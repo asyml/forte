@@ -24,12 +24,12 @@ from forte.data.multi_pack import MultiPack
 from forte.data.base_reader import PackReader, MultiPackReader
 
 __all__ = [
-    'RawDataDeserializeReader',
-    'RecursiveDirectoryDeserializeReader',
-    'DirPackReader',
-    'MultiPackDirectoryReader',
-    'MultiPackDeserializerBase',
-    'SinglePackeReader',
+    "RawDataDeserializeReader",
+    "RecursiveDirectoryDeserializeReader",
+    "DirPackReader",
+    "MultiPackDirectoryReader",
+    "MultiPackDeserializerBase",
+    "SinglePackeReader",
 ]
 
 
@@ -41,14 +41,16 @@ class BaseDeserializeReader(PackReader, ABC):
     def _parse_pack(self, data_source: str) -> Iterator[DataPack]:
         if data_source is None:
             raise ProcessExecutionException(
-                "Data source is None, cannot deserialize.")
+                "Data source is None, cannot deserialize."
+            )
 
         pack: DataPack = DataPack.deserialize(data_source)
 
         if pack is None:
             raise ProcessExecutionException(
                 f"Cannot recover pack from the following data source: \n"
-                f"{data_source}")
+                f"{data_source}"
+            )
 
         yield pack
 
@@ -85,7 +87,8 @@ class RecursiveDirectoryDeserializeReader(BaseDeserializeReader):
         for root, _, files in os.walk(data_dir):
             for file in files:
                 if not self.configs.suffix or file.endswith(
-                        self.configs.suffix):
+                    self.configs.suffix
+                ):
                     with open(os.path.join(root, file)) as f:
                         yield f.read()
 
@@ -107,9 +110,11 @@ class RecursiveDirectoryDeserializeReader(BaseDeserializeReader):
 
         """
         configs = super().default_configs()
-        configs.update({
-            "suffix": ".json",
-        })
+        configs.update(
+            {
+                "suffix": ".json",
+            }
+        )
         return configs
 
 
@@ -150,8 +155,7 @@ class MultiPackDeserializerBase(MultiPackReader):
       information.
     """
 
-    def _collect(
-            self, *args: Any, **kwargs: Any) -> Iterator[Any]:
+    def _collect(self, *args: Any, **kwargs: Any) -> Iterator[Any]:
         """
         This collect actually do not need any data source, it directly reads
         the data from the configurations.
@@ -170,7 +174,10 @@ class MultiPackDeserializerBase(MultiPackReader):
             if p_content is None:
                 logging.warning(
                     "Cannot locate the data pack with pid %d "
-                    "for multi pack %d", pid, m_pack.pack_id)
+                    "for multi pack %d",
+                    pid,
+                    m_pack.pack_id,
+                )
                 break
             pack: DataPack
             if isinstance(p_content, str):
@@ -184,8 +191,9 @@ class MultiPackDeserializerBase(MultiPackReader):
             yield m_pack
 
     @abstractmethod
-    def _get_multipack_content(self, *args: Any, **kwargs: Any
-                               ) -> Iterator[str]:
+    def _get_multipack_content(
+        self, *args: Any, **kwargs: Any
+    ) -> Iterator[str]:
         """
         Implementation of this method should be responsible for yielding
          the raw content of the multi packs.
@@ -226,13 +234,13 @@ class MultiPackDirectoryReader(MultiPackDeserializerBase):
         # pylint: disable=protected-access
         for f in os.listdir(self.configs.multi_pack_dir):
             if f.endswith(self.configs.pack_suffix):
-                with open(os.path.join(
-                        self.configs.multi_pack_dir, f)) as m_data:
+                with open(
+                    os.path.join(self.configs.multi_pack_dir, f)
+                ) as m_data:
                     yield m_data.read()
 
     def _get_pack_content(self, pack_id: int) -> Optional[str]:
-        pack_path = os.path.join(
-            self.configs.data_pack_dir, f'{pack_id}.json')
+        pack_path = os.path.join(self.configs.data_pack_dir, f"{pack_id}.json")
         if os.path.exists(pack_path):
             with open(pack_path) as pack_data:
                 return pack_data.read()
@@ -242,11 +250,13 @@ class MultiPackDirectoryReader(MultiPackDeserializerBase):
     @classmethod
     def default_configs(cls):
         config = super().default_configs()
-        config.update({
-            "multi_pack_dir": None,
-            "data_pack_dir": None,
-            "pack_suffix": '.json'
-        })
+        config.update(
+            {
+                "multi_pack_dir": None,
+                "data_pack_dir": None,
+                "pack_suffix": ".json",
+            }
+        )
         return config
 
 

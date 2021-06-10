@@ -16,6 +16,7 @@ Utils for unit tests.
 """
 import filecmp
 import os
+import re
 import unittest
 
 __all__ = [
@@ -25,11 +26,16 @@ __all__ = [
 
 from typing import Any, Callable
 
+from forte.data import DataPack
+from forte.processors.base import PackProcessor
+from ft.onto.base_ontology import Sentence
+
 
 def define_skip_condition(flag: str, explanation: str):
     return unittest.skipUnless(
-        os.environ.get(flag, 0) or os.environ.get('TEST_ALL', 0),
-        explanation + f" Set `{flag}=1` or `TEST_ALL=1` to run.")
+        os.environ.get(flag, 0) or os.environ.get("TEST_ALL", 0),
+        explanation + f" Set `{flag}=1` or `TEST_ALL=1` to run.",
+    )
 
 
 def dir_is_same(dir1, dir2):
@@ -47,11 +53,15 @@ def dir_is_same(dir1, dir2):
 
     """
     dirs_cmp = filecmp.dircmp(dir1, dir2)
-    if len(dirs_cmp.left_only) > 0 or len(dirs_cmp.right_only) > 0 or \
-            len(dirs_cmp.funny_files) > 0:
+    if (
+        len(dirs_cmp.left_only) > 0
+        or len(dirs_cmp.right_only) > 0
+        or len(dirs_cmp.funny_files) > 0
+    ):
         return False
     (_, mismatch, errors) = filecmp.cmpfiles(
-        dir1, dir2, dirs_cmp.common_files, shallow=False)
+        dir1, dir2, dirs_cmp.common_files, shallow=False
+    )
     if len(mismatch) > 0 or len(errors) > 0:
         return False
     for common_dir in dirs_cmp.common_dirs:
@@ -63,7 +73,9 @@ def dir_is_same(dir1, dir2):
 
 
 performance_test = define_skip_condition(
-    'TEST_PERFORMANCE', "Test the performance of Forte modules.")
+    "TEST_PERFORMANCE", "Test the performance of Forte modules."
+)
 
 pretrained_test: Callable[[Any], Any] = define_skip_condition(
-    'TEST_PRETRAINED', "Test requires loading pre-trained checkpoints.")
+    "TEST_PRETRAINED", "Test requires loading pre-trained checkpoints."
+)

@@ -39,8 +39,9 @@ class MSMarcoEvaluator(Evaluator[MultiPack]):
             doc_id: Optional[str] = query_pack.pack_name
             if doc_id is None:
                 raise ProcessExecutionException(
-                    'Doc ID of the query pack is not set, '
-                    'please double check the reader.')
+                    "Doc ID of the query pack is not set, "
+                    "please double check the reader."
+                )
             self.predicted_results.append((doc_id, pid, str(rank)))
             rank += 1
 
@@ -53,7 +54,7 @@ class MSMarcoEvaluator(Evaluator[MultiPack]):
         if self._score is None:
             with open(output_file, "w") as f:
                 for result in self.predicted_results:
-                    f.write('\t'.join(result) + '\n')
+                    f.write("\t".join(result) + "\n")
 
             self._score = compute_metrics_from_files(gt_file, output_file)
         return self._score
@@ -61,7 +62,7 @@ class MSMarcoEvaluator(Evaluator[MultiPack]):
     @classmethod
     def default_configs(cls):
         return {
-            'pack_name': None,
-            'output_file': None,
-            'ground_truth_file': None,
+            "pack_name": None,
+            "output_file": None,
+            "ground_truth_file": None,
         }

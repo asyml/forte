@@ -22,8 +22,7 @@ from forte.data.readers import OntonotesReader, DirPackReader
 from forte.data.readers.deserialize_reader import MultiPackDirectoryReader
 from forte.pipeline import Pipeline
 from forte.processors.base import MultiPackProcessor, MultiPackWriter
-from forte_wrapper.nltk import (
-    NLTKWordTokenizer, NLTKPOSTagger, NLTKSentenceSegmenter)
+from forte.nltk import NLTKWordTokenizer, NLTKPOSTagger, NLTKSentenceSegmenter
 from forte.processors.writers import PackNameJsonPackWriter
 from ft.onto.base_ontology import EntityMention, CrossDocEntityRelation
 
@@ -40,9 +39,9 @@ class PackCopier(MultiPackProcessor):
         copy_pack.set_text(from_pack.text)
 
         if from_pack.pack_name is not None:
-            copy_pack.pack_name = from_pack.pack_name + '_copy'
+            copy_pack.pack_name = from_pack.pack_name + "_copy"
         else:
-            copy_pack.pack_name = 'copy'
+            copy_pack.pack_name = "copy"
 
         ent: EntityMention
         for ent in from_pack.get(EntityMention):
@@ -50,10 +49,7 @@ class PackCopier(MultiPackProcessor):
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
-        return {
-            'copy_from': 'default',
-            'copy_to': 'duplicate'
-        }
+        return {"copy_from": "default", "copy_to": "duplicate"}
 
 
 class ExampleCoreferencer(MultiPackProcessor):
@@ -62,13 +58,14 @@ class ExampleCoreferencer(MultiPackProcessor):
     """
 
     def _process(self, input_pack: MultiPack):
-        pack_i = input_pack.get_pack('default')
-        pack_j = input_pack.get_pack('duplicate')
+        pack_i = input_pack.get_pack("default")
+        pack_j = input_pack.get_pack("duplicate")
 
-        for ent_i, ent_j in zip(pack_i.get(EntityMention),
-                                pack_j.get(EntityMention)):
+        for ent_i, ent_j in zip(
+            pack_i.get(EntityMention), pack_j.get(EntityMention)
+        ):
             link = CrossDocEntityRelation(input_pack, ent_i, ent_j)
-            link.rel_type = 'coreference'
+            link.rel_type = "coreference"
             input_pack.add_entry(link)
 
 
@@ -108,10 +105,10 @@ def pack_example(input_path, output_path):
     nlp.add(
         PackNameJsonPackWriter(),
         {
-            'output_dir': output_path,
-            'indent': 2,
-            'overwrite': True,
-        }
+            "output_dir": output_path,
+            "indent": 2,
+            "overwrite": True,
+        },
     )
 
     nlp.run(input_path)
@@ -131,8 +128,10 @@ def multi_example(input_path, output_path):
     """
     print("Multi Pack serialization example.")
 
-    print("We first read the data, and add multi-packs to them, and then "
-          "save the results.")
+    print(
+        "We first read the data, and add multi-packs to them, and then "
+        "save the results."
+    )
     coref_pl = Pipeline()
     coref_pl.set_reader(DirPackReader())
     coref_pl.add(MultiPackBoxer())
@@ -143,35 +142,37 @@ def multi_example(input_path, output_path):
     coref_pl.add(
         MultiPackWriter(),
         config={
-            'output_dir': output_path,
-            'indent': 2,
-            'overwrite': True,
-        }
+            "output_dir": output_path,
+            "indent": 2,
+            "overwrite": True,
+        },
     )
 
     coref_pl.run(input_path)
 
-    print("We can then load the saved results, and see if everything is OK. "
-          "We should see the same number of multi packs there. ")
+    print(
+        "We can then load the saved results, and see if everything is OK. "
+        "We should see the same number of multi packs there. "
+    )
     reading_pl = Pipeline()
     reading_pl.set_reader(
         MultiPackDirectoryReader(),
         config={
             "multi_pack_dir": os.path.join(output_path, "multi"),
-            "data_pack_dir": os.path.join(output_path, "packs")
-        }
+            "data_pack_dir": os.path.join(output_path, "packs"),
+        },
     )
     reading_pl.add(ExampleCorefCounter())
     reading_pl.run()
 
 
 def main(data_path: str):
-    pack_output = 'pack_out'
-    multipack_output = 'multi_out'
+    pack_output = "pack_out"
+    multipack_output = "multi_out"
 
     pack_example(data_path, pack_output)
     multi_example(pack_output, multipack_output)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main(sys.argv[1])

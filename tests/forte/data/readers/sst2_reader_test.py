@@ -26,10 +26,13 @@ from ft.onto.base_ontology import ConstituentNode
 
 class SST2ReaderTest(unittest.TestCase):
     def setUp(self):
-        self.dataset_path = os.path.abspath(os.path.join(
-            os.path.dirname(os.path.realpath(__file__)),
-            *([os.path.pardir] * 4),
-            'data_samples/sst2'))
+        self.dataset_path = os.path.abspath(
+            os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                *([os.path.pardir] * 4),
+                "data_samples/sst2"
+            )
+        )
         self.n_samples_per_pack = 100
 
     def test_reader(self):
@@ -39,20 +42,21 @@ class SST2ReaderTest(unittest.TestCase):
         pipeline.initialize()
 
         data_packs: Iterable[DataPack] = pipeline.process_dataset(
-            self.dataset_path, self.n_samples_per_pack)
+            self.dataset_path, self.n_samples_per_pack
+        )
 
         for i, pack in enumerate(data_packs):
             # Test a simple case
             """
-                                0
-                                |
-                                7
-                          ______|_______
-                          |            |
-                          6            5
-                     _____|____   _____|_____
-                     |        |   |         |
-                Effective   but  too-tepid  biopic
+                            0
+                            |
+                            7
+                      ______|_______
+                      |            |
+                      6            5
+                 _____|____   _____|_____
+                 |        |   |         |
+            Effective   but  too-tepid  biopic
             """
             if i == 0:
                 count_root: int = 0

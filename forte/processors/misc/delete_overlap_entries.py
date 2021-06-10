@@ -41,8 +41,7 @@ class DeleteOverlapEntry(PackProcessor):
         super().initialize(resources, configs)
 
         if not self.configs.entry_type:
-            raise ProcessorConfigError(
-                "Please specify an entity mention type!")
+            raise ProcessorConfigError("Please specify an entity mention type!")
 
         self.entry_type = get_class(self.configs.entry_type)
 
@@ -50,15 +49,15 @@ class DeleteOverlapEntry(PackProcessor):
             raise AttributeError(
                 f"The entry type to delete [{self.entry_type}] "
                 f"is not a sub-class of "
-                f"'forte.data.ontology.top.Annotation' class.")
+                f"'forte.data.ontology.top.Annotation' class."
+            )
 
     def _process(self, input_pack: DataPack):
         entry_spans: List[Span] = []
         entries: List[Annotation] = list(input_pack.get(self.entry_type))
         for entry in entries:
             current_span = entry.span
-            if entry_spans and \
-                    self._is_overlap(entry_spans[-1], current_span):
+            if entry_spans and self._is_overlap(entry_spans[-1], current_span):
                 input_pack.delete_entry(entry)
             else:
                 entry_spans.append(current_span)
@@ -83,7 +82,9 @@ class DeleteOverlapEntry(PackProcessor):
 
         """
         configs = super().default_configs()
-        configs.update({
-            "entry_type": None,
-        })
+        configs.update(
+            {
+                "entry_type": None,
+            }
+        )
         return configs

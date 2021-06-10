@@ -33,8 +33,9 @@ __all__ = [
 ]
 
 
-def load_all_datapacks(conn, pack_table_name: str, pack_col: int) -> Dict[
-    int, DataPack]:
+def load_all_datapacks(
+    conn, pack_table_name: str, pack_col: int
+) -> Dict[int, DataPack]:
     """
     Load all the data packs from the table given a sqlite connection to the
       Stave database.
@@ -50,8 +51,7 @@ def load_all_datapacks(conn, pack_table_name: str, pack_col: int) -> Dict[
     """
     c = conn.cursor()
     data_packs: Dict[int, DataPack] = {}
-    for val in c.execute(
-            f'SELECT * FROM {pack_table_name}'):
+    for val in c.execute(f"SELECT * FROM {pack_table_name}"):
         pack: DataPack = DataPack.deserialize(val[pack_col])
         # Currently assume we do not have access to the id in the database,
         #  once we update all Stave db format, we can add the real id.
@@ -90,16 +90,19 @@ class StaveMultiDocSqlReader(MultiPackDeserializerBase):
 
         if not configs.stave_db_path:
             raise ProcessorConfigError(
-                'The database path to stave is not specified.')
+                "The database path to stave is not specified."
+            )
 
         self.conn = sqlite3.connect(configs.stave_db_path)
         self.data_packs: Dict[int, DataPack] = load_all_datapacks(
-            self.conn, configs.datapack_table, configs.pack_content_col)
+            self.conn, configs.datapack_table, configs.pack_content_col
+        )
 
     def _get_multipack_content(self) -> Iterator[str]:  # type: ignore
         c = self.conn.cursor()
         for value in c.execute(
-                f'SELECT textPack FROM {self.configs.multipack_table}'):
+            f"SELECT textPack FROM {self.configs.multipack_table}"
+        ):
             yield value[0]
 
     def _get_pack_content(self, pack_id: int) -> Optional[DataPack]:
@@ -139,13 +142,15 @@ class StaveMultiDocSqlReader(MultiPackDeserializerBase):
 
         """
         config = super().default_configs()
-        config.update({
-            "stave_db_path": None,
-            "multipack_table": 'nlpviewer_backend_crossdoc',
-            "multipack_content_col": 2,
-            "datapack_table": 'nlpviewer_backend_document',
-            "pack_content_col": 2,
-        })
+        config.update(
+            {
+                "stave_db_path": None,
+                "multipack_table": "nlpviewer_backend_crossdoc",
+                "multipack_content_col": 2,
+                "datapack_table": "nlpviewer_backend_document",
+                "pack_content_col": 2,
+            }
+        )
         return config
 
 
@@ -188,15 +193,18 @@ class StaveDataPackSqlReader(PackReader):
 
         if not configs.stave_db_path:
             raise ProcessorConfigError(
-                'The database path to stave is not specified.')
+                "The database path to stave is not specified."
+            )
 
         if not configs.datapack_table:
             raise ProcessorConfigError(
-                'The table name that stores the data pack is not stored.')
+                "The table name that stores the data pack is not stored."
+            )
 
         if not configs.target_project_name:
             logging.info(
-                "No project specified, will attempt to read all proejcts.")
+                "No project specified, will attempt to read all proejcts."
+            )
 
     def _collect(self) -> Iterator[str]:  # type: ignore
         # pylint: disable=attribute-defined-outside-init
@@ -208,12 +216,14 @@ class StaveDataPackSqlReader(PackReader):
 
         if self.configs.target_project_name is None:
             # Read all documents in the database.
-            query = f'SELECT textPack FROM {pack}'
+            query = f"SELECT textPack FROM {pack}"
         else:
             # Read the specific project.
-            query = f'SELECT textPack FROM {pack}, {project} ' \
-                    f'WHERE {pack}.project_id = {project}.id ' \
-                    f'AND {project}.name = "{self.configs.target_project_name}"'
+            query = (
+                f"SELECT textPack FROM {pack}, {project} "
+                f"WHERE {pack}.project_id = {project}.id "
+                f'AND {project}.name = "{self.configs.target_project_name}"'
+            )
 
         for value in c.execute(query):
             yield value[0]
@@ -255,11 +265,13 @@ class StaveDataPackSqlReader(PackReader):
 
         """
         config = super().default_configs()
-        config.update({
-            "stave_db_path": None,
-            "datapack_table": 'nlpviewer_backend_document',
-            "pack_content_col": 2,
-            "project_table": "nlpviewer_backend_project",
-            "target_project_name": None,
-        })
+        config.update(
+            {
+                "stave_db_path": None,
+                "datapack_table": "nlpviewer_backend_document",
+                "pack_content_col": 2,
+                "project_table": "nlpviewer_backend_project",
+                "target_project_name": None,
+            }
+        )
         return config

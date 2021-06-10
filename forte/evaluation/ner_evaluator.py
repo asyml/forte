@@ -61,39 +61,39 @@ class CoNLLNEREvaluator(Evaluator):
     @classmethod
     def default_configs(cls):
         config = super().default_configs()
-        config.update({
-            'entry_type': None,
-            'tagging_unit': None,
-            'attribute': ""
-        })
+        config.update(
+            {"entry_type": None, "tagging_unit": None, "attribute": ""}
+        )
         return config
 
     def consume_next(self, pred_pack: DataPack, ref_pack: DataPack):
         refer_getdata_args = {
             "context_type": Sentence,
             "request": {
-                self.tagging_unit: {
-                    "fields": ["ner"]
-                },
+                self.tagging_unit: {"fields": ["ner"]},
                 self.entry_type: {
                     "fields": [self.attribute],
-                }
-            }
+                },
+            },
         }
-        write_tokens_to_file(pred_pack,
-                             ref_pack,
-                             refer_getdata_args,
-                             self.tagging_unit,
-                             self.entry_type,
-                             self.attribute,
-                             self.output_file)
+        write_tokens_to_file(
+            pred_pack,
+            ref_pack,
+            refer_getdata_args,
+            self.tagging_unit,
+            self.entry_type,
+            self.attribute,
+            self.output_file,
+        )
 
     def get_result(self) -> Dict:
-        eval_script = \
-            Path(os.path.abspath(__file__)).parents[2] / \
-            "utils/eval_scripts/conll03eval.v2"
-        os.system(f"perl {eval_script} < {self.output_file} > "
-                  f"{self.score_file}")
+        eval_script = (
+            Path(os.path.abspath(__file__)).parents[2]
+            / "utils/eval_scripts/conll03eval.v2"
+        )
+        os.system(
+            f"perl {eval_script} < {self.output_file} > " f"{self.score_file}"
+        )
         with open(self.score_file, "r") as fin:
             fin.readline()
             line = fin.readline()

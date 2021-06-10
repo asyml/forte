@@ -27,10 +27,14 @@ from forte.data.vocabulary import Vocabulary, FrequencyVocabFilter
 @ddt
 class VocabularyTest(unittest.TestCase):
     def setUp(self):
-        self.data_path = os.path.abspath(os.path.join(
-            os.path.dirname(__file__),
-            '../../../', 'data_samples', 'random_texts'
-        ))
+        self.data_path = os.path.abspath(
+            os.path.join(
+                os.path.dirname(__file__),
+                "../../../",
+                "data_samples",
+                "random_texts",
+            )
+        )
 
     def argmax(self, one_hot):
         idx = -1
@@ -48,12 +52,20 @@ class VocabularyTest(unittest.TestCase):
             # If we use the generic type here we cannot pickle the class
             # in python 3.6 or earlier (the issue is fixed in 3.7).
             # So here we do not use the type annotation for testing.
-            vocab = Vocabulary(
-                method=method, use_pad=need_pad, use_unk=use_unk)
+            vocab = Vocabulary(method=method, use_pad=need_pad, use_unk=use_unk)
 
             # Check vocabulary add_element, element2repr and id2element
-            elements = ["EU", "rejects", "German", "call",
-                        "to", "boycott", "British", "lamb", "."]
+            elements = [
+                "EU",
+                "rejects",
+                "German",
+                "call",
+                "to",
+                "boycott",
+                "British",
+                "lamb",
+                ".",
+            ]
             for ele in elements:
                 vocab.add_element(ele)
             save_len = len(vocab)
@@ -81,9 +93,9 @@ class VocabularyTest(unittest.TestCase):
             self.assertListEqual(elements, recovered_elements)
 
             # Check __len__, items.
-            self.assertEqual(len(set(elements)) + int(use_unk) +
-                             int(need_pad),
-                             len(vocab))
+            self.assertEqual(
+                len(set(elements)) + int(use_unk) + int(need_pad), len(vocab)
+            )
             saved_len = len(vocab)
 
             # Check has_element
@@ -98,8 +110,9 @@ class VocabularyTest(unittest.TestCase):
                     expected_pad_repr = 0
                 else:
                     expected_pad_repr = [0] * (len(vocab) - 1)
-                self.assertEqual(expected_pad_repr,
-                                 vocab.element2repr(SpecialTokens.PAD))
+                self.assertEqual(
+                    expected_pad_repr, vocab.element2repr(SpecialTokens.PAD)
+                )
 
             # Check UNK_ELEMENT
             if use_unk:
@@ -108,10 +121,12 @@ class VocabularyTest(unittest.TestCase):
                 else:
                     expected_unk_repr = [0] * (len(vocab) - int(need_pad))
                     expected_unk_repr[0] = 1
-                self.assertEqual(expected_unk_repr,
-                                 vocab.element2repr(SpecialTokens.UNK))
-                self.assertEqual(expected_unk_repr,
-                                 vocab.element2repr("random_element"))
+                self.assertEqual(
+                    expected_unk_repr, vocab.element2repr(SpecialTokens.UNK)
+                )
+                self.assertEqual(
+                    expected_unk_repr, vocab.element2repr("random_element")
+                )
                 self.assertEqual(saved_len, len(vocab))
 
             # Check state
@@ -138,16 +153,18 @@ class VocabularyTest(unittest.TestCase):
     @unpack
     def test_freq_filtering(self, need_pad, use_unk, special_tokens):
         base_vocab = Vocabulary(
-            use_pad=need_pad, use_unk=use_unk, special_tokens=special_tokens)
+            use_pad=need_pad, use_unk=use_unk, special_tokens=special_tokens
+        )
 
-        for p in dataset_path_iterator(self.data_path, '.txt'):
+        for p in dataset_path_iterator(self.data_path, ".txt"):
             with open(p) as f:
                 for line in f:
                     for w in line.strip().split():
                         base_vocab.add_element(w)
 
         vocab_filter = FrequencyVocabFilter(
-            base_vocab, min_frequency=2, max_frequency=4)
+            base_vocab, min_frequency=2, max_frequency=4
+        )
 
         filtered = base_vocab.filter(vocab_filter)
 
@@ -163,8 +180,9 @@ class VocabularyTest(unittest.TestCase):
                 else:
                     self.assertFalse(filtered.has_element(e))
 
-        self.assertEqual(len(base_vocab._element2id),
-                         len(base_vocab._id2element))
+        self.assertEqual(
+            len(base_vocab._element2id), len(base_vocab._id2element)
+        )
 
     @data(
         ("indexing", 0, 2),
@@ -174,7 +192,13 @@ class VocabularyTest(unittest.TestCase):
     def test_custom_vocab(self, method, expected_pad_value, expected_unk_value):
         vocab = Vocabulary(method=method, use_pad=False, use_unk=False)
         predefined = {
-            "[PAD]": -1, "[CLS]": -1, "[UNK]": -1, "a": 2, "b": 3, "c": 4}
+            "[PAD]": -1,
+            "[CLS]": -1,
+            "[UNK]": -1,
+            "a": 2,
+            "b": 3,
+            "c": 4,
+        }
         for e, count in predefined.items():
             if count == -1:
                 vocab.add_special_element(e)
@@ -191,8 +215,9 @@ class VocabularyTest(unittest.TestCase):
         self.assertEqual(vocab.element2repr("[PAD]"), expected_pad_value)
 
         # Check that unknown words are mapped to expected representation.
-        self.assertEqual(vocab.element2repr("something else"),
-                         expected_unk_value)
+        self.assertEqual(
+            vocab.element2repr("something else"), expected_unk_value
+        )
 
         for i in [0, 1, 2]:
             self.assertTrue(vocab.is_special_token(i))
@@ -200,5 +225,5 @@ class VocabularyTest(unittest.TestCase):
                 vocab.get_count(i)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

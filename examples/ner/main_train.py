@@ -35,11 +35,11 @@ def main():
 
     # All the configs
     config = Config({}, default_hparams=None)
-    config.add_hparam('config_data', config_data)
-    config.add_hparam('config_model', config_model)
-    config.add_hparam('preprocessor', config_preprocess)
-    config.add_hparam('reader', {})
-    config.add_hparam('evaluator', config_evaluator)
+    config.add_hparam("config_data", config_data)
+    config.add_hparam("config_model", config_model)
+    config.add_hparam("preprocessor", config_preprocess)
+    config.add_hparam("reader", {})
+    config.add_hparam("evaluator", config_evaluator)
 
     reader = CoNLL03Reader()
 
@@ -50,12 +50,17 @@ def main():
     ner_predictor = CoNLLNERPredictor()
     ner_evaluator = CoNLLNEREvaluator()
 
-    train_pipe = TrainPipeline(train_reader=reader, trainer=ner_trainer,
-                               dev_reader=reader, configs=config,
-                               preprocessors=[vocab_processor],
-                               predictor=ner_predictor, evaluator=ner_evaluator)
+    train_pipe = TrainPipeline(
+        train_reader=reader,
+        trainer=ner_trainer,
+        dev_reader=reader,
+        configs=config,
+        preprocessors=[vocab_processor],
+        predictor=ner_predictor,
+        evaluator=ner_evaluator,
+    )
     train_pipe.run()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

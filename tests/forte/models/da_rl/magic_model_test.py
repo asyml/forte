@@ -23,29 +23,22 @@ from forte.models.da_rl import MetaModule, TexarBertMetaModule
 
 
 class TestMetaModule(unittest.TestCase):
-
     def setUp(self):
         # nn config
         self.hparams = {
             "layers": [
                 {
                     "type": "torch.nn.Linear",
-                    "kwargs": {
-                        "in_features": 32,
-                        "out_features": 64
-                    }
+                    "kwargs": {"in_features": 32, "out_features": 64},
                 },
                 {
                     "type": "torch.nn.Linear",
-                    "kwargs": {
-                        "in_features": 64,
-                        "out_features": 128
-                    }
-                }
+                    "kwargs": {"in_features": 64, "out_features": 128},
+                },
             ]
         }
         # bert config
-        self.pretrained_model_name = 'bert-base-uncased'
+        self.pretrained_model_name = "bert-base-uncased"
         self.batch_size = 2
         self.seq_length = 16
         self.num_class = 3
@@ -65,15 +58,21 @@ class TestMetaModule(unittest.TestCase):
         nn_module = FeedForwardNetwork(hparams=self.hparams)
         nn_magic_model = MetaModule(nn_module)
 
-        old_num_buffer_param, old_num_module_param = \
-            self.recursive_module_param(nn_magic_model, [], [])
+        (
+            old_num_buffer_param,
+            old_num_module_param,
+        ) = self.recursive_module_param(nn_magic_model, [], [])
 
-        grads = {name: torch.zeros_like(param)
-                 for name, param in nn_module.named_parameters()}
+        grads = {
+            name: torch.zeros_like(param)
+            for name, param in nn_module.named_parameters()
+        }
         nn_magic_model.update_params(grads)
 
-        new_num_buffer_param, new_num_module_param = \
-            self.recursive_module_param(nn_magic_model, [], [])
+        (
+            new_num_buffer_param,
+            new_num_module_param,
+        ) = self.recursive_module_param(nn_magic_model, [], [])
 
         self.assertEqual(old_num_module_param, new_num_module_param)
         self.assertEqual(old_num_buffer_param, new_num_buffer_param)
@@ -91,20 +90,24 @@ class TestMetaModule(unittest.TestCase):
             "hidden_size": 768,
             "clas_strategy": "cls_time",
             "dropout": 0.1,
-            "num_classes": self.num_class
+            "num_classes": self.num_class,
         }
         bert_model = tx.modules.BERTClassifier(
             pretrained_model_name=self.pretrained_model_name,
-            hparams=config_classifier)
+            hparams=config_classifier,
+        )
         bert_magic_model = TexarBertMetaModule(bert_model)
 
         input_ids = torch.ones(
-            (self.batch_size, self.seq_length), dtype=torch.long)
+            (self.batch_size, self.seq_length), dtype=torch.long
+        )
         segment_ids = torch.zeros(
-            (self.batch_size, self.seq_length), dtype=torch.long)
+            (self.batch_size, self.seq_length), dtype=torch.long
+        )
         input_length = (1 - (input_ids == 0).int()).sum(dim=1)
 
         logits, _ = bert_magic_model(input_ids, input_length, segment_ids)
 
         self.assertEqual(
-            logits.size(), torch.Size([self.batch_size, self.num_class]))
+            logits.size(), torch.Size([self.batch_size, self.num_class])
+        )

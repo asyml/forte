@@ -39,12 +39,12 @@ class Alphabet:
     """
 
     def __init__(
-            self,
-            name,
-            word_cnt: Optional[CounterType[str]] = None,
-            keep_growing: bool = True,
-            ignore_case_in_query: bool = True,
-            other_embeddings: Optional[Dict] = None,
+        self,
+        name,
+        word_cnt: Optional[CounterType[str]] = None,
+        keep_growing: bool = True,
+        ignore_case_in_query: bool = True,
+        other_embeddings: Optional[Dict] = None,
     ):
         self.__name = name
         self.reserved_tokens = tx.data.SpecialTokens

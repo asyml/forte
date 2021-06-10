@@ -29,9 +29,7 @@ from forte.utils import get_class
 
 logger = logging.getLogger(__name__)
 
-__all__ = [
-    "BaseExtractor"
-]
+__all__ = ["BaseExtractor"]
 
 
 class BaseExtractor(ABC):
@@ -83,9 +81,11 @@ class BaseExtractor(ABC):
             this key.
 
     """
-    _VOCAB_ERROR_MSG = "When vocab_method is raw, vocabulary " \
-                       "will not be built. Functions operating " \
-                       "on vocabulary should not be called."
+    _VOCAB_ERROR_MSG = (
+        "When vocab_method is raw, vocabulary "
+        "will not be built. Functions operating "
+        "on vocabulary should not be called."
+    )
 
     def __init__(self):
         self._vocab: Optional[Vocabulary] = None
@@ -97,8 +97,10 @@ class BaseExtractor(ABC):
         # pylint: disable=attribute-defined-outside-init
         self.config = Config(config, self.default_configs())
         if self.config.entry_type is None:
-            raise AttributeError("`entry_type` needs to be specified in "
-                                 "the configuration of an extractor.")
+            raise AttributeError(
+                "`entry_type` needs to be specified in "
+                "the configuration of an extractor."
+            )
         self._entry_type = get_class(self.config.entry_type)
 
         if self.config.vocab_method != "custom":
@@ -107,7 +109,8 @@ class BaseExtractor(ABC):
                 use_pad=self.config.need_pad,
                 use_unk=self.config.vocab_use_unk,
                 pad_value=self.config.pad_value,
-                unk_value=self.config.unk_value)
+                unk_value=self.config.unk_value,
+            )
         else:
             self._vocab = None
         self._vocab_method = self.config.vocab_method
@@ -155,7 +158,7 @@ class BaseExtractor(ABC):
             "vocab_use_unk": True,
             "need_pad": True,
             "pad_value": None,
-            "unk_value": None
+            "unk_value": None,
         }
 
     @property
@@ -244,7 +247,7 @@ class BaseExtractor(ABC):
             self.add(element)
 
     def update_vocab(self, pack: DataPack, instance: Annotation):
-        r""" Populate the vocabulary by taking the elements from one instance
+        r"""Populate the vocabulary by taking the elements from one instance
         vocabulary. For example, when the instance is Sentence and we want
         to add all Token from one sentence into the vocabulary, we might
         call this function.
@@ -293,8 +296,7 @@ class BaseExtractor(ABC):
         """
         pass
 
-    def pre_evaluation_action(self, pack: DataPack,
-                              instance: Annotation):
+    def pre_evaluation_action(self, pack: DataPack, instance: Annotation):
         r"""This function is performed on the pack before the evaluation
         stage, allowing one to perform some actions before the evaluation.
         For example, you can remove entries or remove some attributes of
@@ -308,8 +310,9 @@ class BaseExtractor(ABC):
         """
         pass
 
-    def add_to_pack(self, pack: DataPack, instance: Annotation,
-                    prediction: Any):
+    def add_to_pack(
+        self, pack: DataPack, instance: Annotation, prediction: Any
+    ):
         r"""Add prediction of a model (normally in the form of a tensor)
         back to the pack. This function should have knowledge of the structure
         of the `prediction` to correctly populate the data pack values.

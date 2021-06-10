@@ -19,12 +19,14 @@ import unittest
 
 from forte.data.multi_pack import MultiPack
 from forte.data.selector import (
-    NameMatchSelector, RegexNameMatchSelector, FirstPackSelector,
-    AllPackSelector)
+    NameMatchSelector,
+    RegexNameMatchSelector,
+    FirstPackSelector,
+    AllPackSelector,
+)
 
 
 class SelectorTest(unittest.TestCase):
-
     def setUp(self) -> None:
         self.multi_pack = MultiPack()
 
@@ -64,5 +66,5 @@ class SelectorTest(unittest.TestCase):
             self.assertEqual(doc_id, pack.pack_name)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -73,8 +73,7 @@ class Annotation(Entry):
         return self._span.end
 
     def set_span(self, begin: int, end: int):
-        r"""Set the span of the annotation.
-        """
+        r"""Set the span of the annotation."""
         self._span = Span(begin, end)
 
     def __eq__(self, other):
@@ -87,8 +86,11 @@ class Annotation(Entry):
         """
         if other is None:
             return False
-        return (type(self), self.span.begin, self.span.end) == \
-               (type(other), other.span.begin, other.span.end)
+        return (type(self), self.span.begin, self.span.end) == (
+            type(other),
+            other.span.begin,
+            other.span.end,
+        )
 
     def __lt__(self, other):
         r"""To support total_ordering, :class:`Annotations` must provide
@@ -101,8 +103,10 @@ class Annotation(Entry):
     @property
     def text(self):
         if self.pack is None:
-            raise ValueError("Cannot get text because annotation is not "
-                             "attached to any data pack.")
+            raise ValueError(
+                "Cannot get text because annotation is not "
+                "attached to any data pack."
+            )
         return self.pack.get_span_text(self.span)
 
     @property
@@ -125,10 +129,10 @@ class Link(BaseLink):
     ChildType: Any = Entry
 
     def __init__(
-            self,
-            pack: PackType,
-            parent: Optional[Entry] = None,
-            child: Optional[Entry] = None
+        self,
+        pack: PackType,
+        parent: Optional[Entry] = None,
+        child: Optional[Entry] = None,
     ):
         self._parent: Optional[int] = None
         self._child: Optional[int] = None
@@ -145,7 +149,8 @@ class Link(BaseLink):
         if not isinstance(parent, self.ParentType):
             raise TypeError(
                 f"The parent of {type(self)} should be an "
-                f"instance of {self.ParentType}, but get {type(parent)}")
+                f"instance of {self.ParentType}, but get {type(parent)}"
+            )
         self._parent = parent.tid
 
     def set_child(self, child: Entry):
@@ -158,7 +163,8 @@ class Link(BaseLink):
         if not isinstance(child, self.ChildType):
             raise TypeError(
                 f"The parent of {type(self)} should be an "
-                f"instance of {self.ParentType}, but get {type(child)}")
+                f"instance of {self.ParentType}, but get {type(child)}"
+            )
         self._child = child.tid
 
     @property
@@ -182,8 +188,10 @@ class Link(BaseLink):
              An instance of :class:`Entry` that is the parent of the link.
         """
         if self.pack is None:
-            raise ValueError("Cannot get parent because link is not "
-                             "attached to any data pack.")
+            raise ValueError(
+                "Cannot get parent because link is not "
+                "attached to any data pack."
+            )
         if self._parent is None:
             raise ValueError("The parent of this entry is not set.")
         return self.pack.get_entry(self._parent)
@@ -195,8 +203,10 @@ class Link(BaseLink):
              An instance of :class:`Entry` that is the child of the link.
         """
         if self.pack is None:
-            raise ValueError("Cannot get child because link is not"
-                             " attached to any data pack.")
+            raise ValueError(
+                "Cannot get child because link is not"
+                " attached to any data pack."
+            )
         if self._child is None:
             raise ValueError("The child of this entry is not set.")
         return self.pack.get_entry(self._child)
@@ -211,9 +221,9 @@ class Group(BaseGroup[Entry]):
     MemberType: Type[Entry] = Entry
 
     def __init__(
-            self,
-            pack: PackType,
-            members: Optional[Iterable[Entry]] = None,
+        self,
+        pack: PackType,
+        members: Optional[Iterable[Entry]] = None,
     ):  # pylint: disable=useless-super-delegation
         self._members: Set[int] = set()
         super().__init__(pack, members)
@@ -227,7 +237,8 @@ class Group(BaseGroup[Entry]):
         if not isinstance(member, self.MemberType):
             raise TypeError(
                 f"The members of {type(self)} should be "
-                f"instances of {self.MemberType}, but got {type(member)}")
+                f"instances of {self.MemberType}, but got {type(member)}"
+            )
         self._members.add(member.tid)
 
     def get_members(self) -> List[Entry]:
@@ -238,8 +249,10 @@ class Group(BaseGroup[Entry]):
              group.
         """
         if self.pack is None:
-            raise ValueError("Cannot get members because group is not "
-                             "attached to any data pack.")
+            raise ValueError(
+                "Cannot get members because group is not "
+                "attached to any data pack."
+            )
         member_entries = []
         for m in self._members:
             member_entries.append(self.pack.get_entry(m))
@@ -263,10 +276,10 @@ class MultiPackLink(MultiEntry, BaseLink):
     ChildType = Entry
 
     def __init__(
-            self,
-            pack: PackType,
-            parent: Optional[Entry] = None,
-            child: Optional[Entry] = None,
+        self,
+        pack: PackType,
+        parent: Optional[Entry] = None,
+        child: Optional[Entry] = None,
     ):
         self._parent: Optional[Tuple[int, int]] = None
         self._child: Optional[Tuple[int, int]] = None
@@ -339,7 +352,8 @@ class MultiPackLink(MultiEntry, BaseLink):
         if not isinstance(parent, self.ParentType):
             raise TypeError(
                 f"The parent of {type(self)} should be an "
-                f"instance of {self.ParentType}, but get {type(parent)}")
+                f"instance of {self.ParentType}, but get {type(parent)}"
+            )
         self._parent = self.pack.get_pack_index(parent.pack_id), parent.tid
 
     def set_child(self, child: Entry):
@@ -356,7 +370,8 @@ class MultiPackLink(MultiEntry, BaseLink):
         if not isinstance(child, self.ChildType):
             raise TypeError(
                 f"The child of {type(self)} should be an "
-                f"instance of {self.ChildType}, but get {type(child)}")
+                f"instance of {self.ChildType}, but get {type(child)}"
+            )
         self._child = self.pack.get_pack_index(child.pack_id), child.tid
 
     def get_parent(self) -> Entry:
@@ -392,7 +407,7 @@ class MultiPackGroup(MultiEntry, BaseGroup[Entry]):
     MemberType: Type[Entry] = Entry
 
     def __init__(
-            self, pack: PackType, members: Optional[Iterable[Entry]] = None
+        self, pack: PackType, members: Optional[Iterable[Entry]] = None
     ):  # pylint: disable=useless-super-delegation
         self._members: List[Tuple[int, int]] = []
         super().__init__(pack)
@@ -403,10 +418,12 @@ class MultiPackGroup(MultiEntry, BaseGroup[Entry]):
         if not isinstance(member, self.MemberType):
             raise TypeError(
                 f"The members of {type(self)} should be "
-                f"instances of {self.MemberType}, but got {type(member)}")
+                f"instances of {self.MemberType}, but got {type(member)}"
+            )
 
         self._members.append(
-            (self.pack.get_pack_index(member.pack_id), member.tid))
+            (self.pack.get_pack_index(member.pack_id), member.tid)
+        )
 
     def get_members(self) -> List[Entry]:
         members = []

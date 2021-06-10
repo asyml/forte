@@ -18,9 +18,7 @@ from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
 
-__all__ = [
-    "AttributeMasker"
-]
+__all__ = ["AttributeMasker"]
 
 
 class AttributeMasker(PackProcessor):
@@ -54,10 +52,7 @@ class AttributeMasker(PackProcessor):
             a list of field names.
         """
         config = super().default_configs()
-        config.update({
-            "type": "",
-            "kwargs": {}
-        })
+        config.update({"type": "", "kwargs": {}})
         return config
 
     def _process(self, input_pack: DataPack):

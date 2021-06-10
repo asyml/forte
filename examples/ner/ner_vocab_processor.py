@@ -37,9 +37,7 @@ def construct_word_embedding_table(embed_dict, alphabet):
     embedding_dim = list(embed_dict.values())[0].shape[-1]
 
     scale = np.sqrt(3.0 / embedding_dim)
-    table = np.empty(
-        [alphabet.size(), embedding_dim], dtype=np.float32
-    )
+    table = np.empty([alphabet.size(), embedding_dim], dtype=np.float32)
     oov = 0
     for word, index in alphabet.items():
         if word in embed_dict:
@@ -66,7 +64,7 @@ class CoNLL03VocabularyProcessor(VocabularyProcessor):
         super().__init__()
         self.min_frequency = 0
         self.normalize_digit: bool = True
-        self.embedding_path: str = '.'
+        self.embedding_path: str = "."
 
         self.word_cnt: Counter = Counter()
         self.char_cnt: Counter = Counter()
@@ -98,8 +96,8 @@ class CoNLL03VocabularyProcessor(VocabularyProcessor):
         """
         # for data_pack in input_pack:
         for instance in data_pack.get_data(
-                context_type=Sentence,
-                request={Token: ["chunk", "pos", "ner"]}):
+            context_type=Sentence, request={Token: ["chunk", "pos", "ner"]}
+        ):
             for token in instance["Token"]["text"]:
                 for char in token:
                     self.char_cnt[char] += 1
@@ -130,15 +128,18 @@ class CoNLL03VocabularyProcessor(VocabularyProcessor):
             if word not in word_alphabet.instance2index:
                 word_alphabet.add(word)
 
-        word_embedding_table = construct_word_embedding_table(embedding_dict,
-                                                              word_alphabet)
+        word_embedding_table = construct_word_embedding_table(
+            embedding_dict, word_alphabet
+        )
 
-        logging.info('word embedding table size: %s',
-                     word_embedding_table.size())
+        logging.info(
+            "word embedding table size: %s", word_embedding_table.size()
+        )
 
         # Adding vocabulary information to resource.
         resource.update(
             word_alphabet=word_alphabet,
             char_alphabet=char_alphabet,
             ner_alphabet=ner_alphabet,
-            word_embedding_table=word_embedding_table)
+            word_embedding_table=word_embedding_table,
+        )

@@ -18,8 +18,9 @@ import unittest
 
 from forte.data.data_pack import DataPack
 from ft.onto.base_ontology import Token
-from forte.processors.data_augment.algorithms.distribution_replacement_op \
-    import DistributionReplacementOp
+from forte.processors.data_augment.algorithms.distribution_replacement_op import (
+    DistributionReplacementOp,
+)
 from forte.processors.data_augment.algorithms.sampler import UniformSampler
 
 

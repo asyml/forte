@@ -38,8 +38,10 @@ class AGNewsReader(PackReader):
 
     The input to this reader is the path to the CSV file.
     """
-    def _collect(self,  # type: ignore
-                 csv_file: str) -> Iterator[Tuple[int, str]]:
+
+    def _collect(  # type: ignore
+        self, csv_file: str
+    ) -> Iterator[Tuple[int, str]]:
         r"""Collects from a CSV file path and returns an iterator of AG News
         data. The elements in the iterator correspond to each line
         in the csv file. One line is expected to be parsed as one
@@ -65,7 +67,7 @@ class AGNewsReader(PackReader):
         line = line.strip()
         data = line.split(",")
 
-        class_id: int = int(data[0].replace("\"", ""))
+        class_id: int = int(data[0].replace('"', ""))
         title: str = data[1]
         description: str = data[2]
 
@@ -89,12 +91,14 @@ class AGNewsReader(PackReader):
     def default_configs(cls):
         config: dict = super().default_configs()
 
-        config.update({
-            'class_names': {
-                1: 'World',
-                2: 'Sports',
-                3: 'Business',
-                4: 'Sci/Tech'
+        config.update(
+            {
+                "class_names": {
+                    1: "World",
+                    2: "Sports",
+                    3: "Business",
+                    4: "Sci/Tech",
+                }
             }
-        })
+        )
         return config

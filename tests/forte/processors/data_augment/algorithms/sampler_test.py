@@ -16,21 +16,19 @@ Unit tests for distribution sampler.
 """
 import unittest
 
-from forte.processors.data_augment.algorithms.sampler import \
-    UniformSampler, UnigramSampler
+from forte.processors.data_augment.algorithms.sampler import (
+    UniformSampler,
+    UnigramSampler,
+)
 
 
 class TestSampler(unittest.TestCase):
     def test_unigram_sampler(self):
-        word_count = {"apple": 1,
-                      "banana": 2,
-                      "orange": 3}
+        word_count = {"apple": 1, "banana": 2, "orange": 3}
         sampler = UnigramSampler(word_count)
         word = sampler.sample()
         self.assertIn(word, word_count)
-        word_prob = {"apple": 0.4,
-                      "banana": 0.4,
-                      "orange": 0.2}
+        word_prob = {"apple": 0.4, "banana": 0.4, "orange": 0.2}
         sampler = UnigramSampler(word_prob)
         word = sampler.sample()
         self.assertIn(word, word_prob)

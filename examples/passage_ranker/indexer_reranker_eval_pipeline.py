@@ -16,8 +16,7 @@ import argparse
 
 import yaml
 
-from forte_wrapper.elastic import ElasticSearchQueryCreator, \
-    ElasticSearchProcessor
+from forte.elastic import ElasticSearchQueryCreator, ElasticSearchProcessor
 
 from ms_marco_evaluator import MSMarcoEvaluator
 from reader import EvalReader
@@ -30,8 +29,9 @@ from forte.processors.ir import BertRerankingProcessor
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--config_file", default="./config.yml",
-                        help="Config YAML filepath")
+    parser.add_argument(
+        "--config_file", default="./config.yml", help="Config YAML filepath"
+    )
     args = parser.parse_args()
 
     # loading config
@@ -39,9 +39,11 @@ if __name__ == "__main__":
     config = Config(config, default_hparams=None)
 
     # reading query input file
-    parser.add_argument("--input_file",
-                        default="./data/collectionandqueries/query_doc_id.tsv",
-                        help="Input query filepath")
+    parser.add_argument(
+        "--input_file",
+        default="./data/collectionandqueries/query_doc_id.tsv",
+        help="Input query filepath",
+    )
 
     input_file = config.evaluator.input_file
 

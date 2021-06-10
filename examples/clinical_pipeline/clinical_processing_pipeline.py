@@ -4,10 +4,10 @@ import time
 import yaml
 from mimic3_note_reader import Mimic3DischargeNoteReader
 
-from forte_wrapper.elastic import ElasticSearchPackIndexProcessor
-from forte_wrapper.nltk import NLTKSentenceSegmenter
-from forte_wrapper.hugginface.bio_ner_predictor import BioBERTNERPredictor
-from forte_wrapper.hugginface.transformers_processor import BERTTokenizer
+from forte.elastic import ElasticSearchPackIndexProcessor
+from forte.nltk import NLTKSentenceSegmenter
+from forte.hugginface.bio_ner_predictor import BioBERTNERPredictor
+from forte.hugginface.transformers_processor import BERTTokenizer
 
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
@@ -17,8 +17,9 @@ from forte.processors.writers import PackIdJsonPackWriter
 
 def main(input_path: str, output_path: str, max_packs: int = -1):
     pl = Pipeline[DataPack]()
-    pl.set_reader(Mimic3DischargeNoteReader(),
-                  config={'max_num_notes': max_packs})
+    pl.set_reader(
+        Mimic3DischargeNoteReader(), config={"max_num_notes": max_packs}
+    )
     pl.add(NLTKSentenceSegmenter())
 
     config = yaml.safe_load(open("bio_ner_config.yml", "r"))
@@ -31,12 +32,12 @@ def main(input_path: str, output_path: str, max_packs: int = -1):
     pl.add(
         PackIdJsonPackWriter(),
         {
-            'output_dir': output_path,
-            'indent': 2,
-            'overwrite': True,
-            'drop_record': True,
-            'zip_pack': True
-        }
+            "output_dir": output_path,
+            "indent": 2,
+            "overwrite": True,
+            "drop_record": True,
+            "zip_pack": True,
+        },
     )
 
     pl.initialize()

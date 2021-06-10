@@ -31,9 +31,7 @@ from forte.utils import get_class
 
 logger = logging.getLogger(__name__)
 
-__all__ = [
-    "TrainPreprocessor"
-]
+__all__ = ["TrainPreprocessor"]
 
 
 class TrainPreprocessor:
@@ -70,8 +68,7 @@ class TrainPreprocessor:
     DATA_INPUT = 0
     DATA_OUTPUT = 1
 
-    def __init__(self,
-                 pack_iterator: Iterator[DataPack]):
+    def __init__(self, pack_iterator: Iterator[DataPack]):
         self._pack_iterator: Iterator[DataPack] = pack_iterator
         self._cached_packs: List[DataPack] = []
 
@@ -118,10 +115,7 @@ class TrainPreprocessor:
                 "device": "cpu",
             },
             "dataset": DataPackDataset.default_hparams(),
-            "request": {
-                "scope": None,
-                "feature_scheme": None
-            }
+            "request": {"scope": None, "feature_scheme": None},
         }
 
     def _validate_config(self):
@@ -136,34 +130,38 @@ class TrainPreprocessor:
         """
         parsed_request: Dict[str, Any] = {}
 
-        assert "scope" in request, \
-            "Field not found for data request: `scope`"
-        assert "feature_scheme" in request, \
-            "Field not found for data request: `schemes`"
+        assert "scope" in request, "Field not found for data request: `scope`"
+        assert (
+            "feature_scheme" in request
+        ), "Field not found for data request: `schemes`"
 
         parsed_request["scope"] = get_class(request["scope"])
         parsed_request["schemes"] = {}
 
         # Used for check dependency between different extractors
-        scheme_group: Dict[str, Dict] = {
-            "dependent": {}, "dependee": {}
-        }
+        scheme_group: Dict[str, Dict] = {"dependent": {}, "dependee": {}}
 
         for tag, scheme in request["feature_scheme"].items():
-            assert "extractor" in scheme, \
-                "Field not found for data request scheme: `extractor`"
+            assert (
+                "extractor" in scheme
+            ), "Field not found for data request scheme: `extractor`"
             parsed_request["schemes"][tag] = {}
 
-            assert "type" in scheme, \
-                "Field not found for data request scheme: `type`"
-            assert scheme["type"] in ["data_input", "data_output"], \
-                "Type field must be either data_input or data_output."
+            assert (
+                "type" in scheme
+            ), "Field not found for data request scheme: `type`"
+            assert scheme["type"] in [
+                "data_input",
+                "data_output",
+            ], "Type field must be either data_input or data_output."
             if scheme["type"] == "data_input":
-                parsed_request["schemes"][tag]["type"] = \
-                    TrainPreprocessor.DATA_INPUT
+                parsed_request["schemes"][tag][
+                    "type"
+                ] = TrainPreprocessor.DATA_INPUT
             if scheme["type"] == "data_output":
-                parsed_request["schemes"][tag]["type"] = \
-                    TrainPreprocessor.DATA_OUTPUT
+                parsed_request["schemes"][tag][
+                    "type"
+                ] = TrainPreprocessor.DATA_OUTPUT
 
             extractor_class = scheme["extractor"]["class_name"]
             if not isinstance(get_class(extractor_class)(), BaseExtractor):
@@ -177,13 +175,11 @@ class TrainPreprocessor:
             if hasattr(extractor, "based_on"):
                 if extractor.entry_type not in scheme_group["dependent"]:
                     scheme_group["dependent"][extractor.entry_type] = set()
-                scheme_group["dependent"][extractor.entry_type].add(
-                    extractor)
+                scheme_group["dependent"][extractor.entry_type].add(extractor)
             else:
                 if extractor.entry_type not in scheme_group["dependee"]:
                     scheme_group["dependee"][extractor.entry_type] = set()
-                scheme_group["dependee"][extractor.entry_type].add(
-                    extractor)
+                scheme_group["dependee"][extractor.entry_type].add(extractor)
 
             # Create default converter if there is no given converter
             if "converter" not in scheme:
@@ -198,8 +194,10 @@ class TrainPreprocessor:
                     raise ValueError(
                         "Extractor {} needs the entry {} to do extraction "
                         "processing but it is not extracted by any other "
-                        "extractors given in request".
-                            format(based_on, dependent_extractor.tag))
+                        "extractors given in request".format(
+                            based_on, dependent_extractor.tag
+                        )
+                    )
 
         self._request = parsed_request
         self._request_ready = True
@@ -223,19 +221,19 @@ class TrainPreprocessor:
 
         self._vocab_ready = True
 
-    def _build_dataset_iterator(self) \
-            -> DataIterator:
+    def _build_dataset_iterator(self) -> DataIterator:
         scope: Type[EntryType] = self._request["scope"]  # type: ignore
         schemes: Dict[str, Dict[str, Any]] = self._request["schemes"]
 
-        data_source = DataPackIterator(pack_iterator=iter(self._cached_packs),
-                                       context_type=scope,
-                                       request={scope: []})
+        data_source = DataPackIterator(
+            pack_iterator=iter(self._cached_packs),
+            context_type=scope,
+            request={scope: []},
+        )
 
-        dataset = DataPackDataset(data_source,
-                                  schemes,
-                                  self._config.dataset,
-                                  self.device)
+        dataset = DataPackDataset(
+            data_source, schemes, self._config.dataset, self.device
+        )
         iterator = DataIterator(dataset)
 
         return iterator
@@ -244,56 +242,56 @@ class TrainPreprocessor:
     def request(self) -> Dict:
         # pylint: disable=line-too-long
         r"""A `Dict` containing all the information needed for doing the
-        pre-processing. This is obtained via parsing the input `request`
+            pre-processing. This is obtained via parsing the input `request`
 
-        An example `request` is:
+            An example `request` is:
 
-        .. code-block:: python
+            .. code-block:: python
 
-            request = {
-                "scope": ft.onto.Sentence
-                "schemes": {
-                    "text_tag": {
-                        "extractor": forte.data.extractor.AttributeExtractor,
-                        "converter": forte.data.converter.Converter,
-                        "type": TrainPreprocessor.DATA_INPUT,
-                    },
-                    "char_tag" {
-                        "extractor": forte.data.extractor.CharExtractor,
-                        "converter": forte.data.converter.Converter,
-                        "type": TrainPreprocessor.DATA_INPUT,
-                    }
-                    "ner_tag": {
-                        "extractor":
-                            forte.data.extractor.BioSeqTaggingExtractor,
-                        "converter": forte.data.converter.Converter,
-                        "type": TrainPreprocessor.DATA_OUTPUT,
+                request = {
+                    "scope": ft.onto.Sentence
+                    "schemes": {
+                        "text_tag": {
+                            "extractor": forte.data.extractor.AttributeExtractor,
+                            "converter": forte.data.converter.Converter,
+                            "type": TrainPreprocessor.DATA_INPUT,
+                        },
+                        "char_tag" {
+                            "extractor": forte.data.extractor.CharExtractor,
+                            "converter": forte.data.converter.Converter,
+                            "type": TrainPreprocessor.DATA_INPUT,
+                        }
+                        "ner_tag": {
+                            "extractor":
+                                forte.data.extractor.BioSeqTaggingExtractor,
+                            "converter": forte.data.converter.Converter,
+                            "type": TrainPreprocessor.DATA_OUTPUT,
+                        }
                     }
                 }
-            }
 
-    Here:
+        Here:
 
-        `"scope"`: Entry
-            A class of type :class:`~forte.data.ontology.core.Entry` The
-            granularity to separate data into different examples. For example,
-            if `scope` is :class:`~ft.onto.base_ontology.Sentence`, then each
-            training example will represent the information of a sentence.
+            `"scope"`: Entry
+                A class of type :class:`~forte.data.ontology.core.Entry` The
+                granularity to separate data into different examples. For example,
+                if `scope` is :class:`~ft.onto.base_ontology.Sentence`, then each
+                training example will represent the information of a sentence.
 
-        `"schemes"`: `Dict`
-            A `Dict` containing the information about doing the pre-processing.
-            The `key` is the tags provided by input `request`. The `value` is a
-            `Dict` containing the information for doing pre-processing for that
-            feature.
+            `"schemes"`: `Dict`
+                A `Dict` containing the information about doing the pre-processing.
+                The `key` is the tags provided by input `request`. The `value` is a
+                `Dict` containing the information for doing pre-processing for that
+                feature.
 
-        `"schemes.tag.extractor"`: Extractor
-            An instance of type :class:`~forte.data.extractor.BaseExtractor`.
+            `"schemes.tag.extractor"`: Extractor
+                An instance of type :class:`~forte.data.extractor.BaseExtractor`.
 
-        `"schemes.tag.converter"`: Converter
-            An instance of type :class:`~forte.data.converter.Converter`.
+            `"schemes.tag.converter"`: Converter
+                An instance of type :class:`~forte.data.converter.Converter`.
 
-        `"schemes.tag.type"`: TrainPreprocessor.DATA_INPUT/DATA_OUTPUT
-            Denoting whether this feature is the input or output feature.
+            `"schemes.tag.type"`: TrainPreprocessor.DATA_INPUT/DATA_OUTPUT
+                Denoting whether this feature is the input or output feature.
         """
         if not self._request:
             self._parse_request(self._request)

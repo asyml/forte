@@ -16,7 +16,6 @@ Unit tests for Pipeline.
 """
 
 import os
-import re
 import unittest
 import warnings
 from dataclasses import dataclass
@@ -25,42 +24,58 @@ from typing import Any, Dict, Iterator, Optional, Type, Set
 import numpy as np
 from ddt import ddt, data, unpack
 
+from forte.common import ProcessExecutionException, ProcessorConfigError
 from forte.data.base_pack import PackType
 from forte.data.base_reader import PackReader, MultiPackReader
 from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
 from forte.data.caster import MultiPackBoxer
-from forte.data.converter import Converter
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology.top import Generics
 from forte.data.readers import PlainTextReader, StringReader, OntonotesReader
-from forte.data.selector import FirstPackSelector, NameMatchSelector, \
-    SinglePackSelector, AllPackSelector
+from forte.data.selector import (
+    FirstPackSelector,
+    NameMatchSelector,
+    SinglePackSelector,
+    AllPackSelector,
+)
 from forte.data.types import DataRequest
-from forte.common import ProcessExecutionException, ProcessorConfigError, \
-    Resources
 from forte.evaluation.base import Evaluator
 from forte.pipeline import Pipeline
-from forte.processors.base import PackProcessor, FixedSizeBatchProcessor, \
-    MultiPackProcessor
+from forte.processors.base import (
+    PackProcessor,
+    FixedSizeBatchProcessor,
+    MultiPackProcessor,
+)
 from forte.processors.base.batch_processor import Predictor, BatchProcessor
-from forte.train_preprocessor import TrainPreprocessor
+from forte.processors.misc import PeriodSentenceSplitter
 from forte.utils import get_full_module_name
 from ft.onto.base_ontology import Token, Sentence, EntityMention, RelationLink
 
+data_samples_root = os.path.abspath(
+    os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        *([os.path.pardir] * 2),
+        "data_samples"
+    )
+)
 
-data_samples_root = os.path.abspath(os.path.join(
-    os.path.dirname(os.path.realpath(__file__)),
-    *([os.path.pardir] * 2), 'data_samples'))
-
-onto_specs_samples_root = os.path.abspath(os.path.join(
-    os.path.dirname(os.path.realpath(__file__)),
-    *([os.path.pardir] * 1), 'forte', 'data', 'ontology', 'test_specs'))
+onto_specs_samples_root = os.path.abspath(
+    os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        *([os.path.pardir] * 1),
+        "forte",
+        "data",
+        "ontology",
+        "test_specs"
+    )
+)
 
 
 @dataclass
 class NewType(Generics):
     """A dummy generic type to check the correctness of pipeline execution."""
+
     value: Optional[str] = None
 
     def __init__(self, pack, value):
@@ -131,7 +146,7 @@ class MultiPackSentenceReader(MultiPackReader):
                     continue
 
                 m_pack = MultiPack()
-                pack = m_pack.add_pack('pack')
+                pack = m_pack.add_pack("pack")
                 pack.set_text(line)
 
                 Sentence(pack, 0, len(line))
@@ -146,19 +161,8 @@ class MultiPackCopier(MultiPackProcessor):
     """
 
     def _process(self, input_pack: MultiPack):
-        pack = input_pack.add_pack('copy')
+        pack = input_pack.add_pack("copy")
         pack.set_text(input_pack.get_pack_at(0).text)
-
-
-class PeriodSentenceSplitter(PackProcessor):
-    def _process(self, input_pack: DataPack):
-        pattern = '\\.\\s*'
-        start = 0
-
-        for m in re.finditer(pattern, input_pack.text):
-            end = m.end()
-            Sentence(input_pack, start, end)
-            start = end
 
 
 class DummyRelationExtractor(BatchProcessor):
@@ -184,7 +188,7 @@ class DummyRelationExtractor(BatchProcessor):
     def _define_input_info() -> DataRequest:
         input_info: DataRequest = {
             Token: [],
-            EntityMention: {"fields": ["ner_type", "tid"]}
+            EntityMention: {"fields": ["ner_type", "tid"]},
         }
         return input_info
 
@@ -211,12 +215,9 @@ class DummyRelationExtractor(BatchProcessor):
                     child.append(tid[j])
                     rel_type.append("dummy_relation")
 
-            pred["RelationLink"]["parent.tid"].append(
-                np.array(parent))
-            pred["RelationLink"]["child.tid"].append(
-                np.array(child))
-            pred["RelationLink"]["rel_type"].append(
-                np.array(rel_type))
+            pred["RelationLink"]["parent.tid"].append(np.array(parent))
+            pred["RelationLink"]["child.tid"].append(np.array(child))
+            pred["RelationLink"]["rel_type"].append(np.array(rel_type))
 
         return pred
 
@@ -230,10 +231,12 @@ class DummyRelationExtractor(BatchProcessor):
                 link = RelationLink(data_pack)
                 link.rel_type = output_dict["RelationLink"]["rel_type"][i][j]
                 parent: EntityMention = data_pack.get_entry(  # type: ignore
-                    output_dict["RelationLink"]["parent.tid"][i][j])
+                    output_dict["RelationLink"]["parent.tid"][i][j]
+                )
                 link.set_parent(parent)
                 child: EntityMention = data_pack.get_entry(  # type: ignore
-                    output_dict["RelationLink"]["child.tid"][i][j])
+                    output_dict["RelationLink"]["child.tid"][i][j]
+                )
                 link.set_child(child)
 
     @classmethod
@@ -244,7 +247,7 @@ class DummyRelationExtractor(BatchProcessor):
 
 
 class DummyEvaluator(Evaluator):
-    """ This evaluator does nothing, just for test purpose."""
+    """This evaluator does nothing, just for test purpose."""
 
     def consume_next(self, pred_pack: PackType, ref_pack: PackType):
         pass
@@ -254,7 +257,6 @@ class DummyEvaluator(Evaluator):
 
 
 class DummyPackProcessor(PackProcessor):
-
     def __init__(self):
         super().__init__()
         # Use to test the initialization behavior.
@@ -262,10 +264,12 @@ class DummyPackProcessor(PackProcessor):
 
     def initialize(self, resources, configs):
         super().initialize(resources, configs)
-        if ("successor" in configs["test"] and "test" not in configs["test"]):
-                raise ProcessorConfigError('"test" is necessary as the first '
-                                           'step for "successor" in config '
-                                           'for test case purpose.')
+        if "successor" in configs["test"] and "test" not in configs["test"]:
+            raise ProcessorConfigError(
+                '"test" is necessary as the first '
+                'step for "successor" in config '
+                "for test case purpose."
+            )
         self.initialize_count += 1
 
     def _process(self, input_pack: DataPack):
@@ -279,12 +283,11 @@ class DummyPackProcessor(PackProcessor):
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
         configs = super().default_configs()
-        configs['test'] = "test, successor"
+        configs["test"] = "test, successor"
         return configs
 
 
 class DummyFixedSizeBatchProcessor(FixedSizeBatchProcessor):
-
     def __init__(self):
         super().__init__()
         self.counter = 0
@@ -312,11 +315,7 @@ class DummyFixedSizeBatchProcessor(FixedSizeBatchProcessor):
     @classmethod
     def default_configs(cls):
         config = super().default_configs()
-        config.update(
-            {
-                "batcher": {"batch_size": 4}
-            }
-        )
+        config.update({"batcher": {"batch_size": 4}})
         return config
 
 
@@ -337,7 +336,6 @@ class DummyPredictor(Predictor):
 
 @ddt
 class PredictorPipelineTest(unittest.TestCase):
-
     @data(2, 4, 8)
     def test_pipeline_different_batch_size_chain_predictor(self, batch_size):
         """Tests a chain of Batch->Pack->Batch with different batch sizes."""
@@ -363,9 +361,9 @@ class PredictorPipelineTest(unittest.TestCase):
                 "text_tag": {
                     "extractor": {
                         "class_name": text_extractor_name,
-                        "config": text_extractor_config
+                        "config": text_extractor_config,
                     },
-                    "type": "data_input"
+                    "type": "data_input",
                 },
             },
         }
@@ -378,8 +376,7 @@ class PredictorPipelineTest(unittest.TestCase):
         nlp.add(DummyEvaluator())
         nlp.initialize()
 
-        text_extractor = predictor.configs.\
-            feature_scheme.text_tag.extractor
+        text_extractor = predictor.configs.feature_scheme.text_tag.extractor
         for pack in pipeline.process_dataset(data_path):
             for instance in pack.get(Sentence):
                 text_extractor.update_vocab(pack, instance)
@@ -394,7 +391,6 @@ class PredictorPipelineTest(unittest.TestCase):
 
 @ddt
 class PipelineTest(unittest.TestCase):
-
     def test_process_next(self):
         # Define and config the Pipeline
         nlp = Pipeline[DataPack]()
@@ -422,13 +418,12 @@ class PipelineTest(unittest.TestCase):
         reader = SentenceReader()
         nlp.set_reader(reader)
         dummy = DummyPackProcessor()
-        config = {'test': 'successor'}
+        config = {"test": "successor"}
         nlp.add(dummy, config=config)
         print(nlp.components)
 
         with self.assertRaises(ProcessorConfigError):
             nlp.initialize()
-
 
     def test_pipeline_pack_processor(self):
         """Tests a pack processor only."""
@@ -530,8 +525,9 @@ class PipelineTest(unittest.TestCase):
 
     @data((2, 3), (4, 5), (8, 9), (3, 2), (5, 4), (9, 8))
     @unpack
-    def test_pipeline_batch_pack_batch_diff_size(self, batch_size1,
-                                                 batch_size2):
+    def test_pipeline_batch_pack_batch_diff_size(
+        self, batch_size1, batch_size2
+    ):
         # Tests a chain of Batch->Pack->Batch with different batch sizes.
         nlp = Pipeline[DataPack]()
         reader = SentenceReader()
@@ -559,10 +555,9 @@ class PipelineTest(unittest.TestCase):
 
     @data((2, 3, 4), (4, 5, 3), (8, 9, 7))
     @unpack
-    def test_pipeline_three_stack_batch_diff_size(self,
-                                                  batch_size1,
-                                                  batch_size2,
-                                                  batch_size3):
+    def test_pipeline_three_stack_batch_diff_size(
+        self, batch_size1, batch_size2, batch_size3
+    ):
         # Tests a chain of Batch->Batch->Batch with different batch sizes.
 
         nlp = Pipeline[DataPack]()
@@ -592,10 +587,9 @@ class PipelineTest(unittest.TestCase):
 
     @data((2, 3, 4), (4, 5, 3), (8, 9, 7))
     @unpack
-    def test_pipeline_three_stack_diff_size_batch_pack_chain(self,
-                                                             batch_size1,
-                                                             batch_size2,
-                                                             batch_size3):
+    def test_pipeline_three_stack_diff_size_batch_pack_chain(
+        self, batch_size1, batch_size2, batch_size3
+    ):
         # Tests a chain of Batch->Batch->Batch->Pack with different batch sizes.
 
         nlp = Pipeline[DataPack]()
@@ -635,12 +629,12 @@ class MultiPackPipelineTest(unittest.TestCase):
         nlp = Pipeline[DataPack]()
         nlp.set_reader(OntonotesReader())
 
-        pack_name = 'test_pack'
-        nlp.add(MultiPackBoxer(), {'pack_name': pack_name})
+        pack_name = "test_pack"
+        nlp.add(MultiPackBoxer(), {"pack_name": pack_name})
         nlp.add(
             DummyRelationExtractor(),
             config={"batcher": {"batch_size": 5}},
-            selector=NameMatchSelector(select_name=pack_name)
+            selector=NameMatchSelector(select_name=pack_name),
         )
         nlp.initialize()
 
@@ -655,8 +649,7 @@ class MultiPackPipelineTest(unittest.TestCase):
                 sent_text = sentence.text
 
                 # second method to get entry in a sentence
-                tokens = [token.text for token in
-                          pack.get(Token, sentence)]
+                tokens = [token.text for token in pack.get(Token, sentence)]
                 self.assertEqual(sent_text, " ".join(tokens))
 
     def test_pipeline_multipack_reader(self):
@@ -687,8 +680,7 @@ class MultiPackPipelineTest(unittest.TestCase):
         nlp.set_reader(reader)
         dummy = DummyFixedSizeBatchProcessor()
         config = {"batcher": {"batch_size": 4}}
-        nlp.add(component=dummy, config=config,
-                selector=FirstPackSelector())
+        nlp.add(component=dummy, config=config, selector=FirstPackSelector())
         nlp.initialize()
         data_path = data_samples_root + "/random_texts/0.txt"
         num_packs = 0
@@ -710,14 +702,17 @@ class MultiPackPipelineTest(unittest.TestCase):
         nlp.add(PeriodSentenceSplitter())
         nlp.add(batch_processor, config=config)
         nlp.initialize()
-        sentences = ["This tool is called Forte. The goal of this project to "
-                     "help you build NLP pipelines. NLP has never been made "
-                     "this easy before."]
+        sentences = [
+            "This tool is called Forte. The goal of this project to "
+            "help you build NLP pipelines. NLP has never been made "
+            "this easy before."
+        ]
         pack = nlp.process(sentences)
         sent_len = len(list(pack.get(Sentence)))
         self.assertEqual(
             batch_processor.counter,
-            (sent_len // batch_size + (sent_len % batch_size > 0)))
+            (sent_len // batch_size + (sent_len % batch_size > 0)),
+        )
 
     @data(1, 2, 3)
     def test_two_batch_processors(self, batch_size):
@@ -738,12 +733,14 @@ class MultiPackPipelineTest(unittest.TestCase):
         sent_len = len(list(pack.get(Sentence)))
 
         self.assertEqual(
-            dummy1.counter, (sent_len // batch_size +
-                             (sent_len % batch_size > 0)))
+            dummy1.counter,
+            (sent_len // batch_size + (sent_len % batch_size > 0)),
+        )
 
         self.assertEqual(
-            dummy2.counter, (sent_len // (2 * batch_size) +
-                             (sent_len % (2 * batch_size) > 0)))
+            dummy2.counter,
+            (sent_len // (2 * batch_size) + (sent_len % (2 * batch_size) > 0)),
+        )
 
     @data(2, 4, 8)
     def test_pipeline_multipack_batch_pack_batch_double_size(self, batch_size):
@@ -753,14 +750,12 @@ class MultiPackPipelineTest(unittest.TestCase):
         nlp.set_reader(reader)
         dummy1 = DummyFixedSizeBatchProcessor()
         config = {"batcher": {"batch_size": batch_size}}
-        nlp.add(component=dummy1, config=config,
-                selector=FirstPackSelector())
+        nlp.add(component=dummy1, config=config, selector=FirstPackSelector())
         dummy2 = DummyPackProcessor()
         nlp.add(component=dummy2, selector=FirstPackSelector())
         dummy3 = DummyFixedSizeBatchProcessor()
         config = {"batcher": {"batch_size": 2 * batch_size}}
-        nlp.add(component=dummy3, config=config,
-                selector=FirstPackSelector())
+        nlp.add(component=dummy3, config=config, selector=FirstPackSelector())
         nlp.initialize()
         data_path = os.path.join(data_samples_root, "random_texts", "0.txt")
 
@@ -786,12 +781,10 @@ class MultiPackPipelineTest(unittest.TestCase):
 
         dummy2 = DummyFixedSizeBatchProcessor()
         config = {"batcher": {"batch_size": batch_size}}
-        nlp.add(component=dummy2, config=config,
-                selector=FirstPackSelector())
+        nlp.add(component=dummy2, config=config, selector=FirstPackSelector())
 
         dummy3 = DummyPackProcessor()
-        nlp.add(component=dummy3,
-                selector=FirstPackSelector())
+        nlp.add(component=dummy3, selector=FirstPackSelector())
         nlp.initialize()
         data_path = os.path.join(data_samples_root, "random_texts", "0.txt")
 
@@ -807,9 +800,9 @@ class MultiPackPipelineTest(unittest.TestCase):
 
     @data((2, 3), (4, 5), (8, 9), (3, 2), (5, 4), (9, 8))
     @unpack
-    def test_pipeline_multipack_batch_pack_batch_diff_size(self,
-                                                           batch_size1,
-                                                           batch_size2):
+    def test_pipeline_multipack_batch_pack_batch_diff_size(
+        self, batch_size1, batch_size2
+    ):
         # Tests a chain of Batch->Pack->Batch with different batch sizes.
 
         nlp = Pipeline[MultiPack]()
@@ -817,15 +810,12 @@ class MultiPackPipelineTest(unittest.TestCase):
         nlp.set_reader(reader)
         dummy1 = DummyFixedSizeBatchProcessor()
         config = {"batcher": {"batch_size": batch_size1}}
-        nlp.add(component=dummy1, config=config,
-                selector=FirstPackSelector())
+        nlp.add(component=dummy1, config=config, selector=FirstPackSelector())
         dummy2 = DummyPackProcessor()
-        nlp.add(component=dummy2,
-                selector=FirstPackSelector())
+        nlp.add(component=dummy2, selector=FirstPackSelector())
         dummy3 = DummyFixedSizeBatchProcessor()
         config = {"batcher": {"batch_size": batch_size2}}
-        nlp.add(component=dummy3, config=config,
-                selector=FirstPackSelector())
+        nlp.add(component=dummy3, config=config, selector=FirstPackSelector())
         nlp.initialize()
         data_path = os.path.join(data_samples_root, "random_texts", "0.txt")
 
@@ -842,7 +832,8 @@ class MultiPackPipelineTest(unittest.TestCase):
     @data((2, 3, 4), (4, 5, 3), (8, 9, 7))
     @unpack
     def test_pipeline_multipack_three_stack_batch_diff(
-            self, batch_size1, batch_size2, batch_size3):
+        self, batch_size1, batch_size2, batch_size3
+    ):
         # Tests a chain of Batch->Batch->Batch with different batch sizes.
 
         nlp = Pipeline[MultiPack]()
@@ -850,16 +841,13 @@ class MultiPackPipelineTest(unittest.TestCase):
         nlp.set_reader(reader)
         dummy1 = DummyFixedSizeBatchProcessor()
         config = {"batcher": {"batch_size": batch_size1}}
-        nlp.add(component=dummy1, config=config,
-                selector=FirstPackSelector())
+        nlp.add(component=dummy1, config=config, selector=FirstPackSelector())
         dummy2 = DummyFixedSizeBatchProcessor()
         config = {"batcher": {"batch_size": batch_size2}}
-        nlp.add(component=dummy2, config=config,
-                selector=FirstPackSelector())
+        nlp.add(component=dummy2, config=config, selector=FirstPackSelector())
         dummy3 = DummyFixedSizeBatchProcessor()
         config = {"batcher": {"batch_size": batch_size3}}
-        nlp.add(component=dummy3, config=config,
-                selector=FirstPackSelector())
+        nlp.add(component=dummy3, config=config, selector=FirstPackSelector())
         nlp.initialize()
         data_path = os.path.join(data_samples_root, "random_texts", "0.txt")
 
@@ -876,7 +864,8 @@ class MultiPackPipelineTest(unittest.TestCase):
     @data((2, 3, 4), (4, 5, 3), (8, 9, 7))
     @unpack
     def test_pipeline_multipack_three_stack_batch_diff_size_pack_chain(
-            self, batch_size1, batch_size2, batch_size3):
+        self, batch_size1, batch_size2, batch_size3
+    ):
         # Tests a chain of Batch->Batch->Batch->Pack with different batch sizes.
 
         nlp = Pipeline[MultiPack]()
@@ -884,16 +873,13 @@ class MultiPackPipelineTest(unittest.TestCase):
         nlp.set_reader(reader)
         dummy1 = DummyFixedSizeBatchProcessor()
         config = {"batcher": {"batch_size": batch_size1}}
-        nlp.add(component=dummy1, config=config,
-                selector=FirstPackSelector())
+        nlp.add(component=dummy1, config=config, selector=FirstPackSelector())
         dummy2 = DummyFixedSizeBatchProcessor()
         config = {"batcher": {"batch_size": batch_size2}}
-        nlp.add(component=dummy2, config=config,
-                selector=FirstPackSelector())
+        nlp.add(component=dummy2, config=config, selector=FirstPackSelector())
         dummy3 = DummyFixedSizeBatchProcessor()
         config = {"batcher": {"batch_size": batch_size3}}
-        nlp.add(component=dummy3, config=config,
-                selector=FirstPackSelector())
+        nlp.add(component=dummy3, config=config, selector=FirstPackSelector())
         dummy4 = DummyPackProcessor()
         nlp.add(component=dummy4, selector=FirstPackSelector())
         nlp.initialize()
@@ -914,13 +900,17 @@ class MultiPackPipelineTest(unittest.TestCase):
         Test the selector that doesn't select anything perform well in the
         pipeline.
         """
-        for pack in Pipeline().set_reader(MultiPackSentenceReader()).add(
-                DummyPackProcessor(), selector=NothingSelector()
-        ).initialize().process_dataset(
-            os.path.join(data_samples_root, "random_texts", "0.txt")
+        for pack in (
+            Pipeline()
+            .set_reader(MultiPackSentenceReader())
+            .add(DummyPackProcessor(), selector=NothingSelector())
+            .initialize()
+            .process_dataset(
+                os.path.join(data_samples_root, "random_texts", "0.txt")
+            )
         ):
             # Because no packs are selected, we do not have any entries added.
-            self.assertTrue(pack.get_pack('pack').num_generics_entries == 0)
+            self.assertTrue(pack.get_pack("pack").num_generics_entries == 0)
 
     def test_caster_all_selector(self):
         """
@@ -931,71 +921,65 @@ class MultiPackPipelineTest(unittest.TestCase):
         works OK.
         """
         mp: MultiPack
-        for mp in Pipeline().set_reader(SentenceReader()).add(
-                MultiPackBoxer()
-        ).add(
-            MultiPackCopier()
-        ).add(
-            DummyPackProcessor(), selector=AllPackSelector()
-        ).initialize().process_dataset(
-            os.path.join(data_samples_root, "random_texts", "0.txt")
+        for mp in (
+            Pipeline()
+            .set_reader(SentenceReader())
+            .add(MultiPackBoxer())
+            .add(MultiPackCopier())
+            .add(DummyPackProcessor(), selector=AllPackSelector())
+            .initialize()
+            .process_dataset(
+                os.path.join(data_samples_root, "random_texts", "0.txt")
+            )
         ):
             num_pack = 0
             for pack in mp.packs:
                 num_pack += 1
                 entries = list(pack.get(NewType))
                 self.assertEqual(len(entries), 1)
-                self.assertEqual(
-                    entries[0].value, "[PACK]")
+                self.assertEqual(entries[0].value, "[PACK]")
             self.assertEqual(num_pack, 2)
 
 
 class DummySentenceReaderOne(SentenceReader):
-
     def record(self, record_meta: Dict[str, Set[str]]):
         record_meta["Sentence"] = {"1", "2", "3"}
 
 
 class DummySentenceReaderTwo(SentenceReader):
-
     def record(self, record_meta: Dict[str, Set[str]]):
-        record_meta["ft.onto.example_ontology.Word"] = {"string_features",
-                                                        "word_forms",
-                                                        "token_ranks"}
+        record_meta["ft.onto.example_ontology.Word"] = {
+            "string_features",
+            "word_forms",
+            "token_ranks",
+        }
 
 
 class DummyPackProcessorOne(DummyPackProcessor):
-
     def record(self, record_meta: Dict[str, Set[str]]):
         record_meta["Token"] = {"1", "2"}
         record_meta["Document"] = {"2"}
 
     @classmethod
     def expected_types_and_attributes(cls):
-        expectation: Dict[str, Set[str]] = {
-            "Sentence": {"1", "2", "3"}
-        }
+        expectation: Dict[str, Set[str]] = {"Sentence": {"1", "2", "3"}}
 
         return expectation
 
 
 class DummyPackProcessorTwo(DummyPackProcessor):
-
     def record(self, record_meta: Dict[str, Set[str]]):
         record_meta["Token"] = {"1", "2"}
         record_meta["Document"] = {"2"}
 
     @classmethod
     def expected_types_and_attributes(cls):
-        expectation: Dict[str, Set[str]] = {
-            "Document": {"1", "2", "3", "4"}
-        }
+        expectation: Dict[str, Set[str]] = {"Document": {"1", "2", "3", "4"}}
 
         return expectation
 
 
 class DummyPackProcessorThree(DummyPackProcessor):
-
     @classmethod
     def expected_types_and_attributes(cls):
         expectation: Dict[str, Set[str]] = {
@@ -1006,7 +990,6 @@ class DummyPackProcessorThree(DummyPackProcessor):
 
 
 class DummyPackProcessorFour(DummyPackProcessor):
-
     def _process(self, input_pack: DataPack):
         for sentence in input_pack.get(entry_type=Sentence):
             scores = {"a": 0.1, "b": 0.9}
@@ -1014,7 +997,6 @@ class DummyPackProcessorFour(DummyPackProcessor):
 
 
 class DummyPackProcessorFive(DummyPackProcessor):
-
     def _process(self, input_pack: DataPack):
         for sentence in input_pack.get(entry_type=Sentence):
             scores = 0.1
@@ -1022,7 +1004,7 @@ class DummyPackProcessorFive(DummyPackProcessor):
 
 
 class DummyEvaluatorOne(Evaluator):
-    """ This evaluator does nothing, just for test purpose."""
+    """This evaluator does nothing, just for test purpose."""
 
     def pred_pack_record(self, record_meta: Dict[str, Set[str]]):
         record_meta["Token"] = {"1", "2"}
@@ -1035,8 +1017,9 @@ class DummyEvaluatorOne(Evaluator):
             "Sentence": {"1", "2", "3"}
         }
 
-        self.expected_types_and_attributes(pred_pack_expectation,
-                                           ref_pack_expectation)
+        self.expected_types_and_attributes(
+            pred_pack_expectation, ref_pack_expectation
+        )
         self.check_record(pred_pack, ref_pack)
         self.writes_record(pred_pack, ref_pack)
 
@@ -1045,7 +1028,7 @@ class DummyEvaluatorOne(Evaluator):
 
 
 class DummyEvaluatorTwo(Evaluator):
-    """ This evaluator does nothing, just for test purpose."""
+    """This evaluator does nothing, just for test purpose."""
 
     def pred_pack_record(self, record_meta: Dict[str, Set[str]]):
         record_meta["Token"] = {"1", "2"}
@@ -1058,8 +1041,9 @@ class DummyEvaluatorTwo(Evaluator):
             "Document": {"1", "2", "3"}
         }
 
-        self.expected_types_and_attributes(pred_pack_expectation,
-                                           ref_pack_expectation)
+        self.expected_types_and_attributes(
+            pred_pack_expectation, ref_pack_expectation
+        )
         self.check_record(pred_pack, ref_pack)
         self.writes_record(pred_pack, ref_pack)
 
@@ -1068,7 +1052,7 @@ class DummyEvaluatorTwo(Evaluator):
 
 
 class DummyEvaluatorThree(Evaluator):
-    """ This evaluator does nothing, just for test purpose."""
+    """This evaluator does nothing, just for test purpose."""
 
     def consume_next(self, pred_pack: PackType, ref_pack: PackType):
         pred_pack_expectation: Dict[str, Set[str]] = {
@@ -1078,8 +1062,9 @@ class DummyEvaluatorThree(Evaluator):
             "ft.onto.example_import_ontology.Token": {"pos", "lemma"}
         }
 
-        self.expected_types_and_attributes(pred_pack_expectation,
-                                           ref_pack_expectation)
+        self.expected_types_and_attributes(
+            pred_pack_expectation, ref_pack_expectation
+        )
         self.check_record(pred_pack, ref_pack)
         self.writes_record(pred_pack, ref_pack)
 
@@ -1088,9 +1073,8 @@ class DummyEvaluatorThree(Evaluator):
 
 
 class RecordCheckPipelineTest(unittest.TestCase):
-
     def test_pipeline_reader_record_writing(self):
-        """Tests reader record writing """
+        """Tests reader record writing"""
 
         nlp = Pipeline[DataPack](enforce_consistency=True)
         reader = DummySentenceReaderOne()
@@ -1161,15 +1145,20 @@ class RecordCheckPipelineTest(unittest.TestCase):
 
     def test_reuse_processor(self):
         # Create a basic pipeline of multi packs that have two pack (by copying)
-        nlp = Pipeline().set_reader(
-            SentenceReader()).add(
-            MultiPackBoxer()).add(
-            MultiPackCopier())
+        nlp = (
+            Pipeline()
+            .set_reader(SentenceReader())
+            .add(MultiPackBoxer())
+            .add(MultiPackCopier())
+        )
 
         # Create one shared instance of this extractor
         dummy = DummyPackProcessor()
-        nlp.add(dummy, config={"test": "dummy1"},
-                selector=NameMatchSelector("default"))
+        nlp.add(
+            dummy,
+            config={"test": "dummy1"},
+            selector=NameMatchSelector("default"),
+        )
 
         # This will not add the component successfully because the processor is
         # initialized.
@@ -1181,10 +1170,12 @@ class RecordCheckPipelineTest(unittest.TestCase):
         nlp.initialize()
 
         # Check that the two processors have the same name.
-        self.assertEqual(nlp.components[2].name,
-                         get_full_module_name(DummyPackProcessor))
-        self.assertEqual(nlp.components[3].name,
-                         get_full_module_name(DummyPackProcessor))
+        self.assertEqual(
+            nlp.components[2].name, get_full_module_name(DummyPackProcessor)
+        )
+        self.assertEqual(
+            nlp.components[3].name, get_full_module_name(DummyPackProcessor)
+        )
 
         # Check that the two processors are also the same instance.
         self.assertEqual(nlp.components[2], nlp.components[3])
@@ -1195,7 +1186,7 @@ class RecordCheckPipelineTest(unittest.TestCase):
         self.assertEqual(nlp.components[3].initialize_count, 1)
 
         # Check that the configuration is not changed by the second insertion.
-        self.assertEqual(nlp.components[3].configs.test, 'dummy1')
+        self.assertEqual(nlp.components[3].configs.test, "dummy1")
 
         # Run it once to make sure it can run.
         dataset_path = os.path.join(data_samples_root, "random_texts", "0.txt")
@@ -1211,10 +1202,12 @@ class RecordCheckPipelineTest(unittest.TestCase):
         nlp.initialize()  # re-initialize.
 
         # Check the name again after re-initialize.
-        self.assertEqual(nlp.components[2].name,
-                         get_full_module_name(DummyPackProcessor))
-        self.assertEqual(nlp.components[3].name,
-                         get_full_module_name(DummyPackProcessor))
+        self.assertEqual(
+            nlp.components[2].name, get_full_module_name(DummyPackProcessor)
+        )
+        self.assertEqual(
+            nlp.components[3].name, get_full_module_name(DummyPackProcessor)
+        )
 
         # Obtain the results from the multipack.
         mp: MultiPack = nlp.process(dataset_path)
@@ -1229,10 +1222,12 @@ class RecordCheckPipelineTest(unittest.TestCase):
     def test_pipeline_processor_subclass_type_checking(self):
         r"""Tests the processor record subclass type checking for processor with
         pipeline initialized with ontology specification file"""
-        onto_specs_file_path = os.path.join(onto_specs_samples_root,
-                                            'example_merged_ontology.json')
-        nlp = Pipeline[DataPack](ontology_file=onto_specs_file_path,
-                                 enforce_consistency=True)
+        onto_specs_file_path = os.path.join(
+            onto_specs_samples_root, "example_merged_ontology.json"
+        )
+        nlp = Pipeline[DataPack](
+            ontology_file=onto_specs_file_path, enforce_consistency=True
+        )
         reader = DummySentenceReaderTwo()
         nlp.set_reader(reader)
         dummy = DummyPackProcessorThree()
@@ -1240,19 +1235,26 @@ class RecordCheckPipelineTest(unittest.TestCase):
         nlp.initialize()
         data_path = data_samples_root + "/random_texts/0.txt"
         pack = nlp.process(data_path)
-        self.assertEqual(pack._meta.record, {
-            "ft.onto.example_ontology.Word": {"string_features",
-                                              "word_forms",
-                                              "token_ranks"}
-        })
+        self.assertEqual(
+            pack._meta.record,
+            {
+                "ft.onto.example_ontology.Word": {
+                    "string_features",
+                    "word_forms",
+                    "token_ranks",
+                }
+            },
+        )
 
     def test_pipeline_evaluator_subclass_type_checking(self):
         r"""Tests the processor record subclass type checking for evaluator with
         pipeline initialized with ontology specification file"""
-        onto_specs_file_path = os.path.join(onto_specs_samples_root,
-                                            'example_merged_ontology.json')
-        nlp = Pipeline[DataPack](ontology_file=onto_specs_file_path,
-                                 enforce_consistency=True)
+        onto_specs_file_path = os.path.join(
+            onto_specs_samples_root, "example_merged_ontology.json"
+        )
+        nlp = Pipeline[DataPack](
+            ontology_file=onto_specs_file_path, enforce_consistency=True
+        )
         reader = DummySentenceReaderTwo()
         nlp.set_reader(reader)
         dummy = DummyEvaluatorThree()
@@ -1260,11 +1262,16 @@ class RecordCheckPipelineTest(unittest.TestCase):
         nlp.initialize()
         data_path = data_samples_root + "/random_texts/0.txt"
         pack = nlp.process(data_path)
-        self.assertEqual(pack._meta.record, {
-            "ft.onto.example_ontology.Word": {"string_features",
-                                              "word_forms",
-                                              "token_ranks"}
-        })
+        self.assertEqual(
+            pack._meta.record,
+            {
+                "ft.onto.example_ontology.Word": {
+                    "string_features",
+                    "word_forms",
+                    "token_ranks",
+                }
+            },
+        )
 
     def test_entry_adding_attribute_wrong_key(self):
         r"""Tests the processor adding attributes content to entry with
@@ -1276,11 +1283,13 @@ class RecordCheckPipelineTest(unittest.TestCase):
         nlp.add(dummy)
         nlp.initialize()
         data_path = data_samples_root + "/random_texts/0.txt"
-        warning_content = "Base on attributes in entry definition, " \
-                          "the [ab] attribute_name " \
-                          "does not exist in the " \
-                          "[Sentence] that " \
-                          "you specified to add to."
+        warning_content = (
+            "Base on attributes in entry definition, "
+            "the [ab] attribute_name "
+            "does not exist in the "
+            "[Sentence] that "
+            "you specified to add to."
+        )
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             with self.assertRaises(KeyError):
@@ -1297,15 +1306,17 @@ class RecordCheckPipelineTest(unittest.TestCase):
         nlp.add(dummy)
         nlp.initialize()
         data_path = data_samples_root + "/random_texts/0.txt"
-        warning_content = "Based on type annotation, the [classification] " \
-                          "attribute of [Sentence] " \
-                          "should be [typing.Dict[str, float]], but got " \
-                          "[<class 'float'>]."
+        warning_content = (
+            "Based on type annotation, the [classification] "
+            "attribute of [Sentence] "
+            "should be [typing.Dict[str, float]], but got "
+            "[<class 'float'>]."
+        )
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             nlp.process(data_path)
             self.assertEqual(str(w[-1].message), warning_content)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

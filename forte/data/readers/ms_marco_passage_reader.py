@@ -32,9 +32,7 @@ from forte.data.data_pack import DataPack
 from forte.data.base_reader import PackReader
 from ft.onto.base_ontology import Document
 
-__all__ = [
-    "MSMarcoPassageReader"
-]
+__all__ = ["MSMarcoPassageReader"]
 
 
 class MSMarcoPassageReader(PackReader):
@@ -42,11 +40,11 @@ class MSMarcoPassageReader(PackReader):
         # pylint: disable = unused-argument, undefined-variable
         dir_path: str = args[0]
 
-        corpus_file_path = os.path.join(dir_path, 'collection.tsv')
+        corpus_file_path = os.path.join(dir_path, "collection.tsv")
 
-        with open(corpus_file_path, 'r', encoding='utf-8') as file:
+        with open(corpus_file_path, "r", encoding="utf-8") as file:
             for line in file:
-                doc_id, doc_content = line.split('\t', 1)
+                doc_id, doc_content = line.split("\t", 1)
                 yield doc_id, doc_content
 
     def _parse_pack(self, doc_info: Tuple[str, str]) -> Iterator[DataPack]:

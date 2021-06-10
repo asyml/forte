@@ -15,8 +15,9 @@ import random
 from typing import Tuple, Union, Dict, Any
 from forte.common.configuration import Config
 from forte.data.ontology import Annotation
-from forte.processors.data_augment.algorithms.text_replacement_op \
-    import TextReplacementOp
+from forte.processors.data_augment.algorithms.text_replacement_op import (
+    TextReplacementOp,
+)
 from forte.processors.data_augment.algorithms.sampler import Sampler
 
 __all__ = [
@@ -36,8 +37,9 @@ class DistributionReplacementOp(TextReplacementOp):
             it should fall in [0, 1].
     """
 
-    def __init__(self, sampler: Sampler,
-                 configs: Union[Config, Dict[str, Any]]):
+    def __init__(
+        self, sampler: Sampler, configs: Union[Config, Dict[str, Any]]
+    ):
         super().__init__(configs)
         self.sampler = sampler
 

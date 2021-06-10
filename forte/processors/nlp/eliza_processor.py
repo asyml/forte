@@ -75,8 +75,8 @@ class ElizaProcessor(PackProcessor):
 
         self.parse_doctor()
 
-        self.__ai: str = 'ai'
-        self.__user: str = 'user'
+        self.__ai: str = "ai"
+        self.__user: str = "user"
 
     def parse_doctor(self):
         parse_nodes: List[Union[Key, Decomp]] = []
@@ -88,26 +88,26 @@ class ElizaProcessor(PackProcessor):
             depth = int((len(line) - len(line.lstrip())) / 2)
             parse_nodes = parse_nodes[:depth]
 
-            tag, content = [part.strip() for part in line.split(':')]
+            tag, content = [part.strip() for part in line.split(":")]
 
             if len(parse_nodes) == 0:
-                if tag == 'initial':
+                if tag == "initial":
                     self.initials.append(content)
-                elif tag == 'final':
+                elif tag == "final":
                     self.finals.append(content)
-                elif tag == 'quit':
+                elif tag == "quit":
                     self.quits.append(content)
-                elif tag == 'pre':
-                    parts = content.split(' ')
+                elif tag == "pre":
+                    parts = content.split(" ")
                     self.pres[parts[0]] = parts[1:]
-                elif tag == 'post':
-                    parts = content.split(' ')
+                elif tag == "post":
+                    parts = content.split(" ")
                     self.posts[parts[0]] = parts[1:]
-                elif tag == 'synon':
-                    parts = content.split(' ')
+                elif tag == "synon":
+                    parts = content.split(" ")
                     self.synons[parts[0]] = parts
-                elif tag == 'key':
-                    parts = content.split(' ')
+                elif tag == "key":
+                    parts = content.split(" ")
                     word = parts[0]
                     weight = int(parts[1]) if len(parts) > 1 else 1
                     key = Key(word, weight, [])
@@ -116,10 +116,10 @@ class ElizaProcessor(PackProcessor):
             else:
                 parent_node = parse_nodes[-1]
                 if isinstance(parent_node, Key):
-                    if tag == 'decomp':
-                        parts = content.split(' ')
+                    if tag == "decomp":
+                        parts = content.split(" ")
                         save = False
-                        if parts[0] == '$':
+                        if parts[0] == "$":
                             save = True
                             parts = parts[1:]
                         decomp = Decomp(parts, save, [])
@@ -128,8 +128,8 @@ class ElizaProcessor(PackProcessor):
                     else:
                         raise ValueError(f"Unexpected parent node {tag}")
                 if isinstance(parent_node, Decomp):
-                    if tag == 'reasmb':
-                        parts = content.split(' ')
+                    if tag == "reasmb":
+                        parts = content.split(" ")
                         parent_node.reasmbs.append(parts)
                     else:
                         raise ValueError(f"Unexpected parent node {tag}")
@@ -137,16 +137,16 @@ class ElizaProcessor(PackProcessor):
     def _match_decomp_r(self, parts, words, results):
         if not parts and not words:
             return True
-        if not parts or (not words and parts != ['*']):
+        if not parts or (not words and parts != ["*"]):
             return False
-        if parts[0] == '*':
+        if parts[0] == "*":
             for index in range(len(words), -1, -1):
                 results.append(words[:index])
                 if self._match_decomp_r(parts[1:], words[index:], results):
                     return True
                 results.pop()
             return False
-        elif parts[0].startswith('@'):
+        elif parts[0].startswith("@"):
             root = parts[0][1:]
             if root not in self.synons:
                 raise ValueError("Unknown synonym root {}".format(root))
@@ -176,14 +176,14 @@ class ElizaProcessor(PackProcessor):
         for reword in reasmb:
             if not reword:
                 continue
-            if reword[0] == '(' and reword[-1] == ')':
+            if reword[0] == "(" and reword[-1] == ")":
                 index = int(reword[1:-1])
                 if index < 1 or index > len(results):
                     raise ValueError("Invalid result index {}".format(index))
                 insert = results[index - 1]
-                for punct in [',', '.', ';']:
+                for punct in [",", ".", ";"]:
                     if punct in insert:
-                        insert = insert[:insert.index(punct)]
+                        insert = insert[: insert.index(punct)]
                 output.extend(insert)
             else:
                 output.append(reword)
@@ -203,24 +203,24 @@ class ElizaProcessor(PackProcessor):
         for decomp in key.decomps:
             results = self._match_decomp(decomp.parts, words)
             if results is None:
-                logging.debug('Decomp did not match: %s', decomp.parts)
+                logging.debug("Decomp did not match: %s", decomp.parts)
                 continue
-            logging.debug('Decomp matched: %s', decomp.parts)
-            logging.debug('Decomp results: %s', results)
+            logging.debug("Decomp matched: %s", decomp.parts)
+            logging.debug("Decomp results: %s", results)
             results = [self._sub(words, self.posts) for words in results]
-            logging.debug('Decomp results after posts: %s', results)
+            logging.debug("Decomp results after posts: %s", results)
             reasmb = self._next_reasmb(decomp)
-            logging.debug('Using reassembly: %s', reasmb)
-            if reasmb[0] == 'goto':
+            logging.debug("Using reassembly: %s", reasmb)
+            if reasmb[0] == "goto":
                 goto_key = reasmb[1]
                 if goto_key not in self.keys:
                     raise ValueError("Invalid goto key {}".format(goto_key))
-                logging.debug('Goto key: %s', goto_key)
+                logging.debug("Goto key: %s", goto_key)
                 return self._match_key(words, self.keys[goto_key])
             output = self._reassemble(reasmb, results)
             if decomp.save:
                 self.memory.append(output)
-                logging.debug('Saved to memory: %s', output)
+                logging.debug("Saved to memory: %s", output)
                 continue
             return output
         return None
@@ -238,51 +238,51 @@ class ElizaProcessor(PackProcessor):
         if text.lower() in self.quits:
             return None
 
-        text = re.sub(r'\s*\.+\s*', ' . ', text)
-        text = re.sub(r'\s*,+\s*', ' , ', text)
-        text = re.sub(r'\s*;+\s*', ' ; ', text)
-        logging.debug('After punctuation cleanup: %s', text)
+        text = re.sub(r"\s*\.+\s*", " . ", text)
+        text = re.sub(r"\s*,+\s*", " , ", text)
+        text = re.sub(r"\s*;+\s*", " ; ", text)
+        logging.debug("After punctuation cleanup: %s", text)
 
-        words = [w for w in text.split(' ') if w]
-        logging.debug('Input: %s', words)
+        words = [w for w in text.split(" ") if w]
+        logging.debug("Input: %s", words)
 
         words = self._sub(words, self.pres)
-        logging.debug('After pre-substitution: %s', words)
+        logging.debug("After pre-substitution: %s", words)
 
         keys = [self.keys[w.lower()] for w in words if w.lower() in self.keys]
         keys = sorted(keys, key=lambda k: -k.weight)
-        logging.debug('Sorted keys: %s', [(k.word, k.weight) for k in keys])
+        logging.debug("Sorted keys: %s", [(k.word, k.weight) for k in keys])
 
         output = None
 
         for key in keys:
             output = self._match_key(words, key)
             if output:
-                logging.debug('Output from key: %s', output)
+                logging.debug("Output from key: %s", output)
                 break
         if not output:
             if self.memory:
                 index = random.randrange(len(self.memory))
                 output = self.memory.pop(index)
-                logging.debug('Output from memory: %s', output)
+                logging.debug("Output from memory: %s", output)
             else:
-                output = self._next_reasmb(self.keys['xnone'].decomps[0])
-                logging.debug('Output from xnone: %s', output)
+                output = self._next_reasmb(self.keys["xnone"].decomps[0])
+                logging.debug("Output from xnone: %s", output)
 
         return " ".join(output)
 
     def _process(self, input_pack: DataPack):
-        utterance: Optional[Utterance] = get_last_utterance(input_pack, 'user')
+        utterance: Optional[Utterance] = get_last_utterance(input_pack, "user")
         if utterance is None:
             logging.info("Cannot get new user utterance. Showing initials.")
-            create_utterance(input_pack, random.choice(self.initials), 'ai')
+            create_utterance(input_pack, random.choice(self.initials), "ai")
         else:
             output = self._respond(utterance.text)
 
             if output is None:
-                create_utterance(input_pack, random.choice(self.finals), 'ai')
+                create_utterance(input_pack, random.choice(self.finals), "ai")
             else:
-                create_utterance(input_pack, output, 'ai')
+                create_utterance(input_pack, output, "ai")
 
 
 # The doctor for initializing Eliza. Also from https://github.com/wadetb/eliza.

@@ -30,28 +30,30 @@ from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology.core import Entry, BaseLink
 from forte.data.ontology.top import (
-    Annotation, MultiPackLink, Link, MultiPackGroup, Group
+    Annotation,
+    MultiPackLink,
+    Link,
+    MultiPackGroup,
+    Group,
 )
 from forte.data.span import Span
 from forte.processors.base import MultiPackProcessor
-from forte.processors.data_augment.algorithms.text_replacement_op \
-    import TextReplacementOp
+from forte.processors.data_augment.algorithms.text_replacement_op import (
+    TextReplacementOp,
+)
 from forte.utils.utils import get_class, create_class_with_kwargs
 
-__all__ = [
-    "BaseDataAugmentProcessor",
-    "ReplacementDataAugmentProcessor"
-]
+__all__ = ["BaseDataAugmentProcessor", "ReplacementDataAugmentProcessor"]
 
 
 def modify_index(
-        index: int,
-        # Both of the following spans should be SortedList.
-        # Use List to avoid typing errors.
-        old_spans: List[Span],
-        new_spans: List[Span],
-        is_begin: bool,
-        is_inclusive: bool
+    index: int,
+    # Both of the following spans should be SortedList.
+    # Use List to avoid typing errors.
+    old_spans: List[Span],
+    new_spans: List[Span],
+    is_begin: bool,
+    is_inclusive: bool,
 ) -> int:
     r"""
     A helper function to map an index before replacement
@@ -144,9 +146,7 @@ def modify_index(
     # This is the last span that has a start index less than
     # the input index. The position change of this span determines
     # the modification we will apply to the input index.
-    last_span_ind: int = bisect_right(
-        old_spans, Span(index, max_index)
-    ) - 1
+    last_span_ind: int = bisect_right(old_spans, Span(index, max_index)) - 1
 
     # If there is an inserted span, it will always be the first of
     # those spans with the same begin index. For example, given spans
@@ -157,8 +157,10 @@ def modify_index(
             if is_begin:
                 # When inclusive, move the begin index
                 # to the left to include the inserted span.
-                if last_span_ind > 0 and \
-                        old_spans[last_span_ind - 1].begin == index:
+                if (
+                    last_span_ind > 0
+                    and old_spans[last_span_ind - 1].begin == index
+                ):
                     # Old spans: [0, 1], [1, 1], [1, 3]
                     # Target index: 1
                     # Change last_span_index from 2 to 1
@@ -175,15 +177,19 @@ def modify_index(
             if not is_begin:
                 # When exclusive, move the end index
                 # to the left to exclude the inserted span.
-                if last_span_ind > 0 and \
-                        old_spans[last_span_ind - 1].begin == index:
+                if (
+                    last_span_ind > 0
+                    and old_spans[last_span_ind - 1].begin == index
+                ):
                     # Old spans: [0, 1], [1, 1], [1, 3]
                     # Target index: 1
                     # Change last_span_index from 2 to 0
                     # to exclude the [1, 1] span.
                     last_span_ind -= 2
-                elif old_spans[last_span_ind].begin == index and \
-                        old_spans[last_span_ind].end == index:
+                elif (
+                    old_spans[last_span_ind].begin == index
+                    and old_spans[last_span_ind].end == index
+                ):
                     # Old spans: [0, 1], [1, 1], [2, 3]
                     # Target index: 1
                     # Change last_span_index from 1 to 0
@@ -195,19 +201,23 @@ def modify_index(
         return index
     # Find the nearest anchor point on the left of current index.
     # Start from the span's begin index.
-    delta_index: int = new_spans[last_span_ind].begin - \
-                       old_spans[last_span_ind].begin
+    delta_index: int = (
+        new_spans[last_span_ind].begin - old_spans[last_span_ind].begin
+    )
 
-    if old_spans[last_span_ind].begin == old_spans[last_span_ind].end \
-            and old_spans[last_span_ind].begin == index \
-            and is_begin \
-            and is_inclusive:
+    if (
+        old_spans[last_span_ind].begin == old_spans[last_span_ind].end
+        and old_spans[last_span_ind].begin == index
+        and is_begin
+        and is_inclusive
+    ):
         return index + delta_index
 
     if old_spans[last_span_ind].end <= index:
         # Use the span's end index as anchor, if possible.
-        delta_index = new_spans[last_span_ind].end - \
-                      old_spans[last_span_ind].end
+        delta_index = (
+            new_spans[last_span_ind].end - old_spans[last_span_ind].end
+        )
     return index + delta_index
 
 
@@ -234,10 +244,9 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         # It is a map from datapack id to a list of tuples
         # (span, new text) inserted by :func:`replace`.
         # The new text will be used for building new data pack.
-        self._replaced_annos: DefaultDict[int, SortedList[Tuple[Span, str]]] = \
-            defaultdict(
-                lambda: SortedList([], key=lambda x: x[0])
-            )
+        self._replaced_annos: DefaultDict[
+            int, SortedList[Tuple[Span, str]]
+        ] = defaultdict(lambda: SortedList([], key=lambda x: x[0]))
 
         # :attr:`_inserted_annos_pos_len`: {datapack id: Dict{position: length}}
         # It records the position and length of inserted spans,
@@ -245,10 +254,9 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         # inserted by :func:`insert`.
         # The position is the index in the original datapack
         # of insertion, and the length is the length of the inserted string.
-        self._inserted_annos_pos_len: DefaultDict[int, SortedDict[int, int]] = \
-            defaultdict(
-                lambda: SortedDict({})
-            )
+        self._inserted_annos_pos_len: DefaultDict[
+            int, SortedDict[int, int]
+        ] = defaultdict(lambda: SortedDict({}))
 
         # :attr:`_deleted_annos_id`: {datapack id: Set[annotation tid]}
         # It records the deleted span ids, mapping from datapack id
@@ -287,10 +295,9 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         """
         if len(self._replaced_annos[pid]) == 0:
             return False
-        ind: int = bisect_left(
-            self._replaced_annos[pid],
-            (Span(begin, begin), "")
-        ) - 1
+        ind: int = (
+            bisect_left(self._replaced_annos[pid], (Span(begin, begin), "")) - 1
+        )
 
         if ind < 0:
             ind += 1
@@ -306,9 +313,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         return False
 
     def _replace(
-            self,
-            replacement_op: TextReplacementOp,
-            input_anno: Annotation
+        self, replacement_op: TextReplacementOp, input_anno: Annotation
     ) -> bool:
         r"""
         This is a wrapper function to call the replacement op. After
@@ -337,10 +342,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         return False
 
     def _insert(
-            self,
-            inserted_text: str,
-            data_pack: DataPack,
-            pos: int
+        self, inserted_text: str, data_pack: DataPack, pos: int
     ) -> bool:
         r"""
         This is a wrapper function to insert a new annotation. After
@@ -367,10 +369,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             return True
         return False
 
-    def _delete(
-            self,
-            input_anno: Annotation
-    ) -> bool:
+    def _delete(self, input_anno: Annotation) -> bool:
         r"""
         This is a wrapper function to delete an annotation.
 
@@ -385,9 +384,9 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         return True
 
     def _auto_align_annotations(
-            self,
-            data_pack: DataPack,
-            replaced_annotations: SortedList,
+        self,
+        data_pack: DataPack,
+        replaced_annotations: SortedList,
     ) -> DataPack:
         r"""
         Function to replace some annotations with new strings.
@@ -415,10 +414,10 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         if len(replaced_annotations) == 0:
             return deepcopy(data_pack)
 
-        spans: List[Span] = [
-            span for span, _ in replaced_annotations]
+        spans: List[Span] = [span for span, _ in replaced_annotations]
         replacement_strs: List[str] = [
-            replacement_str for _, replacement_str in replaced_annotations]
+            replacement_str for _, replacement_str in replaced_annotations
+        ]
 
         # Get the new text for the new data pack.
         new_text: str = ""
@@ -426,12 +425,12 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             new_span_str = replacement_strs[i]
             # First, get the gap text between last and this span.
             last_span_end: int = spans[i - 1].end if i > 0 else 0
-            gap_text: str = data_pack.text[last_span_end: span.begin]
+            gap_text: str = data_pack.text[last_span_end : span.begin]
             new_text += gap_text
             # Then, append the replaced new text.
             new_text += new_span_str
         # Finally, append to new_text the text after the last span.
-        new_text += data_pack.text[spans[-1].end:]
+        new_text += data_pack.text[spans[-1].end :]
 
         # Get the span (begin, end) before and after replacement.
         new_spans: List[Span] = []
@@ -450,9 +449,9 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         new_pack: DataPack = DataPack()
         new_pack.set_text(new_text)
 
-        entries_to_copy: List[str] = \
-            list(self._other_entry_policy.keys()) + \
-            [self.configs['augment_entry']]
+        entries_to_copy: List[str] = list(self._other_entry_policy.keys()) + [
+            self.configs["augment_entry"]
+        ]
 
         entry_map: Dict[int, int] = {}
         insert_ind: int = 0
@@ -463,12 +462,12 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         )
 
         def _insert_new_span(
-                entry_class: str,
-                insert_ind: int,
-                inserted_annos: List[Tuple[int, int]],
-                new_pack: DataPack,
-                spans: List[Span],
-                new_spans: List[Span]
+            entry_class: str,
+            insert_ind: int,
+            inserted_annos: List[Tuple[int, int]],
+            new_pack: DataPack,
+            spans: List[Span],
+            new_spans: List[Span],
         ):
             """
             An internal helper function for insertion.
@@ -495,16 +494,12 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
                 new_spans,
                 is_begin=False,
                 # Include the inserted span itself.
-                is_inclusive=True
+                is_inclusive=True,
             )
             insert_begin: int = insert_end - length
             new_anno = create_class_with_kwargs(
                 entry_class,
-                {
-                    "pack": new_pack,
-                    "begin": insert_begin,
-                    "end": insert_end
-                }
+                {"pack": new_pack, "begin": insert_begin, "end": insert_end},
             )
             new_pack.add_entry(new_anno)
 
@@ -514,14 +509,17 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             if not issubclass(class_to_copy, Annotation):
                 raise AttributeError(
                     f"The entry type to copy from [{entry_to_copy}] is not "
-                    f"a sub-class of 'forte.data.ontology.top.Annotation'.")
+                    f"a sub-class of 'forte.data.ontology.top.Annotation'."
+                )
 
             orig_annos: Iterable[Annotation] = data_pack.get(class_to_copy)
             for orig_anno in orig_annos:
                 # Dealing with insertion/deletion only for augment_entry.
-                if entry_to_copy == self.configs['augment_entry']:
-                    while insert_ind < len(inserted_annos) and \
-                            inserted_annos[insert_ind][0] <= orig_anno.begin:
+                if entry_to_copy == self.configs["augment_entry"]:
+                    while (
+                        insert_ind < len(inserted_annos)
+                        and inserted_annos[insert_ind][0] <= orig_anno.begin
+                    ):
                         # Preserve the order of the spans with merging sort.
                         # It is a 2-way merging from the inserted spans
                         # and original spans based on the begin index.
@@ -531,7 +529,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
                             inserted_annos,
                             new_pack,
                             spans,
-                            new_spans
+                            new_spans,
                         )
                         insert_ind += 1
 
@@ -543,32 +541,36 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
                 span_new_begin: int = orig_anno.begin
                 span_new_end: int = orig_anno.end
 
-                if (entry_to_copy == self.configs['augment_entry'] or
-                        self._other_entry_policy[
-                            entry_to_copy] == 'auto_align'):
+                if (
+                    entry_to_copy == self.configs["augment_entry"]
+                    or self._other_entry_policy[entry_to_copy] == "auto_align"
+                ):
                     # Only inclusive when the entry is not augmented.
                     # E.g.: A Sentence include the inserted Token on the edge.
                     # E.g.: A Token shouldn't include a nearby inserted Token.
-                    is_inclusive = entry_to_copy != self.configs[
-                        'augment_entry']
+                    is_inclusive = (
+                        entry_to_copy != self.configs["augment_entry"]
+                    )
                     span_new_begin = modify_index(
-                        orig_anno.begin, spans, new_spans, True, is_inclusive)
+                        orig_anno.begin, spans, new_spans, True, is_inclusive
+                    )
                     span_new_end = modify_index(
-                        orig_anno.end, spans, new_spans, False, is_inclusive)
+                        orig_anno.end, spans, new_spans, False, is_inclusive
+                    )
 
                 new_anno = create_class_with_kwargs(
                     entry_to_copy,
                     {
                         "pack": new_pack,
                         "begin": span_new_begin,
-                        "end": span_new_end
-                    }
+                        "end": span_new_end,
+                    },
                 )
                 new_pack.add_entry(new_anno)
                 entry_map[orig_anno.tid] = new_anno.tid
 
             # Deal with spans after the last annotation in the original pack.
-            if entry_to_copy == self.configs['augment_entry']:
+            if entry_to_copy == self.configs["augment_entry"]:
                 while insert_ind < len(inserted_annos):
                     _insert_new_span(
                         entry_to_copy,
@@ -576,7 +578,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
                         inserted_annos,
                         new_pack,
                         spans,
-                        new_spans
+                        new_spans,
                     )
                     insert_ind += 1
 
@@ -602,10 +604,10 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         self._entry_maps.clear()
 
     def _copy_link_or_group(
-            self,
-            entry: Union[Link, Group],
-            entry_map: Dict[int, int],
-            new_pack: DataPack,
+        self,
+        entry: Union[Link, Group],
+        entry_map: Dict[int, int],
+        new_pack: DataPack,
     ) -> bool:
         r"""
         This function copies a Link/Group in the data pack.
@@ -641,15 +643,14 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             if isinstance(child_entry, (Link, Group)):
                 # Recursively copy the children Links/Groups.
                 if not self._copy_link_or_group(
-                        child_entry, entry_map, new_pack):
+                    child_entry, entry_map, new_pack
+                ):
                     return False
             else:
                 # Children Annotation must have been copied.
                 if child_entry.tid not in entry_map:
                     return False
-            new_child: Entry = new_pack.get_entry(
-                entry_map[child_entry.tid]
-            )
+            new_child: Entry = new_pack.get_entry(entry_map[child_entry.tid])
             new_children.append(new_child)
 
         # Create the new entry and add to the new pack.
@@ -659,19 +660,17 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             new_link_parent: Entry = new_children[0]
             new_link_child: Entry = new_children[1]
             new_entry = type(entry)(
-                new_pack, new_link_parent, new_link_child)  # type: ignore
+                new_pack, new_link_parent, new_link_child  # type: ignore
+            )
         else:
             entry = cast(Group, entry)
-            new_entry = type(entry)(
-                new_pack, new_children)  # type: ignore
+            new_entry = type(entry)(new_pack, new_children)  # type: ignore
         new_pack.add_entry(new_entry)
         entry_map[entry.tid] = new_entry.tid
         return True
 
     def _copy_multi_pack_link_or_group(
-            self,
-            entry: Union[MultiPackLink, MultiPackGroup],
-            multi_pack: MultiPack
+        self, entry: Union[MultiPackLink, MultiPackGroup], multi_pack: MultiPack
     ) -> bool:
         r"""
         This function copies a MultiPackLink/MultiPackGroup in the multipack.
@@ -698,8 +697,10 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             child_pack: DataPack = child_entry.pack
             child_pack_pid: int = child_pack.pack_id
             # The new pack should be present.
-            if child_pack_pid not in self._data_pack_map \
-                    or child_pack_pid not in self._entry_maps:
+            if (
+                child_pack_pid not in self._data_pack_map
+                or child_pack_pid not in self._entry_maps
+            ):
                 return False
             new_child_pack: DataPack = multi_pack.get_pack_at(
                 multi_pack.get_pack_index(self._data_pack_map[child_pack_pid])
@@ -707,8 +708,9 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             # The new child entry should be present.
             if child_entry.tid not in self._entry_maps[child_pack_pid]:
                 return False
-            new_child_tid: int = \
-                self._entry_maps[child_pack_pid][child_entry.tid]
+            new_child_tid: int = self._entry_maps[child_pack_pid][
+                child_entry.tid
+            ]
             new_child_entry: Entry = new_child_pack.get_entry(new_child_tid)
             new_children.append(new_child_entry)
 
@@ -719,11 +721,11 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             new_link_parent: Entry = new_children[0]
             new_link_child: Entry = new_children[1]
             new_entry = type(entry)(
-                multi_pack, new_link_parent, new_link_child)  # type: ignore
+                multi_pack, new_link_parent, new_link_child  # type: ignore
+            )
         else:
             entry = cast(MultiPackGroup, entry)
-            new_entry = type(entry)(
-                multi_pack, new_children)  # type: ignore
+            new_entry = type(entry)(multi_pack, new_children)  # type: ignore
         multi_pack.add_entry(new_entry)
         return True
 
@@ -743,7 +745,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             self.configs["data_aug_op"],
             class_args={
                 "configs": self.configs["data_aug_op_config"]["kwargs"]
-            }
+            },
         )
         augment_entry = get_class(self.configs["augment_entry"])
 
@@ -769,16 +771,13 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         self._augment(input_pack, aug_pack_names)
         new_packs: List[Tuple[str, DataPack]] = []
         for aug_pack_name in aug_pack_names:
-            new_pack_name: str = \
-                self.configs["augment_pack_names"]["kwargs"].get(
-                    aug_pack_name, "augmented_" + aug_pack_name
-                )
+            new_pack_name: str = self.configs["augment_pack_names"][
+                "kwargs"
+            ].get(aug_pack_name, "augmented_" + aug_pack_name)
             data_pack = input_pack.get_pack(aug_pack_name)
             new_pack = self._auto_align_annotations(
                 data_pack=data_pack,
-                replaced_annotations=self._replaced_annos[
-                    data_pack.pack_id
-                ]
+                replaced_annotations=self._replaced_annos[data_pack.pack_id],
             )
             new_packs.append((new_pack_name, new_pack))
 
@@ -875,21 +874,14 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
                         }
         """
         config = super().default_configs()
-        config.update({
-            'augment_entry': 'ft.onto.base_ontology.Sentence',
-            'other_entry_policy': {
-                'type': '',
-                'kwargs': {}
-            },
-            'type': 'data_augmentation_op',
-            'data_aug_op': '',
-            'data_aug_op_config': {
-                'type': '',
-                'kwargs': {}
-            },
-            'augment_pack_names': {
-                'type': '',
-                'kwargs': {}
+        config.update(
+            {
+                "augment_entry": "ft.onto.base_ontology.Sentence",
+                "other_entry_policy": {"type": "", "kwargs": {}},
+                "type": "data_augmentation_op",
+                "data_aug_op": "",
+                "data_aug_op_config": {"type": "", "kwargs": {}},
+                "augment_pack_names": {"type": "", "kwargs": {}},
             }
-        })
+        )
         return config

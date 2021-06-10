@@ -24,9 +24,7 @@ from ft.onto.base_ontology import Utterance
 
 logger = logging.getLogger(__name__)
 
-__all__ = [
-    "TerminalReader"
-]
+__all__ = ["TerminalReader"]
 
 
 class TerminalReader(PackReader):
@@ -74,10 +72,12 @@ class TerminalReader(PackReader):
         Returns: The default configuration values as a dict.
         """
         configs = super().default_configs()
-        configs.update({
-            "pack_name": "query",
-            "prompt_text": "Enter your query here: ",
-        })
+        configs.update(
+            {
+                "pack_name": "query",
+                "prompt_text": "Enter your query here: ",
+            }
+        )
 
         configs["pack_name"] = "query"
         return configs

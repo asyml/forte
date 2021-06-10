@@ -27,7 +27,12 @@ from forte.data.types import DataRequest
 from forte.models.srl.model import LabeledSpanGraphNetwork
 from forte.processors.base.batch_processor import FixedSizeBatchProcessor
 from ft.onto.base_ontology import (
-    Token, Sentence, PredicateLink, PredicateMention, PredicateArgument)
+    Token,
+    Sentence,
+    PredicateLink,
+    PredicateMention,
+    PredicateArgument,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -35,9 +40,7 @@ __all__ = [
     "SRLPredictor",
 ]
 
-Prediction = List[
-    Tuple[Span, List[Tuple[Span, str]]]
-]
+Prediction = List[Tuple[Span, List[Tuple[Span, str]]]]
 
 
 class SRLPredictor(FixedSizeBatchProcessor):
@@ -54,11 +57,10 @@ class SRLPredictor(FixedSizeBatchProcessor):
     def __init__(self):
         super().__init__()
         self.device = torch.device(
-            torch.cuda.current_device() if torch.cuda.is_available() else 'cpu')
+            torch.cuda.current_device() if torch.cuda.is_available() else "cpu"
+        )
 
-    def initialize(self,
-                   resources: Resources,
-                   configs: Optional[Config]):
+    def initialize(self, resources: Resources, configs: Optional[Config]):
         super().initialize(resources, configs)
 
         model_dir = configs.storage_path if configs is not None else None
@@ -69,19 +71,27 @@ class SRLPredictor(FixedSizeBatchProcessor):
             self._batcher.initialize(configs.batcher)
 
         self.word_vocab = tx.data.Vocab(
-            os.path.join(model_dir, "embeddings/word_vocab.english.txt"))
+            os.path.join(model_dir, "embeddings/word_vocab.english.txt")
+        )
         self.char_vocab = tx.data.Vocab(
-            os.path.join(model_dir, "embeddings/char_vocab.english.txt"))
+            os.path.join(model_dir, "embeddings/char_vocab.english.txt")
+        )
         model_hparams = LabeledSpanGraphNetwork.default_hparams()
         model_hparams["context_embeddings"]["path"] = os.path.join(
-            model_dir, model_hparams["context_embeddings"]["path"])
+            model_dir, model_hparams["context_embeddings"]["path"]
+        )
         model_hparams["head_embeddings"]["path"] = os.path.join(
-            model_dir, model_hparams["head_embeddings"]["path"])
+            model_dir, model_hparams["head_embeddings"]["path"]
+        )
         self.model = LabeledSpanGraphNetwork(
-            self.word_vocab, self.char_vocab, model_hparams)
-        self.model.load_state_dict(torch.load(
-            os.path.join(model_dir, "pretrained/model.pt"),
-            map_location=self.device))
+            self.word_vocab, self.char_vocab, model_hparams
+        )
+        self.model.load_state_dict(
+            torch.load(
+                os.path.join(model_dir, "pretrained/model.pt"),
+                map_location=self.device,
+            )
+        )
         self.model.eval()
 
     @staticmethod
@@ -95,15 +105,24 @@ class SRLPredictor(FixedSizeBatchProcessor):
 
     def predict(self, data_batch: Dict) -> Dict[str, List[Prediction]]:
         text: List[List[str]] = [
-            sentence.tolist() for sentence in data_batch["Token"]["text"]]
-        text_ids, length = tx.data.padded_batch([
-            self.word_vocab.map_tokens_to_ids_py(sentence)
-            for sentence in text])
+            sentence.tolist() for sentence in data_batch["Token"]["text"]
+        ]
+        text_ids, length = tx.data.padded_batch(
+            [
+                self.word_vocab.map_tokens_to_ids_py(sentence)
+                for sentence in text
+            ]
+        )
         text_ids = torch.from_numpy(text_ids).to(device=self.device)
         length = torch.tensor(length, dtype=torch.long, device=self.device)
         batch_size = len(text)
-        batch = tx.data.Batch(batch_size, text=text, text_ids=text_ids,
-                              length=length, srl=[[]] * batch_size)
+        batch = tx.data.Batch(
+            batch_size,
+            text=text,
+            text_ids=text_ids,
+            length=length,
+            srl=[[]] * batch_size,
+        )
         self.model = self.model.to(self.device)
         batch_srl_spans = self.model.decode(batch)
 
@@ -127,14 +146,16 @@ class SRLPredictor(FixedSizeBatchProcessor):
             batch_predictions.append(predictions)
         return {"predictions": batch_predictions}
 
-    def pack(self, data_pack: DataPack,
-             inputs: Dict[str, List[Prediction]]) -> None:
+    def pack(
+        self, data_pack: DataPack, inputs: Dict[str, List[Prediction]]
+    ) -> None:
         batch_predictions = inputs["predictions"]
         for predictions in batch_predictions:
             for pred_span, arg_result in predictions:
 
-                pred = PredicateMention(data_pack, pred_span.begin,
-                                        pred_span.end)
+                pred = PredicateMention(
+                    data_pack, pred_span.begin, pred_span.end
+                )
 
                 for arg_span, label in arg_result:
                     arg = PredicateArgument(
@@ -150,10 +171,5 @@ class SRLPredictor(FixedSizeBatchProcessor):
         :return:
         """
         configs = super().default_configs()
-        configs.update({
-            'storage_path': None,
-            "batcher": {
-                "batch_size": 4
-            }
-        })
+        configs.update({"storage_path": None, "batcher": {"batch_size": 4}})
         return configs

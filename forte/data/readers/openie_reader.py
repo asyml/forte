@@ -28,28 +28,26 @@ from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.base_reader import PackReader
 from ft.onto.base_ontology import Sentence, RelationLink, EntityMention
 
-__all__ = [
-    "OpenIEReader"
-]
+__all__ = ["OpenIEReader"]
 
 
 class OpenIEReader(PackReader):
     r""":class:`OpenIEReader` is designed to read in the Open IE dataset used
-        by Open Information Extraction task. The related paper can be found
-        `here
-        <https://gabrielstanovsky.github.io/assets/papers/emnlp16a/paper.pdf>`__.
-        The related source code for generating this dataset can be found
-        `here
-        <https://github.com/gabrielStanovsky/oie-benchmark>`__.
-        To use this Reader, you must follow the dataset format. Each line in
-        the dataset should contain following fields:
+    by Open Information Extraction task. The related paper can be found
+    `here
+    <https://gabrielstanovsky.github.io/assets/papers/emnlp16a/paper.pdf>`__.
+    The related source code for generating this dataset can be found
+    `here
+    <https://github.com/gabrielStanovsky/oie-benchmark>`__.
+    To use this Reader, you must follow the dataset format. Each line in
+    the dataset should contain following fields:
 
-        .. code-block:: none
+    .. code-block:: none
 
-            <sentence>\t<predicate_head>\t<full_predicate>\t<arg1>\t<arg2>....
+        <sentence>\t<predicate_head>\t<full_predicate>\t<arg1>\t<arg2>....
 
-        You can also find the dataset format `here
-        <https://github.com/gabrielStanovsky/oie-benchmark/tree/master/oie_corpus>`__.
+    You can also find the dataset format `here
+    <https://github.com/gabrielStanovsky/oie-benchmark/tree/master/oie_corpus>`__.
     """
 
     def initialize(self, resources: Resources, configs: Config):
@@ -57,7 +55,8 @@ class OpenIEReader(PackReader):
 
         if configs.oie_file_extension is None:
             raise ProcessorConfigError(
-                "Configuration oie_file_extension not provided.")
+                "Configuration oie_file_extension not provided."
+            )
 
     def _collect(self, *args, **kwargs) -> Iterator[str]:
         # pylint: disable = unused-argument
@@ -72,8 +71,11 @@ class OpenIEReader(PackReader):
         """
         oie_directory: str = args[0]
         oie_file_extension: str = self.configs.oie_file_extension
-        logging.info("Reading dataset from %s with extension %s",
-                     oie_directory, oie_file_extension)
+        logging.info(
+            "Reading dataset from %s with extension %s",
+            oie_directory,
+            oie_file_extension,
+        )
         return dataset_path_iterator(oie_directory, oie_file_extension)
 
     def _cache_key_function(self, oie_file: str) -> str:
@@ -99,13 +101,15 @@ class OpenIEReader(PackReader):
                     arg1_begin = sentence.find(oie_component[3]) + offset
                     arg1_end = arg1_begin + len(oie_component[3])
                     arg1: EntityMention = EntityMention(
-                        pack, arg1_begin, arg1_end)
+                        pack, arg1_begin, arg1_end
+                    )
 
                     # Find argument 2.
                     arg2_begin = sentence.find(oie_component[4]) + offset
                     arg2_end = arg2_begin + len(oie_component[4])
                     arg2: EntityMention = EntityMention(
-                        pack, arg2_begin, arg2_end)
+                        pack, arg2_begin, arg2_end
+                    )
 
                     head_relation = RelationLink(pack, arg1, arg2)
                     head_relation.rel_type = oie_component[2]
@@ -121,7 +125,5 @@ class OpenIEReader(PackReader):
         config: dict = super().default_configs()
 
         # Add OIE dataset file extension. The default is '.oie'
-        config.update({
-            'oie_file_extension': 'oie'
-        })
+        config.update({"oie_file_extension": "oie"})
         return config

@@ -20,8 +20,10 @@ from typing import Any, Dict, Set
 
 from forte.data.base_pack import PackType
 from forte.pipeline_component import PipelineComponent
-from forte.utils.utils_processor import (record_types_and_attributes_check,
-                                         collect_input_pack_record)
+from forte.utils.utils_processor import (
+    record_types_and_attributes_check,
+    collect_input_pack_record,
+)
 
 __all__ = [
     "Evaluator",
@@ -30,6 +32,7 @@ __all__ = [
 
 class Evaluator(PipelineComponent[PackType]):
     r"""The base class of the evaluator."""
+
     def __init__(self):
         super().__init__()
         self._pred_pack_expectation: Dict[str, Set[str]] = None
@@ -57,11 +60,11 @@ class Evaluator(PipelineComponent[PackType]):
         """
         raise NotImplementedError
 
-    def expected_types_and_attributes(self,
-                                      pred_pack_expectation: Dict[
-                                          str, Set[str]],
-                                      ref_pack_expectation: Dict[
-                                          str, Set[str]]):
+    def expected_types_and_attributes(
+        self,
+        pred_pack_expectation: Dict[str, Set[str]],
+        ref_pack_expectation: Dict[str, Set[str]],
+    ):
         r"""If the evaluator has required input types and attributes for
         `pred_pack` or `ref_pack`, user could add the types and attributes
         required with this function.
@@ -111,14 +114,18 @@ class Evaluator(PipelineComponent[PackType]):
                 to score on.
         """
         if self._check_type_consistency:
-            pred_pack_record = collect_input_pack_record(self.resources,
-                                                         pred_pack)
-            ref_pack_record = collect_input_pack_record(self.resources,
-                                                        ref_pack)
-            record_types_and_attributes_check(self._pred_pack_expectation,
-                                              pred_pack_record)
-            record_types_and_attributes_check(self._ref_pack_expectation,
-                                              ref_pack_record)
+            pred_pack_record = collect_input_pack_record(
+                self.resources, pred_pack
+            )
+            ref_pack_record = collect_input_pack_record(
+                self.resources, ref_pack
+            )
+            record_types_and_attributes_check(
+                self._pred_pack_expectation, pred_pack_record
+            )
+            record_types_and_attributes_check(
+                self._ref_pack_expectation, ref_pack_record
+            )
 
     def writes_record(self, pred_pack: PackType, ref_pack: PackType):
         r"""Method to write records of the output type of the current
@@ -141,11 +148,13 @@ class Evaluator(PipelineComponent[PackType]):
         except AttributeError:
             # For backward compatibility, no record to write.
             logging.info(
-                "Packs of the old format do not have the record field.")
+                "Packs of the old format do not have the record field."
+            )
 
         try:
             self.ref_pack_record(ref_pack._meta.record)
         except AttributeError:
             # For backward compatibility, no record to write.
             logging.info(
-                "Packs of the old format do not have the record field.")
+                "Packs of the old format do not have the record field."
+            )

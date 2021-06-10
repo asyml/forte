@@ -39,20 +39,23 @@ __all__ = [
 
 class CoNLLNERPredictor(FixedSizeBatchProcessor):
     """
-       An Named Entity Recognizer trained according to `Ma, Xuezhe, and Eduard
-       Hovy. "End-to-end sequence labeling via bi-directional lstm-cnns-crf."
-       <https://arxiv.org/abs/1603.01354>`_.
+    An Named Entity Recognizer trained according to `Ma, Xuezhe, and Eduard
+    Hovy. "End-to-end sequence labeling via bi-directional lstm-cnns-crf."
+    <https://arxiv.org/abs/1603.01354>`_.
 
-       Note that to use :class:`CoNLLNERPredictor`, the :attr:`ontology` of
-       :class:`Pipeline` must be an ontology that include
-       ``ft.onto.base_ontology.Token`` and ``ft.onto.base_ontology.Sentence``.
+    Note that to use :class:`CoNLLNERPredictor`, the :attr:`ontology` of
+    :class:`Pipeline` must be an ontology that include
+    ``ft.onto.base_ontology.Token`` and ``ft.onto.base_ontology.Sentence``.
     """
 
     def __init__(self):
         super().__init__()
         self.model = None
         self.word_alphabet, self.char_alphabet, self.ner_alphabet = (
-            None, None, None)
+            None,
+            None,
+            None,
+        )
         self.resource = None
         self.config_model = None
         self.config_data = None
@@ -84,8 +87,12 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
 
         resource_path = configs.config_model.resource_dir
 
-        keys = {"word_alphabet", "char_alphabet", "ner_alphabet",
-                "word_embedding_table"}
+        keys = {
+            "word_alphabet",
+            "char_alphabet",
+            "ner_alphabet",
+            "word_embedding_table",
+        }
 
         missing_keys = list(keys.difference(self.resource.keys()))
 
@@ -99,16 +106,23 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         if resources.get("device"):
             self.device = resources.get("device")
         else:
-            self.device = torch.device('cuda') if torch.cuda.is_available() \
-                else torch.device('cpu')
+            self.device = (
+                torch.device("cuda")
+                if torch.cuda.is_available()
+                else torch.device("cpu")
+            )
 
         self.normalize_func = utils.normalize_digit_word
 
         if "model" not in self.resource.keys():
+
             def load_model(path):
                 model = BiRecurrentConvCRF(
-                    word_embedding_table, self.char_alphabet.size(),
-                    self.ner_alphabet.size(), self.config_model)
+                    word_embedding_table,
+                    self.char_alphabet.size(),
+                    self.ner_alphabet.size(),
+                    self.config_model,
+                )
 
                 if os.path.exists(path):
                     with open(path, "rb") as f:
@@ -125,8 +139,9 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         utils.set_random_seed(self.config_model.random_seed)
 
     @torch.no_grad()
-    def predict(self, data_batch: Dict[str, Dict[str, List[str]]]) \
-            -> Dict[str, Dict[str, List[np.array]]]:
+    def predict(
+        self, data_batch: Dict[str, Dict[str, List[str]]]
+    ) -> Dict[str, Dict[str, List[np.array]]]:
         tokens = data_batch["Token"]
 
         instances = []
@@ -165,14 +180,20 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         return pred
 
     def load_model_checkpoint(self, model_path=None):
-        p = model_path if model_path is not None \
+        p = (
+            model_path
+            if model_path is not None
             else self.config_model.model_path
+        )
         ckpt = torch.load(p, map_location=self.device)
         logger.info(f"Restoring NER model from {self.config_model.model_path}")
         self.model.load_state_dict(ckpt["model"])
 
-    def pack(self, data_pack: DataPack,
-             output_dict: Optional[Dict[str, Dict[str, List[str]]]] = None):
+    def pack(
+        self,
+        data_pack: DataPack,
+        output_dict: Optional[Dict[str, Dict[str, List[str]]]] = None,
+    ):
         """
         Write the prediction results back to datapack. by writing the predicted
         ner to the original tokens.
@@ -207,20 +228,22 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
                     if token_ner[2:] != current_entity_mention[1]:
                         continue
 
-                    entity = EntityMention(data_pack,
-                                           current_entity_mention[0],
-                                           token.span.end)
+                    entity = EntityMention(
+                        data_pack, current_entity_mention[0], token.span.end
+                    )
                     entity.ner_type = current_entity_mention[1]
                 elif token_ner[0] == "S":
                     current_entity_mention = (token.span.begin, token_ner[2:])
-                    entity = EntityMention(data_pack, current_entity_mention[0],
-                                           token.span.end)
+                    entity = EntityMention(
+                        data_pack, current_entity_mention[0], token.span.end
+                    )
                     entity.ner_type = current_entity_mention[1]
 
     def get_batch_tensor(
-            self, data: List[Tuple[List[int], List[List[int]]]],
-            device: Optional[torch.device] = None) -> \
-            Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        self,
+        data: List[Tuple[List[int], List[List[int]]]],
+        device: Optional[torch.device] = None,
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         """Get the tensors to be fed into the model.
 
         Args:
@@ -271,7 +294,7 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
             wid_inputs[i, inst_size:] = self.word_alphabet.pad_id
             for c, cids in enumerate(cid_seqs):
                 cid_inputs[i, c, : len(cids)] = cids
-                cid_inputs[i, c, len(cids):] = self.char_alphabet.pad_id
+                cid_inputs[i, c, len(cids) :] = self.char_alphabet.pad_id
             cid_inputs[i, inst_size:, :] = self.char_alphabet.pad_id
             masks[i, :inst_size] = 1.0
 
@@ -300,54 +323,39 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
                 "batch_size_tokens": 512,
                 "test_batch_size": 16,
                 "max_char_length": 45,
-                "num_char_pad": 2
+                "num_char_pad": 2,
             },
             "config_model": {
                 "output_hidden_size": 128,
                 "dropout_rate": 0.3,
-                "word_emb": {
-                    "dim": 100
-                },
-                "char_emb": {
-                    "dim": 30,
-                    "initializer": {
-                        "type": "normal_"
-                    }
-                },
+                "word_emb": {"dim": 100},
+                "char_emb": {"dim": 30, "initializer": {"type": "normal_"}},
                 "char_cnn_conv": {
                     "in_channels": 30,
                     "out_channels": 30,
                     "kernel_size": 3,
-                    "padding": 2
+                    "padding": 2,
                 },
                 "bilstm_sentence_encoder": {
                     "rnn_cell_fw": {
                         "input_size": 130,
                         "type": "LSTMCell",
-                        "kwargs": {
-                            "num_units": 128
-                        }
+                        "kwargs": {"num_units": 128},
                     },
                     "rnn_cell_share_config": "yes",
-                    "output_layer_fw": {
-                        "num_layers": 0
-                    },
-                    "output_layer_share_config": "yes"
+                    "output_layer_fw": {"num_layers": 0},
+                    "output_layer_share_config": "yes",
                 },
                 "learning_rate": 0.01,
                 "momentum": 0.9,
                 "decay_interval": 1,
                 "decay_rate": 0.05,
                 "random_seed": 1234,
-                "initializer": {
-                    "type": "xavier_uniform_"
-                },
+                "initializer": {"type": "xavier_uniform_"},
                 "model_path": "",
-                "resource_dir": ""
+                "resource_dir": "",
             },
-            "batcher": {
-                "batch_size": 16
-            }
+            "batcher": {"batch_size": 16},
         }
 
         configs.update(more_configs)

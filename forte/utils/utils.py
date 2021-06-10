@@ -28,7 +28,7 @@ __all__ = [
     "get_class",
     "get_qual_name",
     "create_class_with_kwargs",
-    "check_type"
+    "check_type",
 ]
 
 
@@ -49,7 +49,7 @@ def get_full_module_name(o, lower: bool = False) -> str:
     module = o.__module__
     if module is None or module == str.__class__.__module__:
         return o.__name__
-    name = module + '.' + o.__name__
+    name = module + "." + o.__name__
     if lower:
         return name.lower()
     else:
@@ -74,8 +74,7 @@ def get_class_name(o, lower: bool = False) -> str:
         return o.__name__
 
 
-def get_class(class_name: str,
-              module_paths: Optional[List[str]] = None):
+def get_class(class_name: str, module_paths: Optional[List[str]] = None):
     r"""Returns the class based on class name.
 
     Args:
@@ -95,17 +94,17 @@ def get_class(class_name: str,
     class_ = locate(class_name)
     if (class_ is None) and (module_paths is not None):
         for module_path in module_paths:
-            class_ = locate('.'.join([module_path, class_name]))
+            class_ = locate(".".join([module_path, class_name]))
             if class_ is not None:
                 break
 
     if class_ is None:
         if module_paths:
             raise ValueError(
-                "Class not found in {}: {}".format(module_paths, class_name))
+                "Class not found in {}: {}".format(module_paths, class_name)
+            )
         else:
-            raise ValueError(
-                "Class not found in {}".format(class_name))
+            raise ValueError("Class not found in {}".format(class_name))
 
     return class_
 
@@ -162,13 +161,13 @@ def validate_input(func, **kwargs):
 
     # iterate all type hints
     for attr_name, attr_type in hints.items():
-        if attr_name == 'return':
+        if attr_name == "return":
             continue
 
         if not isinstance(kwargs[attr_name], attr_type):
             raise TypeError(
-                f'{attr_name} should be of type {attr_type}, '
-                f'got type {type(kwargs[attr_name])}'
+                f"{attr_name} should be of type {attr_type}, "
+                f"got type {type(kwargs[attr_name])}"
             )
 
 

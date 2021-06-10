@@ -24,7 +24,7 @@ feature_types = {
     "sent_b_seq_len": ["int64", "stacked_tensor"],
     "sent_b_segment_ids": ["int64", "stacked_tensor", max_seq_length],
     "sentence_b": ["str", "stacked_tensor"],
-    "label_ids": ["int64", "stacked_tensor"]
+    "label_ids": ["int64", "stacked_tensor"],
 }
 
 train_hparam = {
@@ -33,10 +33,10 @@ train_hparam = {
     "dataset": {
         "data_name": "data",
         "feature_types": feature_types,
-        "files": "{}/train.pkl".format(pickle_data_dir)
+        "files": "{}/train.pkl".format(pickle_data_dir),
     },
     "shuffle": True,
-    "shuffle_buffer_size": 100
+    "shuffle_buffer_size": 100,
 }
 
 eval_hparam = {
@@ -45,9 +45,9 @@ eval_hparam = {
     "dataset": {
         "data_name": "data",
         "feature_types": feature_types,
-        "files": "{}/eval.pkl".format(pickle_data_dir)
+        "files": "{}/eval.pkl".format(pickle_data_dir),
     },
-    "shuffle": False
+    "shuffle": False,
 }
 
 test_hparam = {
@@ -56,7 +56,7 @@ test_hparam = {
     "dataset": {
         "data_name": "data",
         "feature_types": feature_types,
-        "files": "{}/test.pkl".format(pickle_data_dir)
+        "files": "{}/test.pkl".format(pickle_data_dir),
     },
-    "shuffle": False
+    "shuffle": False,
 }

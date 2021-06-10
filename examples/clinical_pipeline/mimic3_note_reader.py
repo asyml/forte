@@ -40,7 +40,7 @@ class Mimic3DischargeNoteReader(PackReader):
         self.__note_count = 0  # Count number of notes processed.
 
     def _collect(  # type: ignore
-            self, mimic3_path: Union[Path, str]
+        self, mimic3_path: Union[Path, str]
     ) -> Iterator[Any]:
         with open(mimic3_path) as f:
             for r in csv.reader(f):
@@ -52,17 +52,17 @@ class Mimic3DischargeNoteReader(PackReader):
         if len(self.headers) == 0:
             self.headers.extend(row)
             for i, h in enumerate(self.headers):
-                if h == 'TEXT':
+                if h == "TEXT":
                     self.text_col = i
                     logging.info("Text Column is %d", i)
-                if h == 'DESCRIPTION':
+                if h == "DESCRIPTION":
                     self.description_col = i
                     logging.info("Description Column is %d", i)
         else:
             pack: DataPack = DataPack()
             description: str = row[self.description_col]
             text: str = row[self.text_col]
-            delimiter = '\n-----------------\n'
+            delimiter = "\n-----------------\n"
             full_text = description + delimiter + text
             pack.set_text(full_text)
 
@@ -76,5 +76,5 @@ class Mimic3DischargeNoteReader(PackReader):
         config = super().default_configs()
         # If this is set (>0), the reader will only read up to
         # the number specified.
-        config['max_num_notes'] = -1
+        config["max_num_notes"] = -1
         return config

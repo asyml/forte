@@ -22,20 +22,18 @@ from forte.data.data_pack import DataPack
 from forte.data.base_reader import PackReader
 from ft.onto.base_ontology import Token, Document, EntityMention
 
-__all__ = [
-    "ProdigyReader"
-]
+__all__ = ["ProdigyReader"]
 
 
 class ProdigyReader(PackReader):
-    r""":class:`ProdigyReader` is designed to read in Prodigy output text.
-    """
+    r""":class:`ProdigyReader` is designed to read in Prodigy output text."""
 
     def _cache_key_function(self, data: dict) -> str:
-        return data['meta']['id']
+        return data["meta"]["id"]
 
-    def _collect(self,  # type: ignore
-                 prodigy_annotation_file: str) -> Iterator[Any]:
+    def _collect(  # type: ignore
+        self, prodigy_annotation_file: str
+    ) -> Iterator[Any]:
         r"""Collects from Prodigy file path and returns an iterator of Prodigy
         annotation data. The elements in the iterator correspond to each line
         in the prodigy file. One element is expected to be parsed as one
@@ -61,24 +59,24 @@ class ProdigyReader(PackReader):
         Returns: DataPack containing information extracted from `data`.
         """
         pack = DataPack()
-        text = data['text']
+        text = data["text"]
         pack.set_text(text, replace_func=self.text_replace_operation)
 
         Document(pack, 0, len(text))
 
-        tokens = data['tokens']
-        spans = data['spans']
+        tokens = data["tokens"]
+        spans = data["spans"]
         for token in tokens:
-            begin = token['start']
-            end = token['end']
+            begin = token["start"]
+            end = token["end"]
             Token(pack, begin, end)
 
         for span_items in spans:
-            begin = span_items['start']
-            end = span_items['end']
+            begin = span_items["start"]
+            end = span_items["end"]
             annotation_entry = EntityMention(pack, begin, end)
-            annotation_entry.ner_type = span_items['label']
+            annotation_entry.ner_type = span_items["label"]
 
-        pack.pack_name = data['meta']['id']
+        pack.pack_name = data["meta"]["id"]
 
         yield pack

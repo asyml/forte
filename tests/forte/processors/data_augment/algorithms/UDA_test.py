@@ -28,29 +28,28 @@ class UDATest(unittest.TestCase):
         max_seq_length = 128
         self.feature_types = {
             "input_ids": ["int64", "stacked_tensor", max_seq_length],
-            "label_ids": ["int64", "stacked_tensor"]
+            "label_ids": ["int64", "stacked_tensor"],
         }
 
         self.unsup_feature_types = {
             "input_ids": ["int64", "stacked_tensor", max_seq_length],
             "aug_input_ids": ["int64", "stacked_tensor", max_seq_length],
-            "label_ids": ["int64", "stacked_tensor"]
+            "label_ids": ["int64", "stacked_tensor"],
         }
 
-        self.sample_feature = {
-            "input_ids": [0] * 128,
-            "label_ids": 0
-        }
+        self.sample_feature = {"input_ids": [0] * 128, "label_ids": 0}
 
         self.unsup_sample_feature = {
             "input_ids": [0] * 128,
             "aug_input_ids": [1] * 128,
-            "label_ids": 0
+            "label_ids": 0,
         }
 
         self.train_path = "{}/train.pkl".format(self.pickle_data_dir.name)
         self.test_path = "{}/predict.pkl".format(self.pickle_data_dir.name)
-        self.unsup_path = "{}/unsupervised.pkl".format(self.pickle_data_dir.name)
+        self.unsup_path = "{}/unsupervised.pkl".format(
+            self.pickle_data_dir.name
+        )
 
         self.train_hparam = {
             "allow_smaller_final_batch": False,
@@ -58,10 +57,10 @@ class UDATest(unittest.TestCase):
             "dataset": {
                 "data_name": "data",
                 "feature_types": self.feature_types,
-                "files": self.train_path
+                "files": self.train_path,
             },
             "shuffle": True,
-            "shuffle_buffer_size": None
+            "shuffle_buffer_size": None,
         }
 
         self.test_hparam = {
@@ -70,9 +69,9 @@ class UDATest(unittest.TestCase):
             "dataset": {
                 "data_name": "data",
                 "feature_types": self.feature_types,
-                "files": self.test_path
+                "files": self.test_path,
             },
-            "shuffle": False
+            "shuffle": False,
         }
 
         self.unsup_hparam = {
@@ -81,20 +80,16 @@ class UDATest(unittest.TestCase):
             "dataset": {
                 "data_name": "data",
                 "feature_types": self.unsup_feature_types,
-                "files": self.unsup_path
+                "files": self.unsup_path,
             },
-            "shuffle": True
+            "shuffle": True,
         }
 
     def tearDown(self):
         self.pickle_data_dir.cleanup()
 
     def output_sample_features_to_file(
-            self,
-            feature,
-            feature_types,
-            output_file,
-            dup_num
+        self, feature, feature_types, output_file, dup_num
     ):
         with tx.data.RecordData.writer(output_file, feature_types) as writer:
             for i in range(dup_num):
@@ -105,40 +100,39 @@ class UDATest(unittest.TestCase):
             self.sample_feature,
             self.feature_types,
             self.train_path,
-            dup_num=train_num
+            dup_num=train_num,
         )
 
         self.output_sample_features_to_file(
             self.sample_feature,
             self.feature_types,
             self.test_path,
-            dup_num=test_num
+            dup_num=test_num,
         )
 
         self.output_sample_features_to_file(
             self.unsup_sample_feature,
             self.unsup_feature_types,
             self.unsup_path,
-            dup_num=unsup_num
+            dup_num=unsup_num,
         )
 
         train_dataset = tx.data.RecordData(
-            hparams=self.train_hparam, device=torch.device("cpu"))
+            hparams=self.train_hparam, device=torch.device("cpu")
+        )
         test_dataset = tx.data.RecordData(
-            hparams=self.test_hparam, device=torch.device("cpu"))
+            hparams=self.test_hparam, device=torch.device("cpu")
+        )
         unsup_dataset = tx.data.RecordData(
-            hparams=self.unsup_hparam, device=torch.device("cpu"))
+            hparams=self.unsup_hparam, device=torch.device("cpu")
+        )
         sup_iterator = tx.data.DataIterator(
             {
                 "train": train_dataset,
                 "test": test_dataset,
             }
         )
-        unsup_iterator = tx.data.DataIterator(
-            {
-                "unsup": unsup_dataset
-            }
-        )
+        unsup_iterator = tx.data.DataIterator({"unsup": unsup_dataset})
 
         def unsup_forward_fn(batch):
             orig_input = batch["input_ids"]
@@ -156,7 +150,7 @@ class UDATest(unittest.TestCase):
             unsup_iterator,
             softmax_temperature=1.0,
             confidence_threshold=-1,
-            reduction="mean"
+            reduction="mean",
         )
 
         num_epoch = 10

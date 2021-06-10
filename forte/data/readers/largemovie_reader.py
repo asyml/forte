@@ -48,24 +48,24 @@ from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.base_reader import PackReader
 from ft.onto.base_ontology import Document, Sentence
 
-__all__ = [
-    "LargeMovieReader"
-]
+__all__ = ["LargeMovieReader"]
 
 
 class LargeMovieReader(PackReader):
     r""":class:`LargeMovieReader` is designed to read in
-        the Large Movie Review Dataset v1.0.
-        Reviews are stored in text files named
-        following the convention [[id]_[rating].txt].
+    the Large Movie Review Dataset v1.0.
+    Reviews are stored in text files named
+    following the convention [[id]_[rating].txt].
     """
 
     def __init__(self):
         super().__init__()
         self.REPLACE_NO_SPACE = re.compile(
-            r"(\:)|(\')|(\,)|(\")|(\()|(\))|(\[)|(\])")
+            r"(\:)|(\')|(\,)|(\")|(\()|(\))|(\[)|(\])"
+        )
         self.REPLACE_WITH_NEWLINE = re.compile(
-            r"(<br\s*/><br\s*/>)|(\-)|(\/)|(\.)|(\;)|(\!)|(\?)")
+            r"(<br\s*/><br\s*/>)|(\-)|(\/)|(\.)|(\;)|(\!)|(\?)"
+        )
 
     def preprocess_reviews(self, para):
         para = self.REPLACE_NO_SPACE.sub("", para.lower())
@@ -107,9 +107,9 @@ class LargeMovieReader(PackReader):
 
         pos_dir: str = os.path.basename(os.path.dirname(file_path))
         movie_file: str = os.path.basename(file_path)
-        title: List = movie_file.split('_')
+        title: List = movie_file.split("_")
         doc_id: str = pos_dir + title[0]
-        score: float = float(title[1].split('.')[0])
+        score: float = float(title[1].split(".")[0])
         score /= 10.0
 
         data_pack.pack_name = doc_id
@@ -122,5 +122,6 @@ class LargeMovieReader(PackReader):
         yield data_pack
 
     def _cache_key_function(self, movie_file: str) -> str:
-        return os.path.basename(os.path.dirname(movie_file)) + \
-               os.path.basename(movie_file)
+        return os.path.basename(os.path.dirname(movie_file)) + os.path.basename(
+            movie_file
+        )

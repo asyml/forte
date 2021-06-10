@@ -28,7 +28,6 @@ from ft.onto.base_ontology import Token, Sentence, EntityMention, RelationLink
 
 
 class DummyPackProcessor(PackProcessor):
-
     def __init__(self, sleep_time: float):
         super().__init__()
         self.sleep_time: float = sleep_time
@@ -38,7 +37,6 @@ class DummyPackProcessor(PackProcessor):
 
 
 class TestTimeProfiling(unittest.TestCase):
-
     def setUp(self):
         self.pl = Pipeline[DataPack]()
         self.pl.set_reader(StringReader())
@@ -50,26 +48,33 @@ class TestTimeProfiling(unittest.TestCase):
         self.pl.initialize()
 
     def test_ner(self):
-        sentences = ["This tool is called New York .",
-                     "The goal of this project to help you build NLP "
-                     "pipelines.",
-                     "NLP has never been made this easy before."]
-        document = ' '.join(sentences)
+        sentences = [
+            "This tool is called New York .",
+            "The goal of this project to help you build NLP " "pipelines.",
+            "NLP has never been made this easy before.",
+        ]
+        document = " ".join(sentences)
 
-        with self.assertLogs('forte.pipeline', level='INFO') as log:
+        with self.assertLogs("forte.pipeline", level="INFO") as log:
             pack = self.pl.process_one(document)
             self.pl.finish()
 
         self.assertEqual(len(log.output), 1)
-        lines: List[str] = log.output[0].split('\n')
+        lines: List[str] = log.output[0].split("\n")
         self.assertEqual(len(lines), 5)
-        self.assertEqual('INFO:forte.pipeline:Pipeline Time Profile', lines[0])
-        self.assertEqual(f'- Reader: {self.pl.reader.component_name}, ' +
-            f'{self.pl.reader.time_profile} s', lines[1])
+        self.assertEqual("INFO:forte.pipeline:Pipeline Time Profile", lines[0])
+        self.assertEqual(
+            f"- Reader: {self.pl.reader.component_name}, "
+            + f"{self.pl.reader.time_profile} s",
+            lines[1],
+        )
         for i in range(3):
-            self.assertIn(f'- Component [{i}]: ' +
-                f'{self.pl.components[i].name}, ' +
-                f'{self.pl._profiler[i]} s', lines[i + 2])
+            self.assertIn(
+                f"- Component [{i}]: "
+                + f"{self.pl.components[i].name}, "
+                + f"{self.pl._profiler[i]} s",
+                lines[i + 2],
+            )
 
         self.assertGreater(self.pl.reader.time_profile, 0.0)
         self.assertTrue(all(t > 0.0 for t in self.pl._profiler))

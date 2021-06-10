@@ -41,6 +41,7 @@ class EntryWithList(Generics):
     """
     Test whether entries are stored correctly as a List using FList.
     """
+
     entries: FList[ExampleEntry] = None
 
     def __init__(self, pack: MultiPack):
@@ -52,6 +53,7 @@ class EntryWithDict(Generics):
     """
     Test whether entries are stored correctly as a Dict using FDict.
     """
+
     entries: FDict[int, ExampleEntry] = None
 
     def __init__(self, pack: DataPack):
@@ -63,6 +65,7 @@ class EntryAsAttribute(Generics):
     """
     Test whether entries are stored correctly in the entry.
     """
+
     att_entry: Optional[ExampleEntry] = None
 
     def __init__(self, pack: DataPack):
@@ -116,8 +119,8 @@ class EmptyMultiReader(MultiPackReader):
 class MultiPackEntryAnnotator(MultiPackProcessor):
     def _process(self, multi_pack: MultiPack):
         # Add a pack.
-        p1 = multi_pack.add_pack('pack1')
-        p2 = multi_pack.add_pack('pack2')
+        p1 = multi_pack.add_pack("pack1")
+        p2 = multi_pack.add_pack("pack2")
 
         # Add some entries into one pack.
         e1: ExampleEntry = p1.add_entry(ExampleEntry(p1))
@@ -135,18 +138,19 @@ class MultiEntryStructure(unittest.TestCase):
         p.set_reader(EmptyMultiReader())
         p.add(MultiPackEntryAnnotator())
         p.initialize()
-        self.pack: MultiPack = p.process(['doc1', 'doc2'])
+        self.pack: MultiPack = p.process(["doc1", "doc2"])
 
     def test_entry_attribute(self):
         mpe: ExampleMPEntry = self.pack.get_single(ExampleMPEntry)
         self.assertIsInstance(mpe.refer_entry, ExampleEntry)
-        self.assertIsInstance(mpe.__dict__['refer_entry'], MpPointer)
+        self.assertIsInstance(mpe.__dict__["refer_entry"], MpPointer)
 
     def test_wrong_attribute(self):
         import warnings
+
         input_pack = MultiPack()
         mp_entry = ExampleMPEntry(input_pack)
-        p1 = input_pack.add_pack('pack1')
+        p1 = input_pack.add_pack("pack1")
         e1: DifferentEntry = p1.add_entry(DifferentEntry(p1))
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
@@ -163,16 +167,17 @@ class EntryDataStructure(unittest.TestCase):
         p.add(EntryAnnotator())
         p.initialize()
 
-        self.pack: DataPack = p.process(['doc1', 'doc2'])
+        self.pack: DataPack = p.process(["doc1", "doc2"])
 
     def test_entry_attribute(self):
         entry_with_attr: EntryAsAttribute = self.pack.get_single(
-            EntryAsAttribute)
+            EntryAsAttribute
+        )
 
         # Make sure we can get the entry of correct type and data.
         self.assertIsInstance(entry_with_attr.att_entry, ExampleEntry)
         self.assertEqual(entry_with_attr.att_entry.secret_number, 27)
-        self.assertIsInstance(entry_with_attr.__dict__['att_entry'], Pointer)
+        self.assertIsInstance(entry_with_attr.__dict__["att_entry"], Pointer)
 
     def test_entry_list(self):
         list_entry: EntryWithList = self.pack.get_single(EntryWithList)
@@ -183,7 +188,7 @@ class EntryDataStructure(unittest.TestCase):
         self.assertEqual(len(list_entry.entries), 10)
 
         # Make sure we stored index instead of raw data in list.
-        for v in list_entry.entries.__dict__['_FList__data']:
+        for v in list_entry.entries.__dict__["_FList__data"]:
             self.assertIsInstance(v, Pointer)
 
     def test_entry_dict(self):
@@ -195,7 +200,7 @@ class EntryDataStructure(unittest.TestCase):
         self.assertEqual(len(dict_entry.entries), 10)
 
         # Make sure we stored index (pointers) instead of raw data in dict.
-        for v in dict_entry.entries.__dict__['_FDict__data'].values():
+        for v in dict_entry.entries.__dict__["_FDict__data"].values():
             self.assertTrue(isinstance(v, Pointer))
 
 
