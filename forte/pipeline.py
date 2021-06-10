@@ -289,8 +289,8 @@ class Pipeline(Generic[PackType]):
         app = FastAPI()
 
         class RequestBody(BaseModel):
-            args: List[str] = []
-            kwargs: Dict[str, str] = {}
+            args: str = "[]"
+            kwargs: str = "{}"
 
         @app.get("/")
         def default_page():
@@ -298,8 +298,8 @@ class Pipeline(Generic[PackType]):
 
         @app.post("/process")
         def run_pipeline(body: RequestBody):
-            args = [json.loads(arg) for arg in body.args]
-            kwargs = {k: json.loads(v) for k, v in body.kwargs.items()}
+            args = json.loads(body.args)
+            kwargs = json.loads(body.kwargs)
             result = self.process(*args, **kwargs)
             return {"result": result.serialize()}
 

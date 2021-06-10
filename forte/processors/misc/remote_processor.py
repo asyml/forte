@@ -54,7 +54,7 @@ class RemoteProcessor(PackProcessor):
 
     def _process(self, input_pack: DataPack):
         response = requests.post(f"{self._url}/process", json={
-            "args": [json.dumps([input_pack.serialize()])]
+            "args": json.dumps([[input_pack.serialize()]])
         })
         if response.status_code != 200:
             raise Exception(f"{response.status_code}: Invalid post request.")
