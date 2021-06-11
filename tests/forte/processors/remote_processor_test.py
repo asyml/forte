@@ -111,7 +111,7 @@ class TestRemoteProcessor(unittest.TestCase):
 
         # Configure RemoteProcessor into test mode
         remote_processor: RemoteProcessor = RemoteProcessor()
-        remote_processor.set_test_mode(serve_pl.remote_service_app)
+        remote_processor.set_test_mode(serve_pl._remote_service_app)
 
         # Build test pipeline
         test_pl: Pipeline[DataPack] = Pipeline[DataPack]()

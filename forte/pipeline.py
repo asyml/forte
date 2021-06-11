@@ -290,7 +290,7 @@ class Pipeline(Generic[PackType]):
             yaml.safe_dump(self._dump_to_config(), f)
 
     @property
-    def remote_service_app(self):
+    def _remote_service_app(self):
         r"""Return a FastAPI app that can be used to serve the pipeline.
         Currently it only supports the `process` function, but it can be
         extended by adding new interfaces that wrap up any Pipeline method.
@@ -328,7 +328,7 @@ class Pipeline(Generic[PackType]):
         """
         self.initialize()
         uvicorn.run(
-            self.remote_service_app, host=host, port=port, log_level="info"
+            self._remote_service_app, host=host, port=port, log_level="info"
         )
 
     def set_profiling(self, enable_profiling: bool = True):
