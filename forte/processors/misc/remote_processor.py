@@ -33,9 +33,7 @@ from forte.processors.base import PackProcessor
 
 logger = logging.getLogger(__name__)
 
-__all__ = [
-    "RemoteProcessor"
-]
+__all__ = ["RemoteProcessor"]
 
 
 class RemoteProcessor(PackProcessor):
@@ -53,6 +51,7 @@ class RemoteProcessor(PackProcessor):
             .add(RemoteProcessor(), {"host":"localhost", "port":8080})
 
     """
+
     def __init__(self):
         super().__init__()
         self._url: str
@@ -65,14 +64,17 @@ class RemoteProcessor(PackProcessor):
         # Verify the service is running
         response = self._requests.get(self._url)
         if response.status_code != 200 or response.json()["status"] != "OK":
-            raise ProcessorConfigError(f"{response.status_code}: "
-                "Remote service not started or invalid endpoint configs.")
+            raise ProcessorConfigError(
+                f"{response.status_code}: "
+                "Remote service not started or invalid endpoint configs."
+            )
 
     def _process(self, input_pack: DataPack):
         # Pack the input_pack and POST it to remote service
-        response = self._requests.post(f"{self._url}/process", json={
-            "args": json.dumps([[input_pack.serialize()]])
-        })
+        response = self._requests.post(
+            f"{self._url}/process",
+            json={"args": json.dumps([[input_pack.serialize()]])},
+        )
         if response.status_code != 200:
             raise Exception(f"{response.status_code}: Invalid post request.")
         result = response.json()["result"]
@@ -104,10 +106,5 @@ class RemoteProcessor(PackProcessor):
             dict: A dictionary with the default config for this processor.
         """
         config = super().default_configs()
-
-        config.update({
-            "port": 8008,
-            "host": "localhost"
-        })
-
+        config.update({"port": 8008, "host": "localhost"})
         return config

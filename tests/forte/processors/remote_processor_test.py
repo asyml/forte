@@ -68,7 +68,8 @@ class TestRemoteProcessor(unittest.TestCase):
         """
         i_str, o_str = input_output_pair
         pl_config_path: str = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), "eliza_pl_ir.yaml")
+            os.path.dirname(os.path.abspath(__file__)), "eliza_pl_ir.yaml"
+        )
 
         # Build eliza pipeline
         eliza_pl: Pipeline[DataPack] = Pipeline[DataPack]()

@@ -60,10 +60,7 @@ from forte.utils import create_class_with_kwargs
 
 logger = logging.getLogger(__name__)
 
-__all__ = [
-    "Pipeline",
-    "serve"
-]
+__all__ = ["Pipeline", "serve"]
 
 
 class ProcessBuffer:
@@ -260,21 +257,23 @@ class Pipeline(Generic[PackType]):
             dict: A dictionary storing IR.
         """
         configs: List[Dict] = []
-        configs.append({
-            "type": '.'.join([
-                self._reader.__module__,
-                type(self._reader).__name__
-            ]),
-            "configs": self._reader_config.todict()
-        })
+        configs.append(
+            {
+                "type": ".".join(
+                    [self._reader.__module__, type(self._reader).__name__]
+                ),
+                "configs": self._reader_config.todict(),
+            }
+        )
         for component, config in zip(self.components, self.component_configs):
-            configs.append({
-                "type": '.'.join([
-                    component.__module__,
-                    type(component).__name__
-                ]),
-                "configs": config.todict()
-            })
+            configs.append(
+                {
+                    "type": ".".join(
+                        [component.__module__, type(component).__name__]
+                    ),
+                    "configs": config.todict(),
+                }
+            )
         return configs
 
     def save(self, path: str):
@@ -329,7 +328,8 @@ class Pipeline(Generic[PackType]):
         """
         self.initialize()
         uvicorn.run(
-            self.remote_service_app, host=host, port=port, log_level="info")
+            self.remote_service_app, host=host, port=port, log_level="info"
+        )
 
     def set_profiling(self, enable_profiling: bool = True):
         r"""Set profiling option.
