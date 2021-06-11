@@ -252,7 +252,12 @@ class Pipeline(Generic[PackType]):
                 self.add(component, component_config.get("configs", {}))
 
     def _dump_to_config(self):
-        r"""Serialize the pipeline to an intermediate representation.
+        r"""Serialize the pipeline to an IR(intermediate representation).
+        The returned IR can be passed to `init_from_config` to initialize
+        a pipeline.
+
+        Returns:
+            dict: A dictionary storing IR.
         """
         configs: List[Dict] = []
         configs.append({
@@ -273,10 +278,11 @@ class Pipeline(Generic[PackType]):
         return configs
 
     def save(self, path: str):
-        r"""Store the pipeline as an intermediate representation in yaml. Note
-        that calling ``init_from_config`` from a different python environment
-        may not work for some self defined component classes since their module
-        name is `__main__`.
+        r"""Store the pipeline as an IR(intermediate representation) in yaml.
+        The path can then be passed to ``init_from_config_path`` to initialize
+        a pipeline. Note that calling ``init_from_config`` from a different
+        python environment may not work for some self defined component classes
+        because their module name is `__main__`.
 
         Args:
             path: The file path to save configurations.
@@ -286,6 +292,14 @@ class Pipeline(Generic[PackType]):
 
     @property
     def remote_service_app(self):
+        r"""Return a FastAPI app that can be used to serve the pipeline.
+        Currently it only supports the `process` function, but it can be
+        extended by adding new interfaces that wrap up any Pipeline method.
+        Refer to https://fastapi.tiangolo.com for more info.
+
+        Returns:
+            FastAPI: A FastAPI app for remote service.
+        """
         app = FastAPI()
 
         class RequestBody(BaseModel):
@@ -306,6 +320,13 @@ class Pipeline(Generic[PackType]):
         return app
 
     def serve(self, host: str = "localhost", port: int = 8008):
+        r"""Start a service of the current pipeline at a specified host
+        and port.
+
+        Args:
+            host: Port number of pipeline service.
+            port: Host name of pipeline service.
+        """
         self.initialize()
         uvicorn.run(
             self.remote_service_app, host=host, port=port, log_level="info")
@@ -1049,7 +1070,18 @@ class Pipeline(Generic[PackType]):
             assert isinstance(p, Evaluator)
             yield p.name, p.get_result()
 
+
 def serve(pl_config_path: str, host: str = "localhost", port: int = 8008):
-    pipeline = Pipeline()
+    r"""Start a remote service of a pipeline initialized from a YAML config at
+    a specified host and port.
+
+    Args:
+        pl_config_path: A string of the configuration path, which is
+            is a YAML file that specify the structure and parameters of the
+            pipeline.
+        host: Port number of pipeline service.
+        port: Host name of pipeline service.
+    """
+    pipeline: Pipeline = Pipeline()
     pipeline.init_from_config_path(pl_config_path)
     pipeline.serve(host=host, port=port)

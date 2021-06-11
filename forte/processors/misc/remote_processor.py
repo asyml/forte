@@ -13,7 +13,9 @@
 # limitations under the License.
 
 """
-TODO: Module docs
+RemoteProcessor is used to interact with a remote Forte end-point.
+The Forte service must be created by a pipeline with `RawDataDeserializeReader`
+being set as its reader.
 """
 
 import json
@@ -38,23 +40,36 @@ __all__ = [
 
 class RemoteProcessor(PackProcessor):
     r"""
-    TODO: Class Docs
+    RemoteProcessor wraps up the interactions with remote Forte end point.
+    Each input DataPack from the upstream component will be serialized and
+    packed into a POST request to be sent to a remote service, which should
+    return a response that can be parsed into a DataPack to update the input.
+    Example usage:
+
+    .. code-block:: python
+        # Assume that a Forte service is running on "localhost:8080".
+        Pipeline() \
+            .set_reader(plaintext_reader(), {"input_path":"some/path"}) \
+            .add(RemoteProcessor(), {"host":"localhost", "port":8080})
+
     """
     def __init__(self):
         super().__init__()
         self._url: str
-        self._requests: "module" = requests
+        self._requests: Any = requests
 
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
         self._url = f"http://{self.configs.host}:{self.configs.port}"
+
+        # Verify the service is running
         response = self._requests.get(self._url)
         if response.status_code != 200 or response.json()["status"] != "OK":
             raise ProcessorConfigError(f"{response.status_code}: "
                 "Remote service not started or invalid endpoint configs.")
-        logger.info("%s", response.json())
 
     def _process(self, input_pack: DataPack):
+        # Pack the input_pack and POST it to remote service
         response = self._requests.post(f"{self._url}/process", json={
             "args": json.dumps([[input_pack.serialize()]])
         })
@@ -62,15 +77,16 @@ class RemoteProcessor(PackProcessor):
             raise Exception(f"{response.status_code}: Invalid post request.")
         result = response.json()["result"]
         # TODO: Not recommended to directly update __dict__. Maybe it's better
-        #   to add an "update()" interface to DataPack.
+        #   to add an "update()" interface in <class 'DataPack'>.
         input_pack.__dict__.update(DataPack.deserialize(result).__dict__)
 
     def set_test_mode(self, app: FastAPI):
         """
-        Configure the processor in test mode.
+        Configure the processor into test mode. This should only be called
+        from a pytest program.
 
         Args:
-            app: A fastapi app from a forte pipeline.
+            app: A fastapi app from a Forte pipeline.
         """
         self._requests = TestClient(app)
 
@@ -80,10 +96,9 @@ class RemoteProcessor(PackProcessor):
         This defines a basic config structure for RemoteProcessor.
         Following are the keys for this dictionary:
 
-            - ``port``: Port number for Stave server. Default value is `8888`.
-            - ``host``: Host name for Stave server. Default value is
+            - ``port``: Port number of remote service. Default value is `8888`.
+            - ``host``: Host name of remote service. Default value is
               `"localhost"`.
-            - ``in_test_mode``: Run the processor in pytest. Default to False.
 
         Returns:
             dict: A dictionary with the default config for this processor.

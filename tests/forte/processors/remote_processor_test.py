@@ -32,6 +32,7 @@ from forte.data.readers import RawDataDeserializeReader, StringReader
 from forte.data.common_entry_utils import create_utterance, get_last_utterance
 from ft.onto.base_ontology import Utterance
 
+
 class UserSimulator(PackProcessor):
     """
     A simulated processor that will generate utterance based on the config.
@@ -46,11 +47,12 @@ class UserSimulator(PackProcessor):
         config["user_input"] = ""
         return config
 
+
 @ddt
 class TestRemoteProcessor(unittest.TestCase):
     """
     Test RemoteProcessor. Here we use eliza pipeline as an example,
-    and all the testcases below are refactored from `eliza_test.py`.
+    and all the testcases below are refactored from `./eliza_test.py`.
     """
 
     @data(
