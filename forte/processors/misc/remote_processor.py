@@ -19,8 +19,10 @@ TODO: Module docs
 import json
 import logging
 from typing import Dict, Any
-import threading
 import requests
+
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
 
 from forte.common import Resources, ProcessorConfigError
 from forte.common.configuration import Config
@@ -41,19 +43,19 @@ class RemoteProcessor(PackProcessor):
     def __init__(self):
         super().__init__()
         self._url: str
-        self._barrier = threading.Barrier(2, timeout=10)
+        self._requests: "module" = requests
 
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
         self._url = f"http://{self.configs.host}:{self.configs.port}"
-        response = requests.get(self._url)
+        response = self._requests.get(self._url)
         if response.status_code != 200 or response.json()["status"] != "OK":
             raise ProcessorConfigError(f"{response.status_code}: "
                 "Remote service not started or invalid endpoint configs.")
         logger.info("%s", response.json())
 
     def _process(self, input_pack: DataPack):
-        response = requests.post(f"{self._url}/process", json={
+        response = self._requests.post(f"{self._url}/process", json={
             "args": json.dumps([[input_pack.serialize()]])
         })
         if response.status_code != 200:
@@ -62,6 +64,15 @@ class RemoteProcessor(PackProcessor):
         # TODO: Not recommended to directly update __dict__. Maybe it's better
         #   to add an "update()" interface to DataPack.
         input_pack.__dict__.update(DataPack.deserialize(result).__dict__)
+
+    def set_test_mode(self, app: FastAPI):
+        """
+        Configure the processor in test mode.
+
+        Args:
+            app: A fastapi app from a forte pipeline.
+        """
+        self._requests = TestClient(app)
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
@@ -72,6 +83,7 @@ class RemoteProcessor(PackProcessor):
             - ``port``: Port number for Stave server. Default value is `8888`.
             - ``host``: Host name for Stave server. Default value is
               `"localhost"`.
+            - ``in_test_mode``: Run the processor in pytest. Default to False.
 
         Returns:
             dict: A dictionary with the default config for this processor.

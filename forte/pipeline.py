@@ -284,8 +284,8 @@ class Pipeline(Generic[PackType]):
         with open(path, "w") as f:
             yaml.safe_dump(self._dump_to_config(), f)
 
-    def serve(self, host: str = "localhost", port: int = 8008):
-        self.initialize()
+    @property
+    def remote_service_app(self):
         app = FastAPI()
 
         class RequestBody(BaseModel):
@@ -303,7 +303,12 @@ class Pipeline(Generic[PackType]):
             result = self.process(*args, **kwargs)
             return {"result": result.serialize()}
 
-        uvicorn.run(app, host=host, port=port, log_level="info")
+        return app
+
+    def serve(self, host: str = "localhost", port: int = 8008):
+        self.initialize()
+        uvicorn.run(
+            self.remote_service_app, host=host, port=port, log_level="info")
 
     def set_profiling(self, enable_profiling: bool = True):
         r"""Set profiling option.
