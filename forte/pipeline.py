@@ -305,6 +305,7 @@ class Pipeline(Generic[PackType]):
             args: str = "[]"
             kwargs: str = "{}"
 
+        # pylint: disable=unused-variable
         @app.get("/")
         def default_page():
             return {"status": "OK", "pipeline": self._dump_to_config()}
@@ -315,6 +316,7 @@ class Pipeline(Generic[PackType]):
             kwargs = json.loads(body.kwargs)
             result = self.process(*args, **kwargs)
             return {"result": result.serialize()}
+        # pylint: enable=unused-variable
 
         return app
 
