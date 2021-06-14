@@ -33,6 +33,9 @@ from typing import (
 )
 
 import yaml
+import uvicorn
+from fastapi import FastAPI
+from pydantic import BaseModel
 
 from forte.common import ProcessorConfigError
 from forte.common.configuration import Config
@@ -57,7 +60,7 @@ from forte.utils import create_class_with_kwargs
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["Pipeline"]
+__all__ = ["Pipeline", "serve"]
 
 
 class ProcessBuffer:
@@ -244,6 +247,92 @@ class Pipeline(Generic[PackType]):
             else:
                 # Can be processor, caster, or evaluator
                 self.add(component, component_config.get("configs", {}))
+
+    def _dump_to_config(self):
+        r"""Serialize the pipeline to an IR(intermediate representation).
+        The returned IR can be passed to `init_from_config` to initialize
+        a pipeline.
+
+        Returns:
+            dict: A dictionary storing IR.
+        """
+        configs: List[Dict] = []
+        configs.append(
+            {
+                "type": ".".join(
+                    [self._reader.__module__, type(self._reader).__name__]
+                ),
+                "configs": self._reader_config.todict(),
+            }
+        )
+        for component, config in zip(self.components, self.component_configs):
+            configs.append(
+                {
+                    "type": ".".join(
+                        [component.__module__, type(component).__name__]
+                    ),
+                    "configs": config.todict(),
+                }
+            )
+        return configs
+
+    def save(self, path: str):
+        r"""Store the pipeline as an IR(intermediate representation) in yaml.
+        The path can then be passed to ``init_from_config_path`` to initialize
+        a pipeline. Note that calling ``init_from_config`` from a different
+        python environment may not work for some self defined component classes
+        because their module name is `__main__`.
+
+        Args:
+            path: The file path to save configurations.
+        """
+        with open(path, "w") as f:
+            yaml.safe_dump(self._dump_to_config(), f)
+
+    @property
+    def _remote_service_app(self):
+        r"""Return a FastAPI app that can be used to serve the pipeline.
+        Currently it only supports the `process` function, but it can be
+        extended by adding new interfaces that wrap up any Pipeline method.
+        Refer to https://fastapi.tiangolo.com for more info.
+
+        Returns:
+            FastAPI: A FastAPI app for remote service.
+        """
+        app = FastAPI()
+
+        class RequestBody(BaseModel):
+            args: str = "[]"
+            kwargs: str = "{}"
+
+        # pylint: disable=unused-variable
+        @app.get("/")
+        def default_page():
+            return {"status": "OK", "pipeline": self._dump_to_config()}
+
+        @app.post("/process")
+        def run_pipeline(body: RequestBody):
+            args = json.loads(body.args)
+            kwargs = json.loads(body.kwargs)
+            result = self.process(*args, **kwargs)
+            return {"result": result.serialize()}
+
+        # pylint: enable=unused-variable
+
+        return app
+
+    def serve(self, host: str = "localhost", port: int = 8008):
+        r"""Start a service of the current pipeline at a specified host
+        and port.
+
+        Args:
+            host: Port number of pipeline service.
+            port: Host name of pipeline service.
+        """
+        self.initialize()
+        uvicorn.run(
+            self._remote_service_app, host=host, port=port, log_level="info"
+        )
 
     def set_profiling(self, enable_profiling: bool = True):
         r"""Set profiling option.
@@ -983,3 +1072,19 @@ class Pipeline(Generic[PackType]):
             p = self.components[i]
             assert isinstance(p, Evaluator)
             yield p.name, p.get_result()
+
+
+def serve(pl_config_path: str, host: str = "localhost", port: int = 8008):
+    r"""Start a remote service of a pipeline initialized from a YAML config at
+    a specified host and port.
+
+    Args:
+        pl_config_path: A string of the configuration path, which is
+            is a YAML file that specify the structure and parameters of the
+            pipeline.
+        host: Port number of pipeline service.
+        port: Host name of pipeline service.
+    """
+    pipeline: Pipeline = Pipeline()
+    pipeline.init_from_config_path(pl_config_path)
+    pipeline.serve(host=host, port=port)
