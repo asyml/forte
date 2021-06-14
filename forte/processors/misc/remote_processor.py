@@ -45,6 +45,7 @@ class RemoteProcessor(PackProcessor):
     Example usage:
 
     .. code-block:: python
+
         # Assume that a Forte service is running on "localhost:8080".
         Pipeline() \
             .set_reader(plaintext_reader(), {"input_path":"some/path"}) \
