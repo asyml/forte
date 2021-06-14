@@ -49,7 +49,7 @@ class RemoteProcessor(PackProcessor):
         # Assume that a Forte service is running on "localhost:8080".
         Pipeline() \
             .set_reader(plaintext_reader(), {"input_path":"some/path"}) \
-            .add(RemoteProcessor(), {"host":"localhost", "port":8080})
+            .add(RemoteProcessor(), {"url": "http://localhost:8008"})
 
     """
 
