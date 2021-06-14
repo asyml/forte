@@ -55,15 +55,13 @@ class RemoteProcessor(PackProcessor):
 
     def __init__(self):
         super().__init__()
-        self._url: str
         self._requests: Any = requests
 
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
-        self._url = f"http://{self.configs.host}:{self.configs.port}"
 
         # Verify the service is running
-        response = self._requests.get(self._url)
+        response = self._requests.get(self.configs.url)
         if response.status_code != 200 or response.json()["status"] != "OK":
             raise ProcessorConfigError(
                 f"{response.status_code}: "
@@ -73,15 +71,13 @@ class RemoteProcessor(PackProcessor):
     def _process(self, input_pack: DataPack):
         # Pack the input_pack and POST it to remote service
         response = self._requests.post(
-            f"{self._url}/process",
+            f"{self.configs.url}/process",
             json={"args": json.dumps([[input_pack.serialize()]])},
         )
         if response.status_code != 200:
             raise Exception(f"{response.status_code}: Invalid post request.")
         result = response.json()["result"]
-        # TODO: Not recommended to directly update __dict__. Maybe it's better
-        #   to add an "update()" interface in <class 'DataPack'>.
-        input_pack.__dict__.update(DataPack.deserialize(result).__dict__)
+        input_pack.update(DataPack.deserialize(result))
 
     def set_test_mode(self, app: FastAPI):
         """
@@ -99,13 +95,12 @@ class RemoteProcessor(PackProcessor):
         This defines a basic config structure for RemoteProcessor.
         Following are the keys for this dictionary:
 
-            - ``port``: Port number of remote service. Default value is `8888`.
-            - ``host``: Host name of remote service. Default value is
-              `"localhost"`.
+            - ``url``: URL of the remote service end point.
+              Default value is `"http://localhost:8008"`.
 
         Returns:
             dict: A dictionary with the default config for this processor.
         """
         config = super().default_configs()
-        config.update({"port": 8008, "host": "localhost"})
+        config.update({"url": "http://localhost:8008"})
         return config

@@ -1127,6 +1127,17 @@ class DataPack(BasePack[Entry, Link, Group]):
                     continue
             yield entry  # type: ignore
 
+    def update(self, datapack: "DataPack"):
+        r"""Update the attributes and properties of the current DataPack with
+        another DataPack.
+
+        Args:
+            datapack: A reference datapack to update
+        """
+        # TODO: Not recommended to directly update __dict__. Should find a
+        #   better solution.
+        self.__dict__.update(datapack.__dict__)
+
 
 class DataIndex(BaseIndex):
     r"""A set of indexes used in :class:`DataPack`, note that this class is
