@@ -29,7 +29,7 @@ __all__ = [
     "DirPackReader",
     "MultiPackDirectoryReader",
     "MultiPackDeserializerBase",
-    "SinglePackeReader",
+    "SinglePackReader",
 ]
 
 
@@ -118,7 +118,7 @@ class RecursiveDirectoryDeserializeReader(BaseDeserializeReader):
         return configs
 
 
-class SinglePackeReader(BaseDeserializeReader):
+class SinglePackReader(BaseDeserializeReader):
     """
     This reader reader one file of the given path as a DataPack. Compressed
     files are supported.
