@@ -18,3 +18,4 @@ from forte.processors.misc.lowercaser_processor import *
 from forte.processors.misc.vocabulary_processor import *
 from forte.processors.misc.delete_overlap_entries import *
 from forte.processors.misc.simple_processors import *
+from forte.processors.misc.remote_processor import *
