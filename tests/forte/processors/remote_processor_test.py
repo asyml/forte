@@ -41,6 +41,13 @@ class UserSimulator(PackProcessor):
     def _process(self, input_pack: DataPack):
         create_utterance(input_pack, self.configs.user_input, "user")
 
+    def record(self, record_meta: Dict[str, Set[str]]):
+        """
+        Add records to test validation in RemoteProcessor
+        """
+        record_meta["Token"] = {"1", "2"}
+        record_meta["Document"] = {"2"}
+
     @classmethod
     def default_configs(cls):
         config = super().default_configs()
@@ -101,6 +108,7 @@ class TestRemoteProcessor(unittest.TestCase):
         Verify RemoteProcessor.
         """
         i_str, o_str = input_output_pair
+        service_name: str = "test_service_name"
 
         # Build service pipeline
         serve_pl: Pipeline[DataPack] = Pipeline[DataPack]()
@@ -111,12 +119,23 @@ class TestRemoteProcessor(unittest.TestCase):
 
         # Configure RemoteProcessor into test mode
         remote_processor: RemoteProcessor = RemoteProcessor()
-        remote_processor.set_test_mode(serve_pl._remote_service_app)
+        remote_processor.set_test_mode(
+            serve_pl._remote_service_app(name=service_name)
+        )
 
         # Build test pipeline
         test_pl: Pipeline[DataPack] = Pipeline[DataPack]()
         test_pl.set_reader(StringReader())
-        test_pl.add(remote_processor)
+        test_pl.add(
+            remote_processor,
+            config={
+                "do_validation": True,
+                "expected_name": service_name,
+                "expected_records": json.dumps(
+                    {"Token": ["1", "2"], "Document": ["2"]}
+                ),
+            },
+        )
         test_pl.initialize()
 
         # Verify output

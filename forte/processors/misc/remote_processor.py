@@ -30,6 +30,7 @@ from forte.common import Resources, ProcessorConfigError
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
+from forte.utils.utils_processor import record_types_and_attributes_check
 
 logger = logging.getLogger(__name__)
 
@@ -67,6 +68,32 @@ class RemoteProcessor(PackProcessor):
                 f"{response.status_code}: "
                 "Remote service not started or invalid endpoint configs."
             )
+        service_name: str = response.json()["name"]
+
+        if self.configs.do_validation:
+            # Validate service name
+            if service_name != self.configs.expected_name:
+                raise ProcessorConfigError(
+                    "Validation fail: Name Mismatch. "
+                    f"'{service_name}' != '{self.configs.expected_name}'"
+                )
+
+            # Validate the output records
+            response = self._requests.get(f"{self.configs.url}/records")
+            if response.status_code != 200 or response.json()["status"] != "OK":
+                raise ProcessorConfigError(
+                    f"{response.status_code}: "
+                    "Fail to fetch records from remote service."
+                )
+            records = {
+                k: set(v)
+                for k, v in json.loads(response.json()["records"]).items()
+            }
+            expectation = {
+                k: set(v)
+                for k, v in json.loads(self.configs.expected_records).items()
+            }
+            record_types_and_attributes_check(expectation, records)
 
     def _process(self, input_pack: DataPack):
         # Pack the input_pack and POST it to remote service
@@ -74,7 +101,7 @@ class RemoteProcessor(PackProcessor):
             f"{self.configs.url}/process",
             json={"args": json.dumps([[input_pack.serialize()]])},
         )
-        if response.status_code != 200:
+        if response.status_code != 200 or response.json()["status"] != "OK":
             raise Exception(f"{response.status_code}: Invalid post request.")
         result = response.json()["result"]
         input_pack.update(DataPack.deserialize(result))
@@ -97,10 +124,25 @@ class RemoteProcessor(PackProcessor):
 
             - ``url``: URL of the remote service end point.
               Default value is `"http://localhost:8008"`.
+            - ``do_validation``: Validate the pipeline by checking the info
+              of the remote pipeline with the expected attributes. Default
+              to `False`.
+            - ``expected_name``: The expected pipeline name. Default to `''`.
+            - ``expected_records``: The expected records of the output
+              DataPack meta from the pipeline. It should be a string that
+              represents a serialized dictionary `Dict[str, List[str]]`.
+              Default to `{}`.
 
         Returns:
             dict: A dictionary with the default config for this processor.
         """
         config = super().default_configs()
-        config.update({"url": "http://localhost:8008"})
+        config.update(
+            {
+                "url": "http://localhost:8008",
+                "do_validation": False,
+                "expected_name": "",
+                "expected_records": "{}",
+            }
+        )
         return config

@@ -289,17 +289,21 @@ class Pipeline(Generic[PackType]):
         with open(path, "w") as f:
             yaml.safe_dump(self._dump_to_config(), f)
 
-    @property
-    def _remote_service_app(self):
+    def _remote_service_app(self, name: str = ""):
         r"""Return a FastAPI app that can be used to serve the pipeline.
         Currently it only supports the `process` function, but it can be
         extended by adding new interfaces that wrap up any Pipeline method.
         Refer to https://fastapi.tiangolo.com for more info.
 
+        Args:
+            name: Assign a name to the pipeline service for validation.
+                Default to `''`.
+
         Returns:
             FastAPI: A FastAPI app for remote service.
         """
         app = FastAPI()
+        records: str = ""
 
         class RequestBody(BaseModel):
             args: str = "[]"
@@ -308,30 +312,53 @@ class Pipeline(Generic[PackType]):
         # pylint: disable=unused-variable
         @app.get("/")
         def default_page():
-            return {"status": "OK", "pipeline": self._dump_to_config()}
+            nonlocal name
+            return {
+                "status": "OK",
+                "name": name,
+                "pipeline": self._dump_to_config(),
+            }
+
+        @app.get("/records")
+        def get_records():
+            nonlocal records
+            if not records:
+                # Collect records of each pipeline component for validation
+                meta_records: Dict = {}
+                for component in [self._reader] + self.components:
+                    component.record(meta_records)
+                records = json.dumps(
+                    {k: list(v) for k, v in meta_records.items()}
+                )
+            return {"status": "OK", "records": records}
 
         @app.post("/process")
         def run_pipeline(body: RequestBody):
             args = json.loads(body.args)
             kwargs = json.loads(body.kwargs)
             result = self.process(*args, **kwargs)
-            return {"result": result.serialize()}
+            return {"status": "OK", "result": result.serialize()}
 
         # pylint: enable=unused-variable
 
         return app
 
-    def serve(self, host: str = "localhost", port: int = 8008):
+    def serve(self, host: str = "localhost", port: int = 8008, name: str = ""):
         r"""Start a service of the current pipeline at a specified host
         and port.
 
         Args:
             host: Port number of pipeline service.
             port: Host name of pipeline service.
+            name: Assign a name to the pipeline service for validation.
+                Default to `''`.
         """
         self.initialize()
         uvicorn.run(
-            self._remote_service_app, host=host, port=port, log_level="info"
+            self._remote_service_app(name=name),
+            host=host,
+            port=port,
+            log_level="info",
         )
 
     def set_profiling(self, enable_profiling: bool = True):
@@ -1074,7 +1101,12 @@ class Pipeline(Generic[PackType]):
             yield p.name, p.get_result()
 
 
-def serve(pl_config_path: str, host: str = "localhost", port: int = 8008):
+def serve(
+    pl_config_path: str,
+    host: str = "localhost",
+    port: int = 8008,
+    name: str = "",
+):
     r"""Start a remote service of a pipeline initialized from a YAML config at
     a specified host and port.
 
@@ -1084,7 +1116,9 @@ def serve(pl_config_path: str, host: str = "localhost", port: int = 8008):
             pipeline.
         host: Port number of pipeline service.
         port: Host name of pipeline service.
+        name: Assign a name to the pipeline service for validation.
+            Default to `''`.
     """
     pipeline: Pipeline = Pipeline()
     pipeline.init_from_config_path(pl_config_path)
-    pipeline.serve(host=host, port=port)
+    pipeline.serve(host=host, port=port, name=name)
