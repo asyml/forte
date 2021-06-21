@@ -68,8 +68,10 @@ class RemoteProcessor(PackProcessor):
         response = self._requests.get(self.configs.url)
         if response.status_code != 200 or response.json()["status"] != "OK":
             raise ProcessorConfigError(
-                f"{response.status_code} {response.reason}: "
-                "Remote service not started or invalid endpoint configs."
+                f"{response.status_code} {response.reason}: Please double "
+                "check your endpoint URL configuration and make sure that the "
+                f"remote service at {self.configs.url} is a valid pipeline "
+                "service that is up and running."
             )
         service_name: str = response.json()["service_name"]
         input_format: str = response.json()["input_format"]
@@ -100,7 +102,9 @@ class RemoteProcessor(PackProcessor):
             if response.status_code != 200 or response.json()["status"] != "OK":
                 raise ProcessorConfigError(
                     f"{response.status_code} {response.reason}: "
-                    "Fail to fetch records from remote service."
+                    "Fail to fetch records from remote service. Please make "
+                    f"sure that the remote service at {self.configs.url} is "
+                    "a valid pipeline service that is up and running."
                 )
             self._records = response.json()["records"]
 
@@ -128,7 +132,9 @@ class RemoteProcessor(PackProcessor):
         if response.status_code != 200 or response.json()["status"] != "OK":
             raise Exception(
                 f"{response.status_code} {response.reason}: "
-                "Invalid post request."
+                "Invalid post request to process input pack. Please make "
+                f"sure that the remote service at {self.configs.url} is "
+                "a valid pipeline service that is up and running."
             )
         result = response.json()["result"]
         input_pack.update(DataPack.deserialize(result))
