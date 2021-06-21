@@ -117,7 +117,10 @@ class RemoteProcessor(PackProcessor):
             input_pack: The input datapack.
         """
         super().check_record(input_pack)
-        if self._validation.do_init_type_check:
+        if (
+            self._validation.do_init_type_check
+            and self._validation.expected_records is not None
+        ):
             # Validate the output records
             record_types_and_attributes_check(
                 self._validation.expected_records.todict(), self._records
