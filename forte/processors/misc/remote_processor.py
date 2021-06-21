@@ -20,7 +20,7 @@ being set as its reader.
 
 import json
 import logging
-from typing import Dict, Any
+from typing import Dict, Set, Any
 import requests
 
 from fastapi import FastAPI
@@ -57,43 +57,67 @@ class RemoteProcessor(PackProcessor):
     def __init__(self):
         super().__init__()
         self._requests: Any = requests
+        self._validation: Config
+        self._records: Dict[str, Set[str]]
 
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
+        self._validation = self.configs.validation
 
         # Verify the service is running
         response = self._requests.get(self.configs.url)
         if response.status_code != 200 or response.json()["status"] != "OK":
             raise ProcessorConfigError(
-                f"{response.status_code}: "
+                f"{response.status_code} {response.reason}: "
                 "Remote service not started or invalid endpoint configs."
             )
-        service_name: str = response.json()["name"]
+        service_name: str = response.json()["service_name"]
+        input_format: str = response.json()["input_format"]
 
-        if self.configs.do_validation:
-            # Validate service name
-            if service_name != self.configs.expected_name:
+        if self._validation.do_init_type_check:
+            # Validate service name and input format
+            if service_name != self._validation.expected_name:
                 raise ProcessorConfigError(
-                    "Validation fail: Name Mismatch. "
-                    f"'{service_name}' != '{self.configs.expected_name}'"
+                    "Validation fail: The expected service name "
+                    f"('{self._validation.expected_name}') does not match "
+                    "the actual name returned by remote service "
+                    f"('{service_name}'). Consider updating the configs of "
+                    "RemoteProcessor so that 'validation.expected_name' "
+                    f"equals to '{service_name}'."
+                )
+            if input_format != self._validation.input_format:
+                raise ProcessorConfigError(
+                    "Validation fail: The expected input format "
+                    f"('{self._validation.input_format}') does not match "
+                    "the actual input format returned by remote service "
+                    f"('{input_format}'). Consider updating the configs of "
+                    "RemoteProcessor so that 'validation.input_format' "
+                    f"equals to '{input_format}'."
                 )
 
-            # Validate the output records
+            # Get the output records
             response = self._requests.get(f"{self.configs.url}/records")
             if response.status_code != 200 or response.json()["status"] != "OK":
                 raise ProcessorConfigError(
-                    f"{response.status_code}: "
+                    f"{response.status_code} {response.reason}: "
                     "Fail to fetch records from remote service."
                 )
-            records = {
-                k: set(v)
-                for k, v in json.loads(response.json()["records"]).items()
-            }
-            expectation = {
-                k: set(v)
-                for k, v in json.loads(self.configs.expected_records).items()
-            }
-            record_types_and_attributes_check(expectation, records)
+            self._records = response.json()["records"]
+
+    def check_record(self, input_pack):
+        r"""Add additional checking of remote pipeline service. The records
+        of remote service will be queried and validated against the expected
+        record types and attributes in configs.
+
+        Args:
+            input_pack: The input datapack.
+        """
+        super().check_record(input_pack)
+        if self._validation.do_init_type_check:
+            # Validate the output records
+            record_types_and_attributes_check(
+                self._validation.expected_records.todict(), self._records
+            )
 
     def _process(self, input_pack: DataPack):
         # Pack the input_pack and POST it to remote service
@@ -102,7 +126,10 @@ class RemoteProcessor(PackProcessor):
             json={"args": json.dumps([[input_pack.serialize()]])},
         )
         if response.status_code != 200 or response.json()["status"] != "OK":
-            raise Exception(f"{response.status_code}: Invalid post request.")
+            raise Exception(
+                f"{response.status_code} {response.reason}: "
+                "Invalid post request."
+            )
         result = response.json()["result"]
         input_pack.update(DataPack.deserialize(result))
 
@@ -124,14 +151,19 @@ class RemoteProcessor(PackProcessor):
 
             - ``url``: URL of the remote service end point.
               Default value is `"http://localhost:8008"`.
-            - ``do_validation``: Validate the pipeline by checking the info
-              of the remote pipeline with the expected attributes. Default
-              to `False`.
-            - ``expected_name``: The expected pipeline name. Default to `''`.
-            - ``expected_records``: The expected records of the output
-              DataPack meta from the pipeline. It should be a string that
-              represents a serialized dictionary `Dict[str, List[str]]`.
-              Default to `{}`.
+            - ``validation``: Information for validation.
+
+                - ``do_init_type_check``: Validate the pipeline by checking
+                  the info of the remote pipeline with the expected
+                  attributes. Default to `False`.
+                - ``input_format``: The expected input format of the remote
+                  service. Default to `"string"`.
+                - ``expected_name``: The expected pipeline name.
+                  Default to `''`.
+                - ``expected_records``: The expected records of the output
+                  DataPack meta from the pipeline. It should be a string that
+                  represents a serialized dictionary `Dict[str, Set[str]]`.
+                  Default to `None`.
 
         Returns:
             dict: A dictionary with the default config for this processor.
@@ -140,9 +172,12 @@ class RemoteProcessor(PackProcessor):
         config.update(
             {
                 "url": "http://localhost:8008",
-                "do_validation": False,
-                "expected_name": "",
-                "expected_records": "{}",
+                "validation": {
+                    "do_init_type_check": False,
+                    "input_format": "string",
+                    "expected_name": "",
+                    "expected_records": None,
+                },
             }
         )
         return config

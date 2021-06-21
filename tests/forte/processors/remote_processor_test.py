@@ -109,6 +109,7 @@ class TestRemoteProcessor(unittest.TestCase):
         """
         i_str, o_str = input_output_pair
         service_name: str = "test_service_name"
+        input_format: str = "DataPack"
 
         # Build service pipeline
         serve_pl: Pipeline[DataPack] = Pipeline[DataPack]()
@@ -120,7 +121,9 @@ class TestRemoteProcessor(unittest.TestCase):
         # Configure RemoteProcessor into test mode
         remote_processor: RemoteProcessor = RemoteProcessor()
         remote_processor.set_test_mode(
-            serve_pl._remote_service_app(name=service_name)
+            serve_pl._remote_service_app(
+                service_name=service_name, input_format=input_format
+            )
         )
 
         # Build test pipeline
@@ -129,11 +132,15 @@ class TestRemoteProcessor(unittest.TestCase):
         test_pl.add(
             remote_processor,
             config={
-                "do_validation": True,
-                "expected_name": service_name,
-                "expected_records": json.dumps(
-                    {"Token": ["1", "2"], "Document": ["2"]}
-                ),
+                "validation": {
+                    "do_init_type_check": True,
+                    "input_format": input_format,
+                    "expected_name": service_name,
+                    "expected_records": {
+                        "Token": {"1", "2"},
+                        "Document": {"2"},
+                    },
+                }
             },
         )
         test_pl.initialize()

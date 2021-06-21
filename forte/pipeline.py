@@ -289,21 +289,30 @@ class Pipeline(Generic[PackType]):
         with open(path, "w") as f:
             yaml.safe_dump(self._dump_to_config(), f)
 
-    def _remote_service_app(self, name: str = ""):
+    def _remote_service_app(
+        self, service_name: str = "", input_format: str = "string"
+    ):
         r"""Return a FastAPI app that can be used to serve the pipeline.
-        Currently it only supports the `process` function, but it can be
-        extended by adding new interfaces that wrap up any Pipeline method.
-        Refer to https://fastapi.tiangolo.com for more info.
 
         Args:
-            name: Assign a name to the pipeline service for validation.
-                Default to `''`.
+            service_name: Assign a name to the pipeline service for validation.
+                This will appear in the `service_name` field on default page
+                and can be queried and validated against the expected service
+                name set by user. Default to `''`.
+            input_format: Specify format of the input for validation. It can be
+                `"string"` or `"DataPack"`. This will appear in the
+                `input_format` field on default page and can be queried and
+                validated against the expected input format set by user.
+                Default to `"string"`.
 
         Returns:
             FastAPI: A FastAPI app for remote service.
         """
+        # TODO: Currently we only support the `process` function, but it can
+        # be extended by adding new interfaces that wrap up any Pipeline
+        # method. Refer to https://fastapi.tiangolo.com for more info.
         app = FastAPI()
-        records: str = ""
+        records: Optional[Dict[str, Set[str]]] = None
 
         class RequestBody(BaseModel):
             args: str = "[]"
@@ -312,24 +321,21 @@ class Pipeline(Generic[PackType]):
         # pylint: disable=unused-variable
         @app.get("/")
         def default_page():
-            nonlocal name
             return {
                 "status": "OK",
-                "name": name,
+                "service_name": service_name,
+                "input_format": input_format,
                 "pipeline": self._dump_to_config(),
             }
 
         @app.get("/records")
         def get_records():
             nonlocal records
-            if not records:
+            if records is None:
                 # Collect records of each pipeline component for validation
-                meta_records: Dict = {}
+                records = {}
                 for component in [self._reader] + self.components:
-                    component.record(meta_records)
-                records = json.dumps(
-                    {k: list(v) for k, v in meta_records.items()}
-                )
+                    component.record(records)
             return {"status": "OK", "records": records}
 
         @app.post("/process")
@@ -343,19 +349,34 @@ class Pipeline(Generic[PackType]):
 
         return app
 
-    def serve(self, host: str = "localhost", port: int = 8008, name: str = ""):
+    def serve(
+        self,
+        host: str = "localhost",
+        port: int = 8008,
+        service_name: str = "",
+        input_format: str = "string",
+    ):
         r"""Start a service of the current pipeline at a specified host
         and port.
 
         Args:
             host: Port number of pipeline service.
             port: Host name of pipeline service.
-            name: Assign a name to the pipeline service for validation.
-                Default to `''`.
+            service_name: Assign a name to the pipeline service for validation.
+                This will appear in the `service_name` field on default page
+                and can be queried and validated against the expected service
+                name set by user. Default to `''`.
+            input_format: Specify format of the input for validation. It can be
+                `"string"` or `"DataPack"`. This will appear in the
+                `input_format` field on default page and can be queried and
+                validated against the expected input format set by user.
+                Default to `"string"`.
         """
         self.initialize()
         uvicorn.run(
-            self._remote_service_app(name=name),
+            self._remote_service_app(
+                service_name=service_name, input_format=input_format
+            ),
             host=host,
             port=port,
             log_level="info",
@@ -1105,7 +1126,8 @@ def serve(
     pl_config_path: str,
     host: str = "localhost",
     port: int = 8008,
-    name: str = "",
+    service_name: str = "",
+    input_format: str = "string",
 ):
     r"""Start a remote service of a pipeline initialized from a YAML config at
     a specified host and port.
@@ -1116,9 +1138,21 @@ def serve(
             pipeline.
         host: Port number of pipeline service.
         port: Host name of pipeline service.
-        name: Assign a name to the pipeline service for validation.
-            Default to `''`.
+        service_name: Assign a name to the pipeline service for validation.
+                This will appear in the `service_name` field on default page
+                and can be queried and validated against the expected service
+                name set by user. Default to `''`.
+        input_format: Specify format of the input for validation. It can be
+            `"string"` or `"DataPack"`. This will appear in the
+            `input_format` field on default page and can be queried and
+            validated against the expected input format set by user.
+            Default to `"string"`.
     """
     pipeline: Pipeline = Pipeline()
     pipeline.init_from_config_path(pl_config_path)
-    pipeline.serve(host=host, port=port, name=name)
+    pipeline.serve(
+        host=host,
+        port=port,
+        service_name=service_name,
+        input_format=input_format,
+    )
