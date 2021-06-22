@@ -33,6 +33,16 @@ from forte.data.common_entry_utils import create_utterance, get_last_utterance
 from ft.onto.base_ontology import Utterance
 
 
+TEST_RECORDS_1 = {
+    "Token": {"1", "2"},
+    "Document": {"2"},
+}
+TEST_RECORDS_2 = {
+    "ft.onto.example_import_ontology.Token": {"pos", "lemma"},
+    "Sentence": {"1", "2", "3"},
+}
+
+
 class UserSimulator(PackProcessor):
     """
     A simulated processor that will generate utterance based on the config.
@@ -41,18 +51,35 @@ class UserSimulator(PackProcessor):
     def _process(self, input_pack: DataPack):
         create_utterance(input_pack, self.configs.user_input, "user")
 
-    def record(self, record_meta: Dict[str, Set[str]]):
-        """
-        Add records to test validation in RemoteProcessor
-        """
-        record_meta["Token"] = {"1", "2"}
-        record_meta["Document"] = {"2"}
-
     @classmethod
     def default_configs(cls):
         config = super().default_configs()
         config["user_input"] = ""
         return config
+
+
+class DummyProcessor(PackProcessor):
+    """
+    A dummpy Processor to check the expected/output records from the remote
+    pipeline.
+    """
+
+    def __init__(
+        self,
+        expected_records: Dict[str, Set[str]] = {},
+        output_records: Dict[str, Set[str]] = {},
+    ):
+        self._expected_records: Dict[str, Set[str]] = expected_records
+        self._output_records: Dict[str, Set[str]] = output_records
+
+    def _process(self, input_pack: DataPack):
+        pass
+
+    def expected_types_and_attributes(self):
+        return self._expected_records
+
+    def record(self, record_meta: Dict[str, Set[str]]):
+        record_meta.update(self._output_records)
 
 
 @ddt
@@ -114,7 +141,9 @@ class TestRemoteProcessor(unittest.TestCase):
         # Build service pipeline
         serve_pl: Pipeline[DataPack] = Pipeline[DataPack]()
         serve_pl.set_reader(RawDataDeserializeReader())
+        serve_pl.add(DummyProcessor(expected_records=TEST_RECORDS_1))
         serve_pl.add(UserSimulator(), config={"user_input": i_str})
+        serve_pl.add(DummyProcessor(output_records=TEST_RECORDS_2))
         serve_pl.add(ElizaProcessor())
         serve_pl.initialize()
 
@@ -127,8 +156,11 @@ class TestRemoteProcessor(unittest.TestCase):
         )
 
         # Build test pipeline
-        test_pl: Pipeline[DataPack] = Pipeline[DataPack]()
+        test_pl: Pipeline[DataPack] = Pipeline[DataPack](
+            do_init_type_check=True
+        )
         test_pl.set_reader(StringReader())
+        test_pl.add(DummyProcessor(output_records=TEST_RECORDS_1))
         test_pl.add(
             remote_processor,
             config={
@@ -136,13 +168,10 @@ class TestRemoteProcessor(unittest.TestCase):
                     "do_init_type_check": True,
                     "input_format": input_format,
                     "expected_name": service_name,
-                    "expected_records": {
-                        "Token": {"1", "2"},
-                        "Document": {"2"},
-                    },
                 }
             },
         )
+        test_pl.add(DummyProcessor(expected_records=TEST_RECORDS_2))
         test_pl.initialize()
 
         # Verify output

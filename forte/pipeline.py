@@ -57,6 +57,7 @@ from forte.process_manager import ProcessManager, ProcessJobStatus
 from forte.processors.base import BaseProcessor
 from forte.processors.base.batch_processor import BaseBatchProcessor
 from forte.utils import create_class_with_kwargs
+from forte.utils.utils_processor import record_types_and_attributes_check
 
 logger = logging.getLogger(__name__)
 
@@ -115,6 +116,7 @@ class Pipeline(Generic[PackType]):
         resource: Optional[Resources] = None,
         ontology_file: Optional[str] = None,
         enforce_consistency: bool = False,
+        do_init_type_check: bool = False,
     ):
         r"""
 
@@ -146,6 +148,12 @@ class Pipeline(Generic[PackType]):
                 `enforce_consistency=True`, processor A would check if this
                 type exists in the record of the output of the
                 previous pipeline component.
+            do_init_type_check: Determine whether to check records types and
+                attributes during pipeline initialization. Default to `False`.
+                If this boolean is set to `True`, each component in the
+                pipeline will be validated by comparing its
+                ``expected_types_and_attributes`` with the accumulated
+                ``records`` from all the downstream components.
         """
         self._reader: BaseReader
         self._reader_config: Optional[Config] = None
@@ -193,6 +201,9 @@ class Pipeline(Generic[PackType]):
         self._profiler: List[float] = []
 
         self._check_type_consistency = enforce_consistency
+
+        # Indicate whether do type checking during pipeline initialization
+        self._do_init_type_check: bool = do_init_type_check
 
     def enforce_consistency(self, enforce: bool = True):
         r"""This function determines whether the pipeline will check
@@ -338,6 +349,13 @@ class Pipeline(Generic[PackType]):
                     component.record(records)
             return {"status": "OK", "records": records}
 
+        @app.get("/expectation")
+        def get_expectation():
+            expectation: Dict[str, Set[str]] = {}
+            if len(self.components) > 0:
+                expectation = self.components[0].expected_types_and_attributes()
+            return {"status": "OK", "expectation": expectation}
+
         @app.post("/process")
         def run_pipeline(body: RequestBody):
             args = json.loads(body.args)
@@ -448,6 +466,16 @@ class Pipeline(Generic[PackType]):
         if self._enable_profiling:
             self.reader.set_profiling(True)
             self._profiler = [0.0] * len(self.components)
+
+        # Check record types and attributes of each pipeline component
+        if self._do_init_type_check:
+            current_records = {}
+            self._reader.record(current_records)
+            for component in self.components:
+                record_types_and_attributes_check(
+                    component.expected_types_and_attributes(), current_records
+                )
+                component.record(current_records)
 
         return self
 
