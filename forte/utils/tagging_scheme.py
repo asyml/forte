@@ -94,7 +94,7 @@ def bio_merge(
     result_start: List[Union[int, None]] = []
     result_end: List[Union[int, None]] = []
 
-    for index, (tag, type) in enumerate(zip(tags, types)):
+    for idx, (tag, type) in enumerate(zip(tags, types)):
         if (
             tag == "B"
             or (tag == "I" and type != prev_type)
@@ -106,15 +106,15 @@ def bio_merge(
                 result_end.append(prev_end)
 
             if is_indexed:
-                prev_start = start[index]
-                prev_end = end[index]
+                prev_start = start[idx]
+                prev_end = end[idx]
 
             if tag != "O":  # a new entity started
                 new_entity = True
 
         elif tag == "I" and type == prev_type:  # continue with the last entity
             if is_indexed:
-                prev_end = end[index]
+                prev_end = end[idx]
 
         else:  # "O" tag
             new_entity = False
