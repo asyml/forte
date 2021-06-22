@@ -19,11 +19,14 @@ import logging
 from typing import Optional, List, Union, Tuple
 
 
-def bio_merge(tags: List[str], types: List[Union[str, None]],
-              index: Optional[List[Tuple[int, int]]]=None) \
-        -> Tuple[List[Union[str, None]],
-                 List[Tuple[Union[int, None], Union[int, None]]]]:
-    r""" This function merged BIO-schemed augmented tagging scheme results and
+def bio_merge(
+    tags: List[str],
+    types: List[Union[str, None]],
+    index: Optional[List[Tuple[int, int]]] = None,
+) -> Tuple[
+    List[Union[str, None]], List[Tuple[Union[int, None], Union[int, None]]]
+]:
+    r"""This function merged BIO-schemed augmented tagging scheme results and
     return chunks information.
 
     For example, BIO NER tags could be merged by passing
@@ -64,30 +67,40 @@ def bio_merge(tags: List[str], types: List[Union[str, None]],
         is_indexed = False
         start = []
         end = []
-        logging.warning('start and end indexes for the tags was not provided '
-                      'and will be returned as `None`')
+        logging.warning(
+            "start and end indexes for the tags was not provided "
+            "and will be returned as `None`"
+        )
     else:  # get start and end index
         start, end = zip(*index)
 
     # input check
-    if len(tags) != len(types) or (is_indexed and (len(start) != len(tags) or
-                                                   len(end) != len(tags))):
-        raise ValueError('The input tags, types, start and end index have '
-                         'different length, please check.')
+    if len(tags) != len(types) or (
+        is_indexed and (len(start) != len(tags) or len(end) != len(tags))
+    ):
+        raise ValueError(
+            "The input tags, types, start and end index have "
+            "different length, please check."
+        )
 
     for tag in tags:
         if tag not in ["B", "I", "O"]:
-            raise ValueError('The BIO tags contain characters beyond `BIO`, '
-                             'please check the input tags.')
+            raise ValueError(
+                "The BIO tags contain characters beyond `BIO`, "
+                "please check the input tags."
+            )
 
     result_types: List[Union[str, None]] = []
     result_start: List[Union[int, None]] = []
     result_end: List[Union[int, None]] = []
 
     for index, (tag, type) in enumerate(zip(tags, types)):
-        if tag == "B" or (tag == "I" and type != prev_type) or (tag == "O" and
-                prev_tag and prev_tag != "O"):  # the last entity has ended
-            if prev_tag and prev_tag != 'O':
+        if (
+            tag == "B"
+            or (tag == "I" and type != prev_type)
+            or (tag == "O" and prev_tag and prev_tag != "O")
+        ):  # the last entity has ended
+            if prev_tag and prev_tag != "O":
                 result_types.append(prev_type)
                 result_start.append(prev_start)
                 result_end.append(prev_end)
@@ -114,7 +127,8 @@ def bio_merge(tags: List[str], types: List[Union[str, None]],
         result_start.append(prev_start)
         result_end.append(prev_end)
 
-    result_index: List[Tuple[Union[int, None], Union[int, None]]] = \
-        list(zip(result_start, result_end))
+    result_index: List[Tuple[Union[int, None], Union[int, None]]] = list(
+        zip(result_start, result_end)
+    )
 
     return result_types, result_index
