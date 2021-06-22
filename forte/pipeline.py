@@ -472,10 +472,15 @@ class Pipeline(Generic[PackType]):
             current_records: Dict[str, Set[str]] = {}
             self._reader.record(current_records)
             for component in self.components:
+                if not (
+                    hasattr(component, "expected_types_and_attributes")
+                    and hasattr(component, "record")
+                ):
+                    continue
                 record_types_and_attributes_check(
-                    component.expected_types_and_attributes(), current_records
+                    component.expected_types_and_attributes(), current_records  # type: ignore
                 )
-                component.record(current_records)
+                component.record(current_records)  # type: ignore
 
         return self
 
