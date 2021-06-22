@@ -22,7 +22,7 @@ from typing import Optional, List, Union, Tuple
 def bio_merge(
     tags: List[str],
     types: List[Union[str, None]],
-    index: Optional[List[Tuple[int, int]]] = None,
+    index: Optional[List[Tuple[Union[int, None], Union[int, None]]]] = None,
 ) -> Tuple[
     List[Union[str, None]], List[Tuple[Union[int, None], Union[int, None]]]
 ]:
@@ -65,14 +65,14 @@ def bio_merge(
     # No start or end information is provided, do not process index information
     if index is None:
         is_indexed = False
-        start = []
-        end = []
+        start: List[Union[int, None]] = []
+        end: List[Union[int, None]] = []
         logging.warning(
             "start and end indexes for the tags was not provided "
             "and will be returned as `None`"
         )
     else:  # get start and end index
-        start, end = zip(*index)
+        start, end = zip(*index)  # type: ignore
 
     # input check
     if len(tags) != len(types) or (
