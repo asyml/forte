@@ -469,7 +469,7 @@ class Pipeline(Generic[PackType]):
 
         # Check record types and attributes of each pipeline component
         if self._do_init_type_check:
-            current_records = {}
+            current_records: Dict[str, Set[str]] = {}
             self._reader.record(current_records)
             for component in self.components:
                 record_types_and_attributes_check(
