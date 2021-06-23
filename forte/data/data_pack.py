@@ -89,7 +89,7 @@ class Meta(BaseMeta):
         self.language = language
         self.span_unit = span_unit
         self.record: Dict[str, Set[str]] = dict()
-        self.info: Dict[str, str] = dict()
+        self.info: Dict[str, str] = info
 
 
 class DataPack(BasePack[Entry, Link, Group]):
