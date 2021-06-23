@@ -20,7 +20,7 @@ from abc import ABC
 from typing import Iterator, Dict, Any
 
 from forte.data import DataPack, MultiPack
-from forte.data.base_pack import PackType, BasePack
+from forte.data.base_pack import PackType
 from forte.data.base_reader import PackReader, BaseReader
 from ft.onto.base_ontology import Utterance
 
