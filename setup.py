@@ -38,6 +38,9 @@ setuptools.setup(
         'typing-inspect>=0.6.0',
         'dataclasses~=0.7;python_version<"3.7"',
         'importlib-resources==5.1.4;python_version<"3.7"',
+        'dataclasses~=0.7;python_version<"3.7"',
+        'fastapi==0.65.2',
+        'uvicorn==0.14.0'
     ],
     extras_require={
         'ner': ['torch>=1.1.0', 'torchtext==0.4.0', 'tqdm>=4.36.1'],

@@ -118,13 +118,13 @@ principle, we make Forte:
   collaborations!
 
 -----------------
-| ![forte_arch.jpg](https://raw.githubusercontent.com/asyml/forte/master/docs/_static/img/forte_arch.png)
-| |:--:| | *A high level Architecture of Forte showing how ontology and entries
-work with the pipeline.* |
+| ![forte_arch.jpg](https://raw.githubusercontent.com/asyml/forte/master/docs/_static/img/forte_arch.png) |
+|:--:| 
+| *A high level Architecture of Forte showing how ontology and entries work with the pipeline.* |
 -----------------
-| ![forte_results.jpg](https://raw.githubusercontent.com/asyml/forte/master/docs/_static/img/forte_results.png)
-| |:--:| | *Forte stores results in data packs and use the ontology to represent
-task logic.* |
+| ![forte_results.jpg](https://raw.githubusercontent.com/asyml/forte/master/docs/_static/img/forte_results.png) |
+|:--:| 
+|*Forte stores results in data packs and use the ontology to represent task logic.* |
 -----------------
 
 ## Package Overview
