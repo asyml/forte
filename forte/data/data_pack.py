@@ -66,7 +66,11 @@ class Meta(BaseMeta):
         language: The language used by this data pack, default is English.
         span_unit: The unit used for interpreting the Span object of this
           data pack. Default is character.
+        info: Store additional string based information that the user add.
     Attributes:
+        pack_name:  storing the provided `pack_name`.
+        language: storing the provided `language`.
+        info: storing the provided `info`.
         record: Initialized as a dictionary. This is not a required field.
             The key of the record should be the entry type and values should
             be attributes of the entry type. All the information would be used
@@ -79,11 +83,13 @@ class Meta(BaseMeta):
             pack_name: Optional[str] = None,
             language: str = "eng",
             span_unit: str = "character",
+            info: Dict[str, str] = None
     ):
         super().__init__(pack_name)
         self.language = language
         self.span_unit = span_unit
         self.record: Dict[str, Set[str]] = dict()
+        self.info: Dict[str, str] = dict()
 
 
 class DataPack(BasePack[Entry, Link, Group]):

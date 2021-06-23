@@ -19,6 +19,8 @@ import os
 import tempfile
 from unittest import TestCase
 
+from smart_open import open
+
 from forte.common import Resources
 from forte.data.data_pack import DataPack
 from forte.datasets.wikipedia.dbpedia import (
@@ -117,6 +119,10 @@ class TestDBpediaReaders(TestCase):
 
         self.num_packs_check(output, 1)
         self.num_indexed(output, 1)
+
+        with open(glob.glob(output + "/**/*.json.gz")[0]) as data:
+            pack = DataPack.deserialize(data.read())
+            self.assertEqual(len(list(pack.get("ft.onto.wikipedia.WikiAnchor"))), 4)
 
     def test_property(self):
         pl = Pipeline[DataPack](self.resources)
