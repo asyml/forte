@@ -19,6 +19,8 @@ import itertools
 import logging
 import json
 from time import time
+import sys
+
 from typing import (
     Any,
     Dict,
@@ -58,6 +60,11 @@ from forte.processors.base import BaseProcessor
 from forte.processors.base.batch_processor import BaseBatchProcessor
 from forte.utils import create_class_with_kwargs
 from forte.utils.utils_processor import record_types_and_attributes_check
+
+if sys.version_info < (3, 7):
+    import importlib_resources as resources
+else:
+    from importlib import resources
 
 logger = logging.getLogger(__name__)
 
@@ -181,6 +188,13 @@ class Pipeline(Generic[PackType]):
             self.resource = Resources()
         else:
             self.resource = resource
+
+        if ontology_file is None:
+            with resources.path(
+                "forte.ontology_specs", "base_ontology.json"
+            ) as data_path:
+                ontology_file = str(data_path)
+
         if ontology_file is not None:
             with open(ontology_file, "r") as f:
                 spec_dict = json.load(f)

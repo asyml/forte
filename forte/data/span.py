@@ -62,3 +62,9 @@ class Span:
 
     def __eq__(self, other):
         return (self.begin, self.end) == (other.begin, other.end)
+
+    def __key(self):
+        return self.begin, self.end
+
+    def __hash__(self):
+        return hash(self.__key())
