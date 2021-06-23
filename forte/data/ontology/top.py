@@ -18,7 +18,13 @@ from typing import Optional, Set, Tuple, Type, Any, Dict, Union, Iterable, List
 import numpy as np
 
 from forte.data.base_pack import PackType
-from forte.data.ontology.core import Entry, BaseLink, BaseGroup, MultiEntry, EntryType
+from forte.data.ontology.core import (
+    Entry,
+    BaseLink,
+    BaseGroup,
+    MultiEntry,
+    EntryType,
+)
 from forte.data.span import Span
 
 __all__ = [
@@ -114,10 +120,10 @@ class Annotation(Entry):
         return self.tid
 
     def get(
-            self,
-            entry_type: Union[str, Type[EntryType]],
-            components: Optional[Union[str, Iterable[str]]] = None,
-            include_sub_type=True,
+        self,
+        entry_type: Union[str, Type[EntryType]],
+        components: Optional[Union[str, Iterable[str]]] = None,
+        include_sub_type=True,
     ) -> Iterable[EntryType]:
         """
         This function wraps the :method:`~forte.data.DataPack.get()` method to find
@@ -170,10 +176,10 @@ class Link(BaseLink):
     ChildType: Any = Entry
 
     def __init__(
-            self,
-            pack: PackType,
-            parent: Optional[Entry] = None,
-            child: Optional[Entry] = None,
+        self,
+        pack: PackType,
+        parent: Optional[Entry] = None,
+        child: Optional[Entry] = None,
     ):
         self._parent: Optional[int] = None
         self._child: Optional[int] = None
@@ -262,9 +268,9 @@ class Group(BaseGroup[Entry]):
     MemberType: Type[Entry] = Entry
 
     def __init__(
-            self,
-            pack: PackType,
-            members: Optional[Iterable[Entry]] = None,
+        self,
+        pack: PackType,
+        members: Optional[Iterable[Entry]] = None,
     ):  # pylint: disable=useless-super-delegation
         self._members: Set[int] = set()
         super().__init__(pack, members)
@@ -317,10 +323,10 @@ class MultiPackLink(MultiEntry, BaseLink):
     ChildType = Entry
 
     def __init__(
-            self,
-            pack: PackType,
-            parent: Optional[Entry] = None,
-            child: Optional[Entry] = None,
+        self,
+        pack: PackType,
+        parent: Optional[Entry] = None,
+        child: Optional[Entry] = None,
     ):
         self._parent: Optional[Tuple[int, int]] = None
         self._child: Optional[Tuple[int, int]] = None
@@ -448,7 +454,7 @@ class MultiPackGroup(MultiEntry, BaseGroup[Entry]):
     MemberType: Type[Entry] = Entry
 
     def __init__(
-            self, pack: PackType, members: Optional[Iterable[Entry]] = None
+        self, pack: PackType, members: Optional[Iterable[Entry]] = None
     ):  # pylint: disable=useless-super-delegation
         self._members: List[Tuple[int, int]] = []
         super().__init__(pack)

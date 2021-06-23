@@ -79,11 +79,11 @@ class Meta(BaseMeta):
     """
 
     def __init__(
-            self,
-            pack_name: Optional[str] = None,
-            language: str = "eng",
-            span_unit: str = "character",
-            info: Dict[str, str] = None
+        self,
+        pack_name: Optional[str] = None,
+        language: str = "eng",
+        span_unit: str = "character",
+        info: Dict[str, str] = None,
     ):
         super().__init__(pack_name)
         self.language = language
@@ -283,12 +283,12 @@ class DataPack(BasePack[Entry, Link, Group]):
         Returns:
             The text within this span
         """
-        return self._text[span.begin: span.end]
+        return self._text[span.begin : span.end]
 
     def set_text(
-            self,
-            text: str,
-            replace_func: Optional[Callable[[str], ReplaceOperationsType]] = None,
+        self,
+        text: str,
+        replace_func: Optional[Callable[[str], ReplaceOperationsType]] = None,
     ):
 
         if len(text) < len(self._text):
@@ -326,7 +326,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         return original_text
 
     def get_original_span(
-            self, input_processed_span: Span, align_mode: str = "relaxed"
+        self, input_processed_span: Span, align_mode: str = "relaxed"
     ):
         r"""Function to obtain span of the original text that aligns with the
         given span of the processed text.
@@ -383,7 +383,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         req_end = input_processed_span.end
 
         def get_original_index(
-                input_index: int, is_begin_index: bool, mode: str
+            input_index: int, is_begin_index: bool, mode: str
         ) -> int:
             r"""
             Args:
@@ -401,8 +401,8 @@ class DataPack(BasePack[Entry, Link, Group]):
             orig_index = None
             prev_end = 0
             for (
-                    inverse_span,
-                    original_span,
+                inverse_span,
+                original_span,
             ) in self.__processed_original_spans:
                 # check if the input_index lies between one of the unprocessed
                 # spans
@@ -483,7 +483,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         return self.__add_entry_with_check(entry, True)
 
     def __add_entry_with_check(
-            self, entry: EntryType, allow_duplicate: bool = True
+        self, entry: EntryType, allow_duplicate: bool = True
     ) -> EntryType:
         r"""Internal method to add an :class:`Entry` object to the
         :class:`DataPack` object.
@@ -618,10 +618,10 @@ class DataPack(BasePack[Entry, Link, Group]):
         return isinstance(entry, Group)
 
     def get_data(
-            self,
-            context_type: Type[Annotation],
-            request: Optional[DataRequest] = None,
-            skip_k: int = 0,
+        self,
+        context_type: Type[Annotation],
+        request: Optional[DataRequest] = None,
+        skip_k: int = 0,
     ) -> Iterator[Dict[str, Any]]:
         r"""Fetch entries from the data_pack of type `context_type`.
 
@@ -709,7 +709,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         # must iterate through a copy here because self.annotations is changing
         for context in list(self.annotations):
             if context.tid not in valid_context_ids or not isinstance(
-                    context, context_type
+                context, context_type
             ):
                 continue
             if skipped < skip_k:
@@ -717,7 +717,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                 continue
 
             data: Dict[str, Any] = dict()
-            data["context"] = self.text[context.span.begin: context.span.end]
+            data["context"] = self.text[context.span.begin : context.span.end]
             data["offset"] = context.span.begin
 
             for field in context_fields:
@@ -802,11 +802,11 @@ class DataPack(BasePack[Entry, Link, Group]):
         return components, unit, fields
 
     def _generate_annotation_entry_data(
-            self,
-            a_type: Type[Annotation],
-            a_args: Union[Dict, Iterable],
-            data: Dict,
-            cont: Optional[Annotation],
+        self,
+        a_type: Type[Annotation],
+        a_args: Union[Dict, Iterable],
+        data: Dict,
+        cont: Optional[Annotation],
     ) -> Dict:
 
         components, unit, fields = self._parse_request_args(a_type, a_args)
@@ -851,7 +851,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
             if unit is not None:
                 while not self._index.in_span(
-                        data[unit]["tid"][unit_begin], annotation.span
+                    data[unit]["tid"][unit_begin], annotation.span
                 ):
                     unit_begin += 1
 
@@ -859,7 +859,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                 unit_span_end = unit_span_begin + 1
 
                 while self._index.in_span(
-                        data[unit]["tid"][unit_span_end], annotation.span
+                    data[unit]["tid"][unit_span_end], annotation.span
                 ):
                     unit_span_end += 1
 
@@ -871,11 +871,11 @@ class DataPack(BasePack[Entry, Link, Group]):
         return a_dict
 
     def _generate_link_entry_data(
-            self,
-            a_type: Type[Link],
-            a_args: Union[Dict, Iterable],
-            data: Dict,
-            cont: Optional[Annotation],
+        self,
+        a_type: Type[Link],
+        a_args: Union[Dict, Iterable],
+        data: Dict,
+        cont: Optional[Annotation],
     ) -> Dict:
 
         components, unit, fields = self._parse_request_args(a_type, a_args)
@@ -925,7 +925,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         return a_dict
 
     def build_coverage_for(
-            self, context_type: Type[Annotation], covered_type: Type[EntryType]
+        self, context_type: Type[Annotation], covered_type: Type[EntryType]
     ):
         """
         User can call this function to build coverage index for specific types.
@@ -942,7 +942,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             self._index.build_coverage_index(self, context_type, covered_type)
 
     def iter_in_range(
-            self, entry_type: Type[EntryType], range_annotation: Annotation
+        self, entry_type: Type[EntryType], range_annotation: Annotation
     ) -> Iterator[EntryType]:
         """
         Iterate the entries of the provided type within or fulfill the
@@ -1009,11 +1009,11 @@ class DataPack(BasePack[Entry, Link, Group]):
                         yield group
 
     def get(  # type: ignore
-            self,
-            entry_type: Union[str, Type[EntryType]],
-            range_annotation: Optional[Annotation] = None,
-            components: Optional[Union[str, Iterable[str]]] = None,
-            include_sub_type=True,
+        self,
+        entry_type: Union[str, Type[EntryType]],
+        range_annotation: Optional[Annotation] = None,
+        components: Optional[Union[str, Iterable[str]]] = None,
+        include_sub_type=True,
     ) -> Iterable[EntryType]:
         r"""This function is used to get data from a data pack with various
         methods.
@@ -1111,9 +1111,9 @@ class DataPack(BasePack[Entry, Link, Group]):
             entry_iter = self.generics
         elif range_annotation is not None:
             if (
-                    issubclass(entry_type_, Annotation)
-                    or issubclass(entry_type_, Link)
-                    or issubclass(entry_type_, Group)
+                issubclass(entry_type_, Annotation)
+                or issubclass(entry_type_, Link)
+                or issubclass(entry_type_, Group)
             ):
                 entry_iter = self.iter_in_range(entry_type_, range_annotation)
         elif issubclass(entry_type_, Annotation):
@@ -1185,7 +1185,7 @@ class DataIndex(BaseIndex):
         self._coverage_index_valid = False
 
     def coverage_index(
-            self, outer_type: Type[Annotation], inner_type: Type[EntryType]
+        self, outer_type: Type[Annotation], inner_type: Type[EntryType]
     ) -> Optional[Dict[int, Set[int]]]:
         r"""Get the coverage index from ``outer_type`` to ``inner_type``.
 
@@ -1202,10 +1202,10 @@ class DataIndex(BaseIndex):
         return self._coverage_index.get((outer_type, inner_type))
 
     def build_coverage_index(
-            self,
-            data_pack: DataPack,
-            outer_type: Type[Annotation],
-            inner_type: Type[EntryType],
+        self,
+        data_pack: DataPack,
+        outer_type: Type[Annotation],
+        inner_type: Type[EntryType],
     ):
         r"""Build the coverage index from ``outer_type`` to ``inner_type``.
 
@@ -1239,7 +1239,7 @@ class DataIndex(BaseIndex):
         self.activate_coverage_index()
 
     def have_overlap(
-            self, entry1: Union[Annotation, int], entry2: Union[Annotation, int]
+        self, entry1: Union[Annotation, int], entry2: Union[Annotation, int]
     ) -> bool:
         r"""Check whether the two annotations have overlap in span.
 
@@ -1273,8 +1273,8 @@ class DataIndex(BaseIndex):
             )
 
         return not (
-                entry1_.span.begin >= entry2_.span.end
-                or entry1_.span.end <= entry2_.span.begin
+            entry1_.span.begin >= entry2_.span.end
+            or entry1_.span.end <= entry2_.span.begin
         )
 
     def in_span(self, inner_entry: Union[int, Entry], span: Span) -> bool:
@@ -1332,7 +1332,7 @@ class DataIndex(BaseIndex):
             parent = inner_entry.get_parent()
 
             if not isinstance(child, Annotation) or not isinstance(
-                    parent, Annotation
+                parent, Annotation
             ):
                 # Cannot check in_span for non-annotations.
                 return False
