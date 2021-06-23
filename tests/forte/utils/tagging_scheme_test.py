@@ -39,23 +39,52 @@ class TestTaggingScheme(unittest.TestCase):
         ]
         start = [0, 11, 20, 24, 27, 34, 41, 44, 51, 54, 76, 83]
         end = [1, 19, 22, 26, 28, 40, 43, 46, 52, 59, 82, 89]
-        index = list(zip(start, end))
+        indices = list(zip(start, end))
 
-        expected_type, expected_start, expected_end = (
+        expected_types, expected_start, expected_end = (
             ["PER", "PER", "LOC", "PER", "LOC"],
             [11, 27, 34, 54, 76],
             [19, 28, 46, 59, 89],
         )
-        expected_index = list(zip(expected_start, expected_end))
+        expected_indices = list(zip(expected_start, expected_end))
 
-        result_type, result_index = bio_merge(tags, types, index)
+        result_types, result_indices = bio_merge(tags, types, indices)
 
-        self.assertEqual(result_type, expected_type)
-        self.assertEqual(result_index, expected_index)
+        self.assertEqual(result_types, expected_types)
+        self.assertEqual(result_indices, expected_indices)
 
     @data(["O", "B", "Y"], ["B", "B", "B", "B"])
     def test_invalid_input(self, tags):
-        types = [None, None, None]
+        types = ["", "", ""]
+        indices = [(0, 1), (2, 3), (4, 5)]
 
         with self.assertRaises(ValueError):
-            bio_merge(tags, types)
+            bio_merge(tags, types, indices)
+
+    def test_empty_type(self):
+        tags = ["B", "I", "O"]
+        types = ["", "", ""]
+        start = [0, 11, 20]
+        end = [1, 19, 22]
+        indices = list(zip(start, end))
+
+        expected_types = []
+        expected_indices = [(0, 19)]
+        result_types, result_indices = bio_merge(tags, types, indices)
+
+        self.assertEqual(result_types, expected_types)
+        self.assertEqual(result_indices, expected_indices)
+
+    def test_no_leading_B_tag(self):
+        tags = ["I", "O", "B", "I", "I"]
+        types = ["PER", "", "PER", "PER", "LOC"]
+        start = [0, 11, 20, 30, 40]
+        end = [1, 19, 22, 32, 42]
+        indices = list(zip(start, end))
+
+        expected_types = ["PER", "PER", "LOC"]
+        expected_indices = [(0, 1), (20, 32), (40, 42)]
+        result_types, result_indices = bio_merge(tags, types, indices)
+
+        self.assertEqual(result_types, expected_types)
+        self.assertEqual(result_indices, expected_indices)

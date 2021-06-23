@@ -15,28 +15,25 @@
 Utility functions related to tagging scheme.
 """
 
-import logging
-from typing import Optional, List, Union, Tuple
+from typing import Optional, List, Tuple
 
 
 def bio_merge(
     tags: List[str],
-    types: List[Union[str, None]],
-    index: Optional[List[Tuple[Union[int, None], Union[int, None]]]] = None,
-) -> Tuple[
-    List[Union[str, None]], List[Tuple[Union[int, None], Union[int, None]]]
-]:
+    types: List[str],
+    indices: List[Tuple[int, int]],
+) -> Tuple[List[Optional[str]], List[Tuple[int, int]]]:
     r"""This function merged BIO-schemed augmented tagging scheme results and
     return chunks information.
 
     For example, BIO NER tags could be merged by passing
     tags = ['B', 'O', 'B', 'I']
     types = ['PER', '', 'LOC', 'LOC']
-    index = [(0, 1), (11, 19), (20, 22), (24, 26)]
+    indices = [(0, 1), (11, 19), (20, 22), (24, 26)]
 
     After merging BIO tags, the results will be returned as
     result_types = ['PER', 'LOC']
-    result_index = [(0, 1), (20, 26)]
+    result_indices = [(0, 1), (20, 26)]
 
     The function handles 'I' with no leading 'B' tag. If we encounter
     "I" while its type is different from the previous type, we will consider
@@ -44,39 +41,27 @@ def bio_merge(
 
     The function can also handle tags with no types, for example, in some word
     segmentation tasks. In this case the input `types` should be set as a list
-    of None, and the returned result_type will be a list of None.
+    of empty string "", and the returned `result_types` will be an empty list.
 
     Args:
         tags: list of bio tags, contains "B", "I", "O" labels.
         types: list of entity type, could be PER, LOC in NER task.
-        index: list of (start, end) index for each input tag. default is None.
+        indices: list of (start, end) index for each input tag.
 
     Returns:
         result_types: list of merged entity type.
-        result_index: list of (start, end) index for the merged entities.
+        result_indices: list of (start, end) index for the merged entities.
     """
     prev_type: Optional[str] = None
     prev_tag: Optional[str] = None
     prev_start: Optional[int] = None
     prev_end: Optional[int] = None
     new_entity: bool = False
-    is_indexed: bool = True
-
-    # No start or end information is provided, do not process index information
-    if index is None:
-        is_indexed = False
-        start: List[Union[int, None]] = []
-        end: List[Union[int, None]] = []
-        logging.warning(
-            "start and end indexes for the tags was not provided "
-            "and will be returned as `None`"
-        )
-    else:  # get start and end index
-        start, end = zip(*index)  # type: ignore
+    start, end = zip(*indices)  # type: ignore
 
     # input check
     if len(tags) != len(types) or (
-        is_indexed and (len(start) != len(tags) or len(end) != len(tags))
+        (len(start) != len(tags) or len(end) != len(tags))
     ):
         raise ValueError(
             "The input tags, types, start and end index have "
@@ -90,9 +75,9 @@ def bio_merge(
                 "please check the input tags."
             )
 
-    result_types: List[Union[str, None]] = []
-    result_start: List[Union[int, None]] = []
-    result_end: List[Union[int, None]] = []
+    result_types: List[Optional[str]] = []
+    result_start: List[int] = []
+    result_end: List[int] = []
 
     for idx, (tag, type) in enumerate(zip(tags, types)):
         if (
@@ -105,16 +90,13 @@ def bio_merge(
                 result_start.append(prev_start)
                 result_end.append(prev_end)
 
-            if is_indexed:
-                prev_start = start[idx]
-                prev_end = end[idx]
+            new_entity = True if tag != "O" else False  # a new entity started
 
-            if tag != "O":  # a new entity started
-                new_entity = True
+            prev_start = start[idx]
+            prev_end = end[idx]
 
         elif tag == "I" and type == prev_type:  # continue with the last entity
-            if is_indexed:
-                prev_end = end[idx]
+            prev_end = end[idx]
 
         else:  # "O" tag
             new_entity = False
@@ -127,8 +109,10 @@ def bio_merge(
         result_start.append(prev_start)
         result_end.append(prev_end)
 
-    result_index: List[Tuple[Union[int, None], Union[int, None]]] = list(
-        zip(result_start, result_end)
-    )
+    result_indices: List[Tuple[int, int]] = list(zip(result_start, result_end))
 
-    return result_types, result_index
+    # no types provided, return empty list
+    if len(set(result_types)) == 1 and result_types[0] == "":
+        result_types = []
+
+    return result_types, result_indices
