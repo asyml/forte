@@ -37,6 +37,11 @@ class PeriodSentenceSplitter(PackProcessor):
             Sentence(input_pack, start, end)
             start = end
 
+        if start < len(input_pack.text):
+            input_pack.add_entry(
+                Sentence(input_pack, start, len(input_pack.text))
+            )
+
 
 class WhiteSpaceTokenizer(PackProcessor):
     """

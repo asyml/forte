@@ -16,15 +16,21 @@
 The module contains assorted common readers.
 """
 import logging
+from abc import ABC
 from typing import Iterator, Dict, Any
 
-from forte.data import DataPack
-from forte.data.base_reader import PackReader
+from forte.data import DataPack, MultiPack
+from forte.data.base_pack import PackType
+from forte.data.base_reader import PackReader, BaseReader
 from ft.onto.base_ontology import Utterance
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["TerminalReader"]
+__all__ = [
+    "TerminalReader",
+    "RawPackReader",
+    "RawMultiPackReader",
+]
 
 
 class TerminalReader(PackReader):
@@ -81,3 +87,23 @@ class TerminalReader(PackReader):
 
         configs["pack_name"] = "query"
         return configs
+
+
+class BaseRawPackReader(BaseReader, ABC):
+    def _collect(self, pack: PackType) -> Iterator[Any]:  # type: ignore
+        yield pack
+
+    def _parse_pack(self, pack: PackType) -> Iterator[PackType]:
+        yield pack
+
+
+class RawPackReader(BaseRawPackReader):
+    @property
+    def pack_type(self):
+        return DataPack
+
+
+class RawMultiPackReader(BaseRawPackReader):
+    @property
+    def pack_type(self):
+        return MultiPack
