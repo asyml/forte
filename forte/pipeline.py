@@ -57,6 +57,7 @@ from forte.process_manager import ProcessManager, ProcessJobStatus
 from forte.processors.base import BaseProcessor
 from forte.processors.base.batch_processor import BaseBatchProcessor
 from forte.utils import create_class_with_kwargs
+from forte.utils.utils_processor import record_types_and_attributes_check
 
 logger = logging.getLogger(__name__)
 
@@ -115,6 +116,7 @@ class Pipeline(Generic[PackType]):
         resource: Optional[Resources] = None,
         ontology_file: Optional[str] = None,
         enforce_consistency: bool = False,
+        do_init_type_check: bool = False,
     ):
         r"""
 
@@ -146,6 +148,12 @@ class Pipeline(Generic[PackType]):
                 `enforce_consistency=True`, processor A would check if this
                 type exists in the record of the output of the
                 previous pipeline component.
+            do_init_type_check: Determine whether to check records types and
+                attributes during pipeline initialization. Default to `False`.
+                If this boolean is set to `True`, each component in the
+                pipeline will be validated by comparing its
+                ``expected_types_and_attributes`` with the accumulated
+                ``records`` from all the downstream components.
         """
         self._reader: BaseReader
         self._reader_config: Optional[Config] = None
@@ -193,6 +201,9 @@ class Pipeline(Generic[PackType]):
         self._profiler: List[float] = []
 
         self._check_type_consistency = enforce_consistency
+
+        # Indicate whether do type checking during pipeline initialization
+        self._do_init_type_check: bool = do_init_type_check
 
     def enforce_consistency(self, enforce: bool = True):
         r"""This function determines whether the pipeline will check
@@ -289,17 +300,30 @@ class Pipeline(Generic[PackType]):
         with open(path, "w") as f:
             yaml.safe_dump(self._dump_to_config(), f)
 
-    @property
-    def _remote_service_app(self):
+    def _remote_service_app(
+        self, service_name: str = "", input_format: str = "string"
+    ):
         r"""Return a FastAPI app that can be used to serve the pipeline.
-        Currently it only supports the `process` function, but it can be
-        extended by adding new interfaces that wrap up any Pipeline method.
-        Refer to https://fastapi.tiangolo.com for more info.
+
+        Args:
+            service_name: Assign a name to the pipeline service for validation.
+                This will appear in the `service_name` field on default page
+                and can be queried and validated against the expected service
+                name set by user. Default to `''`.
+            input_format: Specify format of the input for validation. It can be
+                `"string"` or `"DataPack"`. This will appear in the
+                `input_format` field on default page and can be queried and
+                validated against the expected input format set by user.
+                Default to `"string"`.
 
         Returns:
             FastAPI: A FastAPI app for remote service.
         """
+        # TODO: Currently we only support the `process` function, but it can
+        # be extended by adding new interfaces that wrap up any Pipeline
+        # method. Refer to https://fastapi.tiangolo.com for more info.
         app = FastAPI()
+        records: Optional[Dict[str, Set[str]]] = None
 
         class RequestBody(BaseModel):
             args: str = "[]"
@@ -308,30 +332,72 @@ class Pipeline(Generic[PackType]):
         # pylint: disable=unused-variable
         @app.get("/")
         def default_page():
-            return {"status": "OK", "pipeline": self._dump_to_config()}
+            return {
+                "status": "OK",
+                "service_name": service_name,
+                "input_format": input_format,
+                "pipeline": self._dump_to_config(),
+            }
+
+        @app.get("/records")
+        def get_records():
+            nonlocal records
+            if records is None:
+                # Collect records of each pipeline component for validation
+                records = {}
+                for component in [self._reader] + self.components:
+                    component.record(records)
+            return {"status": "OK", "records": records}
+
+        @app.get("/expectation")
+        def get_expectation():
+            expectation: Dict[str, Set[str]] = {}
+            if len(self.components) > 0:
+                expectation = self.components[0].expected_types_and_attributes()
+            return {"status": "OK", "expectation": expectation}
 
         @app.post("/process")
         def run_pipeline(body: RequestBody):
             args = json.loads(body.args)
             kwargs = json.loads(body.kwargs)
             result = self.process(*args, **kwargs)
-            return {"result": result.serialize()}
+            return {"status": "OK", "result": result.serialize()}
 
         # pylint: enable=unused-variable
 
         return app
 
-    def serve(self, host: str = "localhost", port: int = 8008):
+    def serve(
+        self,
+        host: str = "localhost",
+        port: int = 8008,
+        service_name: str = "",
+        input_format: str = "string",
+    ):
         r"""Start a service of the current pipeline at a specified host
         and port.
 
         Args:
             host: Port number of pipeline service.
             port: Host name of pipeline service.
+            service_name: Assign a name to the pipeline service for validation.
+                This will appear in the `service_name` field on default page
+                and can be queried and validated against the expected service
+                name set by user. Default to `''`.
+            input_format: Specify format of the input for validation. It can be
+                `"string"` or `"DataPack"`. This will appear in the
+                `input_format` field on default page and can be queried and
+                validated against the expected input format set by user.
+                Default to `"string"`.
         """
         self.initialize()
         uvicorn.run(
-            self._remote_service_app, host=host, port=port, log_level="info"
+            self._remote_service_app(
+                service_name=service_name, input_format=input_format
+            ),
+            host=host,
+            port=port,
+            log_level="info",
         )
 
     def set_profiling(self, enable_profiling: bool = True):
@@ -400,6 +466,19 @@ class Pipeline(Generic[PackType]):
         if self._enable_profiling:
             self.reader.set_profiling(True)
             self._profiler = [0.0] * len(self.components)
+
+        # Check record types and attributes of each pipeline component
+        if self._do_init_type_check:
+            current_records: Dict[str, Set[str]] = {}
+            self._reader.record(current_records)
+            for component in self.components:
+                if hasattr(component, "expected_types_and_attributes"):
+                    record_types_and_attributes_check(
+                        component.expected_types_and_attributes(),  # type: ignore
+                        current_records,
+                    )
+                if hasattr(component, "record"):
+                    component.record(current_records)  # type: ignore
 
         return self
 
@@ -1074,7 +1153,13 @@ class Pipeline(Generic[PackType]):
             yield p.name, p.get_result()
 
 
-def serve(pl_config_path: str, host: str = "localhost", port: int = 8008):
+def serve(
+    pl_config_path: str,
+    host: str = "localhost",
+    port: int = 8008,
+    service_name: str = "",
+    input_format: str = "string",
+):
     r"""Start a remote service of a pipeline initialized from a YAML config at
     a specified host and port.
 
@@ -1084,7 +1169,21 @@ def serve(pl_config_path: str, host: str = "localhost", port: int = 8008):
             pipeline.
         host: Port number of pipeline service.
         port: Host name of pipeline service.
+        service_name: Assign a name to the pipeline service for validation.
+                This will appear in the `service_name` field on default page
+                and can be queried and validated against the expected service
+                name set by user. Default to `''`.
+        input_format: Specify format of the input for validation. It can be
+            `"string"` or `"DataPack"`. This will appear in the
+            `input_format` field on default page and can be queried and
+            validated against the expected input format set by user.
+            Default to `"string"`.
     """
     pipeline: Pipeline = Pipeline()
     pipeline.init_from_config_path(pl_config_path)
-    pipeline.serve(host=host, port=port)
+    pipeline.serve(
+        host=host,
+        port=port,
+        service_name=service_name,
+        input_format=input_format,
+    )
