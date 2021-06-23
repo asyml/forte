@@ -90,7 +90,7 @@ def bio_merge(
                 result_start.append(prev_start)
                 result_end.append(prev_end)
 
-            new_entity = True if tag != "O" else False  # a new entity started
+            new_entity = tag != "O"  # a new entity started
 
             prev_start = start[idx]
             prev_end = end[idx]
