@@ -62,28 +62,28 @@ class TestTaggingScheme(unittest.TestCase):
             bio_merge(tags, types, indices)
 
     def test_empty_type(self):
-        tags = ["B", "I", "O"]
-        types = ["", "", ""]
-        start = [0, 11, 20]
-        end = [1, 19, 22]
+        tags = ["O", "B", "I", "O"]
+        types = ["", "", "", ""]
+        start = [0, 2, 11, 20]
+        end = [1, 3, 19, 22]
         indices = list(zip(start, end))
 
         expected_types = []
-        expected_indices = [(0, 19)]
+        expected_indices = [(2, 19)]
         result_types, result_indices = bio_merge(tags, types, indices)
 
         self.assertEqual(result_types, expected_types)
         self.assertEqual(result_indices, expected_indices)
 
     def test_no_leading_B_tag(self):
-        tags = ["I", "O", "B", "I", "I"]
-        types = ["PER", "", "PER", "PER", "LOC"]
-        start = [0, 11, 20, 30, 40]
-        end = [1, 19, 22, 32, 42]
+        tags = ["I", "I", "O", "B", "I", "I"]
+        types = ["PER", "LOC", "", "PER", "PER", "LOC"]
+        start = [0, 2, 11, 20, 30, 40]
+        end = [1, 3, 19, 22, 32, 42]
         indices = list(zip(start, end))
 
-        expected_types = ["PER", "PER", "LOC"]
-        expected_indices = [(0, 1), (20, 32), (40, 42)]
+        expected_types = ["PER", "LOC", "PER", "LOC"]
+        expected_indices = [(0, 1), (2, 3), (20, 32), (40, 42)]
         result_types, result_indices = bio_merge(tags, types, indices)
 
         self.assertEqual(result_types, expected_types)

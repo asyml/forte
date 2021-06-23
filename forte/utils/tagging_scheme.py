@@ -54,10 +54,10 @@ def bio_merge(
     """
     prev_type: Optional[str] = None
     prev_tag: Optional[str] = None
-    prev_start: Optional[int] = None
-    prev_end: Optional[int] = None
+    prev_start: int = -1
+    prev_end: int = -1
     new_entity: bool = False
-    start, end = zip(*indices)  # type: ignore
+    start, end = zip(*indices)
 
     # input check
     if len(tags) != len(types) or (
