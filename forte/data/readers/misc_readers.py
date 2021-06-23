@@ -90,10 +90,10 @@ class TerminalReader(PackReader):
 
 
 class BaseRawPackReader(BaseReader, ABC):
-    def _collect(self, pack: BasePack) -> Iterator[Any]:
+    def _collect(self, pack: PackType) -> Iterator[Any]:  # type: ignore
         yield pack
 
-    def _parse_pack(self, pack: BasePack) -> Iterator[PackType]:
+    def _parse_pack(self, pack: PackType) -> Iterator[PackType]:
         yield pack
 
 

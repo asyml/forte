@@ -83,13 +83,17 @@ class Meta(BaseMeta):
         pack_name: Optional[str] = None,
         language: str = "eng",
         span_unit: str = "character",
-        info: Dict[str, str] = None,
+        info: Optional[Dict[str, str]] = None,
     ):
         super().__init__(pack_name)
         self.language = language
         self.span_unit = span_unit
         self.record: Dict[str, Set[str]] = dict()
-        self.info: Dict[str, str] = info
+        self.info: Dict[str, str]
+        if info is None:
+            self.info = {}
+        else:
+            self.info = info
 
 
 class DataPack(BasePack[Entry, Link, Group]):

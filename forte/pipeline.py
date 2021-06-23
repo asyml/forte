@@ -185,7 +185,7 @@ class Pipeline(Generic[PackType]):
             with resources.path(
                 "forte.ontology_specs", "base_ontology.json"
             ) as data_path:
-                ontology_file = data_path
+                ontology_file = str(data_path)
 
         if ontology_file is not None:
             with open(ontology_file, "r") as f:
