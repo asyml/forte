@@ -15,7 +15,7 @@
 Unit test for tagging scheme.
 """
 import unittest
-from ddt import ddt, data
+from ddt import ddt, data, unpack
 from forte.utils.tagging_scheme import bio_merge
 
 
@@ -61,15 +61,18 @@ class TestTaggingScheme(unittest.TestCase):
         with self.assertRaises(ValueError):
             bio_merge(tags, types, indices)
 
-    def test_empty_type(self):
-        tags = ["O", "B", "I", "O"]
-        types = ["", "", "", ""]
-        start = [0, 2, 11, 20]
-        end = [1, 3, 19, 22]
+    @data(
+        (["I", "B", "I", "O", "B", "O"], [(0, 1), (2, 19), (30, 32)]),
+        (["O", "I", "B", "I", "O", "I"], [(2, 3), (11, 22), (40, 42)]),
+    )
+    @unpack
+    def test_empty_type(self, tags, expected_indices):
+        types = ["", "", "", "", "", ""]
+        start = [0, 2, 11, 20, 30, 40]
+        end = [1, 3, 19, 22, 32, 42]
         indices = list(zip(start, end))
 
         expected_types = []
-        expected_indices = [(2, 19)]
         result_types, result_indices = bio_merge(tags, types, indices)
 
         self.assertEqual(result_types, expected_types)

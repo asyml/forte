@@ -97,6 +97,9 @@ def bio_merge(
 
         elif tag == "I" and type == prev_type:  # continue with the last entity
             prev_end = end[idx]
+            if prev_tag == "O":  # edge case: no leading B, start a new entity
+                new_entity = True
+                prev_start = start[idx]
 
         else:  # "O" tag
             new_entity = False
