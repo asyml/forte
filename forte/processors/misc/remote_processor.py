@@ -20,7 +20,7 @@ being set as its reader.
 
 import json
 import logging
-from typing import Dict, Any
+from typing import Dict, Set, Any, Optional
 import requests
 
 from fastapi import FastAPI
@@ -56,17 +56,86 @@ class RemoteProcessor(PackProcessor):
     def __init__(self):
         super().__init__()
         self._requests: Any = requests
+        self._records: Optional[Dict[str, Set[str]]] = None
+        self._expectation: Optional[Dict[str, Set[str]]] = None
 
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
+        _validation: Config = self.configs.validation
 
         # Verify the service is running
         response = self._requests.get(self.configs.url)
         if response.status_code != 200 or response.json()["status"] != "OK":
             raise ProcessorConfigError(
-                f"{response.status_code}: "
-                "Remote service not started or invalid endpoint configs."
+                f"{response.status_code} {response.reason}: Please double "
+                "check your endpoint URL configuration and make sure that the "
+                f"remote service at {self.configs.url} is a valid pipeline "
+                "service that is up and running."
             )
+        service_name: str = response.json()["service_name"]
+        input_format: str = response.json()["input_format"]
+
+        if _validation.do_init_type_check:
+            # Validate service name and input format
+            if service_name != _validation.expected_name:
+                raise ProcessorConfigError(
+                    "Validation fail: The expected service name "
+                    f"('{_validation.expected_name}') does not match the "
+                    "actual name returned by remote service "
+                    f"('{service_name}'). Please double check your endpoint "
+                    f"URL {self.configs.url} or consider updating the configs "
+                    "of RemoteProcessor so that 'validation.expected_name' "
+                    f"equals to '{service_name}'."
+                )
+            if input_format != _validation.input_format:
+                raise ProcessorConfigError(
+                    "Validation fail: The expected input format "
+                    f"('{_validation.input_format}') does not match the "
+                    "actual input format returned by remote service "
+                    f"('{input_format}'). Please double check your endpoint "
+                    f"URL {self.configs.url} or consider updating the configs "
+                    "of RemoteProcessor so that 'validation.input_format' "
+                    f"equals to '{input_format}'."
+                )
+
+    def record(self, record_meta: Dict[str, Set[str]]):
+        r"""Method to add output type record of `RemoteProcessor`. The records
+        are queried from the remote service. The types and attributes are
+        populated from all the components in remote pipeline.
+
+        Args:
+            record_meta: the field in the datapack for type record that need to
+                fill in for consistency checking.
+        """
+        if self._records is None:
+            response = self._requests.get(f"{self.configs.url}/records")
+            if response.status_code != 200 or response.json()["status"] != "OK":
+                raise ProcessorConfigError(
+                    f"{response.status_code} {response.reason}: "
+                    "Fail to fetch records from remote service. Please make "
+                    f"sure that the remote service at {self.configs.url} is "
+                    "a valid pipeline service that is up and running."
+                )
+            self._records = response.json()["records"]
+        record_meta.update(self._records)
+
+    def expected_types_and_attributes(self):
+        r"""Method to add expected types and attributes for the input of
+        `RemoteProcessor`. This should be the `expected_types_and_attributes`
+        of the first processor in remote pipeline.
+        """
+        if self._expectation is None:
+            response = self._requests.get(f"{self.configs.url}/expectation")
+            if response.status_code != 200 or response.json()["status"] != "OK":
+                raise ProcessorConfigError(
+                    f"{response.status_code} {response.reason}: "
+                    "Fail to fetch expected types and attributes from remote "
+                    "service. Please make sure that the remote service at "
+                    f"{self.configs.url} is a valid pipeline service that is "
+                    "up and running."
+                )
+            self._expectation = response.json()["expectation"]
+        return self._expectation
 
     def _process(self, input_pack: DataPack):
         # Pack the input_pack and POST it to remote service
@@ -74,8 +143,13 @@ class RemoteProcessor(PackProcessor):
             f"{self.configs.url}/process",
             json={"args": json.dumps([[input_pack.serialize()]])},
         )
-        if response.status_code != 200:
-            raise Exception(f"{response.status_code}: Invalid post request.")
+        if response.status_code != 200 or response.json()["status"] != "OK":
+            raise Exception(
+                f"{response.status_code} {response.reason}: "
+                "Invalid post request to process input pack. Please make "
+                f"sure that the remote service at {self.configs.url} is "
+                "a valid pipeline service that is up and running."
+            )
         result = response.json()["result"]
         input_pack.update(DataPack.deserialize(result))
 
@@ -97,10 +171,28 @@ class RemoteProcessor(PackProcessor):
 
             - ``url``: URL of the remote service end point.
               Default value is `"http://localhost:8008"`.
+            - ``validation``: Information for validation.
+
+                - ``do_init_type_check``: Validate the pipeline by checking
+                  the info of the remote pipeline with the expected
+                  attributes. Default to `False`.
+                - ``input_format``: The expected input format of the remote
+                  service. Default to `"string"`.
+                - ``expected_name``: The expected pipeline name.
+                  Default to `''`.
 
         Returns:
             dict: A dictionary with the default config for this processor.
         """
         config = super().default_configs()
-        config.update({"url": "http://localhost:8008"})
+        config.update(
+            {
+                "url": "http://localhost:8008",
+                "validation": {
+                    "do_init_type_check": False,
+                    "input_format": "string",
+                    "expected_name": "",
+                },
+            }
+        )
         return config
