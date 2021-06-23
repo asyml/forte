@@ -11,10 +11,10 @@ pip install "git+https://git@github.com/asyml/forte-wrappers.git#egg=forte.stanz
 pip install stave
 ```
 
-Try the following:
+Try starting the script with the following:
 
 ```bash 
 python visualize.py
 ```
 
-A web brow
+(After a ton of downloading) A web browser will pop up to show the results. You can enter sentence in the terminal prompt.
