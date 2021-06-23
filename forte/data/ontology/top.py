@@ -126,7 +126,7 @@ class Annotation(Entry):
         include_sub_type=True,
     ) -> Iterable[EntryType]:
         """
-        This function wraps the :method:`~forte.data.DataPack.get()` method to find
+        This function wraps the :meth:`~forte.data.DataPack.get()` method to find
         entries "covered" by this annotation. See that method for more information.
 
         Example:
