@@ -118,10 +118,10 @@ class Pipeline(Generic[PackType]):
     """
 
     def __init__(
-            self,
-            resource: Optional[Resources] = None,
-            ontology_file: Optional[str] = None,
-            enforce_consistency: bool = False,
+        self,
+        resource: Optional[Resources] = None,
+        ontology_file: Optional[str] = None,
+        enforce_consistency: bool = False,
     ):
         r"""
 
@@ -183,7 +183,7 @@ class Pipeline(Generic[PackType]):
 
         if ontology_file is None:
             with resources.path(
-                    "forte.ontology_specs", "base_ontology.json"
+                "forte.ontology_specs", "base_ontology.json"
             ) as data_path:
                 ontology_file = data_path
 
@@ -454,9 +454,9 @@ class Pipeline(Generic[PackType]):
             component.enforce_consistency(enforce=self._check_type_consistency)
 
     def set_reader(
-            self,
-            reader: BaseReader,
-            config: Optional[Union[Config, Dict[str, Any]]] = None,
+        self,
+        reader: BaseReader,
+        config: Optional[Union[Config, Dict[str, Any]]] = None,
     ) -> "Pipeline":
         """
         Set the reader of the pipeline. A reader is the entry point of
@@ -508,10 +508,10 @@ class Pipeline(Generic[PackType]):
         return self._configs
 
     def add(
-            self,
-            component: PipelineComponent,
-            config: Optional[Union[Config, Dict[str, Any]]] = None,
-            selector: Optional[Selector] = None,
+        self,
+        component: PipelineComponent,
+        config: Optional[Union[Config, Dict[str, Any]]] = None,
+        selector: Optional[Selector] = None,
     ) -> "Pipeline":
         """
         Adds a pipeline component to the pipeline. The pipeline components
@@ -677,8 +677,8 @@ class Pipeline(Generic[PackType]):
         if self._enable_profiling:
             out_header: str = "Pipeline Time Profile\n"
             out_reader: str = (
-                    f"- Reader: {self.reader.component_name}, "
-                    + f"{self.reader.time_profile} s\n"
+                f"- Reader: {self.reader.component_name}, "
+                + f"{self.reader.time_profile} s\n"
             )
             out_processor: str = "\n".join(
                 [
@@ -712,7 +712,7 @@ class Pipeline(Generic[PackType]):
         data_pool_length = len(component.batcher.data_pack_pool)
 
         for i, job_i in enumerate(
-                itertools.islice(current_queue, 0, u_index + 1)
+            itertools.islice(current_queue, 0, u_index + 1)
         ):
             if i <= u_index - data_pool_length:
                 job_i.set_status(ProcessJobStatus.PROCESSED)
@@ -725,10 +725,10 @@ class Pipeline(Generic[PackType]):
             job.set_status(ProcessJobStatus.PROCESSED)
 
     def _process_with_component(
-            self,
-            selector: Selector,
-            component: PipelineComponent,
-            raw_job: ProcessJob,
+        self,
+        selector: Selector,
+        component: PipelineComponent,
+        raw_job: ProcessJob,
     ):
         for pack in selector.select(raw_job.pack):
             # First, perform the component action on the pack
@@ -759,7 +759,7 @@ class Pipeline(Generic[PackType]):
                 ) from e
 
     def _process_packs(
-            self, data_iter: Iterator[PackType]
+        self, data_iter: Iterator[PackType]
     ) -> Iterator[PackType]:
         r"""Process the packs received from the reader by the running through
         the pipeline.
@@ -920,7 +920,7 @@ class Pipeline(Generic[PackType]):
 
                     # Check status of all the jobs up to "index".
                     for i, job_i in enumerate(
-                            itertools.islice(current_queue, 0, index + 1)
+                        itertools.islice(current_queue, 0, index + 1)
                     ):
                         if job_i.status == ProcessJobStatus.PROCESSED:
                             processed_queue_indices[current_queue_index] = i
@@ -1043,8 +1043,8 @@ class Pipeline(Generic[PackType]):
                 # current queue is modified in the loop
                 for job in list(current_queue):
                     if (
-                            job.status != ProcessJobStatus.PROCESSED
-                            and not job.is_poison
+                        job.status != ProcessJobStatus.PROCESSED
+                        and not job.is_poison
                     ):
                         raise ValueError(
                             "Job is neither PROCESSED nor is "
