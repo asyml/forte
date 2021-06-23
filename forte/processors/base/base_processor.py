@@ -95,13 +95,14 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
 
         """
         # pylint: disable=protected-access
-        try:
-            self.record(input_pack._meta.record)
-        except AttributeError:
-            # For backward compatibility, no record to write.
-            logging.info(
-                "Packs of the old format do not have the record field."
-            )
+        if self._check_type_consistency:
+            try:
+                self.record(input_pack._meta.record)
+            except AttributeError:
+                # For backward compatibility, no record to write.
+                logging.info(
+                    "Packs of the old format do not have the record field."
+                )
 
     def process(self, input_pack: PackType):
         self.check_record(input_pack)

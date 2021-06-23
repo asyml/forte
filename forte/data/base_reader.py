@@ -263,14 +263,16 @@ class BaseReader(PipelineComponent[PackType], ABC):
         if self._cache_in_memory and self._cache_ready:
             # Read from memory
             for pack in self._data_packs:
-                if hasattr(pack._meta, "record"):
-                    self.record(pack._meta.record)
+                if self._check_type_consistency:
+                    if hasattr(pack._meta, "record"):
+                        self.record(pack._meta.record)
                 yield from self.timer_yield(pack)
         else:
             # Read via parsing dataset
             for pack in self._lazy_iter(*args, **kwargs):
-                if hasattr(pack._meta, "record"):
-                    self.record(pack._meta.record)
+                if self._check_type_consistency:
+                    if hasattr(pack._meta, "record"):
+                        self.record(pack._meta.record)
                 if self._cache_in_memory:
                     self._data_packs.append(pack)
 

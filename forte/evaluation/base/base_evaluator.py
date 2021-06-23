@@ -143,18 +143,19 @@ class Evaluator(PipelineComponent[PackType]):
 
         """
         # pylint: disable=protected-access
-        try:
-            self.pred_pack_record(pred_pack._meta.record)
-        except AttributeError:
-            # For backward compatibility, no record to write.
-            logging.info(
-                "Packs of the old format do not have the record field."
-            )
+        if self._check_type_consistency:
+            try:
+                self.pred_pack_record(pred_pack._meta.record)
+            except AttributeError:
+                # For backward compatibility, no record to write.
+                logging.info(
+                    "Packs of the old format do not have the record field."
+                )
 
-        try:
-            self.ref_pack_record(ref_pack._meta.record)
-        except AttributeError:
-            # For backward compatibility, no record to write.
-            logging.info(
-                "Packs of the old format do not have the record field."
-            )
+            try:
+                self.ref_pack_record(ref_pack._meta.record)
+            except AttributeError:
+                # For backward compatibility, no record to write.
+                logging.info(
+                    "Packs of the old format do not have the record field."
+                )
