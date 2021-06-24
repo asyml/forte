@@ -960,8 +960,7 @@ class DummyPackProcessorOne(DummyPackProcessor):
         record_meta["Token"] = {"1", "2"}
         record_meta["Document"] = {"2"}
 
-    @classmethod
-    def expected_types_and_attributes(cls):
+    def expected_types_and_attributes(self):
         expectation: Dict[str, Set[str]] = {"Sentence": {"1", "2", "3"}}
 
         return expectation
@@ -972,16 +971,15 @@ class DummyPackProcessorTwo(DummyPackProcessor):
         record_meta["Token"] = {"1", "2"}
         record_meta["Document"] = {"2"}
 
-    @classmethod
-    def expected_types_and_attributes(cls):
+    def expected_types_and_attributes(self):
         expectation: Dict[str, Set[str]] = {"Document": {"1", "2", "3", "4"}}
 
         return expectation
 
 
 class DummyPackProcessorThree(DummyPackProcessor):
-    @classmethod
-    def expected_types_and_attributes(cls):
+
+    def expected_types_and_attributes(self):
         expectation: Dict[str, Set[str]] = {
             "ft.onto.example_import_ontology.Token": {"pos", "lemma"}
         }
