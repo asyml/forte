@@ -41,8 +41,8 @@ def build_ontology(sql_db, project_name):
     onto_path = "./stave_test_onto"
     res = query(
         sql_db,
-        f"SELECT ontology FROM nlpviewer_backend_project "
-        f"WHERE nlpviewer_backend_project.name = "
+        f"SELECT ontology FROM stave_backend_project "
+        f"WHERE stave_backend_project.name = "
         f'"{project_name}"',
     ).fetchone()[0]
     with tempfile.NamedTemporaryFile("w") as onto_file:
