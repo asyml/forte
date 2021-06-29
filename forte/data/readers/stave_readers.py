@@ -118,9 +118,9 @@ class StaveMultiDocSqlReader(MultiPackDeserializerBase):
 
             {
                 "stave_db_path": None,
-                "multipack_table": 'nlpviewer_backend_crossdoc',
+                "multipack_table": 'stave_backend_crossdoc',
                 "multipack_content_col": 2,
-                "datapack_table": 'nlpviewer_backend_document',
+                "datapack_table": 'stave_backend_document',
                 "pack_content_col": 2,
             }
 
@@ -145,9 +145,9 @@ class StaveMultiDocSqlReader(MultiPackDeserializerBase):
         config.update(
             {
                 "stave_db_path": None,
-                "multipack_table": "nlpviewer_backend_crossdoc",
+                "multipack_table": "stave_backend_crossdoc",
                 "multipack_content_col": 2,
-                "datapack_table": "nlpviewer_backend_document",
+                "datapack_table": "stave_backend_document",
                 "pack_content_col": 2,
             }
         )
@@ -241,9 +241,9 @@ class StaveDataPackSqlReader(PackReader):
 
             {
                 "stave_db_path": None,
-                "datapack_table": 'nlpviewer_backend_document',
+                "datapack_table": 'stave_backend_document',
                 "pack_content_col": 2,
-                "project_table": "nlpviewer_backend_project",
+                "project_table": "stave_backend_project",
                 "target_project_name": None,
             }
 
@@ -268,9 +268,9 @@ class StaveDataPackSqlReader(PackReader):
         config.update(
             {
                 "stave_db_path": None,
-                "datapack_table": "nlpviewer_backend_document",
+                "datapack_table": "stave_backend_document",
                 "pack_content_col": 2,
-                "project_table": "nlpviewer_backend_project",
+                "project_table": "stave_backend_project",
                 "target_project_name": None,
             }
         )

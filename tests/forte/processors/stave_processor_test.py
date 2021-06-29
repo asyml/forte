@@ -31,7 +31,7 @@ from forte.processors.base.batch_processor import Predictor
 from ft.onto.base_ontology import Token, Sentence, EntityMention, RelationLink
 
 from forte.processors.stave import StaveProcessor
-from nlpviewer_backend.lib.stave_project import StaveProjectReader
+from stave_backend.lib.stave_project import StaveProjectReader
 
 
 class TestStaveProcessor(unittest.TestCase):
