@@ -11,13 +11,9 @@
 [![Chat](http://img.shields.io/badge/gitter.im-asyml/forte-blue.svg)](https://gitter.im/asyml/community)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-**Forte** is a toolkit for building Natural Language Processing pipelines,
-featuring cross-task interaction, adaptable data-model interfaces and composable
-pipeline. 
-
-Forte is a toolkit for building Natural Language Processing pipelines, featuring 
-composable components, convenient data interfaces, and cross-task interaction.  
-Forte designs a universal data representation format for text, making it a 
+**Forte** is a toolkit for building Natural Language Processing pipelines, featuring 
+composable components, convenient data interfaces, and cross-task interaction. Forte designs 
+a universal data representation format for text, making it a 
 one-stop platform to assemble state-of-the-art NLP/ML technologies, ranging 
 from Information Retrieval, Natural Language Understanding to Natural Language Generation. 
 
