@@ -29,8 +29,8 @@ import logging
 import collections
 from typing import Dict, Set, Any
 
-from nlpviewer_backend.lib.stave_viewer import StaveViewer
-from nlpviewer_backend.lib.stave_project import StaveProjectWriter
+from stave_backend.lib.stave_viewer import StaveViewer
+from stave_backend.lib.stave_project import StaveProjectWriter
 
 from forte.common import Resources, ProcessorConfigError
 from forte.common.configuration import Config

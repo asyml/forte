@@ -81,7 +81,7 @@ class LastUtteranceSearcher(PackProcessor):
                     "textPack": raw_pack_str,
                     "project_id": 5,
                 }
-                db_id = sqlite_insert(conn, "nlpviewer_backend_document", item)
+                db_id = sqlite_insert(conn, "stave_backend_document", item)
                 answers += [db_id]
                 print(pack_id, db_id)
 

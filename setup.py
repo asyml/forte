@@ -48,7 +48,7 @@ setuptools.setup(
         'example': ['termcolor==1.1.0', 'hypothesis==2.0.0'],
         'wikipedia': ['rdflib==4.2.2'],
         'augment': ['transformers>=3.1', 'nltk'],
-        'stave': ['stave']
+        'stave': ['stave==0.0.1.dev12']
     },
     entry_points={
         'console_scripts': [
