@@ -13,15 +13,18 @@
 
 **Forte** is a toolkit for building Natural Language Processing pipelines,
 featuring cross-task interaction, adaptable data-model interfaces and composable
-pipeline. Forte was originally developed in CMU and is actively contributed
+pipeline. 
+
+Forte is a toolkit for building Natural Language Processing pipelines, featuring 
+composable components, convenient data interfaces, and cross-task interaction.  
+Forte designs a universal data representation format for text, making it a 
+one-stop platform to assemble state-of-the-art NLP/ML technologies, ranging 
+from Information Retrieval, Natural Language Understanding to Natural Language Generation. 
+
+Forte was originally developed in CMU and is actively contributed
 by [Petuum](https://petuum.com/)
 in collaboration with other institutes. This project is part of
 the [CASL Open Source](http://casl-project.ai/) family.
-
-Forte provides a platform to assemble state-of-the-art NLP and ML technologies
-in a highly-composable fashion, including a wide spectrum of tasks ranging from
-Information Retrieval, Natural Language Understanding to Natural Language
-Generation.
 
 ### Download and Installation
 
@@ -192,5 +195,7 @@ and [Contribution Guideline](https://github.com/asyml/forte/blob/master/CONTRIBU
    <img src="https://raw.githubusercontent.com/asyml/forte/master/docs/_static/img/Petuum.png" width="200" align="top">
    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
    <img src="https://asyml.io/assets/institutions/cmu.png", width="200" align="top">
+   <img src="https://www.ucsd.edu/_resources/img/logo_UCSD.png" width="200" align="top">
 </p>
+
 
