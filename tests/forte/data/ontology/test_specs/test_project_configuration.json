@@ -168,5 +168,12 @@
         "left": "default-meta",
         "right": "default-attribute",
         "center-bottom": "disable"
+    },
+    "remoteConfigs": {
+        "pipelineUrl": "",
+        "doValidation": false,
+        "expectedName": "",
+        "inputFormat": "string",
+        "expectedRecords": {}
     }
 }
