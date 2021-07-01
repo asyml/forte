@@ -62,6 +62,19 @@
       ]
     },
     {
+      "entry_name": "ft.onto.base_ontology.Classification",
+      "parent_entry": "forte.data.ontology.top.Generics",
+      "description": "Used to store values for classification prediction",
+      "attributes": [
+        {
+          "name": "classification_result",
+          "type": "Dict",
+          "key_type": "str",
+          "value_type": "float"
+        }
+      ]
+    },
+    {
       "entry_name": "ft.onto.base_ontology.Document",
       "parent_entry": "forte.data.ontology.top.Annotation",
       "description": "A span based annotation `Document`, normally used to represent a document.",
@@ -77,6 +90,13 @@
           "type": "Dict",
           "key_type": "str",
           "value_type": "float"
+        },
+        {
+          "name": "classifications",
+          "type": "Dict",
+          "key_type": "str",
+          "value_type": "ft.onto.base_ontology.Classification",
+          "description": "Stores the classification results for this document. The key is the name/task of the classification, the value is an classification object storing the results."
         }
       ]
     },
@@ -104,6 +124,13 @@
           "type": "Dict",
           "key_type": "str",
           "value_type": "float"
+        },
+        {
+          "name": "classifications",
+          "type": "Dict",
+          "key_type": "str",
+          "value_type": "ft.onto.base_ontology.Classification",
+          "description": "Stores the classification results for this sentence. The key is the name/task of the classification, the value is an classification object storing the results."
         }
       ]
     },

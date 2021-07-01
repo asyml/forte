@@ -17,6 +17,11 @@
             "is_shown": true,
             "attributes": {}
         },
+        "ft.onto.base_ontology.Classification": {
+            "is_selected": false,
+            "is_shown": true,
+            "attributes": {}
+        },
         "ft.onto.base_ontology.Document": {
             "is_selected": false,
             "is_shown": true,
