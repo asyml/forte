@@ -18,3 +18,7 @@ python visualize.py
 ```
 
 (After a ton of downloading) A web browser will pop up to show the results. You can enter sentence in the terminal prompt.
+
+The visualization example looks like the following:
+
+![visualization example](example_visualized.png)
