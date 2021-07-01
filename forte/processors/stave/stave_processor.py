@@ -191,6 +191,13 @@ class StaveProcessor(PackProcessor):
                 "right": "default-attribute",
                 "center-bottom": "disable",
             },
+            "remoteConfigs": {
+                "pipelineUrl": "",
+                "doValidation": False,
+                "expectedName": "",
+                "inputFormat": "string",
+                "expectedRecords": {},
+            },
         }
 
         # Create legend configs
