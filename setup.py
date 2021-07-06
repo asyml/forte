@@ -24,14 +24,14 @@ setuptools.setup(
 
     install_requires=[
         'sortedcontainers==2.1.0',
-        'numpy==1.16.5',
+        'numpy>=1.16.6',
         'jsonpickle==1.4',
         'pyyaml==5.4',
         'smart-open==1.8.4',
         'typed_astunparse==2.1.4',
         'funcsigs==1.0.2',
         'mypy_extensions==0.4.3',
-        'typed_ast==1.4.0',
+        'typed_ast>=1.4.3',
         'jsonschema==3.0.2',
         'texar-pytorch',
         'typing>=3.7.4;python_version<"3.5"',
