@@ -15,7 +15,7 @@ jobs:
       matrix:
         python-version: [ 3.6, 3.7, 3.9 ]
         torch-version: [ 1.7.1, 1.8.0 ]
-        tensorflow-version: [ 1.15.0 ]
+        tensorflow-version: [ 2.5.0 ]
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
