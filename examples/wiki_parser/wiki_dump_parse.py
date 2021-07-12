@@ -72,7 +72,7 @@ def add_wiki_info(
             "output_dir": output_path,
             "zip_pack": True,
             "drop_record": True,
-            "output_index_file": output_index_file_name,
+            "index_file": output_index_file_name,
             "overwrite": overwrite,
         },
     )
@@ -148,7 +148,7 @@ def main(
         raw_pack_dir,
         struct_dir,
         "page_structures",
-        True,
+        skip_existing=True,
     )
     print_progress("Done reading wikipedia structures.", "\n")
 
@@ -161,7 +161,7 @@ def main(
         struct_dir,
         link_dir,
         "anchor_links",
-        True,
+        skip_existing=True,
     )
     print_progress("Done reading wikipedia anchors.", "\n")
 

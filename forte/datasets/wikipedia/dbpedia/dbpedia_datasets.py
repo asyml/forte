@@ -78,7 +78,7 @@ class DBpediaWikiReader(PackReader):
     """
 
     def __init__(
-        self,
+            self,
     ):
         super().__init__()
         self.__redirects: Dict[str, str] = {}
@@ -92,7 +92,7 @@ class DBpediaWikiReader(PackReader):
             raise ResourceError("Redirects not provided from resources.")
 
     def _collect(  # type: ignore
-        self, nif_context: str
+            self, nif_context: str
     ) -> Iterator[Dict[str, str]]:
         str_data: Dict[str, str] = {}
 
@@ -103,10 +103,10 @@ class DBpediaWikiReader(PackReader):
 
                 fragment = get_resource_fragment(v)
                 if (
-                    nif_type
-                    and nif_type == "context"
-                    and fragment is not None
-                    and fragment == "isString"
+                        nif_type
+                        and nif_type == "context"
+                        and fragment is not None
+                        and fragment == "isString"
                 ):
                     str_data["text"] = o.toPython()
                     doc_name: Optional[str] = get_resource_name(s)
@@ -188,7 +188,7 @@ class WikiPackReader(PackReader):
         raise NotImplementedError
 
     def _collect(  # type: ignore
-        self, nif_path: str
+            self, nif_path: str
     ) -> Iterator[Tuple[str, Dict[str, List[state_type]]]]:
         for _, statements in ContextGroupedNIFReader(nif_path):
             name = get_resource_name(statements[0][0])
@@ -196,7 +196,7 @@ class WikiPackReader(PackReader):
                 yield name, statements
 
     def _parse_pack(
-        self, collection: Tuple[str, List[state_type]]
+            self, collection: Tuple[str, List[state_type]]
     ) -> Iterator[DataPack]:
         resource_name, statements = collection
         if resource_name in self._redirects:
@@ -243,16 +243,20 @@ class WikiPackReader(PackReader):
 
 class WikiArticleWriter(JsonPackWriter):
     """
-    This is a pack writer that writes out the Wikipedia articles on disk. It
+    This is a pack writer that writes out the Wikipedia articles to disk. It
     has two special behaviors:
-      1. An `article.idx` file will be created at the output directory, it
-      maps from the article name to the article path.
-      2. The packs are organized into directories. Each directory contains
-      at most 2000 documents.
-
+      1. If the `article.idx` file provided via the configuration exists,
+      the file will be used to determine the path of writing the data packs. This
+      will also activate the overwrite mode.
+      2. If the `article.idx` file does not exist, it will be created at the output
+      directory, it maps from the article name to the article path. In this case,
+      the overwrite mode will not be activated, existing files will not be overwritten
+      and that such instances will be logged.
+         2a. The packs are organized into directories. Each directory contains
+         at most 2000 documents.
     """
 
-    article_index: TextIO
+    _article_index_file: TextIO
 
     # It is difficult to get the type of the csv writer
     # https://stackoverflow.com/questions
@@ -262,31 +266,46 @@ class WikiArticleWriter(JsonPackWriter):
     def __init__(self):
         super().__init__()
         self.article_count: int = 0
+        self.__use_existing_index: bool = False
+        self._article_index = {}
 
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
         self.article_count = 0
-        self.article_index = open(
-            os.path.join(
-                self.configs.output_dir, self.configs.output_index_file
-            ),
-            "w",
+        index_path = os.path.join(
+            self.configs.output_dir, self.configs.index_file
         )
-        self.csv_writer = csv.writer(self.article_index, delimiter="\t")
+
+        self._article_index = {}
+        if os.path.exists(index_path):
+            self._article_index_file = open(index_path)
+            with open(index_path) as f:
+                for line in f:
+                    article_name, sub_path = line.strip().split()
+                    self._article_index[article_name] = sub_path
+            self.__use_existing_index = True
+        else:
+            self._article_index_file = open(index_path, "w", )
+            self.__use_existing_index = False
+
+        self.csv_writer = csv.writer(self._article_index_file, delimiter="\t")
 
     def sub_output_path(self, pack: DataPack) -> str:
-        sub_dir = str(int(self.article_count / 2000)).zfill(5)
-        pid = pack.get_single(WikiPage).page_id
-        doc_name = f"doc_{self.article_count}" if pid is None else pid
-        suffix = ".json.gz" if self.zip_pack else ".json"
-        return os.path.join(sub_dir, doc_name) + suffix
+        if self.__use_existing_index:
+            return self._article_index[pack.pack_name]
+        else:
+            sub_dir = str(int(self.article_count / 2000)).zfill(5)
+            pid = pack.get_single(WikiPage).page_id
+            doc_name = f"doc_{self.article_count}" if pid is None else pid
+            suffix = ".json.gz" if self.zip_pack else ".json"
+            return os.path.join(sub_dir, doc_name) + suffix
 
     def _process(self, input_pack: DataPack):
         """
-        Write an index from the document id to the relative storage of this
+        In additional writing the data pack, we also write the index under
+        the condition, to store the document id to the relative storage of this
         DataPack. This can be used as a simple index to retrieve the relevant
-        file, which can enable faster lookup in use cases like following the
-        Wikipedia links.
+        file, which can enable faster lookup.
 
         Args:
             input_pack: The DataPack that contains the Wikipedia information.
@@ -295,18 +314,19 @@ class WikiArticleWriter(JsonPackWriter):
         """
         super()._process(input_pack)
 
-        out_path = self.sub_output_path(input_pack)
-        # Write the index
-        self.csv_writer.writerow([input_pack.pack_name, out_path])
-        self.article_count += 1
+        if self.__use_existing_index:
+            out_path = self.sub_output_path(input_pack)
+            # Write the index
+            self.csv_writer.writerow([input_pack.pack_name, out_path])
 
+        self.article_count += 1
         if self.article_count % 1000 == 0:
             logging.info(
                 "Written %s to %s", self.article_count, self.configs.output_dir
             )
 
     def finish(self, _: Resources):
-        self.article_index.close()
+        self._article_index_file.close()
 
     @classmethod
     def default_configs(cls):
@@ -315,15 +335,18 @@ class WikiArticleWriter(JsonPackWriter):
 
         Here:
           - pack_dir: the directory that contains all the serialized packs.
-          - pack_index: the file name under the pack directory that points to
-            the index from the name to the actual pack path.
+          - input_index_file: the file name under the pack directory that points to
+            the index from the name to the actual pack path. If provided, data path will
+             be digested from here.
+          - output_index_file: write out the file name to pack index if provided.
 
         :return:
         """
         config = super().default_configs()
         config.update(
             {
-                "output_index_file": "article.idx",
+                "input_index_file": "article.idx",
+                "output_index_file": None,
             }
         )
         return config
@@ -417,15 +440,15 @@ class WikiAnchorReader(WikiPackReader):
                 if info_key == "type":
                     anchor_type = get_resource_fragment(info_value)
                     if (
-                        not anchor_type == "Phrase"
-                        and not anchor_type == "Word"
+                            not anchor_type == "Phrase"
+                            and not anchor_type == "Word"
                     ):
                         logging.warning("Unknown anchor type: %s", info_value)
                 if info_key == "taIdentRef":
                     target_page_name = get_resource_name(info_value)
                     if (
-                        target_page_name is not None
-                        and target_page_name in self._redirects
+                            target_page_name is not None
+                            and target_page_name in self._redirects
                     ):
                         target_page_name = self._redirects[target_page_name]
 
