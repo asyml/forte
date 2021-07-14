@@ -1,5 +1,5 @@
 # ***automatically_generated***
-# ***source json:../../../../../../Documents/projects/forte/tests/forte/data/ontology/test_specs/example_complex_ontology.json***
+# ***source json:../../../../../../Documents/forte_develop/forte/tests/forte/data/ontology/test_specs/example_complex_ontology.json***
 # flake8: noqa
 # mypy: ignore-errors
 # pylint: skip-file

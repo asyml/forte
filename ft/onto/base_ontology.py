@@ -1,5 +1,5 @@
 # ***automatically_generated***
-# ***source json:forte/ontology_specs/base_ontology.json***
+# ***source json:../../../../../../Documents/forte_develop/forte/forte/ontology_specs/base_ontology.json***
 # flake8: noqa
 # mypy: ignore-errors
 # pylint: skip-file
@@ -11,8 +11,10 @@ from dataclasses import dataclass
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology.core import Entry
+from forte.data.ontology.core import FDict
 from forte.data.ontology.core import FList
 from forte.data.ontology.top import Annotation
+from forte.data.ontology.top import Generics
 from forte.data.ontology.top import Group
 from forte.data.ontology.top import Link
 from forte.data.ontology.top import MultiPackLink
@@ -24,6 +26,7 @@ from typing import Optional
 __all__ = [
     "Token",
     "Subword",
+    "Classification",
     "Document",
     "Sentence",
     "Phrase",
@@ -101,21 +104,39 @@ class Subword(Annotation):
 
 
 @dataclass
+class Classification(Generics):
+    """
+    Used to store values for classification prediction
+    Attributes:
+        classification_result (Dict[str, float]):
+    """
+
+    classification_result: Dict[str, float]
+
+    def __init__(self, pack: DataPack):
+        super().__init__(pack)
+        self.classification_result: Dict[str, float] = dict()
+
+
+@dataclass
 class Document(Annotation):
     """
     A span based annotation `Document`, normally used to represent a document.
     Attributes:
         document_class (List[str]):	A list of class names that the document belongs to.
         sentiment (Dict[str, float]):
+        classifications (FDict[str, Classification]):	Stores the classification results for this document. The key is the name/task of the classification, the value is an classification object storing the results.
     """
 
     document_class: List[str]
     sentiment: Dict[str, float]
+    classifications: FDict[str, Classification]
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self.document_class: List[str] = []
         self.sentiment: Dict[str, float] = dict()
+        self.classifications: FDict[str, Classification] = FDict(self)
 
 
 @dataclass
@@ -127,12 +148,14 @@ class Sentence(Annotation):
         part_id (Optional[int]):
         sentiment (Dict[str, float]):
         classification (Dict[str, float]):
+        classifications (FDict[str, Classification]):	Stores the classification results for this sentence. The key is the name/task of the classification, the value is an classification object storing the results.
     """
 
     speaker: Optional[str]
     part_id: Optional[int]
     sentiment: Dict[str, float]
     classification: Dict[str, float]
+    classifications: FDict[str, Classification]
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
@@ -140,6 +163,7 @@ class Sentence(Annotation):
         self.part_id: Optional[int] = None
         self.sentiment: Dict[str, float] = dict()
         self.classification: Dict[str, float] = dict()
+        self.classifications: FDict[str, Classification] = FDict(self)
 
 
 @dataclass

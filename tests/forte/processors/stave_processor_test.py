@@ -38,22 +38,21 @@ class TestStaveProcessor(unittest.TestCase):
     def setUp(self):
 
         self._port: int = 8880
-        self._file_dir_path = os.path.dirname(__file__)
+        _file_dir_path: str = os.path.dirname(__file__)
         self._project_name: str = "serialization_pipeline_test"
         self._dataset_dir: str = os.path.abspath(
             os.path.join(
-                self._file_dir_path, "../../../", "data_samples/ontonotes/00/"
+                _file_dir_path, "../../../", "data_samples/ontonotes/00/"
             )
+        )
+        self._test_specs_dir: str = os.path.abspath(
+            os.path.join(_file_dir_path, "../data/ontology/test_specs/")
         )
         self._stave_processor = StaveProcessor()
 
         self.pl = Pipeline[DataPack](
-            ontology_file=os.path.abspath(
-                os.path.join(
-                    self._file_dir_path,
-                    "../../../",
-                    "forte/ontology_specs/base_ontology.json",
-                )
+            ontology_file=os.path.join(
+                self._test_specs_dir, "test_stave_ontology.json"
             )
         )
         self.pl.set_reader(OntonotesReader())
@@ -93,12 +92,8 @@ class TestStaveProcessor(unittest.TestCase):
 
         # Check default project configuration
         with open(
-            os.path.abspath(
-                os.path.join(
-                    self._file_dir_path,
-                    "../data/ontology/test_specs/",
-                    "test_project_configuration.json",
-                )
+            os.path.join(
+                self._test_specs_dir, "test_project_configuration.json"
             ),
             "r",
         ) as f:
