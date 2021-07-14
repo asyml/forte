@@ -113,7 +113,7 @@ class JsonPackWriter(PackProcessor, ABC):
         self.indent = configs.indent
 
     @abstractmethod
-    def sub_output_path(self, pack: DataPack) -> str:
+    def sub_output_path(self, pack: DataPack) -> Optional[str]:
         r"""Allow defining output path using the information of the pack.
 
         Args:
@@ -137,19 +137,18 @@ class JsonPackWriter(PackProcessor, ABC):
 
     def _process(self, input_pack: DataPack):
         sub_path = self.sub_output_path(input_pack)
-        if sub_path == "":
-            raise ValueError("No concrete path provided from sub_output_path.")
-
-        maybe_create_dir(self.configs.output_dir)
-        write_pack(
-            input_pack,
-            self.configs.output_dir,
-            sub_path,
-            self.configs.indent,
-            self.configs.zip_pack,
-            self.configs.overwrite,
-            self.configs.drop_record,
-        )
+        if sub_path is not None and not sub_path == "":
+            # Sub path could be empty, which we will skip writing the file.
+            maybe_create_dir(self.configs.output_dir)
+            write_pack(
+                input_pack,
+                self.configs.output_dir,
+                sub_path,
+                self.configs.indent,
+                self.configs.zip_pack,
+                self.configs.overwrite,
+                self.configs.drop_record,
+            )
 
 
 class MultiPackWriter(MultiPackProcessor):

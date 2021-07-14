@@ -78,7 +78,7 @@ class DBpediaWikiReader(PackReader):
     """
 
     def __init__(
-            self,
+        self,
     ):
         super().__init__()
         self.__redirects: Dict[str, str] = {}
@@ -92,7 +92,7 @@ class DBpediaWikiReader(PackReader):
             raise ResourceError("Redirects not provided from resources.")
 
     def _collect(  # type: ignore
-            self, nif_context: str
+        self, nif_context: str
     ) -> Iterator[Dict[str, str]]:
         str_data: Dict[str, str] = {}
 
@@ -103,10 +103,10 @@ class DBpediaWikiReader(PackReader):
 
                 fragment = get_resource_fragment(v)
                 if (
-                        nif_type
-                        and nif_type == "context"
-                        and fragment is not None
-                        and fragment == "isString"
+                    nif_type
+                    and nif_type == "context"
+                    and fragment is not None
+                    and fragment == "isString"
                 ):
                     str_data["text"] = o.toPython()
                     doc_name: Optional[str] = get_resource_name(s)
@@ -188,7 +188,7 @@ class WikiPackReader(PackReader):
         raise NotImplementedError
 
     def _collect(  # type: ignore
-            self, nif_path: str
+        self, nif_path: str
     ) -> Iterator[Tuple[str, Dict[str, List[state_type]]]]:
         for _, statements in ContextGroupedNIFReader(nif_path):
             name = get_resource_name(statements[0][0])
@@ -196,7 +196,7 @@ class WikiPackReader(PackReader):
                 yield name, statements
 
     def _parse_pack(
-            self, collection: Tuple[str, List[state_type]]
+        self, collection: Tuple[str, List[state_type]]
     ) -> Iterator[DataPack]:
         resource_name, statements = collection
         if resource_name in self._redirects:
@@ -245,23 +245,33 @@ class WikiArticleWriter(JsonPackWriter):
     """
     This is a pack writer that writes out the Wikipedia articles to disk. It
     has two special behaviors:
-      1. If the `article.idx` file provided via the configuration exists,
-      the file will be used to determine the path of writing the data packs. This
-      will also activate the overwrite mode.
-      2. If the `article.idx` file does not exist, it will be created at the output
-      directory, it maps from the article name to the article path. In this case,
-      the overwrite mode will not be activated, existing files will not be overwritten
-      and that such instances will be logged.
+      1. If the `input_index_file` file is provided via the configuration and it
+       exists, the file will be used to determine the path of writing the
+       data packs. This will also activate the overwrite mode.
+      2. If the `input_index_file` file is not provided,
          2a. The packs are organized into directories. Each directory contains
          at most 2000 documents.
+         2b. the overwrite mode will not be activated
+      3. If the `output_index_file` is provided, an index file with the provided
+      name/path will be created, its content will be a mapping from the article
+      name to the article path.
+
+    There are two general use cases:
+    1. If the writer is used to write a new directory of data, simply provide
+    the `output_index_file`
+    2. If the writer is used to add content/overwriting to an existing
+    directory, it is suggested to use the index file of the original
+    directory as the `input_index_file`, and the `output_index_file` can be
+    used to store the information for this new writing process if desired.
     """
 
-    _article_index_file: TextIO
+    _input_index_file: TextIO
+    _output_index_file: TextIO
 
     # It is difficult to get the type of the csv writer
     # https://stackoverflow.com/questions
     # /51264355/how-to-type-annotate-object-returned-by-csv-writer
-    csv_writer: Any
+    _csv_writer: Any
 
     def __init__(self):
         super().__init__()
@@ -272,28 +282,47 @@ class WikiArticleWriter(JsonPackWriter):
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
         self.article_count = 0
-        index_path = os.path.join(
-            self.configs.output_dir, self.configs.index_file
-        )
 
-        self._article_index = {}
-        if os.path.exists(index_path):
-            self._article_index_file = open(index_path)
-            with open(index_path) as f:
-                for line in f:
-                    article_name, sub_path = line.strip().split()
-                    self._article_index[article_name] = sub_path
-            self.__use_existing_index = True
+        if self.configs.use_input_index and self.configs.input_index_file:
+            # Load input index.
+            input_index_path = os.path.join(
+                self.configs.output_dir, self.configs.input_index_file
+            )
+            self._article_index = {}
+            if os.path.exists(input_index_path):
+                self._input_index_file = open(input_index_path)
+                with open(input_index_path) as f:
+                    for line in f:
+                        article_name, sub_path = line.strip().split()
+                        self._article_index[article_name] = sub_path
+                self.__use_existing_index = True
+                self.configs.overwrite = True
+                logging.info(
+                    "Wikipedia writer is setup with existing index "
+                    "file. The output will be written to the existing "
+                    "path and overwritten is enabled."
+                )
+            else:
+                raise FileNotFoundError(
+                    f"Cannot find provided index file {input_index_path}"
+                )
         else:
-            self._article_index_file = open(index_path, "w", )
             self.__use_existing_index = False
 
-        self.csv_writer = csv.writer(self._article_index_file, delimiter="\t")
+        output_index_path = os.path.join(
+            self.configs.output_dir, self.configs.output_index_file
+        )
+        self._output_index_file = open(output_index_path, "w")
+        self._csv_writer = csv.writer(self._output_index_file, delimiter="\t")
 
     def sub_output_path(self, pack: DataPack) -> str:
         if self.__use_existing_index:
-            return self._article_index[pack.pack_name]
+            if pack.pack_name in self._article_index:
+                # Since datasets are built separated, there might be cases where the
+                #  an article referred later is not in the original parsed dataset.
+                return self._article_index[pack.pack_name]
         else:
+            # Organize the data by IO ordering instead.
             sub_dir = str(int(self.article_count / 2000)).zfill(5)
             pid = pack.get_single(WikiPage).page_id
             doc_name = f"doc_{self.article_count}" if pid is None else pid
@@ -317,7 +346,7 @@ class WikiArticleWriter(JsonPackWriter):
         if self.__use_existing_index:
             out_path = self.sub_output_path(input_pack)
             # Write the index
-            self.csv_writer.writerow([input_pack.pack_name, out_path])
+            self._csv_writer.writerow([input_pack.pack_name, out_path])
 
         self.article_count += 1
         if self.article_count % 1000 == 0:
@@ -326,7 +355,8 @@ class WikiArticleWriter(JsonPackWriter):
             )
 
     def finish(self, _: Resources):
-        self._article_index_file.close()
+        self._input_index_file.close()
+        self._output_index_file.close()
 
     @classmethod
     def default_configs(cls):
@@ -335,17 +365,21 @@ class WikiArticleWriter(JsonPackWriter):
 
         Here:
           - pack_dir: the directory that contains all the serialized packs.
-          - input_index_file: the file name under the pack directory that points to
-            the index from the name to the actual pack path. If provided, data path will
-             be digested from here.
-          - output_index_file: write out the file name to pack index if provided.
+          - use_input_index: whether to use the input index file to find data.
+          - input_index_file: the file name under the pack directory that
+            points to the index from the name to the actual pack path. If
+            `use_input_index` is also true, data path will be digested using
+            the paths provided in this index.
+          - output_index_file: if provided, will write out the index from file
+             name to the packs.
 
-        :return:
+        Returns: The default configuration of this reader.
         """
         config = super().default_configs()
         config.update(
             {
-                "input_index_file": "article.idx",
+                "use_input_index": False,
+                "input_index_file": None,
                 "output_index_file": None,
             }
         )
@@ -440,15 +474,15 @@ class WikiAnchorReader(WikiPackReader):
                 if info_key == "type":
                     anchor_type = get_resource_fragment(info_value)
                     if (
-                            not anchor_type == "Phrase"
-                            and not anchor_type == "Word"
+                        not anchor_type == "Phrase"
+                        and not anchor_type == "Word"
                     ):
                         logging.warning("Unknown anchor type: %s", info_value)
                 if info_key == "taIdentRef":
                     target_page_name = get_resource_name(info_value)
                     if (
-                            target_page_name is not None
-                            and target_page_name in self._redirects
+                        target_page_name is not None
+                        and target_page_name in self._redirects
                     ):
                         target_page_name = self._redirects[target_page_name]
 
