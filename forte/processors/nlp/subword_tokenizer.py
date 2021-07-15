@@ -50,7 +50,7 @@ class SubwordTokenizer(PackProcessor):
         subwords = subword_tokenizer.tokenize_with_span(input_pack.text)
         for subword, start, end in subwords:
             subword_token = Subword(
-                input_pack, token.begin + start, token.begin + end
+                input_pack, start, end
             )
             subword_token.is_first_segment = not subword.startswith("##")
 
