@@ -23,7 +23,7 @@ from forte.common import Resources
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
-from ft.onto.base_ontology import Subword, Token
+from ft.onto.base_ontology import Subword
 
 
 class SubwordTokenizer(PackProcessor):
@@ -47,13 +47,12 @@ class SubwordTokenizer(PackProcessor):
 
     def _process(self, input_pack: DataPack):
         subword_tokenizer = self.tokenizer.wordpiece_tokenizer
-        for token in input_pack.get(Token):
-            subwords = subword_tokenizer.tokenize_with_span(token.text)
-            for subword, start, end in subwords:
-                subword_token = Subword(
-                    input_pack, token.begin + start, token.begin + end
-                )
-                subword_token.is_first_segment = not subword.startswith("##")
+        subwords = subword_tokenizer.tokenize_with_span(input_pack.text)
+        for subword, start, end in subwords:
+            subword_token = Subword(
+                input_pack, token.begin + start, token.begin + end
+            )
+            subword_token.is_first_segment = not subword.startswith("##")
 
     @classmethod
     def default_configs(cls):
