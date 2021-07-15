@@ -315,12 +315,15 @@ class WikiArticleWriter(JsonPackWriter):
         self._output_index_file = open(output_index_path, "w")
         self._csv_writer = csv.writer(self._output_index_file, delimiter="\t")
 
-    def sub_output_path(self, pack: DataPack) -> str:
+    def sub_output_path(self, pack: DataPack) -> Optional[str]:
         if self.__use_existing_index:
             if pack.pack_name in self._article_index:
-                # Since datasets are built separated, there might be cases where the
-                #  an article referred later is not in the original parsed dataset.
+                # Since datasets are built separated, there might be cases
+                # where the article referred later is not in the original
+                # parsed dataset, so we need to check if they exist.
                 return self._article_index[pack.pack_name]
+            else:
+                return None
         else:
             # Organize the data by IO ordering instead.
             sub_dir = str(int(self.article_count / 2000)).zfill(5)
