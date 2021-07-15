@@ -57,7 +57,7 @@ class SubwordTokenizer(PackProcessor):
         configs = super().default_configs()
         configs.update(
             {
-                "pretrained_model_name": None,
+                "pretrained_model_name": "bert-base-uncased",
             }
         )
         return configs
