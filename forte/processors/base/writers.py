@@ -123,7 +123,20 @@ class JsonPackWriter(PackProcessor, ABC):
 
     @classmethod
     def default_configs(cls):
-        r"""This defines a basic ``Hparams`` structure."""
+        r"""This defines a basic configuration structure for writer.
+
+        Here:
+          - output_dir (str): the directory for writing the result.
+          - zip_pack (bool): whether to zip the data pack. The default value is
+             False.
+          - indent (int): None not indented, if larger than 0, the JSON
+             files will be written in the with the provided indention. The
+             default value is None.
+          - drop_record: whether to drop the creation records in the data pack,
+             the default value is False.
+
+        Returns: The default configuration of this writer.
+        """
         config = super().default_configs()
         config.update(
             {

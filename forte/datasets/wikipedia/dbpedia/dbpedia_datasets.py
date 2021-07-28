@@ -346,10 +346,9 @@ class WikiArticleWriter(JsonPackWriter):
         """
         super()._process(input_pack)
 
-        if self.__use_existing_index:
-            out_path = self.sub_output_path(input_pack)
-            # Write the index
-            self._csv_writer.writerow([input_pack.pack_name, out_path])
+        # Write the output index files.
+        out_path = self.sub_output_path(input_pack)
+        self._csv_writer.writerow([input_pack.pack_name, out_path])
 
         self.article_count += 1
         if self.article_count % 1000 == 0:
@@ -358,7 +357,8 @@ class WikiArticleWriter(JsonPackWriter):
             )
 
     def finish(self, _: Resources):
-        self._input_index_file.close()
+        if self.configs.use_input_index and self.configs.input_index_file:
+            self._input_index_file.close()
         self._output_index_file.close()
 
     @classmethod
@@ -366,24 +366,28 @@ class WikiArticleWriter(JsonPackWriter):
         """
         This defines a basic config structure for the reader.
 
-        Here:
-          - pack_dir: the directory that contains all the serialized packs.
-          - use_input_index: whether to use the input index file to find data.
-          - input_index_file: the file name under the pack directory that
-            points to the index from the name to the actual pack path. If
-            `use_input_index` is also true, data path will be digested using
-            the paths provided in this index.
-          - output_index_file: if provided, will write out the index from file
-             name to the packs.
+        The additional parameters to provide:
+          - use_input_index (bool): whether to use the input index file to find
+              data.
+          - input_index_file (str): the path providing the index from the
+              wikipedia article name to the relative paths that stores these
+              files. This path and the relative paths are all relative names
+              are relative to the `output_dir`.
+              This file will only be used if the `use_input_index` and
+              `overwrite` are both set to true, and the data path will be
+              used to write the results (which means the existing files will be
+              overwritten).
+          - output_index_file (str): if provided, will write out the index from
+              file name to the packs.
 
-        Returns: The default configuration of this reader.
+        Returns: The default configuration of this writer.
         """
         config = super().default_configs()
         config.update(
             {
                 "use_input_index": False,
                 "input_index_file": None,
-                "output_index_file": None,
+                "output_index_file": "article.idx",
             }
         )
         return config
