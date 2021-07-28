@@ -117,6 +117,9 @@ class TestDBpediaReaders(TestCase):
         output: str = os.path.join(self.output_dir.name, "anchor")
         write_results(pl, output, os.path.join(self.data_dir, "text_links.tql"))
 
+        print(self.raw_output)
+        print(output)
+
         self.num_packs_check(output, 1)
         self.num_indexed(output, 1)
 

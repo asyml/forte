@@ -11,6 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from typing import Optional
+
 from forte.common.exception import ProcessExecutionException
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
@@ -18,13 +20,13 @@ from forte.processors.base.writers import JsonPackWriter, MultiPackWriter
 
 
 class PackIdJsonPackWriter(JsonPackWriter):
-    def sub_output_path(self, pack: DataPack) -> str:
+    def sub_output_path(self, pack: DataPack) -> Optional[str]:
         suffix = ".json.gz" if self.zip_pack else ".json"
         return str(pack.pack_id) + suffix
 
 
 class PackNameJsonPackWriter(JsonPackWriter):
-    def sub_output_path(self, pack: DataPack) -> str:
+    def sub_output_path(self, pack: DataPack) -> Optional[str]:
         if pack.pack_name is None:
             raise ValueError(
                 "Cannot use DocIdJsonPackWriter when [pack_name] of the pack "

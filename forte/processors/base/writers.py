@@ -113,7 +113,7 @@ class JsonPackWriter(PackProcessor, ABC):
         self.indent = configs.indent
 
     @abstractmethod
-    def sub_output_path(self, pack: DataPack) -> str:
+    def sub_output_path(self, pack: DataPack) -> Optional[str]:
         r"""Allow defining output path using the information of the pack.
 
         Args:
@@ -123,7 +123,20 @@ class JsonPackWriter(PackProcessor, ABC):
 
     @classmethod
     def default_configs(cls):
-        r"""This defines a basic ``Hparams`` structure."""
+        r"""This defines a basic configuration structure for writer.
+
+        Here:
+          - output_dir (str): the directory for writing the result.
+          - zip_pack (bool): whether to zip the data pack. The default value is
+             False.
+          - indent (int): None not indented, if larger than 0, the JSON
+             files will be written in the with the provided indention. The
+             default value is None.
+          - drop_record: whether to drop the creation records in the data pack,
+             the default value is False.
+
+        Returns: The default configuration of this writer.
+        """
         config = super().default_configs()
         config.update(
             {
@@ -137,19 +150,18 @@ class JsonPackWriter(PackProcessor, ABC):
 
     def _process(self, input_pack: DataPack):
         sub_path = self.sub_output_path(input_pack)
-        if sub_path == "":
-            raise ValueError("No concrete path provided from sub_output_path.")
-
-        maybe_create_dir(self.configs.output_dir)
-        write_pack(
-            input_pack,
-            self.configs.output_dir,
-            sub_path,
-            self.configs.indent,
-            self.configs.zip_pack,
-            self.configs.overwrite,
-            self.configs.drop_record,
-        )
+        if sub_path is not None and not sub_path == "":
+            # Sub path could be empty, which we will skip writing the file.
+            maybe_create_dir(self.configs.output_dir)
+            write_pack(
+                input_pack,
+                self.configs.output_dir,
+                sub_path,
+                self.configs.indent,
+                self.configs.zip_pack,
+                self.configs.overwrite,
+                self.configs.drop_record,
+            )
 
 
 class MultiPackWriter(MultiPackProcessor):

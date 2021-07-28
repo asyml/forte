@@ -19,7 +19,7 @@ import logging
 import os
 import pickle
 import sys
-from typing import Dict
+from typing import Dict, Optional
 
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
@@ -40,22 +40,23 @@ from forte.pipeline import Pipeline
 
 
 def add_wiki_info(
-    reader: PackReader,
-    resources: Resources,
-    input_path: str,
-    input_pack_path: str,
-    output_path: str,
-    prompt_name: str,
-    skip_existing=True,
-    overwrite=False,
-    input_index_file_name: str = "article.idx",
-    output_index_file_name: str = "article.idx",
+        reader: PackReader,
+        resources: Resources,
+        wiki_info_data_path: str,
+        input_pack_path: str,
+        output_path: str,
+        prompt_name: str,
+        use_input_index=False,
+        skip_existing=True,
+        input_index_file_name: Optional[str] = "article.idx",
+        output_index_file_name: Optional[str] = "article.idx",
 ):
     pl = Pipeline[DataPack](resources)
 
     out_index_path = os.path.join(output_path, output_index_file_name)
     if skip_existing and os.path.exists(out_index_path):
-        print_progress(f"\n{output_path} exist, skipping {prompt_name}", "\n")
+        print_progress(
+            f"\n{out_index_path} exist, skipping {prompt_name}", "\n")
         return
 
     pl.set_reader(
@@ -72,21 +73,22 @@ def add_wiki_info(
             "output_dir": output_path,
             "zip_pack": True,
             "drop_record": True,
+            "use_input_index": use_input_index,
+            "input_index_file": input_index_file_name,
             "output_index_file": output_index_file_name,
-            "overwrite": overwrite,
         },
     )
 
     print_progress(f"Start running the {prompt_name} pipeline.", "\n")
-    pl.run(input_path)
+    pl.run(wiki_info_data_path)
     print_progress(f"Done collecting {prompt_name}.", "\n")
 
 
 def read_wiki_text(
-    nif_context: str,
-    output_dir: str,
-    resources: Resources,
-    skip_existing: bool = False,
+        nif_context: str,
+        output_dir: str,
+        resources: Resources,
+        skip_existing: bool = False,
 ):
     if skip_existing and os.path.exists(output_dir):
         print_progress(f"\n{output_dir} exist, skipping reading text", "\n")
@@ -107,28 +109,35 @@ def read_wiki_text(
     print_progress("Done collecting wiki text.", "\n")
 
 
-def main(
-    nif_context: str,
-    nif_page_structure: str,
-    mapping_literals: str,
-    mapping_objects: str,
-    nif_text_links: str,
-    redirects: str,
-    info_boxs_properties: str,
-    base_output_path: str,
-):
-    # The datasets are read in a few steps.
-    # 0. Load redirects between wikipedia pages.
-    print_progress("Loading redirects", "\n")
+def cache_redirects(
+        base_output_path: str, redirect_path: str) -> Dict[str, str]:
     redirect_pickle = os.path.join(base_output_path, "redirects.pickle")
 
     redirect_map: Dict[str, str]
     if os.path.exists(redirect_pickle):
         redirect_map = pickle.load(open(redirect_pickle, "rb"))
     else:
-        redirect_map = load_redirects(redirects)
+        redirect_map = load_redirects(redirect_path)
         with open(redirect_pickle, "wb") as pickle_f:
             pickle.dump(redirect_map, pickle_f)
+    return redirect_map
+
+
+def main(
+        nif_context: str,
+        nif_page_structure: str,
+        mapping_literals: str,
+        mapping_objects: str,
+        nif_text_links: str,
+        redirects: str,
+        info_boxs_properties: str,
+        base_output_path: str,
+):
+    # The datasets are read in a few steps.
+    # 0. Load redirects between wikipedia pages.
+    print_progress("Loading redirects", "\n")
+
+    redirect_map: Dict[str, str] = cache_redirects(base_output_path, redirects)
 
     resources: Resources = Resources()
     resources.update(redirects=redirect_map)
@@ -148,7 +157,7 @@ def main(
         raw_pack_dir,
         struct_dir,
         "page_structures",
-        True,
+        skip_existing=True,
     )
     print_progress("Done reading wikipedia structures.", "\n")
 
@@ -161,7 +170,7 @@ def main(
         struct_dir,
         link_dir,
         "anchor_links",
-        True,
+        skip_existing=True,
     )
     print_progress("Done reading wikipedia anchors.", "\n")
 
@@ -175,8 +184,8 @@ def main(
         link_dir,
         property_dir,
         "info_box_properties",
+        use_input_index=True,
         skip_existing=True,
-        overwrite=True,
         output_index_file_name="properties.idx",
     )
     print_progress("Done reading wikipedia info-boxes properties.", "\n")
@@ -190,8 +199,8 @@ def main(
         property_dir,
         literal_dir,
         "literals",
+        use_input_index=True,
         skip_existing=True,
-        overwrite=True,
         output_index_file_name="literals.idx",
     )
     print_progress("Done reading wikipedia info-boxes literals.", "\n")
@@ -205,8 +214,8 @@ def main(
         literal_dir,
         mapping_dir,
         "objects",
+        use_input_index=True,
         skip_existing=True,
-        overwrite=True,
         output_index_file_name="objects.idx",
     )
     print_progress("Done reading wikipedia info-boxes objects.", "\n")
