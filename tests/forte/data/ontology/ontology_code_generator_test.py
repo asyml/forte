@@ -84,6 +84,7 @@ class GenerateOntologyTest(unittest.TestCase):
             ["ft/onto/ft_module", "custom/user/custom_module"],
         ),
         ("race_qa_onto", ["ft/onto/race_qa_ontology"]),
+        ("test_top_attribute", ["ft/onto/test_top_attribute"]),
     )
     def test_generated_code(self, value):
         input_file_name, file_paths = value
