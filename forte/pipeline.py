@@ -253,12 +253,20 @@ class Pipeline(Generic[PackType]):
         given configurations.
 
         Args:
-            configs: The configs used to initialize the pipeline.
+            configs: The configs used to initialize the pipeline. It should be
+                a list of dictionary that contains `"type"` and `"configs"`.
+                `"type"` indicates the class of pipeline components and
+                `"configs"` stores the corresponding component's configs. One
+                exception is that when `"type"` is set to `"PIPELINE_STATES"`,
+                `"configs"` will be used to update the pipeline states
+                based on the fields specified in `configs.attribute` and
+                `configs.resource`.
         """
 
         is_first: bool = True
         for component_config in configs:
 
+            # Set pipeline states and resources
             if component_config["type"] == "PIPELINE_STATES":
                 state_configs: Dict[str, Dict] = component_config["configs"]
                 for attr, val in state_configs["attribute"].items():
@@ -293,7 +301,7 @@ class Pipeline(Generic[PackType]):
         a pipeline.
 
         Returns:
-            dict: A dictionary storing IR.
+            list: A list of dictionary storing IR.
         """
         configs: List[Dict] = []
         configs.append(
