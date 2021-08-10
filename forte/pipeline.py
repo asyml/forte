@@ -34,6 +34,7 @@ from typing import (
     Set,
 )
 
+import pickle
 import yaml
 import uvicorn
 from fastapi import FastAPI
@@ -257,6 +258,19 @@ class Pipeline(Generic[PackType]):
 
         is_first: bool = True
         for component_config in configs:
+
+            if component_config["type"] == "PIPELINE_STATES":
+                state_configs: Dict[str, Dict] = component_config["configs"]
+                for attr, val in state_configs["attribute"].items():
+                    setattr(self, attr, val)
+                self.resource.update(
+                    **{
+                        field: pickle.loads(val.encode("latin1"))
+                        for field, val in state_configs["resource"].items()
+                    }
+                )
+                continue
+
             component = create_class_with_kwargs(
                 class_name=component_config["type"],
                 class_args=component_config.get("kwargs", {}),
@@ -299,6 +313,33 @@ class Pipeline(Generic[PackType]):
                     "configs": config.todict(),
                 }
             )
+
+        # Serialize current states of pipeline
+        configs.append(
+            {
+                "type": "PIPELINE_STATES",
+                "configs": {
+                    "attribute": {
+                        attr: getattr(self, attr)
+                        for attr in (
+                            "_initialized",
+                            "_enable_profiling",
+                            "_check_type_consistency",
+                            "_do_init_type_check",
+                        )
+                        if hasattr(self, attr)
+                    },
+                    "resource": {
+                        field: pickle.dumps(self.resource.get(field)).decode(
+                            "latin1"
+                        )
+                        for field in ("onto_specs_dict", "merged_entry_tree")
+                        if self.resource.contains(field)
+                    },
+                },
+            }
+        )
+
         return configs
 
     def save(self, path: str):
