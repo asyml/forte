@@ -34,7 +34,6 @@ from typing import (
     Set,
 )
 
-import pickle
 import yaml
 import uvicorn
 from fastapi import FastAPI
@@ -220,6 +219,9 @@ class Pipeline(Generic[PackType]):
         # Indicate whether do type checking during pipeline initialization
         self._do_init_type_check: bool = do_init_type_check
 
+        # The version of intermediate representation format
+        self.FORTE_IR_VERSION: str = "0.0.1"
+
     def enforce_consistency(self, enforce: bool = True):
         r"""This function determines whether the pipeline will check
         the content expectations specified in each pipeline component. This
@@ -248,37 +250,32 @@ class Pipeline(Generic[PackType]):
         configs = yaml.safe_load(open(config_path))
         self.init_from_config(configs)
 
-    def init_from_config(self, configs: List):
+    def init_from_config(self, configs: Dict[str, Any]):
         r"""Initialized the pipeline (ontology and processors) from the
         given configurations.
 
         Args:
             configs: The configs used to initialize the pipeline. It should be
-                a list of dictionary that contains `"type"` and `"configs"`.
-                `"type"` indicates the class of pipeline components and
-                `"configs"` stores the corresponding component's configs. One
-                exception is that when `"type"` is set to `"PIPELINE_STATES"`,
-                `"configs"` will be used to update the pipeline states
-                based on the fields specified in `configs.attribute` and
-                `configs.resource`.
+                a dictionary that contains `forte_ir_version`, `components`
+                and `states`. `forte_ir_version` is a string used to validate
+                input format. `components` is a list of dictionary that
+                contains `type` (the class of pipeline components),
+                `configs` (the corresponding component's configs) and
+                `selector`. `states` will be used to update the pipeline states
+                based on the fields specified in `states.attribute` and
+                `states.resource`.
         """
+        # Validate IR version
+        if configs.get("forte_ir_version") != self.FORTE_IR_VERSION:
+            raise ProcessorConfigError(
+                f"forte_ir_version={configs.get('forte_ir_version')} not "
+                "supported. Please make sure the format of input IR complies "
+                f"with forte_ir_version={self.FORTE_IR_VERSION}."
+            )
 
+        # Add components from IR
         is_first: bool = True
-        for component_config in configs:
-
-            # Set pipeline states and resources
-            if component_config["type"] == "PIPELINE_STATES":
-                state_configs: Dict[str, Dict] = component_config["configs"]
-                for attr, val in state_configs["attribute"].items():
-                    setattr(self, attr, val)
-                self.resource.update(
-                    **{
-                        field: pickle.loads(val.encode("latin1"))
-                        for field, val in state_configs["resource"].items()
-                    }
-                )
-                continue
-
+        for component_config in configs["components"]:
             component = create_class_with_kwargs(
                 class_name=component_config["type"],
                 class_args=component_config.get("kwargs", {}),
@@ -293,7 +290,26 @@ class Pipeline(Generic[PackType]):
                 is_first = False
             else:
                 # Can be processor, caster, or evaluator
-                self.add(component, component_config.get("configs", {}))
+                selector = create_class_with_kwargs(
+                    class_name=component_config["selector"]["type"],
+                    class_args=component_config["selector"].get("kwargs", {}),
+                )
+                self.add(
+                    component=component,
+                    config=component_config.get("configs", {}),
+                    selector=selector,
+                )
+
+        # Set pipeline states and resources
+        states_config: Dict[str, Dict] = configs["states"]
+        for attr, val in states_config["attribute"].items():
+            setattr(self, attr, val)
+        self.resource.update(
+            onto_specs_dict=states_config["resource"]["onto_specs_dict"],
+            merged_entry_tree=EntryTree().fromdict(
+                states_config["resource"]["merged_entry_tree"]
+            ),
+        )
 
     def _dump_to_config(self):
         r"""Serialize the pipeline to an IR(intermediate representation).
@@ -301,10 +317,16 @@ class Pipeline(Generic[PackType]):
         a pipeline.
 
         Returns:
-            list: A list of dictionary storing IR.
+            dict: A dictionary storing IR.
         """
-        configs: List[Dict] = []
-        configs.append(
+        configs: Dict = {
+            "forte_ir_version": self.FORTE_IR_VERSION,
+            "components": list(),
+            "states": dict(),
+        }
+
+        # Serialize pipeline components
+        configs["components"].append(
             {
                 "type": ".".join(
                     [self._reader.__module__, type(self._reader).__name__]
@@ -312,38 +334,44 @@ class Pipeline(Generic[PackType]):
                 "configs": self._reader_config.todict(),
             }
         )
-        for component, config in zip(self.components, self.component_configs):
-            configs.append(
+        for component, config, selector in zip(
+            self.components, self.component_configs, self._selectors
+        ):
+            configs["components"].append(
                 {
                     "type": ".".join(
                         [component.__module__, type(component).__name__]
                     ),
                     "configs": config.todict(),
+                    "selector": {
+                        "type": ".".join(
+                            [selector.__module__, type(selector).__name__]
+                        ),
+                        # TODO: This presumes that class attributes' names are
+                        # the same as the paramaters' names passed to
+                        # selector's constructor, which may not be always true.
+                        "kwargs": selector.__dict__ or None,
+                    },
                 }
             )
 
         # Serialize current states of pipeline
-        configs.append(
+        configs["states"].update(
             {
-                "type": "PIPELINE_STATES",
-                "configs": {
-                    "attribute": {
-                        attr: getattr(self, attr)
-                        for attr in (
-                            "_initialized",
-                            "_enable_profiling",
-                            "_check_type_consistency",
-                            "_do_init_type_check",
-                        )
-                        if hasattr(self, attr)
-                    },
-                    "resource": {
-                        field: pickle.dumps(self.resource.get(field)).decode(
-                            "latin1"
-                        )
-                        for field in ("onto_specs_dict", "merged_entry_tree")
-                        if self.resource.contains(field)
-                    },
+                "attribute": {
+                    attr: getattr(self, attr)
+                    for attr in (
+                        "_initialized",
+                        "_enable_profiling",
+                        "_check_type_consistency",
+                        "_do_init_type_check",
+                    )
+                    if hasattr(self, attr)
+                },
+                "resource": {
+                    "onto_specs_dict": self.resource.get("onto_specs_dict"),
+                    "merged_entry_tree": self.resource.get("merged_entry_tree")
+                    and self.resource.get("merged_entry_tree").todict(),
                 },
             }
         )
