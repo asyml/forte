@@ -60,6 +60,7 @@ from forte.processors.base import BaseProcessor
 from forte.processors.base.batch_processor import BaseBatchProcessor
 from forte.utils import create_class_with_kwargs
 from forte.utils.utils_processor import record_types_and_attributes_check
+from forte.version import FORTE_IR_VERSION
 
 if sys.version_info < (3, 7):
     import importlib_resources as resources
@@ -219,9 +220,6 @@ class Pipeline(Generic[PackType]):
         # Indicate whether do type checking during pipeline initialization
         self._do_init_type_check: bool = do_init_type_check
 
-        # The version of intermediate representation format
-        self.FORTE_IR_VERSION: str = "0.0.1"
-
     def enforce_consistency(self, enforce: bool = True):
         r"""This function determines whether the pipeline will check
         the content expectations specified in each pipeline component. This
@@ -266,16 +264,16 @@ class Pipeline(Generic[PackType]):
                 `states.resource`.
         """
         # Validate IR version
-        if configs.get("forte_ir_version") != self.FORTE_IR_VERSION:
+        if configs.get("forte_ir_version") != FORTE_IR_VERSION:
             raise ProcessorConfigError(
                 f"forte_ir_version={configs.get('forte_ir_version')} not "
                 "supported. Please make sure the format of input IR complies "
-                f"with forte_ir_version={self.FORTE_IR_VERSION}."
+                f"with forte_ir_version={FORTE_IR_VERSION}."
             )
 
         # Add components from IR
         is_first: bool = True
-        for component_config in configs["components"]:
+        for component_config in configs.get("components", []):
             component = create_class_with_kwargs(
                 class_name=component_config["type"],
                 class_args=component_config.get("kwargs", {}),
@@ -290,26 +288,32 @@ class Pipeline(Generic[PackType]):
                 is_first = False
             else:
                 # Can be processor, caster, or evaluator
-                selector = create_class_with_kwargs(
-                    class_name=component_config["selector"]["type"],
-                    class_args=component_config["selector"].get("kwargs", {}),
-                )
+                selector_config = component_config.get("selector")
                 self.add(
                     component=component,
                     config=component_config.get("configs", {}),
-                    selector=selector,
+                    selector=selector_config
+                    and create_class_with_kwargs(
+                        class_name=selector_config["type"],
+                        class_args=selector_config.get("kwargs", {}),
+                    ),
                 )
 
         # Set pipeline states and resources
-        states_config: Dict[str, Dict] = configs["states"]
-        for attr, val in states_config["attribute"].items():
+        states_config: Dict[str, Dict] = configs.get("states", {})
+        for attr, val in states_config.get("attribute", {}).items():
             setattr(self, attr, val)
-        self.resource.update(
-            onto_specs_dict=states_config["resource"]["onto_specs_dict"],
-            merged_entry_tree=EntryTree().fromdict(
-                states_config["resource"]["merged_entry_tree"]
-            ),
-        )
+        resource_config: Dict[str, Dict] = states_config.get("resource", {})
+        if "onto_specs_dict" in resource_config:
+            self.resource.update(
+                onto_specs_dict=resource_config["onto_specs_dict"]
+            )
+        if "merged_entry_tree" in resource_config:
+            self.resource.update(
+                merged_entry_tree=EntryTree().fromdict(
+                    resource_config["merged_entry_tree"]
+                ),
+            )
 
     def _dump_to_config(self):
         r"""Serialize the pipeline to an IR(intermediate representation).
@@ -320,7 +324,7 @@ class Pipeline(Generic[PackType]):
             dict: A dictionary storing IR.
         """
         configs: Dict = {
-            "forte_ir_version": self.FORTE_IR_VERSION,
+            "forte_ir_version": FORTE_IR_VERSION,
             "components": list(),
             "states": dict(),
         }
@@ -350,7 +354,7 @@ class Pipeline(Generic[PackType]):
                         # TODO: This presumes that class attributes' names are
                         # the same as the paramaters' names passed to
                         # selector's constructor, which may not be always true.
-                        "kwargs": selector.__dict__ or None,
+                        "kwargs": selector.__dict__ or {},
                     },
                 }
             )
@@ -368,13 +372,21 @@ class Pipeline(Generic[PackType]):
                     )
                     if hasattr(self, attr)
                 },
-                "resource": {
-                    "onto_specs_dict": self.resource.get("onto_specs_dict"),
-                    "merged_entry_tree": self.resource.get("merged_entry_tree")
-                    and self.resource.get("merged_entry_tree").todict(),
-                },
+                "resource": dict(),
             }
         )
+        if self.resource.contains("onto_specs_dict"):
+            configs["states"]["resource"].update(
+                {"onto_specs_dict": self.resource.get("onto_specs_dict")}
+            )
+        if self.resource.contains("merged_entry_tree"):
+            configs["states"]["resource"].update(
+                {
+                    "merged_entry_tree": self.resource.get(
+                        "merged_entry_tree"
+                    ).todict()
+                }
+            )
 
         return configs
 
