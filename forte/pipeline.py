@@ -323,6 +323,22 @@ class Pipeline(Generic[PackType]):
         Returns:
             dict: A dictionary storing IR.
         """
+
+        def get_type(instance) -> str:
+            r"""Get full module name of an instance"""
+            return instance.__module__ + "." + type(instance).__name__
+
+        def test_jsonable(test_dict: Dict, type_name: str = ""):
+            r"""Check if a dictionary is JSON serializable"""
+            try:
+                json.dumps(test_dict)
+                return test_dict
+            except (TypeError, OverflowError) as e:
+                raise ProcessorConfigError(
+                    f"{type_name} is not JSON serializable. Please double "
+                    "check the configuration or arguments"
+                ) from e
+
         configs: Dict = {
             "forte_ir_version": FORTE_IR_VERSION,
             "components": list(),
@@ -332,10 +348,11 @@ class Pipeline(Generic[PackType]):
         # Serialize pipeline components
         configs["components"].append(
             {
-                "type": ".".join(
-                    [self._reader.__module__, type(self._reader).__name__]
+                "type": get_type(self._reader),
+                "configs": test_jsonable(
+                    test_dict=self._reader_config.todict(),
+                    type_name=f"Configuration of {get_type(self._reader)}",
                 ),
-                "configs": self._reader_config.todict(),
             }
         )
         for component, config, selector in zip(
@@ -343,18 +360,19 @@ class Pipeline(Generic[PackType]):
         ):
             configs["components"].append(
                 {
-                    "type": ".".join(
-                        [component.__module__, type(component).__name__]
+                    "type": get_type(component),
+                    "configs": test_jsonable(
+                        test_dict=config.todict(),
+                        type_name=f"Configuration of {get_type(component)}",
                     ),
-                    "configs": config.todict(),
                     "selector": {
-                        "type": ".".join(
-                            [selector.__module__, type(selector).__name__]
+                        "type": get_type(selector),
+                        "kwargs": test_jsonable(
+                            # pylint: disable=protected-access
+                            test_dict=selector._stored_kwargs,
+                            # pylint: enable=protected-access
+                            type_name=f"kwargs of {get_type(selector)}",
                         ),
-                        # TODO: This presumes that class attributes' names are
-                        # the same as the paramaters' names passed to
-                        # selector's constructor, which may not be always true.
-                        "kwargs": selector.__dict__ or {},
                     },
                 }
             )
