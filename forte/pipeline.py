@@ -58,7 +58,7 @@ from forte.process_job import ProcessJob
 from forte.process_manager import ProcessManager, ProcessJobStatus
 from forte.processors.base import BaseProcessor
 from forte.processors.base.batch_processor import BaseBatchProcessor
-from forte.utils import create_class_with_kwargs
+from forte.utils import create_class_with_kwargs, get_full_module_name
 from forte.utils.utils_processor import record_types_and_attributes_check
 from forte.version import FORTE_IR_VERSION
 
@@ -324,20 +324,51 @@ class Pipeline(Generic[PackType]):
             dict: A dictionary storing IR.
         """
 
-        def get_type(instance) -> str:
-            r"""Get full module name of an instance"""
-            return instance.__module__ + "." + type(instance).__name__
-
-        def test_jsonable(test_dict: Dict, type_name: str = ""):
+        def test_jsonable(test_dict: Dict, err_msg: str):
             r"""Check if a dictionary is JSON serializable"""
             try:
                 json.dumps(test_dict)
                 return test_dict
             except (TypeError, OverflowError) as e:
-                raise ProcessorConfigError(
-                    f"{type_name} is not JSON serializable. Please double "
-                    "check the configuration or arguments"
-                ) from e
+                raise ProcessorConfigError(err_msg) from e
+
+        get_err_msg: Dict = {
+            "reader": lambda reader: (
+                "The reader of the pipeline cannot be JSON serialized. This is"
+                " likely due to some parameters in the configuration of the "
+                f"reader {get_full_module_name(reader)} cannot be serialized "
+                "in JSON. To resolve this issue, you can consider implementing"
+                " a JSON serialization for that parameter type or changing the"
+                " parameters of this reader. Note that in order for the reader"
+                " to be serialized in JSON, all the variables defined in both "
+                "the default_configs and the configuration passed in during "
+                "pipeline.set_reader() need to be JSON-serializable. You can "
+                "find in the stack trace the type of the un-serializable "
+                "parameter."
+            ),
+            "component": lambda component: (
+                "One component of the pipeline cannot be JSON serialized. This"
+                " is likely due to some parameters in the configuration of the"
+                f" component {get_full_module_name(component)} cannot be "
+                "serialized in JSON. To resolve this issue, you can consider "
+                "implementing a JSON serialization for that parameter type or "
+                "changing the parameters of the component. Note that in order "
+                "for the component to be serialized in JSON, all the variables"
+                " defined in both the default_configs and the configuration "
+                "passed in during pipeline.add() need to be JSON-serializable."
+                " You can find in the stack trace the type of the "
+                "un-serializable parameter."
+            ),
+            "selector": lambda selector: (
+                "A selector cannot be JSON serialized. This is likely due to "
+                "some __init__ parameters for class "
+                f"{get_full_module_name(selector)} cannot be serialized in "
+                "JSON. To resolve this issue, you can consider implementing a "
+                "JSON serialization for that parameter type or changing the "
+                "signature of the __init__ function. You can find in the stack"
+                " trace the type of the un-serializable parameter."
+            ),
+        }
 
         configs: Dict = {
             "forte_ir_version": FORTE_IR_VERSION,
@@ -348,10 +379,10 @@ class Pipeline(Generic[PackType]):
         # Serialize pipeline components
         configs["components"].append(
             {
-                "type": get_type(self._reader),
+                "type": get_full_module_name(self._reader),
                 "configs": test_jsonable(
                     test_dict=self._reader_config.todict(),
-                    type_name=f"Configuration of {get_type(self._reader)}",
+                    err_msg=get_err_msg["reader"](self._reader),
                 ),
             }
         )
@@ -360,18 +391,18 @@ class Pipeline(Generic[PackType]):
         ):
             configs["components"].append(
                 {
-                    "type": get_type(component),
+                    "type": get_full_module_name(component),
                     "configs": test_jsonable(
                         test_dict=config.todict(),
-                        type_name=f"Configuration of {get_type(component)}",
+                        err_msg=get_err_msg["component"](component),
                     ),
                     "selector": {
-                        "type": get_type(selector),
+                        "type": get_full_module_name(selector),
                         "kwargs": test_jsonable(
                             # pylint: disable=protected-access
                             test_dict=selector._stored_kwargs,
                             # pylint: enable=protected-access
-                            type_name=f"kwargs of {get_type(selector)}",
+                            err_msg=get_err_msg["selector"](selector),
                         ),
                     },
                 }
