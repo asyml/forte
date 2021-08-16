@@ -279,7 +279,7 @@ class DiffAligner:
         self.__matcher.set_seqs(text, text_to_align)
         self.clear_alignment()
 
-        for tag, i1, i2, j1, j2 in self._get_opcodes():
+        for _, i1, i2, j1, j2 in self._get_opcodes():
             self.__begin_mapper.set_ref_points(j1, i1 - j1)
             self.__end_mapper.set_ref_points(j2, i2 - j2)
 

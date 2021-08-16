@@ -98,6 +98,7 @@ class SubwordTokenizer(PackProcessor):
                     subword_token.is_first_segment = not subword.startswith(
                         "##"
                     )
+                    # pylint: disable=protected-access
                     subword_token.vocab_id = self.tokenizer._map_token_to_id(
                         subword
                     )
