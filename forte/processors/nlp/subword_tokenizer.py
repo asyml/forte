@@ -74,7 +74,7 @@ class SubwordTokenizer(PackProcessor):
             )
 
             for token, (token_start, token_end) in zip(
-                basic_tokens, token_spans
+                    basic_tokens, token_spans
             ):
                 assert token is not None
 
@@ -84,9 +84,9 @@ class SubwordTokenizer(PackProcessor):
                     continue
 
                 for (
-                    subword,
-                    start,
-                    end,
+                        subword,
+                        start,
+                        end,
                 ) in self.tokenizer.wordpiece_tokenizer.tokenize_with_span(
                     token
                 ):
@@ -98,11 +98,13 @@ class SubwordTokenizer(PackProcessor):
                     subword_token.is_first_segment = not subword.startswith(
                         "##"
                     )
+                    subword_token.vocab_id = self.tokenizer._map_token_to_id(
+                        subword)
         else:
             for (
-                subword,
-                start,
-                end,
+                    subword,
+                    start,
+                    end,
             ) in self.tokenizer.wordpiece_tokenizer.tokenize_with_span(
                 input_pack.text
             ):

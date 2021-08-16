@@ -47,10 +47,10 @@ class TestSubWordTokenizer(unittest.TestCase):
         for pack in self.pl.process_dataset(input_data):
             for subword in pack.get(Subword):
                 if subword.is_unk:
-                    continue
-
-                subword_repr = subword.text if subword.is_first_segment else \
-                    "##" + subword.text
-                if not (subword_repr in self.vocab
-                        or subword_repr.lower() in self.vocab):
-                    assert False
+                    assert subword.vocab_id == 100
+                else:
+                    subword_repr = subword.text if subword.is_first_segment \
+                        else "##" + subword.text
+                    if not (subword_repr in self.vocab
+                            or subword_repr.lower() in self.vocab):
+                        assert False

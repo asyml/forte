@@ -95,15 +95,18 @@ class Subword(Annotation):
     Attributes:
         is_first_segment (Optional[bool]):
         is_unk (Optional[bool]):
+        vocab_id (Optional[int]):
     """
 
     is_first_segment: Optional[bool]
     is_unk: Optional[bool]
+    vocab_id: Optional[int]
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self.is_first_segment: Optional[bool] = None
         self.is_unk: Optional[bool] = None
+        self.vocab_id: Optional[int] = None
 
 
 @dataclass

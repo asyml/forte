@@ -62,6 +62,10 @@
         {
           "name": "is_unk",
           "type": "bool"
+        },
+        {
+          "name": "vocab_id",
+          "type": "int"
         }
       ]
     },
