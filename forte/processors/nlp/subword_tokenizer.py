@@ -36,6 +36,7 @@ class SubwordTokenizer(PackProcessor):
     """
 
     def __init__(self):
+        super().__init__()
         self.tokenizer: Optional[BERTTokenizer] = None
         self.aligner: Optional[DiffAligner] = None
 
@@ -73,11 +74,13 @@ class SubwordTokenizer(PackProcessor):
                 text_to_match, basic_tokens
             )
 
-            for token, (token_start, token_end) in zip(
-                basic_tokens, token_spans
-            ):
+            for token, aligned_span in zip(basic_tokens, token_spans):
                 assert token is not None
 
+                if aligned_span is None:
+                    continue
+
+                token_start, token_end = aligned_span
                 if token_end <= token_start:
                     # Handle the case where a basic token is not mapped to
                     # the real text span.

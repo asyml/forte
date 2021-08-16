@@ -199,8 +199,21 @@ class DiffAligner:
             self.ref_points.add(p)
             self.adjustments.append(adjustment)
 
-        def trans_offset(self, origin: int):
+        def trans_offset(self, origin: int) -> Optional[int]:
+            """
+            Translate the offset based on the reference points. If there is no
+            translation found, will return None.
+
+            Args:
+                origin: The original offset
+
+            Returns:
+                The translated offset, None if cannot find one.
+
+            """
             idx = self.ref_points.bisect_left(origin)
+            if idx >= len(self.adjustments):
+                return None
             return origin + self.adjustments[idx]
 
         def clear(self):
@@ -209,7 +222,7 @@ class DiffAligner:
 
     def align_with_segments(
         self, text: str, segments: List[str]
-    ) -> List[Tuple[int, int]]:
+    ) -> List[Optional[Tuple[int, int]]]:
         """
         Provided a text sequence `text`, and a list of text `segments`,
         this function will try to align the `text` with the `segments`,
@@ -234,7 +247,7 @@ class DiffAligner:
         Returns:
             The list of mapped offsets for each segment.
         """
-        aligned_spans: List[Tuple[int, int]] = []
+        aligned_spans: List[Optional[Tuple[int, int]]] = []
         segment_spans: List[Tuple[int, int]] = []
 
         # Construct the text using the segments, and store position and
@@ -250,11 +263,17 @@ class DiffAligner:
         self.build_alignment(text, segment_text)
 
         for ss in segment_spans:
-            aligned_spans.append(self.trans_span(ss))
+            b, e = self.trans_span(ss)
+            if b is None or e is None or b >= e:
+                aligned_spans.append(None)
+            else:
+                aligned_spans.append((b, e))
 
         return aligned_spans
 
-    def trans_span(self, span: Tuple[int, int]) -> Tuple[int, int]:
+    def trans_span(
+        self, span: Tuple[int, int]
+    ) -> Tuple[Optional[int], Optional[int]]:
         """
         Translate the provided span based on the alignment computed. Need to
         run after `build_alignment`.
