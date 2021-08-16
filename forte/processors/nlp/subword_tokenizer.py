@@ -78,6 +78,8 @@ class SubwordTokenizer(PackProcessor):
                 assert token is not None
 
                 if aligned_span is None:
+                    # import pdb
+                    # pdb.set_trace()
                     continue
 
                 token_start, token_end = aligned_span

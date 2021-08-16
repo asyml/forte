@@ -41,7 +41,21 @@ class TestSubWordTokenizer(unittest.TestCase):
     @data(
         "GP contacted Harefield Hospital at Hillingdon in north London.",
         "Forte can run a subword tokenizer from Texar, by auto aligning.",
-        "Handling unknown token like a chinese work: 铁."
+        "Handling unknown token like a chinese work: 铁.",
+        "Macroglossum vidua is a moth of the family Sphingidae. It is known "
+        "from north-eastern Papua New Guinea. The length of the forewings is "
+        "about 22 mm. It is similar to Macroglossum glaucoptera, Macroglossum "
+        "corythus luteata and Macroglossum sylvia, but recognisable by the "
+        "dirty grey colour of the underside of the palpus, the greyish of the "
+        "bases of the wing undersides and by the broad antemedian band of the "
+        "forewing upperside. The head and thorax uppersides have no dark "
+        "mesial stripe. The underside of the palpus and middle of the thorax "
+        "are dirty grey, the white scaling mixed with drab-brown scales, "
+        "the sides darker. The abdomen underside is grey. Both wing "
+        "undersides are dark walnut-brown, dull, becoming somewhat olive "
+        "distally, without a distinct brown border. The bases are faintly "
+        "greyish. The hindwing upperside has an interrupted yellow "
+        "band.\n\nReferences\n"
     )
     def test_tokenizer(self, input_data):
         for pack in self.pl.process_dataset(input_data):

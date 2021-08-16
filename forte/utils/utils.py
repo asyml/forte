@@ -30,6 +30,7 @@ __all__ = [
     "get_qual_name",
     "create_class_with_kwargs",
     "check_type",
+    "DiffAligner",
 ]
 
 
@@ -186,7 +187,7 @@ def type_check(func):
 
 class DiffAligner:
     def __init__(self):
-        self.__matcher = difflib.SequenceMatcher()
+        self.__matcher = difflib.SequenceMatcher(autojunk=False)
         self.__begin_mapper = DiffAligner.OffsetMapper()
         self.__end_mapper = DiffAligner.OffsetMapper()
 
@@ -199,7 +200,7 @@ class DiffAligner:
             self.ref_points.add(p)
             self.adjustments.append(adjustment)
 
-        def trans_offset(self, origin: int) -> Optional[int]:
+        def trans_offset(self, origin: int) -> int:
             """
             Translate the offset based on the reference points. If there is no
             translation found, will return None.
@@ -208,12 +209,12 @@ class DiffAligner:
                 origin: The original offset
 
             Returns:
-                The translated offset, None if cannot find one.
+                The translated offset.
 
             """
             idx = self.ref_points.bisect_left(origin)
             if idx >= len(self.adjustments):
-                return None
+                return origin + self.adjustments[-1]
             return origin + self.adjustments[idx]
 
         def clear(self):
@@ -260,20 +261,18 @@ class DiffAligner:
             segment_spans.append((offset, offset + len(s)))
             offset += len(s) + 1
 
-        self.build_alignment(text, segment_text)
+        self.build_alignment(text.strip(), segment_text)
 
         for ss in segment_spans:
             b, e = self.trans_span(ss)
-            if b is None or e is None or b >= e:
+            if b >= e:
                 aligned_spans.append(None)
             else:
                 aligned_spans.append((b, e))
 
         return aligned_spans
 
-    def trans_span(
-        self, span: Tuple[int, int]
-    ) -> Tuple[Optional[int], Optional[int]]:
+    def trans_span(self, span: Tuple[int, int]) -> Tuple[int, int]:
         """
         Translate the provided span based on the alignment computed. Need to
         run after `build_alignment`.
@@ -304,3 +303,208 @@ class DiffAligner:
 
     def _get_opcodes(self):
         yield from self.__matcher.get_opcodes()
+
+
+def main():
+    aligner = DiffAligner()
+    source = (
+        "Macroglossum vidua is a moth of the family Sphingidae. It is "
+        "known "
+        "from north-eastern Papua New Guinea. The length of the "
+        "forewings is "
+        "about 22 mm. It is similar to Macroglossum glaucoptera, "
+        "Macroglossum "
+        "corythus luteata and Macroglossum sylvia, but recognisable by "
+        "the "
+        "dirty grey colour of the underside of the palpus, the greyish "
+        "of the "
+        "bases of the wing undersides and by the broad antemedian band "
+        "of the "
+        "forewing upperside. The head and thorax uppersides have no dark "
+        ""
+        ""
+        "mesial stripe. The underside of the palpus and middle of the "
+        "thorax "
+        "are dirty grey, the white scaling mixed with drab-brown scales, "
+        ""
+        ""
+        "the sides darker. The abdomen underside is grey. Both wing "
+        "undersides are dark walnut-brown, dull, becoming somewhat olive "
+        ""
+        ""
+        "distally, without a distinct brown border. The bases are "
+        "faintly "
+        "greyish. The hindwing upperside has an interrupted yellow "
+        "band.\n\nReferences\n"
+    )
+    target = [
+        "macroglossum",
+        "vidua",
+        "is",
+        "a",
+        "moth",
+        "of",
+        "the",
+        "family",
+        "sphingidae",
+        ".",
+        "it",
+        "is",
+        "known",
+        "from",
+        "north",
+        "-",
+        "eastern",
+        "papua",
+        "new",
+        "guinea",
+        ".",
+        "the",
+        "length",
+        "of",
+        "the",
+        "forewings",
+        "is",
+        "about",
+        "22",
+        "mm",
+        ".",
+        "it",
+        "is",
+        "similar",
+        "to",
+        "macroglossum",
+        "glaucoptera",
+        ",",
+        "macroglossum",
+        "corythus",
+        "luteata",
+        "and",
+        "macroglossum",
+        "sylvia",
+        ",",
+        "but",
+        "recognisable",
+        "by",
+        "the",
+        "dirty",
+        "grey",
+        "colour",
+        "of",
+        "the",
+        "underside",
+        "of",
+        "the",
+        "palpus",
+        ",",
+        "the",
+        "greyish",
+        "of",
+        "the",
+        "bases",
+        "of",
+        "the",
+        "wing",
+        "undersides",
+        "and",
+        "by",
+        "the",
+        "broad",
+        "antemedian",
+        "band",
+        "of",
+        "the",
+        "forewing",
+        "upperside",
+        ".",
+        "the",
+        "head",
+        "and",
+        "thorax",
+        "uppersides",
+        "have",
+        "no",
+        "dark",
+        "mesial",
+        "stripe",
+        ".",
+        "the",
+        "underside",
+        "of",
+        "the",
+        "palpus",
+        "and",
+        "middle",
+        "of",
+        "the",
+        "thorax",
+        "are",
+        "dirty",
+        "grey",
+        ",",
+        "the",
+        "white",
+        "scaling",
+        "mixed",
+        "with",
+        "drab",
+        "-",
+        "brown",
+        "scales",
+        ",",
+        "the",
+        "sides",
+        "darker",
+        ".",
+        "the",
+        "abdomen",
+        "underside",
+        "is",
+        "grey",
+        ".",
+        "both",
+        "wing",
+        "undersides",
+        "are",
+        "dark",
+        "walnut",
+        "-",
+        "brown",
+        ",",
+        "dull",
+        ",",
+        "becoming",
+        "somewhat",
+        "olive",
+        "distally",
+        ",",
+        "without",
+        "a",
+        "distinct",
+        "brown",
+        "border",
+        ".",
+        "the",
+        "bases",
+        "are",
+        "faintly",
+        "greyish",
+        ".",
+        "the",
+        "hindwing",
+        "upperside",
+        "has",
+        "an",
+        "interrupted",
+        "yellow",
+        "band",
+        ".",
+        "references",
+    ]
+    spans = aligner.align_with_segments(source, target)
+
+    print(spans)
+
+    import pdb
+
+    pdb.set_trace()

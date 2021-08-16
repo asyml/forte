@@ -80,7 +80,7 @@ class UtilsTest(unittest.TestCase):
     @data(
         ("this if  sentences for testing.",
          ["This", "is", "a", "sentence", "4", "testing", "."],
-         [(0, 4), (5, 7), (8, 8), (9, 17), (19, 22), (23, 30), (30, 31)]
+         [(0, 4), (5, 7), None, (9, 17), (19, 22), (23, 30), (30, 31)]
          ),
         (
                 "aa bb   cc",
@@ -90,7 +90,7 @@ class UtilsTest(unittest.TestCase):
         (
                 "aa bb  cc  dd xx yy",
                 ["aa", "bb", "cc", "d", "dd", "xx", "yy"],
-                [(0, 2), (3, 5), (6, 9), (10, 10), (11, 13), (14, 16), (17, 19)]
+                [(0, 2), (3, 5), (6, 9), None, (11, 13), (14, 16), (17, 19)]
         ),
     )
     def test_diff_aligner(self, value):
