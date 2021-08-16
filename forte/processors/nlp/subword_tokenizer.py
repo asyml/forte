@@ -24,6 +24,7 @@ from texar.torch.data.tokenizers.bert_tokenizer import BERTTokenizer
 from forte.common import Resources
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
+from forte.data.ontology import Annotation
 from forte.processors.base import PackProcessor
 from forte.utils.utils import DiffAligner
 from ft.onto.base_ontology import Subword
@@ -60,62 +61,65 @@ class SubwordTokenizer(PackProcessor):
         # uses tokenzie_with_span to get the span information. May have
         # problems if there are refactoring happens in BERTTokenizer.
         if self.tokenizer.do_basic_tokenize:
-            basic_tokens = self.tokenizer.basic_tokenizer.tokenize(
-                input_pack.text, never_split=self.tokenizer.all_special_tokens
-            )
+            if self.configs.segment_unit is not None:
+                segment: Annotation
+                for segment in input_pack.get(self.configs.segment_unit):
+                    self._segment(input_pack, segment.text, segment.begin)
+            else:
+                # Use the whole data pack, maybe less efficient.
+                self._segment(input_pack, input_pack.text, 0)
 
-            text_to_match = (
-                input_pack.text.lower()
-                if self.tokenizer.basic_tokenizer.do_lower_case
-                else input_pack.text
-            )
+    def _segment(self, pack: DataPack, text: str, segment_offset: int):
+        basic_tokens = self.tokenizer.basic_tokenizer.tokenize(
+            text, never_split=self.tokenizer.all_special_tokens
+        )
 
-            token_spans = self.aligner.align_with_segments(
-                text_to_match, basic_tokens
-            )
+        text_to_match = (
+            text.lower()
+            if self.tokenizer.basic_tokenizer.do_lower_case
+            else text
+        )
 
-            for token, aligned_span in zip(basic_tokens, token_spans):
-                assert token is not None
+        token_spans = self.aligner.align_with_segments(
+            text_to_match, basic_tokens
+        )
 
-                if aligned_span is None:
-                    # import pdb
-                    # pdb.set_trace()
-                    continue
+        for token, aligned_span in zip(basic_tokens, token_spans):
+            assert token is not None
 
-                token_start, token_end = aligned_span
-                if token_end <= token_start:
-                    # Handle the case where a basic token is not mapped to
-                    # the real text span.
-                    continue
+            if aligned_span is None:
+                # import pdb
+                # pdb.set_trace()
+                continue
 
-                for (
-                    subword,
-                    start,
-                    end,
-                ) in self.tokenizer.wordpiece_tokenizer.tokenize_with_span(
-                    token
-                ):
-                    subword_token = Subword(
-                        input_pack, token_start + start, token_start + end
-                    )
-                    if subword == self.tokenizer.wordpiece_tokenizer.unk_token:
-                        subword_token.is_unk = True
-                    subword_token.is_first_segment = not subword.startswith(
-                        "##"
-                    )
-                    # pylint: disable=protected-access
-                    subword_token.vocab_id = self.tokenizer._map_token_to_id(
-                        subword
-                    )
+            token_start, token_end = aligned_span
+
+            for (
+                subword,
+                start,
+                end,
+            ) in self.tokenizer.wordpiece_tokenizer.tokenize_with_span(token):
+                subword_token = Subword(
+                    pack,
+                    token_start + start + segment_offset,
+                    token_start + end + segment_offset,
+                )
+                if subword == self.tokenizer.wordpiece_tokenizer.unk_token:
+                    subword_token.is_unk = True
+                subword_token.is_first_segment = not subword.startswith("##")
+                # pylint: disable=protected-access
+                subword_token.vocab_id = self.tokenizer._map_token_to_id(
+                    subword
+                )
         else:
             for (
                 subword,
                 start,
                 end,
-            ) in self.tokenizer.wordpiece_tokenizer.tokenize_with_span(
-                input_pack.text
-            ):
-                subword_token = Subword(input_pack, start, end)
+            ) in self.tokenizer.wordpiece_tokenizer.tokenize_with_span(text):
+                subword_token = Subword(
+                    pack, start + segment_offset, end + segment_offset
+                )
                 subword_token.is_first_segment = not subword.startswith("##")
 
     @classmethod
@@ -133,5 +137,6 @@ class SubwordTokenizer(PackProcessor):
         """
         configs = super().default_configs()
         configs.update({"tokenizer_configs": BERTTokenizer.default_hparams()})
+        configs["segment_unit"] = None
 
         return configs
