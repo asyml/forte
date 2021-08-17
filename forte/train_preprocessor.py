@@ -135,7 +135,8 @@ class TrainPreprocessor:
 
         if "feature_scheme" not in request or request["feature_scheme"] is None:
             raise ValueError(
-                "Field not found for data request: `feature_scheme`")
+                "Field not found for data request: `feature_scheme`"
+            )
 
         parsed_request["scope"] = get_class(request["scope"])
         parsed_request["schemes"] = {}
@@ -145,12 +146,12 @@ class TrainPreprocessor:
 
         for tag, scheme in request["feature_scheme"].items():
             assert (
-                    "extractor" in scheme
+                "extractor" in scheme
             ), "Field not found for data request scheme: `extractor`"
             parsed_request["schemes"][tag] = {}
 
             assert (
-                    "type" in scheme
+                "type" in scheme
             ), "Field not found for data request scheme: `type`"
             assert scheme["type"] in [
                 "data_input",

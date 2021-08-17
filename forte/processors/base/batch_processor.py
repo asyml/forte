@@ -103,7 +103,7 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
             self._prepare_coverage_index(input_pack)
 
         for packs, _, batch in self._batcher.get_batch(
-                input_pack, self.context_type, self.input_info
+            input_pack, self.context_type, self.input_info
         ):
             pred = self.predict(batch)
             self.pack_all(packs, pred)
@@ -323,8 +323,11 @@ class Predictor(BaseBatchProcessor):
         parsed_configs = self.default_configs()
         parsed_configs["batch_size"] = configs.batch_size
 
-        parsed_configs["scope"] = get_class(configs.scope) if isinstance(
-            configs.scope, str) else configs.scope
+        parsed_configs["scope"] = (
+            get_class(configs.scope)
+            if isinstance(configs.scope, str)
+            else configs.scope
+        )
 
         parsed_configs["do_eval"] = configs.do_eval
         parsed_configs["feature_scheme"] = {}
@@ -375,7 +378,7 @@ class Predictor(BaseBatchProcessor):
             self._prepare_coverage_index(input_pack)
 
         for batch in self._batcher.get_batch(
-                input_pack, self.context_type, self.input_info
+            input_pack, self.context_type, self.input_info
         ):
             self.__process_batch(batch)
 

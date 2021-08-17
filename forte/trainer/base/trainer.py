@@ -170,7 +170,6 @@ class BaseTrainer:
         self._initialized = True
         logging.info("Done Initializing.")
 
-
     @property
     def train_preprocessor(self) -> Optional[TrainPreprocessor]:
         r"""The instance of type
