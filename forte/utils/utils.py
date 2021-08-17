@@ -222,7 +222,7 @@ class DiffAligner:
             self.adjustments.clear()
 
     def align_with_segments(
-            self, text: str, segments: List[str]
+        self, text: str, segments: List[str]
     ) -> List[Optional[Tuple[int, int]]]:
         """
         Provided a text sequence `text`, and a list of text `segments`,
