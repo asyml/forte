@@ -11,20 +11,29 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
+import os
 import unittest
 
 from ft.onto.base_ontology import Sentence, Token, EntityMention
 from forte.pipeline import Pipeline
 from forte.data.readers.conll03_reader import CoNLL03Reader
 from forte.data.data_pack import DataPack
-from forte.data.extractor.char_extractor import CharExtractor
+from forte.data.extractors.char_extractor import CharExtractor
 
 
 class CharExtractorTest(unittest.TestCase):
-
     def setUp(self):
+        root_path = os.path.abspath(
+            os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                os.pardir,
+                os.pardir,
+                os.pardir,
+                os.pardir,
+            )
+        )
         # Define and config the Pipeline
-        self.dataset_path = "data_samples/conll03"
+        self.dataset_path = os.path.join(root_path, "data_samples/conll03")
 
     def test_CharExtractor(self):
         pipeline = Pipeline[DataPack]()
@@ -33,25 +42,28 @@ class CharExtractorTest(unittest.TestCase):
         pipeline.initialize()
 
         config1 = {
-            "entry_type": Token,
+            "entry_type": "ft.onto.base_ontology.Token",
             "need_pad": True,
             "vocab_use_unk": True,
         }
 
         config2 = {
-            "entry_type": Token,
+            "entry_type": "ft.onto.base_ontology.Token",
             "need_pad": True,
             "vocab_use_unk": True,
-            "max_char_length": 4
+            "max_char_length": 4,
         }
 
         for config in [config1, config2]:
-            extractor = CharExtractor(config)
+            extractor = CharExtractor()
+            extractor.initialize(config=config)
 
-            sentence = "The European Commission said on Thursday it disagreed "\
-                        "with German advice to consumers to shun British lamb "\
-                        "until scientists determine whether mad cow disease "\
-                        "can be transmitted to sheep ."
+            sentence = (
+                "The European Commission said on Thursday it disagreed "
+                "with German advice to consumers to shun British lamb "
+                "until scientists determine whether mad cow disease "
+                "can be transmitted to sheep ."
+            )
 
             for pack in pipeline.process_dataset(self.dataset_path):
                 for instance in pack.get(Sentence):
@@ -63,19 +75,23 @@ class CharExtractorTest(unittest.TestCase):
                     features.append(extractor.extract(pack, instance))
 
             for feat in features:
-                recovered = [[extractor.id2element(idx) for idx in sent]
-                                                for sent in feat.data[0]]
+                recovered = [
+                    [extractor.id2element(idx) for idx in sent]
+                    for sent in feat.data[0]
+                ]
 
                 recovered = ["".join(chars) for chars in recovered]
                 recovered = " ".join(recovered)
                 if "max_char_length" not in config:
                     self.assertEqual(recovered, sentence)
                 else:
-                    truncated_sent = [token[:config["max_char_length"]]
-                            for token in sentence.split(" ")]
+                    truncated_sent = [
+                        token[: config["max_char_length"]]
+                        for token in sentence.split(" ")
+                    ]
                     truncated_sent = " ".join(truncated_sent)
                     self.assertEqual(recovered, truncated_sent)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

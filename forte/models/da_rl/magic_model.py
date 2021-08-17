@@ -25,10 +25,7 @@ import torch
 import torch.nn as nn
 import texar.torch as tx
 
-__all__ = [
-    "MetaModule",
-    "TexarBertMetaModule"
-]
+__all__ = ["MetaModule", "TexarBertMetaModule"]
 
 
 class MetaModule(nn.ModuleList):
@@ -72,7 +69,7 @@ class MetaModule(nn.ModuleList):
 
         for key, value in module._parameters.items():
             if value is not None:
-                self.register_parameter('_origin_' + key, value)
+                self.register_parameter("_origin_" + key, value)
                 self.register_buffer(key, value.data)
             else:
                 self.register_buffer(key, None)
@@ -88,9 +85,11 @@ class MetaModule(nn.ModuleList):
             self.add_module(key, type(self)(value))
 
         for key, value in module.__dict__.items():
-            if key not in self.__dict__ and \
-                    key not in self._buffers and \
-                    key not in self._modules:
+            if (
+                key not in self.__dict__
+                and key not in self._buffers
+                and key not in self._modules
+            ):
                 self.__setattr__(key, value)
 
     def forward(self, *args, **kwargs):
@@ -99,20 +98,20 @@ class MetaModule(nn.ModuleList):
     def update_params(self, deltas: Dict[str, torch.Tensor]):
         sub_params: Dict[str, torch.Tensor] = {}
         for key, delta in deltas.items():
-            if '.' not in key:
+            if "." not in key:
                 self._buffers[key] = self._buffers[key] + delta
             else:
-                attr = key.split('.')[0]
+                attr = key.split(".")[0]
                 if attr not in sub_params:
                     sub_params[attr] = {}
-                sub_params[attr]['.'.join(key.split('.')[1:])] = delta
+                sub_params[attr][".".join(key.split(".")[1:])] = delta
         for key, value in sub_params.items():
             self._modules[key].update_params(value)
 
 
-class TexarBertMetaModule(MetaModule,
-                          tx.modules.EmbedderBase,
-                          tx.modules.MultiheadAttentionEncoder):
+class TexarBertMetaModule(
+    MetaModule, tx.modules.EmbedderBase, tx.modules.MultiheadAttentionEncoder
+):
     r"""A subclass that extends :class:`MetaModule` to do parameter updates
     locally for texar-pytorch Bert related modules.
     E.g. :class:`texar.torch.modules.BERTClassifier`

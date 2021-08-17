@@ -1,5 +1,5 @@
 # ***automatically_generated***
-# ***source json:tests/forte/data/ontology/test_specs/example_complex_ontology.json***
+# ***source json:../../../../../../Documents/forte_develop/forte/tests/forte/data/ontology/test_specs/example_complex_ontology.json***
 # flake8: noqa
 # mypy: ignore-errors
 # pylint: skip-file
@@ -27,10 +27,10 @@ __all__ = [
 class Token(Annotation):
     """
     Attributes:
-        lemma (Optional[str])
-        is_verb (Optional[bool])
-        num_chars (Optional[int])
-        score (Optional[float])
+        lemma (Optional[str]):
+        is_verb (Optional[bool]):
+        num_chars (Optional[int]):
+        score (Optional[float]):
     """
 
     lemma: Optional[str]
@@ -50,7 +50,7 @@ class Token(Annotation):
 class Sentence(Annotation):
     """
     Attributes:
-        key_tokens (FList[Token])
+        key_tokens (FList[Token]):
     """
 
     key_tokens: FList[Token]
@@ -71,7 +71,7 @@ class Document(Annotation):
 class Dependency(Link):
     """
     Attributes:
-        rel_type (Optional[str])
+        rel_type (Optional[str]):
     """
 
     rel_type: Optional[str]

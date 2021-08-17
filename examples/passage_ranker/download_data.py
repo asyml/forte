@@ -28,8 +28,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     # data path can be read from config file
-    parser.add_argument("--config_file", default="./config.yml",
-                        help="Config YAML filepath")
+    parser.add_argument(
+        "--config_file", default="./config.yml", help="Config YAML filepath"
+    )
     args = parser.parse_args()
 
     data_config = yaml.safe_load(open(args.config_file, "r"))["data"]
@@ -37,8 +38,11 @@ if __name__ == "__main__":
 
     # data path can be passed through command line, it is given priority
     default_data_path = config.relative_path
-    parser.add_argument("--path", default=default_data_path,
-                        help="Path to where data will be saved")
+    parser.add_argument(
+        "--path",
+        default=default_data_path,
+        help="Path to where data will be saved",
+    )
 
     args = parser.parse_args()
 
@@ -48,9 +52,9 @@ if __name__ == "__main__":
     resource_path.mkdir(parents=True, exist_ok=True)
 
     # download data
-    url = "https://msmarco.blob.core.windows.net/msmarcoranking/" \
-          "collectionandqueries.tar.gz"
+    url = (
+        "https://msmarco.blob.core.windows.net/msmarcoranking/"
+        "collectionandqueries.tar.gz"
+    )
 
-    maybe_download(urls=[url],
-                   path=resource_path,
-                   extract=True)
+    maybe_download(urls=[url], path=resource_path, extract=True)

@@ -11,24 +11,31 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
+import os
 import unittest
-from ft.onto.base_ontology import Sentence, Token, EntityMention
+
+from forte.data.batchers import FixedSizeDataPackBatcherWithExtractor
+from forte.data.converter import Converter
+from forte.data.data_pack import DataPack
+from forte.data.extractors.attribute_extractor import AttributeExtractor
+from forte.data.readers.conll03_reader import CoNLL03Reader
 from forte.pipeline import Pipeline
 from forte.train_preprocessor import TrainPreprocessor
-from forte.data.readers.conll03_reader import CoNLL03Reader
-from forte.data.data_pack import DataPack
-from forte.data.converter import Converter
-from forte.data.extractor.attribute_extractor import AttributeExtractor
-from forte.data.extractor.seqtagging_extractor import BioSeqTaggingExtractor
-from forte.data.batchers import FixedSizeDataPackBatcherWithExtractor
-from forte.processors.base.batch_processor import Predictor
+from ft.onto.base_ontology import Sentence
 
 
 class FixedSizeDataPackBatcherWithExtractorTest(unittest.TestCase):
-
     def setUp(self):
         # Define and config the Pipeline
-        self.dataset_path = "data_samples/conll03"
+        root_path = os.path.abspath(
+            os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                os.pardir,
+                os.pardir,
+                os.pardir,
+            )
+        )
+        self.dataset_path = os.path.join(root_path, "data_samples/conll03")
 
     def test_FixedSizeDataPackBatcherWithExtractor(self):
         r"""This funciton tests the corectness of cross_pack."""
@@ -36,11 +43,14 @@ class FixedSizeDataPackBatcherWithExtractorTest(unittest.TestCase):
         pipeline.set_reader(CoNLL03Reader())
         pipeline.initialize()
 
-        text_extractor = AttributeExtractor({
-            "need_pad": True,
-            "entry_type": Token,
-            "attribute": "text",
-        })
+        text_extractor = AttributeExtractor()
+        text_extractor.initialize(
+            {
+                "need_pad": True,
+                "entry_type": "ft.onto.base_ontology.Token",
+                "attribute": "text",
+            }
+        )
 
         pack_num = 0
         for pack in pipeline.process_dataset(self.dataset_path):
@@ -51,27 +61,29 @@ class FixedSizeDataPackBatcherWithExtractorTest(unittest.TestCase):
 
         batch_size = 2
         batcher = FixedSizeDataPackBatcherWithExtractor(cross_pack=True)
-        batcher.initialize({
-            "scope": Sentence,
-            "batch_size": batch_size,
-            "feature_scheme": {
-                "text_tag": {
-                    "extractor": text_extractor,
-                    "converter": Converter({}),
-                    "type": TrainPreprocessor.DATA_INPUT
-                }
-            },
-        })
+        batcher.initialize(
+            {
+                "scope": Sentence,
+                "batch_size": batch_size,
+                "feature_scheme": {
+                    "text_tag": {
+                        "extractor": text_extractor,
+                        "converter": Converter(),
+                        "type": TrainPreprocessor.DATA_INPUT,
+                    }
+                },
+            }
+        )
 
         batch_num = 0
         for pack in pipeline.process_dataset(self.dataset_path):
             for batch in batcher.get_batch(pack, Sentence, None):
                 batch_num += 1
                 self.assertEqual(len(batch[0]), batch_size)
-        for batch in batcher.flush():
+        for _ in batcher.flush():
             batch_num += 1
         self.assertEqual(batch_num, 1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

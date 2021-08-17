@@ -24,6 +24,10 @@ from texar.torch.losses.info_loss import kl_divg_loss_with_logits
 from texar.torch.data import DataIterator
 from texar.torch.data.data.dataset_utils import Batch
 
+__all__ = [
+    "UDAIterator",
+]
+
 
 class UDAIterator:
     r"""
@@ -70,13 +74,14 @@ class UDAIterator:
             - ``'mean'``: the output will be divided by the number of elements
               in the output.
     """
+
     def __init__(
-            self,
-            sup_iterator: DataIterator,
-            unsup_iterator: DataIterator,
-            softmax_temperature: float = 1.0,
-            confidence_threshold: float = -1,
-            reduction: str = "mean",
+        self,
+        sup_iterator: DataIterator,
+        unsup_iterator: DataIterator,
+        softmax_temperature: float = 1.0,
+        confidence_threshold: float = -1,
+        reduction: str = "mean",
     ):
         self._sup_iterator: DataIterator = sup_iterator
         self._unsup_iterator: DataIterator = unsup_iterator
@@ -93,34 +98,30 @@ class UDAIterator:
         return self._sup_iterator.__len__()
 
     def switch_to_dataset(
-            self,
-            dataset_name: Optional[str] = None,
-            use_unsup: bool = True
+        self, dataset_name: Optional[str] = None, use_unsup: bool = True
     ):
         # Set the flag of using unsupervised data.
         self._use_unsup = use_unsup
         self._sup_iterator.switch_to_dataset(dataset_name)
 
-    def switch_to_dataset_unsup(
-            self,
-            dataset_name: Optional[str] = None
-    ):
+    def switch_to_dataset_unsup(self, dataset_name: Optional[str] = None):
         self._unsup_iterator.switch_to_dataset(dataset_name)
 
     @property
     def num_datasets(self) -> int:
-        return self._sup_iterator.num_datasets \
-               + self._unsup_iterator.num_datasets
+        return (
+            self._sup_iterator.num_datasets + self._unsup_iterator.num_datasets
+        )
 
     @property
     def dataset_names(self) -> List[str]:
-        return self._sup_iterator.dataset_names \
-               + self._unsup_iterator.dataset_names
+        return (
+            self._sup_iterator.dataset_names
+            + self._unsup_iterator.dataset_names
+        )
 
     def calculate_uda_loss(
-            self,
-            logits_orig: Tensor,
-            logits_aug: Tensor
+        self, logits_orig: Tensor, logits_aug: Tensor
     ) -> Tensor:
         r"""
         This function calculate the KL divergence between the output
@@ -142,7 +143,7 @@ class UDAIterator:
             input_logits=logits_aug,
             softmax_temperature=self._softmax_temperature,
             confidence_threshold=self._confidence_threshold,
-            reduction=self._reduction
+            reduction=self._reduction,
         )
         return uda_loss
 

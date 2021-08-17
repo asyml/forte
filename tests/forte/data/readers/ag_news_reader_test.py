@@ -27,47 +27,60 @@ from forte.data.data_pack import DataPack
 
 
 class AGNewsReaderTest(unittest.TestCase):
-
     def setUp(self):
         self.pipeline = Pipeline()
 
         self.pipeline.set_reader(AGNewsReader())
         self.pipeline.initialize()
 
-        self.sample_file: str = os.path.abspath(os.path.join(
-            os.path.dirname(os.path.realpath(__file__)),
-            *([os.path.pardir] * 4),
-            'data_samples/ag_news/sample.csv'))
+        self.sample_file: str = os.path.abspath(
+            os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                *([os.path.pardir] * 4),
+                "data_samples/ag_news/sample.csv"
+            )
+        )
 
         self.expected_content: Dict[int, str] = {}
-        with open(self.sample_file, 'r') as file:
+        with open(self.sample_file, "r") as file:
             for line_id, line in enumerate(file):
-                data = line.strip().split(',')
-                class_id, title, description = int(data[0].replace("\"", "")), data[1], data[2]
+                data = line.strip().split(",")
+                class_id, title, description = (
+                    int(data[0].replace('"', "")),
+                    data[1],
+                    data[2],
+                )
                 self.expected_content[line_id] = (class_id, title, description)
 
         self.class_idx_to_name = {
-            1: 'World',
-            2: 'Sports',
-            3: 'Business',
-            4: 'Sci/Tech'
+            1: "World",
+            2: "Sports",
+            3: "Business",
+            4: "Sci/Tech",
         }
 
     def test_ag_news_reader(self):
         for data_pack in self.pipeline.process_dataset(self.sample_file):
-            expected_class_id, expected_title, expected_desc = \
-                self.expected_content[data_pack.pack_name]
+            (
+                expected_class_id,
+                expected_title,
+                expected_desc,
+            ) = self.expected_content[data_pack.pack_name]
             self.assertIsInstance(data_pack, DataPack)
             # Test Article
             doc_entries = list(data_pack.get(Document))
             self.assertTrue(len(doc_entries) == 1)
             article: Document = doc_entries[0]
             self.assertIsInstance(article, Document)
-            self.assertEqual(article.text, expected_title + "\n" + expected_desc)
+            self.assertEqual(
+                article.text, expected_title + "\n" + expected_desc
+            )
             # Test Document Class
             doc_class = article.document_class
             self.assertTrue(len(doc_class) == 1)
-            self.assertEqual(doc_class[0], self.class_idx_to_name[expected_class_id])
+            self.assertEqual(
+                doc_class[0], self.class_idx_to_name[expected_class_id]
+            )
             # Test Title
             title_entries = list(data_pack.get(Title))
             self.assertTrue(len(title_entries) == 1)

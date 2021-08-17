@@ -25,6 +25,8 @@ __all__ = [
     "ProcessExecutionException",
     "ValidationError",
     "ResourceError",
+    "ExpectedRecordNotFound",
+    "InvalidOperationException",
 ]
 
 
@@ -36,14 +38,12 @@ class PackIndexError(Exception):
 
 
 class IncompleteEntryError(Exception):
-    r"""Raise this error when the entry is not complete.
-    """
+    r"""Raise this error when the entry is not complete."""
     pass
 
 
 class EntryNotFoundError(ValueError):
-    r"""Raise this error when the entry is not found in the data pack.
-    """
+    r"""Raise this error when the entry is not found in the data pack."""
     pass
 
 
@@ -67,7 +67,7 @@ class PackDataException(Exception):
 
 
 class ProcessFlowException(Exception):
-    r"""Raise this when errors happen in flow control """
+    r"""Raise this when errors happen in flow control"""
     pass
 
 
@@ -78,4 +78,15 @@ class ProcessExecutionException(Exception):
 
 class ValidationError(Exception):
     r"""Raise this error when input validate fail"""
+    pass
+
+
+class ExpectedRecordNotFound(ValueError):
+    r"""Raise this error when expected type for input is not in input record"""
+    pass
+
+
+class InvalidOperationException(Exception):
+    """Throw when a methoc call is invalid for the object's current state"""
+
     pass

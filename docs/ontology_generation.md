@@ -8,7 +8,7 @@ The ontology can be specified via a JSON format. And
 tools are provided to convert the ontology into production code (Python). 
 Make sure Forte is installed before following this tutorial.
 
-### A simple ontology config
+# A simple ontology config
 Imagine you need to develop an NLP system for a pet shop, first thing first, 
 you need to understand what are the needed output from the documents. Let's 
 say you need to develop a system to assets such as `Pet` and `Revenue` ,
@@ -33,7 +33,7 @@ In the rest of the tutorial, we will walk through this example and you will lear
   * Generate the corresponding Python classes automatically and use them in 
     your project.
 
-### Before we start
+# Before we start
 There are a few basic concepts to understand Forte's ontology system.
 
 * *Entry* - An entry corresponds to one NLP unit in the document, for instance, 
@@ -57,7 +57,7 @@ We provide a set of commonly used NLP entry types in the module
 [``forte.data.ontology.base_ontology.py``](https://github.com/asyml/forte/blob/master/forte/ontology_specs/base_ontology.json). 
 Those entries could be used directly in your project!
  
-### A simple ontology config
+# A simple ontology config
 Let us consider a simple ontology for documents of a pet shop.
 ```json
 {
@@ -96,7 +96,7 @@ Let us consider a simple ontology for documents of a pet shop.
 }
 ```
 
-#### Breakdown of the simple ontology
+## Breakdown of the simple ontology
 
 - The top level `name` and `description` are annotation keywords meant for descriptive
 purposes only.
@@ -104,7 +104,7 @@ purposes only.
 - The `definitions` is used to enlist entry definitions, where each entry is represented
 as a json object. Each entry correspond to one concept in the ontology, and a Python class. 
 
-##### ```definitions```
+### ```definitions```
 Each definition is a dictionary of several keywords:
 * The `entry_name` keyword defines the name of the entry. It is used to 
 define the full name of an entry, and is of the form
@@ -126,7 +126,7 @@ define the full name of an entry, and is of the form
  * `attributes`: List of attributes that would be used as instance variables of 
  the generated class. 
 
-##### ```attributes```
+### ```attributes```
 Each entry definition will define a couple (can be empty) attributes, mimicking the class variables:
 
 * The `name` keyword defines the name of the property unique to the entry.
@@ -147,7 +147,7 @@ Each entry definition will define a couple (can be empty) attributes, mimicking 
    then these two represent the types of the key and value of the dictionary,
    currently, only primitive types are supported as the `key_type`.
 
-### Major ontology types, Annotations, Links, Groups and Generics
+# Major ontology types, Annotations, Links, Groups and Generics
 There are some very frequently used types in NLP: 
 
 * **Annotation**: an annotation is a type of entry that correspond to a piece of text.
@@ -174,7 +174,7 @@ To see more examples of these different types of entries, you can read the
 as an example, or refer to the [base ontology](https://github.com/asyml/forte/blob/master/forte/ontology_specs/base_ontology.json),
 which is an ontology provided by Forte to represent general NLP concepts.
 
-### Importing another ontology
+# Importing another ontology
 `imports` is an optional keyword used to help you import existing ontology to help build
 the current one. This is similar to `import` in a normal programming language:
 
@@ -192,7 +192,7 @@ framework makes sure that the imported JSON configs are generated before the
 current config. In case of cycle dependency between the JSON configs, an 
 error would be thrown.
 
-### Package Naming Convention
+# Package Naming Convention
 Each entry should be named following a package convention, such as `ft.onto.Pet`
 in this example. This allows the generator to create a package structure for the python
 class.
@@ -243,13 +243,13 @@ following snippet:
 }
 ```
     
-### Generating Python classes from ontology.
+# Generating Python classes from ontology.
 * Write the json spec(s) as per the instructions in the previous sections. 
 * Use the command `generate_ontology --create` (added during installation of Forte) to 
 generate the ontology, and `generate_ontology --clean` to clean up the generated ontology. 
 The steps are detailed in the following sections.
 
-##### Ontology Generation Steps
+## Ontology Generation Steps
 At the beginning we have tried generating the ontology. Now let's go into the
 some details.
 
@@ -330,7 +330,7 @@ following -
     ```
  * Our ontology generation is complete!
  
-#### Cleaning the generated ontology
+## Cleaning the generated ontology
 * Use `clean` mode of `generate_ontology` to clean the generated files from a given directory.
 * All the arguments of `generate_ontology clean` are explained as below:
 

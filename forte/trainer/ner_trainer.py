@@ -41,8 +41,7 @@ logger = logging.getLogger(__name__)
 
 class CoNLLNERTrainer(BaseTrainer):
     def __init__(self):
-        """ Create an NER trainer.
-        """
+        """Create an NER trainer."""
 
         super().__init__()
 
@@ -86,25 +85,34 @@ class CoNLLNERTrainer(BaseTrainer):
         self.char_alphabet = resources.get("char_alphabet")
         self.ner_alphabet = resources.get("ner_alphabet")
 
-        word_embedding_table = resources.get('word_embedding_table')
+        word_embedding_table = resources.get("word_embedding_table")
 
         self.config_model = configs.config_model
         self.config_data = configs.config_data
 
         self.normalize_func = utils.normalize_digit_word
 
-        self.device = torch.device("cuda") if torch.cuda.is_available() \
+        self.device = (
+            torch.device("cuda")
+            if torch.cuda.is_available()
             else torch.device("cpu")
+        )
 
         utils.set_random_seed(self.config_model.random_seed)
 
         self.model = BiRecurrentConvCRF(
-            word_embedding_table, self.char_alphabet.size(),
-            self.ner_alphabet.size(), self.config_model).to(device=self.device)
+            word_embedding_table,
+            self.char_alphabet.size(),
+            self.ner_alphabet.size(),
+            self.config_model,
+        ).to(device=self.device)
 
         self.optim = SGD(
-            self.model.parameters(), lr=self.config_model.learning_rate,
-            momentum=self.config_model.momentum, nesterov=True)
+            self.model.parameters(),
+            lr=self.config_model.learning_rate,
+            momentum=self.config_model.momentum,
+            nesterov=True,
+        )
 
         self.trained_epochs = 0
 
@@ -125,7 +133,7 @@ class CoNLLNERTrainer(BaseTrainer):
             "request": {
                 Token: ["ner"],
                 Sentence: [],  # span by default
-            }
+            },
         }
         return request_string
 
@@ -176,8 +184,9 @@ class CoNLLNERTrainer(BaseTrainer):
         counter = len(self.train_instances_cache)
         logger.info(f"Total number of ner_data: {counter}")
 
-        lengths = \
-            sum([len(instance[0]) for instance in self.train_instances_cache])
+        lengths = sum(
+            [len(instance[0]) for instance in self.train_instances_cache]
+        )
 
         logger.info(f"Average sentence length: {(lengths / counter):0.3f}")
 
@@ -191,10 +200,12 @@ class CoNLLNERTrainer(BaseTrainer):
         instances = self.train_instances_cache
         random.shuffle(self.train_instances_cache)
         data_iterator = torchtext.data.iterator.pool(
-            instances, self.config_data.batch_size_tokens,
+            instances,
+            self.config_data.batch_size_tokens,
             key=lambda x: x.length(),  # length of word_ids
             batch_size_fn=_batch_size_fn,
-            random_shuffler=torchtext.data.iterator.RandomShuffler())
+            random_shuffler=torchtext.data.iterator.RandomShuffler(),
+        )
 
         step = 0
 
@@ -214,18 +225,22 @@ class CoNLLNERTrainer(BaseTrainer):
 
             # update log
             if step % 200 == 0:
-                logger.info(f"Train: {step}, "
-                            f"loss: {(train_err / train_total):0.3f}")
+                logger.info(
+                    f"Train: {step}, " f"loss: {(train_err / train_total):0.3f}"
+                )
 
-        logger.info(f"Epoch: {epoch}, steps: {step}, "
-                    f"loss: {(train_err / train_total):0.3f}, "
-                    f"time: {(time.time() - start_time):0.3f}s")
+        logger.info(
+            f"Epoch: {epoch}, steps: {step}, "
+            f"loss: {(train_err / train_total):0.3f}, "
+            f"time: {(time.time() - start_time):0.3f}s"
+        )
 
         self.trained_epochs = epoch
 
         if epoch % self.config_model.decay_interval == 0:
-            lr = self.config_model.learning_rate / \
-                 (1.0 + self.trained_epochs * self.config_model.decay_rate)
+            lr = self.config_model.learning_rate / (
+                1.0 + self.trained_epochs * self.config_model.decay_rate
+            )
             for param_group in self.optim.param_groups:
                 param_group["lr"] = lr
             logger.info(f"Update learning rate to {lr:0.3f}")
@@ -250,8 +265,9 @@ class CoNLLNERTrainer(BaseTrainer):
         losses = 0
         val_data = list(instances)
         for i in tqdm(
-                range(0, len(val_data), self.config_data.test_batch_size)):
-            b_data = val_data[i: i + self.config_data.test_batch_size]
+            range(0, len(val_data), self.config_data.test_batch_size)
+        ):
+            b_data = val_data[i : i + self.config_data.test_batch_size]
             batch = self.get_batch_tensor(b_data, device=self.device)
 
             word, char, labels, masks, unused_lengths = batch
@@ -272,29 +288,37 @@ class CoNLLNERTrainer(BaseTrainer):
 
         """
 
-        if self.__past_dev_result is None or \
-                (eval_result["eval"]["f1"] >
-                 self.__past_dev_result["eval"]["f1"]):
+        if self.__past_dev_result is None or (
+            eval_result["eval"]["f1"] > self.__past_dev_result["eval"]["f1"]
+        ):
             self.__past_dev_result = eval_result
             logger.info("Validation f1 increased, saving model")
             self.__save_model_checkpoint()
 
         best_epoch = self.__past_dev_result["epoch"]
-        acc, prec, rec, f1 = (self.__past_dev_result["eval"]["accuracy"],
-                              self.__past_dev_result["eval"]["precision"],
-                              self.__past_dev_result["eval"]["recall"],
-                              self.__past_dev_result["eval"]["f1"])
-        logger.info(f"Best val acc: {acc: 0.3f}, precision: {prec:0.3f}, "
-                    f"recall: {rec:0.3f}, F1: {f1:0.3f}, epoch={best_epoch}")
+        acc, prec, rec, f1 = (
+            self.__past_dev_result["eval"]["accuracy"],
+            self.__past_dev_result["eval"]["precision"],
+            self.__past_dev_result["eval"]["recall"],
+            self.__past_dev_result["eval"]["f1"],
+        )
+        logger.info(
+            f"Best val acc: {acc: 0.3f}, precision: {prec:0.3f}, "
+            f"recall: {rec:0.3f}, F1: {f1:0.3f}, epoch={best_epoch}"
+        )
 
         if "test" in self.__past_dev_result:
-            acc, prec, rec, f1 = (self.__past_dev_result["test"]["accuracy"],
-                                  self.__past_dev_result["test"]["precision"],
-                                  self.__past_dev_result["test"]["recall"],
-                                  self.__past_dev_result["test"]["f1"])
-            logger.info(f"Best test acc: {acc: 0.3f}, precision: {prec: 0.3f}, "
-                        f"recall: {rec: 0.3f}, F1: {f1: 0.3f}, "
-                        f"epoch={best_epoch}")
+            acc, prec, rec, f1 = (
+                self.__past_dev_result["test"]["accuracy"],
+                self.__past_dev_result["test"]["precision"],
+                self.__past_dev_result["test"]["recall"],
+                self.__past_dev_result["test"]["f1"],
+            )
+            logger.info(
+                f"Best test acc: {acc: 0.3f}, precision: {prec: 0.3f}, "
+                f"recall: {rec: 0.3f}, F1: {f1: 0.3f}, "
+                f"epoch={best_epoch}"
+            )
 
     def finish(self, resources: Resources):  # pylint: disable=unused-argument
         """
@@ -310,14 +334,17 @@ class CoNLLNERTrainer(BaseTrainer):
             keys_to_serializers = {}
             for key in resources.keys():
                 if key == "model":
-                    keys_to_serializers[key] = \
-                        lambda x, y: pickle.dump(x.state_dict(), open(y, "wb"))
+                    keys_to_serializers[key] = lambda x, y: pickle.dump(
+                        x.state_dict(), open(y, "wb")
+                    )
                 else:
-                    keys_to_serializers[key] = \
-                        lambda x, y: pickle.dump(x, open(y, "wb"))
+                    keys_to_serializers[key] = lambda x, y: pickle.dump(
+                        x, open(y, "wb")
+                    )
 
-            self.resource.save(keys_to_serializers,
-                               output_dir=self.config_model.resource_dir)
+            self.resource.save(
+                keys_to_serializers, output_dir=self.config_model.resource_dir
+            )
 
         self.__save_model_checkpoint()
 
@@ -342,16 +369,17 @@ class CoNLLNERTrainer(BaseTrainer):
 
         """
         ckpt = torch.load(self.config_model.model_path)
-        logger.info("restoring model from %s",
-                    self.config_model.model_path)
+        logger.info("restoring model from %s", self.config_model.model_path)
         self.model.load_state_dict(ckpt["model"])
         self.optim.load_state_dict(ckpt["optimizer"])
 
     def get_batch_tensor(
-            self, data: List[Tuple[List[int], List[List[int]], List[int]]],
-            device: Optional[torch.device] = None) -> \
-            Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor,
-                  torch.Tensor]:
+        self,
+        data: List[Tuple[List[int], List[List[int]], List[int]]],
+        device: Optional[torch.device] = None,
+    ) -> Tuple[
+        torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor
+    ]:
         """Get the tensors to be fed into the model.
 
         Args:
@@ -405,7 +433,7 @@ class CoNLLNERTrainer(BaseTrainer):
             wid_inputs[i, inst_size:] = self.word_alphabet.pad_id
             for c, cids in enumerate(cid_seqs):
                 cid_inputs[i, c, : len(cids)] = cids
-                cid_inputs[i, c, len(cids):] = self.char_alphabet.pad_id
+                cid_inputs[i, c, len(cids) :] = self.char_alphabet.pad_id
             cid_inputs[i, inst_size:, :] = self.char_alphabet.pad_id
             # ner ids
             nid_inputs[i, :inst_size] = nids
@@ -427,6 +455,7 @@ def _batch_size_fn(new: Tuple, count: int, _: int):
         _batch_size_fn.max_length = 0  # type: ignore
 
     _batch_size_fn.max_length = max(  # type: ignore
-        _batch_size_fn.max_length, len(new[0]))  # type: ignore
+        _batch_size_fn.max_length, len(new[0])  # type: ignore
+    )
     elements = count * _batch_size_fn.max_length  # type: ignore
     return elements

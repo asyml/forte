@@ -30,7 +30,7 @@ feature_types = {
     "input_ids": ["int64", "stacked_tensor", max_seq_length],
     "input_mask": ["int64", "stacked_tensor", max_seq_length],
     "segment_ids": ["int64", "stacked_tensor", max_seq_length],
-    "label_ids": ["int64", "stacked_tensor"]
+    "label_ids": ["int64", "stacked_tensor"],
 }
 
 train_hparam = {
@@ -39,10 +39,10 @@ train_hparam = {
     "dataset": {
         "data_name": "data",
         "feature_types": feature_types,
-        "files": "{}/train_rl.pkl".format(pickle_data_dir)
+        "files": "{}/train_rl.pkl".format(pickle_data_dir),
     },
     "shuffle": True,
-    "shuffle_buffer_size": None
+    "shuffle_buffer_size": None,
 }
 
 eval_hparam = {
@@ -51,9 +51,9 @@ eval_hparam = {
     "dataset": {
         "data_name": "data",
         "feature_types": feature_types,
-        "files": "{}/eval_rl.pkl".format(pickle_data_dir)
+        "files": "{}/eval_rl.pkl".format(pickle_data_dir),
     },
-    "shuffle": False
+    "shuffle": False,
 }
 
 test_hparam = {
@@ -62,7 +62,7 @@ test_hparam = {
     "dataset": {
         "data_name": "data",
         "feature_types": feature_types,
-        "files": "{}/predict.pkl".format(pickle_data_dir)
+        "files": "{}/predict.pkl".format(pickle_data_dir),
     },
-    "shuffle": False
+    "shuffle": False,
 }

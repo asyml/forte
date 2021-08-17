@@ -31,30 +31,32 @@ from forte.data.ontology import Query
 
 @ddt
 class TestBertBasedQueryCreator(unittest.TestCase):
-
     def setUp(self):
         self.test_dir = tempfile.mkdtemp()
 
     def tearDown(self):
         shutil.rmtree(self.test_dir)
 
-    @data((["Hello, good morning",
-            "This is a tool for NLP"],))
+    @data((["Hello, good morning", "This is a tool for NLP"],))
     @unpack
     def test_pipeline(self, texts):
         for idx, text in enumerate(texts):
             file_path = os.path.join(self.test_dir, f"{idx+1}.txt")
-            with open(file_path, 'w') as f:
+            with open(file_path, "w") as f:
                 f.write(text)
 
         nlp = Pipeline[MultiPack]()
-        reader_config = {"input_pack_name": "query",
-                         "output_pack_name": "output"}
+        reader_config = {
+            "input_pack_name": "query",
+            "output_pack_name": "output",
+        }
         nlp.set_reader(reader=MultiPackSentenceReader(), config=reader_config)
-        config = {"model": {"name": "bert-base-uncased"},
-                  "tokenizer": {"name": "bert-base-uncased"},
-                  "max_seq_length": 128,
-                  "query_pack_name": "query"}
+        config = {
+            "model": {"name": "bert-base-uncased"},
+            "tokenizer": {"name": "bert-base-uncased"},
+            "max_seq_length": 128,
+            "query_pack_name": "query",
+        }
         nlp.add(BertBasedQueryCreator(), config=config)
 
         nlp.initialize()

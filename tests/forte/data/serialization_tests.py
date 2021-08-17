@@ -23,10 +23,17 @@ from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.readers import OntonotesReader, DirPackReader
 from forte.pipeline import Pipeline
-from forte.processors.base import MultiPackProcessor, MultiPackWriter, \
-    PackProcessor
-from forte.processors.writers import PackNameJsonPackWriter, \
-    PackIdJsonPackWriter, PackNameMultiPackWriter, PackIdMultiPackWriter
+from forte.processors.base import (
+    MultiPackProcessor,
+    MultiPackWriter,
+    PackProcessor,
+)
+from forte.processors.writers import (
+    PackNameJsonPackWriter,
+    PackIdJsonPackWriter,
+    PackNameMultiPackWriter,
+    PackIdMultiPackWriter,
+)
 from ft.onto.base_ontology import Sentence
 
 
@@ -42,9 +49,9 @@ class CopySentence(MultiPackProcessor):
         copy_pack.set_text(from_pack.text)
 
         if from_pack.pack_name is not None:
-            copy_pack.pack_name = from_pack.pack_name + '_copy'
+            copy_pack.pack_name = from_pack.pack_name + "_copy"
         else:
-            copy_pack.pack_name = 'copy'
+            copy_pack.pack_name = "copy"
 
         s: Sentence
         for s in from_pack.get(Sentence):
@@ -52,17 +59,15 @@ class CopySentence(MultiPackProcessor):
 
     @classmethod
     def default_configs(cls) -> Dict[str, str]:
-        return {
-            'copy_from': 'default',
-            'copy_to': 'duplicate'
-        }
+        return {"copy_from": "default", "copy_to": "duplicate"}
 
 
 class SerializationTest(unittest.TestCase):
     def setUp(self):
         file_dir_path = os.path.dirname(__file__)
         data_path = os.path.join(
-            file_dir_path, "../../../../", 'data_samples', 'ontonotes', '00')
+            file_dir_path, "../../../../", "data_samples", "ontonotes", "00"
+        )
 
         self.main_output = tempfile.TemporaryDirectory()
 
@@ -71,10 +76,10 @@ class SerializationTest(unittest.TestCase):
         nlp.add(
             PackIdJsonPackWriter(),
             {
-                'output_dir': os.path.join(self.main_output.name, 'packs'),
-                'indent': 2,
-                'overwrite': True,
-            }
+                "output_dir": os.path.join(self.main_output.name, "packs"),
+                "indent": 2,
+                "overwrite": True,
+            },
         )
         nlp.run(data_path)
 
@@ -87,16 +92,16 @@ class SerializationTest(unittest.TestCase):
         coref_pl.add(
             PackIdMultiPackWriter(),
             config={
-                'output_dir': os.path.join(self.main_output.name, 'multi'),
-                'indent': 2,
-                'overwrite': True,
-            }
+                "output_dir": os.path.join(self.main_output.name, "multi"),
+                "indent": 2,
+                "overwrite": True,
+            },
         )
-        coref_pl.run(os.path.join(self.main_output.name, 'packs'))
-        self.assertTrue(os.path.exists(os.path.join('multi_out', 'multi.idx')))
-        self.assertTrue(os.path.exists(os.path.join('multi_out', 'pack.idx')))
-        self.assertTrue(os.path.exists(os.path.join('multi_out', 'packs')))
-        self.assertTrue(os.path.exists(os.path.join('multi_out', 'multi')))
+        coref_pl.run(os.path.join(self.main_output.name, "packs"))
+        self.assertTrue(os.path.exists(os.path.join("multi_out", "multi.idx")))
+        self.assertTrue(os.path.exists(os.path.join("multi_out", "pack.idx")))
+        self.assertTrue(os.path.exists(os.path.join("multi_out", "packs")))
+        self.assertTrue(os.path.exists(os.path.join("multi_out", "multi")))
 
     def testStaveFormat(self):
         # TODO: call stave transform here.

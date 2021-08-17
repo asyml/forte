@@ -19,7 +19,7 @@ import logging
 import os
 import re
 import sys
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 from urllib.parse import urlparse, parse_qs
 
 import rdflib
@@ -52,16 +52,17 @@ def load_redirects(redirect_path: str) -> Dict[str, str]:
         for statement in statements:
             s, v, o, _ = statement
             if str(v) == redirect_rel:
-                count += 1
                 from_page = get_resource_name(s)
                 redirect_page = get_resource_name(o)
-                redirect_to[from_page] = redirect_page
+                if from_page is not None and redirect_page is not None:
+                    redirect_to[from_page] = redirect_page
+                    count += 1
                 if count % 50000 == 0:
                     logging.info("Loaded %d redirects.", count)
     return redirect_to
 
 
-def get_resource_attribute(url: str, param_name: str) -> str:
+def get_resource_attribute(url: str, param_name: str) -> Optional[str]:
     # pylint: disable=line-too-long
     """
     A utility function that extract the attribute of the resource from a NIF
@@ -78,11 +79,16 @@ def get_resource_attribute(url: str, param_name: str) -> str:
     Returns (str):
         The extracted parameter value.
     """
-    parsed = urlparse(url)
+    try:
+        parsed = urlparse(url)
+    except ValueError:
+        logging.warning("Encounter un-parsable URL [%s]", url)
+        return None
+
     return parse_qs(parsed.query)[param_name][0]
 
 
-def context_base(c: rdflib.Graph) -> str:
+def context_base(c: rdflib.Graph) -> Optional[str]:
     """
     Take the base URL (context) from an URI from an statement.
 
@@ -90,13 +96,13 @@ def context_base(c: rdflib.Graph) -> str:
         c: The statement (which is a parsed rdflib.Graph object)
 
     Returns:
-        The base URL.
+        The base URL. None if the URL cannot be parsed.
 
     """
     return strip_url_params(c.identifier)
 
 
-def get_resource_fragment(url: str) -> str:
+def get_resource_fragment(url: str) -> Optional[str]:
     # pylint: disable=line-too-long
     """
     Get the resource fragment from an URL.
@@ -111,30 +117,66 @@ def get_resource_fragment(url: str) -> str:
     Returns:
         The resource fragment.
     """
-    return urlparse(url).fragment
+    try:
+        return urlparse(url).fragment
+    except ValueError:
+        logging.warning("Encounter un-parsable URL [%s]", url)
+        return None
 
 
-def get_resource_name(url: str) -> str:
+def get_resource_name(
+    url: str, resource_domain="http://dbpedia.org/resource"
+) -> Optional[str]:
     # pylint: disable=line-too-long
     """
     Get the name of the resource from the URL.
 
-    >>> sample_url = 'http://dbpedia.org/resource/Animalia_(book)?dbpv=2016-10&nif=context'
-    >>> get_resource_name(sample_url)
+    >>> get_resource_name("http://dbpedia.org/resource/Animalia_(book)?dbpv=2016-10&nif=context")
     'Animalia_(book)'
 
+    >>> get_resource_name("http://dbpedia.org/resource/A_grave")
+    'A_grave'
+
+    # Handling wierd input from DBpedia dumps.
+    >>> get_resource_name("http://dbpedia.org/resource/A;sldkfj")
+    'A;sldkfj'
+
+    >>> get_resource_name("http://dbpedia.org/resource/A;sldkfj?nif=context")
+    'A;sldkfj'
+
     Args:
-        url: The URL to find the resource name.
+        url: The URL to find the resource name. None if the URL cannot be
+          correctly parsed.
 
     Returns:
         The resource name.
     """
+    try:
+        parsed = urlparse(url)
+    except ValueError:
+        logging.warning("Encounter un-parsable URL [%s]", url)
+        return None
 
-    parsed = urlparse(url)
-    return re.sub('^/resource/', '', parsed.path)
+    if url.startswith(resource_domain):
+        reconstruct = parsed.path
+        if not parsed.params == "":
+            reconstruct = parsed.path + ";" + parsed.params
+            # Sometimes there are ill-formed URL or resource name.
+            if reconstruct not in url:
+                logging.warning(
+                    "Encounter unexpected resource URL [%s]. This resource "
+                    "name may contain unexpected characters",
+                    url,
+                )
+                return None
+
+        # Params of the last fragment seem to be needed.
+        return re.sub("^/resource/", "", reconstruct)
+    else:
+        return str(url)
 
 
-def strip_url_params(url) -> str:
+def strip_url_params(url) -> Optional[str]:
     # pylint: disable=line-too-long
     """
     Take only the base URL and strip the parameters.
@@ -149,11 +191,16 @@ def strip_url_params(url) -> str:
     Returns:
         The base URL without all parameters.
     """
-    parsed = urlparse(url)
+    try:
+        parsed = urlparse(url)
+    except ValueError:
+        logging.warning("Encounter un-parsable URL [%s]", url)
+        return None
+
     return parsed.scheme + "://" + parsed.netloc + parsed.path
 
 
-def print_progress(msg: str, end='\r'):
+def print_progress(msg: str, end="\r"):
     """
     Print progress message to the same line.
     Args:
@@ -163,7 +210,7 @@ def print_progress(msg: str, end='\r'):
     """
     logging.info(msg)
     sys.stdout.write("\033[K")  # Clear to the end of line.
-    print(f' -- {msg}', end=end)
+    print(f" -- {msg}", end=end)
 
 
 def print_notice(msg: str):
@@ -174,7 +221,7 @@ def print_notice(msg: str):
         msg: The message to print.
 
     """
-    print(f'\n -- {msg}')
+    print(f"\n -- {msg}")
 
 
 class NIFParser:
@@ -188,7 +235,7 @@ class NIFParser:
 
     """
 
-    def __init__(self, nif_path: str, tuple_format='nquads'):
+    def __init__(self, nif_path: str, tuple_format="nquads"):
         """
 
         Args:
@@ -198,7 +245,7 @@ class NIFParser:
         if nif_path.endswith(".bz2"):
             self.__nif = bz2.BZ2File(nif_path)
         else:
-            self.__nif = open(nif_path, 'rb')  # type: ignore
+            self.__nif = open(nif_path, "rb")  # type: ignore
 
         self.format = tuple_format
 
@@ -215,14 +262,14 @@ class NIFParser:
         return self.read()
 
     def parse_graph(self, data: str, tuple_format: str) -> List:
-        if self.format == 'nquads':
+        if self.format == "nquads":
             g_ = rdflib.ConjunctiveGraph()
         else:
             g_ = rdflib.Graph()
 
         g_.parse(data=data, format=tuple_format)
 
-        if self.format == 'nquads':
+        if self.format == "nquads":
             return list(g_.quads())
         else:
             return list(g_)
@@ -230,10 +277,9 @@ class NIFParser:
     def read(self):
         while True:
             line = next(self.__nif)
-            statements = list(self.parse_graph(
-                line.decode('utf-8'),
-                tuple_format=self.format
-            ))
+            statements = list(
+                self.parse_graph(line.decode("utf-8"), tuple_format=self.format)
+            )
 
             if len(statements) > 0:
                 return list(statements)
@@ -257,7 +303,7 @@ class ContextGroupedNIFReader:
         self.__parser = NIFParser(nif_path)
         self.data_name = os.path.basename(nif_path)
 
-        self.__last_c: str = ''
+        self.__last_c: str = ""
         self.__statements: List[state_type] = []
         self.__finished: bool = False
 
@@ -271,7 +317,7 @@ class ContextGroupedNIFReader:
         return self
 
     def __next__(self):
-        res_c: str = ''
+        res_c: str = ""
         res_states: List = []
 
         while True:
@@ -282,7 +328,10 @@ class ContextGroupedNIFReader:
                 for s, v, o, c in statements:
                     c_ = context_base(c)
 
-                    if c_ != self.__last_c and self.__last_c != '':
+                    if c_ is None:
+                        continue
+
+                    if c_ != self.__last_c and self.__last_c != "":
                         res_c = self.__last_c
                         res_states.extend(self.__statements)
                         self.__statements.clear()
@@ -290,7 +339,7 @@ class ContextGroupedNIFReader:
                     self.__statements.append((s, v, o))
                     self.__last_c = c_
 
-                    if not res_c == '':
+                    if not res_c == "":
                         return res_c, res_states
             except StopIteration:
                 break

@@ -26,9 +26,7 @@ from torch.optim import Optimizer
 
 from forte.models.da_rl.magic_model import MetaModule
 
-__all__ = [
-    "MetaAugmentationWrapper"
-]
+__all__ = ["MetaAugmentationWrapper"]
 
 
 class MetaAugmentationWrapper:
@@ -109,9 +107,14 @@ class MetaAugmentationWrapper:
 
     """
 
-    def __init__(self, augmentation_model: nn.Module,
-                 augmentation_optimizer: Optimizer,
-                 input_mask_ids: int, device: torch.device, num_aug: int):
+    def __init__(
+        self,
+        augmentation_model: nn.Module,
+        augmentation_optimizer: Optimizer,
+        input_mask_ids: int,
+        device: torch.device,
+        num_aug: int,
+    ):
         self._aug_model = augmentation_model
         self._aug_optimizer = augmentation_optimizer
         self._input_mask_ids = input_mask_ids
@@ -122,8 +125,9 @@ class MetaAugmentationWrapper:
         self._aug_model.train()
         self._aug_model.zero_grad()
 
-    def _augment_instance(self, features: Tuple[torch.Tensor, ...],
-                          num_aug: int) -> torch.Tensor:
+    def _augment_instance(
+        self, features: Tuple[torch.Tensor, ...], num_aug: int
+    ) -> torch.Tensor:
         r"""Augment a training instance. Randomly mask out some tokens in the
         input sentence and use the logits of the augmentation model as the
         augmented bert token soft embedding.
@@ -147,23 +151,25 @@ class MetaAugmentationWrapper:
                 It is the augmented bert token soft embedding.
         """
 
-        feature: Generator[torch.Tensor, torch.Tensor, torch.Tensor] = \
-            (t.view(1, -1).to(self._device) for t in features)
+        feature: Generator[torch.Tensor, torch.Tensor, torch.Tensor] = (
+            t.view(1, -1).to(self._device) for t in features
+        )
         init_ids, input_mask, segment_ids, _ = feature
 
         length = int(torch.sum(input_mask).item())
 
         if length >= 4:
             mask_idx = sorted(
-                random.sample(list(range(1, length - 1)), max(length // 7, 2)))
+                random.sample(list(range(1, length - 1)), max(length // 7, 2))
+            )
         else:
             mask_idx = [1]
 
         init_ids[0][mask_idx] = self._input_mask_ids
 
-        logits = self._aug_model(init_ids,
-                                 token_type_ids=segment_ids,
-                                 attention_mask=input_mask)[0]
+        logits = self._aug_model(
+            init_ids, token_type_ids=segment_ids, attention_mask=input_mask
+        )[0]
 
         # Get samples
         aug_probs_all = []
@@ -172,21 +178,26 @@ class MetaAugmentationWrapper:
             # Enable efficient gradient propagation through theta' to phi.
             probs = F.gumbel_softmax(logits.squeeze(0), hard=False)
             aug_probs = torch.zeros_like(probs).scatter_(
-                1, init_ids[0].unsqueeze(1), 1.)
+                1, init_ids[0].unsqueeze(1), 1.0
+            )
 
             for t in mask_idx:
                 aug_probs = tx.utils.pad_and_concat(
-                    [aug_probs[:t], probs[t:t + 1], aug_probs[t + 1:]], axis=0)
+                    [aug_probs[:t], probs[t : t + 1], aug_probs[t + 1 :]],
+                    axis=0,
+                )
 
             aug_probs_all.append(aug_probs)
 
         aug_probs = tx.utils.pad_and_concat(
-            [ap.unsqueeze(0) for ap in aug_probs_all], axis=0)
+            [ap.unsqueeze(0) for ap in aug_probs_all], axis=0
+        )
 
         return aug_probs
 
-    def augment_instance(self, features: Tuple[torch.Tensor, ...]) \
-            -> Tuple[torch.Tensor, ...]:
+    def augment_instance(
+        self, features: Tuple[torch.Tensor, ...]
+    ) -> Tuple[torch.Tensor, ...]:
         r"""Augment a training instance.
 
         Args:
@@ -228,19 +239,24 @@ class MetaAugmentationWrapper:
 
         aug_probs = self._augment_instance(features, self._num_aug)
 
-        _, input_mask, segment_ids, label_ids = \
-            (t.to(self._device).unsqueeze(0) for t in features)
+        _, input_mask, segment_ids, label_ids = (
+            t.to(self._device).unsqueeze(0) for t in features
+        )
         input_mask_aug = tx.utils.pad_and_concat(
-            [input_mask] * self._num_aug, axis=0)
+            [input_mask] * self._num_aug, axis=0
+        )
         segment_ids_aug = tx.utils.pad_and_concat(
-            [segment_ids] * self._num_aug, axis=0)
+            [segment_ids] * self._num_aug, axis=0
+        )
         label_ids_aug = tx.utils.pad_and_concat(
-            [label_ids] * self._num_aug, axis=0)
+            [label_ids] * self._num_aug, axis=0
+        )
 
         return aug_probs, input_mask_aug, segment_ids_aug, label_ids_aug
 
-    def augment_batch(self, batch_features: Tuple[torch.Tensor, ...]) \
-            -> Tuple[torch.Tensor, ...]:
+    def augment_batch(
+        self, batch_features: Tuple[torch.Tensor, ...]
+    ) -> Tuple[torch.Tensor, ...]:
         r"""Augment a batch of training instances. Append augmented instances
         to the input instances.
 
@@ -290,37 +306,45 @@ class MetaAugmentationWrapper:
                 aug_probs = self._augment_instance(feature, num_aug=1)
                 aug_instances.append(aug_probs)
 
-        input_ids_or_probs, input_masks, segment_ids, label_ids = \
-            [tx.utils.pad_and_concat(
-                [t[i].unsqueeze(0) for t in features], axis=0).to(
-                self._device) for i in range(4)]
+        input_ids_or_probs, input_masks, segment_ids, label_ids = [
+            tx.utils.pad_and_concat(
+                [t[i].unsqueeze(0) for t in features], axis=0
+            ).to(self._device)
+            for i in range(4)
+        ]
 
         num_aug = len(aug_instances[0])
 
         input_ids_or_probs_aug = []
         for i in range(num_aug):
             for aug_probs in aug_instances:
-                input_ids_or_probs_aug.append(aug_probs[i:i + 1])
+                input_ids_or_probs_aug.append(aug_probs[i : i + 1])
         input_ids_or_probs_aug = tx.utils.pad_and_concat(
-            input_ids_or_probs_aug, axis=0).to(self._device)
+            input_ids_or_probs_aug, axis=0
+        ).to(self._device)
 
         inputs_onehot = torch.zeros_like(
-            input_ids_or_probs_aug[:len(input_ids_or_probs)]).scatter_(
-            2, input_ids_or_probs.unsqueeze(2), 1.)
+            input_ids_or_probs_aug[: len(input_ids_or_probs)]
+        ).scatter_(2, input_ids_or_probs.unsqueeze(2), 1.0)
         input_probs_aug = tx.utils.pad_and_concat(
-            [inputs_onehot, input_ids_or_probs_aug], axis=0).to(self._device)
+            [inputs_onehot, input_ids_or_probs_aug], axis=0
+        ).to(self._device)
 
         input_mask_aug = tx.utils.pad_and_concat(
-            [input_masks] * (num_aug + 1), axis=0).to(self._device)
+            [input_masks] * (num_aug + 1), axis=0
+        ).to(self._device)
         segment_ids_aug = tx.utils.pad_and_concat(
-            [segment_ids] * (num_aug + 1), axis=0).to(self._device)
+            [segment_ids] * (num_aug + 1), axis=0
+        ).to(self._device)
         label_ids_aug = tx.utils.pad_and_concat(
-            [label_ids] * (num_aug + 1), axis=0).to(self._device)
+            [label_ids] * (num_aug + 1), axis=0
+        ).to(self._device)
 
         return input_probs_aug, input_mask_aug, segment_ids_aug, label_ids_aug
 
-    def eval_batch(self, batch_features: Tuple[torch.Tensor, ...]) \
-            -> torch.FloatTensor:
+    def eval_batch(
+        self, batch_features: Tuple[torch.Tensor, ...]
+    ) -> torch.FloatTensor:
         r"""Evaluate a batch of training instances.
 
         Args:
@@ -340,13 +364,21 @@ class MetaAugmentationWrapper:
         self._aug_model.eval()
         batch = tuple(t.to(self._device) for t in batch_features)
         input_ids, input_mask, segment_ids, labels = batch
-        loss = self._aug_model(input_ids, token_type_ids=segment_ids,
-                               attention_mask=input_mask, labels=labels)[0]
+        loss = self._aug_model(
+            input_ids,
+            token_type_ids=segment_ids,
+            attention_mask=input_mask,
+            labels=labels,
+        )[0]
         return loss
 
-    def update_meta_model(self, meta_model: MetaModule, loss: torch.Tensor,
-                          model: nn.Module, optimizer: Optimizer) \
-            -> MetaModule:
+    def update_meta_model(
+        self,
+        meta_model: MetaModule,
+        loss: torch.Tensor,
+        model: nn.Module,
+        optimizer: Optimizer,
+    ) -> MetaModule:
         r"""Update the parameters within the `MetaModel`
         according to the downstream model loss.
 
@@ -378,13 +410,18 @@ class MetaAugmentationWrapper:
         return meta_model
 
     @staticmethod
-    def _calculate_grads(loss: torch.Tensor, model: nn.Module,
-                         optimizer: Optimizer) -> Dict[str, torch.Tensor]:
+    def _calculate_grads(
+        loss: torch.Tensor, model: nn.Module, optimizer: Optimizer
+    ) -> Dict[str, torch.Tensor]:
         grads = torch.autograd.grad(
-            loss, [param for name, param in model.named_parameters()],
-            create_graph=True)
-        grads = {param: grads[i] for i, (name, param) in enumerate(
-            model.named_parameters())}
+            loss,
+            [param for name, param in model.named_parameters()],
+            create_graph=True,
+        )
+        grads = {
+            param: grads[i]
+            for i, (name, param) in enumerate(model.named_parameters())
+        }
 
         if isinstance(optimizer, tx.core.BertAdam):
             deltas = _texar_bert_adam_delta(grads, model, optimizer)
@@ -401,9 +438,11 @@ class MetaAugmentationWrapper:
         self._aug_optimizer.step()
 
 
-def _texar_bert_adam_delta(grads: Dict[nn.parameter.Parameter, torch.Tensor],
-                           model: nn.Module,
-                           optimizer: Optimizer) -> Dict[str, torch.Tensor]:
+def _texar_bert_adam_delta(
+    grads: Dict[nn.parameter.Parameter, torch.Tensor],
+    model: nn.Module,
+    optimizer: Optimizer,
+) -> Dict[str, torch.Tensor]:
     # pylint: disable=line-too-long
     r"""Compute parameter delta function for texar-pytorch
     core.BertAdam optimizer.
@@ -415,28 +454,28 @@ def _texar_bert_adam_delta(grads: Dict[nn.parameter.Parameter, torch.Tensor],
 
     deltas = {}
     for group in optimizer.param_groups:
-        for param in group['params']:
+        for param in group["params"]:
             grad = grads[param]
             state = optimizer.state[param]
 
             if len(state) == 0:
                 # Exponential moving average of gradient values
-                state['next_m'] = torch.zeros_like(param.data)
+                state["next_m"] = torch.zeros_like(param.data)
                 # Exponential moving average of squared gradient values
-                state['next_v'] = torch.zeros_like(param.data)
+                state["next_v"] = torch.zeros_like(param.data)
 
-            exp_avg, exp_avg_sq = state['next_m'], state['next_v']
+            exp_avg, exp_avg_sq = state["next_m"], state["next_v"]
 
-            beta1, beta2 = group['betas']
+            beta1, beta2 = group["betas"]
 
-            if group['weight_decay'] != 0:
-                grad = grad + group['weight_decay'] * param.data
+            if group["weight_decay"] != 0:
+                grad = grad + group["weight_decay"] * param.data
 
-            exp_avg = exp_avg * beta1 + (1. - beta1) * grad
-            exp_avg_sq = exp_avg_sq * beta2 + (1. - beta2) * grad * grad
-            denom = exp_avg_sq.sqrt() + group['eps']
+            exp_avg = exp_avg * beta1 + (1.0 - beta1) * grad
+            exp_avg_sq = exp_avg_sq * beta2 + (1.0 - beta2) * grad * grad
+            denom = exp_avg_sq.sqrt() + group["eps"]
 
-            step_size = group['lr']
+            step_size = group["lr"]
 
             deltas[param] = -step_size * exp_avg / denom
 
@@ -445,40 +484,42 @@ def _texar_bert_adam_delta(grads: Dict[nn.parameter.Parameter, torch.Tensor],
     return {param_to_name[param]: delta for param, delta in deltas.items()}
 
 
-def _torch_adam_delta(grads: Dict[nn.parameter.Parameter, torch.Tensor],
-                      model: nn.Module,
-                      optimizer: Optimizer) -> Dict[str, torch.Tensor]:
-    r"""Compute parameter delta function for Torch Adam optimizer.
-    """
+def _torch_adam_delta(
+    grads: Dict[nn.parameter.Parameter, torch.Tensor],
+    model: nn.Module,
+    optimizer: Optimizer,
+) -> Dict[str, torch.Tensor]:
+    r"""Compute parameter delta function for Torch Adam optimizer."""
     assert issubclass(type(optimizer), Optimizer)
 
     deltas = {}
     for group in optimizer.param_groups:
-        for param in group['params']:
+        for param in group["params"]:
             grad = grads[param]
             state = optimizer.state[param]
 
             if len(state) == 0:
-                state['exp_avg'] = torch.zeros_like(param.data)
-                state['exp_avg_sq'] = torch.zeros_like(param.data)
-                state['step'] = 0
+                state["exp_avg"] = torch.zeros_like(param.data)
+                state["exp_avg_sq"] = torch.zeros_like(param.data)
+                state["step"] = 0
 
-            exp_avg, exp_avg_sq = state['exp_avg'], state['exp_avg_sq']
-            beta1, beta2 = group['betas']
+            exp_avg, exp_avg_sq = state["exp_avg"], state["exp_avg_sq"]
+            beta1, beta2 = group["betas"]
 
-            step = state['step'] + 1
+            step = state["step"] + 1
 
-            if group['weight_decay'] != 0:
-                grad = grad + group['weight_decay'] * param.data
+            if group["weight_decay"] != 0:
+                grad = grad + group["weight_decay"] * param.data
 
-            exp_avg = exp_avg * beta1 + (1. - beta1) * grad
-            exp_avg_sq = exp_avg_sq * beta2 + (1. - beta2) * grad * grad
-            denom = exp_avg_sq.sqrt() + group['eps']
+            exp_avg = exp_avg * beta1 + (1.0 - beta1) * grad
+            exp_avg_sq = exp_avg_sq * beta2 + (1.0 - beta2) * grad * grad
+            denom = exp_avg_sq.sqrt() + group["eps"]
 
-            bias_correction1 = 1. - beta1 ** step
-            bias_correction2 = 1. - beta2 ** step
-            step_size = group['lr'] * math.sqrt(
-                bias_correction2) / bias_correction1
+            bias_correction1 = 1.0 - beta1 ** step
+            bias_correction2 = 1.0 - beta2 ** step
+            step_size = (
+                group["lr"] * math.sqrt(bias_correction2) / bias_correction1
+            )
 
             deltas[param] = -step_size * exp_avg / denom
 

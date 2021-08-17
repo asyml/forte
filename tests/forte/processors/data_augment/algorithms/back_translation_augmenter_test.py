@@ -19,8 +19,9 @@ import unittest
 import random
 from forte.data.data_pack import DataPack
 from ft.onto.base_ontology import Sentence
-from forte.processors.data_augment.algorithms.back_translation_op \
-    import BackTranslationOp
+from forte.processors.data_augment.algorithms.back_translation_op import (
+    BackTranslationOp,
+)
 
 
 class TestBackTranslationAugmenter(unittest.TestCase):
@@ -36,7 +37,7 @@ class TestBackTranslationAugmenter(unittest.TestCase):
                 "model_back": model_class_name,
                 "src_language": "en",
                 "tgt_language": "fr",
-                "device": "cpu"
+                "device": "cpu",
             }
         )
 
@@ -48,9 +49,10 @@ class TestBackTranslationAugmenter(unittest.TestCase):
         sent = Sentence(data_pack, 0, len(text))
         data_pack.add_entry(sent)
 
-        translated_text = "The treatment of natural language " \
-                          "has never been easier!"
-        assert (translated_text == self.bta.replace(sent)[1])
+        translated_text = (
+            "The treatment of natural language " "has never been easier!"
+        )
+        assert translated_text == self.bta.replace(sent)[1]
 
 
 if __name__ == "__main__":

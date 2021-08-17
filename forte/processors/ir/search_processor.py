@@ -19,35 +19,28 @@ from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology.top import Query
-from forte.indexers.embedding_based_indexer import EmbeddingBasedIndexer
 from forte.processors.base import MultiPackProcessor
+from forte.utils import create_class_with_kwargs
 from ft.onto.base_ontology import Document
 
-__all__ = [
-    "SearchProcessor"
-]
+__all__ = ["SearchProcessor"]
 
 
 class SearchProcessor(MultiPackProcessor):
     r"""This processor searches for relevant documents for a query"""
 
-    def __init__(self) -> None:
-        super().__init__()
-
-        self.index = EmbeddingBasedIndexer(config={
-            "index_type": "GpuIndexFlatIP",
-            "dim": 768,
-            "device": "gpu0"
-        })
-
     def initialize(self, resources: Resources, configs: Config):
-        self.resources = resources
-        self.config = configs
-        self.index.load(self.config.model_dir)
-        self.k = self.config.k or 5
+        super().initialize(resources, configs)
+        # Replace explicit class with configuration class name.
+        self.index = create_class_with_kwargs(
+            self.configs.indexer_class,
+            class_args={"config": self.configs.indexer_configs},
+        )
+        self.index.load(self.configs.model_dir)
+        self.k = self.configs.k or 5
 
     def _process(self, input_pack: MultiPack):
-        query_pack = input_pack.get_pack(self.config.query_pack_name)
+        query_pack = input_pack.get_pack(self.configs.query_pack_name)
         first_query = list(query_pack.get(Query))[0]
         results = self.index.search(first_query.value, self.k)
         documents = [r[1] for result in results for r in result]
@@ -58,15 +51,24 @@ class SearchProcessor(MultiPackProcessor):
             pack.set_text(doc)
 
             Document(pack, 0, len(doc))
-            packs[self.config.response_pack_name_prefix + f'_{i}'] = pack
+            packs[self.configs.response_pack_name_prefix + f"_{i}"] = pack
 
         input_pack.update_pack(packs)
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
         config = super().default_configs()
-        config.update({
-            'model_dir': None,
-            'response_pack_name_prefix': 'doc'
-        })
+        config.update(
+            {
+                "model_dir": None,
+                "response_pack_name_prefix": "doc",
+                "indexer_class": "forte.faiss.embedding_based_indexer"
+                ".EmbeddingBasedIndexer",
+                "indexer_configs": {
+                    "index_type": "GpuIndexFlatIP",
+                    "dim": 768,
+                    "device": "gpu0",
+                },
+            }
+        )
         return config

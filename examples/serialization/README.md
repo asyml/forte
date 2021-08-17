@@ -1,5 +1,6 @@
-This is a very simple serialization demo that use the built-in JSON serializer. Just run the following command in this directory:
+This is a very simple serialization demo that use the built-in JSON serializer.
+Just run the following command in this directory:
 
 `
-python serialize_example.py
+python serialize_example.py "../../data_samples/ontonotes/00/"
 `

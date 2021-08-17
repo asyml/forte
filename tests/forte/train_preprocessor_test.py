@@ -12,118 +12,141 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import unittest
-import torch
 from typing import Dict, Any, Iterator
+import os
+import torch
 
-from forte.evaluation.ner_evaluator import CoNLLNEREvaluator
+from forte.data.base_extractor import BaseExtractor
 from forte.data.base_pack import PackType
-from forte.data.vocabulary import Vocabulary
 from forte.data.converter import Converter
-from forte.train_preprocessor import TrainPreprocessor
+from forte.data.extractors.attribute_extractor import AttributeExtractor
+from forte.data.extractors.char_extractor import CharExtractor
+from forte.data.extractors.seqtagging_extractor import BioSeqTaggingExtractor
 from forte.data.readers.conll03_reader import CoNLL03Reader
-from forte.data.extractor.attribute_extractor import AttributeExtractor
-from forte.data.extractor.base_extractor import BaseExtractor
-from forte.data.extractor.char_extractor import CharExtractor
-from forte.data.extractor.seqtagging_extractor import BioSeqTaggingExtractor
+from forte.data.vocabulary import Vocabulary
+from forte.evaluation.ner_evaluator import CoNLLNEREvaluator
 from forte.pipeline import Pipeline
-from ft.onto.base_ontology import Sentence, Token, EntityMention
+from forte.train_preprocessor import TrainPreprocessor
 
 
 class TrainPreprocessorTest(unittest.TestCase):
     def setUp(self):
+        root_path = os.path.abspath(
+            os.path.join(
+                os.path.dirname(os.path.abspath(__file__)), os.pardir, os.pardir
+            )
+        )
+
         self.config = {
             "max_char_length": 45,
-            "train_path": "data_samples/train_pipeline_test",
-            "val_path": "data_samples/train_pipeline_test",
+            "train_path": os.path.join(
+                root_path, "data_samples/train_pipeline_test"
+            ),
+            "val_path": os.path.join(
+                root_path, "data_samples/train_pipeline_test"
+            ),
             "num_epochs": 1,
             "batch_size_tokens": 5,
             "learning_rate": 0.01,
             "momentum": 0.9,
-            "nesterov": True
+            "nesterov": True,
         }
 
-        text_extractor: AttributeExtractor = \
-            AttributeExtractor(config={"entry_type": Token,
-                                       "vocab_method": "indexing",
-                                       "attribute": "text"})
+        text_extractor = (
+            "forte.data.extractors.attribute_extractor.AttributeExtractor"
+        )
+        text_extractor_config = {
+            "entry_type": "ft.onto.base_ontology.Token",
+            "vocab_method": "indexing",
+            "attribute": "text",
+        }
 
-        char_extractor: CharExtractor = \
-            CharExtractor(
-                config={"entry_type": Token,
-                        "vocab_method": "indexing",
-                        "max_char_length": self.config["max_char_length"]})
+        char_extractor = "forte.data.extractors.char_extractor.CharExtractor"
+        char_extractor_config = {
+            "entry_type": "ft.onto.base_ontology.Token",
+            "vocab_method": "indexing",
+            "max_char_length": self.config["max_char_length"],
+        }
 
         # Add output part in request based on different task type
-        ner_extractor: BioSeqTaggingExtractor = \
-            BioSeqTaggingExtractor(config={"entry_type": EntityMention,
-                                           "attribute": "ner_type",
-                                           "tagging_unit": Token,
-                                           "vocab_method": "indexing"})
+        ner_extractor = "forte.data.extractors.seqtagging_extractor.BioSeqTaggingExtractor"  # pylint: disable=line-too-long
+        ner_extractor_config = {
+            "entry_type": "ft.onto.base_ontology.EntityMention",
+            "attribute": "ner_type",
+            "tagging_unit": "ft.onto.base_ontology.Token",
+            "vocab_method": "indexing",
+        }
 
         self.tp_request = {
-            "scope": Sentence,
-            "schemes": {
+            "scope": "ft.onto.base_ontology.Sentence",
+            "feature_scheme": {
                 "text_tag": {
-                    "type": TrainPreprocessor.DATA_INPUT,
-                    "extractor": text_extractor
+                    "type": "data_input",
+                    "extractor": {
+                        "class_name": text_extractor,
+                        "config": text_extractor_config,
+                    },
                 },
                 "char_tag": {
-                    "type": TrainPreprocessor.DATA_INPUT,
-                    "extractor": char_extractor
+                    "type": "data_input",
+                    "extractor": {
+                        "class_name": char_extractor,
+                        "config": char_extractor_config,
+                    },
                 },
                 "ner_tag": {
-                    "type": TrainPreprocessor.DATA_OUTPUT,
-                    "extractor": ner_extractor
-                }
-            }
+                    "type": "data_output",
+                    "extractor": {
+                        "class_name": ner_extractor,
+                        "config": ner_extractor_config,
+                    },
+                },
+            },
+        }
+
+        self.tp_config = {
+            "request": self.tp_request,
+            "dataset": {"batch_size": self.config["batch_size_tokens"]},
         }
 
         self.reader = CoNLL03Reader()
 
         self.evaluator = CoNLLNEREvaluator()
 
-        self.tp_config = {
-            "dataset": {
-                "batch_size": self.config["batch_size_tokens"]
-            }
-        }
-
         train_pl: Pipeline = Pipeline()
         train_pl.set_reader(self.reader)
         train_pl.initialize()
-        pack_iterator: Iterator[PackType] = \
-            train_pl.process_dataset(self.config["train_path"])
+        pack_iterator: Iterator[PackType] = train_pl.process_dataset(
+            self.config["train_path"]
+        )
 
-        self.train_preprocessor = \
-            TrainPreprocessor(pack_iterator=pack_iterator,
-                              request=self.tp_request,
-                              config=self.tp_config)
+        self.train_preprocessor = TrainPreprocessor(pack_iterator=pack_iterator)
+        self.train_preprocessor.initialize(config=self.tp_config)
 
     def test_parse_request(self):
         self.assertTrue(self.train_preprocessor.request is not None)
         self.assertTrue("scope" in self.train_preprocessor.request)
         self.assertTrue("schemes" in self.train_preprocessor.request)
 
+        self.assertTrue(len(self.train_preprocessor.request["schemes"]), 3)
         self.assertTrue(
-            len(self.train_preprocessor.request["schemes"]), 3)
+            "text_tag" in self.train_preprocessor.request["schemes"]
+        )
         self.assertTrue(
-            "text_tag" in self.train_preprocessor.request["schemes"])
-        self.assertTrue(
-            "char_tag" in self.train_preprocessor.request["schemes"])
-        self.assertTrue(
-            "ner_tag" in self.train_preprocessor.request["schemes"])
+            "char_tag" in self.train_preprocessor.request["schemes"]
+        )
+        self.assertTrue("ner_tag" in self.train_preprocessor.request["schemes"])
 
-        for tag, scheme in \
-                self.train_preprocessor.request["schemes"].items():
+        for tag, scheme in self.train_preprocessor.request["schemes"].items():
             self.assertTrue("extractor" in scheme)
             self.assertTrue("converter" in scheme)
-            self.assertTrue(issubclass(type(scheme["extractor"]),
-                                       BaseExtractor))
+            self.assertTrue(
+                issubclass(type(scheme["extractor"]), BaseExtractor)
+            )
             self.assertTrue(isinstance(scheme["converter"], Converter))
 
     def test_build_vocab(self):
-        schemes: Dict[str, Any] = \
-            self.train_preprocessor.request["schemes"]
+        schemes: Dict[str, Any] = self.train_preprocessor.request["schemes"]
 
         text_extractor: AttributeExtractor = schemes["text_tag"]["extractor"]
         vocab: Vocabulary = text_extractor.vocab
@@ -143,8 +166,7 @@ class TrainPreprocessorTest(unittest.TestCase):
         self.assertTrue(vocab.has_element(("MISC", "I")))
 
     def test_build_dataset_iterator(self):
-        train_iterator = \
-            self.train_preprocessor._build_dataset_iterator()
+        train_iterator = self.train_preprocessor._build_dataset_iterator()
 
         batchs = []
         for batch in train_iterator:
@@ -172,5 +194,5 @@ class TrainPreprocessorTest(unittest.TestCase):
                     self.assertEqual(type(batch_t["masks"][1]), torch.Tensor)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -1,0 +1,72 @@
+{
+  "name": "all_ontology",
+  "definitions": [
+    {
+      "entry_name": "ft.onto.example_import_ontology.Token",
+      "parent_entry": "forte.data.ontology.top.Annotation",
+      "description": "Base parent token entry",
+      "attributes": [
+        {
+          "name": "pos",
+          "type": "str"
+        },
+        {
+          "name": "lemma",
+          "type": "str"
+        }
+      ]
+    },
+    {
+      "entry_name": "ft.onto.example_import_ontology.EntityMention",
+      "parent_entry": "forte.data.ontology.top.Annotation",
+      "attributes": [
+        {
+          "name": "entity_type",
+          "type": "str"
+        }
+      ]
+    },
+    {
+      "entry_name": "ft.onto.example_ontology.Word",
+      "parent_entry": "ft.onto.example_import_ontology.Token",
+      "description": "",
+      "attributes": [
+        {
+          "name": "string_features",
+          "description": "To demonstrate the composite type, List.",
+          "type": "List",
+          "item_type": "str"
+        },
+        {
+          "name": "word_forms",
+          "description": "To demonstrate that an attribute can be a List of other entries.",
+          "type": "List",
+          "item_type": "ft.onto.example_ontology.Word"
+        },
+        {
+          "name": "token_ranks",
+          "description": "To demonstrate that an attribute can be a Dict, and the values can be other entries.",
+          "type": "Dict",
+          "key_type": "int",
+          "value_type": "ft.onto.example_ontology.Word"
+        }
+      ]
+    },
+    {
+      "entry_name": "ft.onto.example_ontology.WordLink",
+      "parent_entry": "forte.data.ontology.top.Link",
+      "description": "",
+      "parent_type": "ft.onto.example_ontology.Word",
+      "child_type": "ft.onto.example_ontology.Word",
+      "attributes": [
+        {
+          "name": "string_features",
+          "description": "To demonstrate the composite type, List.",
+          "type": "List",
+          "item_type": "str"
+        }
+      ]
+    }
+  ],
+  "additional_prefixes": []
+}

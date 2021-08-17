@@ -27,15 +27,14 @@ from forte.data.ontology import Query
 from forte.processors.base import MultiPackProcessor
 
 from forte.processors.ir.bert_ranker import (
-    BERTClassifier, BERTEncoder)
+    BERTClassifier,
+    BERTEncoder,
+)
 
-__all__ = [
-    "BertRerankingProcessor"
-]
+__all__ = ["BertRerankingProcessor"]
 
 
 class BertRerankingProcessor(MultiPackProcessor):
-
     def initialize(self, resources: Resources, configs: Config):
         self.resources = resources
         self.config = Config(configs, self.default_configs())
@@ -47,34 +46,42 @@ class BertRerankingProcessor(MultiPackProcessor):
         BERTClassifier._ENCODER_CLASS = BERTEncoder
         # pylint: enable=protected-access
 
-        cache_dir = os.path.join(os.path.dirname(__file__),
-                                 self.config.model_dir)
+        cache_dir = os.path.join(
+            os.path.dirname(__file__), self.config.model_dir
+        )
 
-        self.device = torch.device('cuda:0') \
-            if torch.cuda.is_available() else torch.device('cpu')
+        self.device = (
+            torch.device("cuda:0")
+            if torch.cuda.is_available()
+            else torch.device("cpu")
+        )
 
         self.model = BERTClassifier(
             pretrained_model_name=self.config.pretrained_model_name,
             cache_dir=cache_dir,
-            hparams=self.config).to(self.device)
+            hparams=self.config,
+        ).to(self.device)
 
         self.tokenizer = BERTTokenizer(
             pretrained_model_name=self.config.pretrained_model_name,
             cache_dir=cache_dir,
-            hparams=None)
+            hparams=None,
+        )
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
         configs = super().default_configs()
         pretrained_model_name = "bert-large-uncased"
-        configs.update({
-            "size": 5,
-            "query_pack_name": "query",
-            "field": "content",
-            "pretrained_model_name": pretrained_model_name,
-            "model_dir": os.path.join(os.path.dirname(__file__), "models"),
-            "max_seq_length": 512
-        })
+        configs.update(
+            {
+                "size": 5,
+                "query_pack_name": "query",
+                "field": "content",
+                "pretrained_model_name": pretrained_model_name,
+                "model_dir": os.path.join(os.path.dirname(__file__), "models"),
+                "max_seq_length": 512,
+            }
+        )
         return configs
 
     def _process(self, input_pack: MultiPack):
@@ -97,7 +104,9 @@ class BertRerankingProcessor(MultiPackProcessor):
             input_ids, segment_ids, input_mask = [
                 torch.LongTensor(item).unsqueeze(0).to(self.device)
                 for item in self.tokenizer.encode_text(
-                    query_text, document_text, max_len)]
+                    query_text, document_text, max_len
+                )
+            ]
 
             seq_length = (input_mask == 1).sum(dim=-1)
             logits, _ = self.model(input_ids, seq_length, segment_ids)

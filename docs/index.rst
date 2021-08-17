@@ -26,4 +26,3 @@ API
    code/training_system.rst
    code/data_aug.rst
    code/vocabulary.rst
-   code/indexers.rst
