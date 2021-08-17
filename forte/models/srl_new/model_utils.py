@@ -282,7 +282,7 @@ def batch_gather(tensors: torch.Tensor, index: torch.Tensor) -> torch.Tensor:
 
 
 @overload
-def batch_gather(
+def batch_gather(  # type: ignore
     tensors: List[torch.Tensor], index: torch.Tensor
 ) -> List[torch.Tensor]:
     ...
