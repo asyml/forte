@@ -376,7 +376,7 @@ class PredictorPipelineTest(unittest.TestCase):
         nlp.add(DummyEvaluator())
         nlp.initialize()
 
-        text_extractor = predictor.configs.feature_scheme.text_tag.extractor
+        text_extractor = predictor._request["text_tag"]["extractor"]
         for pack in pipeline.process_dataset(data_path):
             for instance in pack.get(Sentence):
                 text_extractor.update_vocab(pack, instance)
@@ -978,7 +978,6 @@ class DummyPackProcessorTwo(DummyPackProcessor):
 
 
 class DummyPackProcessorThree(DummyPackProcessor):
-
     def expected_types_and_attributes(self):
         expectation: Dict[str, Set[str]] = {
             "ft.onto.example_import_ontology.Token": {"pos", "lemma"}
