@@ -17,7 +17,7 @@ import torch
 import yaml
 
 from forte.common.configuration import Config
-from examples.tagging.tagging_trainer import TaggingTrainer
+from tagging_trainer import TaggingTrainer
 
 logger = logging.getLogger(__name__)
 

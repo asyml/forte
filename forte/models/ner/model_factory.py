@@ -25,17 +25,25 @@ from forte.models.ner.conditional_random_field import ConditionalRandomField
 
 
 class BiRecurrentConvCRF(nn.Module):
-    def __init__(self, word_vocab: Dict, char_vocab_size: int,
-                 tag_vocab_size: int, config_model: Config):
+    def __init__(
+        self,
+        word_vocab: Dict,
+        char_vocab_size: int,
+        tag_vocab_size: int,
+        config_model: Config,
+    ):
         super().__init__()
 
         self.word_embedder = WordEmbedder(
             init_value=texar.data.Embedding(
-                vocab=word_vocab, hparams={
+                vocab=word_vocab,
+                hparams={
                     "dim": config_model.word_emb.dim,
                     "file": config_model.embedding_path,
                     "read_fn": "load_glove",
-                }).word_vecs)
+                },
+            ).word_vecs
+        )
 
         self.char_embedder = WordEmbedder(
             vocab_size=char_vocab_size, hparams=config_model.char_emb

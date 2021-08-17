@@ -26,8 +26,9 @@ from forte.models.ner.model_factory import BiRecurrentConvCRF
 from forte.data.readers.conll03_reader import CoNLL03Reader
 from forte.pipeline import Pipeline
 from forte.data.data_pack import DataPack
-from forte.data.extractor import AttributeExtractor, CharExtractor, \
-    BaseExtractor, BioSeqTaggingExtractor
+from forte.data.extractors import AttributeExtractor, CharExtractor, \
+    BioSeqTaggingExtractor
+from forte.data import BaseExtractor
 from forte.trainer.base.trainer import BaseTrainer
 from forte.train_preprocessor import TrainPreprocessor
 from ft.onto.base_ontology import Token, EntityMention, Sentence
