@@ -20,14 +20,14 @@ from typing import List, Dict, Optional, Type, Any
 
 from forte.common import Resources, ProcessorConfigError
 from forte.common.configuration import Config
-from forte.data import slice_batch, BaseExtractor
-from forte.data.converter import Converter
+from forte.data import slice_batch
 from forte.data.base_pack import PackType
 from forte.data.batchers import (
     ProcessingBatcher,
     FixedSizeDataPackBatcher,
     FixedSizeDataPackBatcherWithExtractor,
 )
+from forte.data.converter import Converter
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology.top import Annotation

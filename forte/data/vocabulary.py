@@ -423,7 +423,7 @@ class Vocabulary(Generic[ElementType]):
           depending on the settings of this class).
         """
         vocab_dict: Dict[ElementType, Any] = {}
-        for element, idx in self._element2id.items():
+        for element in self._element2id:
             vocab_dict[element] = self.element2repr(element)
         return vocab_dict
 
