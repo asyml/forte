@@ -17,7 +17,7 @@ __all__ = [
     "SubwordTokenizer",
 ]
 
-from typing import Optional, List, Tuple, Iterator
+from typing import Optional, List, Tuple, Iterator, Dict, Set
 
 from texar.torch.data.tokenizers.bert_tokenizer import BERTTokenizer
 
@@ -38,8 +38,8 @@ class SubwordTokenizer(PackProcessor):
 
     def __init__(self):
         super().__init__()
-        self.tokenizer: Optional[BERTTokenizer] = None
-        self.aligner: Optional[DiffAligner] = None
+        self.tokenizer: BERTTokenizer = None
+        self.aligner: DiffAligner = None
         self.__do_lower_case = True
 
     # pylint: disable=attribute-defined-outside-init,unused-argument
@@ -62,16 +62,21 @@ class SubwordTokenizer(PackProcessor):
             # Use provided token source.
             token: Annotation
             for token in input_pack.get(self.configs.token_source):
+                assert isinstance(token, Annotation)
                 self.__add_subwords(
                     input_pack,
-                    token.text.lower() if self.__do_lower_case else token.text,
-                    token.start,
+                    token.text.lower()  # type: ignore
+                    if self.__do_lower_case
+                    else token.text,  # type: ignore
+                    token.start,  # type: ignore
                 )
         elif self.configs.segment_unit is not None:
             # If token source not provide, try to use provided segments.
             segment: Annotation
             for segment in input_pack.get(self.configs.segment_unit):
-                self._segment(input_pack, segment.text, segment.begin)
+                self._segment(
+                    input_pack, segment.text, segment.begin  # type: ignore
+                )
         else:
             # Use the whole data pack, maybe less efficient in some cases.
             self._segment(input_pack, input_pack.text, 0)
@@ -98,7 +103,6 @@ class SubwordTokenizer(PackProcessor):
         basic_tokens: List[str] = self.tokenizer.basic_tokenizer.tokenize(
             text, never_split=self.tokenizer.all_special_tokens
         )
-
         token_spans = self.aligner.align_with_segments(text, basic_tokens)
 
         for t, span in zip(basic_tokens, token_spans):
@@ -110,7 +114,7 @@ class SubwordTokenizer(PackProcessor):
             text = text.lower()
 
         if self.tokenizer.do_basic_tokenize:
-            for token, token_start, _ in self._word_tokenization(text):
+            for token, (token_start, _) in self._word_tokenization(text):
                 assert token is not None
                 self.__add_subwords(pack, text, token_start + segment_offset)
         else:
@@ -130,6 +134,37 @@ class SubwordTokenizer(PackProcessor):
             subword_token.is_first_segment = not subword.startswith("##")
             # pylint: disable=protected-access
             subword_token.vocab_id = self.tokenizer._map_token_to_id(subword)
+
+    def record(self, record_meta: Dict[str, Set[str]]):
+        r"""Method to add output type record of current processor
+        to :attr:`forte.data.data_pack.Meta.record`.
+
+        Args:
+            record_meta: the field in the data pack storing type records needed
+                in for consistency checking.
+        Returns:
+
+        """
+        record_meta["ft.onto.base_ontology.Subword"] = {
+            "is_unk",
+            "is_first_segment",
+            "vocab_id",
+        }
+
+    def expected_types_and_attributes(self) -> Dict[str, Set[str]]:
+        r"""Method to add expected type for current processor input which
+        would be checked before running the processor if
+        the pipeline is initialized with
+        `enforce_consistency=True` or
+        :meth:`~forte.pipeline.Pipeline.enforce_consistency` was enabled for
+        the pipeline.
+        """
+        expected_types: Dict[str, Set[str]] = {}
+        if self.configs.token_source is not None:
+            expected_types[self.configs.token_source] = set()
+        elif self.configs.segment_unit is not None:
+            expected_types[self.configs.segment_unit] = set()
+        return expected_types
 
     @classmethod
     def default_configs(cls):
