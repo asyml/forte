@@ -285,7 +285,7 @@ class Predictor(BaseBatchProcessor):
 
     @staticmethod
     def define_batcher() -> ProcessingBatcher:
-        return FixedSizeDataPackBatcherWithExtractor()
+        return FixedSizeDataPackBatcherWithExtractor(cross_pack=False)
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
