@@ -1,0 +1,45 @@
+indexer_name: "da_selector"
+
+indexer_config:
+  batch_size: 5
+  fields:
+    - doc_id
+    - content
+    - pack_info
+  indexer:
+    name: "ElasticSearchIndexer"
+    hparams:
+      index_name: indexer_name
+      hosts: "localhost:9200"
+      algorithm: "bm25"
+    other_kwargs:
+      request_timeout: 10
+      refresh: False
+
+data_selector_config:
+  index_config:
+    index_name: indexer_name
+  size: 2
+
+boxer_config:
+  pack_name: "input"
+
+da_processor_config:
+  augment_entry: "ft.onto.base_ontology.Token"
+  other_entry_policy:
+    type: ''
+    kwargs:
+      ft.onto.base_ontology.Document: "auto_align"
+      ft.onto.base_ontology.Sentence: "auto_align"
+
+  type: 'data_augmentation_op'
+  data_aug_op: 'forte.processors.data_augment.algorithms.dictionary_replacement_op.DictionaryReplacementOp'
+  data_aug_op_config:
+    type: ''
+    kwargs:
+      dictionary_class: "forte.processors.data_augment.algorithms.dictionary.WordnetDictionary"
+      prob: 0.8
+      lang: "eng"
+  augment_pack_names:
+    kwargs:
+      input: 'augmented_input'

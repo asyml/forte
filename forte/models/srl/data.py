@@ -58,21 +58,25 @@ class SRLSpanData(tx.data.DatasetBase[str, Example]):
 
     def process(self, raw_example: str) -> Example:
         raw: RawExample = json.loads(raw_example)
-        assert len(raw['sentences']) == 1
-        sentence = raw['sentences'][0]
+        assert len(raw["sentences"]) == 1
+        sentence = raw["sentences"][0]
         example: Example = {
-            'text': sentence,
-            'text_ids': self._vocab.map_tokens_to_ids_py(sentence),
-            'srl': [SRLSpan(*items) for items in raw['srl'][0]]
+            "text": sentence,
+            "text_ids": self._vocab.map_tokens_to_ids_py(sentence),
+            "srl": [SRLSpan(*items) for items in raw["srl"][0]],
         }
         return example
 
     def collate(self, examples: List[Example]) -> tx.data.Batch:
-        sentences = [ex['text'] for ex in examples]
+        sentences = [ex["text"] for ex in examples]
         tokens, length = tx.data.padded_batch(
-            [ex['text_ids'] for ex in examples])
-        srl = [ex['srl'] for ex in examples]
+            [ex["text_ids"] for ex in examples]
+        )
+        srl = [ex["srl"] for ex in examples]
         return tx.data.Batch(
-            len(examples), srl=srl, text=sentences,
+            len(examples),
+            srl=srl,
+            text=sentences,
             text_ids=torch.from_numpy(tokens).to(self.device),
-            length=torch.tensor(length).to(self.device))
+            length=torch.tensor(length).to(self.device),
+        )

@@ -28,35 +28,23 @@ COmprehension Dataset." (2016).
 import os
 from typing import Iterator, Tuple
 
-from forte.common.configuration import Config
-from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
-from forte.data.readers.base_reader import PackReader
+from forte.data.base_reader import PackReader
 from ft.onto.base_ontology import Document
 
-__all__ = [
-    "MSMarcoPassageReader"
-]
+__all__ = ["MSMarcoPassageReader"]
 
 
 class MSMarcoPassageReader(PackReader):
-    def __init__(self):
-        super().__init__()
-        self.configs = None
-
-    def initialize(self, resources: Resources, configs: Config):
-        # pylint: disable = unused-argument
-        self.configs = configs
-
     def _collect(self, *args, **kwargs) -> Iterator[Tuple[str, str]]:
         # pylint: disable = unused-argument, undefined-variable
         dir_path: str = args[0]
 
-        corpus_file_path = os.path.join(dir_path, 'collection.tsv')
+        corpus_file_path = os.path.join(dir_path, "collection.tsv")
 
-        with open(corpus_file_path, 'r') as file:
+        with open(corpus_file_path, "r", encoding="utf-8") as file:
             for line in file:
-                doc_id, doc_content = line.split('\t', 1)
+                doc_id, doc_content = line.split("\t", 1)
                 yield doc_id, doc_content
 
     def _parse_pack(self, doc_info: Tuple[str, str]) -> Iterator[DataPack]:

@@ -39,20 +39,20 @@ Task Processors
 
 :hidden:`CoNLLNERPredictor`
 ----------------------------------
-.. autoclass:: forte.processors.ner_predictor.CoNLLNERPredictor
+.. autoclass:: forte.processors.nlp.ner_predictor.CoNLLNERPredictor
     :members:
 
 :hidden:`SRLPredictor`
 ----------------------------------
-.. autoclass:: forte.processors.srl_predictor.SRLPredictor
+.. autoclass:: forte.processors.nlp.srl_predictor.SRLPredictor
     :members:
 
 :hidden:`VocabularyProcessor`
 ----------------------------------
-.. autoclass:: forte.processors.vocabulary_processor.VocabularyProcessor
+.. autoclass:: forte.processors.misc.vocabulary_processor.VocabularyProcessor
     :members:
 
 :hidden:`Alphabet`
 ----------------------------------
-.. autoclass:: forte.processors.vocabulary_processor.Alphabet
+.. autoclass:: forte.processors.misc.vocabulary_processor.Alphabet
     :members:

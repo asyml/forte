@@ -14,27 +14,38 @@
 """
 Unit tests for OntonotesReader.
 """
-
+import os
 import unittest
+from typing import Tuple, List
 
 from forte.data.data_pack import DataPack
 from forte.data.readers.ontonotes_reader import OntonotesReader
 from forte.processors.base.pack_processor import PackProcessor
 from forte.pipeline import Pipeline
-from ft.onto.base_ontology import Token, Sentence
+from ft.onto.base_ontology import Token, Sentence, PredicateLink
 
 
 class DummyPackProcessor(PackProcessor):
-
     def _process(self, input_pack: DataPack):
         pass
 
 
 class OntonotesReaderPipelineTest(unittest.TestCase):
-
     def setUp(self):
+        root_path = os.path.abspath(
+            os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                os.pardir,
+                os.pardir,
+                os.pardir,
+                os.pardir,
+            )
+        )
         # Define and config the Pipeline
-        self.dataset_path = "data_samples/ontonotes/00"
+        self.dataset_path = os.path.join(root_path, "data_samples/ontonotes/00")
+        self.dataset_path_nested_span = os.path.join(
+            root_path, "data_samples/ontonotes/nested_spans"
+        )
 
         self.nlp = Pipeline[DataPack]()
 
@@ -56,6 +67,38 @@ class OntonotesReaderPipelineTest(unittest.TestCase):
                 self.assertEqual(sent_text, " ".join(tokens))
         self.assertTrue(doc_exists)
 
+    def test_nested_spans(self):
+        expected: List[Tuple] = [
+            ("bring", "Tomorrow", "ARG0"),
+            ("bring", "Ehud Barak and Yasser Arafat", "ARG2"),
+            ("bring", "to the resort city of Sharm El", "ARG4"),
+            (
+                "have",
+                "years in terms of their statements and attitudes , "
+                "six years or",
+                "ARG0",
+            ),
+            ("statements", "their", "ARG0"),
+            ("statements", "or more -- before the Oslo accords ,", "ARG1"),
+        ]
 
-if __name__ == '__main__':
+        actual: List[Tuple] = []
+
+        # get processed pack from dataset
+        for pack in self.nlp.process_dataset(self.dataset_path_nested_span):
+            # get sentence from pack
+            for sentence in pack.get(Sentence):
+                for pred_link in pack.get(PredicateLink, sentence):
+                    pred_link: PredicateLink
+                    actual.append(
+                        (
+                            pred_link.get_parent().text,
+                            pred_link.get_child().text,
+                            pred_link.arg_type,
+                        )
+                    )
+        self.assertEqual(actual, expected)
+
+
+if __name__ == "__main__":
     unittest.main()

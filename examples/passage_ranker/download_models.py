@@ -24,8 +24,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     # model name and path can be read from config file
-    parser.add_argument("--config_file", default="./config.yml",
-                        help="Config YAML filepath")
+    parser.add_argument(
+        "--config_file", default="./config.yml", help="Config YAML filepath"
+    )
 
     args = parser.parse_args()
 
@@ -36,14 +37,20 @@ if __name__ == "__main__":
     default_model_dir = config.reranker.model_dir
 
     # model name and path can be passed through command line as well
-    parser.add_argument("--pretrained_model_name", default=default_model_name,
-                        help="Pre-trained model name to download. It can be "
-                             "`bert-base-uncased` or `bert-large-uncased`or a "
-                             "url from where the model will be directly"
-                             "downloaded")
+    parser.add_argument(
+        "--pretrained_model_name",
+        default=default_model_name,
+        help="Pre-trained model name to download. It can be "
+        "`bert-base-uncased` or `bert-large-uncased`or a "
+        "url from where the model will be directly"
+        "downloaded",
+    )
 
-    parser.add_argument("--model_dir", default=default_model_dir,
-                        help="Directory to which the model will be downloaded")
+    parser.add_argument(
+        "--model_dir",
+        default=default_model_dir,
+        help="Directory to which the model will be downloaded",
+    )
 
     args = parser.parse_args()
 
@@ -64,6 +71,4 @@ if __name__ == "__main__":
     else:
         url = args.pretrained_model_name
 
-    maybe_download(urls=[url],
-                   path=resource_path,
-                   extract=True)
+    maybe_download(urls=[url], path=resource_path, extract=True)
