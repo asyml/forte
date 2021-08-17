@@ -19,32 +19,31 @@ import unittest
 
 from ddt import ddt, data, unpack
 from texar.torch.data import Embedding, load_glove
-from texar.torch.data.vocabulary import Vocab
 
 from forte.data.caster import MultiPackBoxer
+from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.readers import StringReader
 from forte.data.selector import AllPackSelector
 from forte.pipeline import Pipeline
-from forte.processors.base import ReplacementDataAugmentProcessor
-from forte.processors.data_augment.algorithms.embedding_similarity_replacement_op \
+from forte.processors.data_augment import ReplacementDataAugmentProcessor
+from forte.processors.data_augment.algorithms \
+    .embedding_similarity_replacement_op \
     import EmbeddingSimilarityReplacementOp
-from forte.processors.nltk_processors import NLTKWordTokenizer, NLTKPOSTagger
-
+from forte.processors.misc import WhiteSpaceTokenizer
 from ft.onto.base_ontology import Token
-from forte.data.data_pack import DataPack
 
 
 @ddt
 class TestEmbeddingSimilarityReplacementOp(unittest.TestCase):
     def setUp(self):
         file_dir_path = os.path.dirname(__file__)
-        vocab_path = "tests/forte/processors/data_augment/algorithms/"\
+        vocab_path = "tests/forte/processors/data_augment/algorithms/" \
                      "sample_embedding.txt.vocab"
         self.abs_vocab_path = os.path.abspath(os.path.join(file_dir_path,
-                                                      *([os.pardir] * 5),
-                                                      vocab_path))
-        embed_path = "tests/forte/processors/data_augment/algorithms/"\
+                                                           *([os.pardir] * 5),
+                                                           vocab_path))
+        embed_path = "tests/forte/processors/data_augment/algorithms/" \
                      "sample_embedding.txt"
         abs_embed_path = os.path.abspath(os.path.join(file_dir_path,
                                                       *([os.pardir] * 5),
@@ -89,8 +88,7 @@ class TestEmbeddingSimilarityReplacementOp(unittest.TestCase):
 
         nlp.set_reader(reader=StringReader())
         nlp.add(component=MultiPackBoxer(), config=boxer_config)
-        nlp.add(component=NLTKWordTokenizer(), selector=AllPackSelector())
-        nlp.add(component=NLTKPOSTagger(), selector=AllPackSelector())
+        nlp.add(component=WhiteSpaceTokenizer(), selector=AllPackSelector())
 
         processor_config = {
             'augment_entry': "ft.onto.base_ontology.Token",
@@ -102,7 +100,8 @@ class TestEmbeddingSimilarityReplacementOp(unittest.TestCase):
                 }
             },
             'type': 'data_augmentation_op',
-            'data_aug_op': 'forte.processors.data_augment.algorithms.embedding_similarity_replacement_op.'
+            'data_aug_op': 'forte.processors.data_augment.algorithms'
+                           '.embedding_similarity_replacement_op.'
                            'EmbeddingSimilarityReplacementOp',
             'data_aug_op_config': {
                 'type': '',
@@ -118,7 +117,8 @@ class TestEmbeddingSimilarityReplacementOp(unittest.TestCase):
                 }
             }
         }
-        nlp.add(component=ReplacementDataAugmentProcessor(), config=processor_config)
+        nlp.add(component=ReplacementDataAugmentProcessor(),
+                config=processor_config)
         nlp.initialize()
 
         for idx, m_pack in enumerate(nlp.process_dataset(texts)):
