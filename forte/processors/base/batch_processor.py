@@ -20,7 +20,7 @@ from typing import List, Dict, Optional, Type, Any
 
 from forte.common import Resources, ProcessorConfigError
 from forte.common.configuration import Config
-from forte.data import slice_batch
+from forte.data import slice_batch, BaseExtractor
 from forte.data.converter import Converter
 from forte.data.base_pack import PackType
 from forte.data.batchers import (
@@ -103,7 +103,7 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
             self._prepare_coverage_index(input_pack)
 
         for packs, _, batch in self._batcher.get_batch(
-            input_pack, self.context_type, self.input_info
+                input_pack, self.context_type, self.input_info
         ):
             pred = self.predict(batch)
             self.pack_all(packs, pred)
@@ -319,9 +319,13 @@ class Predictor(BaseBatchProcessor):
         self.model = model
 
     def _parse_configs(self, configs):
+        # TODO: Need to clean up the config parsing and put into one place.
         parsed_configs = self.default_configs()
         parsed_configs["batch_size"] = configs.batch_size
-        parsed_configs["scope"] = get_class(configs.scope)
+
+        parsed_configs["scope"] = get_class(configs.scope) if isinstance(
+            configs.scope, str) else configs.scope
+
         parsed_configs["do_eval"] = configs.do_eval
         parsed_configs["feature_scheme"] = {}
         for tag, scheme in configs.feature_scheme.items():
@@ -335,12 +339,16 @@ class Predictor(BaseBatchProcessor):
                     "type"
                 ] = TrainPreprocessor.DATA_OUTPUT
 
-            extractor = get_class(scheme["extractor"]["class_name"])()
-            extractor.initialize(config=scheme["extractor"]["config"])
-            if "vocab_path" in scheme["extractor"]:
-                vocab_file = open(scheme["extractor"]["vocab_path"], "rb")
-                extractor.vocab = pickle.load(vocab_file)
-                vocab_file.close()
+            if isinstance(scheme["extractor"], str):
+                extractor = get_class(scheme["extractor"]["class_name"])()
+                extractor.initialize(config=scheme["extractor"]["config"])
+                if "vocab_path" in scheme["extractor"]:
+                    vocab_file = open(scheme["extractor"]["vocab_path"], "rb")
+                    extractor.vocab = pickle.load(vocab_file)
+                    vocab_file.close()
+            else:
+                extractor = scheme["extractor"]
+
             parsed_configs["feature_scheme"][tag]["extractor"] = extractor
 
             if "converter" not in scheme:
@@ -367,7 +375,7 @@ class Predictor(BaseBatchProcessor):
             self._prepare_coverage_index(input_pack)
 
         for batch in self._batcher.get_batch(
-            input_pack, self.context_type, self.input_info
+                input_pack, self.context_type, self.input_info
         ):
             self.__process_batch(batch)
 

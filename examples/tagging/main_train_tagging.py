@@ -33,6 +33,8 @@ if __name__ == "__main__":
             open("configs/config_data.yml", "r"))),
         "config_model": Config({}, default_hparams=yaml.safe_load(
             open("configs/config_model.yml", "r"))),
+        "config_extractors": yaml.safe_load(
+            open("configs/config_extractors.yml", "r")),
         "device": torch.device("cuda") if torch.cuda.is_available() else
         torch.device("cpu")
     }

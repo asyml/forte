@@ -19,11 +19,11 @@ from forte.pipeline import Pipeline
 from forte.data.readers.conll03_reader_new import CoNLL03Reader
 from forte.predictor import Predictor
 from ft.onto.base_ontology import Sentence, EntityMention, Token
-from examples.tagging.evaluator import CoNLLNEREvaluator
+from evaluator import CoNLLNEREvaluator
 
 
 def predict_forward_fn(model, batch):
-    '''Use model and batch data to predict ner tag.'''
+    """Use model and batch data to predict ner tag."""
     word = batch["text_tag"]["data"]
     char = batch["char_tag"]["data"]
     word_masks = batch["text_tag"]["masks"][0]

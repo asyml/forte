@@ -126,14 +126,14 @@ class Vocabulary(Generic[ElementType]):
     """
 
     def __init__(
-        self,
-        method: str = "indexing",
-        use_pad: bool = True,
-        use_unk: bool = True,
-        special_tokens: Optional[List[str]] = None,
-        do_counting: bool = True,
-        pad_value: Any = None,
-        unk_value: Any = None,
+            self,
+            method: str = "indexing",
+            use_pad: bool = True,
+            use_unk: bool = True,
+            special_tokens: Optional[List[str]] = None,
+            do_counting: bool = True,
+            pad_value: Any = None,
+            unk_value: Any = None,
     ):
         self.method: str = method
         self.use_pad: bool = use_pad
@@ -215,7 +215,7 @@ class Vocabulary(Generic[ElementType]):
         return self.__counter[eid]
 
     def mark_special_element(
-        self, element_id: int, element_name: str, representation: Any = None
+            self, element_id: int, element_name: str, representation: Any = None
     ):
         """
         Mark a particular (but already existed) index in the vocabulary to be
@@ -259,11 +259,11 @@ class Vocabulary(Generic[ElementType]):
         return element_id in self.__special_ids
 
     def add_special_element(
-        self,
-        element: str,
-        element_id: Optional[int] = None,
-        representation=None,
-        special_token_name: Optional[str] = None,
+            self,
+            element: str,
+            element_id: Optional[int] = None,
+            representation=None,
+            special_token_name: Optional[str] = None,
     ):
         """
         This function will add special elements to the vocabulary, such as
@@ -315,7 +315,8 @@ class Vocabulary(Generic[ElementType]):
             self._id2repr[element_id] = representation
 
     def add_element(
-        self, element: ElementType, representation: Any = None, count: int = 1
+            self, element: ElementType, representation: Any = None,
+            count: int = 1
     ) -> int:
         r"""This function will add a regular element to the vocabulary.
 
@@ -376,7 +377,7 @@ class Vocabulary(Generic[ElementType]):
         return self._id2element[idx]
 
     def element2repr(
-        self, element: Union[ElementType, str]
+            self, element: Union[ElementType, Any]
     ) -> Union[int, List[int]]:
         r"""This function will map element to representation.
 
@@ -413,6 +414,19 @@ class Vocabulary(Generic[ElementType]):
                 f" not have a customized representation, and the representation"
                 f" method [{self.method}] is not supported."
             )
+
+    def to_dict(self) -> Dict[ElementType, Any]:
+        """
+        Create a dictionary from the vocabulary storing all the known elements.
+
+        Returns: The vocabulary as a Dict from ElementType to the
+          representation of the element (could be Integer or One-hot vector,
+          depending on the settings of this class).
+        """
+        vocab_dict: Dict[ElementType, Any] = {}
+        for element, idx in self._element2id.items():
+            vocab_dict[element] = self.element2repr(element)
+        return vocab_dict
 
     def _one_hot(self, idx: int):
         """Compute the one-hot encoding on the fly."""
@@ -568,10 +582,10 @@ class FrequencyVocabFilter(VocabFilter):
     """
 
     def __init__(
-        self,
-        vocab: Vocabulary,
-        min_frequency: int = -1,
-        max_frequency: int = -1,
+            self,
+            vocab: Vocabulary,
+            min_frequency: int = -1,
+            max_frequency: int = -1,
     ):
         super().__init__(vocab)
         self.min_freq = min_frequency

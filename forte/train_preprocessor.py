@@ -130,10 +130,12 @@ class TrainPreprocessor:
         """
         parsed_request: Dict[str, Any] = {}
 
-        assert "scope" in request, "Field not found for data request: `scope`"
-        assert (
-            "feature_scheme" in request
-        ), "Field not found for data request: `schemes`"
+        if "scope" not in request or request["scope"] is None:
+            raise ValueError("Field not found for data request: `scope`")
+
+        if "feature_scheme" not in request or request["feature_scheme"] is None:
+            raise ValueError(
+                "Field not found for data request: `feature_scheme`")
 
         parsed_request["scope"] = get_class(request["scope"])
         parsed_request["schemes"] = {}
@@ -143,12 +145,12 @@ class TrainPreprocessor:
 
         for tag, scheme in request["feature_scheme"].items():
             assert (
-                "extractor" in scheme
+                    "extractor" in scheme
             ), "Field not found for data request scheme: `extractor`"
             parsed_request["schemes"][tag] = {}
 
             assert (
-                "type" in scheme
+                    "type" in scheme
             ), "Field not found for data request scheme: `type`"
             assert scheme["type"] in [
                 "data_input",
@@ -252,7 +254,8 @@ class TrainPreprocessor:
                     "scope": ft.onto.Sentence
                     "schemes": {
                         "text_tag": {
-                            "extractor": forte.data.extractor.AttributeExtractor,
+                            "extractor":
+                            forte.data.extractor.AttributeExtractor,
                             "converter": forte.data.converter.Converter,
                             "type": TrainPreprocessor.DATA_INPUT,
                         },
@@ -274,18 +277,24 @@ class TrainPreprocessor:
 
             `"scope"`: Entry
                 A class of type :class:`~forte.data.ontology.core.Entry` The
-                granularity to separate data into different examples. For example,
-                if `scope` is :class:`~ft.onto.base_ontology.Sentence`, then each
+                granularity to separate data into different examples. For
+                example,
+                if `scope` is :class:`~ft.onto.base_ontology.Sentence`,
+                then each
                 training example will represent the information of a sentence.
 
             `"schemes"`: `Dict`
-                A `Dict` containing the information about doing the pre-processing.
-                The `key` is the tags provided by input `request`. The `value` is a
-                `Dict` containing the information for doing pre-processing for that
+                A `Dict` containing the information about doing the
+                pre-processing.
+                The `key` is the tags provided by input `request`. The
+                `value` is a
+                `Dict` containing the information for doing pre-processing
+                for that
                 feature.
 
             `"schemes.tag.extractor"`: Extractor
-                An instance of type :class:`~forte.data.extractor.BaseExtractor`.
+                An instance of type
+                :class:`~forte.data.extractor.BaseExtractor`.
 
             `"schemes.tag.converter"`: Converter
                 An instance of type :class:`~forte.data.converter.Converter`.

@@ -26,7 +26,7 @@
 import logging
 import torch
 
-from examples.srl.srl_trainer import SRLTrainer
+from srl_trainer import SRLTrainer
 
 logger = logging.getLogger(__name__)
 

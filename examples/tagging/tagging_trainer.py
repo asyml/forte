@@ -13,25 +13,22 @@
 # limitations under the License.
 import logging
 from typing import Iterator, Dict
+
 import torch
+from texar.torch.data import Batch
 from torch.optim import SGD
 from torch.optim.optimizer import Optimizer
-from texar.torch.data import Batch
 from tqdm import tqdm
 
 from forte.common.configuration import Config
-from forte.evaluation.ner_evaluator import CoNLLNEREvaluator
-from forte.processors.base import Predictor
-from forte.models.ner.model_factory import BiRecurrentConvCRF
-from forte.data.readers.conll03_reader import CoNLL03Reader
-from forte.pipeline import Pipeline
-from forte.data.data_pack import DataPack
-from forte.data.extractors import AttributeExtractor, CharExtractor, \
-    BioSeqTaggingExtractor
 from forte.data import BaseExtractor
+from forte.data.data_pack import DataPack
+from forte.data.readers.conll03_reader import CoNLL03Reader
+from forte.evaluation.ner_evaluator import CoNLLNEREvaluator
+from forte.models.ner.model_factory import BiRecurrentConvCRF
+from forte.pipeline import Pipeline
+from forte.processors.base import Predictor
 from forte.trainer.base.trainer import BaseTrainer
-from forte.train_preprocessor import TrainPreprocessor
-from ft.onto.base_ontology import Token, EntityMention, Sentence
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +38,7 @@ class TaggingTrainer(BaseTrainer):
                  task_type: str,
                  config_data: Config,
                  config_model: Config,
+                 config_extractors: Dict,
                  device):
         super().__init__()
         self.task_type = task_type
@@ -48,55 +46,23 @@ class TaggingTrainer(BaseTrainer):
         # All the configs
         self.config_data: Config = config_data
         self.config_model: Config = config_model
+        self.config_extractors: Dict = config_extractors
         self.device = device
 
     def create_tp_request(self) -> Dict:
-        # Generate request
-        text_extractor: AttributeExtractor = \
-            AttributeExtractor(config={"entry_type": Token,
-                                       "vocab_method": "indexing",
-                                       "attribute": "text"})
-
-        char_extractor: CharExtractor = \
-            CharExtractor(config={"entry_type": Token,
-                                  "vocab_method": "indexing",
-                                  "max_char_length":
-                                      self.config_data.max_char_length})
-
-        # Add output part in request based on different task type
-        output_extractor: BaseExtractor
+        # Create output extractor based on the task.
+        extractor_configs = self.config_extractors[
+            "feature_scheme"]["output_tag"]["extractor"]["config"]
         if self.task_type == "ner":
-            output_extractor = \
-                BioSeqTaggingExtractor(config={"entry_type": EntityMention,
-                                               "attribute": "ner_type",
-                                               "tagging_unit": Token,
-                                               "vocab_method": "indexing"})
+            extractor_configs[
+                "entry_type"] = "ft.onto.base_ontology.EntityMention"
+            extractor_configs["attribute"] = "ner_type"
+            extractor_configs["tagging_unit"] = "ft.onto.base_ontology.Token"
+        elif self.task_type == "pos":
+            extractor_configs["entry_type"] = "ft.onto.base_ontology.Token"
+            extractor_configs["attribute"] = "pos"
 
-        else:
-            output_extractor = \
-                AttributeExtractor(config={"entry_type": Token,
-                                           "attribute": "pos",
-                                           "vocab_method": "indexing"})
-
-        tp_request: Dict = {
-            "scope": Sentence,
-            "schemes": {
-                "text_tag": {
-                    "type": TrainPreprocessor.DATA_INPUT,
-                    "extractor": text_extractor
-                },
-                "char_tag": {
-                    "type": TrainPreprocessor.DATA_INPUT,
-                    "extractor": char_extractor
-                },
-                "output_tag": {
-                    "type": TrainPreprocessor.DATA_OUTPUT,
-                    "extractor": output_extractor
-                }
-            }
-        }
-
-        return tp_request
+        return self.config_extractors
 
     def create_tp_config(self) -> Dict:
         tp_config: Dict = {
@@ -105,9 +71,9 @@ class TaggingTrainer(BaseTrainer):
             },
             "dataset": {
                 "batch_size": self.config_data.batch_size_tokens
-            }
+            },
+            "request": self.create_tp_request()
         }
-
         return tp_config
 
     def create_pack_iterator(self) -> Iterator[DataPack]:
@@ -121,18 +87,20 @@ class TaggingTrainer(BaseTrainer):
         return pack_iterator
 
     def train(self):
+        logging.info("Constructing the extractors and models.")
         schemes: Dict = self.train_preprocessor.request["schemes"]
         text_extractor: BaseExtractor = schemes["text_tag"]["extractor"]
         char_extractor: BaseExtractor = schemes["char_tag"]["extractor"]
         output_extractor: BaseExtractor = schemes["output_tag"]["extractor"]
 
         self.model: BiRecurrentConvCRF = \
-            BiRecurrentConvCRF(word_vocab=text_extractor.get_dict(),
-                               char_vocab_size=char_extractor.size(),
-                               tag_vocab_size=output_extractor.size(),
+            BiRecurrentConvCRF(word_vocab=text_extractor.vocab.to_dict(),
+                               char_vocab_size=len(char_extractor.vocab),
+                               tag_vocab_size=len(output_extractor.vocab),
                                config_model=self.config_model)
         self.model.to(self.device)
 
+        logging.info("Constructing the optimizer.")
         optim: Optimizer = SGD(self.model.parameters(),
                                lr=self.config_model.learning_rate,
                                momentum=self.config_model.momentum,
@@ -140,20 +108,29 @@ class TaggingTrainer(BaseTrainer):
 
         tp = self.train_preprocessor
 
+        logging.info("Constructing the validation pipeline.")
         predictor = TaggingPredictor()
         predictor_config = {
-            "scope": tp.request["scope"],
             "batch_size": self.config_data.batch_size_tokens,
-            "feature_scheme": tp.request["schemes"],
         }
+        predictor_config.update(self.config_extractors)
         predictor.load(self.model)
+
         evaluator = CoNLLNEREvaluator()
+        output_extractor_configs = self.config_extractors["feature_scheme"][
+            'output_tag']['extractor']['config']
+        evaluator_config = {
+            "entry_type": output_extractor_configs["entry_type"],
+            "tagging_unit": output_extractor_configs["tagging_unit"],
+            "attribute": output_extractor_configs["attribute"]
+        }
 
         val_reader = CoNLL03Reader(cache_in_memory=True)
         val_pl: Pipeline = Pipeline()
         val_pl.set_reader(val_reader)
         val_pl.add(predictor, config=predictor_config)
-        val_pl.add(evaluator)
+        val_pl.add(evaluator, config=evaluator_config)
+        val_pl.initialize()
 
         epoch: int = 0
         train_err: int = 0
