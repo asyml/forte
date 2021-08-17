@@ -17,7 +17,7 @@ __all__ = [
     "SubwordTokenizer",
 ]
 
-from typing import Optional, List, Tuple, Iterator, Dict, Set
+from typing import List, Tuple, Iterator, Dict, Set
 
 from texar.torch.data.tokenizers.bert_tokenizer import BERTTokenizer
 
