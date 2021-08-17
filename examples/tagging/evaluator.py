@@ -28,20 +28,19 @@ def _post_edit(element):
 
 
 def _get_tag(data, pack):
-    based_on = [pack.get_entry(x) for x in data["Token"]['tid']]
-    entry = [pack.get_entry(x) for x in data["EntityMention"]['tid']]
+    based_on = [pack.get_entry(x) for x in data["Token"]["tid"]]
+    entry = [pack.get_entry(x) for x in data["EntityMention"]["tid"]]
     tag = bio_tagging(based_on, entry)
     tag = [_post_edit(x) for x in tag]
     return tag
 
 
-def _write_tokens_to_file(pred_pack, pred_request,
-                          refer_pack, refer_request,
-                          output_filename):
+def _write_tokens_to_file(
+    pred_pack, pred_request, refer_pack, refer_request, output_filename
+):
     opened_file = open(output_filename, "w+")
     for pred_data, refer_data in zip(
-        pred_pack.get_data(**pred_request),
-        refer_pack.get_data(**refer_request)
+        pred_pack.get_data(**pred_request), refer_pack.get_data(**refer_request)
     ):
         pred_tag = _get_tag(pred_data, pred_pack)
         refer_tag = _get_tag(refer_data, refer_pack)
@@ -49,8 +48,9 @@ def _write_tokens_to_file(pred_pack, pred_request,
         pos = refer_data["Token"]["pos"]
         chunk = refer_data["Token"]["chunk"]
 
-        for i, (word, position, chun, tgt, pred) in \
-                enumerate(zip(words, pos, chunk, refer_tag, pred_tag), 1):
+        for i, (word, position, chun, tgt, pred) in enumerate(
+            zip(words, pos, chunk, refer_tag, pred_tag), 1
+        ):
             opened_file.write(
                 "%d %s %s %s %s %s\n" % (i, word, position, chun, tgt, pred)
             )
@@ -60,6 +60,7 @@ def _write_tokens_to_file(pred_pack, pred_request,
 
 class CoNLLNEREvaluator(Evaluator):
     """Evaluator for Conll NER task."""
+
     def __init__(self):
         super().__init__()
         # self.test_component = CoNLLNERPredictor().name
@@ -71,39 +72,39 @@ class CoNLLNEREvaluator(Evaluator):
         pred_getdata_args = {
             "context_type": Sentence,
             "request": {
-                Token: {
-                    "fields": ["chunk", "pos"]
-                },
+                Token: {"fields": ["chunk", "pos"]},
                 EntityMention: {
                     "fields": ["ner_type"],
                 },
                 Sentence: [],  # span by default
-            }
+            },
         }
 
         refer_getdata_args = {
             "context_type": Sentence,
             "request": {
-                Token: {
-                    "fields": ["chunk", "pos", "ner"]
-                },
+                Token: {"fields": ["chunk", "pos", "ner"]},
                 EntityMention: {
                     "fields": ["ner_type"],
                 },
                 Sentence: [],  # span by default
-            }
+            },
         }
 
-        _write_tokens_to_file(pred_pack=pred_pack,
-                                pred_request=pred_getdata_args,
-                                refer_pack=ref_pack,
-                                refer_request=refer_getdata_args,
-                                output_filename=self.output_file)
-        eval_script = \
-            Path(os.path.abspath(__file__)).parents[2] / \
-            "forte/utils/eval_scripts/conll03eval.v2"
-        os.system(f"perl {eval_script} < {self.output_file} > "
-                  f"{self.score_file}")
+        _write_tokens_to_file(
+            pred_pack=pred_pack,
+            pred_request=pred_getdata_args,
+            refer_pack=ref_pack,
+            refer_request=refer_getdata_args,
+            output_filename=self.output_file,
+        )
+        eval_script = (
+            Path(os.path.abspath(__file__)).parents[2]
+            / "forte/utils/eval_scripts/conll03eval.v2"
+        )
+        os.system(
+            f"perl {eval_script} < {self.output_file} > " f"{self.score_file}"
+        )
         with open(self.score_file, "r") as fin:
             fin.readline()
             line = fin.readline()

@@ -40,23 +40,24 @@ from forte.pipeline import Pipeline
 
 
 def add_wiki_info(
-        reader: PackReader,
-        resources: Resources,
-        wiki_info_data_path: str,
-        input_pack_path: str,
-        output_path: str,
-        prompt_name: str,
-        use_input_index=False,
-        skip_existing=True,
-        input_index_file_name: Optional[str] = "article.idx",
-        output_index_file_name: Optional[str] = "article.idx",
+    reader: PackReader,
+    resources: Resources,
+    wiki_info_data_path: str,
+    input_pack_path: str,
+    output_path: str,
+    prompt_name: str,
+    use_input_index=False,
+    skip_existing=True,
+    input_index_file_name: Optional[str] = "article.idx",
+    output_index_file_name: Optional[str] = "article.idx",
 ):
     pl = Pipeline[DataPack](resources)
 
     out_index_path = os.path.join(output_path, output_index_file_name)
     if skip_existing and os.path.exists(out_index_path):
         print_progress(
-            f"\n{out_index_path} exist, skipping {prompt_name}", "\n")
+            f"\n{out_index_path} exist, skipping {prompt_name}", "\n"
+        )
         return
 
     pl.set_reader(
@@ -85,10 +86,10 @@ def add_wiki_info(
 
 
 def read_wiki_text(
-        nif_context: str,
-        output_dir: str,
-        resources: Resources,
-        skip_existing: bool = False,
+    nif_context: str,
+    output_dir: str,
+    resources: Resources,
+    skip_existing: bool = False,
 ):
     if skip_existing and os.path.exists(output_dir):
         print_progress(f"\n{output_dir} exist, skipping reading text", "\n")
@@ -110,7 +111,8 @@ def read_wiki_text(
 
 
 def cache_redirects(
-        base_output_path: str, redirect_path: str) -> Dict[str, str]:
+    base_output_path: str, redirect_path: str
+) -> Dict[str, str]:
     redirect_pickle = os.path.join(base_output_path, "redirects.pickle")
 
     redirect_map: Dict[str, str]
@@ -124,14 +126,14 @@ def cache_redirects(
 
 
 def main(
-        nif_context: str,
-        nif_page_structure: str,
-        mapping_literals: str,
-        mapping_objects: str,
-        nif_text_links: str,
-        redirects: str,
-        info_boxs_properties: str,
-        base_output_path: str,
+    nif_context: str,
+    nif_page_structure: str,
+    mapping_literals: str,
+    mapping_objects: str,
+    nif_text_links: str,
+    redirects: str,
+    info_boxs_properties: str,
+    base_output_path: str,
 ):
     # The datasets are read in a few steps.
     # 0. Load redirects between wikipedia pages.
