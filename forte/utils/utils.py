@@ -222,7 +222,7 @@ class DiffAligner:
             self.adjustments.clear()
 
     def align_with_segments(
-        self, text: str, segments: List[str]
+            self, text: str, segments: List[str]
     ) -> List[Optional[Tuple[int, int]]]:
         """
         Provided a text sequence `text`, and a list of text `segments`,
@@ -239,7 +239,7 @@ class DiffAligner:
 
         >>> aligner = DiffAligner()
         >>> aligner.align_with_segments("aa bb   cc", ["aa", "bb", "cc"])
-        [(0, 2), (3,5), (6, 10)]
+        [(0, 2), (3, 5), (6, 10)]
 
         Args:
             text (str): The original text.
@@ -265,7 +265,7 @@ class DiffAligner:
 
         for ss in segment_spans:
             b, e = self.trans_span(ss)
-            if b >= e:
+            if b >= e or b >= len(text) or e > len(text):
                 aligned_spans.append(None)
             else:
                 aligned_spans.append((b, e))

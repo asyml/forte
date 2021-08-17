@@ -78,10 +78,11 @@ class UtilsTest(unittest.TestCase):
         )
 
     @data(
-        ("this if  sentences for testing.",
-         ["This", "is", "a", "sentence", "4", "testing", "."],
-         [(0, 4), (5, 7), None, (9, 17), (19, 22), (23, 30), (30, 31)]
-         ),
+        (
+                "this if  sentences for testing.",
+                ["This", "is", "a", "sentence", "4", "testing", "."],
+                [(0, 4), (5, 7), None, (9, 17), (19, 22), (23, 30), (30, 31)]
+        ),
         (
                 "aa bb   cc",
                 ["aa", "bb", "cc"],

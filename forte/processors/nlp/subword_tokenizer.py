@@ -68,7 +68,7 @@ class SubwordTokenizer(PackProcessor):
                     token.text.lower()  # type: ignore
                     if self.__do_lower_case
                     else token.text,  # type: ignore
-                    token.start,  # type: ignore
+                    token.begin,  # type: ignore
                 )
         elif self.configs.segment_unit is not None:
             # If token source not provide, try to use provided segments.
@@ -87,7 +87,7 @@ class SubwordTokenizer(PackProcessor):
         """
         This function should tokenize the text and return the tokenization
         results in the form of a word and the span of each word. A span is the
-        start and end of this word, indexed from 0, and end = start + length
+        begin and end of this word, indexed from 0, and end = begin + length
         of the word.
 
         By default, this calls the Texar's BasicTokenizer and then align the
@@ -98,7 +98,7 @@ class SubwordTokenizer(PackProcessor):
             text: Input text to be tokenized.
 
         Returns: A iterator of tokenization result in the form of triplets of
-        (word, (start, end)).
+        (word, (begin, end)).
         """
         basic_tokens: List[str] = self.tokenizer.basic_tokenizer.tokenize(
             text, never_split=self.tokenizer.all_special_tokens
@@ -114,20 +114,20 @@ class SubwordTokenizer(PackProcessor):
             text = text.lower()
 
         if self.tokenizer.do_basic_tokenize:
-            for token, (token_start, _) in self._word_tokenization(text):
+            for token, (token_begin, _) in self._word_tokenization(text):
                 assert token is not None
-                self.__add_subwords(pack, text, token_start + segment_offset)
+                self.__add_subwords(pack, text, token_begin + segment_offset)
         else:
             self.__add_subwords(pack, text, segment_offset)
 
     def __add_subwords(self, pack: DataPack, text: str, text_offset: int):
         for (
             subword,
-            start,
+            begin,
             end,
         ) in self.tokenizer.wordpiece_tokenizer.tokenize_with_span(text):
             subword_token = Subword(
-                pack, start + text_offset, end + text_offset
+                pack, begin + text_offset, end + text_offset
             )
             if subword == self.tokenizer.wordpiece_tokenizer.unk_token:
                 subword_token.is_unk = True
