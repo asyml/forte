@@ -4,10 +4,7 @@ from typing import Optional
 
 from forte.data.base_pack import PackType
 
-__all__ = [
-    "ProcessJobStatus",
-    "ProcessJob"
-]
+__all__ = ["ProcessJobStatus", "ProcessJob"]
 
 ProcessJobStatus = Enum("ProcessJobStatus", "UNPROCESSED QUEUED PROCESSED")
 
@@ -36,12 +33,12 @@ class ProcessJob:
 
     def alter_pack(self, pack: PackType):
         """
-        This class alter the pack in this job. This should only be control by
+        This class alter the pack in this job. This should only be controlled by
         the system itself. One should not call this function without proper
         understanding.
 
         Args:
-            pack:
+            pack: The pack to be used to replace into this job.
 
         Returns:
 

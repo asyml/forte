@@ -71,7 +71,7 @@ extract the dataset into `data/` folder
 **Note**: There is a minor issue with the dataset. Particularly, in line 810, the response from B is
  missing. We fix this as below
 
-```python
+```bash
 sed -i '810s/.*/2 mine too ! ! ! ! ! now i can play quake and feed my dogs\tnice. do you have farms?/' data/source/all_none_original_no_cands.txt > data/source/dataset.txt
 ```
 

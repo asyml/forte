@@ -27,6 +27,7 @@ class Sampler(ABC):
     r"""
     An abstract sampler class.
     """
+
     def __init__(self):
         random.seed()
 
@@ -67,6 +68,7 @@ class UnigramSampler(Sampler):
         self.unigram: Dict[str, float] = unigram
 
     def sample(self) -> str:
-        word: str = random.choices(list(self.unigram.keys()),
-                                   list(self.unigram.values()))[0]
+        word: str = random.choices(
+            list(self.unigram.keys()), list(self.unigram.values())
+        )[0]
         return word

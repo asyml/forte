@@ -16,20 +16,19 @@ Utility functions related to input/output.
 """
 import os
 
-__all__ = [
-    "maybe_create_dir",
-    "ensure_dir",
-    "get_resource"
-]
+
+__all__ = ["maybe_create_dir", "ensure_dir", "get_resource"]
 
 import sys
 
+from typing import Union
 
-def maybe_create_dir(dirname: str) -> bool:
+
+def maybe_create_dir(dirname: Union[str, os.PathLike]) -> bool:
     r"""Creates directory if it does not exist.
 
     Args:
-        dirname (str): Path to the directory.
+        dirname: Path to the directory.
 
     Returns:
         bool: Whether a new directory is created.

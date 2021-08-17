@@ -1,0 +1,61 @@
+{
+  "name": "medical",
+  "imports": [
+    "base_ontology.json"
+  ],
+  "additional_prefixes": [
+    "ftx.medical"
+  ],
+  "definitions": [
+        {
+      "entry_name": "ftx.medical.UMLSConceptLink",
+      "parent_entry": "forte.data.ontology.top.Generics",
+      "description": "A umls concept entity, used to represent basic information of a umls concept",
+      "attributes": [
+        {
+            "name": "cui",
+            "type": "str"
+        },
+        {
+            "name": "name",
+            "type": "str"
+        },
+        {
+            "name": "definition",
+            "type": "str"
+        },
+        {
+            "name": "tuis",
+            "type": "List",
+            "item_type": "str"
+        },
+        {
+            "name": "aliases",
+            "type": "List",
+            "item_type": "str"
+        },
+        {
+            "name": "score",
+            "type": "str"
+        }
+      ]
+    },
+    {
+      "entry_name": "ftx.medical.MedicalEntityMention",
+      "parent_entry": "ft.onto.base_ontology.EntityMention",
+      "description": "A span based annotation class MedicalEntityMention, used to represent an Entity Mention in medical domain",
+      "attributes": [
+        {
+            "name": "umls_link",
+            "type": "str"
+        },
+        {
+            "name": "umls_entities",
+            "type": "List",
+            "item_type": "ftx.medical.UMLSConceptLink"
+        }
+      ]
+    }
+  ]
+}
+

@@ -269,49 +269,49 @@ NumberException: 'and' must be preceeded by a magnitude but got 'nineteen'
 import re
 
 SMALL = {
-    'zero': 0,
-    'one': 1,
-    'two': 2,
-    'three': 3,
-    'four': 4,
-    'five': 5,
-    'six': 6,
-    'seven': 7,
-    'eight': 8,
-    'nine': 9,
-    'ten': 10,
-    'eleven': 11,
-    'twelve': 12,
-    'thirteen': 13,
-    'fourteen': 14,
-    'fifteen': 15,
-    'sixteen': 16,
-    'seventeen': 17,
-    'eighteen': 18,
-    'nineteen': 19,
-    'twenty': 20,
-    'thirty': 30,
-    'forty': 40,
-    'fifty': 50,
-    'sixty': 60,
-    'seventy': 70,
-    'eighty': 80,
-    'ninety': 90
+    "zero": 0,
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+    "ten": 10,
+    "eleven": 11,
+    "twelve": 12,
+    "thirteen": 13,
+    "fourteen": 14,
+    "fifteen": 15,
+    "sixteen": 16,
+    "seventeen": 17,
+    "eighteen": 18,
+    "nineteen": 19,
+    "twenty": 20,
+    "thirty": 30,
+    "forty": 40,
+    "fifty": 50,
+    "sixty": 60,
+    "seventy": 70,
+    "eighty": 80,
+    "ninety": 90,
 }
 
 MAGNITUDE = {
-    'hundred': 100,
-    'thousand': 1000,
-    'million': 1000000,
-    'billion': 1000000000,
-    'trillion': 1000000000000,
-    'quadrillion': 1000000000000000,
-    'quintillion': 1000000000000000000,
-    'sextillion': 1000000000000000000000,
-    'septillion': 1000000000000000000000000,
-    'octillion': 1000000000000000000000000000,
-    'nonillion': 1000000000000000000000000000000,
-    'decillion': 1000000000000000000000000000000000,
+    "hundred": 100,
+    "thousand": 1000,
+    "million": 1000000,
+    "billion": 1000000000,
+    "trillion": 1000000000000,
+    "quadrillion": 1000000000000000,
+    "quintillion": 1000000000000000000,
+    "sextillion": 1000000000000000000000,
+    "septillion": 1000000000000000000000000,
+    "octillion": 1000000000000000000000000000,
+    "nonillion": 1000000000000000000000000000000,
+    "decillion": 1000000000000000000000000000000000,
 }
 
 
@@ -320,6 +320,7 @@ class NumberException(Exception):
     Number parsing error.
 
     """
+
     pass
 
 
@@ -329,7 +330,7 @@ def text2num(s):
 
     """
     # pylint: disable=invalid-name,too-many-branches,undefined-loop-variable
-    words = re.split(r'[\s,-]+', s)
+    words = re.split(r"[\s,-]+", s)
 
     if not words:
         raise NumberException("no numbers in string: {!r}".format(s))
@@ -346,14 +347,16 @@ def text2num(s):
                 # or reset to 0, then we're in a spot where 'and' is allowed.
                 continue
             fmt = (word, " but got {!r}".format(words[i - 1]) if i else "")
-            raise NumberException("{!r} must be preceeded by a magnitude"
-                                  "{}".format(*fmt))
+            raise NumberException(
+                "{!r} must be preceeded by a magnitude" "{}".format(*fmt)
+            )
 
         x = SMALL.get(word, None)
         if x is not None:
             if x == 0 and len(words) > 1:
-                raise NumberException("{!r} may not appear with other "
-                                      "numbers".format(word))
+                raise NumberException(
+                    "{!r} may not appear with other " "numbers".format(word)
+                )
 
             if tens != 0:
                 # Check whether the two small numbers can be treated as if an
@@ -366,17 +369,21 @@ def text2num(s):
                         g = 0
                         implied_hundred = True
                     else:
-                        fmt = (word, words[i - 1], " ".join(words[:i - 1]))
-                        raise NumberException("{!r} may not proceed {!r} "
-                                              "following {!r}".format(*fmt))
+                        fmt = (word, words[i - 1], " ".join(words[: i - 1]))
+                        raise NumberException(
+                            "{!r} may not proceed {!r} "
+                            "following {!r}".format(*fmt)
+                        )
                 # Treat sequences like 'nineteen one' as errors rather than
                 # interpret them as 'nineteen hundred one', 'nineteen aught
                 # one', 'nineteen oh one', etc. But continue if we have 20 or
                 # greater in the accumulator to support 'twenty one', 'twenty
                 # two', etc.
                 elif tens < 20:
-                    raise NumberException("{!r} may not proceed "
-                                          "{!r}".format(word, words[i - 1]))
+                    raise NumberException(
+                        "{!r} may not proceed "
+                        "{!r}".format(word, words[i - 1])
+                    )
 
             g += x
         else:
@@ -388,19 +395,24 @@ def text2num(s):
             # precedence since it's a bigger problem.
             elif implied_hundred:
                 fmt = (word, " ".join(words[:i]))
-                raise NumberException("{!r} may not proceed implied hundred "
-                                      "{!r}".format(*fmt))
+                raise NumberException(
+                    "{!r} may not proceed implied hundred " "{!r}".format(*fmt)
+                )
             # Disallow standalone magnitudes and multiple magnitudes like
             # 'one thousand million' where 'one billion' should be used
             # instead.
             elif g == 0:
-                raise NumberException("magnitude {!r} must be preceded by a "
-                                      "number".format(word))
+                raise NumberException(
+                    "magnitude {!r} must be preceded by a "
+                    "number".format(word)
+                )
             # Check whether this magnitude was preceded by a lower one.
             elif 0 < n <= x or g >= x:
                 fmt = (word, " ".join(words[:i]))
-                raise NumberException("magnitude {!r} appeared out of order "
-                                      "following {!r}".format(*fmt))
+                raise NumberException(
+                    "magnitude {!r} appeared out of order "
+                    "following {!r}".format(*fmt)
+                )
             # Accumulate hundreds in `g`, not `n`, since hundreds can magnify
             # other magnitudes.
             elif x == 100:

@@ -18,9 +18,7 @@ from typing import Any, Callable, Dict, List, Optional, Union
 
 import pickle
 
-__all__ = [
-    "Resources"
-]
+__all__ = ["Resources"]
 
 SerializeDict = Dict[str, Callable[[Any, Union[str, Path]], None]]
 DeserializeDict = Dict[str, Callable[[Union[str, Path]], None]]
@@ -33,11 +31,14 @@ class Resources:
     """
 
     def __init__(self, **kwargs):
-        self.resources = {}
+        self._resources = {}
         self.update(**kwargs)
 
-    def save(self, keys: Optional[Union[List[str], SerializeDict]] = None,
-             output_dir: Optional[str] = None):
+    def save(
+        self,
+        keys: Optional[Union[List[str], SerializeDict]] = None,
+        output_dir: Optional[str] = None,
+    ):
         r"""Save the resources specified by ``keys`` in binary format.
 
         Args:
@@ -59,41 +60,45 @@ class Resources:
             output_dir = "./"
 
         if keys is None:
-            keys = list(self.resources.keys())
+            keys = list(self._resources.keys())
 
         # pylint: disable=isinstance-second-argument-not-valid-type
         # TODO: disable until fix: https://github.com/PyCQA/pylint/issues/3507
         if isinstance(keys, List):
             for key in keys:
                 with open(Path(output_dir, f"{key}.pkl"), "wb") as f:
-                    pickle.dump(self.resources.get(key), f,
-                                pickle.HIGHEST_PROTOCOL)
+                    pickle.dump(
+                        self._resources.get(key), f, pickle.HIGHEST_PROTOCOL
+                    )
         else:
             for key, serializer in keys.items():
-                serializer(self.resources[key], Path(output_dir, f"{key}.pkl"))
+                serializer(self._resources[key], Path(output_dir, f"{key}.pkl"))
 
     def keys(self) -> KeysView:
-        r"""Return all keys of the resources.
-        """
-        return self.resources.keys()
+        r"""Return all keys of the resources."""
+        return self._resources.keys()
+
+    def contains(self, key: str) -> bool:
+        """Return whether the specified key exists."""
+        return key in self._resources.keys()
 
     def get(self, key: str):
-        r"""Get the corresponding resource by specifying the key.
-        """
-        return self.resources.get(key)
+        r"""Get the corresponding resource by specifying the key."""
+        return self._resources.get(key)
 
     def update(self, **kwargs):
-        r"""Update the resources.
-        """
-        self.resources.update(**kwargs)
+        r"""Update the resources."""
+        self._resources.update(**kwargs)
 
     def remove(self, key: str):
-        r"""Remove the corresponding resource by specifying the key.
-        """
-        del self.resources[key]
+        r"""Remove the corresponding resource by specifying the key."""
+        del self._resources[key]
 
-    def load(self, keys: Union[List[str], DeserializeDict],
-             path: Optional[str] = None):
+    def load(
+        self,
+        keys: Union[List[str], DeserializeDict],
+        path: Optional[str] = None,
+    ):
         r"""Load the resources specified by ``keys``.
 
         Args:
@@ -117,7 +122,7 @@ class Resources:
         if isinstance(keys, List):
             for key in keys:
                 with open(Path(path, f"{key}.pkl"), "rb") as f:
-                    self.resources[key] = pickle.load(f)
+                    self._resources[key] = pickle.load(f)
         else:
             for key, deserializer in keys.items():
-                self.resources[key] = deserializer(Path(path, f"{key}.pkl"))
+                self._resources[key] = deserializer(Path(path, f"{key}.pkl"))

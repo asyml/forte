@@ -15,11 +15,11 @@
 The reader that reads plain text data into Datapacks.
 """
 import os
-from typing import Any, Iterator
+from typing import Any, Iterator, Dict, Set
 
 from forte.data.data_pack import DataPack
 from forte.data.data_utils_io import dataset_path_iterator
-from forte.data.readers.base_reader import PackReader
+from forte.data.base_reader import PackReader
 from ft.onto.base_ontology import Document
 
 __all__ = [
@@ -28,8 +28,7 @@ __all__ = [
 
 
 class PlainTextReader(PackReader):
-    r""":class:`PlainTextReader` is designed to read in plain text dataset.
-    """
+    r""":class:`PlainTextReader` is designed to read in plain text dataset."""
 
     def _collect(self, text_directory) -> Iterator[Any]:  # type: ignore
         r"""Should be called with param ``text_directory`` which is a path to a
@@ -52,7 +51,7 @@ class PlainTextReader(PackReader):
     def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
         pack = DataPack()
 
-        with open(file_path, "r", encoding="utf8", errors='ignore') as file:
+        with open(file_path, "r", encoding="utf8", errors="ignore") as file:
             text = file.read()
 
         pack.set_text(text, replace_func=self.text_replace_operation)
@@ -65,5 +64,16 @@ class PlainTextReader(PackReader):
     @classmethod
     def default_configs(cls):
         config = super().default_configs()
-        config['file_ext'] = '.txt'
+        config["file_ext"] = ".txt"
         return config
+
+    def record(self, record_meta: Dict[str, Set[str]]):
+        r"""Method to add output type record of `PlainTextReader` which is
+        `ft.onto.base_ontology.Document` with an empty set
+        to :attr:`forte.data.data_pack.Meta.record`.
+
+        Args:
+            record_meta: the field in the datapack for type record that need to
+                fill in for consistency checking.
+        """
+        record_meta["ft.onto.base_ontology.Document"] = set()

@@ -33,8 +33,8 @@ class PlainTextReaderTest(unittest.TestCase):
         # Create a temporary directory
         self.test_dir = tempfile.mkdtemp()
         self.orig_text = "<title>The Original Title </title>"
-        file_path = os.path.join(self.test_dir, 'test.html')
-        with open(file_path, 'w') as f:
+        file_path = os.path.join(self.test_dir, "test.html")
+        with open(file_path, "w") as f:
             f.write(self.orig_text)
 
     def tearDown(self):
@@ -45,7 +45,7 @@ class PlainTextReaderTest(unittest.TestCase):
         # Read with no replacements
         pipeline = Pipeline()
         reader = PlainTextReader()
-        pipeline.set_reader(reader, {'file_ext': '.html'})
+        pipeline.set_reader(reader, {"file_ext": ".html"})
         pipeline.initialize()
 
         pack = pipeline.process_one(self.test_dir)
@@ -53,13 +53,13 @@ class PlainTextReaderTest(unittest.TestCase):
 
     @data(
         # No replacement
-        ([], '<title>The Original Title </title>'),
+        ([], "<title>The Original Title </title>"),
         # Insertion
-        ([(Span(11, 11), 'New ')], '<title>The New Original Title </title>'),
+        ([(Span(11, 11), "New ")], "<title>The New Original Title </title>"),
         # Single, sorted multiple and unsorted multiple replacements
-        ([(Span(11, 19), 'New')], '<title>The New Title </title>'),
-        ([(Span(0, 7), ''), (Span(26, 34), '')], 'The Original Title '),
-        ([(Span(26, 34), ''), (Span(0, 7), '')], 'The Original Title '),
+        ([(Span(11, 19), "New")], "<title>The New Title </title>"),
+        ([(Span(0, 7), ""), (Span(26, 34), "")], "The Original Title "),
+        ([(Span(26, 34), ""), (Span(0, 7), "")], "The Original Title "),
     )
     def test_reader_replace_back_test(self, value):
         # Reading with replacements - replacing a span and changing it back
@@ -68,7 +68,7 @@ class PlainTextReaderTest(unittest.TestCase):
         pipeline = Pipeline()
         reader = PlainTextReader()
         reader.text_replace_operation = lambda _: span_ops
-        pipeline.set_reader(reader, {'file_ext': '.html'})
+        pipeline.set_reader(reader, {"file_ext": ".html"})
         pipeline.initialize()
 
         pack: DataPack = pipeline.process_one(self.test_dir)
@@ -100,19 +100,23 @@ class PlainTextReaderTest(unittest.TestCase):
         (Span(38, 38), Span(32, 32), "relaxed"),
         (Span(38, 38), Span(32, 32), "strict"),
         (Span(38, 38), Span(32, 32), "backward"),
-        (Span(38, 38), Span(32, 32), "forward")
+        (Span(38, 38), Span(32, 32), "forward"),
     )
     def test_reader_original_span_test(self, value):
-        span_ops, output = ([(Span(11, 19), 'New'),
-                             (Span(19, 20), ' Shiny '),
-                             (Span(25, 25), ' Ends')],
-                            '<title>The New Shiny Title Ends </title>')
+        span_ops, output = (
+            [
+                (Span(11, 19), "New"),
+                (Span(19, 20), " Shiny "),
+                (Span(25, 25), " Ends"),
+            ],
+            "<title>The New Shiny Title Ends </title>",
+        )
         input_span, expected_span, mode = value
 
         pipeline = Pipeline()
         reader = PlainTextReader()
         reader.text_replace_operation = lambda _: span_ops
-        pipeline.set_reader(reader, {'file_ext': '.html'})
+        pipeline.set_reader(reader, {"file_ext": ".html"})
         pipeline.initialize()
 
         pack = pipeline.process_one(self.test_dir)
@@ -120,15 +124,18 @@ class PlainTextReaderTest(unittest.TestCase):
         self.assertEqual(pack.text, output)
 
         output_span = pack.get_original_span(input_span, mode)
-        self.assertEqual(output_span, expected_span,
-                         f"Expected: ({expected_span.begin, expected_span.end}"
-                         f"), Found: ({output_span.begin, output_span.end})"
-                         f" when Input: ({input_span.begin, input_span.end})"
-                         f" and Mode: {mode}")
+        self.assertEqual(
+            output_span,
+            expected_span,
+            f"Expected: ({expected_span.begin, expected_span.end}"
+            f"), Found: ({output_span.begin, output_span.end})"
+            f" when Input: ({input_span.begin, input_span.end})"
+            f" and Mode: {mode}",
+        )
 
     @data(
-        ([(Span(5, 8), ''), (Span(6, 10), '')], None),  # overlap
-        ([(Span(5, 8), ''), (Span(6, 1000), '')], None),  # outside limit
+        ([(Span(5, 8), ""), (Span(6, 10), "")], None),  # overlap
+        ([(Span(5, 8), ""), (Span(6, 1000), "")], None),  # outside limit
     )
     def test_reader_replace_error_test(self, value):
         # Read with errors in span replacements
@@ -137,7 +144,7 @@ class PlainTextReaderTest(unittest.TestCase):
         pipeline = Pipeline()
         reader = PlainTextReader()
         reader.text_replace_operation = lambda _: span_ops
-        pipeline.set_reader(reader, {'file_ext': '.html'})
+        pipeline.set_reader(reader, {"file_ext": ".html"})
         pipeline.initialize()
 
         with self.assertRaises(ValueError):

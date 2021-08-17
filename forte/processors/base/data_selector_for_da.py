@@ -19,16 +19,13 @@ in order to perform data selection.
 Refer to examples/data_augmentation/data_select_index_pipeline.py
 for indexer creation.
 """
-
+from abc import ABC
 from typing import Iterator, Any, Dict, Optional
 
-from forte.common.resources import Resources
 from forte.common.configuration import Config
+from forte.common.resources import Resources
+from forte.data.base_reader import PackReader
 from forte.data.data_pack import DataPack
-from forte.data.readers.base_reader import PackReader
-from forte.data.data_utils import deserialize
-from forte.indexers.elastic_indexer import ElasticSearchIndexer
-
 
 __all__ = [
     "BaseElasticSearchDataSelector",
@@ -36,24 +33,29 @@ __all__ = [
     "QueryDataSelector",
 ]
 
+from forte.utils import create_class_with_kwargs
 
-class BaseDataSelector(PackReader):
+
+class BaseDataSelector(PackReader, ABC):
     r"""A base data selector for data augmentation.
     It is a reader that selects a subset from the dataset and yields datapacks.
     """
 
 
 class BaseElasticSearchDataSelector(BaseDataSelector):
-    r"""The base elastic search indexer for data selector.
-    This class creates an ElasticSearchIndexer and searches for documents
-    according to the user-provided search keys. Currently supported search
-    criteria: random-based and query-based. It then yields the corresponding
-    datapacks of the selected documents.
+    r"""The base elastic search indexer for data selector. This class creates
+    an :class:`~forte.indexers.elastic_indexer.ElasticSearchIndexer`
+    and searches for documents according to the user-provided search keys.
+    Currently supported search criteria: random-based and query-based. It
+    then yields the corresponding datapacks of the selected documents.
     """
 
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
-        self.index = ElasticSearchIndexer(config=self.configs.index_config)
+        self.index = create_class_with_kwargs(
+            self.configs.indexer_class,
+            class_args={"config": self.configs.index_configs},
+        )
 
     def _create_search_key(self, data: Optional[str]) -> Dict[str, Any]:
         raise NotImplementedError
@@ -62,20 +64,26 @@ class BaseElasticSearchDataSelector(BaseDataSelector):
         raise NotImplementedError
 
     def _parse_pack(self, pack_info: str) -> Iterator[DataPack]:
-        pack: DataPack = deserialize(pack_info)
+        pack: DataPack = DataPack.deserialize(pack_info)
         yield pack
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
         config = super().default_configs()
-        config.update({
-            "index_config": ElasticSearchIndexer.default_configs(),
-        })
+        config.update(
+            {
+                "indexer_class": "forte.elastic.elastic_indexer.ElasticSearchIndexer",
+                "index_config": {
+                    "index_name": "elastic_indexer",
+                    "hosts": "localhost:9200",
+                    "algorithm": "bm25",
+                },
+            }
+        )
         return config
 
 
 class QueryDataSelector(BaseElasticSearchDataSelector):
-
     def _collect(self, *args, **kwargs) -> Iterator[str]:
         # pylint: disable = unused-argument
         r"""Iterator over query text files in the data_source.
@@ -88,7 +96,7 @@ class QueryDataSelector(BaseElasticSearchDataSelector):
         Returns: Selected document's original datapack.
         """
         data_path: str = args[0]
-        with open(data_path, 'r') as file:
+        with open(data_path, "r") as file:
             for line in file:
                 query: Dict = self._create_search_key(line.strip())
                 results = self.index.search(query)
@@ -108,17 +116,20 @@ class QueryDataSelector(BaseElasticSearchDataSelector):
 
         Returns: A dict that specifies the query match field.
         """
-        return {"query":
-                    {"match": {self.configs["field"]: data}},
-                "size": self.configs["size"]}
+        return {
+            "query": {"match": {self.configs["field"]: data}},
+            "size": self.configs["size"],
+        }
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
         config = super().default_configs()
-        config.update({
-            "size": 1000,
-            "field": "content",
-        })
+        config.update(
+            {
+                "size": 1000,
+                "field": "content",
+            }
+        )
         return config
 
 
@@ -138,25 +149,23 @@ class RandomDataSelector(BaseElasticSearchDataSelector):
 
     def _create_search_key(self) -> Dict[str, Any]:  # type: ignore
         return {
-           "size": self.configs["size"],
-           "query": {
-              "function_score": {
-                 "functions": [
-                    {
-                       "random_score": {
-                          "seed": "1477072619038",
-                           "field": "_seq_no"
-                       }
-                    }
-                 ]
-              }
-           }
+            "size": self.configs["size"],
+            "query": {
+                "function_score": {
+                    "functions": [
+                        {
+                            "random_score": {
+                                "seed": "1477072619038",
+                                "field": "_seq_no",
+                            }
+                        }
+                    ]
+                }
+            },
         }
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
         config = super().default_configs()
-        config.update({
-            "size": 1000000
-        })
+        config.update({"size": 1000000})
         return config

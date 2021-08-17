@@ -1,5 +1,5 @@
 # ***automatically_generated***
-# ***source json:tests/forte/data/ontology/test_specs/example_multi_module_ontology.json***
+# ***source json:../../../../../../Documents/forte_develop/forte/tests/forte/data/ontology/test_specs/example_multi_module_ontology.json***
 # flake8: noqa
 # mypy: ignore-errors
 # pylint: skip-file
@@ -23,7 +23,7 @@ __all__ = [
 class Dependency(Link):
     """
     Attributes:
-        rel_type (Optional[str])
+        rel_type (Optional[str]):
     """
 
     rel_type: Optional[str]
