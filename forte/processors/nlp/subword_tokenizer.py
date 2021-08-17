@@ -17,7 +17,7 @@ __all__ = [
     "SubwordTokenizer",
 ]
 
-from typing import Optional
+from typing import Optional, List, Tuple, Iterator
 
 from texar.torch.data.tokenizers.bert_tokenizer import BERTTokenizer
 
@@ -40,6 +40,7 @@ class SubwordTokenizer(PackProcessor):
         super().__init__()
         self.tokenizer: Optional[BERTTokenizer] = None
         self.aligner: Optional[DiffAligner] = None
+        self.__do_lower_case = True
 
     # pylint: disable=attribute-defined-outside-init,unused-argument
     def initialize(self, resources: Resources, configs: Config):
@@ -51,92 +52,118 @@ class SubwordTokenizer(PackProcessor):
             hparams=self.configs.tokenizer_configs,
         )
         self.aligner = DiffAligner()
+        self.__do_lower_case = self.configs.tokenizer_configs.do_lower_case
 
     def _process(self, input_pack: DataPack):
         assert self.tokenizer is not None
         assert self.aligner is not None
 
-        # The following logics are adapted from
-        # texar.torch.data.tokenzier.BERTTokenizer._map_text_to_token,
-        # uses tokenzie_with_span to get the span information. May have
-        # problems if there are refactoring happens in BERTTokenizer.
-        if self.tokenizer.do_basic_tokenize:
-            if self.configs.segment_unit is not None:
-                segment: Annotation
-                for segment in input_pack.get(self.configs.segment_unit):
-                    self._segment(input_pack, segment.text, segment.begin)
-            else:
-                # Use the whole data pack, maybe less efficient.
-                self._segment(input_pack, input_pack.text, 0)
+        if self.configs.token_source is not None:
+            # Use provided token source.
+            token: Annotation
+            for token in input_pack.get(self.configs.token_source):
+                self.__add_subwords(
+                    input_pack,
+                    token.text.lower() if self.__do_lower_case else token.text,
+                    token.start,
+                )
+        elif self.configs.segment_unit is not None:
+            # If token source not provide, try to use provided segments.
+            segment: Annotation
+            for segment in input_pack.get(self.configs.segment_unit):
+                self._segment(input_pack, segment.text, segment.begin)
+        else:
+            # Use the whole data pack, maybe less efficient in some cases.
+            self._segment(input_pack, input_pack.text, 0)
 
-    def _segment(self, pack: DataPack, text: str, segment_offset: int):
-        basic_tokens = self.tokenizer.basic_tokenizer.tokenize(
+    def _word_tokenization(
+        self, text: str
+    ) -> Iterator[Tuple[str, Tuple[int, int]]]:
+        """
+        This function should tokenize the text and return the tokenization
+        results in the form of a word and the span of each word. A span is the
+        start and end of this word, indexed from 0, and end = start + length
+        of the word.
+
+        By default, this calls the Texar's BasicTokenizer and then align the
+        result back. You can implement this function if you prefer a
+        different tokenizer.
+
+        Args:
+            text: Input text to be tokenized.
+
+        Returns: A iterator of tokenization result in the form of triplets of
+        (word, (start, end)).
+        """
+        basic_tokens: List[str] = self.tokenizer.basic_tokenizer.tokenize(
             text, never_split=self.tokenizer.all_special_tokens
         )
 
-        text_to_match = (
-            text.lower()
-            if self.tokenizer.basic_tokenizer.do_lower_case
-            else text
-        )
+        token_spans = self.aligner.align_with_segments(text, basic_tokens)
 
-        token_spans = self.aligner.align_with_segments(
-            text_to_match, basic_tokens
-        )
+        for t, span in zip(basic_tokens, token_spans):
+            if span is not None:
+                yield t, span
 
-        for token, aligned_span in zip(basic_tokens, token_spans):
-            assert token is not None
+    def _segment(self, pack: DataPack, text: str, segment_offset: int):
+        if self.__do_lower_case:
+            text = text.lower()
 
-            if aligned_span is None:
-                # import pdb
-                # pdb.set_trace()
-                continue
-
-            token_start, token_end = aligned_span
-
-            for (
-                subword,
-                start,
-                end,
-            ) in self.tokenizer.wordpiece_tokenizer.tokenize_with_span(token):
-                subword_token = Subword(
-                    pack,
-                    token_start + start + segment_offset,
-                    token_start + end + segment_offset,
-                )
-                if subword == self.tokenizer.wordpiece_tokenizer.unk_token:
-                    subword_token.is_unk = True
-                subword_token.is_first_segment = not subword.startswith("##")
-                # pylint: disable=protected-access
-                subword_token.vocab_id = self.tokenizer._map_token_to_id(
-                    subword
-                )
+        if self.tokenizer.do_basic_tokenize:
+            for token, token_start, _ in self._word_tokenization(text):
+                assert token is not None
+                self.__add_subwords(pack, text, token_start + segment_offset)
         else:
-            for (
-                subword,
-                start,
-                end,
-            ) in self.tokenizer.wordpiece_tokenizer.tokenize_with_span(text):
-                subword_token = Subword(
-                    pack, start + segment_offset, end + segment_offset
-                )
-                subword_token.is_first_segment = not subword.startswith("##")
+            self.__add_subwords(pack, text, segment_offset)
+
+    def __add_subwords(self, pack: DataPack, text: str, text_offset: int):
+        for (
+            subword,
+            start,
+            end,
+        ) in self.tokenizer.wordpiece_tokenizer.tokenize_with_span(text):
+            subword_token = Subword(
+                pack, start + text_offset, end + text_offset
+            )
+            if subword == self.tokenizer.wordpiece_tokenizer.unk_token:
+                subword_token.is_unk = True
+            subword_token.is_first_segment = not subword.startswith("##")
+            # pylint: disable=protected-access
+            subword_token.vocab_id = self.tokenizer._map_token_to_id(subword)
 
     @classmethod
     def default_configs(cls):
         """Returns the configuration with default values.
 
-        * `tokenizer_configs` contains all default
-        hyperparameters in
-        :class:`~texar.torch.data.tokenizer.bert_tokenizer.BERTTokenizer`,
-        this processor will pass on all the configurations to the tokenizer
-        to create the tokenizer instance.
+        Here:
+          - `tokenizer_configs` contains all default
+              hyper-parameters in
+              :class:`~texar.torch.data.tokenizer.bert_tokenizer.BERTTokenizer`,
+              this processor will pass on all the configurations to the
+              tokenizer to create the tokenizer instance.
 
-        Returns:
+          - `segment_unit` contains an Annotation entry type used to split the
+              text into smaller units. For example, setting this to
+              `ft.onto.base_ontology.Sentence` will make this tokenizer do
+              tokenization on a sentence base, which could be more efficient
+              when the alignment is used.
 
+          - `token_source` contains entry name of where the tokens come from.
+               For example, setting this to `ft.onto.base_ontology.Token` will
+               make this tokenizer split the sub-word based on this token. The
+               default value will use `ft.onto.base_ontology.Token`. If this
+               value is set to None, then it will use `word_tokenization`
+               function of this class to do tokenization.
+
+        Note that if `segment_unit` or `token_source` is provided, the
+        :meth:`~forte.processors.base.base_processor.BaseProcessor.check_record`
+         will check if certain types are written before this processor.
+
+        Returns: Default configuration value for the tokenizer.
         """
         configs = super().default_configs()
         configs.update({"tokenizer_configs": BERTTokenizer.default_hparams()})
         configs["segment_unit"] = None
+        configs["token_source"] = "ft.onto.base_ontology.Token"
 
         return configs
