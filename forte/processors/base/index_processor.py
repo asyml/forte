@@ -22,10 +22,7 @@ from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.processors.base.pack_processor import PackProcessor
 
-__all__ = [
-    "IndexProcessor",
-    "IndexProcessorWithDatapack"
-]
+__all__ = ["IndexProcessor", "IndexProcessorWithDatapack"]
 
 
 class IndexProcessor(PackProcessor, ABC):
@@ -44,14 +41,12 @@ class IndexProcessor(PackProcessor, ABC):
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
         config = super().default_configs()
-        config.update({
-            "batch_size": 128
-        })
+        config.update({"batch_size": 128})
         return config
 
     def _bulk_process(self):
         r"""Subclasses of :class:`IndexProcessor` should implement this method
-          to bulk add the documents into the index.
+        to bulk add the documents into the index.
         """
         raise NotImplementedError
 
@@ -72,7 +67,8 @@ class IndexProcessor(PackProcessor, ABC):
     def _process(self, input_pack: DataPack):
         # self.documents.append((str(input_pack.pack_id), input_pack.text))
         index_pairs: Dict[str, str] = dict(
-            zip(self._field_names(), self._content_for_index(input_pack)))
+            zip(self._field_names(), self._content_for_index(input_pack))
+        )
         self.documents.append(index_pairs)
 
         if len(self.documents) == self.configs.batch_size:
@@ -104,9 +100,7 @@ class IndexProcessorWithDatapack(PackProcessor, ABC):
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
         config = super().default_configs()
-        config.update({
-            "batch_size": 128
-        })
+        config.update({"batch_size": 128})
         return config
 
     def _bulk_process(self):
@@ -119,8 +113,9 @@ class IndexProcessorWithDatapack(PackProcessor, ABC):
     def _process(self, input_pack: DataPack):
         serialized_datapack: str = input_pack.serialize()
 
-        self.documents.append((str(input_pack.pack_id), input_pack.text,
-                               serialized_datapack))
+        self.documents.append(
+            (str(input_pack.pack_id), input_pack.text, serialized_datapack)
+        )
 
         if len(self.documents) == self.config.batch_size:
             self._bulk_process()

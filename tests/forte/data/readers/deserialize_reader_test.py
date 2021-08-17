@@ -22,7 +22,6 @@ from forte.pipeline import Pipeline
 
 
 class DeserializeReaderPipelineTest(unittest.TestCase):
-
     def setUp(self):
         # Define and config the Pipeline
         self.nlp: Pipeline[DataPack] = Pipeline[DataPack]()
@@ -38,9 +37,10 @@ class DeserializeReaderPipelineTest(unittest.TestCase):
 
         for pack in self.nlp.process_dataset(data):
             for new_pack in another_pipeline.process_dataset(
-                    [pack.serialize()]):
+                [pack.serialize()]
+            ):
                 self.assertEqual(pack.text, new_pack.text)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

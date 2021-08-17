@@ -26,11 +26,11 @@ from forte.pipeline import Pipeline
 
 
 class ProdigyReaderTest(unittest.TestCase):
-
     def setUp(self):
         # Define and config the Pipeline
-        self.fp = tempfile.NamedTemporaryFile(mode='w', suffix='.jsonl',
-                                              delete=False)
+        self.fp = tempfile.NamedTemporaryFile(
+            mode="w", suffix=".jsonl", delete=False
+        )
         self.nlp = Pipeline[DataPack]()
         self.nlp.set_reader(ProdigyReader())
         self.nlp.initialize()
@@ -42,26 +42,42 @@ class ProdigyReaderTest(unittest.TestCase):
     def create_sample_file(self):
         prodigy_entry = {
             "text": "Lorem ipsum dolor sit amet",
-            "tokens": [{"text": "Lorem", "start": 0, "end": 5, "id": 0},
-                       {"text": "ipsum", "start": 6, "end": 11, "id": 1},
-                       {"text": "dolor", "start": 12, "end": 17, "id": 2},
-                       {"text": "sit", "start": 18, "end": 21, "id": 3},
-                       {"text": "amet", "start": 22, "end": 26, "id": 4}],
-            "spans": [{"start": 0, "end": 5, "token_start": 0,
-                       "token_end": 1, "label": "sample_latin"},
-                      {"start": 12, "end": 26, "token_start": 2,
-                       "token_end": 18, "label": "sample_latin"}],
+            "tokens": [
+                {"text": "Lorem", "start": 0, "end": 5, "id": 0},
+                {"text": "ipsum", "start": 6, "end": 11, "id": 1},
+                {"text": "dolor", "start": 12, "end": 17, "id": 2},
+                {"text": "sit", "start": 18, "end": 21, "id": 3},
+                {"text": "amet", "start": 22, "end": 26, "id": 4},
+            ],
+            "spans": [
+                {
+                    "start": 0,
+                    "end": 5,
+                    "token_start": 0,
+                    "token_end": 1,
+                    "label": "sample_latin",
+                },
+                {
+                    "start": 12,
+                    "end": 26,
+                    "token_start": 2,
+                    "token_end": 18,
+                    "label": "sample_latin",
+                },
+            ],
             "meta": {"id": "doc_1", "sect_id": 1, "version": "1"},
             "_input_hash": 123456789,
             "_task_hash": -123456789,
-            "_session_id": "abcd", "_view_id": "ner_manual", "answer": "accept"
+            "_session_id": "abcd",
+            "_view_id": "ner_manual",
+            "answer": "accept",
         }
 
         # for entry in JSON_file:
         json.dump(prodigy_entry, self.fp)
-        self.fp.write('\n')
+        self.fp.write("\n")
         json.dump(prodigy_entry, self.fp)
-        self.fp.write('\n')
+        self.fp.write("\n")
         self.fp.close()
 
     def test_packs(self):
@@ -89,5 +105,5 @@ class ProdigyReaderTest(unittest.TestCase):
         self.assertEqual(labels, ["sample_latin", "sample_latin"])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

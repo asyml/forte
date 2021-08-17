@@ -14,25 +14,29 @@
 import unittest
 import pickle as pkl
 from ft.onto.base_ontology import Token
-from forte.data.extractor.base_extractor import BaseExtractor
+from forte.data.base_extractor import BaseExtractor
 
 
 class BaseExtractorTest(unittest.TestCase):
-
     def test_base_extractor(self):
         config = {
-            "entry_type": Token,
+            "entry_type": "ft.onto.base_ontology.Token",
             "vocab_method": "indexing",
             "need_pad": True,
         }
 
-        extractor = BaseExtractor(config)
+        extractor = BaseExtractor()
+        extractor.initialize(config=config)
 
         new_extractor = pkl.loads(pkl.dumps(extractor))
 
         # Check state and from state
-        self.assertEqual(extractor.config.entry_type, new_extractor.config.entry_type)
-        self.assertEqual(extractor.config.entry_type, Token)
+        self.assertEqual(
+            extractor.config.entry_type, new_extractor.config.entry_type
+        )
+        self.assertEqual(
+            extractor.config.entry_type, "ft.onto.base_ontology.Token"
+        )
         self.assertNotEqual(new_extractor.vocab, None)
 
         # Check entry_type
@@ -45,5 +49,5 @@ class BaseExtractorTest(unittest.TestCase):
         self.assertEqual(extractor.get_pad_value(), 0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -25,7 +25,6 @@ from forte.pipeline import Pipeline
 
 
 class StringReaderPipelineTest(unittest.TestCase):
-
     def setUp(self):
         # Define and config the Pipeline
         self.dataset_path = "forte/data/readers/tests/"
@@ -43,7 +42,8 @@ class StringReaderPipelineTest(unittest.TestCase):
             "The plain green Norway spruce is displayed in the gallery's "
             "foyer. Wentworth worked as an assistant to sculptor Henry Moore "
             "in the late 1960s. His reputation as a sculptor grew in the "
-            "1980s.")
+            "1980s."
+        )
 
     def test_reader(self):
         self._process()
@@ -68,5 +68,5 @@ class StringReaderPipelineTest(unittest.TestCase):
         os.system("rm -r {}".format(self._cache_directory))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

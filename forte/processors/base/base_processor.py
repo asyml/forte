@@ -14,15 +14,17 @@
 """
 Base class for processors.
 """
-
-import itertools
+import logging
 from abc import abstractmethod, ABC
-from typing import Any, Dict
+from typing import Any, Dict, Set
 
 from forte.data.base_pack import PackType
 from forte.data.selector import DummySelector
 from forte.pipeline_component import PipelineComponent
-from forte.process_manager import ProcessJobStatus
+from forte.utils.utils_processor import (
+    record_types_and_attributes_check,
+    collect_input_pack_record,
+)
 
 __all__ = [
     "BaseProcessor",
@@ -38,19 +40,74 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
         super().__init__()
         self.selector = DummySelector()
 
+    def record(self, record_meta: Dict[str, Set[str]]):
+        r"""Method to add output record of the current processor to
+        :attr:`forte.data.data_pack.Meta.record`. The key of the record
+        should be the entry type and values should be attributes of the entry
+        type. All the information would be used for consistency checking
+        purpose if the pipeline is initialized with
+        `enforce_consistency=True`.
+
+        Args:
+            record_meta: The field in the datapack for type record that need to
+                fill in for consistency checking.
+        """
+        pass
+
+    def expected_types_and_attributes(self) -> Dict[str, Set[str]]:
+        r"""Method to add expected types and attributes for the input of the
+        current processor which would be checked before running the processor if
+        if the pipeline is initialized with
+        `enforce_consistency=True`.
+        """
+
+        return {}
+
+    def check_record(self, input_pack: PackType):
+        # pylint: disable=protected-access
+        r"""Method to check type consistency if the pipeline is initialized with
+        `enforce_consistency=True`. If any expected type or its attribute
+        does not exist in the datapack record of the previous pipeline
+        component, an error of
+        :class:`~forte.common.exception.ExpectedRecordNotFound` will be raised.
+
+        Args:
+            input_pack: The input datapack.
+        """
+        if self._check_type_consistency:
+            expectation = self.expected_types_and_attributes()
+            input_pack_record = collect_input_pack_record(
+                self.resources, input_pack
+            )
+            record_types_and_attributes_check(expectation, input_pack_record)
+
+    def write_record(self, input_pack: PackType):
+        r"""Method to write records of the output type of the current
+        processor to the datapack. The key of the record should be the entry
+        type and values should be attributes of the entry type. All the
+        information would be used for consistency checking purpose if
+        the pipeline is initialized with
+        `enforce_consistency=True`.
+
+        Args:
+            input_pack: The input datapack.
+
+        """
+        # pylint: disable=protected-access
+        if self._check_type_consistency:
+            try:
+                self.record(input_pack._meta.record)
+            except AttributeError:
+                # For backward compatibility, no record to write.
+                logging.info(
+                    "Packs of the old format do not have the record field."
+                )
+
     def process(self, input_pack: PackType):
+        self.check_record(input_pack)
         # Set the component for recording purpose.
-        input_pack.set_control_component(self.name)
         self._process(input_pack)
-
-        # Change status for pack processors
-        q_index = self._process_manager.current_queue_index
-        u_index = self._process_manager.unprocessed_queue_indices[q_index]
-        current_queue = self._process_manager.current_queue
-
-        for job_i in itertools.islice(current_queue, 0, u_index + 1):
-            if job_i.status == ProcessJobStatus.UNPROCESSED:
-                job_i.set_status(ProcessJobStatus.PROCESSED)
+        self.write_record(input_pack)
 
     @abstractmethod
     def _process(self, input_pack: PackType):
@@ -71,12 +128,14 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
         pipeline construction.
         """
         config = super().default_configs()
-        config.update({
-            'selector': {
-                'type': 'forte.data.selector.DummySelector',
-                'args': None,
-                'kwargs': {}
-            },
-            'overwrite': False,
-        })
+        config.update(
+            {
+                "selector": {
+                    "type": "forte.data.selector.DummySelector",
+                    "args": None,
+                    "kwargs": {},
+                },
+                "overwrite": False,
+            }
+        )
         return config

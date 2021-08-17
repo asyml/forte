@@ -14,8 +14,20 @@
 
 import logging
 from collections import defaultdict
-from typing import DefaultDict, Dict, List, Set, Type, Hashable, Generic, \
-    Iterable, Tuple
+from typing import (
+    DefaultDict,
+    Dict,
+    List,
+    Set,
+    Type,
+    Hashable,
+    Generic,
+    Iterable,
+    Tuple,
+    KeysView,
+)
+
+from sortedcontainers import SortedSet
 
 from forte.common.exception import PackIndexError
 from forte.data.ontology.core import GroupType, LinkType, EntryType
@@ -43,12 +55,16 @@ class BaseIndex(Generic[EntryType]):
         self._entry_index: Dict[int, EntryType] = dict()
 
         # Mapping from entry's type to entries' id.
-        self._type_index: DefaultDict[Type, Set[int]] = defaultdict(set)
+        self._type_index: DefaultDict[Type, SortedSet[int]] = defaultdict(
+            SortedSet
+        )
 
         # List of other indexes (built when first looked up).
-        self._group_index: DefaultDict[Hashable, Set[int, int]] = defaultdict(
-            set)
-        self._link_index: Dict[str, DefaultDict[Hashable, set]] = dict()
+        self._group_index: DefaultDict[Hashable, SortedSet[int]] = defaultdict(
+            SortedSet
+        )
+
+        self._link_index: Dict[str, DefaultDict[Hashable, SortedSet]] = dict()
 
         # Indexing switches.
         self._group_index_switch = False
@@ -58,7 +74,7 @@ class BaseIndex(Generic[EntryType]):
         r"""Build or update the basic indexes, including
 
         (1) :attr:`entry_index`,
-        the index from each tid to the corresponding entry;
+        the index from each `tid` to the corresponding entry;
 
         (2) :attr:`type_index`, the index from each type to the entries of that
         type;
@@ -76,6 +92,12 @@ class BaseIndex(Generic[EntryType]):
     def get_entry(self, tid: int) -> EntryType:
         return self._entry_index[tid]
 
+    def indexed_types(self) -> KeysView[Type]:
+        return self._type_index.keys()
+
+    def query_by_type(self, t: Type) -> SortedSet:
+        return self._type_index[t]
+
     def iter_type_index(self) -> Iterable[Tuple[Type, Set[int]]]:
         for t, ids in self._type_index.items():
             yield t, ids
@@ -83,6 +105,9 @@ class BaseIndex(Generic[EntryType]):
     def remove_entry(self, entry: EntryType):
         self._entry_index.pop(entry.tid)
         self._type_index[type(entry)].remove(entry.tid)
+
+        self.turn_group_index_switch(on=False)
+        self.turn_link_index_switch(on=False)
 
     @property
     def link_index_on(self):
@@ -109,7 +134,6 @@ class BaseIndex(Generic[EntryType]):
         Returns:
 
         """
-        logger.debug("Building link index.")
         self.turn_link_index_switch(on=True)
         self._link_index["child_index"] = defaultdict(set)
         self._link_index["parent_index"] = defaultdict(set)
@@ -121,7 +145,6 @@ class BaseIndex(Generic[EntryType]):
         Returns:
 
         """
-        logger.debug("Building group index.")
         self.turn_group_index_switch(on=True)
         self._group_index = defaultdict(set)
         self.update_group_index(groups)
@@ -139,7 +162,7 @@ class BaseIndex(Generic[EntryType]):
                 whose child is `tid`.
         """
         if not self._link_index_switch:
-            raise PackIndexError('Link index for pack not build')
+            raise PackIndexError("Link index for pack not build")
 
         if as_parent:
             return self._link_index["parent_index"][tid]
@@ -150,8 +173,8 @@ class BaseIndex(Generic[EntryType]):
         r"""Look up the group_index with key `tid`. If the index is not built,
         this will raise a ``PackIndexError``.
         """
-        if not self._group_index_switch:
-            raise PackIndexError('Group index for pack not build')
+        if not self.group_index_on:
+            raise PackIndexError("Group index for pack not build")
         return self._group_index[tid]
 
     def update_link_index(self, links: List[LinkType]):
@@ -167,22 +190,20 @@ class BaseIndex(Generic[EntryType]):
         Args:
             links (list): a list of links to be added into the index.
         """
-        logger.debug("Updating link index.")
-
-        if not self._link_index:
+        if not self.link_index_on:
             raise PackIndexError("Link index has not been built.")
 
         for link in links:
-            self._link_index["child_index"][
-                link.get_child().index_key
-            ].add(link.index_key)
-            self._link_index["parent_index"][
-                link.get_parent().index_key
-            ].add(link.index_key)
+            self._link_index["child_index"][link.get_child().index_key].add(
+                link.index_key
+            )
+            self._link_index["parent_index"][link.get_parent().index_key].add(
+                link.index_key
+            )
 
     def update_group_index(self, groups: List[GroupType]):
         r"""Build or update :attr:`group_index`, the index from group members
-         to groups.
+        to groups.
 
         Args:
             groups (list): a list of groups to be added into the index.

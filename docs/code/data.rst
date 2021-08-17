@@ -63,6 +63,11 @@ Packs
 .. autoclass:: forte.data.data_pack.DataPack
     :members:
 
+:hidden:`MultiPack`
+------------------------
+.. autoclass:: forte.data.multi_pack.MultiPack
+    :members:
+
 :hidden:`BaseMeta`
 ------------------------
 .. autoclass:: forte.data.base_pack.BaseMeta
@@ -88,17 +93,17 @@ Readers
 
 :hidden:`BaseReader`
 ------------------------
-.. autoclass:: forte.data.readers.base_reader.BaseReader
+.. autoclass:: forte.data.base_reader.BaseReader
     :members:
 
 :hidden:`PackReader`
 ------------------------
-.. autoclass:: forte.data.readers.base_reader.PackReader
+.. autoclass:: forte.data.base_reader.PackReader
     :members:
 
 :hidden:`MultiPackReader`
 --------------------------
-.. autoclass:: forte.data.readers.base_reader.MultiPackReader
+.. autoclass:: forte.data.base_reader.MultiPackReader
     :members:
 
 :hidden:`CoNLL03Reader`
@@ -181,35 +186,17 @@ Readers
 .. autoclass:: forte.data.readers.openie_reader.OpenIEReader
     :members:
 
-Converter
-==========
+DataPack Dataset
+=================
 
-:hidden:`Converter`
+:hidden:`DataPackIterator`
 ------------------------------
-.. autoclass:: forte.data.converter.Converter
+.. autoclass:: forte.data.data_pack_dataset.DataPackIterator
     :members:
 
-:hidden:`Feature`
+:hidden:`DataPackDataset`
 ------------------------------
-.. autoclass:: forte.data.converter.Feature
-    :members:
-
-Extractor
-==========
-
-:hidden:`BaseExtractor`
---------------------------
-.. autoclass:: forte.data.extractor.base_extractor.BaseExtractor
-    :members:
-
-:hidden:`AttributeExtractor`
-------------------------------
-.. autoclass:: forte.data.extractor.attribute_extractor.AttributeExtractor
-    :members:
-
-:hidden:`CharExtractor`
-------------------------------
-.. autoclass:: forte.data.extractor.char_extractor.CharExtractor
+.. autoclass:: forte.data.data_pack_dataset.DataPackDataset
     :members:
 
 Batchers

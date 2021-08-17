@@ -32,13 +32,25 @@ class MSMarcoPassageReaderTest(unittest.TestCase):
         self.pipeline.set_reader(MSMarcoPassageReader())
         self.pipeline.initialize()
 
-        self.data_dir = 'data_samples/ms_marco_passage_retrieval'
+        root_path = os.path.abspath(
+            os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                os.pardir,
+                os.pardir,
+                os.pardir,
+                os.pardir,
+            )
+        )
 
-        corpus_file = os.path.join(self.data_dir, 'collection.tsv')
+        self.data_dir = os.path.join(
+            root_path, "data_samples/ms_marco_passage_retrieval"
+        )
+
+        corpus_file = os.path.join(self.data_dir, "collection.tsv")
         self.expected_content = {}
-        with open(corpus_file, 'r') as f:
+        with open(corpus_file, "r") as f:
             for line in f.readlines():
-                key, value = tuple(line.split('\t', 1))
+                key, value = tuple(line.split("\t", 1))
                 self.expected_content[key] = value
 
     def test_ms_marco_passage_reader(self):
@@ -54,5 +66,5 @@ class MSMarcoPassageReaderTest(unittest.TestCase):
         self.assertDictEqual(actual_content, self.expected_content)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

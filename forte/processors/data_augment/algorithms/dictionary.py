@@ -17,10 +17,7 @@ import nltk
 from nltk.corpus import wordnet
 
 
-__all__ = [
-    "Dictionary",
-    "WordnetDictionary"
-]
+__all__ = ["Dictionary", "WordnetDictionary"]
 
 
 class Dictionary:
@@ -32,10 +29,7 @@ class Dictionary:
 
     # pylint: disable=unused-argument
     def get_synonyms(
-            self,
-            word: str,
-            pos_tag: str = "",
-            lang: str = "eng"
+        self, word: str, pos_tag: str = "", lang: str = "eng"
     ) -> List[str]:
         r"""
         Args:
@@ -48,10 +42,7 @@ class Dictionary:
         return []
 
     def get_antonyms(
-            self,
-            word: str,
-            pos_tag: str = "",
-            lang: str = "eng"
+        self, word: str, pos_tag: str = "", lang: str = "eng"
     ) -> List[str]:
         r"""
         Args:
@@ -64,10 +55,7 @@ class Dictionary:
         return []
 
     def get_hypernyms(
-            self,
-            word: str,
-            pos_tag: str = "",
-            lang: str = "eng"
+        self, word: str, pos_tag: str = "", lang: str = "eng"
     ) -> List[str]:
         r"""
         Args:
@@ -80,10 +68,7 @@ class Dictionary:
         return []
 
     def get_hyponyms(
-            self,
-            word: str,
-            pos_tag: str = "",
-            lang: str = "eng"
+        self, word: str, pos_tag: str = "", lang: str = "eng"
     ) -> List[str]:
         r"""
         Args:
@@ -103,37 +88,38 @@ class WordnetDictionary(Dictionary):
     Part-of-Speech(optional) can be provided to the wordnet
     for retrieving words with the same POS.
     """
+
     def __init__(self):
         try:
             # Check if the wordnet package and
             # pos_tag package are downloaded.
-            wordnet.synsets('computer')
+            wordnet.synsets("computer")
         except LookupError:
-            nltk.download('wordnet')
+            nltk.download("wordnet")
         self.model = wordnet
 
     def _get_wordnet_pos(self, treebank_tag: str) -> str:
         """
         return WORDNET POS compliance to WORDNET lemmatization (a,n,r,v)
         """
-        if treebank_tag.startswith('J'):
+        if treebank_tag.startswith("J"):
             return self.model.ADJ
-        elif treebank_tag.startswith('V'):
+        elif treebank_tag.startswith("V"):
             return self.model.VERB
-        elif treebank_tag.startswith('N'):
+        elif treebank_tag.startswith("N"):
             return self.model.NOUN
-        elif treebank_tag.startswith('R'):
+        elif treebank_tag.startswith("R"):
             return self.model.ADV
         else:
             # As default pos in lemmatization is Noun
             return self.model.NOUN
 
     def get_lemmas(
-            self,
-            word: str,
-            pos_tag: str = "",
-            lang: str = "eng",
-            lemma_type: str = "SYNONYM"
+        self,
+        word: str,
+        pos_tag: str = "",
+        lang: str = "eng",
+        lemma_type: str = "SYNONYM",
     ):
         r"""
         This function gets synonyms/antonyms/hypernyms/hyponyms
@@ -157,11 +143,7 @@ class WordnetDictionary(Dictionary):
         if pos_tag and len(pos_tag) > 0:
             pos_wordnet = self._get_wordnet_pos(pos_tag)
 
-        for synonym in self.model.synsets(
-            word,
-            pos=pos_wordnet,
-            lang=lang
-        ):
+        for synonym in self.model.synsets(word, pos=pos_wordnet, lang=lang):
             for lemma in synonym.lemmas(lang=lang):
                 if lemma_type == "SYNONYM":
                     res.append(lemma.name())
@@ -176,7 +158,7 @@ class WordnetDictionary(Dictionary):
                         res.append(hyponym.name())
                 else:
                     raise KeyError(
-                        'The type {} does not belong to '
+                        "The type {} does not belong to "
                         '["SYNONYM", "ANTONYM", '
                         '"HYPERNYM", "HYPONYM"]]'.format(type)
                     )
@@ -184,10 +166,7 @@ class WordnetDictionary(Dictionary):
         return [word.replace("_", " ") for word in res]
 
     def get_synonyms(
-            self,
-            word: str,
-            pos_tag: str = "",
-            lang: str = "eng"
+        self, word: str, pos_tag: str = "", lang: str = "eng"
     ) -> List[str]:
         r"""
         This function replaces a word with synonyms from a WORDNET dictionary.
@@ -195,10 +174,7 @@ class WordnetDictionary(Dictionary):
         return self.get_lemmas(word, pos_tag, lang, lemma_type="SYNONYM")
 
     def get_antonyms(
-            self,
-            word: str,
-            pos_tag: str = "",
-            lang: str = "eng"
+        self, word: str, pos_tag: str = "", lang: str = "eng"
     ) -> List[str]:
         r"""
         This function replaces a word with antonyms from a WORDNET dictionary.
@@ -206,10 +182,7 @@ class WordnetDictionary(Dictionary):
         return self.get_lemmas(word, pos_tag, lang, lemma_type="ANTONYM")
 
     def get_hypernyms(
-            self,
-            word: str,
-            pos_tag: str = "",
-            lang: str = "eng"
+        self, word: str, pos_tag: str = "", lang: str = "eng"
     ) -> List[str]:
         r"""
         This function replaces a word with hypernyms from a WORDNET dictionary.
@@ -217,10 +190,7 @@ class WordnetDictionary(Dictionary):
         return self.get_lemmas(word, pos_tag, lang, lemma_type="HYPERNYM")
 
     def get_hyponyms(
-            self,
-            word: str,
-            pos_tag: str = "",
-            lang: str = "eng"
+        self, word: str, pos_tag: str = "", lang: str = "eng"
     ) -> List[str]:
         r"""
         This function replaces a word with hyponyms from a WORDNET dictionary.

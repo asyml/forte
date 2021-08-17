@@ -29,7 +29,7 @@ def load_reference_from_stream(f):
     qids_to_relevant_passageids = {}
     for l in f:
         try:
-            l = l.strip().split('\t')
+            l = l.strip().split("\t")
             qid = int(l[0])
             if qid in qids_to_relevant_passageids:
                 pass
@@ -37,7 +37,7 @@ def load_reference_from_stream(f):
                 qids_to_relevant_passageids[qid] = []
             qids_to_relevant_passageids[qid].append(int(l[1]))
         except:
-            raise IOError('\"%s\" is not valid format' % l)
+            raise IOError('"%s" is not valid format' % l)
     return qids_to_relevant_passageids
 
 
@@ -46,7 +46,7 @@ def load_reference(path_to_reference):
     Args:path_to_reference (str): path to a file to load.
     Returns:qids_to_relevant_passageids (dict): dictionary mapping from query_id (int) to relevant passages (list of ints).
     """
-    with open(path_to_reference, 'r') as f:
+    with open(path_to_reference, "r") as f:
         qids_to_relevant_passageids = load_reference_from_stream(f)
     return qids_to_relevant_passageids
 
@@ -59,7 +59,7 @@ def load_candidate_from_stream(f):
     qid_to_ranked_candidate_passages = {}
     for l in f:
         try:
-            l = l.strip().split('\t')
+            l = l.strip().split("\t")
             qid = int(l[0])
             pid = int(l[1])
             rank = int(l[2])
@@ -71,7 +71,7 @@ def load_candidate_from_stream(f):
                 qid_to_ranked_candidate_passages[qid] = tmp
             qid_to_ranked_candidate_passages[qid][rank - 1] = pid
         except:
-            raise IOError('\"%s\" is not valid format' % l)
+            raise IOError('"%s" is not valid format' % l)
     return qid_to_ranked_candidate_passages
 
 
@@ -81,13 +81,14 @@ def load_candidate(path_to_candidate):
     Returns:qid_to_ranked_candidate_passages (dict): dictionary mapping from query_id (int) to a list of 1000 passage ids(int) ranked by relevance and importance
     """
 
-    with open(path_to_candidate, 'r') as f:
+    with open(path_to_candidate, "r") as f:
         qid_to_ranked_candidate_passages = load_candidate_from_stream(f)
     return qid_to_ranked_candidate_passages
 
 
-def quality_checks_qids(qids_to_relevant_passageids,
-                        qids_to_ranked_candidate_passages):
+def quality_checks_qids(
+    qids_to_relevant_passageids, qids_to_ranked_candidate_passages
+):
     """Perform quality checks on the dictionaries
     Args:
     p_qids_to_relevant_passageids (dict): dictionary of query-passage mapping
@@ -96,7 +97,7 @@ def quality_checks_qids(qids_to_relevant_passageids,
     Returns:
         bool,str: Boolean whether allowed, message to be shown in case of a problem
     """
-    message = ''
+    message = ""
     allowed = True
 
     # Create sets of the QIDs for the submitted and reference queries
@@ -106,19 +107,28 @@ def quality_checks_qids(qids_to_relevant_passageids,
     # Check that we do not have multiple passages per query
     for qid in qids_to_ranked_candidate_passages:
         # Remove all zeros from the candidates
-        duplicate_pids = set([item for item, count in Counter(
-            qids_to_ranked_candidate_passages[qid]).items() if count > 1])
+        duplicate_pids = set(
+            [
+                item
+                for item, count in Counter(
+                    qids_to_ranked_candidate_passages[qid]
+                ).items()
+                if count > 1
+            ]
+        )
 
         if len(duplicate_pids - set([0])) > 0:
             message = "Cannot rank a passage multiple times for a single query. QID={qid}, PID={pid}".format(
-                qid=qid, pid=list(duplicate_pids)[0])
+                qid=qid, pid=list(duplicate_pids)[0]
+            )
             allowed = False
 
     return allowed, message
 
 
-def compute_metrics(qids_to_relevant_passageids,
-                    qids_to_ranked_candidate_passages):
+def compute_metrics(
+    qids_to_relevant_passageids, qids_to_ranked_candidate_passages
+):
     """Compute MRR metric
     Args:
     p_qids_to_relevant_passageids (dict): dictionary of query-passage mapping
@@ -144,16 +154,18 @@ def compute_metrics(qids_to_relevant_passageids,
                     break
     if len(ranking) == 0:
         raise IOError(
-            "No matching QIDs found. Are you sure you are scoring the evaluation set?")
+            "No matching QIDs found. Are you sure you are scoring the evaluation set?"
+        )
 
     MRR = MRR / len(qids_to_relevant_passageids)
-    all_scores['MRR @10'] = MRR
-    all_scores['QueriesRanked'] = len(qids_to_ranked_candidate_passages)
+    all_scores["MRR @10"] = MRR
+    all_scores["QueriesRanked"] = len(qids_to_ranked_candidate_passages)
     return all_scores
 
 
-def compute_metrics_from_files(path_to_reference, path_to_candidate,
-                               perform_checks=True):
+def compute_metrics_from_files(
+    path_to_reference, path_to_candidate, perform_checks=True
+):
     """Compute MRR metric
     Args:
     p_path_to_reference_file (str): path to reference file.
@@ -173,12 +185,15 @@ def compute_metrics_from_files(path_to_reference, path_to_candidate,
     qids_to_relevant_passageids = load_reference(path_to_reference)
     qids_to_ranked_candidate_passages = load_candidate(path_to_candidate)
     if perform_checks:
-        allowed, message = quality_checks_qids(qids_to_relevant_passageids,
-                                               qids_to_ranked_candidate_passages)
-        if message != '': print(message)
+        allowed, message = quality_checks_qids(
+            qids_to_relevant_passageids, qids_to_ranked_candidate_passages
+        )
+        if message != "":
+            print(message)
 
-    return compute_metrics(qids_to_relevant_passageids,
-                           qids_to_ranked_candidate_passages)
+    return compute_metrics(
+        qids_to_relevant_passageids, qids_to_ranked_candidate_passages
+    )
 
 
 def main():
@@ -189,18 +204,20 @@ def main():
     if len(sys.argv) == 3:
         path_to_reference = sys.argv[1]
         path_to_candidate = sys.argv[2]
-        metrics = compute_metrics_from_files(path_to_reference,
-                                             path_to_candidate)
-        print('#####################')
+        metrics = compute_metrics_from_files(
+            path_to_reference, path_to_candidate
+        )
+        print("#####################")
         for metric in sorted(metrics):
-            print('{}: {}'.format(metric, metrics[metric]))
-        print('#####################')
+            print("{}: {}".format(metric, metrics[metric]))
+        print("#####################")
 
     else:
         print(
-            'Usage: msmarco_eval_ranking.py <reference ranking> <candidate ranking>')
+            "Usage: msmarco_eval_ranking.py <reference ranking> <candidate ranking>"
+        )
         exit()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

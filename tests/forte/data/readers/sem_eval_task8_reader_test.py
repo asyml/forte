@@ -26,10 +26,13 @@ from ft.onto.base_ontology import Sentence, RelationLink
 
 class SemEvalTask8ReaderTest(unittest.TestCase):
     def setUp(self):
-        self.dataset_path = os.path.abspath(os.path.join(
-            os.path.dirname(os.path.realpath(__file__)),
-            *([os.path.pardir] * 4),
-            'data_samples/sem_eval_task8'))
+        self.dataset_path = os.path.abspath(
+            os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                *([os.path.pardir] * 4),
+                "data_samples/sem_eval_task8"
+            )
+        )
 
     def test_reader_no_replace_test(self):
         pipeline = Pipeline[DataPack]()
@@ -38,25 +41,26 @@ class SemEvalTask8ReaderTest(unittest.TestCase):
         pipeline.initialize()
 
         expected_sents = [
-            "The system as described above has its greatest application" +
-            " in an arrayed configuration of antenna elements.",
+            "The system as described above has its greatest application"
+            + " in an arrayed configuration of antenna elements.",
             "The child was carefully wrapped and bound into the cradle by means of a cord.",
             "The author of a keygen uses a disassembler to look at the raw assembly code.",
             "A misty ridge uprises from the surge.",
-            "The student association is the voice of the undergraduate student" +
-            " population of the State University of New York at Buffalo."
+            "The student association is the voice of the undergraduate student"
+            + " population of the State University of New York at Buffalo.",
         ]
         expected_relations = [
             ("Component-Whole", "elements", "configuration"),
             ("Other", "child", "cradle"),
             ("Instrument-Agency", "disassembler", "author"),
             ("Other", "ridge", "surge"),
-            ("Member-Collection", "student", "association")
+            ("Member-Collection", "student", "association"),
         ]
         expected_text = " ".join(expected_sents) + " "
 
         data_packs: Iterable[DataPack] = pipeline.process_dataset(
-            self.dataset_path)
+            self.dataset_path
+        )
 
         count_packs = 0
         for pack in data_packs:
@@ -70,12 +74,13 @@ class SemEvalTask8ReaderTest(unittest.TestCase):
                 index = expected_sents.index(s.text)
                 r = pack.get(RelationLink, s)
                 r = next(r)
-                self.assertEqual(r.rel_type,
-                                expected_relations[index][0])
-                self.assertEqual(r.get_parent().text,
-                                expected_relations[index][1])
-                self.assertEqual(r.get_child().text,
-                                expected_relations[index][2])
+                self.assertEqual(r.rel_type, expected_relations[index][0])
+                self.assertEqual(
+                    r.get_parent().text, expected_relations[index][1]
+                )
+                self.assertEqual(
+                    r.get_child().text, expected_relations[index][2]
+                )
 
             self.assertEqual(expected_text, pack.text)
 

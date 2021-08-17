@@ -25,9 +25,7 @@ from forte.data.multi_pack import MultiPack
 from forte.data.ontology.top import Query
 from forte.processors.base.pack_processor import MultiPackProcessor
 
-__all__ = [
-    "QueryProcessor"
-]
+__all__ = ["QueryProcessor"]
 
 QueryType = Union[Dict[str, Any], np.ndarray]
 
@@ -49,8 +47,9 @@ class QueryProcessor(MultiPackProcessor, ABC):
         """
         raise NotImplementedError
 
-    def _process_query(self, input_pack: MultiPack) \
-            -> Tuple[DataPack, QueryType]:
+    def _process_query(
+        self, input_pack: MultiPack
+    ) -> Tuple[DataPack, QueryType]:
         r"""Subclasses of QueryProcessor should implement this method which
         takes in an `input_pack` and processes it to generate a query.
 

@@ -16,11 +16,11 @@ import logging
 
 import yaml
 
-from examples.ner.ner_vocab_processor import CoNLL03VocabularyProcessor
+from ner_vocab_processor import CoNLL03VocabularyProcessor
 from forte.common.configuration import Config
 from forte.data.readers.conll03_reader import CoNLL03Reader
 from forte.evaluation.ner_evaluator import CoNLLNEREvaluator
-from forte.processors.ner_predictor import CoNLLNERPredictor
+from forte.processors.nlp import CoNLLNERPredictor
 from forte.train_pipeline import TrainPipeline
 from forte.trainer.ner_trainer import CoNLLNERTrainer
 
@@ -30,15 +30,16 @@ logging.basicConfig(level=logging.DEBUG)
 def main():
     config_data = yaml.safe_load(open("config_data.yml", "r"))
     config_model = yaml.safe_load(open("config_model.yml", "r"))
+    config_evaluator = yaml.safe_load(open("config_evaluator.yml", "r"))
     config_preprocess = yaml.safe_load(open("config_preprocessor.yml", "r"))
 
     # All the configs
     config = Config({}, default_hparams=None)
-    config.add_hparam('config_data', config_data)
-    config.add_hparam('config_model', config_model)
-    config.add_hparam('preprocessor', config_preprocess)
-    config.add_hparam('reader', {})
-    config.add_hparam('evaluator', {})
+    config.add_hparam("config_data", config_data)
+    config.add_hparam("config_model", config_model)
+    config.add_hparam("preprocessor", config_preprocess)
+    config.add_hparam("reader", {})
+    config.add_hparam("evaluator", config_evaluator)
 
     reader = CoNLL03Reader()
 
@@ -49,12 +50,17 @@ def main():
     ner_predictor = CoNLLNERPredictor()
     ner_evaluator = CoNLLNEREvaluator()
 
-    train_pipe = TrainPipeline(train_reader=reader, trainer=ner_trainer,
-                               dev_reader=reader, configs=config,
-                               preprocessors=[vocab_processor],
-                               predictor=ner_predictor, evaluator=ner_evaluator)
+    train_pipe = TrainPipeline(
+        train_reader=reader,
+        trainer=ner_trainer,
+        dev_reader=reader,
+        configs=config,
+        preprocessors=[vocab_processor],
+        predictor=ner_predictor,
+        evaluator=ner_evaluator,
+    )
     train_pipe.run()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

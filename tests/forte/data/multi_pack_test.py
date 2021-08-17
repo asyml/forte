@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.DEBUG)
 def _space_token(pack: DataPack):
     begin = 0
     for i, c in enumerate(pack.text):
-        if c == ' ':
+        if c == " ":
             pack.add_entry(Token(pack, begin, i))
             begin = i + 1
 
@@ -24,7 +24,6 @@ def _space_token(pack: DataPack):
 
 
 class DataPackTest(unittest.TestCase):
-
     def setUp(self) -> None:
         # Note: input source is created automatically by the system, but we
         #  can also set it manually at test cases.
@@ -48,13 +47,13 @@ class DataPackTest(unittest.TestCase):
         data_pack3.set_text("Test to see if we can add new packs..")
 
         self.assertEqual(len(self.multi_pack.packs), 3)
-        self.assertEqual(self.multi_pack.pack_names,
-                         {'left pack', 'right pack', 'new pack'})
+        self.assertEqual(
+            self.multi_pack.pack_names, {"left pack", "right pack", "new pack"}
+        )
 
     def test_rename_pack(self):
-        self.multi_pack.rename_pack('right pack', 'last pack')
-        self.assertEqual(self.multi_pack.pack_names,
-                         {'left pack', 'last pack'})
+        self.multi_pack.rename_pack("right pack", "last pack")
+        self.assertEqual(self.multi_pack.pack_names, {"left pack", "last pack"})
 
     def test_multipack_groups(self):
         """
@@ -79,13 +78,19 @@ class DataPackTest(unittest.TestCase):
         for key, lt in left_tokens.items():
             if key in right_tokens:
                 rt = right_tokens[key]
-                self.multi_pack.add_entry(MultiPackGroup(
-                    self.multi_pack, [lt, rt]))
+                self.multi_pack.add_entry(
+                    MultiPackGroup(self.multi_pack, [lt, rt])
+                )
 
         # Check the groups.
-        expected_content = [("This", "This"), ("pack", "pack"),
-                            ("contains", "contains"), ("some", "some"),
-                            ("sample", "sample"), ("data.", "data.")]
+        expected_content = [
+            ("This", "This"),
+            ("pack", "pack"),
+            ("contains", "contains"),
+            ("some", "some"),
+            ("sample", "sample"),
+            ("data.", "data."),
+        ]
 
         group_content = []
         g: MultiPackGroup
@@ -108,12 +113,13 @@ class DataPackTest(unittest.TestCase):
         left_tokens = [t.text for t in self.multi_pack.packs[0].get(Token)]
         right_tokens = [t.text for t in self.multi_pack.packs[1].get(Token)]
 
-        self.assertListEqual(left_tokens,
-                             ["This", "pack", "contains", "some", "sample",
-                              "data."])
-        self.assertListEqual(right_tokens,
-                             ["This", "pack", "contains", "some", "other",
-                              "sample", "data."])
+        self.assertListEqual(
+            left_tokens, ["This", "pack", "contains", "some", "sample", "data."]
+        )
+        self.assertListEqual(
+            right_tokens,
+            ["This", "pack", "contains", "some", "other", "sample", "data."],
+        )
 
         # 2. Link the same words from two packs.
         token: Annotation
@@ -128,8 +134,9 @@ class DataPackTest(unittest.TestCase):
         for key, lt in left_tokens.items():
             if key in right_tokens:
                 rt = right_tokens[key]
-                self.multi_pack.add_entry(MultiPackLink(
-                    self.multi_pack, lt, rt))
+                self.multi_pack.add_entry(
+                    MultiPackLink(self.multi_pack, lt, rt)
+                )
 
         # One way to link tokens.
         linked_tokens = []
@@ -140,8 +147,15 @@ class DataPackTest(unittest.TestCase):
 
         self.assertListEqual(
             linked_tokens,
-            [("This", "This"), ("pack", "pack"), ("contains", "contains"),
-             ("some", "some"), ("sample", "sample"), ("data.", "data.")])
+            [
+                ("This", "This"),
+                ("pack", "pack"),
+                ("contains", "contains"),
+                ("some", "some"),
+                ("sample", "sample"),
+                ("data.", "data."),
+            ],
+        )
 
         # Another way to get the links
         linked_tokens = []
@@ -152,8 +166,15 @@ class DataPackTest(unittest.TestCase):
 
         self.assertListEqual(
             linked_tokens,
-            [("This", "This"), ("pack", "pack"), ("contains", "contains"),
-             ("some", "some"), ("sample", "sample"), ("data.", "data.")])
+            [
+                ("This", "This"),
+                ("pack", "pack"),
+                ("contains", "contains"),
+                ("some", "some"),
+                ("sample", "sample"),
+                ("data.", "data."),
+            ],
+        )
 
         # 3. Test deletion
 
@@ -168,9 +189,15 @@ class DataPackTest(unittest.TestCase):
 
         self.assertListEqual(
             linked_tokens,
-            [("This", "This"), ("contains", "contains"),
-             ("some", "some"), ("sample", "sample"), ("data.", "data.")])
+            [
+                ("This", "This"),
+                ("contains", "contains"),
+                ("some", "some"),
+                ("sample", "sample"),
+                ("data.", "data."),
+            ],
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

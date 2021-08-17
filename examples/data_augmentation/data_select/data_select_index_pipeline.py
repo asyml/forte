@@ -26,12 +26,12 @@ This indexer is then used by the DataSelector class to search for documents.
 from typing import Dict, Any
 import logging
 
+from forte.elastic import ElasticSearchIndexer
+from forte.elastic import ElasticSearchPackIndexProcessor
+
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
-from forte.indexers.elastic_indexer import ElasticSearchIndexer
 from forte.pipeline import Pipeline
-from forte.processors.data_augment.selector_index_processor import \
-    DataSelectorIndexProcessor
 
 __all__ = [
     "CreateIndexerPipeline",
@@ -39,12 +39,14 @@ __all__ = [
 
 
 class CreateIndexerPipeline:
-
     def __init__(self, reader, reader_config, indexer_config=None):
         self.reader = reader
         self.reader_config = reader_config
-        self.config = indexer_config if indexer_config is not None \
+        self.config = (
+            indexer_config
+            if indexer_config is not None
             else self.default_config()
+        )
         self.config = Config(self.config, default_hparams=None)
         self.create_pipeline()
 
@@ -52,7 +54,7 @@ class CreateIndexerPipeline:
         # pylint: disable=attribute-defined-outside-init
         self.nlp: Pipeline[DataPack] = Pipeline()
         self.nlp.set_reader(reader=self.reader, config=self.reader_config)
-        self.nlp.add(DataSelectorIndexProcessor(), config=self.config)
+        self.nlp.add(ElasticSearchPackIndexProcessor(), config=self.config)
         self.nlp.initialize()
 
     def create_index(self, datapath):
@@ -68,9 +70,6 @@ class CreateIndexerPipeline:
             "indexer": {
                 "name": "ElasticSearchIndexer",
                 "hparams": ElasticSearchIndexer.default_configs(),
-                "other_kwargs": {
-                    "request_timeout": 60,
-                    "refresh": False
-                }
-            }
+                "other_kwargs": {"request_timeout": 60, "refresh": False},
+            },
         }

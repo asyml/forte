@@ -13,23 +13,30 @@
 # limitations under the License.
 
 import copy
+import uuid
 from abc import abstractmethod
 from typing import (
-    List, Optional, Set, Type, TypeVar, Union, Iterator, Dict, Tuple, Any)
-import uuid
+    List,
+    Optional,
+    Set,
+    Type,
+    TypeVar,
+    Union,
+    Iterator,
+    Dict,
+    Tuple,
+    Any,
+    Iterable,
+)
 
 import jsonpickle
 
 from forte.common import ProcessExecutionException, EntryNotFoundError
 from forte.data.container import EntryContainer
 from forte.data.index import BaseIndex
-from forte.data.ontology.core import (Entry, EntryType, GroupType, LinkType)
+from forte.data.ontology.core import Entry, EntryType, GroupType, LinkType
 
-__all__ = [
-    "BasePack",
-    "BaseMeta",
-    "PackType"
-]
+__all__ = ["BasePack", "BaseMeta", "PackType"]
 
 
 class BaseMeta:
@@ -40,12 +47,18 @@ class BaseMeta:
         pack_name:  An name to identify the data pack, which is helpful in
            situation like serialization. It is suggested that the packs should
            have different doc ids.
-
+    Attributes:
+        record: Initialized as a dictionary. This is not a required field.
+            The key of the record should be the entry type and values should
+            be attributes of the entry type. All the information would be used
+            for consistency checking purpose if the pipeline is initialized with
+            `enforce_consistency=True`.
     """
 
     def __init__(self, pack_name: Optional[str] = None):
         self.pack_name: Optional[str] = pack_name
         self._pack_id: int = uuid.uuid4().int
+        self.record: Dict[str, Set[str]] = dict()
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -86,19 +99,23 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         self._index: BaseIndex = BaseIndex()
 
         self.__control_component: Optional[str] = None
+
+        # This Dict maintains a mapping from entry's tid to the Entry object
+        # itself and the component name associated with the entry.
+        # The component name is used for tracking the "creator" of this entry.
         self._pending_entries: Dict[int, Tuple[Entry, Optional[str]]] = {}
 
     def __getstate__(self):
-        state = super().__getstate__()
-        state.pop('_index')
-        state.pop('_pending_entries')
-        state.pop('_BasePack__control_component')
+        state = self.__dict__.copy()
+        state.pop("_index")
+        state.pop("_pending_entries")
+        state.pop("_BasePack__control_component")
         return state
 
     def __setstate__(self, state):
         super().__setstate__(state)
-        if 'meta' in self.__dict__:
-            self._meta = self.__dict__.pop('meta')
+        if "meta" in self.__dict__:
+            self._meta = self.__dict__.pop("meta")
         self.__control_component = None
         self._pending_entries = {}
 
@@ -124,7 +141,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         if len(self._pending_entries) > 0:
             raise ProcessExecutionException(
                 f"There are {len(self._pending_entries)} "
-                f"entries not added to the index correctly.")
+                f"entries not added to the index correctly."
+            )
 
     @property
     def pack_name(self):
@@ -160,7 +178,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
     @abstractmethod
     def delete_entry(self, entry: EntryType):
-        r""" Remove the entry from the pack.
+        r"""Remove the entry from the pack.
 
         Args:
             entry: The entry to be removed.
@@ -170,13 +188,14 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         """
         raise NotImplementedError
 
-    def add_entry(self, entry: Entry,
-                  component_name: Optional[str] = None) -> EntryType:
-        r"""Add an :class:`~forte.data.ontology.top.Entry` object to the
+    def add_entry(
+        self, entry: Entry, component_name: Optional[str] = None
+    ) -> EntryType:
+        r"""Add an :class:`~forte.data.ontology.core.Entry` object to the
         :class:`BasePack` object. Allow duplicate entries in a pack.
 
         Args:
-            entry (Entry): An :class:`~forte.data.ontology.top.Entry`
+            entry (Entry): An :class:`~forte.data.ontology.core.Entry`
                 object to be added to the pack.
             component_name (str): A name to record that the entry is created by
              this component.
@@ -191,11 +210,11 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
     @abstractmethod
     def _add_entry(self, entry: Entry) -> EntryType:
-        r"""Add an :class:`~forte.data.ontology.top.Entry` object to the
+        r"""Add an :class:`~forte.data.ontology.core.Entry` object to the
         :class:`BasePack` object. Allow duplicate entries in a pack.
 
         Args:
-            entry (Entry): An :class:`~forte.data.ontology.top.Entry`
+            entry (Entry): An :class:`~forte.data.ontology.core.Entry`
                 object to be added to the pack.
 
         Returns:
@@ -275,8 +294,9 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             except KeyError:
                 self._field_records[c] = {(entry_id, field_name)}
 
-    def on_entry_creation(self, entry: Entry,
-                          component_name: Optional[str] = None):
+    def on_entry_creation(
+        self, entry: Entry, component_name: Optional[str] = None
+    ):
         """
         Call this when adding a new entry, will be called
         in :class:`~forte.data.ontology.core.Entry` when
@@ -301,9 +321,11 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
     def regret_creation(self, entry: EntryType):
         """
+        Will remove the entry from the pending entries internal state of the
+        pack.
 
         Args:
-            entry:
+            entry: The entry that we would not add the the pack anymore.
 
         Returns:
 
@@ -317,17 +339,32 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         entry: EntryType = self._index.get_entry(tid)
         if entry is None:
             raise KeyError(
-                f"There is no entry with tid '{tid}'' in this datapack")
+                f"There is no entry with tid '{tid}'' in this datapack"
+            )
         return entry
 
     @abstractmethod
     def get_data(
-            self, context_type, request, skip_k
+        self, context_type, request, skip_k
     ) -> Iterator[Dict[str, Any]]:
         raise NotImplementedError
 
     @abstractmethod
-    def get(self, entry_type: Type[EntryType], **kwargs):
+    def get(
+        self, entry_type: Union[str, Type[EntryType]], **kwargs
+    ) -> Iterator[EntryType]:
+        """
+        Implementation of this method should provide to obtain the entries in
+        entry ordering. If there are orders defined between the entries, they
+        should be used first. Otherwise, the insertion order should be
+        used (FIFO).
+
+        Args:
+            entry_type: The type of the entry to obtain.
+
+        Returns:
+            An iterator of the entries matching the provided arguments.
+        """
         raise NotImplementedError
 
     def get_single(self, entry_type: Type[EntryType]) -> EntryType:
@@ -346,43 +383,89 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             return a
 
         raise EntryNotFoundError(
-            f"The entry {entry_type} is not found in the provided pack.")
+            f"The entry {entry_type} is not found in the provided pack."
+        )
 
     def get_ids_by_creator(self, component: str) -> Set[int]:
-        r"""Look up the component_index with key ``component``."""
+        r"""
+        Look up the component_index with key `component`. This will return
+        the entry ids that are created by the `component`
+
+        Args:
+            component: The component (creator) to find ids for.
+
+        Returns:
+            A set of entry ids that are created by the component.
+        """
         entry_set: Set[int] = self._creation_records[component]
         return entry_set
 
-    def get_entries_by_creator(self, component: str) -> Set[EntryType]:
+    def is_created_by(
+        self, entry: Entry, components: Union[str, Iterable[str]]
+    ) -> bool:
         """
-        Return all entries created by the particular component, an unordered
-        set.
+        Check if the entry is created by any of the provided components.
 
         Args:
-            component: The component to get the entries.
+            entry: The entry to check.
+            components: The list of component names.
+
+        Returns (bool):
+            True if the entry is created by the component, False otherwise.
+        """
+        if isinstance(components, str):
+            components = [components]
+
+        for c in components:
+            if entry.tid in self._creation_records[c]:
+                break
+        else:
+            # The entry not created by any of these components.
+            return False
+
+        return True
+
+    def get_entries_from(self, component: str) -> Set[EntryType]:
+        """
+        Look up all entries from the `component` as a unordered set
+
+        Args:
+            component: The component (creator) to get the entries. It is
+            normally the full qualified name of the creator class, but it
+            may also be customized based on the implementation.
 
         Returns:
-
+            The set of entry ids that are created by the input component.
         """
-        return {self.get_entry(tid)
-                for tid in self.get_ids_by_creator(component)}
+        return {
+            self.get_entry(tid) for tid in self.get_ids_by_creator(component)
+        }
 
-    def get_ids_by_creators(self, components: List[str]) -> Set[int]:
-        """Look up component_index using a list of components."""
+    def get_ids_from(self, components: List[str]) -> Set[int]:
+        """
+        Look up entries using a list of components (creators). This will find
+        each creator iteratively and combine the result.
+
+        Args:
+            components (List[str]): The list of components to find.
+
+        Returns:
+            The list of entry ids that are created from these components.
+        """
         valid_component_id: Set[int] = set()
         for component in components:
             valid_component_id |= self.get_ids_by_creator(component)
         return valid_component_id
 
-    def get_ids_by_type(self, entry_type: Type[EntryType]) -> Set[int]:
+    def get_ids_by_type_subtype(self, entry_type: Type[EntryType]) -> Set[int]:
         r"""Look up the type_index with key ``entry_type``.
 
         Args:
             entry_type: The type of the entry you are looking for.
 
         Returns:
-             A set of entry tids. The entries are instances of entry_type (
-             and also includes instances of the subclasses of entry_type).
+             A set of entry ids. The entries are instances of `entry_type` (
+             and also includes instances of the subclasses of `entry_type`).
         """
         subclass_index: Set[int] = set()
         for index_key, index_val in self._index.iter_type_index():
@@ -390,25 +473,46 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                 subclass_index.update(index_val)
         return subclass_index
 
-    def get_entries_by_type(
-            self, entry_type: Type[EntryType]) -> List[EntryType]:
+    def _expand_to_sub_types(self, entry_type: Type[EntryType]) -> Set[Type]:
+        """
+        Return all the types and the sub types that inherit from the provided
+        type.
+
+        Args:
+            entry_type: The provided type to search for entry.
+
+        Returns:
+            A set of all the sub-types extending the provided type, including
+            the input `entry_type` itself.
+        """
+        all_types: Set[Type] = set()
+        for data_type in self._index.indexed_types():
+            if issubclass(data_type, entry_type):
+                all_types.add(data_type)
+        return all_types
+
+    def get_entries_of(
+        self, entry_type: Type[EntryType], exclude_sub_types=False
+    ) -> Iterator[EntryType]:
         """
         Return all entries of this particular type without orders. If you
-        need to use natural order of the annotations, use
-        :func:`forte.data.data_pack.get_entries`.
+        need to get the annotations based on the entry ordering,
+        use :meth:`forte.data.base_pack.get`.
 
         Args:
             entry_type: The type of the entry you are looking for.
+            exclude_sub_types (bool): Whether to ignore the inherited sub type
+            of the provided `entry_type`. Default is True.
 
         Returns:
-
+            An iterator of the entries matching the type constraint.
         """
-        entries: List[EntryType] = []
-        for tid in self.get_ids_by_type(entry_type):
-            entry: EntryType = self.get_entry(tid)
-            if isinstance(entry, entry_type):
-                entries.append(entry)
-        return entries
+        if exclude_sub_types:
+            for tid in self._index.query_by_type(entry_type):
+                yield self.get_entry(tid)
+        else:
+            for tid in self.get_ids_by_type_subtype(entry_type):
+                yield self.get_entry(tid)
 
     @classmethod
     @abstractmethod
@@ -421,21 +525,23 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         raise NotImplementedError
 
     def get_links_from_node(
-            self,
-            node: Union[int, EntryType],
-            as_parent: bool
+        self, node: Union[int, EntryType], as_parent: bool
     ) -> List[LinkType]:
         links: List[LinkType] = []
         if isinstance(node, Entry):
             tid = node.tid
             if tid is None:
-                raise ValueError("The requested node has no tid. "
-                                 "Have you add this entry into the datapack?")
+                raise ValueError(
+                    "The requested node has no tid. "
+                    "Have you add this entry into the datapack?"
+                )
         elif isinstance(node, int):
             tid = node
         else:
-            raise TypeError("Can only get group via entry id (int) or the "
-                            "group object itself (Entry).")
+            raise TypeError(
+                "Can only get group via entry id (int) or the "
+                "group object itself (Entry)."
+            )
 
         if not self._index.link_index_on:
             self._index.build_link_index(self.links)
@@ -447,26 +553,33 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         return links
 
     def get_links_by_parent(
-            self, parent: Union[int, EntryType]) -> List[LinkType]:
+        self, parent: Union[int, EntryType]
+    ) -> List[LinkType]:
         return self.get_links_from_node(parent, True)
 
     def get_links_by_child(
-            self, child: Union[int, EntryType]) -> List[LinkType]:
+        self, child: Union[int, EntryType]
+    ) -> List[LinkType]:
         return self.get_links_from_node(child, False)
 
     def get_groups_by_member(
-            self, member: Union[int, EntryType]) -> Set[GroupType]:
+        self, member: Union[int, EntryType]
+    ) -> Set[GroupType]:
         groups: Set[GroupType] = set()
         if isinstance(member, Entry):
             tid = member.tid
             if tid is None:
-                raise ValueError("Argument member has no tid. "
-                                 "Have you add this entry into the datapack?")
+                raise ValueError(
+                    "Argument member has no tid. "
+                    "Have you add this entry into the datapack?"
+                )
         elif isinstance(member, int):
             tid = member
         else:
-            raise TypeError("Can only get group via entry id (int) or the "
-                            "group object itself (Entry).")
+            raise TypeError(
+                "Can only get group via entry id (int) or the "
+                "group object itself (Entry)."
+            )
 
         if not self._index.group_index_on:
             self._index.build_group_index(self.groups)
@@ -478,4 +591,4 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         return groups
 
 
-PackType = TypeVar('PackType', bound=BasePack)
+PackType = TypeVar("PackType", bound=BasePack)
