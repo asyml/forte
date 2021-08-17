@@ -15,68 +15,91 @@
 """
 Unit tests for the writers.
 """
-import shutil
+import os
 import tempfile
 import unittest
 from typing import List, Dict
 
 from forte.data.data_pack import DataPack
-from forte.data.readers import OntonotesReader, \
-    RecursiveDirectoryDeserializeReader
+from forte.data.readers import (
+    OntonotesReader,
+    RecursiveDirectoryDeserializeReader,
+)
 from forte.pipeline import Pipeline
-from forte.processors.annotation_remover import AnnotationRemover
-from forte.processors.nltk_processors import NLTKWordTokenizer, \
-    NLTKPOSTagger, NLTKSentenceSegmenter
+from forte.processors.misc import (
+    AnnotationRemover,
+    PeriodSentenceSplitter,
+    WhiteSpaceTokenizer,
+)
 from forte.processors.writers import PackNameJsonPackWriter
 from ft.onto.base_ontology import Token
 
 
-class TestLowerCaserProcessor(unittest.TestCase):
+class TestJsonWriter(unittest.TestCase):
+    def setUp(self):
+        self.data_path = os.path.abspath(
+            os.path.join(
+                os.path.dirname(__file__),
+                "..",
+                "..",
+                "..",
+                "data_samples",
+                "ontonotes/00",
+            )
+        )
+
     def test_serialize_deserialize_processor(self):
         pipe_serialize = Pipeline[DataPack]()
         pipe_serialize.set_reader(OntonotesReader())
         pipe_serialize.add(
             AnnotationRemover(),
             # Remove tokens and sentences form OntonotesReader.
-            {'removal_types':
-                [
-                    'ft.onto.base_ontology.Token',
-                    'ft.onto.base_ontology.Sentence',
-                ]}
+            {
+                "removal_types": [
+                    "ft.onto.base_ontology.Token",
+                    "ft.onto.base_ontology.Sentence",
+                ]
+            },
         )
-        pipe_serialize.add(NLTKSentenceSegmenter())
-        pipe_serialize.add(NLTKWordTokenizer())
-        pipe_serialize.add(NLTKPOSTagger())
+        pipe_serialize.add(PeriodSentenceSplitter())
+        pipe_serialize.add(WhiteSpaceTokenizer())
 
-        output_path = tempfile.mkdtemp()
+        with tempfile.TemporaryDirectory() as output_dir:
+            pipe_serialize.add(
+                PackNameJsonPackWriter(),
+                {
+                    "output_dir": output_dir,
+                    "indent": 2,
+                },
+            )
 
-        pipe_serialize.add(
-            PackNameJsonPackWriter(), {
-                'output_dir': output_path,
-                'indent': 2,
+            pipe_serialize.run(self.data_path)
+
+            pipe_deserialize = Pipeline[DataPack]()
+            pipe_deserialize.set_reader(RecursiveDirectoryDeserializeReader())
+            pipe_deserialize.initialize()
+
+            token_counts: Dict[str, int] = {}
+
+            # This basically test whether the deserialized data is
+            # still the same as expected.
+            pack: DataPack
+            for pack in pipe_deserialize.process_dataset(output_dir):
+                tokens: List[Token] = list(pack.get(Token))
+                token_counts[pack.pack_name] = len(tokens)
+
+            expected_count = {
+                "bn/abc/00/abc_0039": 72,
+                "bn/abc/00/abc_0019": 370,
+                "bn/abc/00/abc_0059": 39,
+                "bn/abc/00/abc_0009": 424,
+                "bn/abc/00/abc_0029": 487,
+                "bn/abc/00/abc_0069": 428,
+                "bn/abc/00/abc_0049": 73,
             }
-        )
 
-        dataset_path = "data_samples/ontonotes/00"
-        pipe_serialize.run(dataset_path)
+            assert token_counts == expected_count
 
-        pipe_deserialize = Pipeline[DataPack]()
-        pipe_deserialize.set_reader(RecursiveDirectoryDeserializeReader())
-        pipe_deserialize.initialize()
 
-        token_counts: Dict[str, int] = {}
-
-        # This basically test whether the deserialized data is still the same
-        # as expected.
-        pack: DataPack
-        for pack in pipe_deserialize.process_dataset(output_path):
-            tokens: List[Token] = list(pack.get(Token))
-            token_counts[pack.pack_name] = len(tokens)
-
-        expected_count = {'bn/abc/00/abc_0039': 72, 'bn/abc/00/abc_0019': 370,
-                          'bn/abc/00/abc_0059': 39, 'bn/abc/00/abc_0009': 424,
-                          'bn/abc/00/abc_0029': 487, 'bn/abc/00/abc_0069': 428,
-                          'bn/abc/00/abc_0049': 73}
-
-        assert token_counts == expected_count
-        shutil.rmtree(output_path)
+if __name__ == "__main__":
+    unittest.main()

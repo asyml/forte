@@ -24,7 +24,6 @@ from forte.data import data_utils
 
 
 class DataUtilsTest(unittest.TestCase):
-
     def setUp(self) -> None:
         self.test_path = "test_dir"
         self.file_name = "test.txt"
@@ -34,10 +33,13 @@ class DataUtilsTest(unittest.TestCase):
         shutil.rmtree(self.test_path)
 
     def test_data_utils(self):
-        urls = ["https://drive.google.com/file/d/1YHXMiIne5MjSBePsPHPWO6hdRj4w"
-                "EnSk/view?usp=sharing"]
-        data_utils.maybe_download(urls=urls, path=self.test_path,
-                                  filenames=[self.file_name])
+        urls = [
+            "https://drive.google.com/file/d/1YHXMiIne5MjSBePsPHPWO6hdRj4w"
+            "EnSk/view?usp=sharing"
+        ]
+        data_utils.maybe_download(
+            urls=urls, path=self.test_path, filenames=[self.file_name]
+        )
         path = Path(self.test_path)
         self.assertEqual(path.exists(), True)
 
@@ -49,5 +51,5 @@ class DataUtilsTest(unittest.TestCase):
             self.assertEqual(lines, self.text)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -24,8 +24,13 @@ from forte.models.ner.conditional_random_field import ConditionalRandomField
 
 
 class BiRecurrentConvCRF(nn.Module):
-    def __init__(self, word_embedding_table: torch.Tensor, char_vocab_size: int,
-                 tag_vocab_size: int, config_model: Config):
+    def __init__(
+        self,
+        word_embedding_table: torch.Tensor,
+        char_vocab_size: int,
+        tag_vocab_size: int,
+        config_model: Config,
+    ):
         super().__init__()
 
         # TODO: Fix this. init_value doesn't need to be tensor but
@@ -33,7 +38,8 @@ class BiRecurrentConvCRF(nn.Module):
         self.word_embedder = WordEmbedder(init_value=word_embedding_table)
 
         self.char_embedder = WordEmbedder(
-            vocab_size=char_vocab_size, hparams=config_model.char_emb)
+            vocab_size=char_vocab_size, hparams=config_model.char_emb
+        )
 
         self.char_cnn = torch.nn.Conv1d(**config_model.char_cnn_conv)
 
@@ -47,26 +53,31 @@ class BiRecurrentConvCRF(nn.Module):
             config_model.bilstm_sentence_encoder.rnn_cell_fw.kwargs.num_units,
             num_layers=1,
             batch_first=True,
-            bidirectional=True)
+            bidirectional=True,
+        )
 
         self.dense = nn.Linear(
             config_model.bilstm_sentence_encoder.rnn_cell_fw.kwargs.num_units
             * 2,
-            config_model.output_hidden_size)
+            config_model.output_hidden_size,
+        )
 
         self.tag_projection_layer = nn.Linear(
-            config_model.output_hidden_size, tag_vocab_size)
+            config_model.output_hidden_size, tag_vocab_size
+        )
 
         self.crf = ConditionalRandomField(
-            tag_vocab_size, constraints=None,
-            include_start_end_transitions=True)
+            tag_vocab_size, constraints=None, include_start_end_transitions=True
+        )
 
         if config_model.initializer is None or callable(
-                config_model.initializer):
+            config_model.initializer
+        ):
             self.initializer = config_model.initializer
         else:
             self.initializer = texar.core.layers.get_initializer(
-                config_model["initializer"])
+                config_model["initializer"]
+            )
 
         self.reset_parameters()
 
@@ -97,8 +108,9 @@ class BiRecurrentConvCRF(nn.Module):
         output, _, mask, _ = self.encode(input_word, input_char, mask, hx)
 
         logits = self.tag_projection_layer(output)
-        log_likelihood = \
+        log_likelihood = (
             self.crf.forward(logits, target, mask) / target.size()[0]
+        )
         return -log_likelihood
 
     def decode(self, input_word, input_char, mask=None, hx=None):
@@ -113,14 +125,16 @@ class BiRecurrentConvCRF(nn.Module):
 
         """
         output, _, mask, _ = self.encode(
-            input_word, input_char, mask=mask, hx=hx)
+            input_word, input_char, mask=mask, hx=hx
+        )
 
         logits = self.tag_projection_layer(output)
         best_paths = self.crf.viterbi_tags(logits, mask.long())
         predicted_tags = [x for x, y in best_paths]
         predicted_tags = [torch.tensor(x).unsqueeze(0) for x in predicted_tags]
         predicted_tags = texar.utils.pad_and_concat(
-            predicted_tags, axis=0, pad_constant_values=0)
+            predicted_tags, axis=0, pad_constant_values=0
+        )
 
         return predicted_tags
 
@@ -137,8 +151,9 @@ class BiRecurrentConvCRF(nn.Module):
         char_size = char.size()
         # first transform to [batch * length, char_length, char_dim]
         # then transpose to [batch * length, char_dim, char_length]
-        char = char.view(char_size[0] * char_size[1],
-                         char_size[2], char_size[3]).transpose(1, 2)
+        char = char.view(
+            char_size[0] * char_size[1], char_size[2], char_size[3]
+        ).transpose(1, 2)
         # put into cnn [batch*length, char_filters, char_length]
         # then put into maxpooling [batch * length, char_filters]
         char, _ = self.char_cnn(char).max(dim=2)
@@ -154,11 +169,13 @@ class BiRecurrentConvCRF(nn.Module):
 
         # prepare packed_sequence
         seq_input, hx, rev_order, mask = prepare_rnn_seq(
-            input, length, hx=hx, masks=mask, batch_first=True)
+            input, length, hx=hx, masks=mask, batch_first=True
+        )
         self.rnn.flatten_parameters()
         seq_output, hn = self.rnn(seq_input, hx=hx)
         output, hn = recover_rnn_seq(
-            seq_output, rev_order, hx=hn, batch_first=True)
+            seq_output, rev_order, hx=hn, batch_first=True
+        )
 
         # apply dropout for the output of rnn
         output = self.dropout_out(output)
@@ -218,7 +235,8 @@ def prepare_rnn_seq(rnn_input, lengths, hx=None, masks=None, batch_first=False):
 
     lens = lens.tolist()
     seq = rnn_utils.pack_padded_sequence(
-        rnn_input, lens, batch_first=batch_first)
+        rnn_input, lens, batch_first=batch_first
+    )
 
     if masks is not None:
         if batch_first:

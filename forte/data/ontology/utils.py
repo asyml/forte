@@ -32,12 +32,20 @@ from distutils import log
 
 import jsonschema
 
-AUTO_GEN_SIGNATURE = '***automatically_generated***'
+AUTO_GEN_SIGNATURE = "***automatically_generated***"
 
 
-def copytree(src, dst, ignore_pattern_if_file_exists='*', preserve_mode=True,
-             preserve_times=False, preserve_symlinks=False, update=False,
-             verbose=1, dry_run=0):
+def copytree(
+    src,
+    dst,
+    ignore_pattern_if_file_exists="*",
+    preserve_mode=True,
+    preserve_times=False,
+    preserve_symlinks=False,
+    update=False,
+    verbose=1,
+    dry_run=0,
+):
     """
     A slightly modified version of `distutils.dir_util.copytree`, with the
     added parameter `ignore_pattern_if_file_exists` that ignores files if it
@@ -46,8 +54,7 @@ def copytree(src, dst, ignore_pattern_if_file_exists='*', preserve_mode=True,
     """
 
     if not dry_run and not os.path.isdir(src):
-        raise DistutilsFileError(
-            "cannot copy tree '%s': not a directory" % src)
+        raise DistutilsFileError("cannot copy tree '%s': not a directory" % src)
     try:
         names = os.listdir(src)
     except OSError as e:
@@ -55,7 +62,8 @@ def copytree(src, dst, ignore_pattern_if_file_exists='*', preserve_mode=True,
             names = []
         else:
             raise DistutilsFileError(
-                "error listing files in '%s': %s" % (src, e.strerror)) from e
+                "error listing files in '%s': %s" % (src, e.strerror)
+            ) from e
 
     if not dry_run:
         mkpath(dst, verbose=verbose)
@@ -67,7 +75,7 @@ def copytree(src, dst, ignore_pattern_if_file_exists='*', preserve_mode=True,
         src_name = os.path.join(src, n)
         dst_name = os.path.join(dst, n)
 
-        if n.startswith('.nfs'):
+        if n.startswith(".nfs"):
             # skip NFS rename files
             continue
 
@@ -81,16 +89,32 @@ def copytree(src, dst, ignore_pattern_if_file_exists='*', preserve_mode=True,
 
         elif os.path.isdir(src_name):
             part_outputs, part_outputs_ignored = copytree(
-                src_name, dst_name, ignore_pattern_if_file_exists,
-                preserve_mode, preserve_times, preserve_symlinks, update,
-                verbose=verbose, dry_run=dry_run)
+                src_name,
+                dst_name,
+                ignore_pattern_if_file_exists,
+                preserve_mode,
+                preserve_times,
+                preserve_symlinks,
+                update,
+                verbose=verbose,
+                dry_run=dry_run,
+            )
             outputs.extend(part_outputs)
             outputs_ignored.extend(part_outputs_ignored)
 
-        elif not (fnmatch.fnmatch(dst_name, ignore_pattern_if_file_exists) and
-                  os.path.exists(dst_name)):
-            copy_file(src_name, dst_name, preserve_mode, preserve_times, update,
-                      verbose=verbose, dry_run=dry_run)
+        elif not (
+            fnmatch.fnmatch(dst_name, ignore_pattern_if_file_exists)
+            and os.path.exists(dst_name)
+        ):
+            copy_file(
+                src_name,
+                dst_name,
+                preserve_mode,
+                preserve_times,
+                update,
+                verbose=verbose,
+                dry_run=dry_run,
+            )
             outputs.append(dst_name)
 
         else:
@@ -99,8 +123,9 @@ def copytree(src, dst, ignore_pattern_if_file_exists='*', preserve_mode=True,
     return outputs, outputs_ignored
 
 
-def get_user_objects_from_module(module_str: str,
-                                 custom_dirs: Optional[str] = None):
+def get_user_objects_from_module(
+    module_str: str, custom_dirs: Optional[str] = None
+):
     """
     Args:
         module_str: Module in the form of string, package.module.
@@ -112,16 +137,15 @@ def get_user_objects_from_module(module_str: str,
 
     """
     module = locate(module_str)
-    if module is not None and hasattr(module, '__all__'):
+    if module is not None and hasattr(module, "__all__"):
         return module.__all__  # type: ignore
     objects: List[str] = []
     if custom_dirs is not None:
-        module_file = module_str.replace('.', '/') + '.py'
+        module_file = module_str.replace(".", "/") + ".py"
         for dir_ in custom_dirs:
             filepath = os.path.join(dir_, module_file)
             try:
-                spec = import_util.spec_from_file_location(module_str,
-                                                           filepath)
+                spec = import_util.spec_from_file_location(module_str, filepath)
                 module = import_util.module_from_spec(spec)
                 spec.loader.exec_module(module)  # type: ignore
                 objects = module.__all__  # type: ignore
@@ -165,8 +189,11 @@ def get_top_level_dirs(path: Optional[str]):
     """
     if path is None or not os.path.exists(path):
         return []
-    return [item for item in os.listdir(path)
-            if os.path.isdir(os.path.join(path, item))]
+    return [
+        item
+        for item in os.listdir(path)
+        if os.path.isdir(os.path.join(path, item))
+    ]
 
 
 def split_file_path(path: str):
@@ -182,13 +209,13 @@ def split_file_path(path: str):
         ['', 'home', 'file.py']
     """
     path_split = []
-    prev_dir, curr_dir = None, (str(Path(path)), '')
+    prev_dir, curr_dir = None, (str(Path(path)), "")
     while prev_dir != curr_dir:
         prev_dir = curr_dir
         if curr_dir[-1].strip():
             path_split.append(curr_dir[-1])
         curr_dir = os.path.split(curr_dir[0])
-    path_split += [''] if path.startswith('/') else []
+    path_split += [""] if path.startswith("/") else []
     return path_split[::-1]
 
 
@@ -203,10 +230,11 @@ def validate_json_schema(input_filepath: str):
         input_filepath: Filepath of the json schema to be validated
     """
     validation_file_path = os.path.normpath(
-        os.path.join(os.path.dirname(__file__), 'validation_schema.json'))
-    with open(validation_file_path, 'r') as validation_json_file:
+        os.path.join(os.path.dirname(__file__), "validation_schema.json")
+    )
+    with open(validation_file_path, "r") as validation_json_file:
         validation_schema = json.loads(validation_json_file.read())
-    with open(input_filepath, 'r') as input_json_file:
+    with open(input_filepath, "r") as input_json_file:
         input_schema = json.loads(input_json_file.read())
     jsonschema.Draft6Validator(validation_schema).validate(input_schema)
 
@@ -219,12 +247,13 @@ def get_python_version() -> Tuple[int, int]:
     return version_info[0], version_info[1]
 
 
-def get_schema_from_ontology(imported_onto_file: Optional[str],
-                             delimiters: List[str]) -> str:
+def get_schema_from_ontology(
+    imported_onto_file: Optional[str], delimiters: List[str]
+) -> str:
     if imported_onto_file is None:
         raise FileNotFoundError
-    with open(imported_onto_file, 'r') as imported_onto:
-        regex = '|'.join(map(re.escape, delimiters))
+    with open(imported_onto_file, "r") as imported_onto:
+        regex = "|".join(map(re.escape, delimiters))
         reqd_line = imported_onto.readlines()[1]
         installed_json_file = list(filter(None, re.split(regex, reqd_line)))[0]
     return installed_json_file
@@ -236,7 +265,7 @@ def get_parent_path(file_path: str, level: int = 1):
 
 
 def get_installed_forte_dir():
-    init_path = get_module_path('forte')
+    init_path = get_module_path("forte")
     return get_parent_path(init_path, 2) if init_path is not None else None
 
 
@@ -246,9 +275,9 @@ def get_current_forte_dir():
 
 def get_generated_files_in_dir(path):
     def is_generated(file_path):
-        with open(file_path, 'r') as f:
+        with open(file_path, "r") as f:
             lines = f.readlines()
-            return len(lines) > 0 and lines[0] == f'# {AUTO_GEN_SIGNATURE}\n'
+            return len(lines) > 0 and lines[0] == f"# {AUTO_GEN_SIGNATURE}\n"
 
     ext_files = []
     for root, _, files in os.walk(path):

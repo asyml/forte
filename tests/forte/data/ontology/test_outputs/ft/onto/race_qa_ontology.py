@@ -1,5 +1,5 @@
 # ***automatically_generated***
-# ***source json:tests/forte/data/ontology/test_specs/race_qa_onto.json***
+# ***source json:../../../../../../Documents/forte_develop/forte/tests/forte/data/ontology/test_specs/race_qa_onto.json***
 # flake8: noqa
 # mypy: ignore-errors
 # pylint: skip-file
@@ -34,7 +34,7 @@ class RaceDocument(Document):
 class Passage(Document):
     """
     Attributes:
-        passage_id (Optional[str])
+        passage_id (Optional[str]):
     """
 
     passage_id: Optional[str]
@@ -55,8 +55,8 @@ class Option(Annotation):
 class Question(Annotation):
     """
     Attributes:
-        options (FList[Option])
-        answers (List[int])
+        options (FList[Option]):
+        answers (List[int]):
     """
 
     options: FList[Option]

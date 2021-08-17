@@ -17,39 +17,62 @@ Base class for Pipeline module.
 
 import itertools
 import logging
-from typing import Any, Dict, Generic, Iterator, List, Optional, Union, Tuple
+import json
+from time import time
+import sys
+
+from typing import (
+    Any,
+    Dict,
+    Generic,
+    Iterator,
+    List,
+    Optional,
+    Union,
+    Tuple,
+    Deque,
+    Set,
+)
 
 import yaml
+import uvicorn
+from fastapi import FastAPI
+from pydantic import BaseModel
 
 from forte.common import ProcessorConfigError
 from forte.common.configuration import Config
-from forte.common.exception import ProcessExecutionException, \
-    ProcessFlowException
+from forte.common.exception import (
+    ProcessExecutionException,
+    ProcessFlowException,
+)
 from forte.common.resources import Resources
 from forte.data.base_pack import PackType
+from forte.data.ontology.ontology_code_generator import OntologyCodeGenerator
+from forte.data.ontology.code_generation_objects import EntryTree
+from forte.data.base_reader import BaseReader
 from forte.data.caster import Caster
-from forte.data.readers.base_reader import BaseReader
 from forte.data.selector import Selector, DummySelector
 from forte.evaluation.base.base_evaluator import Evaluator
 from forte.pipeline_component import PipelineComponent
 from forte.process_job import ProcessJob
 from forte.process_manager import ProcessManager, ProcessJobStatus
-from forte.processors.base.base_processor import BaseProcessor
+from forte.processors.base import BaseProcessor
 from forte.processors.base.batch_processor import BaseBatchProcessor
 from forte.utils import create_class_with_kwargs
+from forte.utils.utils_processor import record_types_and_attributes_check
+
+if sys.version_info < (3, 7):
+    import importlib_resources as resources
+else:
+    from importlib import resources
 
 logger = logging.getLogger(__name__)
 
-__all__ = [
-    "Pipeline"
-]
+__all__ = ["Pipeline", "serve"]
 
 
 class ProcessBuffer:
-    def __init__(self,
-                 pipeline: "Pipeline",
-                 data_iter: Iterator[PackType],
-                 ):
+    def __init__(self, pipeline: "Pipeline", data_iter: Iterator[PackType]):
         self.__data_iter: Iterator[PackType] = data_iter
         self.__data_exhausted = False
         self.__pipeline = pipeline
@@ -95,15 +118,62 @@ class Pipeline(Generic[PackType]):
     information to the data packs.
     """
 
-    def __init__(self, resource: Optional[Resources] = None):
-        self._reader: BaseReader
-        self._reader_config: Optional[Config]
+    def __init__(
+        self,
+        resource: Optional[Resources] = None,
+        ontology_file: Optional[str] = None,
+        enforce_consistency: bool = False,
+        do_init_type_check: bool = False,
+    ):
+        r"""
 
+        Args:
+            resource: The ``Resources`` object, which is a global registry used
+                in the pipeline. Objects defined as ``Resources`` will be
+                passed on to the processors in the
+                pipeline for initialization.
+            ontology_file: The path to the input ontology specification file,
+                which should be a json file, and it should have all the entries
+                inside with no import as key.
+            enforce_consistency: This boolean determines whether the
+                pipeline will check the content expectations specified in each
+                pipeline component. Each component will check whether the input
+                pack contains the expected data
+                via checking the meta-data, and throws a
+                :class:`~forte.common.exception.ExpectedEntryNotFound` if it
+                fails. When this function is called with enforce is ``True``,
+                all the pipeline components would check if the input datapack
+                record matches
+                with the expected types and attributes if function
+                ``expected_types_and_attributes`` is implemented
+                for the processor. For example, processor A requires entry type
+                of ``ft.onto.base_ontology.Sentence``, and processor B would
+                produce this type in the output datapack, so ``record`` function
+                of processor B writes the record of this type in the datapack
+                and processor A implements ``expected_types_and_attributes`` to
+                add this type. Then when the pipeline runs with
+                `enforce_consistency=True`, processor A would check if this
+                type exists in the record of the output of the
+                previous pipeline component.
+            do_init_type_check: Determine whether to check records types and
+                attributes during pipeline initialization. Default to `False`.
+                If this boolean is set to `True`, each component in the
+                pipeline will be validated by comparing its
+                ``expected_types_and_attributes`` with the accumulated
+                ``records`` from all the downstream components.
+        """
+        self._reader: BaseReader
+        self._reader_config: Optional[Config] = None
+
+        # These variables defines the units in the pipeline, they should be
+        # of the same length
         self._components: List[PipelineComponent] = []
         self._selectors: List[Selector] = []
-
-        self._processors_index: Dict = {'': -1}
         self._configs: List[Optional[Config]] = []
+
+        # Maintain a set of the pipeline components to fast check whether
+        # the component is already there.
+        self.__component_set: Set[PipelineComponent] = set()
 
         # Will initialize at `initialize` because the processors length is
         # unknown.
@@ -119,7 +189,51 @@ class Pipeline(Generic[PackType]):
         else:
             self.resource = resource
 
-        self.initialized: bool = False
+        if ontology_file is None:
+            with resources.path(
+                "forte.ontology_specs", "base_ontology.json"
+            ) as data_path:
+                ontology_file = str(data_path)
+
+        if ontology_file is not None:
+            with open(ontology_file, "r") as f:
+                spec_dict = json.load(f)
+                self.resource.update(onto_specs_path=ontology_file)
+                self.resource.update(onto_specs_dict=spec_dict)
+
+        # The flag indicating whether this pipeline is initialized.
+        self._initialized: bool = False
+        # The flag indicating whether we want to enforce type consistency
+        #  between the processors.
+        self._check_type_consistency: bool = False
+
+        # Create one copy of the dummy selector to reduce class creation.
+        self.__default_selector: Selector = DummySelector()
+
+        # needed for time profiling of pipeline
+        self._enable_profiling: bool = False
+        self._profiler: List[float] = []
+
+        self._check_type_consistency = enforce_consistency
+
+        # Indicate whether do type checking during pipeline initialization
+        self._do_init_type_check: bool = do_init_type_check
+
+    def enforce_consistency(self, enforce: bool = True):
+        r"""This function determines whether the pipeline will check
+        the content expectations specified in each pipeline component. This
+        function works with :meth:`~forte.pipeline.Pipeline.initialize` called
+        after itself. Each component will check whether the input pack contains
+        the expected data via checking the meta-data, and throws a
+        :class:`~forte.common.exception.ExpectedEntryNotFound` if the check
+        fails. The example of implementation is mentioned in the docstrings of
+        :meth:`~forte.pipeline.Pipeline.__init__`.
+
+        Args:
+            enforce: A boolean of whether to enable consistency checking
+                for the pipeline or not.
+        """
+        self._check_type_consistency = enforce
 
     def init_from_config_path(self, config_path):
         r"""Read the configurations from the given path ``config_path``
@@ -144,63 +258,376 @@ class Pipeline(Generic[PackType]):
         is_first: bool = True
         for component_config in configs:
             component = create_class_with_kwargs(
-                class_name=component_config['type'],
-                class_args=component_config.get('kwargs', {}),
+                class_name=component_config["type"],
+                class_args=component_config.get("kwargs", {}),
             )
 
             if is_first:
                 if not isinstance(component, BaseReader):
                     raise ProcessorConfigError(
-                        "The first component of a pipeline must be a reader.")
-                self.set_reader(component, component_config.get('configs', {}))
+                        "The first component of a pipeline must be a reader."
+                    )
+                self.set_reader(component, component_config.get("configs", {}))
                 is_first = False
             else:
                 # Can be processor, caster, or evaluator
-                self.add(component, component_config.get('configs', {}))
+                self.add(component, component_config.get("configs", {}))
 
-    def initialize(self):
+    def _dump_to_config(self):
+        r"""Serialize the pipeline to an IR(intermediate representation).
+        The returned IR can be passed to `init_from_config` to initialize
+        a pipeline.
+
+        Returns:
+            dict: A dictionary storing IR.
+        """
+        configs: List[Dict] = []
+        configs.append(
+            {
+                "type": ".".join(
+                    [self._reader.__module__, type(self._reader).__name__]
+                ),
+                "configs": self._reader_config.todict(),
+            }
+        )
+        for component, config in zip(self.components, self.component_configs):
+            configs.append(
+                {
+                    "type": ".".join(
+                        [component.__module__, type(component).__name__]
+                    ),
+                    "configs": config.todict(),
+                }
+            )
+        return configs
+
+    def save(self, path: str):
+        r"""Store the pipeline as an IR(intermediate representation) in yaml.
+        The path can then be passed to ``init_from_config_path`` to initialize
+        a pipeline. Note that calling ``init_from_config`` from a different
+        python environment may not work for some self defined component classes
+        because their module name is `__main__`.
+
+        Args:
+            path: The file path to save configurations.
+        """
+        with open(path, "w") as f:
+            yaml.safe_dump(self._dump_to_config(), f)
+
+    def _remote_service_app(
+        self, service_name: str = "", input_format: str = "string"
+    ):
+        r"""Return a FastAPI app that can be used to serve the pipeline.
+
+        Args:
+            service_name: Assign a name to the pipeline service for validation.
+                This will appear in the `service_name` field on default page
+                and can be queried and validated against the expected service
+                name set by user. Default to `''`.
+            input_format: Specify format of the input for validation. It can be
+                `"string"` or `"DataPack"`. This will appear in the
+                `input_format` field on default page and can be queried and
+                validated against the expected input format set by user.
+                Default to `"string"`.
+
+        Returns:
+            FastAPI: A FastAPI app for remote service.
+        """
+        # TODO: Currently we only support the `process` function, but it can
+        # be extended by adding new interfaces that wrap up any Pipeline
+        # method. Refer to https://fastapi.tiangolo.com for more info.
+        app = FastAPI()
+        records: Optional[Dict[str, Set[str]]] = None
+
+        class RequestBody(BaseModel):
+            args: str = "[]"
+            kwargs: str = "{}"
+
+        # pylint: disable=unused-variable
+        @app.get("/")
+        def default_page():
+            return {
+                "status": "OK",
+                "service_name": service_name,
+                "input_format": input_format,
+                "pipeline": self._dump_to_config(),
+            }
+
+        @app.get("/records")
+        def get_records():
+            nonlocal records
+            if records is None:
+                # Collect records of each pipeline component for validation
+                records = {}
+                for component in [self._reader] + self.components:
+                    component.record(records)
+            return {"status": "OK", "records": records}
+
+        @app.get("/expectation")
+        def get_expectation():
+            expectation: Dict[str, Set[str]] = {}
+            if len(self.components) > 0:
+                expectation = self.components[0].expected_types_and_attributes()
+            return {"status": "OK", "expectation": expectation}
+
+        @app.post("/process")
+        def run_pipeline(body: RequestBody):
+            args = json.loads(body.args)
+            kwargs = json.loads(body.kwargs)
+            result = self.process(*args, **kwargs)
+            return {"status": "OK", "result": result.serialize()}
+
+        # pylint: enable=unused-variable
+
+        return app
+
+    def serve(
+        self,
+        host: str = "localhost",
+        port: int = 8008,
+        service_name: str = "",
+        input_format: str = "string",
+    ):
+        r"""Start a service of the current pipeline at a specified host
+        and port.
+
+        Args:
+            host: Port number of pipeline service.
+            port: Host name of pipeline service.
+            service_name: Assign a name to the pipeline service for validation.
+                This will appear in the `service_name` field on default page
+                and can be queried and validated against the expected service
+                name set by user. Default to `''`.
+            input_format: Specify format of the input for validation. It can be
+                `"string"` or `"DataPack"`. This will appear in the
+                `input_format` field on default page and can be queried and
+                validated against the expected input format set by user.
+                Default to `"string"`.
+        """
+        self.initialize()
+        uvicorn.run(
+            self._remote_service_app(
+                service_name=service_name, input_format=input_format
+            ),
+            host=host,
+            port=port,
+            log_level="info",
+        )
+
+    def set_profiling(self, enable_profiling: bool = True):
+        r"""Set profiling option.
+
+        Args:
+            enable_profiling: A boolean of whether to enable profiling
+                for the pipeline or not (the default is True).
+        """
+        self._enable_profiling = enable_profiling
+
+    def initialize(self) -> "Pipeline":
+        """
+        This function should be called before the pipeline can be used to
+        process the actual data. This function will call the `initialize` of
+        all the components inside this pipeline.
+
+        Returns:
+
+        """
+        # create EntryTree type object merged_entry_tree to store the parsed
+        # entry tree from ontology specification file passed in as part of
+        # resource and add the result to resource with key of merged_entry_tree.
+        merged_entry_tree = EntryTree()
+        if self.resource.get("onto_specs_path"):
+            OntologyCodeGenerator().parse_schema_for_no_import_onto_specs_file(
+                ontology_path=self.resource.get("onto_specs_path"),
+                ontology_dict=self.resource.get("onto_specs_dict"),
+                merged_entry_tree=merged_entry_tree,
+            )
+            self.resource.update(merged_entry_tree=merged_entry_tree)
+
         # The process manager need to be assigned first.
         self._proc_mgr = ProcessManager(len(self._components))
 
-        self._reader.assign_manager(self._proc_mgr)
+        if self._initialized:
+            # The pipeline has already been initialized, so we are doing
+            # re-initialization here.
+            logging.info("Re-initializing the Pipeline.")
 
-        self._reader.initialize(self.resource, self._reader_config)
-        self.initialize_processors()
+        # Reset the flags of the components before initializing them.
+        self._reader.reset_flags()
+        for c in self._components:
+            c.reset_flags()
 
-        self.initialized = True
+        # Handle the reader.
+        if not self._reader.is_initialized:
+            self._reader.initialize(self.resource, self._reader_config)
+        else:
+            logging.info(
+                "The reader [%s] has already initialized, "
+                "will skip its initialization.",
+                self._reader.name,
+            )
 
-    def initialize_processors(self):
-        for processor, config in zip(self.components, self.processor_configs):
+        if self._check_type_consistency:
+            self.reader.enforce_consistency(enforce=True)
+        else:
+            self.reader.enforce_consistency(enforce=False)
+
+        # Handle other components.
+        self.initialize_components()
+        self._initialized = True
+
+        # Create profiler
+        if self._enable_profiling:
+            self.reader.set_profiling(True)
+            self._profiler = [0.0] * len(self.components)
+
+        # Check record types and attributes of each pipeline component
+        if self._do_init_type_check:
+            current_records: Dict[str, Set[str]] = {}
+            self._reader.record(current_records)
+            for component in self.components:
+                if hasattr(component, "expected_types_and_attributes"):
+                    record_types_and_attributes_check(
+                        component.expected_types_and_attributes(),  # type: ignore
+                        current_records,
+                    )
+                if hasattr(component, "record"):
+                    component.record(current_records)  # type: ignore
+
+        return self
+
+    def initialize_components(self):
+        """
+        This function will initialize all the components in this pipeline,
+        except the reader. The components are initialized in a FIFO manner
+        based on the order of insertion,
+
+        During initialization, the component will be configured based on its
+        corresponding configuration. However, if the component is already
+        initialized (for example, being initialized manually or used twice
+        in the same pipeline), the new configuration will be ignored.
+
+        The pipeline will check for type dependencies between the components
+        inside this pipeline, see
+        :func:`~forte.pipeline_component.PipelineComponent.enforce_consistency`
+        for more details.
+
+        """
+        for component, config in zip(self.components, self.component_configs):
             try:
-                processor.assign_manager(self._proc_mgr)
-                processor.initialize(self.resource, config)
+                if not component.is_initialized:
+                    component.initialize(self.resource, config)
+                else:
+                    logging.info(
+                        "The component [%s] has already initialized, "
+                        "will skip its initialization.",
+                        component.name,
+                    )
             except ProcessorConfigError as e:
-                logging.error("Exception occur when initializing "
-                              "processor %s", processor.name)
+                logging.error(
+                    "Exception occur when initializing " "processor %s",
+                    component.name,
+                )
                 raise e
 
-    def set_reader(self, reader: BaseReader,
-                   config: Optional[Union[Config, Dict[str, Any]]] = None):
+            component.enforce_consistency(enforce=self._check_type_consistency)
+
+    def set_reader(
+        self,
+        reader: BaseReader,
+        config: Optional[Union[Config, Dict[str, Any]]] = None,
+    ) -> "Pipeline":
+        """
+        Set the reader of the pipeline. A reader is the entry point of
+        this pipeline, data flown into the reader will be converted to the
+        data pack format, and being passed onto the other components for
+        processing.
+
+        Args:
+            reader: The reader to be used of the pipeline
+            config: The custom configuration to be passed to the reader. If
+              the config is not provided, the default config defined by the
+              reader class will be used.
+
+        Returns:
+            The pipeline itself, which allows you to directly chain other
+            pipeline construction code afterwards, i.e., you can do:
+
+            .. code-block:: python
+
+                Pipeline().set_reader(your_reader()).add(your_processor())
+
+        """
         self._reader = reader
         self._reader_config = reader.make_configs(config)
+        return self
 
     @property
-    def reader(self):
+    def reader(self) -> BaseReader:
         return self._reader
 
     @property
-    def components(self):
+    def components(self) -> List[PipelineComponent]:
+        """
+        Return all the components in this pipeline, except the reader.
+
+        Returns: A list containing the components.
+
+        """
         return self._components
 
     @property
-    def processor_configs(self):
+    def component_configs(self) -> List[Optional[Config]]:
+        """
+        Return the configs related to the components, except the reader.
+
+        Returns: A list containing the components configs.
+
+        """
         return self._configs
 
-    def add(self, component: PipelineComponent,
-            config: Optional[Union[Config, Dict[str, Any]]] = None,
-            selector: Optional[Selector] = None):
-        self._processors_index[component.name] = len(self.components)
+    def add(
+        self,
+        component: PipelineComponent,
+        config: Optional[Union[Config, Dict[str, Any]]] = None,
+        selector: Optional[Selector] = None,
+    ) -> "Pipeline":
+        """
+        Adds a pipeline component to the pipeline. The pipeline components
+        will form a chain based on the insertion order. The customized
+        `config` and `selector` (:class:`~forte.data.selector.Selector`)
+        will be associated with this particular component. If the `config`
+        or the `selector` is not provided, the default ones will be used.
 
+        Here, note that the same component instance can be added multiple
+        times to the pipeline. In such cases, the instance will only be
+        setup at the first insertion (i.e. its `initialize` function will
+        only be called once). The subsequent insertion of the same component
+        instance will not change the behavior nor the states of the instance.
+        Thus, a different `config` cannot be provided (should be `None`) when
+        added the second time, otherwise a `ProcessorConfigError` will be
+        thrown. In the case where one want to them to behave differently, a
+        different instance should be used.
+
+        Args:
+            component (PipelineComponent): The component to be inserted next
+              to the pipeline.
+            config (Union[Config, Dict[str, Any]): The custom configuration
+              to be used for the added component. Default None, which means
+              the `default_configs()` of the component will be used.
+            selector (Selector): The selector used to pick the corresponding
+              data pack to be consumed by the component. Default None, which
+              means the whole pack will be used.
+
+        Returns:
+            The pipeline itself, which enables one to chain the creation of
+            the pipeline, i.e., you can do:
+
+            .. code-block:: python
+
+                Pipeline().set_reader(your_reader()).add(
+                    your_processor()).add(anther_processor())
+        """
         if isinstance(component, BaseReader):
             raise ProcessFlowException("Reader need to be set via set_reader()")
 
@@ -208,18 +635,40 @@ class Pipeline(Generic[PackType]):
             # This will ask the job to keep a copy of the gold standard.
             self.evaluator_indices.append(len(self.components))
 
-        component.assign_manager(self._proc_mgr)
-        self._components.append(component)
-        self.processor_configs.append(component.make_configs(config))
+        if component not in self.__component_set:
+            # The case where the component is not found.
+            self._components.append(component)
+            self.__component_set.add(component)
+            self.component_configs.append(component.make_configs(config))
+        else:
+            if config is None:
+                self._components.append(component)
+                # We insert a `None` value here just to make the config list
+                # to match the component list, but this config should not be
+                # used.
+                self.component_configs.append(None)
+            else:
+                raise ProcessorConfigError(
+                    f"The same instance of a component named {component.name} "
+                    f" has already been added to"
+                    f" the pipeline, we do not accept a different configuration"
+                    f" for it. If you would like to use a differently"
+                    f" configured component, please create another instance."
+                    f" If you intend to re-use the component instance, please"
+                    f" do not provide the `config` (or provide a `None`)."
+                )
 
         if selector is None:
-            self._selectors.append(DummySelector())
+            self._selectors.append(self.__default_selector)
         else:
             self._selectors.append(selector)
 
+        return self
+
     def add_gold_packs(self, pack):
-        r"""Add gold packs to the dictionary. This dictionary is used by the
-        evaluator while calling `consume_next(...)`
+        r"""Add gold packs to a internal dictionary used for evaluation.
+        This dictionary is used by the evaluator while calling
+        `consume_next(...)`
 
         Args:
             pack (Dict): A key, value pair containing job.id -> gold_pack
@@ -267,9 +716,10 @@ class Pipeline(Generic[PackType]):
                 :attr:`_reader` is a file reader, this can point to the file
                 path.
         """
-        if not self.initialized:
+        if not self._initialized:
             raise ProcessFlowException(
-                "Please call initialize before running the pipeline")
+                "Please call initialize before running the pipeline"
+            )
 
         first_pack = []
 
@@ -288,9 +738,10 @@ class Pipeline(Generic[PackType]):
         iterator or list of DataPacks. The arguments are directly passed
         to the reader to take data from the source.
         """
-        if not self.initialized:
+        if not self._initialized:
             raise ProcessFlowException(
-                "Please call initialize before running the pipeline")
+                "Please call initialize before running the pipeline"
+            )
 
         data_iter = self._reader.iter(*args, **kwargs)
         return self._process_packs(data_iter)
@@ -299,16 +750,96 @@ class Pipeline(Generic[PackType]):
         """
         Call the finish method of all pipeline component. This need to be called
         explicitly to release all resources.
-
-        Returns:
-
         """
+
+        # Report time profiling of readers and processors
+        if self._enable_profiling:
+            out_header: str = "Pipeline Time Profile\n"
+            out_reader: str = (
+                f"- Reader: {self.reader.component_name}, "
+                + f"{self.reader.time_profile} s\n"
+            )
+            out_processor: str = "\n".join(
+                [
+                    f"- Component [{i}]: {self.components[i].name}, {t} s"
+                    for i, t in enumerate(self._profiler)
+                ]
+            )
+            logger.info("%s%s%s", out_header, out_reader, out_processor)
+
         self.reader.finish(self.resource)
         for p in self.components:
             p.finish(self.resource)
+        self._initialized = False
+
+    def __update_stream_job_status(self):
+        q_index = self._proc_mgr.current_queue_index
+        u_index = self._proc_mgr.unprocessed_queue_indices[q_index]
+        current_queue = self._proc_mgr.current_queue
+
+        for job_i in itertools.islice(current_queue, 0, u_index + 1):
+            if job_i.status == ProcessJobStatus.UNPROCESSED:
+                job_i.set_status(ProcessJobStatus.PROCESSED)
+
+    def __update_batch_job_status(self, component: BaseBatchProcessor):
+        # update the status of the jobs. The jobs which were removed from
+        # data_pack_pool will have status "PROCESSED" else they are "QUEUED"
+        q_index = self._proc_mgr.current_queue_index
+        u_index = self._proc_mgr.unprocessed_queue_indices[q_index]
+        current_queue = self._proc_mgr.current_queue
+
+        data_pool_length = len(component.batcher.data_pack_pool)
+
+        for i, job_i in enumerate(
+            itertools.islice(current_queue, 0, u_index + 1)
+        ):
+            if i <= u_index - data_pool_length:
+                job_i.set_status(ProcessJobStatus.PROCESSED)
+            else:
+                job_i.set_status(ProcessJobStatus.QUEUED)
+
+    def __flush_batch_job_status(self):
+        current_queue = self._proc_mgr.current_queue
+        for job in current_queue:
+            job.set_status(ProcessJobStatus.PROCESSED)
+
+    def _process_with_component(
+        self,
+        selector: Selector,
+        component: PipelineComponent,
+        raw_job: ProcessJob,
+    ):
+        for pack in selector.select(raw_job.pack):
+            # First, perform the component action on the pack
+            try:
+                if isinstance(component, Caster):
+                    # Replacing the job pack with the casted version.
+                    raw_job.alter_pack(component.cast(pack))
+                elif isinstance(component, BaseBatchProcessor):
+                    pack.set_control_component(component.name)
+                    component.process(pack)
+                elif isinstance(component, Evaluator):
+                    pack.set_control_component(component.name)
+                    component.consume_next(
+                        pack, self._predict_to_gold[raw_job.id]
+                    )
+                elif isinstance(component, BaseProcessor):
+                    # Should be BasePackProcessor:
+                    # All other processor are considered to be
+                    # streaming processor like this.
+                    pack.set_control_component(component.name)
+                    component.process(pack)
+                # After the component action, make sure the entry is
+                # added into the index.
+                pack.add_all_remaining_entries()
+            except ValueError as e:
+                raise ProcessExecutionException(
+                    f"Exception occurred when running " f"{component.name}"
+                ) from e
 
     def _process_packs(
-            self, data_iter: Iterator[PackType]) -> Iterator[PackType]:
+        self, data_iter: Iterator[PackType]
+    ) -> Iterator[PackType]:
         r"""Process the packs received from the reader by the running through
         the pipeline.
 
@@ -335,7 +866,7 @@ class Pipeline(Generic[PackType]):
         # next.
         #
         # 3) In case of a BatchProcessor, a job enters into QUEUED status if the
-        # job does not satisfy the `batch_size` requirement of that processor.
+        # batch is not full according to the batcher of that processor.
         # In that case, the pipeline requests for additional jobs from the
         # reader and starts the execution loop from the beginning.
         #
@@ -422,9 +953,10 @@ class Pipeline(Generic[PackType]):
         #        |___________|       |_______________|     |_______________|
         #        |___________|       |_______________|     |_______________|
 
-        if not self.initialized:
+        if not self._initialized:
             raise ProcessFlowException(
-                "Please call initialize before running the pipeline")
+                "Please call initialize before running the pipeline"
+            )
 
         buffer = ProcessBuffer(self, data_iter)
 
@@ -434,172 +966,180 @@ class Pipeline(Generic[PackType]):
             return
 
         while not self._proc_mgr.exhausted():
-            # job has to be the first UNPROCESSED element
-            # the status of the job now is UNPROCESSED
-            unprocessed_job: ProcessJob = next(buffer)
+            # Take the raw job from the buffer, the job status now should
+            # be UNPROCESSED.
+            raw_job: ProcessJob = next(buffer)
 
-            processor_index = self._proc_mgr.current_processor_index
-            processor = self.components[processor_index]
-            selector = self._selectors[processor_index]
+            component_index = self._proc_mgr.current_processor_index
+            component = self.components[component_index]
+            selector: Selector = self._selectors[component_index]
             current_queue_index = self._proc_mgr.current_queue_index
-            current_queue = self._proc_mgr.current_queue
+            current_queue: Deque[ProcessJob] = self._proc_mgr.current_queue
             pipeline_length = self._proc_mgr.pipeline_length
-            unprocessed_queue_indices = \
-                self._proc_mgr.unprocessed_queue_indices
-            processed_queue_indices = \
-                self._proc_mgr.processed_queue_indices
+            unprocessed_queue_indices = self._proc_mgr.unprocessed_queue_indices
+            processed_queue_indices = self._proc_mgr.processed_queue_indices
             next_queue_index = current_queue_index + 1
             should_yield = next_queue_index >= pipeline_length
 
-            if not unprocessed_job.is_poison:
-                for pack in selector.select(unprocessed_job.pack):
-                    # First, perform the component action on the pack
-                    try:
-                        if isinstance(processor, Caster):
-                            # Replacing the job pack with the casted version.
-                            unprocessed_job.alter_pack(processor.cast(pack))
-                        elif isinstance(processor, BaseProcessor):
-                            processor.process(pack)
-                        elif isinstance(processor, Evaluator):
-                            processor.consume_next(
-                                pack, self._predict_to_gold[unprocessed_job.id]
-                            )
+            if not raw_job.is_poison:
+                # Start timer
+                if self._enable_profiling:
+                    start_time: float = time()
 
-                        # After the component action, make sure the entry is
-                        # added into the index.
-                        pack.add_all_remaining_entries()
-                    except ValueError as e:
-                        raise ProcessExecutionException(
-                            f'Exception occurred when running '
-                            f'{processor.name}') from e
+                self._process_with_component(selector, component, raw_job)
 
-                    # Then, based on component type, handle the queue.
-                    if isinstance(processor, BaseBatchProcessor):
-                        index = unprocessed_queue_indices[current_queue_index]
+                # Stop timer and add to time profiler
+                if self._enable_profiling:
+                    self._profiler[component_index] += time() - start_time
 
-                        # check status of all the jobs up to "index"
-                        for i, job_i in enumerate(
-                                itertools.islice(current_queue, 0,
-                                                 index + 1)):
+                # Then, based on component type, handle the queue.
+                if isinstance(component, BaseBatchProcessor):
+                    self.__update_batch_job_status(component)
+                    index = unprocessed_queue_indices[current_queue_index]
 
-                            if job_i.status == ProcessJobStatus.PROCESSED:
-                                processed_queue_indices[
-                                    current_queue_index] = i
+                    # Check status of all the jobs up to "index".
+                    for i, job_i in enumerate(
+                        itertools.islice(current_queue, 0, index + 1)
+                    ):
+                        if job_i.status == ProcessJobStatus.PROCESSED:
+                            processed_queue_indices[current_queue_index] = i
 
-                        # there are UNPROCESSED jobs in the queue
-                        if index < len(current_queue) - 1:
-                            unprocessed_queue_indices[current_queue_index] \
-                                += 1
-
+                    # There are UNPROCESSED jobs in the queue.
+                    if index < len(current_queue) - 1:
+                        unprocessed_queue_indices[current_queue_index] += 1
+                    elif processed_queue_indices[current_queue_index] == -1:
                         # Fetch more data from the reader to process the
-                        # first job
-                        elif (processed_queue_indices[current_queue_index]
-                              == -1):
+                        # first job.
+                        unprocessed_queue_indices[current_queue_index] = len(
+                            current_queue
+                        )
+                        self._proc_mgr.current_processor_index = 0
+                        self._proc_mgr.current_queue_index = -1
+                    else:
+                        processed_queue_index = processed_queue_indices[
+                            current_queue_index
+                        ]
+                        # Move or yield the pack.
+                        c_queue = list(current_queue)
+                        for job_i in c_queue[: processed_queue_index + 1]:
+                            if job_i.status == ProcessJobStatus.PROCESSED:
+                                if should_yield:
+                                    if job_i.id in self._predict_to_gold:
+                                        self._predict_to_gold.pop(job_i.id)
+                                    # TODO: I don't know why these are
+                                    #  marked as incompatible type by mypy.
+                                    #  the same happens 3 times on every yield.
+                                    #  It is observed that the pack returned
+                                    #  from the `ProcessJob` is considered to
+                                    #  be different from `PackType`.
+                                    yield job_i.pack  # type: ignore
+                                else:
+                                    self._proc_mgr.add_to_queue(
+                                        queue_index=next_queue_index, job=job_i
+                                    )
+                            else:
+                                raise ProcessFlowException(
+                                    f"The job status should be "
+                                    f"{ProcessJobStatus.PROCESSED} "
+                                    f"at this point."
+                                )
+                            current_queue.popleft()
 
-                            unprocessed_queue_indices[current_queue_index] \
-                                = len(current_queue)
+                        # Set the UNPROCESSED and PROCESSED indices.
+                        unprocessed_queue_indices[current_queue_index] = len(
+                            current_queue
+                        )
 
+                        processed_queue_indices[current_queue_index] = -1
+
+                        if should_yield:
                             self._proc_mgr.current_processor_index = 0
+                            self._proc_mgr.current_queue_index = -1
+                        else:
+                            self._proc_mgr.current_processor_index = (
+                                next_queue_index
+                            )
+                            self._proc_mgr.current_queue_index = (
+                                next_queue_index
+                            )
+                # Besides Batch Processors, the other component type only
+                # deal with one pack at a time, these include: PackProcessor
+                # Evaluator, Caster.
+                # - Move them to the next queue
+                else:
+                    self.__update_stream_job_status()
+                    index = unprocessed_queue_indices[current_queue_index]
 
+                    # there are UNPROCESSED jobs in the queue
+                    if index < len(current_queue) - 1:
+                        unprocessed_queue_indices[current_queue_index] += 1
+                    else:
+                        # current_queue is modified in this array
+                        for job_i in list(current_queue):
+                            if job_i.status == ProcessJobStatus.PROCESSED:
+                                if should_yield:
+                                    if job_i.id in self._predict_to_gold:
+                                        self._predict_to_gold.pop(job_i.id)
+                                    yield job_i.pack  # type: ignore
+                                else:
+                                    self._proc_mgr.add_to_queue(
+                                        queue_index=next_queue_index, job=job_i
+                                    )
+                                current_queue.popleft()
+                            else:
+                                raise ProcessFlowException(
+                                    f"The job status should be "
+                                    f"{ProcessJobStatus.PROCESSED} "
+                                    f"at this point."
+                                )
+
+                        # set the UNPROCESSED index
+                        # we do not use "processed_queue_indices" as the
+                        # jobs get PROCESSED whenever they are passed
+                        # into a PackProcessor
+                        unprocessed_queue_indices[current_queue_index] = len(
+                            current_queue
+                        )
+
+                        # update the current queue and processor only
+                        # when all the jobs are processed in the current
+                        # queue
+                        if should_yield:
+                            self._proc_mgr.current_processor_index = 0
                             self._proc_mgr.current_queue_index = -1
 
                         else:
-                            processed_queue_index = \
-                                processed_queue_indices[current_queue_index]
-
-                            # move or yield the pack
-                            c_queue = list(current_queue)
-                            for job_i in \
-                                    c_queue[:processed_queue_index + 1]:
-
-                                if should_yield:
-                                    if job_i.id in self._predict_to_gold:
-                                        self._predict_to_gold.pop(job_i.id)
-                                    yield job_i.pack
-                                else:
-                                    self._proc_mgr.add_to_queue(
-                                        queue_index=next_queue_index,
-                                        job=job_i)
-                                current_queue.popleft()
-
-                            # set the UNPROCESSED and PROCESSED indices
-                            unprocessed_queue_indices[current_queue_index] \
-                                = len(current_queue)
-
-                            processed_queue_indices[current_queue_index] \
-                                = -1
-
-                            if should_yield:
-                                self._proc_mgr.current_processor_index = 0
-                                self._proc_mgr.current_queue_index = -1
-                            else:
-                                self._proc_mgr.current_processor_index \
-                                    = next_queue_index
-                                self._proc_mgr.current_queue_index \
-                                    = next_queue_index
-
-                    # Besides Batch Processors, the other component type only
-                    # deal with one pack at a time, these include: PackProcessor
-                    # Evaluator, Caster.
-                    # - Move them to the next queue
-                    else:
-                        index = unprocessed_queue_indices[current_queue_index]
-
-                        # there are UNPROCESSED jobs in the queue
-                        if index < len(current_queue) - 1:
-                            unprocessed_queue_indices[current_queue_index] \
-                                += 1
-                        else:
-                            # current_queue is modified in this array
-                            for job_i in list(current_queue):
-                                if should_yield:
-                                    if job_i.id in self._predict_to_gold:
-                                        self._predict_to_gold.pop(job_i.id)
-                                    yield job_i.pack
-                                else:
-                                    self._proc_mgr.add_to_queue(
-                                        queue_index=next_queue_index,
-                                        job=job_i)
-                                current_queue.popleft()
-
-                            # set the UNPROCESSED index
-                            # we do not use "processed_queue_indices" as the
-                            # jobs get PROCESSED whenever they are passed
-                            # into a PackProcessor
-                            unprocessed_queue_indices[current_queue_index] \
-                                = len(current_queue)
-
-                            # update the current queue and processor only
-                            # when all the jobs are processed in the current
-                            # queue
-                            if should_yield:
-                                self._proc_mgr.current_processor_index = 0
-                                self._proc_mgr.current_queue_index = -1
-
-                            else:
-                                self._proc_mgr.current_processor_index \
-                                    = next_queue_index
-                                self._proc_mgr.current_queue_index \
-                                    = next_queue_index
+                            self._proc_mgr.current_processor_index = (
+                                next_queue_index
+                            )
+                            self._proc_mgr.current_queue_index = (
+                                next_queue_index
+                            )
             else:
-                processor.flush()
+                component.flush()
+                self.__flush_batch_job_status()
 
                 # current queue is modified in the loop
                 for job in list(current_queue):
-                    if job.status != ProcessJobStatus.PROCESSED and \
-                            not job.is_poison:
-                        raise ValueError("Job is neither PROCESSED nor is "
-                                         "a poison. Something went wrong "
-                                         "during execution.")
+                    if (
+                        job.status != ProcessJobStatus.PROCESSED
+                        and not job.is_poison
+                    ):
+                        raise ValueError(
+                            "Job is neither PROCESSED nor is "
+                            "a poison. Something went wrong "
+                            "during execution."
+                        )
 
                     if not job.is_poison and should_yield:
                         if job.id in self._predict_to_gold:
                             self._predict_to_gold.pop(job.id)
-                        yield job.pack
+                        yield job.pack  # type: ignore
 
                     elif not should_yield:
                         self._proc_mgr.add_to_queue(
-                            queue_index=next_queue_index, job=job)
+                            queue_index=next_queue_index, job=job
+                        )
 
                     if not job.is_poison:
                         current_queue.popleft()
@@ -612,7 +1152,52 @@ class Pipeline(Generic[PackType]):
         self._proc_mgr.reset()
 
     def evaluate(self) -> Iterator[Tuple[str, Any]]:
+        """
+        Call the evaluators in the pipeline to collect their results.
+
+        Returns:
+            Iterator of the evaluator results. Each element is a tuple, where
+            the first one is the name of the evaluator, and the second one
+            is the output of the evaluator (see
+            :func:`~forte.evaluation.base.evaluator.get_result`).
+        """
         for i in self.evaluator_indices:
             p = self.components[i]
             assert isinstance(p, Evaluator)
             yield p.name, p.get_result()
+
+
+def serve(
+    pl_config_path: str,
+    host: str = "localhost",
+    port: int = 8008,
+    service_name: str = "",
+    input_format: str = "string",
+):
+    r"""Start a remote service of a pipeline initialized from a YAML config at
+    a specified host and port.
+
+    Args:
+        pl_config_path: A string of the configuration path, which is
+            is a YAML file that specify the structure and parameters of the
+            pipeline.
+        host: Port number of pipeline service.
+        port: Host name of pipeline service.
+        service_name: Assign a name to the pipeline service for validation.
+                This will appear in the `service_name` field on default page
+                and can be queried and validated against the expected service
+                name set by user. Default to `''`.
+        input_format: Specify format of the input for validation. It can be
+            `"string"` or `"DataPack"`. This will appear in the
+            `input_format` field on default page and can be queried and
+            validated against the expected input format set by user.
+            Default to `"string"`.
+    """
+    pipeline: Pipeline = Pipeline()
+    pipeline.init_from_config_path(pl_config_path)
+    pipeline.serve(
+        host=host,
+        port=port,
+        service_name=service_name,
+        input_format=input_format,
+    )

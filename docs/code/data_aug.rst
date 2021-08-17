@@ -10,10 +10,16 @@ Data Augmentation Processors
 
 :hidden:`ReplacementDataAugmentProcessor`
 ---------------------------------------------
-.. autoclass:: forte.processors.base.data_augment_processor.ReplacementDataAugmentProcessor
+.. autoclass:: forte.processors.data_augment.base_data_augment_processor.ReplacementDataAugmentProcessor
+
+:hidden:`DataSelector`
+---------------------------------------------
+.. autoclass:: forte.processors.base.data_selector_for_da.BaseElasticSearchDataSelector
+    :members:
+
 
 :hidden:`UDAIterator`
-----------------------------
+---------------------------------------------
 .. autoclass:: forte.processors.data_augment.algorithms.UDA.UDAIterator
     :members:
 
@@ -67,4 +73,18 @@ Data Augmentation Ops
 :hidden:`WordnetDictionary`
 ----------------------------
 .. autoclass:: forte.processors.data_augment.algorithms.dictionary.WordnetDictionary
+    :members:
+
+Data Augmentation Models
+========================================
+
+:hidden:`Reinforcement Learning`
+----------------------------------
+.. autoclass:: forte.models.da_rl.MetaAugmentationWrapper
+    :members:
+
+.. autoclass:: forte.models.da_rl.MetaModule
+    :members:
+
+.. autoclass:: forte.models.da_rl.TexarBertMetaModule
     :members:

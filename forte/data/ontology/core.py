@@ -15,13 +15,25 @@
 Defines the basic data structures and interfaces for the Forte data
 representation system.
 """
-
+import uuid
+import warnings
 from abc import abstractmethod, ABC
 from collections.abc import MutableSequence, MutableMapping
 from dataclasses import dataclass
 from typing import (
-    Iterable, Optional, Type, Hashable, TypeVar, Generic,
-    Union, Dict, Iterator, get_type_hints, overload, List)
+    Iterable,
+    Optional,
+    Type,
+    Hashable,
+    TypeVar,
+    Generic,
+    Union,
+    Dict,
+    Iterator,
+    get_type_hints,
+    overload,
+    List,
+)
 
 import numpy as np
 
@@ -39,15 +51,24 @@ __all__ = [
     "MpPointer",
     "FDict",
     "FList",
-    "MultiEntry"
+    "MultiEntry",
 ]
 
 from forte.utils.utils import check_type
 
 default_entry_fields = [
-    '_Entry__pack', '_tid', '_embedding', '_span', '_parent', '_child',
-    '_members', '_Entry__field_modified', 'field_records', 'creation_records',
-    '_id_manager']
+    "_Entry__pack",
+    "_tid",
+    "_embedding",
+    "_span",
+    "_parent",
+    "_child",
+    "_members",
+    "_Entry__field_modified",
+    "field_records",
+    "creation_records",
+    "_id_manager",
+]
 
 
 @dataclass
@@ -81,9 +102,9 @@ class Entry(Generic[ContainerType]):
         # to be checked by the pack.
         super().__init__()
         self.__pack: ContainerType = pack
-        self._tid: int = self.pack.get_next_id()
+        self._tid: int = uuid.uuid4().int
         self._embedding: np.ndarray = np.empty(0)
-        self.pack.validate(self)
+        self.pack._validate(self)
         self.pack.on_entry_creation(self)
 
     def regret_creation(self):
@@ -104,7 +125,7 @@ class Entry(Generic[ContainerType]):
             state.pop("_embedding")
         else:
             state["_embedding"] = emb
-        state.pop('_Entry__pack')
+        state.pop("_Entry__pack")
         return state
 
     def __setstate__(self, state):
@@ -123,8 +144,7 @@ class Entry(Generic[ContainerType]):
     # a getter function for self._embedding
     @property
     def embedding(self):
-        r"""Get the embedding vectors (numpy array of floats) of the entry.
-        """
+        r"""Get the embedding vectors (numpy array of floats) of the entry."""
         return self._embedding
 
     # a setter function for self._embedding
@@ -160,7 +180,7 @@ class Entry(Generic[ContainerType]):
         Returns:
 
         """
-        return self.__pack.meta.pack_id  # type: ignore
+        return self.__pack.pack_id  # type: ignore
 
     def set_pack(self, pack: ContainerType):
         self.__pack = pack
@@ -178,8 +198,7 @@ class Entry(Generic[ContainerType]):
         """
         if isinstance(from_entry, MultiEntry):
             return MpPointer(
-                from_entry.pack.get_pack_index(self.pack_id),
-                self.tid
+                from_entry.pack.get_pack_index(self.pack_id), self.tid
             )
         elif isinstance(from_entry, Entry):
             return Pointer(self.tid)
@@ -198,7 +217,16 @@ class Entry(Generic[ContainerType]):
             return self.pack.get_entry(ptr.tid)
         else:
             raise TypeError(
-                f"Unsupported pointer type {ptr.__class__} for entry")
+                f"Unsupported pointer type {ptr.__class__} for entry"
+            )
+
+    def entry_type(self) -> str:
+        """Return the full name of this entry type."""
+        module = self.__class__.__module__
+        if module is None or module == str.__class__.__module__:
+            return self.__class__.__name__
+        else:
+            return module + "." + self.__class__.__name__
 
     def _check_attr_type(self, key, value):
         """
@@ -213,11 +241,19 @@ class Entry(Generic[ContainerType]):
         """
         if key not in default_entry_fields:
             hints = get_type_hints(self.__class__)
+            if key not in hints.keys():
+                warnings.warn(
+                    f"Base on attributes in entry definition, "
+                    f"the [{key}] attribute_name does not exist in the "
+                    f"[{type(self).__name__}] that you specified to add to."
+                )
             is_valid = check_type(value, hints[key])
             if not is_valid:
-                raise TypeError(
-                    f"The [{key}] attribute of [{type(self)}] "
-                    f"should be [{hints[key]}], but got [{type(value)}].")
+                warnings.warn(
+                    f"Based on type annotation, "
+                    f"the [{key}] attribute of [{type(self).__name__}] "
+                    f"should be [{hints[key]}], but got [{type(value)}]."
+                )
 
     def __setattr__(self, key, value):
         self._check_attr_type(key, value)
@@ -228,7 +264,8 @@ class Entry(Generic[ContainerType]):
                 self.__dict__[key] = Pointer(value.tid)
             else:
                 raise PackDataException(
-                    "An entry cannot refer to entries in another data pack.")
+                    "An entry cannot refer to entries in another data pack."
+                )
         else:
             super().__setattr__(key, value)
 
@@ -237,7 +274,12 @@ class Entry(Generic[ContainerType]):
             self.__pack.record_field(self.tid, key)
 
     def __getattribute__(self, item):
-        v = super().__getattribute__(item)
+        try:
+            v = super().__getattribute__(item)
+        except AttributeError:
+            # For all unknown attributes, return None.
+            return None
+
         if isinstance(v, BasePointer):
             # Using the pointer to get the entry.
             return self.resolve_pointer(v)
@@ -254,9 +296,8 @@ class Entry(Generic[ContainerType]):
         return (type(self), self._tid) == (type(other), other.tid)
 
     def __lt__(self, other):
-        r"""Comparison based on type and id.
-        """
-        return (str(type(self)), self._tid) < (str(type(other)), other.tid)
+        r"""By default, compared based on type string."""
+        return (str(type(self))) < (str(type(other)))
 
     def __hash__(self) -> int:
         r"""The hash function for :class:`Entry` objects.
@@ -304,7 +345,8 @@ class MultiEntry(Entry, ABC):
             return Pointer(self.tid)
         elif isinstance(from_entry, Entry):
             raise ValueError(
-                "Do not support reference a multi pack entry from an entry.")
+                "Do not support reference a multi pack entry from an entry."
+            )
 
     def resolve_pointer(self, ptr: BasePointer) -> Entry:
         if isinstance(ptr, Pointer):
@@ -327,8 +369,11 @@ class FList(Generic[ParentEntryType], MutableSequence):
     stores the entry as their tid to avoid nesting.
     """
 
-    def __init__(self, parent_entry: ParentEntryType,
-                 data: Optional[Iterable[EntryType]] = None):
+    def __init__(
+        self,
+        parent_entry: ParentEntryType,
+        data: Optional[Iterable[EntryType]] = None,
+    ):
         super().__init__()
         self.__parent_entry = parent_entry
         self.__data: List[BasePointer] = []
@@ -337,7 +382,7 @@ class FList(Generic[ParentEntryType], MutableSequence):
 
     def __getstate__(self):
         state = self.__dict__.copy()
-        state.pop('_FList__parent_entry')
+        state.pop("_FList__parent_entry")
         return state
 
     def insert(self, index: int, entry: EntryType):
@@ -353,17 +398,22 @@ class FList(Generic[ParentEntryType], MutableSequence):
     def __getitem__(self, s: slice) -> MutableSequence:
         ...
 
-    def __getitem__(self, index: Union[int, slice]
-                    ) -> Union[EntryType, MutableSequence]:
+    def __getitem__(
+        self, index: Union[int, slice]
+    ) -> Union[EntryType, MutableSequence]:
         if isinstance(index, slice):
-            return [self.__parent_entry.resolve_pointer(d) for d in
-                    self.__data[index]]
+            return [
+                self.__parent_entry.resolve_pointer(d)
+                for d in self.__data[index]
+            ]
         else:
             return self.__parent_entry.resolve_pointer(self.__data[index])
 
     def __setitem__(
-            self, index: Union[int, slice],
-            value: Union[EntryType, Iterable[EntryType]]) -> None:
+        self,
+        index: Union[int, slice],
+        value: Union[EntryType, Iterable[EntryType]],
+    ) -> None:
         # pylint: disable=isinstance-second-argument-not-valid-type
         # TODO: Disable until fix: https://github.com/PyCQA/pylint/issues/3507
         if isinstance(index, int):
@@ -373,7 +423,8 @@ class FList(Generic[ParentEntryType], MutableSequence):
         else:
             assert isinstance(value, Iterable)
             self.__data[index] = [
-                v.as_pointer(self.__parent_entry) for v in value]
+                v.as_pointer(self.__parent_entry) for v in value
+            ]
 
     def __delitem__(self, index: Union[int, slice]) -> None:
         del self.__data[index]
@@ -382,8 +433,8 @@ class FList(Generic[ParentEntryType], MutableSequence):
         return len(self.__data)
 
 
-KeyType = TypeVar('KeyType', bound=Hashable)
-ValueType = TypeVar('ValueType', bound=Entry)
+KeyType = TypeVar("KeyType", bound=Hashable)
+ValueType = TypeVar("ValueType", bound=Entry)
 
 
 class FDict(Generic[KeyType, ValueType], MutableMapping):
@@ -393,8 +444,11 @@ class FDict(Generic[KeyType, ValueType], MutableMapping):
     supported to be entries now.
     """
 
-    def __init__(self, parent_entry: ParentEntryType,
-                 data: Optional[Dict[KeyType, ValueType]] = None):
+    def __init__(
+        self,
+        parent_entry: ParentEntryType,
+        data: Optional[Dict[KeyType, ValueType]] = None,
+    ):
         super().__init__()
 
         self.__parent_entry = parent_entry
@@ -402,7 +456,8 @@ class FDict(Generic[KeyType, ValueType], MutableMapping):
 
         if data is not None:
             self.__data = {
-                k: v.as_pointer(self.__parent_entry) for k, v in data.items()}
+                k: v.as_pointer(self.__parent_entry) for k, v in data.items()
+            }
 
     def __setitem__(self, k: KeyType, v: ValueType) -> None:
         try:
@@ -410,7 +465,8 @@ class FDict(Generic[KeyType, ValueType], MutableMapping):
         except AttributeError as e:
             raise AttributeError(
                 f"Item of the FDict must be of type entry, "
-                f"got {v.__class__}") from e
+                f"got {v.__class__}"
+            ) from e
 
     def __delitem__(self, k: KeyType) -> None:
         del self.__data[k]
@@ -466,10 +522,10 @@ class MpPointer(BasePointer):
 
 class BaseLink(Entry, ABC):
     def __init__(
-            self,
-            pack: ContainerType,
-            parent: Optional[Entry] = None,
-            child: Optional[Entry] = None
+        self,
+        pack: ContainerType,
+        parent: Optional[Entry] = None,
+        child: Optional[Entry] = None,
     ):
         super().__init__(pack)
 
@@ -521,8 +577,11 @@ class BaseLink(Entry, ABC):
     def __eq__(self, other):
         if other is None:
             return False
-        return (type(self), self.get_parent(), self.get_child()) == \
-               (type(other), other.get_parent(), other.get_child())
+        return (type(self), self.get_parent(), self.get_child()) == (
+            type(other),
+            other.get_parent(),
+            other.get_child(),
+        )
 
     def __hash__(self):
         return hash((type(self), self.get_parent(), self.get_child()))
@@ -543,8 +602,7 @@ class BaseGroup(Entry, Generic[EntryType]):
     MemberType: Type[EntryType]
 
     def __init__(
-            self, pack: ContainerType,
-            members: Optional[Iterable[EntryType]] = None
+        self, pack: ContainerType, members: Optional[Iterable[EntryType]] = None
     ):
         super().__init__(pack)
         if members is not None:
@@ -587,7 +645,9 @@ class BaseGroup(Entry, Generic[EntryType]):
         if other is None:
             return False
         return (type(self), self.get_members()) == (
-            type(other), other.get_members())
+            type(other),
+            other.get_members(),
+        )
 
     @abstractmethod
     def get_members(self) -> List[EntryType]:
@@ -605,4 +665,4 @@ class BaseGroup(Entry, Generic[EntryType]):
 
 
 GroupType = TypeVar("GroupType", bound=BaseGroup)
-LinkType = TypeVar('LinkType', bound=BaseLink)
+LinkType = TypeVar("LinkType", bound=BaseLink)

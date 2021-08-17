@@ -3,6 +3,14 @@
 This project shows how we can construct projects to make Forte and Stave work
  side by side.
  
+## Install extra dependencies
+
+In command line, we run
+
+```bash
+pip install git+https://git@github.com/asyml/forte-wrappers#egg=forte-wrappers[elastic,nltk]
+```
+
 ## Downloading the models
 
 In this example, we use an NER model fine-tuned on the NCBI-disease dataset, which predicts 
@@ -21,10 +29,13 @@ First, you should start an Elastic Indexer backend.
 
 Second, you can run the following command to parse some files and index them.
 ```bash
-python clinical_processing_pipeline.py
+python clinical_processing_pipeline.py /path/to/mimiciii/1.4/NOTEEVENTS.csv.gz /path_to_sample_output 10000
 ```
 
-Now we are ready on the data processing part. Let's start the GUI.
+Here, we also write out the raw data pack to `/path_to_sample_output`, and only
+index the first 10k notes. Remove the `10000` parameter to index all documents.
+
+After the indexing is done, we are ready with the data processing part. Let's start the GUI.
 
 ## Stave 
 First, set up Stave following the instructions.

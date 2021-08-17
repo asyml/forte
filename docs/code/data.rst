@@ -63,6 +63,11 @@ Packs
 .. autoclass:: forte.data.data_pack.DataPack
     :members:
 
+:hidden:`MultiPack`
+------------------------
+.. autoclass:: forte.data.multi_pack.MultiPack
+    :members:
+
 :hidden:`BaseMeta`
 ------------------------
 .. autoclass:: forte.data.base_pack.BaseMeta
@@ -88,17 +93,17 @@ Readers
 
 :hidden:`BaseReader`
 ------------------------
-.. autoclass:: forte.data.readers.base_reader.BaseReader
+.. autoclass:: forte.data.base_reader.BaseReader
     :members:
 
 :hidden:`PackReader`
 ------------------------
-.. autoclass:: forte.data.readers.base_reader.PackReader
+.. autoclass:: forte.data.base_reader.PackReader
     :members:
 
 :hidden:`MultiPackReader`
 --------------------------
-.. autoclass:: forte.data.readers.base_reader.MultiPackReader
+.. autoclass:: forte.data.base_reader.MultiPackReader
     :members:
 
 :hidden:`CoNLL03Reader`
@@ -179,6 +184,19 @@ Readers
 :hidden:`OpenIEReader`
 ------------------------
 .. autoclass:: forte.data.readers.openie_reader.OpenIEReader
+    :members:
+
+DataPack Dataset
+=================
+
+:hidden:`DataPackIterator`
+------------------------------
+.. autoclass:: forte.data.data_pack_dataset.DataPackIterator
+    :members:
+
+:hidden:`DataPackDataset`
+------------------------------
+.. autoclass:: forte.data.data_pack_dataset.DataPackDataset
     :members:
 
 Batchers

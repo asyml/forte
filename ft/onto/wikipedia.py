@@ -29,8 +29,8 @@ __all__ = [
 class WikiPage(Annotation):
     """
     Attributes:
-        page_id (Optional[str])
-        page_name (Optional[str])
+        page_id (Optional[str]):
+        page_name (Optional[str]):
     """
 
     page_id: Optional[str]
@@ -53,7 +53,7 @@ class WikiBody(Annotation):
 class WikiSection(Annotation):
     """
     Attributes:
-        is_intro (Optional[bool])
+        is_intro (Optional[bool]):
     """
 
     is_intro: Optional[bool]
@@ -81,22 +81,25 @@ class WikiTitle(Annotation):
 class WikiAnchor(Annotation):
     """
     Attributes:
-        target_page_name (Optional[str])
+        target_page_name (Optional[str]):
+        is_external (Optional[bool]):	whether this is a link to external (i.e. outside wikipedia).
     """
 
     target_page_name: Optional[str]
+    is_external: Optional[bool]
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self.target_page_name: Optional[str] = None
+        self.is_external: Optional[bool] = None
 
 
 @dataclass
 class WikiInfoBoxProperty(Generics):
     """
     Attributes:
-        key (Optional[str])
-        value (Optional[str])
+        key (Optional[str]):
+        value (Optional[str]):
     """
 
     key: Optional[str]
@@ -112,8 +115,8 @@ class WikiInfoBoxProperty(Generics):
 class WikiInfoBoxMapped(Generics):
     """
     Attributes:
-        key (Optional[str])
-        value (Optional[str])
+        key (Optional[str]):
+        value (Optional[str]):
     """
 
     key: Optional[str]

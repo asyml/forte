@@ -27,8 +27,8 @@ def split_train_eval_test(file_name):
     conversation = None
 
     for line in text_file:
-        pair = line.rstrip('\n').split('\t')
-        num, question = pair[0].split(' ', 1)
+        pair = line.rstrip("\n").split("\t")
+        num, question = pair[0].split(" ", 1)
         answer = pair[1]
 
         if num == "1":
@@ -49,8 +49,8 @@ def split_train_eval_test(file_name):
     num_test = 500
 
     train_data = text_data[0:num_train]
-    val_data = text_data[num_train:num_train + num_val]
-    test_data = text_data[num_train + num_val:num_train + num_val + num_test]
+    val_data = text_data[num_train : num_train + num_val]
+    test_data = text_data[num_train + num_val : num_train + num_val + num_test]
 
     return train_data, val_data, test_data
 
@@ -88,14 +88,17 @@ def _create_conv_with_history(conv, num_qa):
 
     new_text_data = []
     for i, _ in enumerate(conv):
-        history = conv[max(i - num_qa, 0):i]
+        history = conv[max(i - num_qa, 0) : i]
         current_qa = conv[i]
 
         if history:
-            qa_with_history = [sentence for qa in history for sentence in
-                               qa] + current_qa
-            qa_with_history = [' '.join(qa_with_history[:-1]),
-                               qa_with_history[-1]]
+            qa_with_history = [
+                sentence for qa in history for sentence in qa
+            ] + current_qa
+            qa_with_history = [
+                " ".join(qa_with_history[:-1]),
+                qa_with_history[-1],
+            ]
         else:
             qa_with_history = current_qa
 
@@ -121,7 +124,8 @@ def create_dataset_with_history(conversations, num_line=2):
 
     for conversation in conversations:
         conversation_with_history = _create_conv_with_history(
-            conversation, num_line)
+            conversation, num_line
+        )
         proc_text_data.extend(conversation_with_history)
 
     return proc_text_data

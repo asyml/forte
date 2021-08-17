@@ -1,5 +1,5 @@
 # ***automatically_generated***
-# ***source json:tests/forte/data/ontology/test_specs/example_import_ontology.json***
+# ***source json:../../../../../../Documents/forte_develop/forte/tests/forte/data/ontology/test_specs/example_import_ontology.json***
 # flake8: noqa
 # mypy: ignore-errors
 # pylint: skip-file
@@ -23,8 +23,8 @@ class Token(Annotation):
     """
     Base parent token entry
     Attributes:
-        pos (Optional[str])
-        lemma (Optional[str])
+        pos (Optional[str]):
+        lemma (Optional[str]):
     """
 
     pos: Optional[str]
@@ -40,7 +40,7 @@ class Token(Annotation):
 class EntityMention(Annotation):
     """
     Attributes:
-        entity_type (Optional[str])
+        entity_type (Optional[str]):
     """
 
     entity_type: Optional[str]

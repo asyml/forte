@@ -1,5 +1,5 @@
 # ***automatically_generated***
-# ***source json:tests/forte/data/ontology/test_specs/example_multi_module_ontology.json***
+# ***source json:../../../../../../Documents/forte_develop/forte/tests/forte/data/ontology/test_specs/example_multi_module_ontology.json***
 # flake8: noqa
 # mypy: ignore-errors
 # pylint: skip-file
@@ -24,10 +24,10 @@ __all__ = [
 class Token(Annotation):
     """
     Attributes:
-        lemma (Optional[str])
-        is_verb (Optional[bool])
-        num_chars (Optional[int])
-        score (Optional[float])
+        lemma (Optional[str]):
+        is_verb (Optional[bool]):
+        num_chars (Optional[int]):
+        score (Optional[float]):
     """
 
     lemma: Optional[str]
@@ -47,7 +47,7 @@ class Token(Annotation):
 class Sentence(Annotation):
     """
     Attributes:
-        tokens (FList[Token])
+        tokens (FList[Token]):
     """
 
     tokens: FList[Token]

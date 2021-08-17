@@ -1,0 +1,9 @@
+[tool.black]
+line-length = 80
+extend-exclude = '''
+# A regex preceded with ^/ will apply only to files and directories
+# in the root of the project.
+# This is a whole regex, now each line is a pattern if we connect them with "|" (or)
+test_outputs
+| test_specs
+'''
