@@ -293,6 +293,6 @@ class BioSeqTaggingExtractor(BaseExtractor):
         # Handle the final tag
         if tag_type and tag_start and tag_end:
             entity_mention = self._entry_type(
-                pack, tag_start, tag_end
-            )  # type: ignore
+                pack, tag_start, tag_end  # type: ignore
+            )
             setattr(entity_mention, self.attribute, tag_type)
