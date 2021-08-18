@@ -14,14 +14,12 @@
 """
 The processors that process data in batch.
 """
-import pickle
 from abc import abstractmethod, ABC
 from typing import List, Dict, Optional, Type, Any
 
 from forte.common import Resources, ProcessorConfigError
 from forte.common.configuration import Config
 from forte.data import slice_batch
-from forte.data.converter import Converter
 from forte.data.base_pack import PackType
 from forte.data.batchers import (
     ProcessingBatcher,
@@ -33,8 +31,7 @@ from forte.data.multi_pack import MultiPack
 from forte.data.ontology.top import Annotation
 from forte.data.types import DataRequest
 from forte.processors.base.base_processor import BaseProcessor
-from forte.train_preprocessor import TrainPreprocessor
-from forte.utils import get_class
+from forte.utils import extractor_utils
 
 __all__ = [
     "BaseBatchProcessor",
@@ -44,6 +41,8 @@ __all__ = [
     "FixedSizeBatchProcessor",
     "FixedSizeMultiPackBatchProcessor",
 ]
+
+from forte.utils.extractor_utils import parse_feature_extractors
 
 
 class BaseBatchProcessor(BaseProcessor[PackType], ABC):
@@ -256,6 +255,7 @@ class Predictor(BaseBatchProcessor):
         super().__init__()
         self.model = None
         self.do_eval = False
+        self._request: Dict = {}
 
     @staticmethod
     def _define_context() -> Type[Annotation]:
@@ -304,53 +304,28 @@ class Predictor(BaseBatchProcessor):
 
     def initialize(self, resources: Resources, configs: Optional[Config]):
         if configs is not None:
+            # Will parse the basic configs and also populate the _request.
             configs = self._parse_configs(configs)
             batcher_config = {"scope": configs.scope, "feature_scheme": {}}
-            for tag, scheme in configs.feature_scheme.items():
-                if scheme["type"] == TrainPreprocessor.DATA_INPUT:
+            for tag, scheme in self._request.items():
+                # Add input feature to the batcher.
+                if scheme["type"] == extractor_utils.DATA_INPUT:
                     batcher_config["feature_scheme"][tag] = scheme
             batcher_config["batch_size"] = configs.batch_size
             configs.batcher = batcher_config
             self.do_eval = configs.do_eval
-
         super().initialize(resources, configs)
 
     def load(self, model):
         self.model = model
 
-    def _parse_configs(self, configs):
+    def _parse_configs(self, configs: Config):
         parsed_configs = self.default_configs()
         parsed_configs["batch_size"] = configs.batch_size
-        parsed_configs["scope"] = get_class(configs.scope)
+        parsed_configs["scope"] = configs.scope
         parsed_configs["do_eval"] = configs.do_eval
-        parsed_configs["feature_scheme"] = {}
-        for tag, scheme in configs.feature_scheme.items():
-            parsed_configs["feature_scheme"][tag] = {}
-            if scheme["type"] == "data_input":
-                parsed_configs["feature_scheme"][tag][
-                    "type"
-                ] = TrainPreprocessor.DATA_INPUT
-            elif scheme["type"] == "data_output":
-                parsed_configs["feature_scheme"][tag][
-                    "type"
-                ] = TrainPreprocessor.DATA_OUTPUT
 
-            extractor = get_class(scheme["extractor"]["class_name"])()
-            extractor.initialize(config=scheme["extractor"]["config"])
-            if "vocab_path" in scheme["extractor"]:
-                vocab_file = open(scheme["extractor"]["vocab_path"], "rb")
-                extractor.vocab = pickle.load(vocab_file)
-                vocab_file.close()
-            parsed_configs["feature_scheme"][tag]["extractor"] = extractor
-
-            if "converter" not in scheme:
-                parsed_configs["feature_scheme"][tag]["converter"] = Converter(
-                    {}
-                )
-            else:
-                parsed_configs["feature_scheme"][tag]["converter"] = scheme[
-                    "converter"
-                ]
+        self._request = parse_feature_extractors(configs.feature_scheme)
         return Config(parsed_configs, default_hparams=self.default_configs())
 
     def _process(self, input_pack: DataPack):
@@ -381,10 +356,10 @@ class Predictor(BaseBatchProcessor):
         for tag, preds in predictions.items():
             for pred, pack, instance in zip(preds, packs, instances):
                 if self.do_eval:
-                    self.configs.feature_scheme[tag][
-                        "extractor"
-                    ].pre_evaluation_action(pack, instance)
-                self.configs.feature_scheme[tag]["extractor"].add_to_pack(
+                    self._request[tag]["extractor"].pre_evaluation_action(
+                        pack, instance
+                    )
+                self._request[tag]["extractor"].add_to_pack(
                     pack, instance, pred
                 )
                 pack.add_all_remaining_entries()

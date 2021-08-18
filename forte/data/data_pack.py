@@ -96,6 +96,21 @@ class Meta(BaseMeta):
             self.info = info
 
 
+def as_entry_type(entry_type: Union[str, Type[EntryType]]):
+    entry_type_: Type[EntryType]
+    if isinstance(entry_type, str):
+        entry_type_ = get_class(entry_type)
+        if not issubclass(entry_type_, Entry):
+            raise ValueError(
+                f"The specified entry type [{entry_type}] "
+                f"does not correspond to a "
+                f"`forte.data.ontology.core.Entry` class"
+            )
+    else:
+        entry_type_ = entry_type
+    return entry_type_
+
+
 class DataPack(BasePack[Entry, Link, Group]):
     # pylint: disable=too-many-public-methods
     r"""A :class:`DataPack` contains a piece of natural language text and a
@@ -623,7 +638,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
     def get_data(
         self,
-        context_type: Type[Annotation],
+        context_type: Union[str, Type[Annotation]],
         request: Optional[DataRequest] = None,
         skip_k: int = 0,
     ) -> Iterator[Dict[str, Any]]:
@@ -680,13 +695,26 @@ class DataPack(BasePack[Entry, Link, Group]):
             A data generator, which generates one piece of data (a dict
             containing the required entries, fields, and context).
         """
+        context_type_: Type[Annotation]
+        if isinstance(context_type, str):
+            context_type_ = get_class(context_type)
+            if not issubclass(context_type_, Entry):
+                raise ValueError(
+                    f"The provided `context_type` [{context_type_}] "
+                    f"is not a subclass to the"
+                    f"`forte.data.ontology.top.Annotation` class"
+                )
+        else:
+            context_type_ = context_type
+
         annotation_types: Dict[Type[Annotation], Union[Dict, List]] = dict()
         link_types: Dict[Type[Link], Union[Dict, List]] = dict()
         group_types: Dict[Type[Group], Union[Dict, List]] = dict()
         generics_types: Dict[Type[Generics], Union[Dict, List]] = dict()
 
         if request is not None:
-            for key, value in request.items():
+            for key_, value in request.items():
+                key = as_entry_type(key_)
                 if issubclass(key, Annotation):
                     annotation_types[key] = value
                 elif issubclass(key, Link):
@@ -696,13 +724,15 @@ class DataPack(BasePack[Entry, Link, Group]):
                 elif issubclass(key, Generics):
                     generics_types[key] = value
 
-        context_args = annotation_types.get(context_type)
+        context_args = annotation_types.get(context_type_)
 
         context_components, _, context_fields = self._parse_request_args(
-            context_type, context_args
+            context_type_, context_args
         )
 
-        valid_context_ids: Set[int] = self.get_ids_by_type_subtype(context_type)
+        valid_context_ids: Set[int] = self.get_ids_by_type_subtype(
+            context_type_
+        )
         if context_components:
             valid_component_id: Set[int] = set()
             for component in context_components:
@@ -713,7 +743,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         # must iterate through a copy here because self.annotations is changing
         for context in list(self.annotations):
             if context.tid not in valid_context_ids or not isinstance(
-                context, context_type
+                context, context_type_
             ):
                 continue
             if skipped < skip_k:
@@ -729,7 +759,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
             if annotation_types:
                 for a_type, a_args in annotation_types.items():
-                    if issubclass(a_type, context_type):
+                    if issubclass(a_type, context_type_):
                         continue
                     if a_type.__name__ in data.keys():
                         raise KeyError(
@@ -945,6 +975,26 @@ class DataPack(BasePack[Entry, Link, Group]):
         if self._index.coverage_index(context_type, covered_type) is None:
             self._index.build_coverage_index(self, context_type, covered_type)
 
+    def covers(
+        self, context_entry: Annotation, covered_entry: EntryType
+    ) -> bool:
+        """
+        Check if the `covered_entry` is covered (in span) of the `context_type`.
+
+        See :meth:`~forte.data.data_pack.DataIndex.in_span` for the definition
+         of `in span`.
+
+        Args:
+            context_entry: The context entry.
+            covered_entry: The entry to be checked on whether it is in span
+              of the context entry.
+
+        Returns (bool): True if in span.
+        """
+        return covered_entry.tid in self._index.get_covered(
+            self, context_entry, covered_entry.__class__
+        )
+
     def iter_in_range(
         self, entry_type: Type[EntryType], range_annotation: Annotation
     ) -> Iterator[EntryType]:
@@ -1073,17 +1123,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             Each `Entry` found using this method.
         """
 
-        entry_type_: Type[EntryType]
-        if isinstance(entry_type, str):
-            entry_type_ = get_class(entry_type)
-            if not issubclass(entry_type_, Entry):
-                raise ValueError(
-                    f"The specified entry type [{entry_type}] "
-                    f"does not correspond to a "
-                    f"`forte.data.ontology.core.Entry` class"
-                )
-        else:
-            entry_type_ = entry_type
+        entry_type_: Type[EntryType] = as_entry_type(entry_type)
 
         def require_annotations() -> bool:
             if issubclass(entry_type_, Annotation):
@@ -1215,6 +1255,31 @@ class DataIndex(BaseIndex):
         if not self.coverage_index_is_valid:
             return None
         return self._coverage_index.get((outer_type, inner_type))
+
+    def get_covered(
+        self,
+        data_pack: DataPack,
+        context_annotation: Annotation,
+        inner_type: Type[EntryType],
+    ) -> Set[int]:
+        """
+        Get the entries covered by a certain context annotation
+
+        Args:
+            data_pack: The data pack to search for.
+            context_annotation: The context annotation to search in.
+            inner_type: The inner type to be searched for.
+
+        Returns: Entry ID of type `inner_type` that is covered by
+          `context_annotation`.
+        """
+        context_type = context_annotation.__class__
+        if self.coverage_index(context_type, inner_type) is None:
+            self.build_coverage_index(data_pack, context_type, inner_type)
+        assert self._coverage_index is not None
+        return self._coverage_index.get((context_type, inner_type), {}).get(
+            context_annotation.tid, set()
+        )
 
     def build_coverage_index(
         self,

@@ -76,11 +76,14 @@ class CustomLSTMCell(tx.core.RNNCellBase[LSTMState]):
         self._dropout_mask = None
 
     def zero_state(self, batch_size: int) -> LSTMState:
-        return (self._initial_hidden.expand(batch_size, -1),
-                self._initial_cell.expand(batch_size, -1))
+        return (
+            self._initial_hidden.expand(batch_size, -1),
+            self._initial_cell.expand(batch_size, -1),
+        )
 
-    def forward(self, input: torch.Tensor, state: Optional[LSTMState] = None) \
-            -> Tuple[torch.Tensor, LSTMState]:
+    def forward(
+        self, input: torch.Tensor, state: Optional[LSTMState] = None
+    ) -> Tuple[torch.Tensor, LSTMState]:
         batch_size = input.size(0)
         if state is None:
             state = self.zero_state(batch_size)
@@ -89,7 +92,8 @@ class CustomLSTMCell(tx.core.RNNCellBase[LSTMState]):
             if self._dropout_mask is None:
                 keep_prob = 1 - self._dropout_rate
                 self._dropout_mask = input.new_zeros(
-                    batch_size, self._hidden_size).bernoulli_(keep_prob)
+                    batch_size, self._hidden_size
+                ).bernoulli_(keep_prob)
             h = h * self._dropout_mask
         concat_proj = self._projection(torch.cat([input, h], dim=1))
         i, g, o = torch.chunk(concat_proj, 3, dim=1)
@@ -114,9 +118,12 @@ class CustomBiLSTM(tx.modules.EncoderBase):
             self.bw_cells.append(bw_cell)
             input_dim = 2 * hidden_dim
 
-        self.highway_layers = nn.ModuleList([
-            nn.Linear(hidden_dim * 2, hidden_dim * 2)
-            for _ in range(self._hparams.num_layers - 1)])
+        self.highway_layers = nn.ModuleList(
+            [
+                nn.Linear(hidden_dim * 2, hidden_dim * 2)
+                for _ in range(self._hparams.num_layers - 1)
+            ]
+        )
 
         self.dropout = nn.Dropout(self._hparams.dropout)
 
@@ -129,14 +136,18 @@ class CustomBiLSTM(tx.modules.EncoderBase):
             "dropout": 0.2,
         }
 
-    def forward(self, inputs: torch.Tensor,
-                sequence_length: Optional[torch.LongTensor] = None) \
-            -> torch.Tensor:
+    def forward(
+        self,
+        inputs: torch.Tensor,
+        sequence_length: Optional[torch.LongTensor] = None,
+    ) -> torch.Tensor:
         for idx in range(self._hparams.num_layers):
-            (fw_outputs, bw_outputs), _ = \
-                tx.utils.rnn.bidirectional_dynamic_rnn(
-                    self.fw_cells[idx], self.bw_cells[idx],
-                    inputs, sequence_length)
+            (
+                fw_outputs,
+                bw_outputs,
+            ), _ = tx.utils.rnn.bidirectional_dynamic_rnn(
+                self.fw_cells[idx], self.bw_cells[idx], inputs, sequence_length
+            )
             outputs = torch.cat([fw_outputs, bw_outputs], dim=2)
             outputs = self.dropout(outputs)
             if idx > 0:
@@ -153,15 +164,21 @@ class CharCNN(tx.ModuleBase):
         super().__init__(hparams)
 
         self.char_embed = tx.modules.WordEmbedder(
-            vocab_size=char_vocab_size, hparams={
+            vocab_size=char_vocab_size,
+            hparams={
                 "dim": self._hparams.char_embed_size,
-            })
-        self.cnn_kernels = nn.ModuleList([
-            nn.Conv1d(
-                self._hparams.char_embed_size,
-                self._hparams.filter_size,
-                kernel_size=width
-            ) for width in self._hparams.filter_widths])
+            },
+        )
+        self.cnn_kernels = nn.ModuleList(
+            [
+                nn.Conv1d(
+                    self._hparams.char_embed_size,
+                    self._hparams.filter_size,
+                    kernel_size=width,
+                )
+                for width in self._hparams.filter_widths
+            ]
+        )
         self._max_filter_width = max(self._hparams.filter_widths)
 
     @staticmethod
@@ -178,12 +195,13 @@ class CharCNN(tx.ModuleBase):
 
     @property
     def _device(self) -> torch.device:
-        if not hasattr(self, '__torch_device__'):
+        if not hasattr(self, "__torch_device__"):
             self.__torch_device__ = next(self.parameters()).device
         return self.__torch_device__
 
-    def forward(self, batch: torch.Tensor, masks: List[torch.Tensor]) -> \
-            torch.Tensor:
+    def forward(
+        self, batch: torch.Tensor, masks: List[torch.Tensor]
+    ) -> torch.Tensor:
         r"""Construct character-level representations of the words.
 
         Args:
@@ -223,8 +241,9 @@ class CharCNN(tx.ModuleBase):
         sent_lengths = torch.sum(sentence_mask, dim=1).tolist()
 
         # indices: (len(all_words), max_word_length)
-        indices = torch.cat([batch[i][:l] for i, l in enumerate(sent_lengths)],
-                            dim=0)
+        indices = torch.cat(
+            [batch[i][:l] for i, l in enumerate(sent_lengths)], dim=0
+        )
 
         # TODO: is embed.shape[1] batch_size * max_length or len(all_words) ?
         # embed: (batch_size * max_length, char_embed_dim, indices)
@@ -232,17 +251,20 @@ class CharCNN(tx.ModuleBase):
         if max_word_length < self._max_filter_width:
             pad_length = self._max_filter_width - max_word_length
             # TODO: Probably Train preprocessor can help do this padding
-            embed = torch.cat([embed, embed.new_zeros(
-                *embed.size()[:2], pad_length)], dim=2)
+            embed = torch.cat(
+                [embed, embed.new_zeros(*embed.size()[:2], pad_length)], dim=2
+            )
         kernel_outputs = [kernel(embed) for kernel in self.cnn_kernels]
         cnn_output = torch.cat(
-            [torch.max(out, dim=2)[0] for out in kernel_outputs], dim=1)
+            [torch.max(out, dim=2)[0] for out in kernel_outputs], dim=1
+        )
 
         sent_cnn_outputs = torch.split(cnn_output, sent_lengths, dim=0)
         output = cnn_output.new_zeros(
-            batch_size, max_length, cnn_output.size(1))
+            batch_size, max_length, cnn_output.size(1)
+        )
         for idx, sent_output in enumerate(sent_cnn_outputs):
-            output[idx, :sent_lengths[idx]] = sent_output
+            output[idx, : sent_lengths[idx]] = sent_output
         return output
 
 
@@ -255,13 +277,15 @@ def sum_list(xs: List[torch.Tensor]) -> torch.Tensor:
 
 # pylint: disable=unused-argument,function-redefined
 @overload
-def batch_gather(tensors: torch.Tensor,
-                 index: torch.Tensor) -> torch.Tensor: ...
+def batch_gather(tensors: torch.Tensor, index: torch.Tensor) -> torch.Tensor:
+    ...
 
 
 @overload
-def batch_gather(tensors: List[torch.Tensor],
-                 index: torch.Tensor) -> List[torch.Tensor]: ...
+def batch_gather(  # type: ignore
+    tensors: List[torch.Tensor], index: torch.Tensor
+) -> List[torch.Tensor]:
+    ...
 
 
 def batch_gather(tensors, index):
@@ -307,7 +331,8 @@ class MLP(tx.ModuleBase):
         else:
             activation = None
         for has_bias, output_size in zip(
-                self._hparams.has_bias, self._hparams.hidden_size):
+            self._hparams.has_bias, self._hparams.hidden_size
+        ):
             layers.append(nn.Linear(input_size, output_size, bias=has_bias))
             input_size = output_size
             if activation is not None:
@@ -363,10 +388,12 @@ class ConcatInputMLP(tx.ModuleBase):
         yield
         del self._cached_inputs
 
-    def forward(self, inputs: List[Union[torch.Tensor,
-                                         List[Tuple[torch.Tensor,
-                                                    torch.Tensor]]]]) \
-            -> torch.Tensor:
+    def forward(
+        self,
+        inputs: List[
+            Union[torch.Tensor, List[Tuple[torch.Tensor, torch.Tensor]]]
+        ],
+    ) -> torch.Tensor:
         """
 
         Args:

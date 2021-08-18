@@ -27,7 +27,7 @@ saved_model = torch.load("model.pt")
 
 
 def predict_forward_fn(model, batch):
-    '''Predict function.'''
+    """Predict function."""
     char_tensor: Tensor = batch["char_tag"]["tensor"]
     char_masks: List[Tensor] = batch["char_tag"]["mask"]
     text_tensor: Tensor = batch["text_tag"]["tensor"]
@@ -39,22 +39,26 @@ def predict_forward_fn(model, batch):
     for feature in raw_text_features:
         text.append(feature.unroll()[0])
 
-    output = model.decode(text=text,
-                          char_batch=char_tensor,
-                          char_masks=char_masks,
-                          text_batch=text_tensor,
-                          text_mask=text_mask,
-                          srl_features=srl_features)
+    output = model.decode(
+        text=text,
+        char_batch=char_tensor,
+        char_masks=char_masks,
+        text_batch=text_tensor,
+        text_mask=text_mask,
+        srl_features=srl_features,
+    )
     print(output)
     return {"pred_link_tag": output}
 
 
 train_state = torch.load("train_state.pkl")
 
-predictor = Predictor(batch_size=10,
-                        model=saved_model,
-                        predict_forward_fn=predict_forward_fn,
-                        feature_resource=train_state["feature_resource"])
+predictor = Predictor(
+    batch_size=10,
+    model=saved_model,
+    predict_forward_fn=predict_forward_fn,
+    feature_resource=train_state["feature_resource"],
+)
 
 pl = Pipeline()
 pl.set_reader(reader)

@@ -25,16 +25,20 @@
 # limitations under the License.
 import logging
 import torch
+import yaml
 
-from examples.srl.srl_trainer import SRLTrainer
+from srl_trainer import SRLTrainer
 
 logger = logging.getLogger(__name__)
 
 logging.basicConfig(level=logging.INFO)
 
-
 if __name__ == "__main__":
-    trainer: SRLTrainer = SRLTrainer()
+    trainer: SRLTrainer = SRLTrainer(
+        config_extractors=yaml.safe_load(
+            open("configs/config_extractors.yml", "r")
+        ),
+    )
 
     trainer.run()
 

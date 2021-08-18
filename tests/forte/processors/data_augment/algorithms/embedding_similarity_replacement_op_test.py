@@ -19,36 +19,39 @@ import unittest
 
 from ddt import ddt, data, unpack
 from texar.torch.data import Embedding, load_glove
-from texar.torch.data.vocabulary import Vocab
 
 from forte.data.caster import MultiPackBoxer
+from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.readers import StringReader
 from forte.data.selector import AllPackSelector
 from forte.pipeline import Pipeline
-from forte.processors.base import ReplacementDataAugmentProcessor
-from forte.processors.data_augment.algorithms.embedding_similarity_replacement_op \
-    import EmbeddingSimilarityReplacementOp
-from forte.processors.nltk_processors import NLTKWordTokenizer, NLTKPOSTagger
-
+from forte.processors.data_augment import ReplacementDataAugmentProcessor
+from forte.processors.data_augment.algorithms.embedding_similarity_replacement_op import (
+    EmbeddingSimilarityReplacementOp,
+)
+from forte.processors.misc import WhiteSpaceTokenizer
 from ft.onto.base_ontology import Token
-from forte.data.data_pack import DataPack
 
 
 @ddt
 class TestEmbeddingSimilarityReplacementOp(unittest.TestCase):
     def setUp(self):
         file_dir_path = os.path.dirname(__file__)
-        vocab_path = "tests/forte/processors/data_augment/algorithms/"\
-                     "sample_embedding.txt.vocab"
-        self.abs_vocab_path = os.path.abspath(os.path.join(file_dir_path,
-                                                      *([os.pardir] * 5),
-                                                      vocab_path))
-        embed_path = "tests/forte/processors/data_augment/algorithms/"\
-                     "sample_embedding.txt"
-        abs_embed_path = os.path.abspath(os.path.join(file_dir_path,
-                                                      *([os.pardir] * 5),
-                                                      embed_path))
+        vocab_path = (
+            "tests/forte/processors/data_augment/algorithms/"
+            "sample_embedding.txt.vocab"
+        )
+        self.abs_vocab_path = os.path.abspath(
+            os.path.join(file_dir_path, *([os.pardir] * 5), vocab_path)
+        )
+        embed_path = (
+            "tests/forte/processors/data_augment/algorithms/"
+            "sample_embedding.txt"
+        )
+        abs_embed_path = os.path.abspath(
+            os.path.join(file_dir_path, *([os.pardir] * 5), embed_path)
+        )
         embed_hparams = Embedding.default_hparams()
         embed_hparams["file"] = abs_embed_path
         embed_hparams["dim"] = 50
@@ -56,8 +59,8 @@ class TestEmbeddingSimilarityReplacementOp(unittest.TestCase):
         self.embed_hparams = embed_hparams
         self.esa = EmbeddingSimilarityReplacementOp(
             configs={
-                'vocab_path': self.abs_vocab_path,
-                'embed_hparams': self.embed_hparams,
+                "vocab_path": self.abs_vocab_path,
+                "embed_hparams": self.embed_hparams,
                 "top_k": 5,
             }
         )
@@ -70,59 +73,55 @@ class TestEmbeddingSimilarityReplacementOp(unittest.TestCase):
         is_replace, replaced_token = self.esa.replace(token_1)
         self.assertTrue(is_replace)
         self.assertIn(
-            replaced_token,
-            ['yahoo', 'aol', 'microsoft', 'web', 'internet']
+            replaced_token, ["yahoo", "aol", "microsoft", "web", "internet"]
         )
 
     @data(
-        (["he google yahoo"],
-         ["his yahoo aol"],
-         )
+        (
+            ["he google yahoo"],
+            ["his yahoo aol"],
+        )
     )
     @unpack
     def test_pipeline(self, texts, expected_outputs):
         nlp = Pipeline[MultiPack]()
 
-        boxer_config = {
-            'pack_name': 'input'
-        }
+        boxer_config = {"pack_name": "input"}
 
         nlp.set_reader(reader=StringReader())
         nlp.add(component=MultiPackBoxer(), config=boxer_config)
-        nlp.add(component=NLTKWordTokenizer(), selector=AllPackSelector())
-        nlp.add(component=NLTKPOSTagger(), selector=AllPackSelector())
+        nlp.add(component=WhiteSpaceTokenizer(), selector=AllPackSelector())
 
         processor_config = {
-            'augment_entry': "ft.onto.base_ontology.Token",
-            'other_entry_policy': {
-                'type': '',
-                'kwargs': {
+            "augment_entry": "ft.onto.base_ontology.Token",
+            "other_entry_policy": {
+                "type": "",
+                "kwargs": {
                     "ft.onto.base_ontology.Document": "auto_align",
-                    "ft.onto.base_ontology.Sentence": "auto_align"
-                }
-            },
-            'type': 'data_augmentation_op',
-            'data_aug_op': 'forte.processors.data_augment.algorithms.embedding_similarity_replacement_op.'
-                           'EmbeddingSimilarityReplacementOp',
-            'data_aug_op_config': {
-                'type': '',
-                'kwargs': {
-                    'vocab_path': self.abs_vocab_path,
-                    'embed_hparams': self.embed_hparams,
-                    "top_k": 1
+                    "ft.onto.base_ontology.Sentence": "auto_align",
                 },
             },
-            'augment_pack_names': {
-                'kwargs': {
-                    'input': 'augmented_input'
-                }
-            }
+            "type": "data_augmentation_op",
+            "data_aug_op": "forte.processors.data_augment.algorithms"
+            ".embedding_similarity_replacement_op."
+            "EmbeddingSimilarityReplacementOp",
+            "data_aug_op_config": {
+                "type": "",
+                "kwargs": {
+                    "vocab_path": self.abs_vocab_path,
+                    "embed_hparams": self.embed_hparams,
+                    "top_k": 1,
+                },
+            },
+            "augment_pack_names": {"kwargs": {"input": "augmented_input"}},
         }
-        nlp.add(component=ReplacementDataAugmentProcessor(), config=processor_config)
+        nlp.add(
+            component=ReplacementDataAugmentProcessor(), config=processor_config
+        )
         nlp.initialize()
 
         for idx, m_pack in enumerate(nlp.process_dataset(texts)):
-            aug_pack = m_pack.get_pack('augmented_input')
+            aug_pack = m_pack.get_pack("augmented_input")
             self.assertEqual(aug_pack.text, expected_outputs[idx])
 
 

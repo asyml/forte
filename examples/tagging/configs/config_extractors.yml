@@ -1,0 +1,25 @@
+scope: "ft.onto.base_ontology.Sentence"
+feature_scheme:
+  text_tag:
+    type: "data_input"
+    extractor:
+      class_name: "forte.data.extractors.AttributeExtractor"
+      config:
+        entry_type: "ft.onto.base_ontology.Token"
+        vocab_method: "indexing"
+        attribute: "text"
+  char_tag:
+    type: "data_input"
+    extractor:
+      class_name: "forte.data.extractors.CharExtractor"
+      config:
+        entry_type: "ft.onto.base_ontology.Token"
+        vocab_method: "indexing"
+        max_char_length: 45
+  output_tag:
+    type: "data_output"
+    extractor:
+      class_name: "forte.data.extractors.BioSeqTaggingExtractor"
+      config:
+        vocab_method: "indexing"
+        pad_value: 0

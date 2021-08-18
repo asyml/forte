@@ -16,18 +16,18 @@ Train preprocessor helps doing data pre-processing during training.
 """
 import logging
 from typing import Optional, Dict, Type, Any, Union, Iterator, List
-from texar.torch.data import DataIterator, Batch
+
 import torch
+from texar.torch.data import DataIterator, Batch
 from torch import device
 
 from forte.common.configuration import Config
-from forte.data.converter import Converter
+from forte.data.base_extractor import BaseExtractor
 from forte.data.data_pack import DataPack
 from forte.data.data_pack_dataset import DataPackDataset, DataPackIterator
-from forte.data.base_extractor import BaseExtractor
-from forte.data.ontology.core import Entry
 from forte.data.ontology.core import EntryType
-from forte.utils import get_class
+from forte.utils import extractor_utils
+from forte.utils.extractor_utils import parse_feature_extractors
 
 logger = logging.getLogger(__name__)
 
@@ -65,20 +65,21 @@ class TrainPreprocessor:
         type :class:`~forte.data.converter.Converter` will be picked.
     """
 
-    DATA_INPUT = 0
-    DATA_OUTPUT = 1
+    DATA_INPUT = extractor_utils.DATA_INPUT
+    DATA_OUTPUT = extractor_utils.DATA_OUTPUT
 
     def __init__(self, pack_iterator: Iterator[DataPack]):
         self._pack_iterator: Iterator[DataPack] = pack_iterator
         self._cached_packs: List[DataPack] = []
 
+        self._config: Config = None
         self._user_request: Dict = {}
+        # Parsed feature extractors.
         self._request: Dict = {}
         self._request_ready: bool = False
         self._vocab_ready: bool = False
 
     def initialize(self, config: Optional[Union[Config, Dict]] = None):
-        # pylint: disable=attribute-defined-outside-init,unused-argument
         self._config = Config(config, default_hparams=self.default_configs())
         self._user_request = self._config.request
         self._validate_config()
@@ -130,74 +131,18 @@ class TrainPreprocessor:
         """
         parsed_request: Dict[str, Any] = {}
 
-        assert "scope" in request, "Field not found for data request: `scope`"
-        assert (
-            "feature_scheme" in request
-        ), "Field not found for data request: `schemes`"
+        if "scope" not in request or request["scope"] is None:
+            raise ValueError("Field not found for data request: `scope`")
 
-        parsed_request["scope"] = get_class(request["scope"])
-        parsed_request["schemes"] = {}
+        if "feature_scheme" not in request or request["feature_scheme"] is None:
+            raise ValueError(
+                "Field not found for data request: `feature_scheme`"
+            )
 
-        # Used for check dependency between different extractors
-        scheme_group: Dict[str, Dict] = {"dependent": {}, "dependee": {}}
-
-        for tag, scheme in request["feature_scheme"].items():
-            assert (
-                "extractor" in scheme
-            ), "Field not found for data request scheme: `extractor`"
-            parsed_request["schemes"][tag] = {}
-
-            assert (
-                "type" in scheme
-            ), "Field not found for data request scheme: `type`"
-            assert scheme["type"] in [
-                "data_input",
-                "data_output",
-            ], "Type field must be either data_input or data_output."
-            if scheme["type"] == "data_input":
-                parsed_request["schemes"][tag][
-                    "type"
-                ] = TrainPreprocessor.DATA_INPUT
-            if scheme["type"] == "data_output":
-                parsed_request["schemes"][tag][
-                    "type"
-                ] = TrainPreprocessor.DATA_OUTPUT
-
-            extractor_class = scheme["extractor"]["class_name"]
-            if not isinstance(get_class(extractor_class)(), BaseExtractor):
-                raise RuntimeError("Invalid extractor: ", scheme["extractor"])
-
-            extractor: BaseExtractor = get_class(extractor_class)()
-            extractor.initialize(config=scheme["extractor"]["config"])
-            parsed_request["schemes"][tag]["extractor"] = extractor
-
-            # Track dependency
-            if hasattr(extractor, "based_on"):
-                if extractor.entry_type not in scheme_group["dependent"]:
-                    scheme_group["dependent"][extractor.entry_type] = set()
-                scheme_group["dependent"][extractor.entry_type].add(extractor)
-            else:
-                if extractor.entry_type not in scheme_group["dependee"]:
-                    scheme_group["dependee"][extractor.entry_type] = set()
-                scheme_group["dependee"][extractor.entry_type].add(extractor)
-
-            # Create default converter if there is no given converter
-            if "converter" not in scheme:
-                converter: Converter = Converter({})
-                parsed_request["schemes"][tag]["converter"] = converter
-
-        # Check dependency
-        for _, dependent_extractors in scheme_group["dependent"].items():
-            for dependent_extractor in dependent_extractors:
-                based_on: Entry = dependent_extractor.based_on
-                if based_on not in scheme_group["dependee"]:
-                    raise ValueError(
-                        "Extractor {} needs the entry {} to do extraction "
-                        "processing but it is not extracted by any other "
-                        "extractors given in request".format(
-                            based_on, dependent_extractor.tag
-                        )
-                    )
+        parsed_request["scope"] = request["scope"]
+        parsed_request["schemes"] = parse_feature_extractors(
+            request["feature_scheme"]
+        )
 
         self._request = parsed_request
         self._request_ready = True
@@ -252,7 +197,8 @@ class TrainPreprocessor:
                     "scope": ft.onto.Sentence
                     "schemes": {
                         "text_tag": {
-                            "extractor": forte.data.extractor.AttributeExtractor,
+                            "extractor":
+                            forte.data.extractor.AttributeExtractor,
                             "converter": forte.data.converter.Converter,
                             "type": TrainPreprocessor.DATA_INPUT,
                         },
@@ -274,18 +220,24 @@ class TrainPreprocessor:
 
             `"scope"`: Entry
                 A class of type :class:`~forte.data.ontology.core.Entry` The
-                granularity to separate data into different examples. For example,
-                if `scope` is :class:`~ft.onto.base_ontology.Sentence`, then each
+                granularity to separate data into different examples. For
+                example,
+                if `scope` is :class:`~ft.onto.base_ontology.Sentence`,
+                then each
                 training example will represent the information of a sentence.
 
             `"schemes"`: `Dict`
-                A `Dict` containing the information about doing the pre-processing.
-                The `key` is the tags provided by input `request`. The `value` is a
-                `Dict` containing the information for doing pre-processing for that
+                A `Dict` containing the information about doing the
+                pre-processing.
+                The `key` is the tags provided by input `request`. The
+                `value` is a
+                `Dict` containing the information for doing pre-processing
+                for that
                 feature.
 
             `"schemes.tag.extractor"`: Extractor
-                An instance of type :class:`~forte.data.extractor.BaseExtractor`.
+                An instance of type
+                :class:`~forte.data.extractor.BaseExtractor`.
 
             `"schemes.tag.converter"`: Converter
                 An instance of type :class:`~forte.data.converter.Converter`.

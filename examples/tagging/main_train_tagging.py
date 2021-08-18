@@ -16,8 +16,9 @@ import sys
 import torch
 import yaml
 
-from forte.common.configuration import Config
 from tagging_trainer import TaggingTrainer
+
+from forte.common.configuration import Config
 
 logger = logging.getLogger(__name__)
 
@@ -25,16 +26,29 @@ logging.basicConfig(level=logging.INFO)
 
 if __name__ == "__main__":
     task = sys.argv[1]
-    assert task in ["ner", "pos"], \
-        "Not supported nlp task type: {}".format(task)
+    assert task in ["ner", "pos"], "Not supported nlp task type: {}".format(
+        task
+    )
 
     config = {
-        "config_data": Config({}, default_hparams=yaml.safe_load(
-            open("configs/config_data.yml", "r"))),
-        "config_model": Config({}, default_hparams=yaml.safe_load(
-            open("configs/config_model.yml", "r"))),
-        "device": torch.device("cuda") if torch.cuda.is_available() else
-        torch.device("cpu")
+        "config_data": Config(
+            {},
+            default_hparams=yaml.safe_load(
+                open("configs/config_data.yml", "r")
+            ),
+        ),
+        "config_model": Config(
+            {},
+            default_hparams=yaml.safe_load(
+                open("configs/config_model.yml", "r")
+            ),
+        ),
+        "config_extractors": yaml.safe_load(
+            open("configs/config_extractors.yml", "r")
+        ),
+        "device": torch.device("cuda")
+        if torch.cuda.is_available()
+        else torch.device("cpu"),
     }
 
     trainer: TaggingTrainer = TaggingTrainer(task_type=task, **config)
