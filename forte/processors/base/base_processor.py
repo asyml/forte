@@ -130,11 +130,6 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
         config = super().default_configs()
         config.update(
             {
-                "selector": {
-                    "type": "forte.data.selector.DummySelector",
-                    "args": None,
-                    "kwargs": {},
-                },
                 "overwrite": False,
             }
         )
