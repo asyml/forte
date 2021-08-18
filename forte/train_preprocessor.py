@@ -39,7 +39,7 @@ class TrainPreprocessor:
     r"""
     `TrainPreprocessor` provides the functionality of doing pre-processing work
     including building vocabulary, extracting the features, batching and
-    padding (optional). The procssed data will be provided by its method
+    padding (optional). The processed data will be provided by its method
     :meth:`get_train_batch_iterator`, which will return an `iterator` over the
     batch of pre-processed data. Please refer to the documentation of
     that method for how the pre-processing is done.
