@@ -152,8 +152,8 @@ class BaseTrainer:
     """
 
     def __init__(self):
-        self._tp_request: Dict = {}
-        self._tp_config: Dict = {}
+        # self._tp_request: Dict = {}
+        # self._tp_config: Dict = {}
         self._pack_iterator: Optional[Iterator[DataPack]] = None
         self._tp: Optional[TrainPreprocessor] = None
         self._initialized: bool = False
@@ -163,11 +163,12 @@ class BaseTrainer:
         if self._initialized:
             return
 
-        self._tp_config: Dict = self.create_tp_config()
+        logging.info("Initializing the trainer...")
         self._pack_iterator: Iterator[DataPack] = self.create_pack_iterator()
         self._tp = TrainPreprocessor(pack_iterator=self._pack_iterator)
-        self._tp.initialize(config=self._tp_config)
+        self._tp.initialize(config=self.create_tp_config())
         self._initialized = True
+        logging.info("Done Initializing.")
 
     @property
     def train_preprocessor(self) -> Optional[TrainPreprocessor]:

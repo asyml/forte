@@ -125,7 +125,9 @@ class TestDBpediaReaders(TestCase):
 
         with open(glob.glob(output + "/**/*.json.gz")[0]) as data:
             pack = DataPack.deserialize(data.read())
-            self.assertEqual(len(list(pack.get("ft.onto.wikipedia.WikiAnchor"))), 4)
+            self.assertEqual(
+                len(list(pack.get("ft.onto.wikipedia.WikiAnchor"))), 4
+            )
 
     def test_property(self):
         pl = Pipeline[DataPack](self.resources)
