@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Dict
 import torch
 import torch.nn.functional as F
 import torch.nn.utils.rnn as rnn_utils
@@ -26,16 +27,23 @@ from forte.models.ner.conditional_random_field import ConditionalRandomField
 class BiRecurrentConvCRF(nn.Module):
     def __init__(
         self,
-        word_embedding_table: torch.Tensor,
+        word_vocab: Dict,
         char_vocab_size: int,
         tag_vocab_size: int,
         config_model: Config,
     ):
         super().__init__()
 
-        # TODO: Fix this. init_value doesn't need to be tensor but
-        #  we have to set it for type check
-        self.word_embedder = WordEmbedder(init_value=word_embedding_table)
+        self.word_embedder = WordEmbedder(
+            init_value=texar.data.Embedding(
+                vocab=word_vocab,
+                hparams={
+                    "dim": config_model.word_emb.dim,
+                    "file": config_model.embedding_path,
+                    "read_fn": "load_glove",
+                },
+            ).word_vecs
+        )
 
         self.char_embedder = WordEmbedder(
             vocab_size=char_vocab_size, hparams=config_model.char_emb

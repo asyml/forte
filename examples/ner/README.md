@@ -1,3 +1,7 @@
+# NOTE: DEPRECATED
+this example will be deprecated and we are moving them to the new training 
+interface at `examples/tagging`.
+
 # Introduction
 
 This is an implementation of CNN-BiLSTM-CRF model, built on top of Texar and Pytorch. It's fully 

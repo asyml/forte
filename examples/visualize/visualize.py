@@ -8,14 +8,17 @@ from forte.processors.stave import StaveProcessor
 nlp = Pipeline()
 nlp.set_reader(TerminalReader())
 nlp.add(StandfordNLPProcessor())
-nlp.add(ZeroShotClassifier(), config={
-    "candidate_labels": [
-        "travel",
-        "cooking",
-        "dancing",
-        "exploration",
-    ],
-})
+nlp.add(
+    ZeroShotClassifier(),
+    config={
+        "candidate_labels": [
+            "travel",
+            "cooking",
+            "dancing",
+            "exploration",
+        ],
+    },
+)
 nlp.add(StaveProcessor())
 nlp.initialize()
 nlp.run()
