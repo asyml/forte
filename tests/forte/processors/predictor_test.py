@@ -130,8 +130,8 @@ class PredictorTest(unittest.TestCase):
         predictor_pipeline.add(CoNLLNEREvaluator(), evaluator_config)
         predictor_pipeline.initialize()
 
-        text_extractor = predictor._request["text_tag"]["extractor"]
-        ner_extractor = predictor._request["ner_tag"]["extractor"]
+        text_extractor = predictor._request["schemes"]["text_tag"]["extractor"]
+        ner_extractor = predictor._request["schemes"]["ner_tag"]["extractor"]
 
         for pack in pipeline.process_dataset(self.dataset_path):
             for instance in pack.get(Sentence):

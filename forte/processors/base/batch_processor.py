@@ -342,7 +342,14 @@ class Predictor(BaseBatchProcessor):
     def initialize(self, resources: Resources, configs: Config):
         # Populate the _request.
         if not self._request_ready:
-            self._request = parse_feature_extractors(configs.feature_scheme)
+            for key, value in configs.items():
+                if key == "feature_scheme":
+                    self._request["schemes"] = parse_feature_extractors(
+                        configs.feature_scheme
+                    )
+                else:
+                    self._request[key] = value
+
             self._request_ready = True
 
         batcher_config = {
@@ -392,9 +399,7 @@ class Predictor(BaseBatchProcessor):
         for tag, preds in predictions.items():
             for pred, pack, instance in zip(preds, packs, instances):
                 if self.do_eval:
-                    self.__extractor(tag)["extractor"].pre_evaluation_action(
-                        pack, instance
-                    )
+                    self.__extractor(tag).pre_evaluation_action(pack, instance)
                 self.__extractor(tag).add_to_pack(pack, instance, pred)
                 pack.add_all_remaining_entries()
 

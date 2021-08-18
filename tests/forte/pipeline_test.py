@@ -376,7 +376,7 @@ class PredictorPipelineTest(unittest.TestCase):
         nlp.add(DummyEvaluator())
         nlp.initialize()
 
-        text_extractor = predictor._request["text_tag"]["extractor"]
+        text_extractor = predictor._request["schemes"]["text_tag"]["extractor"]
         for pack in pipeline.process_dataset(data_path):
             for instance in pack.get(Sentence):
                 text_extractor.update_vocab(pack, instance)
