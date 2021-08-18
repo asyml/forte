@@ -55,52 +55,48 @@ class BaseTrainer:
     .. code-block:: python
 
         class TaggingTrainer(BaseTrainer):
-            def create_tp_request(self) -> Dict:
-                # Generate request
-                text_extractor: AttributeExtractor = \
-                    AttributeExtractor(config={"entry_type": Token,
-                                               "vocab_method": "indexing",
-                                               "attribute": "text"})
-
-                char_extractor: CharExtractor = \
-                    CharExtractor(config={"entry_type": Token,
-                                          "vocab_method": "indexing",
-                                          "max_char_length": 45})
-
-                output_extractor: BaseExtractor = \
-                    BioSeqTaggingExtractor(config={"entry_type": EntityMention,
-                                                   "attribute": "ner_type",
-                                                   "based_on": Token,
-                                                   "vocab_method": "indexing"})
-
+            def create_tp_config(self) -> Dict:
                 tp_request: Dict = {
                     "scope": Sentence,
                     "schemes": {
                         "text_tag": {
                             "type": TrainPreprocessor.DATA_INPUT,
-                            "extractor": text_extractor
+                            "extractor": {
+                                "class_name":
+                                "forte.data.extractors.AttributeExtractor",
+                                "config": {
+                                    "entry_type": "ft.onto.base_ontology.Token",
+                                    "vocab_method": "indexing",
+                                    "attribute": "text"
+                                }
+                            }
                         },
                         "char_tag": {
                             "type": TrainPreprocessor.DATA_INPUT,
-                            "extractor": char_extractor
+                            "extractor": {
+                                "class_name":
+                                "forte.data.extractors.CharExtractor",
+                                "config": {
+                                    "entry_type": "ft.onto.base_ontology.Token",
+                                    "vocab_method": "indexing",
+                                    "max_char_length": 45
+                                }
+                            }
                         },
                         "output_tag": {
                             "type": TrainPreprocessor.DATA_OUTPUT,
-                            "extractor": output_extractor
+                            "extractor": {
+                                "class_name":
+                                "forte.data.extractors.BioSeqTaggingExtractor",
+                                "config": {
+                                    "vocab_method": "indexing"
+                                    "pad_value": 0
+                                }
+                            }
                         }
                     }
                 }
-
                 return tp_request
-
-            def create_tp_config(self) -> Dict:
-                tp_config: Dict = {
-                    "dataset": {
-                        "batch_size": 512
-                    }
-                }
-
-                return tp_config
 
             def create_pack_iterator(self) -> Iterator[DataPack]:
                 reader = CoNLL03Reader()
@@ -109,7 +105,6 @@ class BaseTrainer:
                 train_pl.initialize()
                 pack_iterator: Iterator[DataPack] = \
                     train_pl.process_dataset(self.config_data.train_path)
-
                 return pack_iterator
 
             def train(self):
@@ -152,8 +147,6 @@ class BaseTrainer:
     """
 
     def __init__(self):
-        # self._tp_request: Dict = {}
-        # self._tp_config: Dict = {}
         self._pack_iterator: Optional[Iterator[DataPack]] = None
         self._tp: Optional[TrainPreprocessor] = None
         self._initialized: bool = False
@@ -183,14 +176,17 @@ class BaseTrainer:
         return self._tp
 
     def run(self):
-        r"""The main entry for starting a training process."""
+        r"""The entry point for starting a training process."""
         self.initialize()
         self.train()
 
     @abstractmethod
     def create_tp_config(self) -> Dict:
         r"""Users should overwrite this method to provide a concrete train
-        preprocessor config. An example config is given in the example above.
+        preprocessor config to create an object of
+        :class:`~forte.train_preprocessor.TrainPreprocessor`.
+        An example config is given in the example above.
+
         Please refer to :meth:`default_configs` in class
         :class:`~forte.train_preprocessor.TrainPreprocessor` for detailed
         specification of each options in the config.
@@ -199,10 +195,10 @@ class BaseTrainer:
 
     @abstractmethod
     def create_pack_iterator(self) -> Iterator[DataPack]:
-        r"""Users should overwrite this method to provide an iterator of
-        :class:`~forte.data.data_pack.DataPack`. This iterator will be used to
-        produce each input data pack consumed for training. Typically, users
-        can create a reader of type
+        r"""Users should overwrite this method to provide an iterator of data,
+        in DataPack formats:class:`~forte.data.data_pack.DataPack`.
+        This iterator will be used to produce each input data pack consumed
+        for training. Typically, users can create a reader of type
         :class:`~forte.data.readers.base_reader.BaseReader`. The reader can be
         wrapped as an iterator of data pack via forte pipeline system. Please
         refer to the above example for how to create this.

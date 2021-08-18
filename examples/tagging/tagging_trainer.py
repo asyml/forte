@@ -35,12 +35,12 @@ logger = logging.getLogger(__name__)
 
 class TaggingTrainer(BaseTrainer):
     def __init__(
-        self,
-        task_type: str,
-        config_data: Config,
-        config_model: Config,
-        config_extractors: Dict,
-        device,
+            self,
+            task_type: str,
+            config_data: Config,
+            config_model: Config,
+            config_extractors: Dict,
+            device,
     ):
         super().__init__()
         self.task_type = task_type
@@ -53,28 +53,11 @@ class TaggingTrainer(BaseTrainer):
 
         self.model = None
 
-    def create_tp_request(self) -> Dict:
-        # Create output extractor based on the task.
-        extractor_configs = self.config_extractors["feature_scheme"][
-            "output_tag"
-        ]["extractor"]["config"]
-        if self.task_type == "ner":
-            extractor_configs[
-                "entry_type"
-            ] = "ft.onto.base_ontology.EntityMention"
-            extractor_configs["attribute"] = "ner_type"
-            extractor_configs["tagging_unit"] = "ft.onto.base_ontology.Token"
-        elif self.task_type == "pos":
-            extractor_configs["entry_type"] = "ft.onto.base_ontology.Token"
-            extractor_configs["attribute"] = "pos"
-
-        return self.config_extractors
-
     def create_tp_config(self) -> Dict:
         return {
             "preprocess": {"device": self.device.type},
             "dataset": {"batch_size": self.config_data.batch_size_tokens},
-            "request": self.create_tp_request(),
+            "request": self.config_extractors
         }
 
     def create_pack_iterator(self) -> Iterator[DataPack]:
@@ -82,11 +65,9 @@ class TaggingTrainer(BaseTrainer):
         train_pl: Pipeline = Pipeline()
         train_pl.set_reader(reader)
         train_pl.initialize()
-        pack_iterator: Iterator[DataPack] = train_pl.process_dataset(
+        yield from train_pl.process_dataset(
             self.config_data.train_path
         )
-
-        return pack_iterator
 
     def train(self):
         logging.info("Constructing the extractors and models.")
@@ -115,10 +96,8 @@ class TaggingTrainer(BaseTrainer):
 
         logging.info("Constructing the validation pipeline.")
         predictor = TaggingPredictor()
-        predictor_config = {
-            "batch_size": self.config_data.batch_size_tokens,
-        }
-        predictor_config.update(self.config_extractors)
+        # Load the extractors to the predictor.
+        predictor.set_feature_requests(self.train_preprocessor.request)
         predictor.load(self.model)
 
         evaluator = CoNLLNEREvaluator()
@@ -134,7 +113,7 @@ class TaggingTrainer(BaseTrainer):
         val_reader = CoNLL03Reader(cache_in_memory=True)
         val_pl: Pipeline = Pipeline()
         val_pl.set_reader(val_reader)
-        val_pl.add(predictor, config=predictor_config)
+        val_pl.add(predictor, config={"batch_size": 10})
         val_pl.add(evaluator, config=evaluator_config)
         val_pl.initialize()
 

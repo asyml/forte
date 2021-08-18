@@ -57,12 +57,21 @@ class CoNLLNEREvaluator(Evaluator):
         self.entry_type = get_class(configs.entry_type)
         self.tagging_unit = get_class(configs.tagging_unit)
         self.attribute = configs.attribute
+        self.__eval_script = configs.eval_script
 
     @classmethod
     def default_configs(cls):
         config = super().default_configs()
         config.update(
-            {"entry_type": None, "tagging_unit": None, "attribute": ""}
+            {
+                "entry_type": None,
+                "tagging_unit": None,
+                "attribute": "",
+                "eval_script": str(
+                    Path(os.path.abspath(__file__)).parents[1]
+                    / "utils/eval_scripts/conll03eval.v2"
+                ),
+            }
         )
         return config
 
@@ -87,26 +96,31 @@ class CoNLLNEREvaluator(Evaluator):
         )
 
     def get_result(self) -> Dict:
-        eval_script = (
-            Path(os.path.abspath(__file__)).parents[2]
-            / "utils/eval_scripts/conll03eval.v2"
+        eval_call = (
+            f"perl {self.__eval_script} < {self.output_file} > "
+            f"{self.score_file}"
         )
-        os.system(
-            f"perl {eval_script} < {self.output_file} > " f"{self.score_file}"
-        )
-        with open(self.score_file, "r") as fin:
-            fin.readline()
-            line = fin.readline()
-            fields = line.split(";")
-            acc = float(fields[0].split(":")[1].strip()[:-1])
-            precision = float(fields[1].split(":")[1].strip()[:-1])
-            recall = float(fields[2].split(":")[1].strip()[:-1])
-            f_1 = float(fields[3].split(":")[1].strip())
 
-        self.scores = {
-            "accuracy": acc,
-            "precision": precision,
-            "recall": recall,
-            "f1": f_1,
-        }
-        return self.scores
+        call_return = os.system(eval_call)
+        if call_return == 0:
+            with open(self.score_file, "r") as fin:
+                fin.readline()
+                line = fin.readline()
+                fields = line.split(";")
+                acc = float(fields[0].split(":")[1].strip()[:-1])
+                precision = float(fields[1].split(":")[1].strip()[:-1])
+                recall = float(fields[2].split(":")[1].strip()[:-1])
+                f_1 = float(fields[3].split(":")[1].strip())
+
+            self.scores = {
+                "accuracy": acc,
+                "precision": precision,
+                "recall": recall,
+                "f1": f_1,
+            }
+            return self.scores
+        else:
+            raise RuntimeError(
+                f"Error running eval script, return code is {call_return} "
+                f"when running the command {eval_call}"
+            )

@@ -1,7 +1,9 @@
 train_path: "data/conll03_english/train/"
 val_path: "data/conll03_english/dev/"
 test_path: "data/conll03_english/test"
-train_state_path: "train_state.pkl"
+
+vocab_output: "model/vocab.pkl"
+train_state_path: "model/train_state.pkl"
 
 num_epochs: 200
 batch_size_tokens: 512

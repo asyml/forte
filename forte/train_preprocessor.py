@@ -23,6 +23,7 @@ from torch import device
 
 from forte.common.configuration import Config
 from forte.data.base_extractor import BaseExtractor
+from forte.data.converter import Converter
 from forte.data.data_pack import DataPack
 from forte.data.data_pack_dataset import DataPackDataset, DataPackIterator
 from forte.data.ontology.core import EntryType
@@ -38,26 +39,23 @@ class TrainPreprocessor:
     r"""
     `TrainPreprocessor` provides the functionality of doing pre-processing work
     including building vocabulary, extracting the features, batching and
-    padding (optional). The main functionality is provided by its method
-    :meth:`get_train_batch_iterator` which will return an `iterator` over the
+    padding (optional). The processed data will be provided by its method
+    :meth:`get_train_batch_iterator`, which will return an `iterator` over the
     batch of pre-processed data. Please refer to the documentation of
     that method for how the pre-processing is done.
 
-    `TrainPreprocessor` will maintain a Config that stores all the configurable
-    parameters for various components.
+    A main part of the `TrainPreprocessor ` is that it maintains a list of
+    extractors :class:`~forte.data.BaseExtractor` that extract features. This
+    can be provided either via calling `add_extractor` function. Alternatively,
+    a request can be passed in through `initialize`, where the configuration
+    under the `request` key will be used to create the extractor instances.
 
-    `TrainPreprocessor` will also accept a user request. Internally it will
-    parse this user request and store the parsed result.
+    The parsed components will be stored, and can be accessed via the `request`
+    property of this class.
 
     Args:
         pack_iterator (Iterator[DataPack]): An iterator of
             :class:`~forte.data.data_pack.DataPack`.
-        request (Dict): A request that specifies how to do train pre-processing.
-            Please refer to :meth:`request` for details.
-        config: A `Dict` or :class:`~forte.common.configuration.Config` that
-            configs this preprocessor. See :meth:`default_configs` for
-            the defaults.
-
 
     .. note::
         For parameters `request`, user does not necessarily need to provide
@@ -80,11 +78,41 @@ class TrainPreprocessor:
         self._vocab_ready: bool = False
 
     def initialize(self, config: Optional[Union[Config, Dict]] = None):
-        self._config = Config(config, default_hparams=self.default_configs())
+        self._config = Config(
+            config,
+            default_hparams=self.default_configs(),
+            allow_new_hparam=True,
+        )
         self._user_request = self._config.request
         self._validate_config()
         self._parse_request(self._user_request)
         self._build_vocab()
+
+    def add_extractor(
+        self,
+        name: str,
+        extractor: BaseExtractor,
+        is_input: bool,
+        converter: Optional[Converter] = None,
+    ):
+        """
+        Extractors can be added to the preprocessor directly via this
+        method.
+
+        Args:
+            name: The name/identifier of this extractor, the name should be
+              different between different extractors.
+            extractor: The extractor instance to be added.
+            is_input: Whether this extractor will be used as input or output.
+            converter:  The converter instance to be applied after running
+              the extractor.
+
+        Returns:
+
+        """
+        extractor_utils.add_extractor(
+            self._request, name, extractor, is_input, converter
+        )
 
     @staticmethod
     def default_configs():
@@ -194,24 +222,23 @@ class TrainPreprocessor:
             .. code-block:: python
 
                 request = {
-                    "scope": ft.onto.Sentence
+                    "scope": "ft.onto.base_ontology.Sentence"
                     "schemes": {
                         "text_tag": {
                             "extractor":
-                            forte.data.extractor.AttributeExtractor,
-                            "converter": forte.data.converter.Converter,
-                            "type": TrainPreprocessor.DATA_INPUT,
+                                "class_name":
+                                  "forte.data.extractor.AttributeExtractor",
+                                "config": {
+                                    ... more configuration of the extractor
+                                }
                         },
-                        "char_tag" {
-                            "extractor": forte.data.extractor.CharExtractor,
-                            "converter": forte.data.converter.Converter,
-                            "type": TrainPreprocessor.DATA_INPUT,
-                        }
                         "ner_tag": {
                             "extractor":
-                                forte.data.extractor.BioSeqTaggingExtractor,
-                            "converter": forte.data.converter.Converter,
-                            "type": TrainPreprocessor.DATA_OUTPUT,
+                                "class_name":
+                                  "forte.data.extractor.BioSeqTaggingExtractor",
+                                "config": {
+                                    ... more configuration of the extractor
+                                }
                         }
                     }
                 }
@@ -221,19 +248,16 @@ class TrainPreprocessor:
             `"scope"`: Entry
                 A class of type :class:`~forte.data.ontology.core.Entry` The
                 granularity to separate data into different examples. For
-                example,
-                if `scope` is :class:`~ft.onto.base_ontology.Sentence`,
-                then each
-                training example will represent the information of a sentence.
+                example, if `scope` is :class:`~ft.onto.base_ontology.Sentence`,
+                then each training example will represent the information of a
+                sentence.
 
             `"schemes"`: `Dict`
                 A `Dict` containing the information about doing the
                 pre-processing.
                 The `key` is the tags provided by input `request`. The
-                `value` is a
-                `Dict` containing the information for doing pre-processing
-                for that
-                feature.
+                `value` is a `Dict` containing the information for doing
+                pre-processing for that feature.
 
             `"schemes.tag.extractor"`: Extractor
                 An instance of type

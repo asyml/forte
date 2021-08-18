@@ -15,11 +15,10 @@
 Here we define some utility functions for CoNLL evaluation datasets change.
 We can add other datasets conversion function for CoNLL here in the future.
 """
-from typing import List, Dict, Optional, Type, Tuple
+from typing import List, Dict, Optional, Type, Tuple, Union, Callable
 
 from forte.data.data_pack import DataPack
 from forte.data.ontology import Annotation
-from forte.data.extractors.utils import bio_tagging
 from ft.onto.base_ontology import Sentence
 
 
@@ -40,6 +39,91 @@ def post_edit(element: Tuple[Optional[str], str]) -> str:
     if element[0] is None:
         return "O"
     return "%s-%s" % (element[1], element[0])
+
+
+def bio_tagging(
+    pack: DataPack,
+    instance: Annotation,
+    tagging_unit_type: Type[Annotation],
+    entry_type: Type[Annotation],
+    attribute: Union[Callable[[Annotation], str], str],
+) -> List[Tuple[Optional[str], str]]:
+    """This utility function use BIO tagging method to convert tags
+    of "instance_entry" into the same length as "instance_tagging_unit". Both
+    element from "instance_entry" and "instance_tagging_unit" should Annotation
+    type. This function uses their position information to
+    determine B, I, O tagging for the entry on each tagging_unit element.
+
+    Args:
+        pack (DataPack): The datapack that contains the current
+            instance.
+
+        instance (Annotation): The instance from which the
+            extractor will extractor feature. For example, an instance of
+            Sentence type, which mean the tagging sequence comes from
+            one sentence.
+
+        tagging_unit_type (Annotation): The type of tagging unit that entry
+            tag should align to. For example, it can be Token, which means
+            returned tags should aligned to tokens in one sentence.
+
+        entry_type (Annotation): The type of entry that contains tags. For
+            example, it can be EntityMention, which means tags comes from the
+            EntityMention of one sentence. Note that the number of EntityMention
+            can be different from the number of Token. That is why we need to
+            use BIO tagging to align them.
+
+        attribute (Union[Callable[[Annotation], str], str]): A function to
+            get the tags via the attribute of an entry. Or a str of the name
+            of the attribute. For example, it can be "ner_type", which means
+            the attribute ner_type of the entry will be treated as tags.
+    Returns:
+        A list of the type List[Tuple[Optional[str], str]]. For example,
+        [(None, "O"), (LOC, "B"), (LOC, "I"), (None, "O"),
+         (None, "O"), (PER, "B"), (None, "O")]
+    """
+
+    # Tokens in the sentence.
+    tagging_units: List[Annotation] = list(
+        pack.get(tagging_unit_type, instance)
+    )
+    # All mentions in the sentence.
+    instance_entry: List[Annotation] = list(pack.get(entry_type, instance))
+
+    tagged: List[Tuple[Optional[str], str]] = []
+    unit_id = 0
+    entry_id = 0
+    while unit_id < len(tagging_units) or entry_id < len(instance_entry):
+        if entry_id == len(instance_entry):
+            tagged.append((None, "O"))
+            unit_id += 1
+            continue
+
+        is_start = True
+        for unit in pack.get(tagging_unit_type, instance_entry[entry_id]):
+            while (
+                unit_id < len(tagging_units)
+                and tagging_units[unit_id].begin != unit.begin
+                and tagging_units[unit_id].end != unit.end
+            ):
+                tagged.append((None, "O"))
+                unit_id += 1
+
+            if is_start:
+                location = "B"
+                is_start = False
+            else:
+                location = "I"
+
+            unit_id += 1
+            if callable(attribute):
+                tagged.append((attribute(instance_entry[entry_id]), location))
+            else:
+                tagged.append(
+                    (getattr(instance_entry[entry_id], attribute), location)
+                )
+        entry_id += 1
+    return tagged
 
 
 def get_tag(
