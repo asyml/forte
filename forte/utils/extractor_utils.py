@@ -12,7 +12,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 import pickle
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 from forte.common.configuration import Config
 from forte.data import BaseExtractor
@@ -78,3 +78,33 @@ def parse_feature_extractors(scheme_configs: Config) -> Dict[str, Any]:
             feature_requests[tag]["converter"] = converter
 
     return feature_requests
+
+
+def add_extractor(
+    request: Dict,
+    name: str,
+    extractor: BaseExtractor,
+    is_input: bool,
+    converter: Optional[Converter] = None,
+):
+    """
+    Extractors can be added to the preprocessor directly via this
+    method.
+
+    Args:
+        request: A request dictionary to be populated.
+        name: The name/identifier of this extractor, the name should be
+          different between different extractors.
+        extractor: The extractor instance to be added.
+        is_input: Whether this extractor will be used as input or output.
+        converter:  The converter instance to be applied after running
+          the extractor.
+
+    Returns:
+
+    """
+    request["schemes"][name]["extractor"] = extractor
+    request["schemes"][name]["type"] = DATA_INPUT if is_input else DATA_OUTPUT
+    request["schemes"][name]["converter"] = (
+        Converter({}) if converter is None else converter
+    )

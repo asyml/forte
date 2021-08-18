@@ -194,8 +194,8 @@ class FixedSizeDataPackBatcherWithExtractor(ProcessingBatcher):
             or config["batch_size"] is None
         ):
             raise AttributeError(
-                "scope, feature_scheme and"
-                "batch_size cannot be None"
+                "scope, feature_scheme and "
+                "batch_size cannot be None "
                 "in the config."
             )
         self.scope: Type[EntryType] = config["scope"]
