@@ -23,7 +23,7 @@ from forte.common.configuration import Config
 from forte.data.converter.feature import Feature
 from forte.data.data_pack import DataPack
 from forte.data.base_extractor import BaseExtractor
-from forte.data.extractors.utils import bio_tagging, add_entry_to_pack
+from forte.datasets.conll.conll_utils import bio_tagging
 from forte.data.ontology import Annotation
 from forte.utils import get_class
 
@@ -282,9 +282,7 @@ class BioSeqTaggingExtractor(BaseExtractor):
                 or (tag[1] == "I" and tag[0] != tag_type)
             ):
                 if tag_type:
-                    entity_mention = add_entry_to_pack(
-                        pack, self._entry_type, tag_start, tag_end
-                    )
+                    entity_mention = self._entry_type(pack, tag_start, tag_end)
                     setattr(entity_mention, self.attribute, tag_type)
                 tag_start = entry.begin
                 tag_end = entry.end
@@ -294,7 +292,7 @@ class BioSeqTaggingExtractor(BaseExtractor):
 
         # Handle the final tag
         if tag_type and tag_start and tag_end:
-            entity_mention = add_entry_to_pack(
-                pack, self._entry_type, tag_start, tag_end
+            entity_mention = self._entry_type(
+                pack, tag_start, tag_end  # type: ignore
             )
             setattr(entity_mention, self.attribute, tag_type)

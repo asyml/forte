@@ -19,13 +19,14 @@ from typing import List, Dict, Optional, Type, Any
 
 from forte.common import Resources, ProcessorConfigError
 from forte.common.configuration import Config
-from forte.data import slice_batch
+from forte.data import slice_batch, BaseExtractor
 from forte.data.base_pack import PackType
 from forte.data.batchers import (
     ProcessingBatcher,
     FixedSizeDataPackBatcher,
     FixedSizeDataPackBatcherWithExtractor,
 )
+from forte.data.converter import Converter
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology.top import Annotation
@@ -42,7 +43,9 @@ __all__ = [
     "FixedSizeMultiPackBatchProcessor",
 ]
 
-from forte.utils.extractor_utils import parse_feature_extractors
+from forte.utils.extractor_utils import (
+    parse_feature_extractors,
+)
 
 
 class BaseBatchProcessor(BaseProcessor[PackType], ABC):
@@ -83,8 +86,8 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
             self._batcher.initialize(configs.batcher)
         except AttributeError as e:
             raise ProcessorConfigError(
-                "Error in handling batcher config, please provide the "
-                "check the config to see if you have the key 'batcher'."
+                "Error in handling batcher config, please check the "
+                "config of the batcher to see they are correct."
             ) from e
 
     def _process(self, input_pack: PackType):
@@ -256,6 +259,7 @@ class Predictor(BaseBatchProcessor):
         self.model = None
         self.do_eval = False
         self._request: Dict = {}
+        self._request_ready: bool = False
 
     @staticmethod
     def _define_context() -> Type[Annotation]:
@@ -276,6 +280,39 @@ class Predictor(BaseBatchProcessor):
         And it is not actually used in this class.
         """
         pass
+
+    def add_extractor(
+        self,
+        name: str,
+        extractor: BaseExtractor,
+        is_input: bool,
+        converter: Optional[Converter] = None,
+    ):
+        """
+        Extractors can be added to the preprocessor directly via this
+        method.
+
+        Args:
+            name: The name/identifier of this extractor, the name should be
+              different between different extractors.
+            extractor: The extractor instance to be added.
+            is_input: Whether this extractor will be used as input or output.
+            converter:  The converter instance to be applied after running
+              the extractor.
+
+        Returns:
+
+        """
+        extractor_utils.add_extractor(
+            self._request, name, extractor, is_input, converter
+        )
+
+    def set_feature_requests(self, request: Dict):
+        self._request = request
+        self._request_ready = True
+
+    def deactivate_request(self):
+        self._request_ready = False
 
     def pack(self, pack: PackType, inputs) -> None:
         r"""This function is just for the compatibility reason.
@@ -302,31 +339,37 @@ class Predictor(BaseBatchProcessor):
         )
         return super_config
 
-    def initialize(self, resources: Resources, configs: Optional[Config]):
-        if configs is not None:
-            # Will parse the basic configs and also populate the _request.
-            configs = self._parse_configs(configs)
-            batcher_config = {"scope": configs.scope, "feature_scheme": {}}
-            for tag, scheme in self._request.items():
-                # Add input feature to the batcher.
-                if scheme["type"] == extractor_utils.DATA_INPUT:
-                    batcher_config["feature_scheme"][tag] = scheme
-            batcher_config["batch_size"] = configs.batch_size
-            configs.batcher = batcher_config
-            self.do_eval = configs.do_eval
+    def initialize(self, resources: Resources, configs: Config):
+        # Populate the _request.
+        if not self._request_ready:
+            for key, value in configs.items():
+                if key == "feature_scheme":
+                    self._request["schemes"] = parse_feature_extractors(
+                        configs.feature_scheme
+                    )
+                else:
+                    self._request[key] = value
+
+            self._request_ready = True
+
+        batcher_config = {
+            "scope": self._request["scope"],
+            "feature_scheme": {},
+            "batch_size": configs.batch_size,
+        }
+
+        for tag, scheme in self._request["schemes"].items():
+            # Add input feature to the batcher.
+            if scheme["type"] == extractor_utils.DATA_INPUT:
+                batcher_config["feature_scheme"][tag] = scheme
+        configs.batcher = batcher_config
+        self.do_eval = configs.do_eval
+
+        # This needs to be called later since batcher config needs to be loaded.
         super().initialize(resources, configs)
 
     def load(self, model):
         self.model = model
-
-    def _parse_configs(self, configs: Config):
-        parsed_configs = self.default_configs()
-        parsed_configs["batch_size"] = configs.batch_size
-        parsed_configs["scope"] = configs.scope
-        parsed_configs["do_eval"] = configs.do_eval
-
-        self._request = parse_feature_extractors(configs.feature_scheme)
-        return Config(parsed_configs, default_hparams=self.default_configs())
 
     def _process(self, input_pack: DataPack):
         r"""In batch processors, all data are processed in batches. So this
@@ -356,13 +399,12 @@ class Predictor(BaseBatchProcessor):
         for tag, preds in predictions.items():
             for pred, pack, instance in zip(preds, packs, instances):
                 if self.do_eval:
-                    self._request[tag]["extractor"].pre_evaluation_action(
-                        pack, instance
-                    )
-                self._request[tag]["extractor"].add_to_pack(
-                    pack, instance, pred
-                )
+                    self.__extractor(tag).pre_evaluation_action(pack, instance)
+                self.__extractor(tag).add_to_pack(pack, instance, pred)
                 pack.add_all_remaining_entries()
+
+    def __extractor(self, tag_name: str):
+        return self._request["schemes"][tag_name]["extractor"]
 
     def predict(self, data_batch: Dict) -> Dict:
         r"""The function that task processors should implement. Make
