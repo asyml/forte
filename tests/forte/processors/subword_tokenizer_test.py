@@ -54,7 +54,7 @@ class TestSubWordTokenizer(unittest.TestCase):
         "highlights in Bulgarian \n* International Famagusta Festival - "
         "Yıldız İbrahimova"
     )
-    def test_tokenizer(self, input_data):
+    def test_tokenizer_auto(self, input_data):
         tokenizer = SubwordTokenizer()
         self.pl = Pipeline[DataPack]().set_reader(
             StringReader()).add(
@@ -85,7 +85,7 @@ class TestSubWordTokenizer(unittest.TestCase):
         "highlights in Bulgarian \n* International Famagusta Festival - "
         "Yıldız İbrahimova"
     )
-    def test_tokenizer(self, input_data):
+    def test_tokenizer_unicode(self, input_data):
         self.pl = Pipeline[DataPack](
         ).set_reader(
             StringReader()
