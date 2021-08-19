@@ -39,13 +39,15 @@ class LowerCaserProcessor(PackProcessor):
                     break
 
             logging.error(
-                f"Some characters cannot be converted to lower case without "
-                f"changing length in pack [{input_pack.pack_id}] will "
-                f"result in a change of text length, which will cause "
-                f"problems in the data pack system. The text of this pack "
-                f"will remain unchanged. One way to solve this is to provide "
-                f"values from the 'custom_substitutions'. The first "
-                f"problematic character is [{error_char}]."
+                "Some characters cannot be converted to lower case without "
+                "changing length in pack [%s] will "
+                "result in a change of text length, which will cause "
+                "problems in the data pack system. The text of this pack "
+                "will remain unchanged. One way to solve this is to provide "
+                "values from the 'custom_substitutions'. The first "
+                "problematic character is [%s].",
+                input_pack.pack_id,
+                error_char,
             )
 
     @classmethod
