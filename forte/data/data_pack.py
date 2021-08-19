@@ -535,11 +535,12 @@ class DataPack(BasePack[Entry, Link, Group]):
                         f"before calling `add_entry` on the annotations."
                     )
                 else:
+                    pack_ref = entry.pack.pack_id
                     raise ValueError(
                         f"The end {end} of span is greater than the text "
                         f"length {len(self.text)}, which is invalid. The "
                         f"problematic entry is of type {entry.__class__} "
-                        f"at [{begin}:{end}]"
+                        f"at [{begin}:{end}], in pack {pack_ref}."
                     )
 
         elif isinstance(entry, Link):

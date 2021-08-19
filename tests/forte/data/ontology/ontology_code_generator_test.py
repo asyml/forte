@@ -214,15 +214,15 @@ class GenerateOntologyTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             os.mkdir(os.path.join(temp_dir, "ft"))
             temp_filename = _get_temp_filename(json_file_path, temp_dir)
-            with LogCapture() as l:
+            with LogCapture() as lc:
                 self.generator.generate(temp_filename, temp_dir, False)
-                l.check_present(
+                lc.check_present(
                     (
                         "root",
                         "WARNING",
-                        f"The directory with the name ft is already present in "
-                        f"{temp_dir}. New files will be merge into the existing "
-                        f"directory.",
+                        f"The directory with the name ft is already present "
+                        f"in {temp_dir}. New files will be merge into the "
+                        f"existing directory.",
                     )
                 )
 

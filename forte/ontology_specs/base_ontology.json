@@ -58,6 +58,14 @@
         {
           "name": "is_first_segment",
           "type": "bool"
+        },
+        {
+          "name": "is_unk",
+          "type": "bool"
+        },
+        {
+          "name": "vocab_id",
+          "type": "int"
         }
       ]
     },
@@ -158,7 +166,7 @@
       "entry_name": "ft.onto.base_ontology.Utterance",
       "parent_entry": "forte.data.ontology.top.Annotation",
       "description": "A span based annotation `Utterance`, normally used to represent an utterance in dialogue.",
-      "attributes" : [
+      "attributes": [
         {
           "name": "speaker",
           "type": "str"
@@ -334,38 +342,38 @@
       "child_type": "ft.onto.base_ontology.EventMention"
     },
     {
-     "entry_name": "ft.onto.base_ontology.ConstituentNode",
-     "parent_entry": "forte.data.ontology.top.Annotation",
-     "description": "A span based annotation `ConstituentNode` to represent constituents in constituency parsing. This can also sentiment values annotated on the nodes.",
-     "attributes": [
-       {
-         "name": "label",
-         "type": "str"
-       },
-       {
-         "name": "sentiment",
-         "type": "Dict",
-         "key_type": "str",
-         "value_type": "float"
-       },
-       {
-         "name": "is_root",
-         "type": "bool"
-       },
-       {
-         "name": "is_leaf",
-         "type": "bool"
-       },
-       {
-         "name": "parent_node",
-         "type": "ft.onto.base_ontology.ConstituentNode"
-       },
-       {
-         "name": "children_nodes",
-         "type": "List",
-         "item_type": "ft.onto.base_ontology.ConstituentNode"
-       }
-     ]
+      "entry_name": "ft.onto.base_ontology.ConstituentNode",
+      "parent_entry": "forte.data.ontology.top.Annotation",
+      "description": "A span based annotation `ConstituentNode` to represent constituents in constituency parsing. This can also sentiment values annotated on the nodes.",
+      "attributes": [
+        {
+          "name": "label",
+          "type": "str"
+        },
+        {
+          "name": "sentiment",
+          "type": "Dict",
+          "key_type": "str",
+          "value_type": "float"
+        },
+        {
+          "name": "is_root",
+          "type": "bool"
+        },
+        {
+          "name": "is_leaf",
+          "type": "bool"
+        },
+        {
+          "name": "parent_node",
+          "type": "ft.onto.base_ontology.ConstituentNode"
+        },
+        {
+          "name": "children_nodes",
+          "type": "List",
+          "item_type": "ft.onto.base_ontology.ConstituentNode"
+        }
+      ]
     },
     {
       "entry_name": "ft.onto.base_ontology.Title",

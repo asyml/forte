@@ -16,9 +16,13 @@ Unit test for utilities.
 """
 import unittest
 
+from ddt import data, ddt
+
 from forte.utils import utils
+from forte.utils.utils import DiffAligner
 
 
+@ddt
 class UtilsTest(unittest.TestCase):
     def test_get_full_module_name(self):
         from forte.processors.misc import LowerCaserProcessor
@@ -72,6 +76,25 @@ class UtilsTest(unittest.TestCase):
             p.name,
             "forte.processors.misc.lowercaser_processor.LowerCaserProcessor",
         )
+
+    @data(
+        (
+            "this if  sentences for testing.",
+            ["This", "is", "a", "sentence", "4", "testing", "."],
+            [(0, 4), (5, 7), None, (9, 17), (19, 22), (23, 30), (30, 31)],
+        ),
+        ("aa bb   cc", ["aa", "bb", "cc"], [(0, 2), (3, 5), (6, 10)]),
+        (
+            "aa bb  cc  dd xx yy",
+            ["aa", "bb", "cc", "d", "dd", "xx", "yy"],
+            [(0, 2), (3, 5), (6, 9), None, (11, 13), (14, 16), (17, 19)],
+        ),
+    )
+    def test_diff_aligner(self, value):
+        text, segments, expected_spans = value
+        aligner = DiffAligner()
+        spans = aligner.align_with_segments(text, segments)
+        self.assertEqual(spans, expected_spans)
 
 
 if __name__ == "__main__":
