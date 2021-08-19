@@ -57,6 +57,7 @@ from ft.onto.wikipedia import (
     WikiAnchor,
     WikiInfoBoxProperty,
     WikiInfoBoxMapped,
+    WikiCategory,
 )
 
 __all__ = [
@@ -285,9 +286,7 @@ class WikiArticleWriter(JsonPackWriter):
 
         if self.configs.use_input_index and self.configs.input_index_file:
             # Load input index.
-            input_index_path = os.path.join(
-                self.configs.output_dir, self.configs.input_index_file
-            )
+            input_index_path = self.configs.input_index_file
             self._article_index = {}
             if os.path.exists(input_index_path):
                 self._input_index_file = open(input_index_path)
@@ -299,8 +298,8 @@ class WikiArticleWriter(JsonPackWriter):
                 self.configs.overwrite = True
                 logging.info(
                     "Wikipedia writer is setup with existing index "
-                    "file. The output will be written to the existing "
-                    "path and overwritten is enabled."
+                    "file. The output will be written following the input  "
+                    "index path and overwritten is enabled."
                 )
             else:
                 raise FileNotFoundError(
@@ -371,14 +370,14 @@ class WikiArticleWriter(JsonPackWriter):
               data.
           - input_index_file (str): the path providing the index from the
               wikipedia article name to the relative paths that stores these
-              files. This path and the relative paths are all relative names
-              are relative to the `output_dir`.
+              files.
               This file will only be used if the `use_input_index` and
               `overwrite` are both set to true, and the data path will be
               used to write the results (which means the existing files will be
               overwritten).
           - output_index_file (str): if provided, will write out the index from
-              file name to the packs.
+              file name to the packs. This path and the relative paths are all
+              relative names are relative to the `output_dir`.
 
         Returns: The default configuration of this writer.
         """
@@ -533,3 +532,15 @@ class WikiInfoBoxReader(WikiPackReader):
                 info_box = WikiInfoBoxMapped(pack)
                 info_box.key = v.toPython()
                 info_box.value = name
+
+
+class WikiCategoryReader(WikiPackReader):
+    """
+    Read the dbpedia category file to add category information.
+    """
+
+    def add_wiki_info(self, pack: DataPack, statements: List[state_type]):
+        for s, _, o in statements:
+            wc = WikiCategory(pack)
+            wc.values.append(get_resource_name(o))
+            pack.add_entry(wc)
