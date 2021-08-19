@@ -38,9 +38,9 @@ class TestLowerCaserProcessor(unittest.TestCase):
         )
         pack = self.nlp.process(document)
         assert (
-                pack.text == "this tool is called forte. the goal of this "
-                             "project to help you build nlp pipelines. nlp "
-                             "has never been made this easy before."
+            pack.text == "this tool is called forte. the goal of this "
+            "project to help you build nlp pipelines. nlp "
+            "has never been made this easy before."
         )
 
     @log_capture()
@@ -51,8 +51,10 @@ class TestLowerCaserProcessor(unittest.TestCase):
             logger, log_type, msg = lc.actual()[0]
 
             # Make sure the logging error is correct.
-            expected_log = f"Some characters cannot be converted to lower " \
-                           f"case without changing length in pack"
+            expected_log = (
+                f"Some characters cannot be converted to lower "
+                f"case without changing length in pack"
+            )
             assert expected_log in msg
 
             # Make sure the data pack is not changed.
@@ -60,12 +62,16 @@ class TestLowerCaserProcessor(unittest.TestCase):
 
     def test_lowercase_with_substitution(self):
         document = "Yıldız İbrahimova"
-        pack = Pipeline[DataPack]().set_reader(StringReader()).add(
-            LowerCaserProcessor(),
-            config={
-                "custom_substitutions": {"İ": "i"}
-            }
-        ).initialize().process(document)
+        pack = (
+            Pipeline[DataPack]()
+            .set_reader(StringReader())
+            .add(
+                LowerCaserProcessor(),
+                config={"custom_substitutions": {"İ": "i"}},
+            )
+            .initialize()
+            .process(document)
+        )
 
         self.assertNotEqual(pack.text, document)
 

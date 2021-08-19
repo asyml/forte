@@ -52,17 +52,18 @@ class TestSubWordTokenizer(unittest.TestCase):
         "references\n\n\nExternal links\n\n* Rateyourmusic.com — Yıldız "
         "İbrahimova \n* Agency for Bulgarian Artists — photo and biography "
         "highlights in Bulgarian \n* International Famagusta Festival - "
-        "Yıldız İbrahimova"
+        "Yıldız İbrahimova",
     )
     def test_tokenizer_auto(self, input_data):
         tokenizer = SubwordTokenizer()
-        self.pl = Pipeline[DataPack]().set_reader(
-            StringReader()).add(
-            tokenizer,
-            config={
-                "tokenizer_configs": {"do_lower_case": True}
-            }
-        ).initialize()
+        self.pl = (
+            Pipeline[DataPack]()
+            .set_reader(StringReader())
+            .add(
+                tokenizer, config={"tokenizer_configs": {"do_lower_case": True}}
+            )
+            .initialize()
+        )
 
         # Take the vocabulary used by the tokenizer.
         self.vocab: Dict[str, str] = tokenizer.tokenizer.vocab
@@ -71,12 +72,16 @@ class TestSubWordTokenizer(unittest.TestCase):
                 if subword.is_unk:
                     assert subword.vocab_id == 100
                 else:
-                    subword_repr = subword.text if subword.is_first_segment \
+                    subword_repr = (
+                        subword.text
+                        if subword.is_first_segment
                         else "##" + subword.text
-                    if not (subword_repr in self.vocab
-                            or subword_repr.lower() in self.vocab):
+                    )
+                    if not (
+                        subword_repr in self.vocab
+                        or subword_repr.lower() in self.vocab
+                    ):
                         assert False
-        assert False
 
     @data(
         "Balkanatolia 2-Annemden Rumeli Türküleri-Kalan-Turkey\n\nNotes and "
@@ -86,21 +91,22 @@ class TestSubWordTokenizer(unittest.TestCase):
         "Yıldız İbrahimova"
     )
     def test_tokenizer_unicode(self, input_data):
-        self.pl = Pipeline[DataPack](
-        ).set_reader(
-            StringReader()
-        ).add(
-            WhiteSpaceTokenizer()
-        ).add(
-            SubwordTokenizer(),
-            config={
-                "tokenizer_configs": {"do_lower_case": True},
-                "token_source": "ft.onto.base_ontology.Token",
-            }
-        ).initialize()
+        self.pl = (
+            Pipeline[DataPack]()
+            .set_reader(StringReader())
+            .add(WhiteSpaceTokenizer())
+            .add(
+                SubwordTokenizer(),
+                config={
+                    "tokenizer_configs": {"do_lower_case": True},
+                    "token_source": "ft.onto.base_ontology.Token",
+                },
+            )
+            .initialize()
+        )
 
         for pack in self.pl.process_dataset(input_data):
             subwords = list(pack.get(Subword))
             self.assertEqual(len(subwords), 57)
-            self.assertEqual(subwords[-1].text, 'İbrahimova')
+            self.assertEqual(subwords[-1].text, "İbrahimova")
             self.assertTrue(subwords[-1].is_unk)

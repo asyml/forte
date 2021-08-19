@@ -68,7 +68,7 @@ class UtilsTest(unittest.TestCase):
     def test_create_class_with_kwargs(self):
         p = utils.create_class_with_kwargs(
             class_name="forte.processors.misc.lowercaser_processor"
-                       ".LowerCaserProcessor",
+            ".LowerCaserProcessor",
             class_args={},
         )
 
@@ -79,19 +79,15 @@ class UtilsTest(unittest.TestCase):
 
     @data(
         (
-                "this if  sentences for testing.",
-                ["This", "is", "a", "sentence", "4", "testing", "."],
-                [(0, 4), (5, 7), None, (9, 17), (19, 22), (23, 30), (30, 31)]
+            "this if  sentences for testing.",
+            ["This", "is", "a", "sentence", "4", "testing", "."],
+            [(0, 4), (5, 7), None, (9, 17), (19, 22), (23, 30), (30, 31)],
         ),
+        ("aa bb   cc", ["aa", "bb", "cc"], [(0, 2), (3, 5), (6, 10)]),
         (
-                "aa bb   cc",
-                ["aa", "bb", "cc"],
-                [(0, 2), (3, 5), (6, 10)]
-        ),
-        (
-                "aa bb  cc  dd xx yy",
-                ["aa", "bb", "cc", "d", "dd", "xx", "yy"],
-                [(0, 2), (3, 5), (6, 9), None, (11, 13), (14, 16), (17, 19)]
+            "aa bb  cc  dd xx yy",
+            ["aa", "bb", "cc", "d", "dd", "xx", "yy"],
+            [(0, 2), (3, 5), (6, 9), None, (11, 13), (14, 16), (17, 19)],
         ),
     )
     def test_diff_aligner(self, value):
