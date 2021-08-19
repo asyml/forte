@@ -65,7 +65,7 @@ class SubwordTokenizer(PackProcessor):
                 assert isinstance(token, Annotation)
                 self.__add_subwords(
                     input_pack,
-                    token.text.lower()  # type: ignore
+                    token.text  # type: ignore
                     if self.__do_lower_case
                     else token.text,  # type: ignore
                     token.begin,  # type: ignore
@@ -110,9 +110,6 @@ class SubwordTokenizer(PackProcessor):
                 yield t, span
 
     def _segment(self, pack: DataPack, text: str, segment_offset: int):
-        if self.__do_lower_case:
-            text = text.lower()
-
         if self.tokenizer.do_basic_tokenize:
             for token, (token_begin, _) in self._word_tokenization(text):
                 assert token is not None
@@ -121,6 +118,14 @@ class SubwordTokenizer(PackProcessor):
             self.__add_subwords(pack, text, segment_offset)
 
     def __add_subwords(self, pack: DataPack, text: str, text_offset: int):
+        if self.__do_lower_case:
+            lower_text = text.lower()
+            # See this https://bugs.python.org/issue17252 to understand why this
+            # is checked here. tl;dr sometimes lower casing special unicode
+            # string will result in a change of length due to unicode NFD.
+            if len(lower_text) == len(text):
+                text = text.lower()
+
         for (
             subword,
             begin,

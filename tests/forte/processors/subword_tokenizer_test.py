@@ -15,7 +15,6 @@
 Unit tests for stave processor.
 """
 
-import os
 import unittest
 from typing import Dict
 
@@ -24,20 +23,13 @@ from ddt import data, ddt
 from forte.data.data_pack import DataPack
 from forte.data.readers import StringReader
 from forte.pipeline import Pipeline
+from forte.processors.misc import WhiteSpaceTokenizer
 from forte.processors.nlp import SubwordTokenizer
 from ft.onto.base_ontology import Subword
 
 
 @ddt
 class TestSubWordTokenizer(unittest.TestCase):
-    def setUp(self):
-        tokenizer = SubwordTokenizer()
-        self.pl = Pipeline[DataPack]().set_reader(
-            StringReader()).add(tokenizer).initialize()
-
-        # Take the vocabulary used by the tokenizer.
-        self.vocab: Dict[str, str] = tokenizer.tokenizer.vocab
-
     @data(
         "GP contacted Harefield Hospital at Hillingdon in north London.",
         "Forte can run a subword tokenizer from Texar, by auto aligning.",
@@ -55,9 +47,25 @@ class TestSubWordTokenizer(unittest.TestCase):
         "undersides are dark walnut-brown, dull, becoming somewhat olive "
         "distally, without a distinct brown border. The bases are faintly "
         "greyish. The hindwing upperside has an interrupted yellow "
-        "band.\n\nReferences\n"
+        "band.\n\nReferences\n",
+        "Balkanatolia 2-Annemden Rumeli Türküleri-Kalan-Turkey\n\nNotes and "
+        "references\n\n\nExternal links\n\n* Rateyourmusic.com — Yıldız "
+        "İbrahimova \n* Agency for Bulgarian Artists — photo and biography "
+        "highlights in Bulgarian \n* International Famagusta Festival - "
+        "Yıldız İbrahimova"
     )
     def test_tokenizer(self, input_data):
+        tokenizer = SubwordTokenizer()
+        self.pl = Pipeline[DataPack]().set_reader(
+            StringReader()).add(
+            tokenizer,
+            config={
+                "tokenizer_configs": {"do_lower_case": True}
+            }
+        ).initialize()
+
+        # Take the vocabulary used by the tokenizer.
+        self.vocab: Dict[str, str] = tokenizer.tokenizer.vocab
         for pack in self.pl.process_dataset(input_data):
             for subword in pack.get(Subword):
                 if subword.is_unk:
@@ -68,3 +76,31 @@ class TestSubWordTokenizer(unittest.TestCase):
                     if not (subword_repr in self.vocab
                             or subword_repr.lower() in self.vocab):
                         assert False
+        assert False
+
+    @data(
+        "Balkanatolia 2-Annemden Rumeli Türküleri-Kalan-Turkey\n\nNotes and "
+        "references\n\n\nExternal links\n\n* Rateyourmusic.com — Yıldız "
+        "İbrahimova \n* Agency for Bulgarian Artists — photo and biography "
+        "highlights in Bulgarian \n* International Famagusta Festival - "
+        "Yıldız İbrahimova"
+    )
+    def test_tokenizer(self, input_data):
+        self.pl = Pipeline[DataPack](
+        ).set_reader(
+            StringReader()
+        ).add(
+            WhiteSpaceTokenizer()
+        ).add(
+            SubwordTokenizer(),
+            config={
+                "tokenizer_configs": {"do_lower_case": True},
+                "token_source": "ft.onto.base_ontology.Token",
+            }
+        ).initialize()
+
+        for pack in self.pl.process_dataset(input_data):
+            subwords = list(pack.get(Subword))
+            self.assertEqual(len(subwords), 57)
+            self.assertEqual(subwords[-1].text, 'İbrahimova')
+            self.assertTrue(subwords[-1].is_unk)
