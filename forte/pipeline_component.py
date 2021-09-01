@@ -164,9 +164,8 @@ class PipelineComponent(Generic[PackType]):
                 configs = configs.todict()
 
             if "config_path" in configs and not configs["config_path"] is None:
-                filebased_configs = yaml.safe_load(
-                    open(configs.pop("config_path"))
-                )
+                with open(configs.pop("config_path"), encoding="utf-8") as f:
+                    filebased_configs = yaml.safe_load(f)
             else:
                 filebased_configs = {}
 

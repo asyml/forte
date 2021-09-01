@@ -75,9 +75,6 @@ class ElizaProcessor(PackProcessor):
 
         self.parse_doctor()
 
-        self.__ai: str = "ai"
-        self.__user: str = "user"
-
     def parse_doctor(self):
         parse_nodes: List[Union[Key, Decomp]] = []
 

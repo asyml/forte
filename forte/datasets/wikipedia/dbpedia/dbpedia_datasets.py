@@ -84,8 +84,8 @@ class DBpediaWikiReader(PackReader):
         super().__init__()
         self.__redirects: Dict[str, str] = {}
 
-    def initialize(self, resources: Resources, config: Config):
-        super().initialize(resources, config)
+    def initialize(self, resources: Resources, configs: Config):
+        super().initialize(resources, configs)
         if self.resources.contains("redirects"):
             self.__redirects = self.resources.get("redirects")
             logging.info("%d redirects loaded.", len(self.__redirects))
@@ -171,6 +171,7 @@ class WikiPackReader(PackReader):
         self._pack_index: Dict[str, str] = {}
         self._pack_dir: str = ""
         self._redirects: Dict[str, str] = {}
+        self._resume_index: Dict[str, str] = {}
 
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
@@ -179,9 +180,15 @@ class WikiPackReader(PackReader):
         self._pack_index = read_index(configs.pack_index)
         self._pack_dir = configs.pack_dir
 
+        if self.configs.resume_index:
+            self._resume_index = read_index(configs.resume_index)
+            print_progress(
+                f"Loaded {len(self._resume_index)} existing " f"files.", "\n"
+            )
+
         if self.resources.contains("redirects"):
             self._redirects = self.resources.get("redirects")
-            logging.info("%d redirects loaded.", len(self._redirects))
+            print_progress(f"{len(self._redirects)} redirects loaded.", "\n")
         else:
             raise ResourceError("Redirects not provided from resources.")
 
@@ -191,10 +198,17 @@ class WikiPackReader(PackReader):
     def _collect(  # type: ignore
         self, nif_path: str
     ) -> Iterator[Tuple[str, Dict[str, List[state_type]]]]:
+        skipped = 0
         for _, statements in ContextGroupedNIFReader(nif_path):
             name = get_resource_name(statements[0][0])
             if name is not None:
-                yield name, statements
+                if name not in self._resume_index:
+                    yield name, statements
+                else:
+                    skipped += 1
+                    print_progress(
+                        f"Skipped {skipped} documents", terminal_only=True
+                    )
 
     def _parse_pack(
         self, collection: Tuple[str, List[state_type]]
@@ -234,10 +248,7 @@ class WikiPackReader(PackReader):
         """
         config = super().default_configs()
         config.update(
-            {
-                "pack_index": "article.idx",
-                "pack_dir": ".",
-            }
+            {"pack_index": "article.idx", "pack_dir": ".", "resume_index": None}
         )
         return config
 
@@ -311,7 +322,11 @@ class WikiArticleWriter(JsonPackWriter):
         output_index_path = os.path.join(
             self.configs.output_dir, self.configs.output_index_file
         )
-        self._output_index_file = open(output_index_path, "w")
+        self._output_index_file = (
+            open(output_index_path, "a")
+            if self.configs.append_to_index
+            else open(output_index_path, "w")
+        )
         self._csv_writer = csv.writer(self._output_index_file, delimiter="\t")
 
     def sub_output_path(self, pack: DataPack) -> Optional[str]:
@@ -378,6 +393,8 @@ class WikiArticleWriter(JsonPackWriter):
           - output_index_file (str): if provided, will write out the index from
               file name to the packs. This path and the relative paths are all
               relative names are relative to the `output_dir`.
+          - append_to_index (bool): if provided, will append to the
+             `output_index_file` instead of creatign a new one.
 
         Returns: The default configuration of this writer.
         """
@@ -387,6 +404,7 @@ class WikiArticleWriter(JsonPackWriter):
                 "use_input_index": False,
                 "input_index_file": None,
                 "output_index_file": "article.idx",
+                "append_to_index": False,
             }
         )
         return config
@@ -540,7 +558,9 @@ class WikiCategoryReader(WikiPackReader):
     """
 
     def add_wiki_info(self, pack: DataPack, statements: List[state_type]):
-        for s, _, o in statements:
-            wc = WikiCategory(pack)
-            wc.values.append(get_resource_name(o))
-            pack.add_entry(wc)
+        for _, _, o in statements:
+            resource_name = get_resource_name(o)
+            if resource_name is not None:
+                wc = WikiCategory(pack)
+                wc.values.append(resource_name)
+                pack.add_entry(wc)

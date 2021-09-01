@@ -36,21 +36,25 @@ from forte.datasets.wikipedia.dbpedia import (
     WikiInfoBoxReader,
 )
 from forte.data.base_reader import PackReader
-from forte.datasets.wikipedia.dbpedia.dbpedia_datasets import WikiCategoryReader
+from forte.datasets.wikipedia.dbpedia.dbpedia_datasets import (
+    WikiCategoryReader,
+    WikiPackReader,
+)
 from forte.pipeline import Pipeline
 
 
 def add_wiki_info(
-        reader: PackReader,
-        resources: Resources,
-        wiki_info_data_path: str,
-        input_pack_path: str,
-        output_path: str,
-        prompt_name: str,
-        use_input_index=False,
-        skip_existing=True,
-        input_index_file_path: Optional[str] = "article.idx",
-        output_index_file_name: Optional[str] = "article.idx",
+    reader: WikiPackReader,
+    resources: Resources,
+    wiki_info_data_path: str,
+    input_pack_path: str,
+    output_path: str,
+    prompt_name: str,
+    use_input_index=False,
+    skip_existing=True,
+    resume_from_last=False,
+    input_index_file_path: Optional[str] = "article.idx",
+    output_index_file_name: Optional[str] = "article.idx",
 ):
     """
     Add wiki resource into the data pack.
@@ -65,6 +69,8 @@ def add_wiki_info(
         use_input_index: whether to use the input index to determine the
           output path.
         skip_existing: whether to skip this function if the folder exists.
+        resume_from_last: whether to resume from last end point, at most one
+          can be true between this and `skip_existing`
         input_index_file_path: the full file path to the input index.
         output_index_file_name: the file path to write the output index,
             this is relative to `output_path`.
@@ -74,6 +80,11 @@ def add_wiki_info(
     """
     pl = Pipeline[DataPack](resources)
 
+    if resume_from_last and skip_existing:
+        raise ValueError(
+            "resume_from_last and skip_existing cannot both be " "true."
+        )
+
     out_index_path = os.path.join(output_path, output_index_file_name)
     if skip_existing and os.path.exists(out_index_path):
         print_progress(
@@ -81,13 +92,30 @@ def add_wiki_info(
         )
         return
 
-    pl.set_reader(
-        reader,
-        config={
-            "pack_index": input_index_file_path,
-            "pack_dir": input_pack_path,
-        },
-    )
+    if resume_from_last:
+        if not os.path.exists(out_index_path):
+            raise ValueError(f"Configured to do resume but path "
+                             f"{out_index_path} does not exists.")
+
+        print_progress(
+            f"\nWill resume from last from {out_index_path}", "\n"
+        )
+        pl.set_reader(
+            reader,
+            config={
+                "pack_index": input_index_file_path,
+                "pack_dir": input_pack_path,
+                "resume_index": out_index_path,
+            },
+        )
+    else:
+        pl.set_reader(
+            reader,
+            config={
+                "pack_index": input_index_file_path,
+                "pack_dir": input_pack_path,
+            },
+        )
 
     pl.add(
         WikiArticleWriter(),
@@ -98,6 +126,7 @@ def add_wiki_info(
             "use_input_index": use_input_index,
             "input_index_file": input_index_file_path,
             "output_index_file": output_index_file_name,
+            "append_to_index": resume_from_last,
         },
     )
 
@@ -107,10 +136,10 @@ def add_wiki_info(
 
 
 def read_wiki_text(
-        nif_context: str,
-        output_dir: str,
-        resources: Resources,
-        skip_existing: bool = False,
+    nif_context: str,
+    output_dir: str,
+    resources: Resources,
+    skip_existing: bool = False,
 ):
     if skip_existing and os.path.exists(output_dir):
         print_progress(f"\n{output_dir} exist, skipping reading text", "\n")
@@ -132,7 +161,7 @@ def read_wiki_text(
 
 
 def cache_redirects(
-        base_output_path: str, redirect_path: str
+    base_output_path: str, redirect_path: str
 ) -> Dict[str, str]:
     redirect_pickle = os.path.join(base_output_path, "redirects.pickle")
 
@@ -147,16 +176,23 @@ def cache_redirects(
 
 
 def main(
-        nif_context: str,
-        nif_page_structure: str,
-        mapping_literals: str,
-        mapping_objects: str,
-        nif_text_links: str,
-        redirects: str,
-        info_boxs_properties: str,
-        categories: str,
-        base_output_path: str,
+    nif_context: str,
+    nif_page_structure: str,
+    mapping_literals: str,
+    mapping_objects: str,
+    nif_text_links: str,
+    redirects: str,
+    info_boxs_properties: str,
+    categories: str,
+    base_output_path: str,
+    resume_existing: bool,
 ):
+    # Whether to skip the whole step.
+    if resume_existing:
+        skip_existing = False
+    else:
+        skip_existing = True
+
     # The datasets are read in a few steps.
     # 0. Load redirects between wikipedia pages.
     print_progress("Loading redirects", "\n")
@@ -185,8 +221,9 @@ def main(
         struct_dir,
         "page_structures",
         use_input_index=True,
-        skip_existing=True,
-        input_index_file_path=main_index
+        skip_existing=skip_existing,
+        resume_from_last=resume_existing,
+        input_index_file_path=main_index,
     )
     print_progress("Done reading wikipedia structures.", "\n")
 
@@ -201,7 +238,8 @@ def main(
         "anchor_links",
         use_input_index=True,
         skip_existing=True,
-        input_index_file_path=main_index
+        resume_from_last=resume_existing,
+        input_index_file_path=main_index,
     )
     print_progress("Done reading wikipedia anchors.", "\n")
 
@@ -217,8 +255,9 @@ def main(
         "info_box_properties",
         use_input_index=True,
         skip_existing=True,
+        resume_from_last=resume_existing,
         output_index_file_name="properties.idx",
-        input_index_file_path=main_index
+        input_index_file_path=main_index,
     )
     print_progress("Done reading wikipedia info-boxes properties.", "\n")
 
@@ -233,8 +272,9 @@ def main(
         "literals",
         use_input_index=True,
         skip_existing=True,
+        resume_from_last=resume_existing,
         output_index_file_name="literals.idx",
-        input_index_file_path=main_index
+        input_index_file_path=main_index,
     )
     print_progress("Done reading wikipedia info-boxes literals.", "\n")
 
@@ -249,8 +289,9 @@ def main(
         "objects",
         use_input_index=True,
         skip_existing=True,
+        resume_from_last=resume_existing,
         output_index_file_name="objects.idx",
-        input_index_file_path=main_index
+        input_index_file_path=main_index,
     )
     print_progress("Done reading wikipedia info-boxes objects.", "\n")
 
@@ -265,8 +306,9 @@ def main(
         "categories",
         use_input_index=True,
         skip_existing=True,
+        resume_from_last=resume_existing,
         output_index_file_name="categories.idx",
-        input_index_file_path=main_index
+        input_index_file_path=main_index,
     )
 
 
@@ -284,6 +326,9 @@ def get_path(dataset: str):
 if __name__ == "__main__":
     base_dir = sys.argv[1]
     pack_output = sys.argv[2]
+    resume = sys.argv[3]
+
+    will_resume = resume.upper().startswith("TRUE")
 
     if not os.path.exists(pack_output):
         os.makedirs(pack_output)
@@ -304,4 +349,5 @@ if __name__ == "__main__":
         get_path("infobox_properties_mapped_en.tql.bz2"),
         get_path("article_categories_en.tql.bz2"),
         pack_output,
+        will_resume,
     )

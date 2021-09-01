@@ -84,6 +84,10 @@ class RecursiveDirectoryDeserializeReader(BaseDeserializeReader):
 
         Returns: Iterator of the data pack string from the directory.
         """
+        if not os.path.exists(data_dir):
+            raise ValueError(
+                f"The provided directory [{data_dir}] does not " f"exist."
+            )
         for root, _, files in os.walk(data_dir):
             for file in files:
                 if not self.configs.suffix or file.endswith(

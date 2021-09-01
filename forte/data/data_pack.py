@@ -30,7 +30,10 @@ from typing import (
 import numpy as np
 from sortedcontainers import SortedList
 
-from forte.common.exception import ProcessExecutionException
+from forte.common.exception import (
+    ProcessExecutionException,
+    UnknownOntologyClassException,
+)
 from forte.data import data_utils_io
 from forte.data.base_pack import BaseMeta, BasePack
 from forte.data.index import BaseIndex
@@ -88,7 +91,7 @@ class Meta(BaseMeta):
         super().__init__(pack_name)
         self.language = language
         self.span_unit = span_unit
-        self.record: Dict[str, Set[str]] = dict()
+        self.record: Dict[str, Set[str]] = {}
         self.info: Dict[str, str]
         if info is None:
             self.info = {}
@@ -111,8 +114,35 @@ def as_entry_type(entry_type: Union[str, Type[EntryType]]):
     return entry_type_
 
 
+def as_sorted_error_check(entries: List[EntryType]) -> SortedList:
+    """
+    Given a list of entries, return a sorted list of it. If unknown entry
+    classes are seen during this process,
+    a :class:`~forte.common.UnknownOntologyClassException` exception will be
+    thrown.
+
+    Args:
+        entries: A list of entries to be converted.
+
+    Returns: Sorted list of the input entries.
+    """
+    try:
+        return SortedList(entries)
+    except TypeError as e:
+        for entry in entries:
+            if isinstance(entry, Dict) and "py/object" in entry:
+                entry_class = entry["py/object"]
+                try:
+                    get_class(entry_class)
+                except ValueError:
+                    raise UnknownOntologyClassException(
+                        f"Cannot deserialize ontology type {entry_class}, "
+                        f"make sure it is included in the PYTHONPATH."
+                    ) from e
+
+
 class DataPack(BasePack[Entry, Link, Group]):
-    # pylint: disable=too-many-public-methods
+    # pylint: disable=too-many-public-methods, unused-private-member
     r"""A :class:`DataPack` contains a piece of natural language text and a
     collection of NLP entries (annotations, links, and groups). The natural
     language text could be a document, paragraph or in any other granularity.
@@ -132,6 +162,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         self.__replace_back_operations: ReplaceOperationsType = []
         self.__processed_original_spans: List[Tuple[Span, Span]] = []
+
         self.__orig_text_len: int = 0
 
         self._index: DataIndex = DataIndex()
@@ -170,10 +201,10 @@ class DataPack(BasePack[Entry, Link, Group]):
         if "orig_text_len" in self.__dict__:
             self.__orig_text_len = self.__dict__.pop("orig_text_len")
 
-        self.annotations = SortedList(self.annotations)
-        self.links = SortedList(self.links)
-        self.groups = SortedList(self.groups)
-        self.generics = SortedList(self.generics)
+        self.annotations = as_sorted_error_check(self.annotations)
+        self.links = as_sorted_error_check(self.links)
+        self.groups = as_sorted_error_check(self.groups)
+        self.generics = as_sorted_error_check(self.generics)
 
         self._index = DataIndex()
         self._index.update_basic_index(list(self.annotations))
@@ -708,10 +739,10 @@ class DataPack(BasePack[Entry, Link, Group]):
         else:
             context_type_ = context_type
 
-        annotation_types: Dict[Type[Annotation], Union[Dict, List]] = dict()
-        link_types: Dict[Type[Link], Union[Dict, List]] = dict()
-        group_types: Dict[Type[Group], Union[Dict, List]] = dict()
-        generics_types: Dict[Type[Generics], Union[Dict, List]] = dict()
+        annotation_types: Dict[Type[Annotation], Union[Dict, List]] = {}
+        link_types: Dict[Type[Link], Union[Dict, List]] = {}
+        group_types: Dict[Type[Group], Union[Dict, List]] = {}
+        generics_types: Dict[Type[Generics], Union[Dict, List]] = {}
 
         if request is not None:
             for key_, value in request.items():
@@ -751,7 +782,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                 skipped += 1
                 continue
 
-            data: Dict[str, Any] = dict()
+            data: Dict[str, Any] = {}
             data["context"] = self.text[context.span.begin : context.span.end]
             data["offset"] = context.span.begin
 
@@ -846,7 +877,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         components, unit, fields = self._parse_request_args(a_type, a_args)
 
-        a_dict: Dict[str, Any] = dict()
+        a_dict: Dict[str, Any] = {}
 
         a_dict["span"] = []
         a_dict["text"] = []
@@ -918,7 +949,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         if unit is not None:
             raise ValueError(f"Link entries cannot be indexed by {unit}.")
 
-        a_dict: Dict[str, Any] = dict()
+        a_dict: Dict[str, Any] = {}
         for field in fields:
             a_dict[field] = []
         a_dict["parent"] = []
@@ -1113,7 +1144,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             entry_type (type): The type of entries requested.
             range_annotation (Annotation, optional): The range of entries
                 requested. If `None`, will return valid entries in the range of
-                whole data_pack.
+                whole data pack.
             components (str or list, optional): The component (creator)
                 generating the entries requested. If `None`, will return valid
                 entries generated by any component.
@@ -1223,7 +1254,7 @@ class DataIndex(BaseIndex):
         super().__init__()
         self._coverage_index: Dict[
             Tuple[Type[Annotation], Type[EntryType]], Dict[int, Set[int]]
-        ] = dict()
+        ] = {}
         self._coverage_index_valid = True
 
     def remove_entry(self, entry: EntryType):
@@ -1299,7 +1330,7 @@ class DataIndex(BaseIndex):
             raise ValueError(f"Do not support coverage index for {inner_type}.")
 
         if not self.coverage_index_is_valid:
-            self._coverage_index = dict()
+            self._coverage_index = {}
 
         # prevent the index from being used during construction
         self.deactivate_coverage_index()
@@ -1308,7 +1339,7 @@ class DataIndex(BaseIndex):
         #  are not clear about what would happen if the covered annotation
         #  is the same as the covering annotation, or if their spans are the
         #  same.
-        self._coverage_index[(outer_type, inner_type)] = dict()
+        self._coverage_index[(outer_type, inner_type)] = {}
         for range_annotation in data_pack.get_entries_of(outer_type):
             if isinstance(range_annotation, Annotation):
                 entries = data_pack.get(inner_type, range_annotation)
