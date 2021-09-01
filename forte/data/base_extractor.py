@@ -76,9 +76,7 @@ class BaseExtractor(ABC):
         config: An instance of `Dict` or :class:`~forte.common.Config` that
             provides configurable options. See
             :meth:`~forte.data.base_extractor.BaseExtractor.default_configs`
-            for available options and default values. Entry_type is the key
-            that need to be passed in and there will not be default value for
-            this key.
+            for available options and default values.
 
     """
     _VOCAB_ERROR_MSG = (
