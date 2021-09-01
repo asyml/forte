@@ -119,6 +119,13 @@ class BaseExtractor(ABC):
             Check the behavior of vocabulary under different setting
             in :class:`~forte.data.vocabulary.Vocabulary`
 
+        context_type (str): The fully qualified name of the context used to
+            group the extracted features, for example, it could be a
+            `ft.onto.base_ontology.Sentence`. If this is `None`, features from
+            in the whole data pack will be grouped together. Default is None.
+            This value could be mandatory for some processors, which will be
+            documented and specified by the specific processor implementation.
+
         vocab_use_unk (bool)
             Whether the `<UNK>` element should be added to vocabulary.
             Default is true.
@@ -142,6 +149,7 @@ class BaseExtractor(ABC):
         """
         return {
             "vocab_method": "indexing",
+            "context_type": None,
             "vocab_use_unk": True,
             "need_pad": True,
             "pad_value": None,

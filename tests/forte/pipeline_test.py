@@ -375,7 +375,6 @@ class PredictorPipelineTest(unittest.TestCase):
         predictor = DummyPredictor()
         predictor_config = {
             "context_type": "ft.onto.base_ontology.Sentence",
-            "batch_size": batch_size,
             "feature_scheme": {
                 "text_tag": {
                     "extractor": {
@@ -385,6 +384,7 @@ class PredictorPipelineTest(unittest.TestCase):
                     "type": "data_input",
                 },
             },
+            "batcher": {"batch_size": batch_size}
         }
         predictor.load(model)
 
