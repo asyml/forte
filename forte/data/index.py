@@ -52,7 +52,7 @@ class BaseIndex(Generic[EntryType]):
         # List of basic indexes (switches always on).
 
         # Mapping from entry's tid to entry type.
-        self._entry_index: Dict[int, EntryType] = dict()
+        self._entry_index: Dict[int, EntryType] = {}
 
         # Mapping from entry's type to entries' id.
         self._type_index: DefaultDict[Type, SortedSet[int]] = defaultdict(
@@ -64,7 +64,7 @@ class BaseIndex(Generic[EntryType]):
             SortedSet
         )
 
-        self._link_index: Dict[str, DefaultDict[Hashable, SortedSet]] = dict()
+        self._link_index: Dict[str, DefaultDict[Hashable, SortedSet]] = {}
 
         # Indexing switches.
         self._group_index_switch = False

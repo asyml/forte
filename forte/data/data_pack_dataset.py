@@ -46,7 +46,7 @@ FeatureCollection = Dict[str, Feature]
 
 class DataPackIterator(IterDataSource):
     """
-    An iterator over single data example from multiple data packs.
+    An iterator generating data example from a stream of data packs.
 
     Args:
         pack_iterator (Iterator[DataPack]): An iterator of
@@ -179,10 +179,10 @@ class DataPackDataset(DatasetBase):
         Args:
             raw_example (tuple(dict, DataPack)): A `Tuple` where
 
-                The first element is a `Dict` produced by :meth:`get_data()` in
+              - The first element is a `Dict` produced by :meth:`get_data()` in
                 :class:`~forte.data.data_pack.DataPack`.
 
-                The second element is an instance of type
+              - The second element is an instance of type
                 :class:`~forte.data.data_pack.DataPack`.
 
         Returns:

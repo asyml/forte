@@ -148,19 +148,24 @@ class Alphabet:
         if not os.path.exists(output_directory):
             os.makedirs(output_directory)
 
-        json.dump(
-            self.get_content(),
-            open(os.path.join(output_directory, saving_name + ".json"), "w"),
-            indent=4,
-        )
+        with open(
+            os.path.join(output_directory, saving_name + ".json"),
+            "w",
+            encoding="utf-8",
+        ) as out:
+            json.dump(
+                self.get_content(),
+                out,
+                indent=4,
+            )
 
     def load(self, input_directory, name=None):
         loading_name = name if name else self.__name
-        self.__from_json(
-            json.load(
-                open(os.path.join(input_directory, loading_name + ".json"))
-            )
-        )
+        with open(
+            os.path.join(input_directory, loading_name + ".json"),
+            encoding="utf-8",
+        ) as f:
+            self.__from_json(json.load(f))
         self.keep_growing = False
 
 

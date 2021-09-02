@@ -15,7 +15,7 @@
 # pylint: disable=logging-fstring-interpolation
 import logging
 import os
-from typing import Dict, List, Optional, Tuple, Type
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import torch
@@ -24,11 +24,10 @@ from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.data.ontology import Annotation
-from forte.data.types import DataRequest
 from forte.models.ner import utils
 from forte.models.ner.model_factory import BiRecurrentConvCRF
-from forte.processors.base.batch_processor import FixedSizeBatchProcessor
-from ft.onto.base_ontology import Token, Sentence, EntityMention
+from forte.processors.base.batch_processor import FixedSizeBatchPackingProcessor
+from ft.onto.base_ontology import Token, EntityMention
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +36,7 @@ __all__ = [
 ]
 
 
-class CoNLLNERPredictor(FixedSizeBatchProcessor):
+class CoNLLNERPredictor(FixedSizeBatchPackingProcessor):
     """
     An Named Entity Recognizer trained according to `Ma, Xuezhe, and Eduard
     Hovy. "End-to-end sequence labeling via bi-directional lstm-cnns-crf."
@@ -61,22 +60,6 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         self.config_data = None
         self.normalize_func = None
         self.device = None
-
-        self.train_instances_cache = []
-
-        self.batch_size = 3
-
-    @staticmethod
-    def _define_context() -> Type[Annotation]:
-        return Sentence
-
-    @staticmethod
-    def _define_input_info() -> DataRequest:
-        input_info: DataRequest = {
-            Token: [],
-            Sentence: [],
-        }
-        return input_info
 
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
@@ -189,28 +172,29 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         logger.info(f"Restoring NER model from {self.config_model.model_path}")
         self.model.load_state_dict(ckpt["model"])
 
-    def pack(
+    def pack(  # type: ignore
         self,
-        data_pack: DataPack,
-        output_dict: Optional[Dict[str, Dict[str, List[str]]]] = None,
+        pack: DataPack,
+        predict_results: Dict[str, Dict[str, List[str]]],
+        _: Optional[Annotation] = None,
     ):
         """
         Write the prediction results back to datapack. by writing the predicted
         ner to the original tokens.
         """
 
-        if output_dict is None:
+        if predict_results is None:
             return
 
         current_entity_mention: Tuple[int, str] = (-1, "None")
 
-        for i in range(len(output_dict["Token"]["tid"])):
+        for i in range(len(predict_results["Token"]["tid"])):
             # an instance
-            for j in range(len(output_dict["Token"]["tid"][i])):
-                tid: int = output_dict["Token"]["tid"][i][j]  # type: ignore
+            for j in range(len(predict_results["Token"]["tid"][i])):
+                tid: int = predict_results["Token"]["tid"][i][j]  # type: ignore
 
-                orig_token: Token = data_pack.get_entry(tid)  # type: ignore
-                ner_tag: str = output_dict["Token"]["ner"][i][j]
+                orig_token: Token = pack.get_entry(tid)  # type: ignore
+                ner_tag: str = predict_results["Token"]["ner"][i][j]
 
                 orig_token.ner = ner_tag
 
@@ -229,13 +213,13 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
                         continue
 
                     entity = EntityMention(
-                        data_pack, current_entity_mention[0], token.span.end
+                        pack, current_entity_mention[0], token.span.end
                     )
                     entity.ner_type = current_entity_mention[1]
                 elif token_ner[0] == "S":
                     current_entity_mention = (token.span.begin, token_ner[2:])
                     entity = EntityMention(
-                        data_pack, current_entity_mention[0], token.span.end
+                        pack, current_entity_mention[0], token.span.end
                     )
                     entity.ner_type = current_entity_mention[1]
 
@@ -309,9 +293,7 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
     @classmethod
     def default_configs(cls):
         r"""Default config for NER Predictor"""
-
         configs = super().default_configs()
-        # TODO: Batcher in NER need to be update to use the sytem one.
         configs["batcher"] = {"batch_size": 10}
 
         more_configs = {
@@ -355,8 +337,26 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
                 "model_path": "",
                 "resource_dir": "",
             },
-            "batcher": {"batch_size": 16},
+            "batcher": {
+                "batch_size": 16,
+                "context_type": "ft.onto.base_ontology.Sentence",
+                "requests": {
+                    "ft.onto.base_ontology.Token": [],
+                    "ft.onto.base_ontology.Sentence": [],
+                },
+            },
         }
 
         configs.update(more_configs)
         return configs
+
+    # def _define_context() -> Type[Annotation]:
+    #     return Sentence
+    #
+    # @staticmethod
+    # def _define_input_info() -> DataRequest:
+    #     input_info: DataRequest = {
+    #         Token: [],
+    #         Sentence: [],
+    #     }
+    #     return input_info

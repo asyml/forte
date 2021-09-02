@@ -103,7 +103,7 @@ class CoNLLNEREvaluator(Evaluator):
 
         call_return = os.system(eval_call)
         if call_return == 0:
-            with open(self.score_file, "r") as fin:
+            with open(self.score_file, "r", encoding="utf-8") as fin:
                 fin.readline()
                 line = fin.readline()
                 fields = line.split(";")

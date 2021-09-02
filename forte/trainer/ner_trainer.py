@@ -333,6 +333,7 @@ class CoNLLNERTrainer(BaseTrainer):
         if self.resource:
             keys_to_serializers = {}
             for key in resources.keys():
+                # pylint: disable=consider-using-with
                 if key == "model":
                     keys_to_serializers[key] = lambda x, y: pickle.dump(
                         x.state_dict(), open(y, "wb")

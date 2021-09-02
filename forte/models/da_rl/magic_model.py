@@ -22,7 +22,7 @@ and performs memory-efficient parameter updates locally.
 import copy
 from typing import Dict
 import torch
-import torch.nn as nn
+from torch import nn
 import texar.torch as tx
 
 __all__ = ["MetaModule", "TexarBertMetaModule"]

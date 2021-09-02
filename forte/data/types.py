@@ -14,11 +14,15 @@
 
 from typing import Dict, List, Tuple, Type, Union
 
-from forte.data.span import Span
-from forte.data.ontology.core import Entry
+import torch
 
-__all__ = ["ReplaceOperationsType", "DataRequest"]
+from forte.data.ontology.core import Entry
+from forte.data.span import Span
+
+__all__ = ["ReplaceOperationsType", "DataRequest", "MatrixLike"]
 
 ReplaceOperationsType = List[Tuple[Span, str]]
 
 DataRequest = Dict[Type[Entry], Union[Dict, List]]
+
+MatrixLike = Union[torch.TensorType, List]
