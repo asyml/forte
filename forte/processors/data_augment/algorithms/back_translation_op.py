@@ -44,7 +44,7 @@ class BackTranslationOp(TextReplacementOp):
 
     The configuration should have the following fields:
 
-    Args:
+    Config Values:
         prob (float): The probability of replacement, should fall in [0, 1].
         src_lang (str): The source language of back translation.
         tgt_lang (str): The target language of back translation.

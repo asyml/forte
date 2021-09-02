@@ -46,7 +46,8 @@ setuptools.setup(
         "test": ["ddt", "testfixtures"],
         "example": ["termcolor==1.1.0", "hypothesis==2.0.0"],
         "wikipedia": ["rdflib==4.2.2"],
-        "augment": ["transformers>=3.1", "nltk"],
+        # transformers 4.10.0 will break the translation model we used here
+        "augment": ["transformers>=3.1, <=4.9.2", "nltk"],
         "stave": ["stave==0.0.1.dev12"],
     },
     entry_points={
