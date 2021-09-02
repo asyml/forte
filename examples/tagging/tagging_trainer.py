@@ -111,7 +111,13 @@ class TaggingTrainer(BaseTrainer):
         val_reader = CoNLL03Reader(cache_in_memory=True)
         val_pl: Pipeline = Pipeline()
         val_pl.set_reader(val_reader)
-        val_pl.add(predictor, config={"batch_size": 10})
+        val_pl.add(
+            predictor, config={
+                "batcher": {
+                    "batch_size": 10,
+                }
+            }
+        )
         val_pl.add(evaluator, config=evaluator_config)
         val_pl.initialize()
 
