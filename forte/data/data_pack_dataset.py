@@ -154,7 +154,7 @@ class DataPackDataset(DatasetBase):
             :class:`~forte.train_preprocessor.TrainPreprocessor` for details.
         hparams: A `dict` or instance of :
             class:`~texar.torch.HParams` containing
-            hyperßparameters. See :meth:`default_hparams` in
+            hyperparameters. See :meth:`default_hparams` in
             :class:`~texar.torch.data.DatasetBase` for the defaults.
         device: The device of the produced batches. For GPU training,
             set to current CUDA device.
@@ -179,11 +179,11 @@ class DataPackDataset(DatasetBase):
         Args:
             raw_example (tuple(dict, DataPack)): A `Tuple` where
 
-            - The first element is a `Dict` produced by :meth:`get_data()` in
-            :class:`~forte.data.data_pack.DataPack`.
+              - The first element is a `Dict` produced by :meth:`get_data()` in
+                :class:`~forte.data.data_pack.DataPack`.
 
-            - The second element is an instance of type
-            :class:`~forte.data.data_pack.DataPack`.
+              - The second element is an instance of type
+                :class:`~forte.data.data_pack.DataPack`.
 
         Returns:
             A `Dict` mapping from user-specified tags to the

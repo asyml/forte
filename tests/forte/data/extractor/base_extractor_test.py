@@ -23,8 +23,9 @@ from forte.data.base_extractor import BaseExtractor
 
 
 class TestExtractor(BaseExtractor):
-    def extract(self, pack: DataPack,
-                context: Optional[Annotation] = None) -> Feature:
+    def extract(
+        self, pack: DataPack, context: Optional[Annotation] = None
+    ) -> Feature:
         pass
 
 

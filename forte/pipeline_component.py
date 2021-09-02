@@ -146,10 +146,13 @@ class PipelineComponent(Generic[PackType]):
         provided config with the ``default_configs()``.
 
         The following config conventions are expected:
-          - The top level key can be a special `config_path`.
-          - `config_path` should be point to a file system path, which will
-             be a YAML file containing configurations.
-          - Other key values in the configs will be considered as parameters.
+
+        - The top level key can be a special `config_path`.
+
+        - `config_path` should be point to a file system path, which will
+          be a YAML file containing configurations.
+
+        - Other key values in the configs will be considered as parameters.
 
         Args:
             configs: The input config to be merged with the default config.

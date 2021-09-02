@@ -56,23 +56,17 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
     will create data batches relative to the context.
 
     Key fields in this processor:
-        # - context_type (Annotation): define the context (scope) to process.
-        # - input_info: A data request. Based on this input_info. If
-        #   `use_coverage_index` is set to true, the processor will build the
-        #   index based on the input information to speed up the entry
-        #   searching time.
+
         - batcher: The processing batcher used for this processor. The batcher
           will also keep track of the relation between the pack and the batch
           data.
+
         - use_coverage_index: If true, the index will be built based on the
-          input_info.
+          requests.
     """
 
     def __init__(self):
         super().__init__()
-        # self.__context_type: Type[Annotation] = None
-        # self.__input_info: DataRequest = None
-
         self._batcher: Optional[ProcessingBatcher] = None
         self.use_coverage_index = False
 
@@ -316,7 +310,7 @@ class FixedSizeBatchPackingProcessor(PackingBatchProcessor[DataPack], ABC):
 class Predictor(PackingBatchProcessor[PackType]):
     r"""
     `Predictor` is a special type of batch processor that uses
-    :class:`~forte.data.BaseExtractor`s to collect features from data packs, and
+    :class:`~forte.data.BaseExtractor` to collect features from data packs, and
     also uses Extractors to write the prediction back.
 
     `Predictor` implements the `PackingBatchProcessor` class, and implements

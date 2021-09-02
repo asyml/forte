@@ -184,12 +184,14 @@ class ProcessingBatcher(Generic[PackType]):
         class.
 
         Here, the available parameters are:
+
           - `use_coverage_index`: A boolean value indicates whether the
-          batcher will try to build the coverage index based on the data
-          request. Default is True.
+            batcher will try to build the coverage index based on the data
+            request. Default is True.
+
           - `cross_pack`: A boolean value indicates whether the batcher can
-          go across the boundary of data packs when there is no enough data
-          to fill the batch.
+            go across the boundary of data packs when there is no enough data
+            to fill the batch.
 
         Returns: The default configuration.
 

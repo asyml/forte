@@ -384,7 +384,7 @@ class PredictorPipelineTest(unittest.TestCase):
                     "type": "data_input",
                 },
             },
-            "batcher": {"batch_size": batch_size}
+            "batcher": {"batch_size": batch_size},
         }
         predictor.load(model)
 

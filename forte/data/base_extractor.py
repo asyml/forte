@@ -305,10 +305,12 @@ class BaseExtractor(ABC):
         Overwrite instruction:
 
             1. Get all entries from one instance in the pack.
+
             2. Convert predictions into elements that needs to be assigned
-            to entries. You can use :meth:`~forte.data.vocabulary.id2element`
-            to convert integers in the prediction into element via the
-            vocabulary maintained by the extractor.
+               to entries. You can use :meth:`~forte.data.vocabulary.id2element`
+               to convert integers in the prediction into element via the
+               vocabulary maintained by the extractor.
+
             3. Add the element to corresponding entry based on the need.
 
         Args:
