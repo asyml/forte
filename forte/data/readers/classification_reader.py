@@ -32,19 +32,14 @@ __all__ = [
 # PackReader:
 
 # _collect:  file_path ->  takes input and yields data (actually returns an iterator)
-# line_id, line
+            # line_id, line
 # _parse_pack: another function returns an iterator
-# parse the data pack which is what _collect returns (line_id, line)
-# class DataPack to collect line info
+            # parse the data pack which is what _collect returns (line_id, line)
+            # class DataPack to collect line info
 # _cache_key_function:
-#
+            #
 # classmethod: default_configs
-# stores class id with corresponidng class names
-
-
-# figure out what the huggingface dataset format is
-# Q1: do we use the huggingface dataset class or we use the raw data (in json)
-# as the goal is to create some general classes for huggingface classification dataset, maybe it's better to use
+            # stores class id with corresponidng class names
 
 
 def generate_text_n_anchor(subtext_names, *args):
@@ -79,6 +74,7 @@ class AmazonPolarityReader(PackReader):
             for line_id, line in enumerate(data):
                 yield line_id, line
 
+
     def _cache_key_function(self, line_info: Tuple[int, str]) -> str:
         return str(line_info[0])
 
@@ -93,14 +89,17 @@ class AmazonPolarityReader(PackReader):
         pack.set_text(text, replace_func=self.text_replace_operation)
         class_id = int(label) - 1
 
+
         doc = Document(pack, 0, indices["content"][1])
         doc.document_class = [self.configs.class_names[class_id]]
         Title(pack, 0, indices["title"][1])
         # TODO: maybe another generic name for Description (mainSubText)
         Description(pack, indices["content"][0], indices["content"][1])
 
+
         pack.pack_name = line_id
         yield pack
+
 
     @classmethod
     def default_configs(cls):
@@ -111,6 +110,7 @@ class AmazonPolarityReader(PackReader):
                 "class_names": {
                     0: "negative",
                     1: "positive"
+
                 }
             }
         )
@@ -119,7 +119,6 @@ class AmazonPolarityReader(PackReader):
 
 class Banking77(PackReader):
     r"""
-
 
     Train dataset link: "https://raw.githubusercontent.com/PolyAI-LDN/task-specific-datasets/master/banking_data/train.csv"
     Test dataset link: "https://raw.githubusercontent.com/PolyAI-LDN/task-specific-datasets/master/banking_data/test.csv"
@@ -214,6 +213,8 @@ class Banking77(PackReader):
             for line_id, line in enumerate(data):
                 yield line_id, line
 
+
+
     def _cache_key_function(self, line_info: Tuple[int, str]) -> str:
         return str(line_info[0])
 
@@ -229,6 +230,7 @@ class Banking77(PackReader):
         class_id = self.label2index[label]
 
         sent = Sentence(pack, 0, indices["content"][1])
+
         sent.classification = [self.configs.class_names[class_id]]
         # Title(pack, 0, indices["title"][1])
         # TODO: maybe another generic name for Description (mainSubText)
@@ -237,9 +239,11 @@ class Banking77(PackReader):
         pack.pack_name = line_id
         yield pack
 
+
     @classmethod
     def default_configs(cls):
         config: dict = super().default_configs()
+
 
         config.update(
             {
@@ -285,11 +289,6 @@ class AGNewsReader(PackReader):
     def _parse_pack(self, line_info: Tuple[int, str]) -> Iterator[DataPack]:
         line_id, line = line_info
 
-        # pack.set_text (all_input_text)
-        # pass pack into different ontologies to generate the corresponding special variables/methods
-
-        #
-
         pack = DataPack()
         text: str = ""
         line = line.strip()
@@ -331,9 +330,4 @@ class AGNewsReader(PackReader):
         )
         return config
 
-# class classificationDatasetReader:
-#     """
-#     A general class for reading huggingface classification dataset
-#     (https://huggingface.co/datasets?task_categories=task_categories:text-classification&sort=alphabetical)
-#
-#     """
+
