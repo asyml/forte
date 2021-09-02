@@ -114,7 +114,8 @@ def maybe_download(
             if extract:
                 logging.info("Extract %s", filepath)
                 if tarfile.is_tarfile(filepath):
-                    tarfile.open(filepath, "r").extractall(path)
+                    with tarfile.open(filepath, "r") as tfile:
+                        tfile.extractall(path)
                 elif zipfile.is_zipfile(filepath):
                     with zipfile.ZipFile(filepath) as zfile:
                         zfile.extractall(path)

@@ -19,12 +19,14 @@ import logging
 from typing import Tuple, List, Dict, Union, Optional, Iterable, Type
 
 from torch import Tensor
+
 from forte.common.configuration import Config
+from forte.data.base_extractor import BaseExtractor
 from forte.data.converter.feature import Feature
 from forte.data.data_pack import DataPack
-from forte.data.base_extractor import BaseExtractor
-from forte.datasets.conll.conll_utils import bio_tagging
 from forte.data.ontology import Annotation
+from forte.data.ontology.core import Entry
+from forte.datasets.conll.conll_utils import bio_tagging
 from forte.utils import get_class
 
 logger = logging.getLogger(__name__)
@@ -37,15 +39,18 @@ class BioSeqTaggingExtractor(BaseExtractor):
     for the attribute of entry and aligning to the tagging_unit entry. Most of
     the time, a user will not need to call this class explicitly, they will
     be called by the framework.
-
-    Args:
-        config: An instance of `Dict` or
-            :class:`~forte.common.configuration.Config`.
-            See :meth:`default_configs` for available options and
-            default values.
     """
 
     def initialize(self, config: Union[Dict, Config]):
+        """
+        Initialize the extractor based on the provided configuration.
+
+        Args:
+            config: The configuration of the extractor, it can be a `Dict` or
+                :class:`~forte.common.configuration.Config`.
+                See :meth:`default_configs` for available options and
+                default values.
+        """
         # pylint: disable=attribute-defined-outside-init
         super().initialize(config=config)
         if self.config.attribute is None:
@@ -56,59 +61,35 @@ class BioSeqTaggingExtractor(BaseExtractor):
             raise AttributeError(
                 "tagging_unit is required in " "BioSeqTaggingExtractor."
             )
-        self.attribute: str = self.config.attribute
-        self.tagging_unit: Type[Annotation] = get_class(
+        self._attribute: str = self.config.attribute
+        self._tagging_unit: Type[Annotation] = get_class(
             self.config.tagging_unit
         )
-        self.is_bert: bool = self.config.is_bert
+        self._entry_type: Type[Annotation] = get_class(self.config.entry_type)
 
     @classmethod
     def default_configs(cls):
         r"""Returns a dictionary of default hyper-parameters.
 
-        Here:
+        Here, additional parameters are added from the parent class:
 
-        entry_type (str):
-            Required. The string to the ontology type that the extractor
-            will get feature from,
-            e.g: `"ft.onto.base_ontology.EntityMention"`.
+        - entry_type (str): Required. The fully qualified name of an
+            Annotation entry to extract attribute from. For example,
+            for an NER task, it could be `ft.onto.base_ontology.EntityMention`.
 
-        attribute (str): Required. The attribute name of the
+        - attribute (str): Required. The attribute name of the
             entry from which labels are extracted.
 
-        tagging_unit (str): Required. The tagging label
-            will align to the tagging_unit Entry,
-            e.g: `"ft.onto.base_ontology.Token"`.
+        - tagging_unit (str): Required. The fully qualified name of the
+            units for tagging, The tagging label will align to the units,
+            e.g: `ft.onto.base_ontology.Token`.
 
-        vocab_method (str):
-            What type of vocabulary is used for this extractor.
-            `raw`, `indexing`, `one-hot` are supported, default is `indexing`.
-            Check the behavior of vocabulary under different setting
-            in :class:`~forte.data.vocabulary.Vocabulary`
-
-        need_pad (bool):
-            Whether the `<PAD>` element will be added to the vocabulary
-            internally, which will be used for batching and padding in the
-            extracted features. Default is True. You can check more of its
-            behavior in the `~forte.data.vocabulary.Vocabulary`.
-
-        vocab_use_unk (bool):
-            Whether the `<UNK>` element should be added to vocabulary
-            internally. Default is true. You can check more of its
-            behavior in the `~forte.data.vocabulary.Vocabulary`.
-
-        pad_value (int):
+        - pad_value (int):
             A customized value/representation to be used for
             padding. This value is only needed when `use_pad` is True.
             Default is -100 to follow PyTorch convention.
 
-        unk_value (int):
-            A customized value/representation to be used for
-            unknown value (`unk`). This value is only needed when
-            `vocab_use_unk` is True. Default is None, where the value
-            of `UNK` is determined by the system.
-
-        is_bert (bool):
+        - is_bert (bool):
             It indicates whether Bert model is used. If true, padding
             will be added to the beginning and end of a sentence
             corresponding to the special tokens ([CLS], [SEP])
@@ -136,10 +117,11 @@ class BioSeqTaggingExtractor(BaseExtractor):
         config = super().default_configs()
         config.update(
             {
+                "entry_type": None,
                 "attribute": None,
                 "tagging_unit": "",
-                "is_bert": False,
                 "pad_value": -100,
+                "is_bert": False,
             }
         )
         return config
@@ -168,21 +150,30 @@ class BioSeqTaggingExtractor(BaseExtractor):
             for element in self._bio_variance(tag):
                 self.add(element)
 
-    def update_vocab(self, pack: DataPack, instance: Annotation):
+    def update_vocab(
+        self, pack: DataPack, context: Optional[Annotation] = None
+    ):
         r"""Add all the tag from one instance into the vocabulary.
 
         Args:
             pack (DataPack): The datapack that contains the current
                 instance.
-            instance (Annotation): The instance from which the
-                extractor will extractor feature.
+            context (Optional[Annotation]): The context is an Annotation entry
+                where features will be extracted within its range. If None,
+                then the whole data pack will be used as the context.
+                Default is None.
+
         """
-        for entry in pack.get(self._entry_type, instance):
-            attribute = getattr(entry, self.attribute)
-            for tag_variance in self._bio_variance(attribute):
+        anno: Annotation
+        for anno in pack.get(self.config.entry_type, context):
+            for tag_variance in self._bio_variance(
+                getattr(anno, self._attribute)
+            ):
                 self.add(tag_variance)
 
-    def extract(self, pack: DataPack, instance: Annotation) -> Feature:
+    def extract(
+        self, pack: DataPack, context: Optional[Annotation] = None
+    ) -> Feature:
         r"""Extract the sequence tagging feature of one instance. If the
         vocabulary of this extractor is set, then the extracted tag sequences
         will be converted to the tag ids (int).
@@ -190,14 +181,19 @@ class BioSeqTaggingExtractor(BaseExtractor):
         Args:
             pack (DataPack): The datapack that contains the current
                 instance.
-            instance (Annotation): The instance from which the
-                extractor will extractor feature.
+            context (Annotation): The context is an Annotation entry where
+                features will be extracted within its range. If None, then the
+                whole data pack will be used as the context. Default is None.
 
-        Returns (Feature):
-           a feature that contains the extracted data.
+        Returns (Feature): a feature that contains the extracted BIO sequence
+            of and other metadata.
         """
         instance_tagged: List[Tuple[Optional[str], str]] = bio_tagging(
-            pack, instance, self.tagging_unit, self._entry_type, self.attribute
+            pack,
+            self.config.tagging_unit,
+            self.config.entry_type,
+            self.config.attribute,
+            context,
         )
 
         pad_value = self.get_pad_value()
@@ -207,7 +203,7 @@ class BioSeqTaggingExtractor(BaseExtractor):
             for pair in instance_tagged:
                 vocab_mapped.append(self.element2repr(pair))
             raw_data: List = vocab_mapped
-            if self.is_bert:
+            if self.config.is_bert:
                 raw_data = [pad_value] + raw_data + [pad_value]
 
             need_pad = self.vocab.use_pad
@@ -222,29 +218,39 @@ class BioSeqTaggingExtractor(BaseExtractor):
             "dim": 1,
             "dtype": int if self.vocab else tuple,
         }
-
         return Feature(data=raw_data, metadata=meta_data, vocab=self.vocab)
 
-    def pre_evaluation_action(self, pack: DataPack, instance: Annotation):
+    def pre_evaluation_action(
+        self, pack: DataPack, context: Optional[Annotation] = None
+    ):
         r"""This function is performed on the pack before the evaluation
         stage, allowing one to perform some actions before the evaluation.
         By default, this function will remove tags in the instance. You can
         overwrite this function by yourself.
 
         Args:
-            pack (DataPack): The datapack that contains the current
-                instance.
-            instance (Annotation): The instance on which the
-                extractor performs the pre-evaluation action.
+            pack (DataPack): The datapack to be processed.
+            context (Annotation): The context is an Annotation entry where
+                data are extracted within its range. If None, then the
+                whole data pack will be used as the context. Default is None.
         """
-        for entry in pack.get(self._entry_type, instance):
-            pack.delete_entry(entry)
+        all_entries: List[Entry] = []
+        entry: Entry
+        for entry in pack.get(self.config.entry_type, context):
+            all_entries.append(entry)
+
+        for e in all_entries:
+            pack.delete_entry(e)
 
     def add_to_pack(
-        self, pack: DataPack, instance: Annotation, prediction: List[int]
+        self,
+        pack: DataPack,
+        predictions: List[int],
+        context: Optional[Annotation] = None,
     ):
-        r"""Add the prediction for attribute to the instance. We make following
-        assumptions for prediction.
+        r"""Add the prediction results to data pack. The predictions are
+
+        We make following assumptions for prediction.
 
             1. If we encounter "I" while its tag is different from the previous
                tag, we will consider this "I" as a "B" and start a new tag here.
@@ -253,25 +259,26 @@ class BioSeqTaggingExtractor(BaseExtractor):
                remove them.
 
         Args:
-            pack (DataPack):
-                The datapack that contains the current instance.
-            instance (Annotation):
-                The instance to which the extractor add prediction.
-            prediction (Iterable[Union[int, Any]]):
+            pack (DataPack): The datapack that contains the current instance.
+            predictions (Iterable[Union[int, Any]]):
                 This is the output of the model, which contains the index for
                 attributes of one instance.
+            context (Annotation): The context is an Annotation entry where
+                features will be extracted within its range. If None, then the
+                whole data pack will be used as the context. Default is None.
         """
         instance_tagging_unit: List[Annotation] = list(
-            pack.get(self.tagging_unit, instance)
+            pack.get(self._tagging_unit, context)
         )
 
-        if self.is_bert:
-            prediction = prediction[1:-1]
+        if self.config.is_bert:
+            predictions = predictions[1:-1]
 
-        prediction = prediction[: len(instance_tagging_unit)]
-        if isinstance(prediction, Tensor):
-            prediction = prediction.cpu().numpy()
-        tags = [self.id2element(x) for x in prediction]
+        predictions = predictions[: len(instance_tagging_unit)]
+        if isinstance(predictions, Tensor):
+            predictions = predictions.cpu().numpy()
+
+        tags = [self.id2element(x) for x in predictions]
         tag_start = None
         tag_end = None
         tag_type = None
@@ -283,7 +290,7 @@ class BioSeqTaggingExtractor(BaseExtractor):
             ):
                 if tag_type:
                     entity_mention = self._entry_type(pack, tag_start, tag_end)
-                    setattr(entity_mention, self.attribute, tag_type)
+                    setattr(entity_mention, self._attribute, tag_type)
                 tag_start = entry.begin
                 tag_end = entry.end
                 tag_type = tag[0]
@@ -295,4 +302,4 @@ class BioSeqTaggingExtractor(BaseExtractor):
             entity_mention = self._entry_type(
                 pack, tag_start, tag_end  # type: ignore
             )
-            setattr(entity_mention, self.attribute, tag_type)
+            setattr(entity_mention, self._attribute, tag_type)

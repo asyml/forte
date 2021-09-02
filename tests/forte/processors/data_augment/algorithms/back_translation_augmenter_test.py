@@ -50,7 +50,7 @@ class TestBackTranslationAugmenter(unittest.TestCase):
         data_pack.add_entry(sent)
 
         translated_text = (
-            "The treatment of natural language " "has never been easier!"
+            "The treatment of natural language has never been easier!"
         )
         assert translated_text == self.bta.replace(sent)[1]
 

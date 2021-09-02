@@ -42,8 +42,8 @@ def load_glove_embedding(embedding_path, normalize_digits=True):
     """
 
     embed_dim = -1
-    embedd_dict = dict()
-    with open(embedding_path, "r") as file:
+    embedd_dict = {}
+    with open(embedding_path, "r", encoding="utf-8") as file:
         for line in file:
             line = line.strip()
             if len(line) == 0:

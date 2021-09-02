@@ -43,10 +43,10 @@ def post_edit(element: Tuple[Optional[str], str]) -> str:
 
 def bio_tagging(
     pack: DataPack,
-    instance: Annotation,
     tagging_unit_type: Type[Annotation],
     entry_type: Type[Annotation],
     attribute: Union[Callable[[Annotation], str], str],
+    context: Optional[Annotation] = None,
 ) -> List[Tuple[Optional[str], str]]:
     """This utility function use BIO tagging method to convert tags
     of "instance_entry" into the same length as "instance_tagging_unit". Both
@@ -57,11 +57,6 @@ def bio_tagging(
     Args:
         pack (DataPack): The datapack that contains the current
             instance.
-
-        instance (Annotation): The instance from which the
-            extractor will extractor feature. For example, an instance of
-            Sentence type, which mean the tagging sequence comes from
-            one sentence.
 
         tagging_unit_type (Annotation): The type of tagging unit that entry
             tag should align to. For example, it can be Token, which means
@@ -77,6 +72,12 @@ def bio_tagging(
             get the tags via the attribute of an entry. Or a str of the name
             of the attribute. For example, it can be "ner_type", which means
             the attribute ner_type of the entry will be treated as tags.
+
+        context (Annotation): The instance from which the
+            extractor will extractor feature. For example, an instance of
+            Sentence type, which mean the tagging sequence comes from
+            one sentence. If None, then the whole data pack will be used.
+
     Returns:
         A list of the type List[Tuple[Optional[str], str]]. For example,
         [(None, "O"), (LOC, "B"), (LOC, "I"), (None, "O"),
@@ -84,11 +85,9 @@ def bio_tagging(
     """
 
     # Tokens in the sentence.
-    tagging_units: List[Annotation] = list(
-        pack.get(tagging_unit_type, instance)
-    )
+    tagging_units: List[Annotation] = list(pack.get(tagging_unit_type, context))
     # All mentions in the sentence.
-    instance_entry: List[Annotation] = list(pack.get(entry_type, instance))
+    instance_entry: List[Annotation] = list(pack.get(entry_type, context))
 
     tagged: List[Tuple[Optional[str], str]] = []
     unit_id = 0
@@ -162,7 +161,7 @@ def get_tag(
         BIO tag sequence in string format.
 
     """
-    tag = bio_tagging(pack, instance, tagging_unit, entry_type, attribute)
+    tag = bio_tagging(pack, tagging_unit, entry_type, attribute, instance)
     tag = [post_edit(x) for x in tag]
     return tag
 
@@ -203,25 +202,24 @@ def write_tokens_to_file(
         output_file (str): The path where results write.
 
     """
-    opened_file = open(output_file, "a+")
-    for refer_data, pred_sent, refer_sent in zip(
-        refer_pack.get_data(**refer_request),
-        pred_pack.get(Sentence),
-        refer_pack.get(Sentence),
-    ):
-
-        refer_tag = get_tag(
-            refer_pack, refer_sent, tagging_unit, entry_type, attribute
-        )
-        pred_tag = get_tag(
-            pred_pack, pred_sent, tagging_unit, entry_type, attribute
-        )
-
-        words = refer_data["Token"]["text"]
-
-        for i, (word, tgt, pred) in enumerate(
-            zip(words, refer_tag, pred_tag), 1
+    with open(output_file, "a+", encoding="utf-8") as opened_file:
+        for refer_data, pred_sent, refer_sent in zip(
+            refer_pack.get_data(**refer_request),
+            pred_pack.get(Sentence),
+            refer_pack.get(Sentence),
         ):
-            opened_file.write("%d %s %s %s\n" % (i, word, tgt, pred))
-        opened_file.write("\n")
-    opened_file.close()
+
+            refer_tag = get_tag(
+                refer_pack, refer_sent, tagging_unit, entry_type, attribute
+            )
+            pred_tag = get_tag(
+                pred_pack, pred_sent, tagging_unit, entry_type, attribute
+            )
+
+            words = refer_data["Token"]["text"]
+
+            for i, (word, tgt, pred) in enumerate(
+                zip(words, refer_tag, pred_tag), 1
+            ):
+                opened_file.write("%d %s %s %s\n" % (i, word, tgt, pred))
+            opened_file.write("\n")

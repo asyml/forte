@@ -255,11 +255,11 @@ class RandomSwapDataAugmentProcessor(ReplacementDataAugmentProcessor):
                     replace_map[swap_idx[0]] = new_idx_0
                     replace_map[swap_idx[1]] = new_idx_1
                 pid: int = data_pack.pack_id
-                for idx in replace_map:
+                for idx, replace_target in replace_map.items():
                     self._replaced_annos[pid].add(
                         (
                             annotations[idx].span,
-                            annotations[replace_map[idx]].text,
+                            annotations[replace_target].text,
                         )
                     )
 

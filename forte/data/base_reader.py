@@ -323,10 +323,10 @@ class BaseReader(PipelineComponent[PackType], ABC):
 
         logger.info("Caching pack to %s", cache_filename)
         if append:
-            with open(cache_filename, "a") as cache:
+            with open(cache_filename, "a", encoding="utf-8") as cache:
                 cache.write(pack.serialize() + "\n")
         else:
-            with open(cache_filename, "w") as cache:
+            with open(cache_filename, "w", encoding="utf-8") as cache:
                 cache.write(pack.serialize() + "\n")
 
     def read_from_cache(
@@ -341,7 +341,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
         Returns: List of cached data packs.
         """
         logger.info("reading from cache file %s", cache_filename)
-        with open(cache_filename, "r") as cache_file:
+        with open(cache_filename, "r", encoding="utf-8") as cache_file:
             for line in cache_file:
                 pack = DataPack.deserialize(line.strip())
                 if not isinstance(pack, self.pack_type):
@@ -351,7 +351,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
                     )
                 yield pack
 
-    def finish(self, resources: Resources):
+    def finish(self, resource: Resources):
         pass
 
     def set_text(self, pack: DataPack, text: str):

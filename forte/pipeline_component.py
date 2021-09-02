@@ -146,10 +146,13 @@ class PipelineComponent(Generic[PackType]):
         provided config with the ``default_configs()``.
 
         The following config conventions are expected:
-          - The top level key can be a special `config_path`.
-          - `config_path` should be point to a file system path, which will
-             be a YAML file containing configurations.
-          - Other key values in the configs will be considered as parameters.
+
+        - The top level key can be a special `config_path`.
+
+        - `config_path` should be point to a file system path, which will
+          be a YAML file containing configurations.
+
+        - Other key values in the configs will be considered as parameters.
 
         Args:
             configs: The input config to be merged with the default config.
@@ -164,9 +167,8 @@ class PipelineComponent(Generic[PackType]):
                 configs = configs.todict()
 
             if "config_path" in configs and not configs["config_path"] is None:
-                filebased_configs = yaml.safe_load(
-                    open(configs.pop("config_path"))
-                )
+                with open(configs.pop("config_path"), encoding="utf-8") as f:
+                    filebased_configs = yaml.safe_load(f)
             else:
                 filebased_configs = {}
 
