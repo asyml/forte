@@ -139,7 +139,7 @@ class SRLPredictor(FixedSizeBatchPackingProcessor):
         self,
         pack: DataPack,
         predict_results: Dict[str, List[Prediction]],
-        context: Optional[Annotation] = None,
+        _: Optional[Annotation] = None,
     ):
         batch_predictions = predict_results["predictions"]
         for predictions in batch_predictions:

@@ -176,7 +176,7 @@ class CoNLLNERPredictor(FixedSizeBatchPackingProcessor):
         self,
         pack: DataPack,
         predict_results: Dict[str, Dict[str, List[str]]],
-        context: Optional[Annotation] = None,
+        _: Optional[Annotation] = None,
     ):
         """
         Write the prediction results back to datapack. by writing the predicted
