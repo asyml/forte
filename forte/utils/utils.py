@@ -18,9 +18,8 @@ import difflib
 from functools import wraps
 from inspect import getfullargspec
 from pydoc import locate
-from typing import Dict, List, Optional, get_type_hints, Tuple, Union, Any
+from typing import Dict, List, Optional, get_type_hints, Tuple
 
-import yaml
 from sortedcontainers import SortedList
 from typing_inspect import is_union_type, get_origin
 

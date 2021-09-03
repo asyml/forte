@@ -43,12 +43,13 @@ class Configurable(ABC):
 
     @classmethod
     def _default_configs(cls) -> Config:
+        # pylint: disable=protected-access
         merged = Config(cls.default_configs(), {}, allow_new_hparam=True)
         for base in cls.__bases__:
             if hasattr(base, "_default_configs"):
                 merged = Config(
                     merged,
-                    base._default_configs().todict(),  # type: ignore
+                    base._default_configs().todict(),
                     allow_new_hparam=True,
                 )
                 break
@@ -88,9 +89,8 @@ class Configurable(ABC):
                 configs = configs.todict()
 
             if configs.get("@config_path", None) is not None:
-                filebased_configs = yaml.safe_load(
-                    open(configs.pop("@config_path"))
-                )
+                with open(configs.pop("@config_path"), encoding="utf-8") as f:
+                    filebased_configs = yaml.safe_load(f)
             else:
                 filebased_configs = {}
 
