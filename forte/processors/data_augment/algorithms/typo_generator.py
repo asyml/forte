@@ -37,10 +37,11 @@ class TypoGenerator:
 
 class UniformTypoGenerator(TypoGenerator):
     r"""
-    A generateor that generates a typo from a typo dictionary.
+    A uniform generateor that generates a typo from a typo dictionary.
 
     Args:
-        word_list: A list of words that this sampler uniformly samples from.
+        word: input word that needs to be replaced,
+        dict_path: the absolute path to the pre defined typo json file.
     """
 
     def generate(self, word: str, dict_path: str) -> str:
