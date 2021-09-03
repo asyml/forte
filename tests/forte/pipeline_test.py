@@ -307,9 +307,7 @@ class DummyPackProcessor(PackProcessor):
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
-        configs = super().default_configs()
-        configs["test"] = "test, successor"
-        return configs
+        return {"test": "test, successor"}
 
 
 class DummyFixedSizeBatchProcessor(FixedSizeBatchPackingProcessor):

@@ -293,10 +293,7 @@ class CoNLLNERPredictor(FixedSizeBatchPackingProcessor):
     @classmethod
     def default_configs(cls):
         r"""Default config for NER Predictor"""
-        configs = super().default_configs()
-        configs["batcher"] = {"batch_size": 10}
-
-        more_configs = {
+        return {
             "config_data": {
                 "train_path": "",
                 "val_path": "",
@@ -346,17 +343,3 @@ class CoNLLNERPredictor(FixedSizeBatchPackingProcessor):
                 },
             },
         }
-
-        configs.update(more_configs)
-        return configs
-
-    # def _define_context() -> Type[Annotation]:
-    #     return Sentence
-    #
-    # @staticmethod
-    # def _define_input_info() -> DataRequest:
-    #     input_info: DataRequest = {
-    #         Token: [],
-    #         Sentence: [],
-    #     }
-    #     return input_info

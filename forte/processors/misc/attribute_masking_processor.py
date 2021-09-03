@@ -51,9 +51,7 @@ class AttributeMasker(PackProcessor):
             are the entry types whose fields need to be masked and the value is
             a list of field names.
         """
-        config = super().default_configs()
-        config.update({"type": "", "kwargs": {}})
-        return config
+        return {"type": "", "kwargs": {}}
 
     def _process(self, input_pack: DataPack):
         for entry_type, attributes in self.fields.items():

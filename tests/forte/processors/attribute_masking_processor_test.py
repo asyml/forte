@@ -37,7 +37,7 @@ class TestAttributeMaskingProcessor(unittest.TestCase):
         pl.set_reader(ConllUDReader())
 
         # TODO: should not use class in config.
-        config = {"kwargs": {Token: ["pos"]}}
+        config = {"kwargs": {"ft.onto.base_ontology.Token": ["pos"]}}
 
         pl.add(component=AttributeMasker(), config=config)
         pl.initialize()

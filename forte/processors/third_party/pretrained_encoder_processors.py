@@ -149,7 +149,8 @@ class PretrainedEncoder(PackProcessor):
             The name of the pre-trained models including:
 
             * **Standard BERT**: proposed in (`Devlin et al`. 2018)
-              `BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding`_
+              `BERT: Pre-training of Deep Bidirectional Transformers for
+              Language Understanding`_
               . A bidirectional Transformer language model pre-trained on large
               text corpora. Available model names include:
 
@@ -291,11 +292,8 @@ class PretrainedEncoder(PackProcessor):
         Understanding`:
             http://arxiv.org/abs/1906.08237
         """
-        config = super().default_configs()
-        config.update(
-            {
-                "pretrained_model_name": "bert-base-uncased",
-                "entry_type": "ft.onto.base_ontology.Sentence",
-            }
-        )
-        return config
+
+        return {
+            "pretrained_model_name": "bert-base-uncased",
+            "entry_type": "ft.onto.base_ontology.Sentence",
+        }

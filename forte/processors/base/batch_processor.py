@@ -141,9 +141,9 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
         r"""Defines the default configs for batching processor."""
-        super_config = super().default_configs()
-        super_config["batcher"] = cls.define_batcher().default_configs()
-        return super_config
+        return {
+            "batcher": cls.define_batcher().default_configs()
+        }
 
     def _prepare_coverage_index(self, input_pack: PackType):
         """
@@ -365,16 +365,12 @@ class Predictor(PackingBatchProcessor[PackType]):
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
-        super_config = super().default_configs()
-        super_config.update(
-            {
-                "feature_scheme": None,
-                "context_type": None,
-                "batcher": cls.define_batcher().default_configs(),
-                "do_eval": False,
-            }
-        )
-        return super_config
+        return {
+            "feature_scheme": None,
+            "context_type": None,
+            "batcher": cls.define_batcher().default_configs(),
+            "do_eval": False,
+        }
 
     def initialize(self, resources: Resources, configs: Config):
         # Populate the _request. The self._request_ready help avoid parsing

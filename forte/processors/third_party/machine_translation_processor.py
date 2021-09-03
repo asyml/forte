@@ -108,13 +108,9 @@ class MicrosoftBingTranslator(MultiPackProcessor):
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
-        config = super().default_configs()
-        config.update(
-            {
-                "src_language": "en",
-                "target_language": "de",
-                "in_pack_name": "doc_0",
-                "out_pack_name": "response",
-            }
-        )
-        return config
+        return {
+            "src_language": "en",
+            "target_language": "de",
+            "in_pack_name": "doc_0",
+            "out_pack_name": "response",
+        }
