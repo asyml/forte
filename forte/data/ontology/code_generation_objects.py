@@ -785,6 +785,54 @@ class EntryTree:
                     ] = found_node.parent.attributes
                     found_node = found_node.parent
 
+    def todict(self) -> Dict[str, Any]:
+        r"""Dump the EntryTree structure to a dictionary.
+
+        Returns:
+            dict: A dictionary storing the EntryTree.
+        """
+
+        def node_to_dict(node: EntryTreeNode):
+            return (
+                None
+                if not node
+                else {
+                    "name": node.name,
+                    "attributes": list(node.attributes),
+                    "children": [
+                        node_to_dict(child) for child in node.children
+                    ],
+                }
+            )
+
+        return node_to_dict(self.root)
+
+    def fromdict(
+        self, tree_dict: Dict[str, Any], parent_entry_name: Optional[str] = None
+    ) -> Optional["EntryTree"]:
+        r"""Load the EntryTree structure from a dictionary.
+
+        Args:
+            tree_dict: A dictionary storing the EntryTree.
+            parent_entry_name: The type name of the parent of the node to be
+                built. Default value is None.
+        """
+        if not tree_dict:
+            return None
+
+        if parent_entry_name is None:
+            self.root = EntryTreeNode(name=tree_dict["name"])
+            self.root.attributes = set(tree_dict["attributes"])
+        else:
+            self.add_node(
+                curr_entry_name=tree_dict["name"],
+                parent_entry_name=parent_entry_name,
+                curr_entry_attr=set(tree_dict["attributes"]),
+            )
+        for child in tree_dict["children"]:
+            self.fromdict(child, tree_dict["name"])
+        return self
+
 
 def search(node: EntryTreeNode, search_node_name: str):
     if node.name == search_node_name:

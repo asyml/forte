@@ -39,7 +39,7 @@ __all__ = [
 
 class Selector(Generic[InputPackType, OutputPackType]):
     def __init__(self, **kwargs):
-        pass
+        self._stored_kwargs = kwargs
 
     def select(self, pack: InputPackType) -> Iterator[OutputPackType]:
         raise NotImplementedError
@@ -69,7 +69,7 @@ class NameMatchSelector(SinglePackSelector):
     """
 
     def __init__(self, select_name: str):
-        super().__init__()
+        super().__init__(select_name=select_name)
         assert select_name is not None
         self.select_name: str = select_name
 
@@ -90,7 +90,7 @@ class RegexNameMatchSelector(SinglePackSelector):
     r"""Select a :class:`DataPack` from a :class:`MultiPack` using a regex."""
 
     def __init__(self, select_name: str):
-        super().__init__()
+        super().__init__(select_name=select_name)
         assert select_name is not None
         self.select_name: str = select_name
 

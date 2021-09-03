@@ -58,8 +58,9 @@ from forte.process_job import ProcessJob
 from forte.process_manager import ProcessManager, ProcessJobStatus
 from forte.processors.base import BaseProcessor
 from forte.processors.base.batch_processor import BaseBatchProcessor
-from forte.utils import create_class_with_kwargs
+from forte.utils import create_class_with_kwargs, get_full_module_name
 from forte.utils.utils_processor import record_types_and_attributes_check
+from forte.version import FORTE_IR_VERSION
 
 if sys.version_info < (3, 7):
     import importlib_resources as resources
@@ -247,16 +248,32 @@ class Pipeline(Generic[PackType]):
         configs = yaml.safe_load(open(config_path))
         self.init_from_config(configs)
 
-    def init_from_config(self, configs: List):
+    def init_from_config(self, configs: Dict[str, Any]):
         r"""Initialized the pipeline (ontology and processors) from the
         given configurations.
 
         Args:
-            configs: The configs used to initialize the pipeline.
+            configs: The configs used to initialize the pipeline. It should be
+                a dictionary that contains `forte_ir_version`, `components`
+                and `states`. `forte_ir_version` is a string used to validate
+                input format. `components` is a list of dictionary that
+                contains `type` (the class of pipeline components),
+                `configs` (the corresponding component's configs) and
+                `selector`. `states` will be used to update the pipeline states
+                based on the fields specified in `states.attribute` and
+                `states.resource`.
         """
+        # Validate IR version
+        if configs.get("forte_ir_version") != FORTE_IR_VERSION:
+            raise ProcessorConfigError(
+                f"forte_ir_version={configs.get('forte_ir_version')} not "
+                "supported. Please make sure the format of input IR complies "
+                f"with forte_ir_version={FORTE_IR_VERSION}."
+            )
 
+        # Add components from IR
         is_first: bool = True
-        for component_config in configs:
+        for component_config in configs.get("components", []):
             component = create_class_with_kwargs(
                 class_name=component_config["type"],
                 class_args=component_config.get("kwargs", {}),
@@ -271,7 +288,32 @@ class Pipeline(Generic[PackType]):
                 is_first = False
             else:
                 # Can be processor, caster, or evaluator
-                self.add(component, component_config.get("configs", {}))
+                selector_config = component_config.get("selector")
+                self.add(
+                    component=component,
+                    config=component_config.get("configs", {}),
+                    selector=selector_config
+                    and create_class_with_kwargs(
+                        class_name=selector_config["type"],
+                        class_args=selector_config.get("kwargs", {}),
+                    ),
+                )
+
+        # Set pipeline states and resources
+        states_config: Dict[str, Dict] = configs.get("states", {})
+        for attr, val in states_config.get("attribute", {}).items():
+            setattr(self, attr, val)
+        resource_config: Dict[str, Dict] = states_config.get("resource", {})
+        if "onto_specs_dict" in resource_config:
+            self.resource.update(
+                onto_specs_dict=resource_config["onto_specs_dict"]
+            )
+        if "merged_entry_tree" in resource_config:
+            self.resource.update(
+                merged_entry_tree=EntryTree().fromdict(
+                    resource_config["merged_entry_tree"]
+                ),
+            )
 
     def _dump_to_config(self):
         r"""Serialize the pipeline to an IR(intermediate representation).
@@ -281,24 +323,120 @@ class Pipeline(Generic[PackType]):
         Returns:
             dict: A dictionary storing IR.
         """
-        configs: List[Dict] = []
-        configs.append(
+
+        def test_jsonable(test_dict: Dict, err_msg: str):
+            r"""Check if a dictionary is JSON serializable"""
+            try:
+                json.dumps(test_dict)
+                return test_dict
+            except (TypeError, OverflowError) as e:
+                raise ProcessorConfigError(err_msg) from e
+
+        get_err_msg: Dict = {
+            "reader": lambda reader: (
+                "The reader of the pipeline cannot be JSON serialized. This is"
+                " likely due to some parameters in the configuration of the "
+                f"reader {get_full_module_name(reader)} cannot be serialized "
+                "in JSON. To resolve this issue, you can consider implementing"
+                " a JSON serialization for that parameter type or changing the"
+                " parameters of this reader. Note that in order for the reader"
+                " to be serialized in JSON, all the variables defined in both "
+                "the default_configs and the configuration passed in during "
+                "pipeline.set_reader() need to be JSON-serializable. You can "
+                "find in the stack trace the type of the un-serializable "
+                "parameter."
+            ),
+            "component": lambda component: (
+                "One component of the pipeline cannot be JSON serialized. This"
+                " is likely due to some parameters in the configuration of the"
+                f" component {get_full_module_name(component)} cannot be "
+                "serialized in JSON. To resolve this issue, you can consider "
+                "implementing a JSON serialization for that parameter type or "
+                "changing the parameters of the component. Note that in order "
+                "for the component to be serialized in JSON, all the variables"
+                " defined in both the default_configs and the configuration "
+                "passed in during pipeline.add() need to be JSON-serializable."
+                " You can find in the stack trace the type of the "
+                "un-serializable parameter."
+            ),
+            "selector": lambda selector: (
+                "A selector cannot be JSON serialized. This is likely due to "
+                "some __init__ parameters for class "
+                f"{get_full_module_name(selector)} cannot be serialized in "
+                "JSON. To resolve this issue, you can consider implementing a "
+                "JSON serialization for that parameter type or changing the "
+                "signature of the __init__ function. You can find in the stack"
+                " trace the type of the un-serializable parameter."
+            ),
+        }
+
+        configs: Dict = {
+            "forte_ir_version": FORTE_IR_VERSION,
+            "components": list(),
+            "states": dict(),
+        }
+
+        # Serialize pipeline components
+        configs["components"].append(
             {
-                "type": ".".join(
-                    [self._reader.__module__, type(self._reader).__name__]
+                "type": get_full_module_name(self._reader),
+                "configs": test_jsonable(
+                    test_dict=self._reader_config.todict(),
+                    err_msg=get_err_msg["reader"](self._reader),
                 ),
-                "configs": self._reader_config.todict(),
             }
         )
-        for component, config in zip(self.components, self.component_configs):
-            configs.append(
+        for component, config, selector in zip(
+            self.components, self.component_configs, self._selectors
+        ):
+            configs["components"].append(
                 {
-                    "type": ".".join(
-                        [component.__module__, type(component).__name__]
+                    "type": get_full_module_name(component),
+                    "configs": test_jsonable(
+                        test_dict=config.todict(),
+                        err_msg=get_err_msg["component"](component),
                     ),
-                    "configs": config.todict(),
+                    "selector": {
+                        "type": get_full_module_name(selector),
+                        "kwargs": test_jsonable(
+                            # pylint: disable=protected-access
+                            test_dict=selector._stored_kwargs,
+                            # pylint: enable=protected-access
+                            err_msg=get_err_msg["selector"](selector),
+                        ),
+                    },
                 }
             )
+
+        # Serialize current states of pipeline
+        configs["states"].update(
+            {
+                "attribute": {
+                    attr: getattr(self, attr)
+                    for attr in (
+                        "_initialized",
+                        "_enable_profiling",
+                        "_check_type_consistency",
+                        "_do_init_type_check",
+                    )
+                    if hasattr(self, attr)
+                },
+                "resource": dict(),
+            }
+        )
+        if self.resource.contains("onto_specs_dict"):
+            configs["states"]["resource"].update(
+                {"onto_specs_dict": self.resource.get("onto_specs_dict")}
+            )
+        if self.resource.contains("merged_entry_tree"):
+            configs["states"]["resource"].update(
+                {
+                    "merged_entry_tree": self.resource.get(
+                        "merged_entry_tree"
+                    ).todict()
+                }
+            )
+
         return configs
 
     def save(self, path: str):
