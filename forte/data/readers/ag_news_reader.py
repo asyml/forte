@@ -52,7 +52,7 @@ class AGNewsReader(PackReader):
 
         Returns: Iterator of each line in the csv file.
         """
-        with open(csv_file, "r") as f:
+        with open(csv_file, "r", encoding="utf-8") as f:
             for line_id, line in enumerate(f):
                 yield line_id, line
 

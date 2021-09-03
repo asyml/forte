@@ -57,19 +57,19 @@ class EmbeddingSimilarityReplacementOp(TextReplacementOp):
             / np.sqrt((embedding.word_vecs ** 2).sum(axis=1))[:, np.newaxis]
         )
 
-    def replace(self, input: Annotation) -> Tuple[bool, str]:
+    def replace(self, input_anno: Annotation) -> Tuple[bool, str]:
         r"""
         This function replaces a word words with similar
         pretrained embeddings.
 
         Args:
-            input (Annotation): The input annotation.
+            input_anno (Annotation): The input annotation.
         Returns:
             A tuple of two values, where the first element is a boolean value
             indicating whether the replacement happens, and the second
             element is the replaced word.
         """
-        word = input.text
+        word = input_anno.text
         if word not in self.vocab.token_to_id_map_py:
             return False, word
 

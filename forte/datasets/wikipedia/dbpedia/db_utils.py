@@ -200,15 +200,17 @@ def strip_url_params(url) -> Optional[str]:
     return parsed.scheme + "://" + parsed.netloc + parsed.path
 
 
-def print_progress(msg: str, end="\r"):
+def print_progress(msg: str, end="\r", terminal_only=False):
     """
     Print progress message to the same line.
     Args:
         msg: The message to print.
         end: Line ending in terminal.
+        terminal_only: If True, will only write to terminal. Default is False.
 
     """
-    logging.info(msg)
+    if not terminal_only:
+        logging.info(msg)
     sys.stdout.write("\033[K")  # Clear to the end of line.
     print(f" -- {msg}", end=end)
 
@@ -242,6 +244,7 @@ class NIFParser:
             nif_path:
             tuple_format:
         """
+        # pylint: disable=consider-using-with
         if nif_path.endswith(".bz2"):
             self.__nif = bz2.BZ2File(nif_path)
         else:

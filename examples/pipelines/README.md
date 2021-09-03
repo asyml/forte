@@ -12,10 +12,10 @@ pipeline.
 
 ## Install the dependencies
 
-- To run NLTK processors, please install NLTK library using
+- To run NLTK processors, please install Forte NLTK wrappers with:
 
 ```bash
-pip install nltk
+pip install forte.nltk
 ```
 
 - NER and SRL processors are built using texar-pytorch. Please follow the guidelines here 
@@ -24,7 +24,7 @@ https://github.com/asyml/texar-pytorch#installation to install it.
 - To run `stanford_nlp_pipeline.py`, install Stanford NLP library using
 
 ```bash
-pip install stanfordnlp
+pip install forte.stanza
 ```
 
 ## Downloading the models

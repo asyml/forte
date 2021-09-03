@@ -35,12 +35,12 @@ logger = logging.getLogger(__name__)
 
 class TaggingTrainer(BaseTrainer):
     def __init__(
-            self,
-            task_type: str,
-            config_data: Config,
-            config_model: Config,
-            config_extractors: Dict,
-            device,
+        self,
+        task_type: str,
+        config_data: Config,
+        config_model: Config,
+        config_extractors: Dict,
+        device,
     ):
         super().__init__()
         self.task_type = task_type
@@ -57,7 +57,7 @@ class TaggingTrainer(BaseTrainer):
         return {
             "preprocess": {"device": self.device.type},
             "dataset": {"batch_size": self.config_data.batch_size_tokens},
-            "request": self.config_extractors
+            "request": self.config_extractors,
         }
 
     def create_pack_iterator(self) -> Iterator[DataPack]:
@@ -65,9 +65,7 @@ class TaggingTrainer(BaseTrainer):
         train_pl: Pipeline = Pipeline()
         train_pl.set_reader(reader)
         train_pl.initialize()
-        yield from train_pl.process_dataset(
-            self.config_data.train_path
-        )
+        yield from train_pl.process_dataset(self.config_data.train_path)
 
     def train(self):
         logging.info("Constructing the extractors and models.")
@@ -113,7 +111,13 @@ class TaggingTrainer(BaseTrainer):
         val_reader = CoNLL03Reader(cache_in_memory=True)
         val_pl: Pipeline = Pipeline()
         val_pl.set_reader(val_reader)
-        val_pl.add(predictor, config={"batch_size": 10})
+        val_pl.add(
+            predictor, config={
+                "batcher": {
+                    "batch_size": 10,
+                }
+            }
+        )
         val_pl.add(evaluator, config=evaluator_config)
         val_pl.initialize()
 

@@ -54,12 +54,11 @@ if __name__ == "__main__":
 
     # Configure output extractor based on the task, see
     #   BioSeqTaggingExtractor for more information.
-    output_configs = extractor_configs[
-        "feature_scheme"]["output_tag"]["extractor"]["config"]
+    output_configs = extractor_configs["feature_scheme"]["output_tag"][
+        "extractor"
+    ]["config"]
     if task == "ner":
-        output_configs[
-            "entry_type"
-        ] = "ft.onto.base_ontology.EntityMention"
+        output_configs["entry_type"] = "ft.onto.base_ontology.EntityMention"
         output_configs["attribute"] = "ner_type"
         output_configs["tagging_unit"] = "ft.onto.base_ontology.Token"
     elif task == "pos":
@@ -68,12 +67,14 @@ if __name__ == "__main__":
 
     config = {
         "config_data": Config(
-            {}, default_hparams=yaml.safe_load(
+            {},
+            default_hparams=yaml.safe_load(
                 open("configs/config_data.yml", "r")
             ),
         ),
         "config_model": Config(
-            {}, default_hparams=yaml.safe_load(
+            {},
+            default_hparams=yaml.safe_load(
                 open("configs/config_model.yml", "r")
             ),
         ),

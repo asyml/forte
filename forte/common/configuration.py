@@ -16,7 +16,12 @@ We are going to reuse the configuration class HParams in Texar. However, the
 name might be confusing in the context of processors, so we rename them to
 Config here.
 """
+from typing import Dict
 
 from texar.torch import HParams
 
 Config = HParams
+
+
+def merge_configs(config: Dict, parent_config: Dict) -> Dict:
+    return HParams(config, parent_config, True).todict()

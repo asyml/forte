@@ -19,6 +19,7 @@ import torch
 from forte.common.configuration import Config
 from forte.common import ValidationError
 from forte.data.converter.feature import Feature
+from forte.data.types import MatrixLike
 
 logger = logging.getLogger(__name__)
 
@@ -28,8 +29,11 @@ __all__ = ["Converter"]
 class Converter:
     """
     This class has the functionality of converting a batch of
-    :class:`~forte.data.converter.Feature` to a PyTorch `Tensor`. It can also
-    do the padding for the given batch of :class:`~forte.data.converter.Feature`
+    :class:`~forte.data.converter.Feature` to a `MatrixLike` type which can
+    be a Numpy array, a PyTorch `Tensor`, or a nested list.
+
+    It can also perform padding for the given batch of
+    :class:`~forte.data.converter.Feature`
     if user requested it. Please refer to the `request` parameter in
     :class:`~forte.train_preprocessor.TrainPreprocessor` for details.
 
@@ -97,9 +101,11 @@ class Converter:
         self._config.to_numpy = state["to_numpy"]
         self._config.to_torch = state["to_torch"]
 
-    def convert(self, features: List[Feature]) -> Tuple[Any, List[Any]]:
+    def convert(
+        self, features: List[Feature]
+    ) -> Tuple[MatrixLike, List[MatrixLike]]:
         """
-        Convert a list of Features to actual data, where
+        Convert a list of Features to matrix-like form, where
 
         1. The outer most dimension will always be the batch dimension (i.e
         `len(output) = len(feature_num)`).
@@ -129,10 +135,10 @@ class Converter:
         Returns:
             A `Tuple` containing two elements.
 
-            1. The first element is either a `List` or `numpy.ndarray` or
-            `torch.tensor` representing the batch of data.
+            1. The first element is either a `MatrixLike` type representing the
+            batch of data.
 
-            2. The second element is a `List` or `numpy.ndarray` representing
+            2. The second element is a `MatrixLike` type representing
             masks along different feature dimensions.
 
         Example 1:
@@ -235,7 +241,6 @@ class Converter:
             # ]
         """
         dtype: Optional[np.dtype] = None
-
         need_pad: bool = features[0].need_pad
 
         if need_pad and self.to_torch and not self.to_numpy:
@@ -244,7 +249,7 @@ class Converter:
                 "setting to_numpy to False will be ignored."
             )
 
-        # Do padding if needed
+        # Do padding if needed.
         if need_pad:
             dtype = self._padding(features)
 
@@ -290,7 +295,6 @@ class Converter:
                 masks_np_list.append(
                     self._to_numpy_type(batch_masks_dim_i, np.bool)
                 )
-
             return data_np, masks_np_list
 
         # Control should not reach here

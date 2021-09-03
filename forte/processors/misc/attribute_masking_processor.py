@@ -20,6 +20,8 @@ from forte.processors.base import PackProcessor
 
 __all__ = ["AttributeMasker"]
 
+from forte.utils import get_class
+
 
 class AttributeMasker(PackProcessor):
     def __init__(self):
@@ -27,9 +29,11 @@ class AttributeMasker(PackProcessor):
         self.fields: Dict = {}
 
     # pylint: disable=attribute-defined-outside-init
-    def initialize(self, resources: Resources, config: Config):
-        super().initialize(resources, config)
-        self.fields = config.kwargs
+    def initialize(self, resources: Resources, configs: Config):
+        super().initialize(resources, configs)
+        for entry_type, entry_attributes in self.configs.requests.items():
+            entry_class = get_class(entry_type)
+            self.fields[entry_class] = entry_attributes
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
@@ -39,21 +43,19 @@ class AttributeMasker(PackProcessor):
 
         .. code-block:: python
             {
-                "kwargs": {
-                    Token: ["ner"]
+                "requests": {
+                    "ft.onto.base_ontology.Token": ["pos"]
                 }
             }
 
         Here:
 
-        `"request"`: dict
+        `"requests"`: dict
             The entry types and fields required. The keys of the requests dict
             are the entry types whose fields need to be masked and the value is
             a list of field names.
         """
-        config = super().default_configs()
-        config.update({"type": "", "kwargs": {}})
-        return config
+        return {"requests": {}, "@no_typecheck": {"requests"}}
 
     def _process(self, input_pack: DataPack):
         for entry_type, attributes in self.fields.items():

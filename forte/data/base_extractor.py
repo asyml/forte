@@ -16,8 +16,8 @@ This file implements BaseExtractor, which is the abstract class other
 extractors will inherit from.
 """
 import logging
-from abc import ABC
-from typing import Tuple, List, Dict, Any, Type
+from abc import ABC, abstractmethod
+from typing import Tuple, List, Dict, Any
 from typing import Union, Hashable, Iterable, Optional
 
 from forte.common.configuration import Config
@@ -25,7 +25,6 @@ from forte.data.converter.feature import Feature
 from forte.data.data_pack import DataPack
 from forte.data.ontology import Annotation
 from forte.data.vocabulary import Vocabulary
-from forte.utils import get_class
 
 logger = logging.getLogger(__name__)
 
@@ -75,10 +74,9 @@ class BaseExtractor(ABC):
 
     Attributes:
         config: An instance of `Dict` or :class:`~forte.common.Config` that
-            provides configurable options. See :meth:`default_configs` for
-            available options and default values. Entry_type is the key that
-            need to be passed in and there will not be default value for
-            this key.
+            provides configurable options. See
+            :meth:`~forte.data.base_extractor.BaseExtractor.default_configs`
+            for available options and default values.
 
     """
     _VOCAB_ERROR_MSG = (
@@ -89,19 +87,11 @@ class BaseExtractor(ABC):
 
     def __init__(self):
         self._vocab: Optional[Vocabulary] = None
-        self._entry_type: Type[Annotation] = None
         self.config: Config = None
         self._vocab_method = None
 
     def initialize(self, config: Union[Dict, Config]):
-        # pylint: disable=attribute-defined-outside-init
         self.config = Config(config, self.default_configs())
-        if self.config.entry_type is None:
-            raise AttributeError(
-                "`entry_type` needs to be specified in "
-                "the configuration of an extractor."
-            )
-        self._entry_type = get_class(self.config.entry_type)
 
         if self.config.vocab_method != "custom":
             self._vocab = Vocabulary(
@@ -121,15 +111,18 @@ class BaseExtractor(ABC):
 
         Here:
 
-        entry_type (str).
-            Required. The string to the ontology type that the extractor
-            will get feature from, e.g: `"ft.onto.base_ontology.Token"`.
-
         vocab_method (str)
             What type of vocabulary is used for this extractor. `custom`,
             `indexing`, `one-hot` are supported, default is `indexing`.
             Check the behavior of vocabulary under different setting
             in :class:`~forte.data.vocabulary.Vocabulary`
+
+        context_type (str): The fully qualified name of the context used to
+            group the extracted features, for example, it could be a
+            `ft.onto.base_ontology.Sentence`. If this is `None`, features from
+            in the whole data pack will be grouped together. Default is None.
+            This value could be mandatory for some processors, which will be
+            documented and specified by the specific processor implementation.
 
         vocab_use_unk (bool)
             Whether the `<UNK>` element should be added to vocabulary.
@@ -153,21 +146,13 @@ class BaseExtractor(ABC):
 
         """
         return {
-            "entry_type": None,
             "vocab_method": "indexing",
+            "context_type": None,
             "vocab_use_unk": True,
             "need_pad": True,
             "pad_value": None,
             "unk_value": None,
         }
-
-    @property
-    def entry_type(self) -> Type[Annotation]:
-        return self._entry_type
-
-    @entry_type.setter
-    def entry_type(self, input_entry: Type[Annotation]):
-        self._entry_type = input_entry
 
     @property
     def vocab_method(self) -> str:
@@ -246,97 +231,98 @@ class BaseExtractor(ABC):
         for element in predefined:
             self.add(element)
 
-    def update_vocab(self, pack: DataPack, instance: Annotation):
-        r"""Populate the vocabulary by taking the elements from one instance
-        vocabulary. For example, when the instance is Sentence and we want
-        to add all Token from one sentence into the vocabulary, we might
-        call this function.
-
-        If you use a pre-specified vocabulary, you may not need to use this
-        function.
+    def update_vocab(
+        self, pack: DataPack, context: Optional[Annotation] = None
+    ):
+        r"""Populate the vocabulary needed by the extractor. This can be
+        implemented by a specific extractor. The populated vocabulary can be
+        used to map features/items to numeric representations. If you use a
+        pre-specified vocabulary, you may not need to use this function.
 
         Overwrite instructions:
 
-            1. Get all entries from one instance in the pack.
-               You probably would use pack.get function to acquire
-               Entry that you need.
-            2. Get elements that are needed from entries. This process will
-               be very different for different extractors. For example,
-               you might want to get the token text from one sentence.
-               Or you might want to get the tags for a sequence for
-               one sentence.
-            3. Use :func:`add` to add those element into the vocabulary.
+            1. Get all entries of the type of interest, such as all the
+            `Token`s in the data pack.
+            2. Use :func:`~forte.data.vocabulary.Vocabulary.add` to add those
+            element into `self._vocab`.
 
         Args:
-            pack (DataPack): The datapack that contains the current
-                instance.
-            instance (Annotation): The instance from which the
-                extractor will get elements from.
+            pack (DataPack): The input data pack.
+            context (Annotation): The context is an Annotation entry where
+                features will be extracted within its range. If None, then the
+                whole data pack will be used as the context. Default is None.
         """
         pass
 
-    def extract(self, pack: DataPack, instance: Annotation) -> Feature:
-        r"""Extract the feature for one instance in a pack.
-
-        Overwrite instruction:
-
-            1. Get all entries from one instance in the pack.
-            2. Get elements that are needed form entries. For example,
-               the token text or sequence tags.
-            3. Construct a feature and return it.
+    @abstractmethod
+    def extract(
+        self, pack: DataPack, context: Optional[Annotation] = None
+    ) -> Feature:
+        """This method should be implemented to extract features from a
+        datapack.
 
         Args:
-            pack (DataPack): The datapack that contains the current
-                instance.
-            instance (Annotation): The instance from which the
-                extractor will extractor feature.
+            pack (DataPack): The input data pack that contains the features.
+            context (Annotation): The context is an Annotation entry where
+                features will be extracted within its range. If None, then the
+                whole data pack will be used as the context. Default is None.
 
-        Returns (Feature):
-            a feature that contains the extracted data.
+        Returns: Features inside this instance stored as a
+        `~forte.data.converter.feature.Feature` instance.
+
         """
-        pass
+        raise NotImplementedError
 
-    def pre_evaluation_action(self, pack: DataPack, instance: Annotation):
+    def pre_evaluation_action(
+        self, pack: DataPack, context: Optional[Annotation]
+    ):
         r"""This function is performed on the pack before the evaluation
         stage, allowing one to perform some actions before the evaluation.
         For example, you can remove entries or remove some attributes of
         the entry. By default, this function will not do anything.
 
         Args:
-            pack (DataPack): The datapack that contains the current
-                instance.
-            instance (Annotation): The instance from which the
-                extractor will extractor feature.
+            pack (DataPack): The datapack that contains the current instance.
+            context (Optional[Annotation]): The context is an Annotation entry
+                where data are extracted within its range. If None, then the
+                whole data pack will be used as the context. Default is None.
         """
         pass
 
     def add_to_pack(
-        self, pack: DataPack, instance: Annotation, prediction: Any
+        self,
+        pack: DataPack,
+        predictions: Any,
+        context: Optional[Annotation] = None,
     ):
         r"""Add prediction of a model (normally in the form of a tensor)
         back to the pack. This function should have knowledge of the structure
         of the `prediction` to correctly populate the data pack values.
 
         This function can be roughly considered as the reverse operation of
-        :func:`extract`.
+        :meth:`~forte.data.base_extractor.BaseExtractor.extract`.
 
         Overwrite instruction:
 
             1. Get all entries from one instance in the pack.
-            2. Convert prediction into elements that need to be
-               assigned to entries. You might need to use
-               :func:`id2element` to convert index in the prediction
-               into element via the vocabulary maintained by the
-               extractor.
+
+            2. Convert predictions into elements that needs to be assigned
+               to entries. You can use :meth:`~forte.data.vocabulary.id2element`
+               to convert integers in the prediction into element via the
+               vocabulary maintained by the extractor.
+
             3. Add the element to corresponding entry based on the need.
 
         Args:
-            pack (DataPack): The datapack that contains the current
-                instance.
-            instance (Annotation): The instance to which the
-                extractor add prediction.
-            prediction (Any): This is the output of the model, whose
-                format will be determined by the predict function
-                user define and pass in to our framework.
+            pack (DataPack): The datapack to add predictions back.
+            predictions (Any): This is the output of the model, the format of
+              which will be determined by the predict function defined in the
+              Predictor.
+            context (Optional[Annotation]): The context is an Annotation
+                entry where predictions will be added to. This has the same
+                meaning with `context` as in
+                :meth:`~forte.data.base_extractor.BaseExtractor.extract`.
+                If None, then the whole data pack will be used as the
+                context. Default is None.
         """
         pass
