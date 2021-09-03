@@ -245,8 +245,11 @@ class WikiPackReader(PackReader):
             the index from the name to the actual pack path.
 
         """
-        return {"pack_index": "article.idx", "pack_dir": ".", "resume_index": None}
-
+        return {
+            "pack_index": "article.idx",
+            "pack_dir": ".",
+            "resume_index": None,
+        }
 
 
 class WikiArticleWriter(JsonPackWriter):

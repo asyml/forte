@@ -46,7 +46,6 @@ __all__ = [
 ]
 
 
-
 class ProcessingBatcher(Generic[PackType]):
     r"""This defines the basis interface of the batcher used in
     :class:`~forte.processors.base.batch_processor.BaseBatchProcessor`. This
@@ -500,11 +499,11 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
 
         Returns: The default configuration structure and default value.
         """
-        return{
-                "batch_size": 10,
-                "context_type": None,
-                "requests": {},
-                "@no_typecheck": "requests",
+        return {
+            "batch_size": 10,
+            "context_type": None,
+            "requests": {},
+            "@no_typecheck": "requests",
         }
 
 

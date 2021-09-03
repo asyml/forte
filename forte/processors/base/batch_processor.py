@@ -141,9 +141,7 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
         r"""Defines the default configs for batching processor."""
-        return {
-            "batcher": cls.define_batcher().default_configs()
-        }
+        return {"batcher": cls.define_batcher().default_configs()}
 
     def _prepare_coverage_index(self, input_pack: PackType):
         """
