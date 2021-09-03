@@ -140,8 +140,8 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
-        r"""Defines the default configs for batching processor."""
-        return {"batcher": cls.define_batcher().default_configs()}
+        """Defines the default configs for batching processor."""
+        return {}
 
     def _prepare_coverage_index(self, input_pack: PackType):
         """
@@ -303,6 +303,16 @@ class FixedSizeBatchPackingProcessor(PackingBatchProcessor[DataPack], ABC):
     @classmethod
     def define_batcher(cls) -> ProcessingBatcher:
         return FixedSizeDataPackBatcher()
+
+    @classmethod
+    def default_configs(cls) -> Dict[str, Any]:
+        """Defines the default configs for batching processor."""
+        return {
+            "batcher": {
+                "batch_size": 4,
+                "context_type": None,
+            },
+        }
 
 
 class Predictor(PackingBatchProcessor[PackType]):

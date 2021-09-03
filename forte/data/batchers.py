@@ -28,6 +28,7 @@ from typing import (
 )
 
 from forte.common import ValidationError, ProcessorConfigError
+from forte.common.Configurable import Configurable
 from forte.common.configuration import Config
 from forte.data.base_pack import PackType
 from forte.data.converter import Feature
@@ -46,7 +47,7 @@ __all__ = [
 ]
 
 
-class ProcessingBatcher(Generic[PackType]):
+class ProcessingBatcher(Generic[PackType], Configurable):
     r"""This defines the basis interface of the batcher used in
     :class:`~forte.processors.base.batch_processor.BaseBatchProcessor`. This
     Batcher only batches data sequentially. It receives new packs dynamically
