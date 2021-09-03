@@ -62,7 +62,16 @@ class TestLowerCaserProcessor(unittest.TestCase):
 
     def test_lowercase_with_substitution(self):
         document = "Yıldız İbrahimova"
-        pack = Pipeline[DataPack]().process(document)
+        pack = (
+            Pipeline[DataPack]()
+            .set_reader(StringReader())
+            .add(
+                LowerCaserProcessor(),
+                config={"custom_substitutions": {"İ": "i"}},
+            )
+            .initialize()
+            .process(document)
+        )
 
         self.assertNotEqual(pack.text, document)
 
