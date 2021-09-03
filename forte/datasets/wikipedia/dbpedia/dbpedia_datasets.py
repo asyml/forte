@@ -244,13 +244,12 @@ class WikiPackReader(PackReader):
           - pack_index: the file name under the pack directory that points to
             the index from the name to the actual pack path.
 
-        :return:
         """
-        config = super().default_configs()
-        config.update(
-            {"pack_index": "article.idx", "pack_dir": ".", "resume_index": None}
-        )
-        return config
+        return {
+            "pack_index": "article.idx",
+            "pack_dir": ".",
+            "resume_index": None,
+        }
 
 
 class WikiArticleWriter(JsonPackWriter):
@@ -383,6 +382,7 @@ class WikiArticleWriter(JsonPackWriter):
         The additional parameters to provide:
           - use_input_index (bool): whether to use the input index file to find
               data.
+
           - input_index_file (str): the path providing the index from the
               wikipedia article name to the relative paths that stores these
               files.
@@ -390,24 +390,22 @@ class WikiArticleWriter(JsonPackWriter):
               `overwrite` are both set to true, and the data path will be
               used to write the results (which means the existing files will be
               overwritten).
+
           - output_index_file (str): if provided, will write out the index from
               file name to the packs. This path and the relative paths are all
               relative names are relative to the `output_dir`.
+
           - append_to_index (bool): if provided, will append to the
-             `output_index_file` instead of creatign a new one.
+             `output_index_file` instead of creating a new one.
 
         Returns: The default configuration of this writer.
         """
-        config = super().default_configs()
-        config.update(
-            {
-                "use_input_index": False,
-                "input_index_file": None,
-                "output_index_file": "article.idx",
-                "append_to_index": False,
-            }
-        )
-        return config
+        return {
+            "use_input_index": False,
+            "input_index_file": None,
+            "output_index_file": "article.idx",
+            "append_to_index": False,
+        }
 
 
 class WikiStructReader(WikiPackReader):

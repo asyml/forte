@@ -873,15 +873,11 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
                             }
                         }
         """
-        config = super().default_configs()
-        config.update(
-            {
-                "augment_entry": "ft.onto.base_ontology.Sentence",
-                "other_entry_policy": {"type": "", "kwargs": {}},
-                "type": "data_augmentation_op",
-                "data_aug_op": "",
-                "data_aug_op_config": {"type": "", "kwargs": {}},
-                "augment_pack_names": {"type": "", "kwargs": {}},
-            }
-        )
-        return config
+        return {
+            "augment_entry": "ft.onto.base_ontology.Sentence",
+            "other_entry_policy": {"type": "", "kwargs": {}},
+            "type": "data_augmentation_op",
+            "data_aug_op": "",
+            "data_aug_op_config": {"type": "", "kwargs": {}},
+            "augment_pack_names": {"type": "", "kwargs": {}},
+        }

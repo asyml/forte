@@ -170,7 +170,7 @@ class MultiPackCopier(MultiPackProcessor):
         pack.set_text(input_pack.get_pack_at(0).text)
 
 
-class DummyRelationExtractor(PackingBatchProcessor):
+class DummyRelationExtractor(FixedSizeBatchPackingProcessor):
     r"""A dummy relation extractor.
 
     Note that to use :class:`DummyRelationExtractor`, the :attr:`ontology` of
@@ -182,35 +182,19 @@ class DummyRelationExtractor(PackingBatchProcessor):
     def define_batcher(cls) -> ProcessingBatcher:
         return FixedSizeDataPackBatcher()
 
-    # @staticmethod
-    # def _define_context() -> Type[Sentence]:
-    #     return Sentence
-    #
-    # @staticmethod
-    # def _define_input_info() -> DataRequest:
-    #     input_info: DataRequest = {
-    #         Token: [],
-    #         EntityMention: {"fields": ["ner_type", "tid"]},
-    #     }
-    #     return input_info
-
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
-        configs = merge_configs(
-            {
-                "batcher": {
-                    "context_type": "ft.onto.base_ontology.Sentence",
-                    "requests": {
-                        "ft.onto.base_ontology.Token": [],
-                        "ft.onto.base_ontology.EntityMention": {
-                            "fields": ["ner_type", "tid"]
-                        },
+        return {
+            "batcher": {
+                "context_type": "ft.onto.base_ontology.Sentence",
+                "requests": {
+                    "ft.onto.base_ontology.Token": [],
+                    "ft.onto.base_ontology.EntityMention": {
+                        "fields": ["ner_type", "tid"]
                     },
-                }
-            },
-            super().default_configs(),
-        )
-        return configs
+                },
+            }
+        }
 
     def predict(self, data_batch: Dict) -> Dict[str, List[Any]]:
         entities_span = data_batch["EntityMention"]["span"]
@@ -307,9 +291,7 @@ class DummyPackProcessor(PackProcessor):
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
-        configs = super().default_configs()
-        configs["test"] = "test, successor"
-        return configs
+        return {"test": "test, successor"}
 
 
 class DummyFixedSizeBatchProcessor(FixedSizeBatchPackingProcessor):

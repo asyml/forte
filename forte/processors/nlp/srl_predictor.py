@@ -157,24 +157,11 @@ class SRLPredictor(FixedSizeBatchPackingProcessor):
         """
         This defines the default configuration structure for the predictor.
         """
-        configs = super().default_configs()
-        configs.update(
-            {
-                "storage_path": None,
-                "batcher": {
-                    "batch_size": 4,
-                    "context_type": "ft.onto.base_ontology.Sentence",
-                    "requests": {"ft.onto.base_ontology.Token": []},
-                },
-            }
-        )
-        return configs
-
-    # @staticmethod
-    # def _define_context():
-    #     return Sentence
-    #
-    # @staticmethod
-    # def _define_input_info() -> DataRequest:
-    #     input_info: DataRequest = {Token: []}
-    #     return input_info
+        return {
+            "storage_path": None,
+            "batcher": {
+                "batch_size": 4,
+                "context_type": "ft.onto.base_ontology.Sentence",
+                "requests": {"ft.onto.base_ontology.Token": []},
+            },
+        }

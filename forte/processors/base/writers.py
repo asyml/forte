@@ -137,16 +137,12 @@ class JsonPackWriter(PackProcessor, ABC):
 
         Returns: The default configuration of this writer.
         """
-        config = super().default_configs()
-        config.update(
-            {
-                "output_dir": None,
-                "zip_pack": False,
-                "indent": None,
-                "drop_record": False,
-            }
-        )
-        return config
+        return {
+            "output_dir": None,
+            "zip_pack": False,
+            "indent": None,
+            "drop_record": False,
+        }
 
     def _process(self, input_pack: DataPack):
         sub_path = self.sub_output_path(input_pack)

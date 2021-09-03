@@ -140,10 +140,8 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
-        r"""Defines the default configs for batching processor."""
-        super_config = super().default_configs()
-        super_config["batcher"] = cls.define_batcher().default_configs()
-        return super_config
+        """Defines the default configs for batching processor."""
+        return {}
 
     def _prepare_coverage_index(self, input_pack: PackType):
         """
@@ -306,6 +304,16 @@ class FixedSizeBatchPackingProcessor(PackingBatchProcessor[DataPack], ABC):
     def define_batcher(cls) -> ProcessingBatcher:
         return FixedSizeDataPackBatcher()
 
+    @classmethod
+    def default_configs(cls) -> Dict[str, Any]:
+        """Defines the default configs for batching processor."""
+        return {
+            "batcher": {
+                "batch_size": 4,
+                "context_type": None,
+            },
+        }
+
 
 class Predictor(PackingBatchProcessor[PackType]):
     r"""
@@ -365,16 +373,12 @@ class Predictor(PackingBatchProcessor[PackType]):
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
-        super_config = super().default_configs()
-        super_config.update(
-            {
-                "feature_scheme": None,
-                "context_type": None,
-                "batcher": cls.define_batcher().default_configs(),
-                "do_eval": False,
-            }
-        )
-        return super_config
+        return {
+            "feature_scheme": None,
+            "context_type": None,
+            "batcher": cls.define_batcher().default_configs(),
+            "do_eval": False,
+        }
 
     def initialize(self, resources: Resources, configs: Config):
         # Populate the _request. The self._request_ready help avoid parsing

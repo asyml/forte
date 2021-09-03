@@ -15,11 +15,9 @@
 """
 Pipeline component module.
 """
-from typing import Generic, Optional, Union, Dict, Any
+from typing import Generic
 
-import yaml
-
-from forte.common import ProcessorConfigError
+from forte.common.configurable import Configurable
 from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.base_pack import PackType, BasePack
@@ -27,7 +25,7 @@ from forte.data.ontology.core import Entry
 from forte.utils import get_full_module_name
 
 
-class PipelineComponent(Generic[PackType]):
+class PipelineComponent(Generic[PackType], Configurable):
     """
     The base class for all pipeline component. A pipeline component represents
     one node in the pipeline, and would perform certain action on the data
@@ -136,55 +134,6 @@ class PipelineComponent(Generic[PackType]):
             resource (Resources): A global resource registry.
         """
         self.__is_initialized = False
-
-    @classmethod
-    def make_configs(
-        cls, configs: Optional[Union[Config, Dict[str, Any]]]
-    ) -> Config:
-        """
-        Create the component configuration for this class, by merging the
-        provided config with the ``default_configs()``.
-
-        The following config conventions are expected:
-
-        - The top level key can be a special `config_path`.
-
-        - `config_path` should be point to a file system path, which will
-          be a YAML file containing configurations.
-
-        - Other key values in the configs will be considered as parameters.
-
-        Args:
-            configs: The input config to be merged with the default config.
-
-        Returns:
-            The merged configuration.
-        """
-        merged_configs: Dict = {}
-
-        if configs is not None:
-            if isinstance(configs, Config):
-                configs = configs.todict()
-
-            if "config_path" in configs and not configs["config_path"] is None:
-                with open(configs.pop("config_path"), encoding="utf-8") as f:
-                    filebased_configs = yaml.safe_load(f)
-            else:
-                filebased_configs = {}
-
-            merged_configs.update(filebased_configs)
-
-            merged_configs.update(configs)
-
-        try:
-            final_configs = Config(merged_configs, cls.default_configs())
-        except ValueError as e:
-            raise ProcessorConfigError(
-                f"Configuration error for the processor "
-                f"{get_full_module_name(cls)}."
-            ) from e
-
-        return final_configs
 
     @classmethod
     def default_configs(cls):
