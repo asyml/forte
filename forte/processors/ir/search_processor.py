@@ -57,18 +57,14 @@ class SearchProcessor(MultiPackProcessor):
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
-        config = super().default_configs()
-        config.update(
-            {
-                "model_dir": None,
-                "response_pack_name_prefix": "doc",
-                "indexer_class": "forte.faiss.embedding_based_indexer"
-                ".EmbeddingBasedIndexer",
-                "indexer_configs": {
-                    "index_type": "GpuIndexFlatIP",
-                    "dim": 768,
-                    "device": "gpu0",
-                },
-            }
-        )
-        return config
+        return {
+            "model_dir": None,
+            "response_pack_name_prefix": "doc",
+            "indexer_class": "forte.faiss.embedding_based_indexer"
+            ".EmbeddingBasedIndexer",
+            "indexer_configs": {
+                "index_type": "GpuIndexFlatIP",
+                "dim": 768,
+                "device": "gpu0",
+            },
+        }

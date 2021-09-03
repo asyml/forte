@@ -16,6 +16,8 @@ This file implements CharExtractor, which is used to extract feature
 from characters of a piece of text.
 """
 import logging
+from typing import Optional
+
 from forte.data.data_pack import DataPack
 from forte.data.converter.feature import Feature
 from forte.data.base_extractor import BaseExtractor
@@ -28,63 +30,80 @@ __all__ = ["CharExtractor"]
 
 class CharExtractor(BaseExtractor):
     r"""CharExtractor extracts feature from the text of entry.
-    Text will be split into characters. Most of the time, a
-    user will not need to call this class/function explicitly,
-    they will be called by the framework.
+    Text will be split into characters.
     """
 
     @classmethod
     def default_configs(cls):
-        r"""Returns a dictionary of default hyper-parameters.
+        r"""Returns a dictionary of default configuration parameters.
 
-        "max_char_length": int
-            The maximum number of characters for one token in the text.
+        Here:
+
+        - "max_char_length": int
+            The maximum number of characters for one token in the text,
+            default is None, which means no limit will be set.
+        - "entry_type": str
+            The fully qualified name of an annotation type entry. Characters
+            will be extracted based on these entries. Default is `Token`,
+            which means characters of tokens will be extracted.
         """
         config = super().default_configs()
-        config.update({"max_char_length": None})
+        config.update(
+            {
+                "max_char_length": None,
+                "entry_type": "ft.onto.base_ontology.Token",
+            }
+        )
         return config
 
-    def update_vocab(self, pack: DataPack, instance: Annotation):
+    def update_vocab(
+        self, pack: DataPack, context: Optional[Annotation] = None
+    ):
         r"""Add all character into vocabulary.
 
         Args:
-            pack (Datapack): The datapack that contains the current
-                instance.
-            instance (Annotation): The instance from which the
-                extractor will get text from.
+            pack (DataPack): The input data pack.
+            context (Annotation): The context is an Annotation entry where
+                features will be extracted within its range. If None, then the
+                whole data pack will be used as the context. Default is None.
         """
-        for word in pack.get(self._entry_type, instance):
-            for char in word.text:
+        word: Annotation
+        for word in pack.get(self.config.entry_type, context):
+            for char in word.text:  # type: ignore
                 self.add(char)
 
-    def extract(self, pack: DataPack, instance: Annotation) -> Feature:
+    def extract(
+        self, pack: DataPack, context: Optional[Annotation] = None
+    ) -> Feature:
         r"""Extract the character feature of one instance.
 
         Args:
-            pack (Datapack): The datapack that contains the current
-                instance.
-            instance (Annotation): The instance from which the
-                extractor will extractor feature.
+            pack (Datapack): The datapack to extract features from.
+            context (Annotation): The context is an Annotation entry where
+                features will be extracted within its range. If None, then the
+                whole data pack will be used as the context. Default is None.
 
         Returns (Feature):
-            a feature that contains the extracted data.
+            a iterator of feature that contains the characters of each
+            specified annotation.
         """
         data = []
-        max_char_length = -1
 
-        for word in pack.get(self._entry_type, instance):
-            if self.vocab:
-                data.append([self.element2repr(char) for char in word.text])
+        entry: Annotation
+        for entry in pack.get(self.config.entry_type, context):
+            if self.config.max_char_length is not None:
+                max_char_length = min(
+                    self.config.max_char_length, len(entry.text)  # type: ignore
+                )
             else:
-                data.append(list(word.text))
-            max_char_length = max(max_char_length, len(data[-1]))
+                max_char_length = len(entry.text)  # type: ignore
 
-        if (
-            hasattr(self.config, "max_char_length")
-            and self.config.max_char_length is not None
-            and self.config.max_char_length < max_char_length
-        ):
-            data = [token[: self.config.max_char_length] for token in data]
+            characters = entry.text[:max_char_length]  # type: ignore
+
+            if self.vocab:
+                data.append([self.element2repr(char) for char in characters])
+            else:
+                data.append(list(characters))
 
         meta_data = {
             "need_pad": self.config.need_pad,

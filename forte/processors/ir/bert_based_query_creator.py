@@ -68,19 +68,15 @@ class BertBasedQueryCreator(QueryProcessor):
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
-        config = super().default_configs()
-        config.update(
-            {
-                "model": {
-                    "path": None,
-                    "name": "bert-base-uncased",
-                },
-                "tokenizer": {"name": "bert-base-uncased"},
-                "max_seq_length": 128,
-                "query_pack_name": "query",
-            }
-        )
-        return config
+        return {
+            "model": {
+                "path": None,
+                "name": "bert-base-uncased",
+            },
+            "tokenizer": {"name": "bert-base-uncased"},
+            "max_seq_length": 128,
+            "query_pack_name": "query",
+        }
 
     @torch.no_grad()
     def get_embeddings(self, inputs, sequence_length, segment_ids):

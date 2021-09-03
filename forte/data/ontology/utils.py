@@ -146,7 +146,7 @@ def get_user_objects_from_module(
             filepath = os.path.join(dir_, module_file)
             try:
                 spec = import_util.spec_from_file_location(module_str, filepath)
-                module = import_util.module_from_spec(spec)
+                module = import_util.module_from_spec(spec)  # type: ignore
                 spec.loader.exec_module(module)  # type: ignore
                 objects = module.__all__  # type: ignore
             except (FileNotFoundError, AttributeError):
@@ -232,9 +232,11 @@ def validate_json_schema(input_filepath: str):
     validation_file_path = os.path.normpath(
         os.path.join(os.path.dirname(__file__), "validation_schema.json")
     )
-    with open(validation_file_path, "r") as validation_json_file:
+    with open(
+        validation_file_path, "r", encoding="utf-8"
+    ) as validation_json_file:
         validation_schema = json.loads(validation_json_file.read())
-    with open(input_filepath, "r") as input_json_file:
+    with open(input_filepath, "r", encoding="utf-8") as input_json_file:
         input_schema = json.loads(input_json_file.read())
     jsonschema.Draft6Validator(validation_schema).validate(input_schema)
 
@@ -252,7 +254,7 @@ def get_schema_from_ontology(
 ) -> str:
     if imported_onto_file is None:
         raise FileNotFoundError
-    with open(imported_onto_file, "r") as imported_onto:
+    with open(imported_onto_file, "r", encoding="utf-8") as imported_onto:
         regex = "|".join(map(re.escape, delimiters))
         reqd_line = imported_onto.readlines()[1]
         installed_json_file = list(filter(None, re.split(regex, reqd_line)))[0]
@@ -275,7 +277,7 @@ def get_current_forte_dir():
 
 def get_generated_files_in_dir(path):
     def is_generated(file_path):
-        with open(file_path, "r") as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             lines = f.readlines()
             return len(lines) > 0 and lines[0] == f"# {AUTO_GEN_SIGNATURE}\n"
 

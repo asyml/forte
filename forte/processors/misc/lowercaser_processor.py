@@ -63,11 +63,7 @@ class LowerCaserProcessor(PackProcessor):
         Returns:
 
         """
-        configs = super().default_configs()
-        configs.update(
-            {
-                "custom_substitutions": {},
-                "@no_typecheck": ["custom_substitutions"],
-            }
-        )
-        return configs
+        return {
+            "custom_substitutions": {},
+            "@no_typecheck": ["custom_substitutions"],
+        }

@@ -96,7 +96,7 @@ class QueryDataSelector(BaseElasticSearchDataSelector):
         Returns: Selected document's original datapack.
         """
         data_path: str = args[0]
-        with open(data_path, "r") as file:
+        with open(data_path, "r", encoding="utf-8") as file:
             for line in file:
                 query: Dict = self._create_search_key(line.strip())
                 results = self.index.search(query)

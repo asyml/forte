@@ -127,10 +127,6 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
         values. Used to replace the missing values of input ``configs`` during
         pipeline construction.
         """
-        config = super().default_configs()
-        config.update(
-            {
-                "overwrite": False,
-            }
-        )
-        return config
+        return {
+            "overwrite": False,
+        }

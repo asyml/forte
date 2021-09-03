@@ -32,7 +32,6 @@ from forte.data.readers import RawDataDeserializeReader, StringReader
 from forte.data.common_entry_utils import create_utterance, get_last_utterance
 from ft.onto.base_ontology import Utterance
 
-
 TEST_RECORDS_1 = {
     "Token": {"1", "2"},
     "Document": {"2"},
@@ -53,14 +52,12 @@ class UserSimulator(PackProcessor):
 
     @classmethod
     def default_configs(cls):
-        config = super().default_configs()
-        config["user_input"] = ""
-        return config
+        return {"user_input": ""}
 
 
 class DummyProcessor(PackProcessor):
     """
-    A dummpy Processor to check the expected/output records from the remote
+    A dummy Processor to check the expected/output records from the remote
     pipeline.
     """
 

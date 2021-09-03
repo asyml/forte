@@ -20,7 +20,7 @@ import math
 from typing import Tuple, Dict, Generator
 import texar.torch as tx
 import torch
-import torch.nn as nn
+from torch import nn
 from torch.nn import functional as F
 from torch.optim import Optimizer
 

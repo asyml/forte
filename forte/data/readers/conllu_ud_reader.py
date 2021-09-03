@@ -160,9 +160,7 @@ class ConllUDReader(PackReader):
 
                 # add dependencies for a sentence when all the tokens have been
                 # added
-                for token_id in sent_tokens:
-                    token_comps, token = sent_tokens[token_id]
-
+                for _, (token_comps, token) in sent_tokens.items():
                     # add primary dependency
                     label = token_comps["label"]
                     if label == "root":

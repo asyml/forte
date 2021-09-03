@@ -22,9 +22,7 @@ class UserSimulator(PackProcessor):
 
     @classmethod
     def default_configs(cls):
-        config = super().default_configs()
-        config["user_input"] = ""
-        return config
+        return {"user_input": ""}
 
 
 @ddt

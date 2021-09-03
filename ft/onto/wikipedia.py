@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from forte.data.data_pack import DataPack
 from forte.data.ontology.top import Annotation
 from forte.data.ontology.top import Generics
+from typing import List
 from typing import Optional
 
 __all__ = [
@@ -22,6 +23,7 @@ __all__ = [
     "WikiAnchor",
     "WikiInfoBoxProperty",
     "WikiInfoBoxMapped",
+    "WikiCategory",
 ]
 
 
@@ -126,3 +128,17 @@ class WikiInfoBoxMapped(Generics):
         super().__init__(pack)
         self.key: Optional[str] = None
         self.value: Optional[str] = None
+
+
+@dataclass
+class WikiCategory(Generics):
+    """
+    Attributes:
+        values (List[str]):
+    """
+
+    values: List[str]
+
+    def __init__(self, pack: DataPack):
+        super().__init__(pack)
+        self.values: List[str] = []

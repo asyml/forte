@@ -82,7 +82,7 @@ def write_pack(
             with gzip.open(output_path, "wt") as out:
                 out.write(out_str)
         else:
-            with open(output_path, "w") as out:
+            with open(output_path, "w", encoding="utf-8") as out:
                 out.write(out_str)
     else:
         logging.info("Will not overwrite existing path %s", output_path)
@@ -137,16 +137,12 @@ class JsonPackWriter(PackProcessor, ABC):
 
         Returns: The default configuration of this writer.
         """
-        config = super().default_configs()
-        config.update(
-            {
-                "output_dir": None,
-                "zip_pack": False,
-                "indent": None,
-                "drop_record": False,
-            }
-        )
-        return config
+        return {
+            "output_dir": None,
+            "zip_pack": False,
+            "indent": None,
+            "drop_record": False,
+        }
 
     def _process(self, input_pack: DataPack):
         sub_path = self.sub_output_path(input_pack)
@@ -171,16 +167,16 @@ class MultiPackWriter(MultiPackProcessor):
     multi_idx = "multi.idx"
 
     def initialize(self, resources: Resources, configs: Config):
-        # pylint: disable=attribute-defined-outside-init
+        # pylint: disable=attribute-defined-outside-init,consider-using-with
         super().initialize(resources, configs)
 
         pack_paths = os.path.join(self.configs.output_dir, self.pack_idx)
         ensure_dir(pack_paths)
-        self.pack_idx_out = open(pack_paths, "w")
+        self.pack_idx_out = open(pack_paths, "w", encoding="utf-8")
 
         multi_index = os.path.join(self.configs.output_dir, self.multi_idx)
         ensure_dir(multi_index)
-        self.multi_idx_out = open(multi_index, "w")
+        self.multi_idx_out = open(multi_index, "w", encoding="utf-8")
 
     def pack_name(self, pack: DataPack) -> str:
         r"""Allow defining output name using the information of the datapack.

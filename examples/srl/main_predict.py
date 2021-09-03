@@ -13,13 +13,15 @@
 # limitations under the License.
 """Predict for SRL task."""
 from typing import List
+
 import torch
 from torch import Tensor
+
 from ft.onto.base_ontology import Sentence
 from forte.data.converter.feature import Feature
 from forte.pipeline import Pipeline
 from forte.data.readers.ontonotes_reader import OntonotesReader
-from forte.predictor import Predictor
+from forte.processors.base import Predictor
 
 
 reader = OntonotesReader()

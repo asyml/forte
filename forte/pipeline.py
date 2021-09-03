@@ -196,7 +196,7 @@ class Pipeline(Generic[PackType]):
                 ontology_file = str(data_path)
 
         if ontology_file is not None:
-            with open(ontology_file, "r") as f:
+            with open(ontology_file, "r", encoding="ascii") as f:
                 spec_dict = json.load(f)
                 self.resource.update(onto_specs_path=ontology_file)
                 self.resource.update(onto_specs_dict=spec_dict)
@@ -244,8 +244,9 @@ class Pipeline(Generic[PackType]):
                 is a YAML file that specify the structure and parameters of the
                 pipeline.
         """
-        configs = yaml.safe_load(open(config_path))
-        self.init_from_config(configs)
+        with open(config_path, encoding="utf-8") as f:
+            configs = yaml.safe_load(f)
+            self.init_from_config(configs)
 
     def init_from_config(self, configs: List):
         r"""Initialized the pipeline (ontology and processors) from the
@@ -311,7 +312,7 @@ class Pipeline(Generic[PackType]):
         Args:
             path: The file path to save configurations.
         """
-        with open(path, "w") as f:
+        with open(path, "w", encoding="utf-8") as f:
             yaml.safe_dump(self._dump_to_config(), f)
 
     def _remote_service_app(

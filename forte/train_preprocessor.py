@@ -26,6 +26,7 @@ from forte.data.base_extractor import BaseExtractor
 from forte.data.converter import Converter
 from forte.data.data_pack import DataPack
 from forte.data.data_pack_dataset import DataPackDataset, DataPackIterator
+from forte.data.ontology import Annotation
 from forte.data.ontology.core import EntryType
 from forte.utils import extractor_utils
 from forte.utils.extractor_utils import parse_feature_extractors
@@ -144,7 +145,7 @@ class TrainPreprocessor:
                 "device": "cpu",
             },
             "dataset": DataPackDataset.default_hparams(),
-            "request": {"scope": None, "feature_scheme": None},
+            "request": {"context_type": None, "feature_scheme": None},
         }
 
     def _validate_config(self):
@@ -159,15 +160,15 @@ class TrainPreprocessor:
         """
         parsed_request: Dict[str, Any] = {}
 
-        if "scope" not in request or request["scope"] is None:
-            raise ValueError("Field not found for data request: `scope`")
+        if "context_type" not in request or request["context_type"] is None:
+            raise ValueError("Field not found for data request: `context_type`")
 
         if "feature_scheme" not in request or request["feature_scheme"] is None:
             raise ValueError(
                 "Field not found for data request: `feature_scheme`"
             )
 
-        parsed_request["scope"] = request["scope"]
+        parsed_request["context_type"] = request["context_type"]
         parsed_request["schemes"] = parse_feature_extractors(
             request["feature_scheme"]
         )
@@ -176,12 +177,13 @@ class TrainPreprocessor:
         self._request_ready = True
 
     def _build_vocab(self):
-        scope: EntryType = self._request["scope"]
+        context_type: EntryType = self._request["context_type"]
         schemes: Dict = self._request["schemes"]
 
         # TODO: clear vocab?
 
         # Cached all data packs
+        # TODO: this caching is not scalable
         for data_pack in self._pack_iterator:
             self._cached_packs.append(data_pack)
 
@@ -189,19 +191,23 @@ class TrainPreprocessor:
             extractor: BaseExtractor = scheme["extractor"]
             if extractor.vocab_method != "raw":
                 for data_pack in self._cached_packs:
-                    for instance in data_pack.get(scope):
-                        extractor.update_vocab(data_pack, instance)
+                    if context_type is None:
+                        extractor.update_vocab(data_pack)
+                    else:
+                        context: Annotation
+                        for context in data_pack.get(context_type):
+                            extractor.update_vocab(data_pack, context)
 
         self._vocab_ready = True
 
     def _build_dataset_iterator(self) -> DataIterator:
-        scope: Type[EntryType] = self._request["scope"]  # type: ignore
+        context_type: Type[EntryType] = self._request["context_type"]  # type: ignore
         schemes: Dict[str, Dict[str, Any]] = self._request["schemes"]
 
         data_source = DataPackIterator(
             pack_iterator=iter(self._cached_packs),
-            context_type=scope,
-            request={scope: []},
+            context_type=context_type,
+            request={context_type: []},
         )
 
         dataset = DataPackDataset(
@@ -222,7 +228,7 @@ class TrainPreprocessor:
             .. code-block:: python
 
                 request = {
-                    "scope": "ft.onto.base_ontology.Sentence"
+                    "context_type": "ft.onto.base_ontology.Sentence"
                     "schemes": {
                         "text_tag": {
                             "extractor":
@@ -245,25 +251,27 @@ class TrainPreprocessor:
 
         Here:
 
-            `"scope"`: Entry
-                A class of type :class:`~forte.data.ontology.core.Entry` The
-                granularity to separate data into different examples. For
-                example, if `scope` is :class:`~ft.onto.base_ontology.Sentence`,
-                then each training example will represent the information of a
-                sentence.
+            `"context_type"`: Annotation
+                A class of type :class:`~ft.onto.base_ontology.context_type`.
+                Defines the granularity to separate data into different
+                groups. All extractors will operate based on this. For example,
+                if `context_type` is :class:`~ft.onto.base_ontology.Sentence`,
+                then the features of each extractor will represent the
+                information of a sentence. If this value is `None`, then all
+                extractors will operate on the whole data pack.
 
-            `"schemes"`: `Dict`
-                A `Dict` containing the information about doing the
+            `"schemes"`: Dict
+                A Dict containing the information about doing the
                 pre-processing.
                 The `key` is the tags provided by input `request`. The
                 `value` is a `Dict` containing the information for doing
                 pre-processing for that feature.
 
-            `"schemes.tag.extractor"`: Extractor
+            `"schemes.tag.extractor"`:
                 An instance of type
                 :class:`~forte.data.extractor.BaseExtractor`.
 
-            `"schemes.tag.converter"`: Converter
+            `"schemes.tag.converter"`:
                 An instance of type :class:`~forte.data.converter.Converter`.
 
             `"schemes.tag.type"`: TrainPreprocessor.DATA_INPUT/DATA_OUTPUT
