@@ -49,7 +49,7 @@ class Configurable(ABC):
             if hasattr(base, "_default_configs"):
                 merged = Config(
                     merged,
-                    base._default_configs().todict(),
+                    base._default_configs().todict(),  # type: ignore
                     allow_new_hparam=True,
                 )
                 break
