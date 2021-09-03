@@ -34,61 +34,6 @@ __all__ = [
     "DiffAligner",
 ]
 
-from forte.common import ProcessorConfigError
-from forte.common.configuration import Config
-
-
-def make_configs(
-    configs: Optional[Union[Config, Dict[str, Any]]],
-    prompt_name: str,
-    default_configs: Dict[str, Any],
-) -> Config:
-    """
-    Create the configuration by merging the
-    provided config with the default_configs.
-
-    The following config conventions are expected:
-      - The top level key can be a special `@config_path`.
-
-      - `@config_path` should be point to a file system path, which will
-         be a YAML file containing configurations.
-
-      - Other key values in the configs will be considered as parameters.
-
-    Args:
-        configs: The input config to be merged with the default config.
-        prompt_name: A string to shown during for error messages.
-        default_configs: The default configurations to be merged with.
-
-    Returns:
-        The merged configuration.
-    """
-    merged_configs: Dict = {}
-
-    if configs is not None:
-        if isinstance(configs, Config):
-            configs = configs.todict()
-
-        if configs.get("@config_path", None) is not None:
-            filebased_configs = yaml.safe_load(
-                open(configs.pop("@config_path"))
-            )
-        else:
-            filebased_configs = {}
-
-        merged_configs.update(filebased_configs)
-
-        merged_configs.update(configs)
-
-    try:
-        final_configs = Config(merged_configs, default_configs)
-    except ValueError as e:
-        raise ProcessorConfigError(
-            f"Configuration error for {prompt_name}."
-        ) from e
-
-    return final_configs
-
 
 def get_full_module_name(o, lower: bool = False) -> str:
     r"""Returns the full module and class name of an object ``o``. For example,
