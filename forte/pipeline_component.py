@@ -17,7 +17,7 @@ Pipeline component module.
 """
 from typing import Generic
 
-from forte.common.Configurable import Configurable
+from forte.common.configurable import Configurable
 from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.base_pack import PackType, BasePack

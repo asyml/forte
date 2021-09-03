@@ -15,7 +15,7 @@ import unittest
 from abc import ABC
 from typing import Dict, Any, Optional, Union
 
-from forte.common.Configurable import Configurable
+from forte.common.configurable import Configurable
 from forte.common.configuration import Config
 
 

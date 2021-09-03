@@ -28,7 +28,7 @@ from typing import (
 )
 
 from forte.common import ValidationError, ProcessorConfigError
-from forte.common.Configurable import Configurable
+from forte.common.configurable import Configurable
 from forte.common.configuration import Config
 from forte.data.base_pack import PackType
 from forte.data.converter import Feature
