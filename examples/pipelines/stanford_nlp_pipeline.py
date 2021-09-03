@@ -15,11 +15,12 @@
 
 from termcolor import colored
 
+from forte.stanza import StandfordNLPProcessor
+
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.data.readers import StringReader
 from forte.pipeline import Pipeline
-from forte.stanza import StandfordNLPProcessor
 from ft.onto.base_ontology import Token, Sentence, Dependency
 
 

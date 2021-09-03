@@ -60,10 +60,10 @@ class FixedSizeDataPackBatcherWithExtractorTest(unittest.TestCase):
         self.assertEqual(pack_num, 2)
 
         batch_size = 2
-        batcher = FixedSizeDataPackBatcherWithExtractor(cross_pack=True)
+        batcher = FixedSizeDataPackBatcherWithExtractor()
         batcher.initialize(
             {
-                "scope": Sentence,
+                "context_type": Sentence,
                 "batch_size": batch_size,
                 "feature_scheme": {
                     "text_tag": {
@@ -77,7 +77,7 @@ class FixedSizeDataPackBatcherWithExtractorTest(unittest.TestCase):
 
         batch_num = 0
         for pack in pipeline.process_dataset(self.dataset_path):
-            for batch in batcher.get_batch(pack, Sentence, None):
+            for batch in batcher.get_batch(pack):
                 batch_num += 1
                 self.assertEqual(len(batch[0]), batch_size)
         for _ in batcher.flush():

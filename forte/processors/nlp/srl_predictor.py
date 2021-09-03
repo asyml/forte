@@ -22,13 +22,11 @@ import torch
 from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
+from forte.data.ontology import Annotation
 from forte.data.span import Span
-from forte.data.types import DataRequest
 from forte.models.srl.model import LabeledSpanGraphNetwork
-from forte.processors.base.batch_processor import FixedSizeBatchProcessor
+from forte.processors.base.batch_processor import FixedSizeBatchPackingProcessor
 from ft.onto.base_ontology import (
-    Token,
-    Sentence,
     PredicateLink,
     PredicateMention,
     PredicateArgument,
@@ -43,7 +41,7 @@ __all__ = [
 Prediction = List[Tuple[Span, List[Tuple[Span, str]]]]
 
 
-class SRLPredictor(FixedSizeBatchProcessor):
+class SRLPredictor(FixedSizeBatchPackingProcessor):
     """
     An Semantic Role labeler trained according to `He, Luheng, et al.
     "Jointly predicting predicates and arguments in neural semantic role
@@ -68,7 +66,7 @@ class SRLPredictor(FixedSizeBatchProcessor):
 
         # initialize the batcher
         if configs:
-            self._batcher.initialize(configs.batcher)
+            self.batcher.initialize(configs.batcher)
 
         self.word_vocab = tx.data.Vocab(
             os.path.join(model_dir, "embeddings/word_vocab.english.txt")
@@ -93,15 +91,6 @@ class SRLPredictor(FixedSizeBatchProcessor):
             )
         )
         self.model.eval()
-
-    @staticmethod
-    def _define_context():
-        return Sentence
-
-    @staticmethod
-    def _define_input_info() -> DataRequest:
-        input_info: DataRequest = {Token: []}
-        return input_info
 
     def predict(self, data_batch: Dict) -> Dict[str, List[Prediction]]:
         text: List[List[str]] = [
@@ -147,29 +136,45 @@ class SRLPredictor(FixedSizeBatchProcessor):
         return {"predictions": batch_predictions}
 
     def pack(
-        self, data_pack: DataPack, inputs: Dict[str, List[Prediction]]
-    ) -> None:
-        batch_predictions = inputs["predictions"]
+        self,
+        pack: DataPack,
+        predict_results: Dict[str, List[Prediction]],
+        _: Optional[Annotation] = None,
+    ):
+        batch_predictions = predict_results["predictions"]
         for predictions in batch_predictions:
             for pred_span, arg_result in predictions:
 
-                pred = PredicateMention(
-                    data_pack, pred_span.begin, pred_span.end
-                )
+                pred = PredicateMention(pack, pred_span.begin, pred_span.end)
 
                 for arg_span, label in arg_result:
-                    arg = PredicateArgument(
-                        data_pack, arg_span.begin, arg_span.end
-                    )
-                    link = PredicateLink(data_pack, pred, arg)
+                    arg = PredicateArgument(pack, arg_span.begin, arg_span.end)
+                    link = PredicateLink(pack, pred, arg)
                     link.arg_type = label
 
     @classmethod
     def default_configs(cls):
         """
-        This defines a basic config structure
-        :return:
+        This defines the default configuration structure for the predictor.
         """
         configs = super().default_configs()
-        configs.update({"storage_path": None, "batcher": {"batch_size": 4}})
+        configs.update(
+            {
+                "storage_path": None,
+                "batcher": {
+                    "batch_size": 4,
+                    "context_type": "ft.onto.base_ontology.Sentence",
+                    "requests": {"ft.onto.base_ontology.Token": []},
+                },
+            }
+        )
         return configs
+
+    # @staticmethod
+    # def _define_context():
+    #     return Sentence
+    #
+    # @staticmethod
+    # def _define_input_info() -> DataRequest:
+    #     input_info: DataRequest = {Token: []}
+    #     return input_info

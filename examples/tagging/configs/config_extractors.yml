@@ -1,4 +1,4 @@
-scope: "ft.onto.base_ontology.Sentence"
+context_type: "ft.onto.base_ontology.Sentence"
 feature_scheme:
   text_tag:
     type: "data_input"

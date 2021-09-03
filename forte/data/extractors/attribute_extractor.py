@@ -15,11 +15,22 @@
 This file implements AttributeExtractor, which is used to extract feature
 from the attribute of entries.
 """
-from typing import Any, Union, Iterable, Hashable
+from typing import (
+    Any,
+    Union,
+    Iterable,
+    Hashable,
+    SupportsInt,
+    Dict,
+    Optional,
+    List,
+)
 
+from forte.common import ProcessorConfigError
+from forte.common.configuration import Config
+from forte.data.base_extractor import BaseExtractor
 from forte.data.converter.feature import Feature
 from forte.data.data_pack import DataPack
-from forte.data.base_extractor import BaseExtractor
 from forte.data.ontology.core import Entry
 from forte.data.ontology.top import Annotation
 
@@ -32,18 +43,44 @@ class AttributeExtractor(BaseExtractor):
     they will be called by the framework.
     """
 
+    def initialize(self, config: Union[Dict, Config]):
+        super().initialize(config)
+        if self.config.entry_type is None:
+            raise ProcessorConfigError(
+                "The `entry_type` configuration must be "
+                "provided and cannot be None."
+            )
+        if self.config.attribute is None:
+            raise ProcessorConfigError(
+                "The `attribute` configuration must be "
+                "provided and cannot be None."
+            )
+
     @classmethod
     def default_configs(cls):
         r"""Returns a dictionary of default hyper-parameters.
 
+
         Here:
 
-        - "attribute": str
-          The name of attribute we want to extract from the entry. For
-          example, `text` attribute of Token. The default one is `text`.
+        - "`attribute`": str
+              The name of the attribute we want to extract from the entry. This
+              attribute should present in the entry definition. There are some
+              built-in attributes for some instance, such as `text` for
+              `Annotation` entries. `tid` should be also available for any
+              entries. The default value is `tid`.
+        - "`entry_type`": str
+              The fully qualified name of the entry to extract attributes from.
+              The default value is None, but this value must present or an
+              `ProcessorConfigError` will be thrown.
         """
         config = super().default_configs()
-        config.update({"attribute": "text"})
+        config.update(
+            {
+                "attribute": "tid",
+                "entry_type": None,
+            }
+        )
         return config
 
     @classmethod
@@ -75,22 +112,22 @@ class AttributeExtractor(BaseExtractor):
             value (Any): The value to be set for the attribute.
         """
         if attr == "text":
-            raise AttributeError(
-                "text attribute of entry cannot " "be changed."
-            )
+            raise AttributeError("text attribute of entry cannot be changed.")
         setattr(entry, attr, value)
 
-    def update_vocab(self, pack: DataPack, instance: Annotation):
-        r"""Get all attributes of one instance and
-        add them into the vocabulary.
+    def update_vocab(
+        self, pack: DataPack, context: Optional[Annotation] = None
+    ):
+        r"""Get all attributes of one instance and add them into the vocabulary.
 
         Args:
-            pack (DataPack): The datapack that contains the current
-                instance.
-            instance (Annotation): The instance from which the
-                extractor will extractor feature.
+            pack (DataPack): The data pack input to extract vocabulary.
+            context (Annotation): The context is an Annotation entry where
+                features will be extracted within its range. If None, then the
+                whole data pack will be used as the context. Default is None.
         """
-        for entry in pack.get(self._entry_type, instance):
+        entry: Entry
+        for entry in pack.get(self.config.entry_type, context):
             # The following pylint skip due to a bug:
             # https://github.com/PyCQA/pylint/issues/3507
             # Hashable is not recognized the type.
@@ -106,22 +143,27 @@ class AttributeExtractor(BaseExtractor):
                 )
             self.add(element)
 
-    def extract(self, pack: DataPack, instance: Annotation) -> Feature:
-        r"""Extract attributes of one instance.
-        For example, the text of tokens in one sentence.
+    def extract(
+        self, pack: DataPack, context: Optional[Annotation] = None
+    ) -> Feature:
+        """Extract the attribute of an entry of the configured entry type.
+        The entry type is passed in from via extractor config `entry_type`.
 
         Args:
-            pack (DataPack): The datapack that contains the current
-                instance.
-            instance (Annotation): The instance from which the
-                extractor will extractor feature.
+            pack (DataPack): The datapack that contains the current instance.
+            context (Annotation): The context is an Annotation entry where
+                features will be extracted within its range. If None, then the
+                whole data pack will be used as the context. Default is None.
 
-        Returns (Feature):
-            a feature that contains the extracted data.
+        Returns: Features (attributes) for instance with in the provided
+            context, they will be converted to the representation based on
+            the vocabulary configuration.
         """
         data = []
-        for entry in pack.get(self._entry_type, instance):
-            value = self._get_attribute(entry, self.config.attribute)
+
+        instance: Annotation
+        for instance in pack.get(self.config.entry_type, context):
+            value = self._get_attribute(instance, self.config.attribute)
             rep = self.element2repr(value) if self.vocab else value
             data.append(rep)
 
@@ -131,56 +173,61 @@ class AttributeExtractor(BaseExtractor):
             "dim": 1,
             "dtype": int if self.vocab else Any,
         }
-
         return Feature(data=data, metadata=meta_data, vocab=self.vocab)
 
-    def pre_evaluation_action(self, pack: DataPack, instance: Annotation):
+    def pre_evaluation_action(
+        self, pack: DataPack, context: Optional[Annotation]
+    ):
         r"""This function is performed on the pack before the evaluation
         stage, allowing one to perform some actions before the evaluation.
-        By default, this function will remove the attribute. You can
-        overwrite this function by yourself.
+        By default, this function will remove all attributes defined in the
+        config (set them to None). You can overwrite this function by yourself.
 
         Args:
             pack (DataPack): The datapack that contains the current
                 instance.
-            instance (Annotation): The instance from which the
-                extractor will extractor feature.
+            context (Annotation): The context is an Annotation entry where
+                data are extracted within its range. If None, then the
+                whole data pack will be used as the context. Default is None.
         """
-        for entry in pack.get(self._entry_type, instance):
+        entry: Entry
+        for entry in pack.get(self.config.entry_type, context):
             self._set_attribute(entry, self.config.attribute, None)
 
     def add_to_pack(
         self,
         pack: DataPack,
-        instance: Annotation,
-        prediction: Iterable[Union[int, Any]],
+        predictions: Iterable[SupportsInt],
+        context: Optional[Annotation] = None,
     ):
-        r"""Add the prediction for attribute to the
-        instance. If the prediction is an iterable object, we assume
-        each of the element in prediction will correspond to one entry.
-        If the prediction is only one element, then we assume there will
-        only be one entry in the instance.
-
-        Extending this class will need to handle the specific prediction data
-        types. The default implementation assume the data type is Integer.
+        r"""Add the prediction for attributes to the data pack.
+        We assume the number of predictions in the iterable to be the same as
+        the number of the entries of the defined type in the data pack.
 
         Args:
             pack (DataPack): The datapack that contains the current
                 instance.
-            instance (Annotation): The instance to which the
-                extractor add prediction.
-            prediction (Iterable[Union[int, Any]]): This is the output
-                of the model, which contains the index for attributes
-                of one instance.
+            predictions (Iterable[SupportsInt]): This is the output
+                of the model, which should be the class index for the attribute.
+            context (Optional[Annotation]): The context is an Annotation
+                entry where predictions will be added to. This has the same
+                meaning with `context` as in
+                :meth:`~forte.data.base_extractor.BaseExtractor.extract`.
+                If None, then the whole data pack will be used as the
+                context. Default is None.
         """
-        instance_entry = list(pack.get(self._entry_type, instance))
+        instance_entries: List[Entry] = list(
+            pack.get(self.config.entry_type, context)
+        )
 
         # The following pylint skip due to a bug:
         # https://github.com/PyCQA/pylint/issues/3507
         # Iterable is not recognized the type.
         # pylint: disable=isinstance-second-argument-not-valid-type
-        if not isinstance(prediction, Iterable):
-            prediction = [prediction]
-        values = [self.id2element(int(x)) for x in prediction]
-        for entry, value in zip(instance_entry, values):
+        # _predictions = predictions if isinstance(predictions, Iterable) else \
+        #     [predictions]
+        # if not isinstance(predictions, Iterable):
+        #     predictions = [predictions]
+        values = [self.id2element(int(x)) for x in predictions]
+        for entry, value in zip(instance_entries, values):
             self._set_attribute(entry, self.config.attribute, value)

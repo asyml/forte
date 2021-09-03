@@ -163,12 +163,12 @@ class SeqTaggingExtractorTest(unittest.TestCase):
                 recovered = [extractor.id2element(idx) for idx in feature._data]
                 self.assertListEqual(expected, recovered)
                 extractor.pre_evaluation_action(pack, instance)
-                extractor.add_to_pack(pack, instance, feature._data)
+                extractor.add_to_pack(pack, feature._data, instance)
             pack.add_all_remaining_entries()
 
             for instance in pack.get(Sentence):
                 extractor.pre_evaluation_action(pack, instance)
-                extractor.add_to_pack(pack, instance, invalid)
+                extractor.add_to_pack(pack, invalid, instance)
             pack.add_all_remaining_entries()
 
             for instance in pack.get(Sentence):

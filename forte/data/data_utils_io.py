@@ -70,14 +70,14 @@ def slice_batch(batch, start, length):
     r"""Return a sliced batch of size ``length`` from ``start`` in ``batch``."""
     sliced_batch: Dict = {}
 
-    for entry, fields in batch.items():
+    for batch_key, fields in batch.items():
         if isinstance(fields, dict):
-            if entry not in sliced_batch.keys():
-                sliced_batch[entry] = {}
+            if batch_key not in sliced_batch.keys():
+                sliced_batch[batch_key] = {}
             for k, value in fields.items():
-                sliced_batch[entry][k] = value[start : start + length]
+                sliced_batch[batch_key][k] = value[start : start + length]
         else:  # context level feature
-            sliced_batch[entry] = fields[start : start + length]
+            sliced_batch[batch_key] = fields[start : start + length]
 
     return sliced_batch
 
