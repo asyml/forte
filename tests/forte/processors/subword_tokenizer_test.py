@@ -56,7 +56,14 @@ class TestSubWordTokenizer(unittest.TestCase):
     )
     def test_tokenizer_auto(self, input_data):
         tokenizer = SubwordTokenizer()
-        self.pl = Pipeline[DataPack]()
+        self.pl = (
+            Pipeline[DataPack]()
+            .set_reader(StringReader())
+            .add(
+                tokenizer, config={"tokenizer_configs": {"do_lower_case": True}}
+            )
+            .initialize()
+        )
 
         # Take the vocabulary used by the tokenizer.
         self.vocab: Dict[str, str] = tokenizer.tokenizer.vocab
@@ -84,7 +91,19 @@ class TestSubWordTokenizer(unittest.TestCase):
         "Yıldız İbrahimova"
     )
     def test_tokenizer_unicode(self, input_data):
-        self.pl = Pipeline[DataPack]()
+        self.pl = (
+            Pipeline[DataPack]()
+            .set_reader(StringReader())
+            .add(WhiteSpaceTokenizer())
+            .add(
+                SubwordTokenizer(),
+                config={
+                    "tokenizer_configs": {"do_lower_case": True},
+                    "token_source": "ft.onto.base_ontology.Token",
+                },
+            )
+            .initialize()
+        )
 
         for pack in self.pl.process_dataset(input_data):
             subwords = list(pack.get(Subword))
