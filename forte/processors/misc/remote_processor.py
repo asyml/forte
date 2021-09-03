@@ -184,15 +184,11 @@ class RemoteProcessor(PackProcessor):
         Returns:
             dict: A dictionary with the default config for this processor.
         """
-        config = super().default_configs()
-        config.update(
-            {
-                "url": "http://localhost:8008",
-                "validation": {
-                    "do_init_type_check": False,
-                    "input_format": "string",
-                    "expected_name": "",
-                },
-            }
-        )
-        return config
+        return {
+            "url": "http://localhost:8008",
+            "validation": {
+                "do_init_type_check": False,
+                "input_format": "string",
+                "expected_name": "",
+            },
+        }

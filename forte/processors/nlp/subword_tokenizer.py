@@ -201,10 +201,9 @@ class SubwordTokenizer(PackProcessor):
 
         Returns: Default configuration value for the tokenizer.
         """
-        configs = super().default_configs()
-        configs.update({"tokenizer_configs": BERTTokenizer.default_hparams()})
-        configs["segment_unit"] = None
-        configs["token_source"] = "ft.onto.base_ontology.Token"
-        configs["@no_typecheck"] = ["token_source"]
-
-        return configs
+        return {
+            "tokenizer_configs": BERTTokenizer.default_hparams(),
+            "segment_unit": None,
+            "token_source": "ft.onto.base_ontology.Token",
+            "@no_typecheck": "token_source",
+        }

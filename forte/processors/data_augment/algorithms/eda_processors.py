@@ -273,27 +273,23 @@ class RandomSwapDataAugmentProcessor(ReplacementDataAugmentProcessor):
                 in a sentence that are changed. The processor will perform
                 the Random Swap operation (input length * alpha) times.
         """
-        config = super().default_configs()
-        config.update(
-            {
-                "augment_entry": "ft.onto.base_ontology.Token",
-                "other_entry_policy": {
-                    # to use Texar hyperparams 'kwargs' must
-                    # accompany with 'type'
-                    "type": "",
-                    "kwargs": {
-                        "ft.onto.base_ontology.Document": "auto_align",
-                        "ft.onto.base_ontology.Sentence": "auto_align",
-                    },
+        return {
+            "augment_entry": "ft.onto.base_ontology.Token",
+            "other_entry_policy": {
+                # to use Texar hyperparams 'kwargs' must
+                # accompany with 'type'
+                "type": "",
+                "kwargs": {
+                    "ft.onto.base_ontology.Document": "auto_align",
+                    "ft.onto.base_ontology.Sentence": "auto_align",
                 },
-                "alpha": 0.1,
-                "augment_pack_names": {
-                    "type": "",
-                    "kwargs": {"input_src": "augmented_input_src"},
-                },
-            }
-        )
-        return config
+            },
+            "alpha": 0.1,
+            "augment_pack_names": {
+                "type": "",
+                "kwargs": {"input_src": "augmented_input_src"},
+            },
+        }
 
 
 class RandomInsertionDataAugmentProcessor(ReplacementDataAugmentProcessor):

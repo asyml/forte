@@ -28,6 +28,7 @@ from typing import (
 )
 
 from forte.common import ValidationError, ProcessorConfigError
+from forte.common.configurable import Configurable
 from forte.common.configuration import Config
 from forte.data.base_pack import PackType
 from forte.data.converter import Feature
@@ -36,6 +37,7 @@ from forte.data.data_utils_io import merge_batches, batch_instances
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology.core import EntryType
 from forte.data.ontology.top import Annotation
+from forte.utils import get_class
 
 __all__ = [
     "ProcessingBatcher",
@@ -44,10 +46,8 @@ __all__ = [
     "FixedSizeMultiPackProcessingBatcher",
 ]
 
-from forte.utils import get_class
 
-
-class ProcessingBatcher(Generic[PackType]):
+class ProcessingBatcher(Generic[PackType], Configurable):
     r"""This defines the basis interface of the batcher used in
     :class:`~forte.processors.base.batch_processor.BaseBatchProcessor`. This
     Batcher only batches data sequentially. It receives new packs dynamically
@@ -72,7 +72,7 @@ class ProcessingBatcher(Generic[PackType]):
         Returns:
 
         """
-        self.configs = Config(config, self.default_configs())
+        self.configs = self.make_configs(config)
         self._cross_pack = self.configs.cross_pack
         self.current_batch.clear()
         self.data_pack_pool.clear()
@@ -417,15 +417,11 @@ class FixedSizeDataPackBatcherWithExtractor(ProcessingBatcher):
             The default configuration structure.
 
         """
-        configs = super().default_configs()
-        configs.update(
-            {
-                "context_type": None,
-                "feature_scheme": None,
-                "batch_size": 10,
-            }
-        )
-        return configs
+        return {
+            "context_type": None,
+            "feature_scheme": None,
+            "batch_size": 10,
+        }
 
 
 class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
@@ -504,16 +500,12 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
 
         Returns: The default configuration structure and default value.
         """
-        configs = super().default_configs()
-        configs.update(
-            {
-                "batch_size": 10,
-                "context_type": None,
-                "requests": {},
-                "@no_typecheck": "requests",
-            }
-        )
-        return configs
+        return {
+            "batch_size": 10,
+            "context_type": None,
+            "requests": {},
+            "@no_typecheck": "requests",
+        }
 
 
 class FixedSizeMultiPackProcessingBatcher(ProcessingBatcher[MultiPack]):
@@ -554,6 +546,4 @@ class FixedSizeMultiPackProcessingBatcher(ProcessingBatcher[MultiPack]):
 
     @classmethod
     def default_configs(cls) -> Dict:
-        configs = super().default_configs()
-        configs.update({"batch_size": 10})
-        return configs
+        return {"batch_size": 10}
