@@ -42,15 +42,14 @@ class ClassificationDatasetReader(PackReader):
             "User must set index2class to enable"
             " the dataset reader encode labels correctly"
         )
-        # set up class names
 
         # class and index
         if not self.configs.digit_label:
             # initialize class
             self.index2class = self.configs.index2class
-            self.label2index = dict(
-                [(v, k) for k, v in self.index2class.items()]
-            )
+            self.label2index = {
+                v: k for k, v in self.index2class.items()
+            }
 
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
@@ -114,11 +113,10 @@ class ClassificationDatasetReader(PackReader):
                 class_id = int(df_dict["label"])
         else:
             class_id = self.label2index[df_dict["label"]]
-        for subtext_field in subtext_indices.keys():
+        for subtext_field, (start_idx, end_idx) in subtext_indices.items():
             path_str, module_str = subtext_field.rsplit(".", 1)
             mod = importlib.import_module(path_str)  # sentence ontology module
             entry_class = getattr(mod, module_str)
-            start_idx, end_idx = subtext_indices[subtext_field]
             entry_class(pack, start_idx, end_idx)
 
         doc = Document(pack, 0, subtext_indices[subtext_fields[-1]][1])
@@ -162,9 +160,9 @@ def generate_text_n_subtext_indices(subtext_fields, data_fields_dict):
     Retrieve subtext from data fields and concatenate them into text.
     Also, we generate the indices for these subtext accordingly.
 
-    :param subtext_fields:
-    :param data_fields_dict:
-    :return:
+    :param subtext_fields: subtext names
+    :param data_fields_dict: a dictionary with subtext names as key and subtext string as value.
+    :return: a tuple of aggregated text and indices for subtext.
     """
     end = -1
     text = ""
