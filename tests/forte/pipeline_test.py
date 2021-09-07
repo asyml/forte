@@ -28,7 +28,10 @@ from forte.common import ProcessExecutionException, ProcessorConfigError
 from forte.common.configuration import merge_configs, Config
 from forte.data.base_pack import PackType
 from forte.data.base_reader import PackReader, MultiPackReader
-from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
+from forte.data.batchers import (
+    ProcessingBatcher,
+    FixedSizeRequestDataPackBatcher,
+)
 from forte.data.caster import MultiPackBoxer
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
@@ -45,7 +48,7 @@ from forte.evaluation.base import Evaluator
 from forte.pipeline import Pipeline
 from forte.processors.base import (
     PackProcessor,
-    FixedSizeBatchPackingProcessor,
+    RequestPackingProcessor,
     MultiPackProcessor,
 )
 from forte.processors.base.batch_processor import (
@@ -170,7 +173,7 @@ class MultiPackCopier(MultiPackProcessor):
         pack.set_text(input_pack.get_pack_at(0).text)
 
 
-class DummyRelationExtractor(FixedSizeBatchPackingProcessor):
+class DummyRelationExtractor(RequestPackingProcessor):
     r"""A dummy relation extractor.
 
     Note that to use :class:`DummyRelationExtractor`, the :attr:`ontology` of
@@ -180,7 +183,7 @@ class DummyRelationExtractor(FixedSizeBatchPackingProcessor):
 
     @classmethod
     def define_batcher(cls) -> ProcessingBatcher:
-        return FixedSizeDataPackBatcher()
+        return FixedSizeRequestDataPackBatcher()
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
@@ -294,7 +297,7 @@ class DummyPackProcessor(PackProcessor):
         return {"test": "test, successor"}
 
 
-class DummyFixedSizeBatchProcessor(FixedSizeBatchPackingProcessor):
+class DummyFixedSizeBatchProcessor(RequestPackingProcessor):
     def __init__(self):
         super().__init__()
         self.counter = 0
