@@ -26,7 +26,7 @@ from forte.data.data_pack import DataPack
 from forte.data.ontology import Annotation
 from forte.models.ner import utils
 from forte.models.ner.model_factory import BiRecurrentConvCRF
-from forte.processors.base.batch_processor import FixedSizeBatchPackingProcessor
+from forte.processors.base.batch_processor import RequestPackingProcessor
 from ft.onto.base_ontology import Token, EntityMention
 
 logger = logging.getLogger(__name__)
@@ -36,7 +36,7 @@ __all__ = [
 ]
 
 
-class CoNLLNERPredictor(FixedSizeBatchPackingProcessor):
+class CoNLLNERPredictor(RequestPackingProcessor):
     """
     An Named Entity Recognizer trained according to `Ma, Xuezhe, and Eduard
     Hovy. "End-to-end sequence labeling via bi-directional lstm-cnns-crf."
@@ -172,7 +172,7 @@ class CoNLLNERPredictor(FixedSizeBatchPackingProcessor):
         logger.info(f"Restoring NER model from {self.config_model.model_path}")
         self.model.load_state_dict(ckpt["model"])
 
-    def pack(  # type: ignore
+    def pack(
         self,
         pack: DataPack,
         predict_results: Dict[str, Dict[str, List[str]]],

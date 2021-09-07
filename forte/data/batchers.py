@@ -42,8 +42,9 @@ from forte.utils import get_class
 __all__ = [
     "ProcessingBatcher",
     "FixedSizeDataPackBatcherWithExtractor",
-    "FixedSizeDataPackBatcher",
+    "FixedSizeRequestDataPackBatcher",
     "FixedSizeMultiPackProcessingBatcher",
+    "FixedSizeDataPackBatcher",
 ]
 
 
@@ -142,7 +143,6 @@ class ProcessingBatcher(Generic[PackType], Configurable):
             # i.e. ``_should_yield()`` is True.
             if not self._cross_pack or self._should_yield():
                 batch_count += 1
-                print(batch_count)
                 yield (
                     self.data_pack_pool,
                     [None] * len(self.data_pack_pool),
@@ -156,14 +156,13 @@ class ProcessingBatcher(Generic[PackType], Configurable):
         self,
         data_pack: PackType,
     ) -> Iterable[Tuple[Dict, int]]:
-        r"""The abstract function that a batcher need to implement, to get data
-        based on the requests. It will yield data in the format of a
+        r"""The abstract function that a batcher need to implement, to collect
+        data from input data packs. It should yield data in the format of a
         tuple that contains the actual data points and the number of data
-        points. Each data point is in the same format returned by the
-        :meth:`~forte.data.DataPack.get_data` method.
+        points.
 
-        These data points will be collected and obtained in batches from the
-        `get_batch` method.
+        These data points will be collected and organized in batches
+        by the batcher, and can be obtained from the `get_batch` method.
 
         Args:
             data_pack: The data pack to retrieve data from.
@@ -432,14 +431,24 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
     def initialize(self, config: Config):
         super().initialize(config)
         self.batch_is_full = False
-        if self.configs.context_type is None:
-            raise ProcessorConfigError(
-                f"The 'context_type' config of {self.__class__.__name__} "
-                f"cannot be None."
-            )
 
     def _should_yield(self) -> bool:
         return self.batch_is_full
+
+    @abstractmethod
+    def _get_instance(self, data_pack: DataPack) -> Iterator[Dict[str, Any]]:
+        """
+        Get instance from the data pack. By default, this function will use
+        the `requests` in configuration to get data. One can implement this
+        function to extract data instance.
+
+        Args:
+            data_pack: The data pack to extract data from.
+
+        Returns:
+
+        """
+        raise NotImplementedError
 
     def _get_data_batch(
         self,
@@ -467,9 +476,7 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
         instances: List[Dict] = []
         current_size = sum(self.current_batch_sources)
 
-        for data in data_pack.get_data(
-            self.configs.context_type, self.configs.requests.todict()
-        ):
+        for data in self._get_instance(data_pack):
             instances.append(data)
             if len(instances) == self.configs.batch_size - current_size:
                 batch = batch_instances(instances)
@@ -490,6 +497,45 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
 
         Here:
             batch_size: the batch size, default is 10.
+
+        Returns: The default configuration structure and default value.
+        """
+        return {
+            "batch_size": 10,
+        }
+
+
+class FixedSizeRequestDataPackBatcher(FixedSizeDataPackBatcher):
+    def initialize(self, config: Config):
+        super().initialize(config)
+        if self.configs.context_type is None:
+            raise ProcessorConfigError(
+                f"The 'context_type' config of {self.__class__.__name__} "
+                f"cannot be None."
+            )
+
+    def _get_instance(self, data_pack: DataPack) -> Iterator[Dict[str, Any]]:
+        """
+        Get instance from the data pack. By default, this function will use
+        the `requests` in configuration to get data. One can implement this
+        function to extract data instance.
+
+        Args:
+            data_pack: The data pack to extract data from.
+
+        Returns:
+
+        """
+        yield from data_pack.get_data(
+            self.configs.context_type, self.configs.requests.todict()
+        )
+
+    @classmethod
+    def default_configs(cls) -> Dict:
+        """
+        The configuration of a batcher.
+
+        Here:
             context_type (str): The fully qualified name of an `Annotation`
               type, which will be used as the context to retrieve data from. For
               example, if a `ft.onto.Sentence` type is provided, then it will
@@ -501,7 +547,6 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
         Returns: The default configuration structure and default value.
         """
         return {
-            "batch_size": 10,
             "context_type": None,
             "requests": {},
             "@no_typecheck": "requests",
