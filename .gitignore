@@ -1,9 +1,5 @@
 # Created by https://www.gitignore.io/api/python
 
-## test file
-test.py
-
-
 ### Python ###
 # Byte-compiled / optimized / DLL files
 __pycache__/
