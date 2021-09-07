@@ -3,14 +3,14 @@
   "imports": [
     "base_ontology.json"
   ],
+    "additional_prefixes": [
+    "ftx.onto.race_qa"
+  ],
+
   "definitions": [
     {
-      "entry_name": "ft.onto.race_multi_choice_qa_ontology.RaceDocument",
-      "parent_entry": "ft.onto.base_ontology.Document"
-    },
-    {
-      "entry_name": "ft.onto.race_multi_choice_qa_ontology.Passage",
-      "parent_entry": "ft.onto.base_ontology.Document",
+      "entry_name": "ftx.onto.race_qa.Passage",
+      "parent_entry": "forte.data.ontology.top.Annotation",
       "attributes": [
         {
           "name": "passage_id",
@@ -19,17 +19,17 @@
       ]
     },
     {
-      "entry_name": "ft.onto.race_multi_choice_qa_ontology.Option",
+      "entry_name": "ft.onto.base_ontology.MCOption",
       "parent_entry": "forte.data.ontology.top.Annotation"
     },
     {
-      "entry_name": "ft.onto.race_multi_choice_qa_ontology.Question",
+      "entry_name": "ft.onto.base_ontology.MCQuestion",
       "parent_entry": "forte.data.ontology.top.Annotation",
       "attributes": [
         {
           "name": "options",
           "type": "List",
-          "item_type": "ft.onto.race_multi_choice_qa_ontology.Option"
+          "item_type": "ft.onto.base_ontology.MCOption"
         },
         {
           "name": "answers",
