@@ -28,7 +28,7 @@ class TestTypoReplacementOp(unittest.TestCase):
         self.tyre = TypoReplacementOp(
             configs={
                 "prob": 1.0,
-                'typo_generator': 'UniformTypoGenerator',
+                'typo_generator': 'uniform',
                 }
 )
 
