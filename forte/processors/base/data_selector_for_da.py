@@ -54,7 +54,7 @@ class BaseElasticSearchDataSelector(BaseDataSelector):
         super().initialize(resources, configs)
         self.index = create_class_with_kwargs(
             self.configs.indexer_class,
-            class_args={"config": self.configs.index_configs},
+            class_args={"config": self.configs.index_config},
         )
 
     def _create_search_key(self, data: Optional[str]) -> Dict[str, Any]:
