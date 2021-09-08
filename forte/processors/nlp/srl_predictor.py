@@ -25,7 +25,7 @@ from forte.data.data_pack import DataPack
 from forte.data.ontology import Annotation
 from forte.data.span import Span
 from forte.models.srl.model import LabeledSpanGraphNetwork
-from forte.processors.base.batch_processor import FixedSizeBatchPackingProcessor
+from forte.processors.base.batch_processor import RequestPackingProcessor
 from ft.onto.base_ontology import (
     PredicateLink,
     PredicateMention,
@@ -41,7 +41,7 @@ __all__ = [
 Prediction = List[Tuple[Span, List[Tuple[Span, str]]]]
 
 
-class SRLPredictor(FixedSizeBatchPackingProcessor):
+class SRLPredictor(RequestPackingProcessor):
     """
     An Semantic Role labeler trained according to `He, Luheng, et al.
     "Jointly predicting predicates and arguments in neural semantic role

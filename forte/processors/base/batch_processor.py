@@ -23,7 +23,7 @@ from forte.data import slice_batch, BaseExtractor
 from forte.data.base_pack import PackType
 from forte.data.batchers import (
     ProcessingBatcher,
-    FixedSizeDataPackBatcher,
+    FixedSizeRequestDataPackBatcher,
     FixedSizeDataPackBatcherWithExtractor,
 )
 from forte.data.converter import Converter
@@ -38,7 +38,8 @@ __all__ = [
     "PackingBatchProcessor",
     "Predictor",
     "MultiPackBatchProcessor",
-    "FixedSizeBatchPackingProcessor",
+    "RequestPackingProcessor",
+    "FixedSizeBatchProcessor",
 ]
 
 from forte.utils.extractor_utils import (
@@ -172,7 +173,7 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
 
 class PackingBatchProcessor(BaseBatchProcessor[PackType], ABC):
     """
-    This class extend the BaseBatchProcessor class and provide additional
+    This class extends the BaseBatchProcessor class and provide additional
     utilities to align and pack the extracted results back to the data pack.
 
     To implement this processor, one need to implement:
@@ -222,7 +223,7 @@ class PackingBatchProcessor(BaseBatchProcessor[PackType], ABC):
     def pack(
         self,
         pack: PackType,
-        predict_results: Dict[str, List[Any]],
+        predict_results: Dict[str, Any],
         context: Optional[Annotation] = None,
     ):
         r"""The function that task processors should implement. It is the
@@ -294,15 +295,11 @@ class PackingBatchProcessor(BaseBatchProcessor[PackType], ABC):
             pack_i.add_all_remaining_entries()
 
 
-class FixedSizeBatchPackingProcessor(PackingBatchProcessor[DataPack], ABC):
+class FixedSizeBatchProcessor(PackingBatchProcessor[DataPack], ABC):
     """
     A processor that implements the packing batch processor, using a fixed
     size batcher :class:`~forte.data.batchers.FixedSizeDataPackBatcher`
     """
-
-    @classmethod
-    def define_batcher(cls) -> ProcessingBatcher:
-        return FixedSizeDataPackBatcher()
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
@@ -310,8 +307,28 @@ class FixedSizeBatchPackingProcessor(PackingBatchProcessor[DataPack], ABC):
         return {
             "batcher": {
                 "batch_size": 4,
-                "context_type": None,
             },
+        }
+
+
+class RequestPackingProcessor(PackingBatchProcessor[DataPack], ABC):
+    """
+    A processor that implements the packing batch processor, using a
+    variation of the fixed size batcher
+    :class:`~forte.data.batchers.FixedSizeRequestDataPackBatcher`,
+    which will use `DataPack.get_data` function with the`context_type`
+    and `requests` parameters.
+    """
+
+    @classmethod
+    def define_batcher(cls) -> ProcessingBatcher:
+        return FixedSizeRequestDataPackBatcher()
+
+    @classmethod
+    def default_configs(cls) -> Dict[str, Any]:
+        """Defines the default configs for batching processor."""
+        return {
+            "batcher": {"batch_size": 4, "context_type": None, "requests": {}},
         }
 
 
