@@ -121,7 +121,7 @@ class SinglePackSelector(Selector[MultiPack, DataPack]):
 
     def __init__(self, 
                  configs: Optional[Union[Config, Dict[str, Any]]] = None):
-        super.__init__(configs)
+        super().__init__(configs=configs)
 
     def select(self, pack: MultiPack) -> Iterator[DataPack]:
         raise NotImplementedError
@@ -134,7 +134,7 @@ class NameMatchSelector(SinglePackSelector):
 
     def __init__(self, 
                  configs: Optional[Union[Config, Dict[str, Any]]] = None):
-        super().__init__(configs)
+        super().__init__(configs=configs)
         self.select_name = self.configs["select_name"]
         assert self.select_name is not None
 
@@ -166,7 +166,7 @@ class RegexNameMatchSelector(SinglePackSelector):
 
     def __init__(self, 
                  configs: Optional[Union[Config, Dict[str, Any]]] = None):
-        super().__init__(configs)
+        super().__init__(configs=configs)
         self.select_name = self.configs["select_name"]
         assert self.select_name is not None
 
