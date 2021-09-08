@@ -28,9 +28,9 @@ class TestTypoReplacementOp(unittest.TestCase):
         self.tyre = TypoReplacementOp(
             configs={
                 "prob": 1.0,
-                'typo_generator': 'uniform',
-                }
-)
+                "typo_generator": "uniform",
+            }
+        )
 
     def test_replace(self):
         data_pack = DataPack()
@@ -44,25 +44,10 @@ class TestTypoReplacementOp(unittest.TestCase):
 
         self.assertIn(
             self.tyre.replace(token_1)[1],
-            [
-                "auxilliary", 
-                "auxilary", 
-                "auxillary"
-            ],
+            ["auxilliary", "auxilary", "auxillary"],
         )
-        self.assertIn(
-            self.tyre.replace(token_2)[1],
-            [
-                "collegue", 
-                "colleaque"
-            ]
-        )
-        self.assertIn(
-            self.tyre.replace(token_3)[1],
-            [
-                "apple"            
-            ]
-        )
+        self.assertIn(self.tyre.replace(token_2)[1], ["collegue", "colleaque"])
+        self.assertIn(self.tyre.replace(token_3)[1], ["apple"])
 
 
 if __name__ == "__main__":

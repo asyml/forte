@@ -39,8 +39,13 @@ class UniformTypoGenerator:
         dict_path: the url or the path to the pre-defined typo json file.
             The key is a word we want to replace. The value is a list
             containing various typos of the corresponding key.
-            e.g. {"announced": ["anounced", "annouced"],
-            "annual": ["anual"], ...}
+
+            .. code-block:: python
+                {
+                    "apparent": ["aparent", "apparant"],
+                    "bankruptcy": ["bankrupcy", "banruptcy"],
+                    "barbecue": ["barbeque"]
+                }
     """
 
     def __init__(self, dict_path: str):
@@ -88,7 +93,7 @@ class TypoReplacementOp(TextReplacementOp):
                 + "temporaryJson/main/misspelling.json"
             )
         if configs["typo_generator"] == "uniform":
-            self.typoGenerator = UniformTypoGenerator(self.dict_path)
+            self.typo_generator = UniformTypoGenerator(self.dict_path)
         else:
             raise ValueError(
                 "The valid options for typo_generator are [uniform]"
@@ -108,5 +113,5 @@ class TypoReplacementOp(TextReplacementOp):
         # If the replacement does not happen, return False.
         if random.random() > self.configs.prob:
             return False, input_anno.text
-        word: str = self.typoGenerator.generate(input_anno.text)
+        word: str = self.typo_generator.generate(input_anno.text)
         return True, word
