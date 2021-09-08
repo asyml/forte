@@ -164,7 +164,9 @@ class StaveProcessor(PackProcessor):
         """
         Create default project configuration based on ontology.
         This is translated from JavaScript function `createDefaultConfig` in
-        https://github.com/asyml/stave/blob/d82383de3d74bf09c0d30f33d8a902595f5aff80/src/app/pages/Projects.tsx#L140
+        https://github.com/asyml/stave/blob
+        /d82383de3d74bf09c0d30f33d8a902595f5aff80/src/app/pages/Projects.tsx
+        #L140
 
         Returns:
             configs: A dictionary with the default config for project.
@@ -259,20 +261,14 @@ class StaveProcessor(PackProcessor):
         Returns:
             dict: A dictionary with the default config for this processor.
         """
-        config = super().default_configs()
-
-        config.update(
-            {
-                "project_path": None,
-                "port": 8888,
-                "host": "localhost",
-                "project_type": "single_pack",
-                "project_name": "Auto generated project",
-                "multi_ontology": None,
-                "project_configs": None,
-                "server_thread_daemon": False,
-                "use_pack_name": False,
-            }
-        )
-
-        return config
+        return {
+            "project_path": None,
+            "port": 8888,
+            "host": "localhost",
+            "project_type": "single_pack",
+            "project_name": "Auto generated project",
+            "multi_ontology": None,
+            "project_configs": None,
+            "server_thread_daemon": False,
+            "use_pack_name": False,
+        }

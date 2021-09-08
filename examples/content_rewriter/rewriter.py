@@ -121,6 +121,6 @@ class ContentRewriter(PackProcessor):
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
-        config = super().default_configs()
-        config["model_dir"] = "content_rewriter/model"
-        return config
+        return {
+            "model_dir": "content_rewriter/model"
+        }

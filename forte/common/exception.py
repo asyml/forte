@@ -28,6 +28,7 @@ __all__ = [
     "ResourceError",
     "ExpectedRecordNotFound",
     "InvalidOperationException",
+    "UnknownOntologyClassException",
 ]
 
 
@@ -93,6 +94,12 @@ class ExpectedRecordNotFound(ValueError):
 
 
 class InvalidOperationException(Exception):
-    """Throw when a methoc call is invalid for the object's current state"""
+    """Throw when a method call is invalid for the object's current state"""
+
+    pass
+
+
+class UnknownOntologyClassException(Exception):
+    """Throw when there are unrecognized ontology class in the input"""
 
     pass

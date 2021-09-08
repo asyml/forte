@@ -16,7 +16,7 @@ This file implements SubwordExtractor, which is used to extract feature
 from the subwords of an entry.
 """
 import logging
-from typing import Union, Dict
+from typing import Union, Dict, Optional
 
 from texar.torch.data.tokenizers.bert_tokenizer import BERTTokenizer
 from forte.common.configuration import Config
@@ -48,12 +48,10 @@ class SubwordExtractor(BaseExtractor):
             cache_dir=None,
             hparams=None,
         )
-        predifined_dict = [key for key, _ in self.tokenizer.vocab.items()]
-        self.predefined_vocab(predifined_dict)
+        predefined_dict = [key for key, _ in self.tokenizer.vocab.items()]
+        self.predefined_vocab(predefined_dict)
         if not self.vocab:
-            raise AttributeError(
-                "Vocabulary is required " "in SubwordExtractor."
-            )
+            raise AttributeError("Vocabulary is required in SubwordExtractor.")
         self.vocab.mark_special_element(self.tokenizer.vocab["[PAD]"], "PAD")
         self.vocab.mark_special_element(self.tokenizer.vocab["[UNK]"], "UNK")
 
@@ -61,30 +59,42 @@ class SubwordExtractor(BaseExtractor):
     def default_configs(cls):
         r"""Returns a dictionary of default hyper-parameters.
 
-        "pretrained_model_name": str
+        "`pretrained_model_name`": str
             The name of the pretrained bert model. Must be the same
             as used in subword tokenizer.
+        "`subword_class`" (str): the fully qualified name of the class of the
+            subword, default is `ft.onto.base_ontology.Subword`.
         """
         config = super().default_configs()
-        config.update({"pretrained_model_name": None})
+        config.update(
+            {
+                "pretrained_model_name": None,
+                "subword_class": "ft.onto.base_ontology.Subword",
+            }
+        )
         return config
 
-    def extract(self, pack: DataPack, instance: Annotation) -> Feature:
+    def extract(
+        self, pack: DataPack, context: Optional[Annotation] = None
+    ) -> Feature:
         r"""Extract the subword feature of one instance.
 
         Args:
             pack (Datapack): The datapack that contains the current
                 instance.
-            instance (Annotation): The instance from which the
-                extractor will extractor feature.
+            context (Annotation): The context is an Annotation entry where
+                features will be extracted within its range. If None, then the
+                whole data pack will be used as the context. Default is None.
 
         Returns:
             Feature: a feature that contains the extracted data.
         """
         data = []
-        for subword in pack.get(self._entry_type, instance):
-            text = subword.text
-            if not subword.is_first_segment:
+
+        subword: Annotation
+        for subword in pack.get(self.config.subword_class, context):
+            text = subword.text  # type: ignore
+            if not subword.is_first_segment:  # type: ignore
                 text = "##" + text
             data.append(self.element2repr(text))
 

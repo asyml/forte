@@ -91,7 +91,7 @@ class AttributeExtractorTest(unittest.TestCase):
 
         for pack in pipeline.process_dataset(self.dataset_path):
             for instance in pack.get(Sentence):
-                extractor.add_to_pack(pack, instance, fake_pos_ids)
+                extractor.add_to_pack(pack, fake_pos_ids, instance)
 
             for instance in pack.get(Sentence):
                 feat = extractor.extract(pack, instance)

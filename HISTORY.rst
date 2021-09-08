@@ -1,6 +1,15 @@
 =======
 History
 =======
+0.1.2
+ — — — — — — — — -
+* Simplify the Configurable interface (#517)
+* Simplify batcher and batch processing interface (#514, #522)
+* Add a DiffAligner to auto align outputs from 3rd party tools (#505)
+* Add more augmentation methods (#519, #261)
+* Fix a few examples and training interface (#507, #510, #332, #506, #338, #331)
+* Several clean up and bug fixes (#509, #496, #494, #495)
+
 0.1.1
  — — — — — — — — -
 * Implemented connection with Stave (#440).

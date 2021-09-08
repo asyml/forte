@@ -632,7 +632,7 @@ class ModuleWriter:
             # Create init file
             if not dest_path_exists or include_init:
                 init_file_path = os.path.join(temp_path, "__init__.py")
-                with open(init_file_path, "w") as init_file:
+                with open(init_file_path, "w", encoding="utf-8") as init_file:
                     init_file.write(f"# {AUTO_GEN_SIGNATURE}\n")
 
     def write(self, tempdir: str, destination: str, include_init: bool):
@@ -652,7 +652,7 @@ class ModuleWriter:
         self.make_module_dirs(tempdir, destination, include_init)
         full_path = os.path.join(tempdir, self.pkg_dir, self.file_name) + ".py"
 
-        with open(full_path, "w") as f:
+        with open(full_path, "w", encoding="utf-8") as f:
             # Write header.
             f.write(self.to_header(0))
             for entry_name, entry_item in self.entries:
@@ -763,7 +763,7 @@ class EntryTree:
             found_node.attributes = curr_entry_attr
 
     def print_traverse(self):
-        path = list()
+        path = []
         traverse(self.root, path)
 
     def collect_parents(self, node_dict: Dict[str, Set[str]]):

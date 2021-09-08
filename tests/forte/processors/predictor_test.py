@@ -16,17 +16,13 @@ import unittest
 from dataclasses import dataclass
 from typing import Optional
 
-from forte.data.converter import Converter
 from forte.data.data_pack import DataPack
-from forte.data.extractors.attribute_extractor import AttributeExtractor
-from forte.data.extractors.seqtagging_extractor import BioSeqTaggingExtractor
 from forte.data.ontology import Generics
 from forte.data.readers.conll03_reader import CoNLL03Reader
 from forte.evaluation.ner_evaluator import CoNLLNEREvaluator
 from forte.pipeline import Pipeline
 from forte.processors.base.batch_processor import Predictor
-from forte.train_preprocessor import TrainPreprocessor
-from ft.onto.base_ontology import Sentence, Token, EntityMention
+from ft.onto.base_ontology import Sentence, EntityMention
 
 FAKEOUTPUT = 2
 
@@ -83,12 +79,15 @@ class PredictorTest(unittest.TestCase):
             "attribute": "text",
         }
 
-        ner_extractor_name = "forte.data.extractors.seqtagging_extractor.BioSeqTaggingExtractor"  # pylint: disable=line-too-long
+        ner_extractor_name = (
+            "forte.data.extractors.seqtagging_extractor.BioSeqTaggingExtractor"
+        )
         ner_extractor_config = {
             "entry_type": "ft.onto.base_ontology.EntityMention",
-            "need_pad": True,
             "attribute": "ner_type",
             "tagging_unit": "ft.onto.base_ontology.Token",
+            "need_pad": True,
+            "context_type": "ft.onto.base_ontology.Sentence",
         }
 
         model = DummyModel()
@@ -97,8 +96,7 @@ class PredictorTest(unittest.TestCase):
         predictor_pipeline.set_reader(CoNLL03Reader())
 
         predictor_config = {
-            "scope": "ft.onto.base_ontology.Sentence",
-            "batch_size": 2,
+            "context_type": "ft.onto.base_ontology.Sentence",
             "feature_scheme": {
                 "text_tag": {
                     "type": "data_input",
@@ -116,6 +114,9 @@ class PredictorTest(unittest.TestCase):
                 },
             },
             "do_eval": True,
+            "batcher": {
+                "batch_size": 2,
+            },
         }
         # dummy = DummyRelationExtractor()
         # config = {"batcher": {"batch_size": 5}}
@@ -134,12 +135,11 @@ class PredictorTest(unittest.TestCase):
         ner_extractor = predictor._request["schemes"]["ner_tag"]["extractor"]
 
         for pack in pipeline.process_dataset(self.dataset_path):
-            for instance in pack.get(Sentence):
-                text_extractor.update_vocab(pack, instance)
+            text_extractor.update_vocab(pack)
 
         for pack in pipeline.process_dataset(self.dataset_path):
-            for instance in pack.get(Sentence):
-                ner_extractor.update_vocab(pack, instance)
+            ner_extractor.update_vocab(pack)
+
         expected_ners = [
             ner_extractor.id2element(FAKEOUTPUT)[0] for _ in range(30)
         ]
