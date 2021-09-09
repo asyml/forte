@@ -77,6 +77,7 @@ from forte.data.ontology.ontology_code_const import (
     hardcoded_pack_map,
     AUTO_GEN_FILENAME,
     AUTO_DEL_FILENAME,
+    RESERVED_ATTRIBUTE_NAMES,
 )
 from forte.utils.utils_io import get_resource
 
@@ -328,9 +329,17 @@ class OntologyCodeGenerator:
 
         Returns:
         """
-        base_ontology_file = open(base_ontology_module.__file__, "r")
-        tree = ast.parse(base_ontology_file.read())
-        base_ontology_file.close()
+        tree = None
+        with open(
+            base_ontology_module.__file__, "r", encoding="utf-8"
+        ) as base_ontology_file:
+            tree = ast.parse(base_ontology_file.read())
+
+        if tree is None:
+            raise RuntimeError(
+                f"Fail to load AST Tree from {base_ontology_module.__file__}"
+            )
+
         base_module_name = base_ontology_module.__name__
 
         # Record a map from the import name to the full name.
@@ -504,7 +513,7 @@ class OntologyCodeGenerator:
                 "definitions": merged_schemas,
                 "additional_prefixes": list(set(merged_prefixes)),
             }
-            with open(merged_path, "w") as out:
+            with open(merged_path, "w", encoding="utf-8") as out:
                 json.dump(merged_config, out, indent=2)
             logging.info("Done writing.")
 
@@ -565,7 +574,7 @@ class OntologyCodeGenerator:
         try:
             utils.validate_json_schema(import_path)
         except Exception as exception:
-            if type(exception).__name__.split(".")[
+            if type(exception).__name__.split(".", maxsplit=1)[
                 0
             ] == jsonschema.__name__ and hasattr(exception, "message"):
                 raise OntologySpecValidationError() from exception
@@ -616,7 +625,7 @@ class OntologyCodeGenerator:
 
         json_file_path, visited_paths, rec_visited_paths = import_info
 
-        with open(json_file_path, "r") as f:
+        with open(json_file_path, "r", encoding="utf-8") as f:
             spec_dict = json.load(f)
 
         # Parse imported ontologies. Users can import them via a path relative
@@ -889,7 +898,7 @@ class OntologyCodeGenerator:
             # delete .generated marker files and automatically generated files
             is_empty = os.path.basename(path).startswith(AUTO_GEN_FILENAME)
             if not is_empty and os.access(path, os.R_OK):
-                with open(path, "r") as f:
+                with open(path, "r", encoding="utf-8") as f:
                     lines = f.readlines()
                     if len(lines) > 0:
                         if lines[0].startswith(f"# {AUTO_GEN_SIGNATURE}"):
@@ -1011,15 +1020,25 @@ class OntologyCodeGenerator:
 
         property_items, property_names = [], []
         for prop_schema in properties:
+            # TODO: add test
+            prop_name = prop_schema["name"]
+            if prop_name in RESERVED_ATTRIBUTE_NAMES:
+                raise InvalidIdentifierException(
+                    f"The attribute name {prop_name} is reserved and cannot be "
+                    f"used, please consider changed the name. The list of "
+                    f"reserved name strings are "
+                    f"{RESERVED_ATTRIBUTE_NAMES}"
+                )
+
             property_names.append(prop_schema["name"])
             property_items.append(self.parse_property(entry_name, prop_schema))
 
         # For special classes that requires a constraint.
         core_bases: Set[str] = self.top_to_core_entries[base_entry]
         entry_constraint_keys: Dict[str, str] = {}
-        if any([item == "BaseLink" for item in core_bases]):
+        if any(item == "BaseLink" for item in core_bases):
             entry_constraint_keys = DEFAULT_CONSTRAINTS_KEYS["BaseLink"]
-        elif any([item == "BaseGroup" for item in core_bases]):
+        elif any(item == "BaseGroup" for item in core_bases):
             entry_constraint_keys = DEFAULT_CONSTRAINTS_KEYS["BaseGroup"]
 
         class_att_items: List[ClassTypeDefinition] = []

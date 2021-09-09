@@ -1,5 +1,5 @@
 import os
-from typing import List
+from typing import List, Set
 
 from string import Template
 
@@ -29,6 +29,23 @@ class SchemaKeywords:
     dict_key_type = "key_type"
     dict_value_type = "value_type"
 
+
+# Some names are used as properties by the core types, they should not be
+# reused by attributes.
+RESERVED_ATTRIBUTE_NAMES: Set[str] = {
+    "text",
+    "span",
+    "begin",
+    "end",
+    "index_key",
+    "parent",
+    "child",
+    "embedding",
+    "tid",
+    "pack",
+    "pack_id",
+    "index_key",
+}
 
 REQUIRED_IMPORTS: List[str] = ["typing"]
 

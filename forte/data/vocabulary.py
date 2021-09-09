@@ -376,7 +376,7 @@ class Vocabulary(Generic[ElementType]):
         return self._id2element[idx]
 
     def element2repr(
-        self, element: Union[ElementType, str]
+        self, element: Union[ElementType, Any]
     ) -> Union[int, List[int]]:
         r"""This function will map element to representation.
 
@@ -413,6 +413,19 @@ class Vocabulary(Generic[ElementType]):
                 f" not have a customized representation, and the representation"
                 f" method [{self.method}] is not supported."
             )
+
+    def to_dict(self) -> Dict[ElementType, Any]:
+        """
+        Create a dictionary from the vocabulary storing all the known elements.
+
+        Returns: The vocabulary as a Dict from ElementType to the
+          representation of the element (could be Integer or One-hot vector,
+          depending on the settings of this class).
+        """
+        vocab_dict: Dict[ElementType, Any] = {}
+        for element in self._element2id:
+            vocab_dict[element] = self.element2repr(element)
+        return vocab_dict
 
     def _one_hot(self, idx: int):
         """Compute the one-hot encoding on the fly."""

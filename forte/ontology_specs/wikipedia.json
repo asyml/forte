@@ -85,6 +85,17 @@
           "type": "str"
         }
       ]
+    },
+    {
+      "entry_name": "ft.onto.wikipedia.WikiCategory",
+      "parent_entry": "forte.data.ontology.top.Generics",
+      "attributes": [
+        {
+          "name": "values",
+          "type": "List",
+          "item_type": "str"
+        }
+      ]
     }
   ]
 }

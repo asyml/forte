@@ -16,3 +16,4 @@ from forte.data.extractors.attribute_extractor import *
 from forte.data.extractors.char_extractor import *
 from forte.data.extractors.seqtagging_extractor import *
 from forte.data.extractors.subword_extractor import *
+from forte.data.extractors.relation_extractor import *

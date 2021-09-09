@@ -70,19 +70,14 @@ class BertRerankingProcessor(MultiPackProcessor):
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
-        configs = super().default_configs()
-        pretrained_model_name = "bert-large-uncased"
-        configs.update(
-            {
-                "size": 5,
-                "query_pack_name": "query",
-                "field": "content",
-                "pretrained_model_name": pretrained_model_name,
-                "model_dir": os.path.join(os.path.dirname(__file__), "models"),
-                "max_seq_length": 512,
-            }
-        )
-        return configs
+        return {
+            "size": 5,
+            "query_pack_name": "query",
+            "field": "content",
+            "pretrained_model_name": "bert-large-uncased",
+            "model_dir": os.path.join(os.path.dirname(__file__), "models"),
+            "max_seq_length": 512,
+        }
 
     def _process(self, input_pack: MultiPack):
         max_len = self.config.max_seq_length

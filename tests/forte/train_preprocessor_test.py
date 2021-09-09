@@ -78,7 +78,7 @@ class TrainPreprocessorTest(unittest.TestCase):
         }
 
         self.tp_request = {
-            "scope": "ft.onto.base_ontology.Sentence",
+            "context_type": "ft.onto.base_ontology.Sentence",
             "feature_scheme": {
                 "text_tag": {
                     "type": "data_input",
@@ -125,7 +125,7 @@ class TrainPreprocessorTest(unittest.TestCase):
 
     def test_parse_request(self):
         self.assertTrue(self.train_preprocessor.request is not None)
-        self.assertTrue("scope" in self.train_preprocessor.request)
+        self.assertTrue("context_type" in self.train_preprocessor.request)
         self.assertTrue("schemes" in self.train_preprocessor.request)
 
         self.assertTrue(len(self.train_preprocessor.request["schemes"]), 3)

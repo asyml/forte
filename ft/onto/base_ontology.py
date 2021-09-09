@@ -1,5 +1,5 @@
 # ***automatically_generated***
-# ***source json:../../../../../../Documents/forte_develop/forte/forte/ontology_specs/base_ontology.json***
+# ***source json:forte/ontology_specs/base_ontology.json***
 # flake8: noqa
 # mypy: ignore-errors
 # pylint: skip-file
@@ -46,6 +46,8 @@ __all__ = [
     "CrossDocEventRelation",
     "ConstituentNode",
     "Title",
+    "MCOption",
+    "MCQuestion",
 ]
 
 
@@ -94,13 +96,19 @@ class Subword(Annotation):
     Used to represent subword tokenization results.
     Attributes:
         is_first_segment (Optional[bool]):
+        is_unk (Optional[bool]):
+        vocab_id (Optional[int]):
     """
 
     is_first_segment: Optional[bool]
+    is_unk: Optional[bool]
+    vocab_id: Optional[int]
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self.is_first_segment: Optional[bool] = None
+        self.is_unk: Optional[bool] = None
+        self.vocab_id: Optional[int] = None
 
 
 @dataclass
@@ -461,3 +469,27 @@ class Title(Annotation):
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
+
+
+@dataclass
+class MCOption(Annotation):
+
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
+
+
+@dataclass
+class MCQuestion(Annotation):
+    """
+    Attributes:
+        options (FList[MCOption]):
+        answers (List[int]):
+    """
+
+    options: FList[MCOption]
+    answers: List[int]
+
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
+        self.options: FList[MCOption] = FList(self)
+        self.answers: List[int] = []
