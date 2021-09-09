@@ -3,9 +3,12 @@
     "imports": [
       "base_ontology.json"
     ],
+    "additional_prefixes": [
+        "ftx"
+    ],
     "definitions": [
       {
-        "entry_name": "ft.onto.ag_news.Description",
+        "entry_name": "ftx.onto.ag_news.Description",
         "parent_entry": "forte.data.ontology.top.Annotation"
       }
     ]
