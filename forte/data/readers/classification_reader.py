@@ -58,7 +58,8 @@ class ClassificationDatasetReader(PackReader):
      "ft.onto.ag_news.Description"]
     And we want both Title and Description to be included in input string, so we define
     subtext fields = [ "ft.onto.base_ontology.Title",  "ft.onto.ag_news.Description"].
-    To see a full example, please refer to [link_to_example]
+    To see a full example, please refer to
+    https://github.com/asyml/forte/examples/classification
     """
 
     def __init__(self):
