@@ -399,12 +399,15 @@ class Pipeline(Generic[PackType]):
                     ),
                     "selector": {
                         "type": get_full_module_name(selector),
-                        "kwargs": test_jsonable(
-                            # pylint: disable=protected-access
-                            test_dict=selector._stored_kwargs,
-                            # pylint: enable=protected-access
-                            err_msg=get_err_msg["selector"](selector),
-                        ),
+                        "kwargs": {
+                            "configs":
+                                test_jsonable(
+                                    # pylint: disable=protected-access
+                                    test_dict=selector.configs.todict(),
+                                    # pylint: enable=protected-access
+                                    err_msg=get_err_msg["selector"](selector),
+                            )
+                        }
                     },
                 }
             )

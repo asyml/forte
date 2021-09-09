@@ -34,6 +34,7 @@ from forte.data.ontology.code_generation_objects import EntryTreeNode
 from ft.onto.base_ontology import Utterance
 from forte.data.ontology.top import Generics
 
+
 TEST_RECORDS_1 = {
     "Token": {"1", "2"},
     "Document": {"2"},
@@ -54,7 +55,9 @@ class UserSimulator(PackProcessor):
 
     @classmethod
     def default_configs(cls):
-        return {"user_input": ""}
+        config = super().default_configs()
+        config["user_input"] = ""
+        return config
 
 
 class DummyMultiPackReader(MultiPackReader):
@@ -187,7 +190,11 @@ class AdvancedPipelineTest(unittest.TestCase):
         pl.set_reader(DummyMultiPackReader())
         pl.add(
             DummyProcessor(),
-            selector=RegexNameMatchSelector(select_name="^.*\\d$"),
+            selector=RegexNameMatchSelector(
+                configs={
+                    "select_name": "^.*\\d$"
+                }
+            )
         )
         pl.save(self._pl_config_path)
 

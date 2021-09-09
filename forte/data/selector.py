@@ -15,10 +15,12 @@
 This defines some selector interface used as glue to combine
 DataPack/multiPack processors and Pipeline.
 """
-from typing import Generic, Iterator, TypeVar
+from typing import Generic, Iterator, TypeVar, Optional, Union, Dict, Any
 
 import re
 
+from forte.common.configuration import Config
+from forte.common.configurable import Configurable
 from forte.data.base_pack import BasePack
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
@@ -37,9 +39,10 @@ __all__ = [
 ]
 
 
-class Selector(Generic[InputPackType, OutputPackType]):
-    def __init__(self, **kwargs):
-        self._stored_kwargs = kwargs
+class Selector(Generic[InputPackType, OutputPackType], Configurable):
+    def __init__(self,
+                 configs: Optional[Union[Config, Dict[str, Any]]] = None):
+        self.configs = self.make_configs(configs)
 
     def select(self, pack: InputPackType) -> Iterator[OutputPackType]:
         raise NotImplementedError
@@ -66,12 +69,32 @@ class SinglePackSelector(Selector[MultiPack, DataPack]):
 class NameMatchSelector(SinglePackSelector):
     r"""Select a :class:`DataPack` from a :class:`MultiPack` with specified
     name.
+
+    This implementation takes special care for backward compatability:
+    Deprecated:
+        selector = NameMatchSelector(select_name="foo")
+        selector = NameMatchSelector("foo")
+    Now:
+        selector = NameMatchSelector(
+            configs={
+                "select_name": "foo"
+            }
+        )
     """
 
-    def __init__(self, select_name: str):
-        super().__init__(select_name=select_name)
-        assert select_name is not None
-        self.select_name: str = select_name
+    def __init__(self, *args, **kwargs):
+        assert (len(args) == 0) ^ (len(kwargs) == 0)
+        if args:
+            configs = {"select_name": args[0]}
+        else:
+            assert ("configs" in kwargs) or ("select_name" in kwargs)
+            if "select_name" in kwargs:
+                configs = {"select_name": kwargs["select_name"]}
+            else:
+                configs = kwargs["configs"]
+        super().__init__(configs=configs)
+        self.select_name = self.configs["select_name"]
+        assert self.select_name is not None
 
     def select(self, m_pack: MultiPack) -> Iterator[DataPack]:
         matches = 0
@@ -85,14 +108,39 @@ class NameMatchSelector(SinglePackSelector):
                 f"Pack name {self.select_name}" f" not in the MultiPack"
             )
 
+    @classmethod
+    def default_configs(cls):
+        return {"select_name": None}
+
 
 class RegexNameMatchSelector(SinglePackSelector):
-    r"""Select a :class:`DataPack` from a :class:`MultiPack` using a regex."""
+    r"""Select a :class:`DataPack` from a :class:`MultiPack` using a regex.
 
-    def __init__(self, select_name: str):
-        super().__init__(select_name=select_name)
-        assert select_name is not None
-        self.select_name: str = select_name
+    This implementation takes special care for backward compatability:
+    Deprecated:
+        selector = RegexNameMatchSelector(select_name="^.*\\d$")
+        selector = RegexNameMatchSelector("^.*\\d$")
+    Now:
+        selector = RegexNameMatchSelector(
+            configs={
+                "select_name": "^.*\\d$"
+            }
+        )
+    """
+
+    def __init__(self, *args, **kwargs):
+        assert (len(args) == 0) ^ (len(kwargs) == 0)
+        if args:
+            configs = {"select_name": args[0]}
+        else:
+            assert ("configs" in kwargs) or ("select_name" in kwargs)
+            if "select_name" in kwargs:
+                configs = {"select_name": kwargs["select_name"]}
+            else:
+                configs = kwargs["configs"]
+        super().__init__(configs=configs)
+        self.select_name = self.configs["select_name"]
+        assert self.select_name is not None
 
     def select(self, m_pack: MultiPack) -> Iterator[DataPack]:
         if len(m_pack.packs) == 0:
@@ -101,6 +149,10 @@ class RegexNameMatchSelector(SinglePackSelector):
             for name, pack in m_pack.iter_packs():
                 if re.match(self.select_name, name):
                     yield pack
+
+    @classmethod
+    def default_configs(cls):
+        return {"select_name": None}
 
 
 class FirstPackSelector(SinglePackSelector):
