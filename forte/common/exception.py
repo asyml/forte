@@ -20,7 +20,6 @@ __all__ = [
     "IncompleteEntryError",
     "EntryNotFoundError",
     "ProcessorConfigError",
-    "SelectorConfigError",
     "PackDataException",
     "ProcessFlowException",
     "ProcessExecutionException",
@@ -62,11 +61,6 @@ class ResourceError(ValueError):
     """
     pass
 
-class SelectorConfigError(ValueError):
-    r"""Raise this error when the there is a problem with the processor
-    configuration.
-    """
-    pass
 
 class PackDataException(Exception):
     r"""Raise this error when the data in pack is wrong."""

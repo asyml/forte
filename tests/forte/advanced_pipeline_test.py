@@ -34,6 +34,7 @@ from forte.data.ontology.code_generation_objects import EntryTreeNode
 from ft.onto.base_ontology import Utterance
 from forte.data.ontology.top import Generics
 
+
 TEST_RECORDS_1 = {
     "Token": {"1", "2"},
     "Document": {"2"},
@@ -54,7 +55,9 @@ class UserSimulator(PackProcessor):
 
     @classmethod
     def default_configs(cls):
-        return {"user_input": ""}
+        config = super().default_configs()
+        config["user_input"] = ""
+        return config
 
 
 class DummyMultiPackReader(MultiPackReader):
@@ -75,7 +78,7 @@ class DummyMultiPackReader(MultiPackReader):
 
 class DummyProcessor(PackProcessor):
     """
-    A dummy Processor to check the expected/output records from the remote
+    A dummpy Processor to check the expected/output records from the remote
     pipeline.
     """
 
