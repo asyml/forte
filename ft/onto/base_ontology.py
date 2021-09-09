@@ -46,6 +46,8 @@ __all__ = [
     "CrossDocEventRelation",
     "ConstituentNode",
     "Title",
+    "MCOption",
+    "MCQuestion",
 ]
 
 
@@ -467,3 +469,27 @@ class Title(Annotation):
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
+
+
+@dataclass
+class MCOption(Annotation):
+
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
+
+
+@dataclass
+class MCQuestion(Annotation):
+    """
+    Attributes:
+        options (FList[MCOption]):
+        answers (List[int]):
+    """
+
+    options: FList[MCOption]
+    answers: List[int]
+
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
+        self.options: FList[MCOption] = FList(self)
+        self.answers: List[int] = []

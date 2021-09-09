@@ -373,8 +373,8 @@ class Pipeline(Generic[PackType]):
 
         configs: Dict = {
             "forte_ir_version": FORTE_IR_VERSION,
-            "components": list(),
-            "states": dict(),
+            "components": [],
+            "states": {},
         }
 
         # Serialize pipeline components
@@ -425,7 +425,7 @@ class Pipeline(Generic[PackType]):
                     )
                     if hasattr(self, attr)
                 },
-                "resource": dict(),
+                "resource": {},
             }
         )
         if self.resource.contains("onto_specs_dict"):

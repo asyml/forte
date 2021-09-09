@@ -48,7 +48,7 @@ setuptools.setup(
         "wikipedia": ["rdflib==4.2.2"],
         # transformers 4.10.0 will break the translation model we used here
         "augment": ["transformers>=3.1, <=4.9.2", "nltk"],
-        "stave": ["stave==0.0.1.dev12"],
+        "stave": ["stave>=0.0.1.dev12"],
     },
     entry_points={
         "console_scripts": [
