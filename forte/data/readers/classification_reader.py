@@ -164,7 +164,8 @@ class ClassificationDatasetReader(PackReader):
         else:
             # decode string label from dataset into digit label
             class_id = self._class2index[df_dict["label"]]
-        # initialize all subtexts instances as data pack module to add corresponding variables and functions
+        # initialize all subtexts instances as data pack module
+        # to add corresponding variables and functions
         for subtext_field, (start_idx, end_idx) in subtext_indices.items():
             path_str, module_str = subtext_field.rsplit(".", 1)
             mod = importlib.import_module(path_str)  # sentence ontology module
