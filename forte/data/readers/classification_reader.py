@@ -41,17 +41,21 @@ class ClassificationDatasetReader(PackReader):
     Data fields is a list of ontology paths representing data fields in the dataset.
     They must have the same length and align with each other.
     Subtext fields is also a list of ontology paths that represent data fields that
-    will be concatenated into input strings in the same order as the list.
-    It's not necessary to have the same length as the data fields though.
+     will be concatenated into input strings in the same order as the list.
+    User can select an arbitrary sequence of subtexts to concatenate
+     as long as there is at least one subtext in the sequence.
+     The number and the order of subtext can be customized depending on the use cases.
 
 
 
     The first line of dataset usually specifies column names of data fields,
     and the user needs to write a list of data ontology paths.
-    For example, in Amazon review sentiment dataset, the first line specifies [content, label, title].
+    For example, in Amazon review sentiment dataset, the first line specifies [content, label,
+     title].
     By checking the actual data, except for label, we must find their corresponding ontology names
     and its relative path in the given or customized ontology.
-    Here we define data_fields = ["label", "ft.onto.base_ontology.Title",  "ft.onto.ag_news.Description"]
+    Here we define data_fields = ["label", "ft.onto.base_ontology.Title",
+     "ft.onto.ag_news.Description"]
     And we want both Title and Description to be included in input string, so we define
     subtext fields = [ "ft.onto.base_ontology.Title",  "ft.onto.ag_news.Description"].
     To see a full example, please refer to [link_to_example]
@@ -81,7 +85,8 @@ class ClassificationDatasetReader(PackReader):
             raise ProcessorConfigError("There must be data field named 'label' in reader config.")
 
         if not self.configs.subtext_fields:
-            raise ProcessorConfigError("There must be at least one subtext field to reader to select from")
+            raise ProcessorConfigError("There must be at least one subtext field " +
+                                       "to reader to select from.")
 
         if not set(self.configs.subtext_fields).issubset(set(self.configs.data_fields)):
             raise ProcessorConfigError("subtext fields must be a subset of data fields")
@@ -89,12 +94,12 @@ class ClassificationDatasetReader(PackReader):
     def _collect(self, csv_file: str) -> Iterator[Tuple[int, str]]:
         with open(csv_file, encoding="utf-8") as f:
             data = csv.reader(f, delimiter=",", quoting=csv.QUOTE_ALL)
-            if self.config.skip_first_line:
+            if self.configs.skip_first_line:
                 next(data)
             for line_id, line in enumerate(data):
                 yield line_id, line
 
-    def _cache_key_function(self, line_info: Tuple[int, str]) -> str:
+    def _cache_key_function(self, line_info: Tuple[int, List[str]]) -> str:
         return str(line_info[0])
 
     def _parse_pack(self, line_info: Tuple[int, List[str]]) -> Iterator[DataPack]:

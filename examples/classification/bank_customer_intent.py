@@ -3,7 +3,7 @@ from termcolor import colored
 
 from forte import Pipeline
 from forte.data.readers import ClassificationDatasetReader
-from forte.huggingface import ZeroShotClassifier
+from fortex.huggingface import ZeroShotClassifier
 from forte.common.configuration import Config
 from forte.nltk import NLTKWordTokenizer, NLTKSentenceSegmenter
 from ft.onto.base_ontology import Sentence
@@ -127,11 +127,12 @@ pl.initialize()
 for pack in pl.process_dataset(csv_path):
     for sentence in pack.get(Sentence):
         if (
-            input("Type n for the next sentence and its prediction").lower()
+            input("Type n for the next sentence and its prediction: ").lower()
             == "n"
         ):
             sent_text = sentence.text
             print(colored("Sentence:", "red"), sent_text, "\n")
             print(colored("Prediction:", "blue"), sentence.classification)
         else:
+            print("Exit the program due to unrecognized input")
             sys.exit()
