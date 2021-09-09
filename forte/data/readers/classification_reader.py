@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+# mypy: ignore-errors
 import csv
 import importlib
 from typing import Iterator, Tuple, List
@@ -44,7 +44,7 @@ class ClassificationDatasetReader(PackReader):
      will be concatenated into input strings in the same order as the list.
     User can select an arbitrary sequence of subtexts to concatenate
      as long as there is at least one subtext in the sequence.
-     The number and the order of subtext can be customized depending on the use cases.
+     The number and the order of subtexts can be customized depending on the use cases.
 
 
 
@@ -149,7 +149,7 @@ class ClassificationDatasetReader(PackReader):
         else:
             # decode string label from dataset into digit label
             class_id = self._class2index[df_dict["label"]]
-        # initialize all subtexts as data pack module to add corresponding variables and functions
+        # initialize all subtexts instances as data pack module to add corresponding variables and functions
         for subtext_field, (start_idx, end_idx) in subtext_indices.items():
             path_str, module_str = subtext_field.rsplit(".", 1)
             mod = importlib.import_module(path_str)  # sentence ontology module
@@ -193,7 +193,7 @@ class ClassificationDatasetReader(PackReader):
 
 def generate_text_n_subtext_indices(subtext_fields, data_fields_dict):
     """
-    Retrieve subtext from data fields and concatenate them into text.
+    Retrieve subtexts from data fields and concatenate them into text.
     Also, we generate the indices for these subtexts accordingly.
 
     Args:
