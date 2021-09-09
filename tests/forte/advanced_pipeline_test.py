@@ -78,7 +78,7 @@ class DummyMultiPackReader(MultiPackReader):
 
 class DummyProcessor(PackProcessor):
     """
-    A dummpy Processor to check the expected/output records from the remote
+    A dummy Processor to check the expected/output records from the remote
     pipeline.
     """
 
