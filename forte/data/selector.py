@@ -40,8 +40,7 @@ __all__ = [
 
 
 class Selector(Generic[InputPackType, OutputPackType], Configurable):
-    def __init__(self,
-                 configs: Optional[Union[Config, Dict[str, Any]]] = None):
+    def __init__(self, configs: Optional[Union[Config, Dict[str, Any]]] = None):
         self.configs = self.make_configs(configs)
 
     def select(self, pack: InputPackType) -> Iterator[OutputPackType]:

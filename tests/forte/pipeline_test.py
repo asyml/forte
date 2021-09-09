@@ -1321,7 +1321,7 @@ class RecordCheckPipelineTest(unittest.TestCase):
                 configs={
                     "select_name": "copy"
                 }
-            )               
+            )
         )
         nlp.initialize()
 
