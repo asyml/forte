@@ -3,7 +3,7 @@
   "imports": [
     "base_ontology.json"
   ],
-    "additional_prefixes": [
+  "additional_prefixes": [
     "ftx.onto.race_qa"
   ],
 
