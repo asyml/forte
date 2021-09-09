@@ -4,13 +4,15 @@ on:
   push: 
     tags:
       - v*
-  # Only trigger this workflow manually from the Actions tab
+  # Trigger this workflow manually from the Actions tab
   workflow_dispatch:
   
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # Run deploy only on main repo.
+    if: github.repository == ‘asyml/forte’
     env:
       python-version: 3.7
     steps:
