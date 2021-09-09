@@ -14,9 +14,9 @@
 
 import csv
 import importlib
-from typing import Iterator, Tuple
+from typing import Iterator, Tuple, List
 from collections import OrderedDict
-from forte.common import Resources
+from forte.common import Resources, ProcessorConfigError
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.data.base_reader import PackReader
@@ -28,61 +28,87 @@ __all__ = ["ClassificationDatasetReader"]
 
 class ClassificationDatasetReader(PackReader):
     r"""
-    A generic dataset reader class for classification datasets.
+    A generic dataset reader class for classification dataset. In general, it works with any classification tasks that
+    require concatenating a sequence of strings from dataset and predicting a class.
 
+
+    The user must specify the index2label mapping, data fields and subtext fields and other parameters in configs
+    based on their tasks in order to initialize the dataset reader properly.
+    Index2label mapping is a dictionary with index as key and string label as values, it helps encode and decode string
+    labels.
+    Data fields is a list of ontology paths representing data fields in the dataset. They must have the same length
+    and align with each other.
+    Subtext fields is also a list of ontology paths that represent data fields that will be concatenated
+    into input strings in the same order as the list. It's not necessary to
+    have the same length as the data fields though.
+
+
+
+    The first line of dataset usually specify column names of data fields, and the user needs to write a list of data
+    ontology paths.
+    For example, in Amazon review sentiment dataset, the first line specifies [content, label, title].
+    By checking the actual data, except for label, we must find their corresponding ontology names
+    and its relative path in the given or custom ontology.
+    Here we define data_fields = ["label", "ft.onto.base_ontology.Title",  "ft.onto.ag_news.Description"]
+    And we want both Title and Description to be included in input string, so we define
+    subtext fields = [ "ft.onto.base_ontology.Title",  "ft.onto.ag_news.Description"].
+    To see a full example, please refer to [link_to_example]
     """
 
     def __init__(self):
         super().__init__()
-        self.index2class = None
-        self.label2index = None
+        self._index2class = None
+        self._class2index = None
 
     def set_up(self):
         assert self.configs.index2class is not None, (
-            "User must set index2class to enable"
-            " the dataset reader encode labels correctly"
+            "User must set _index2class to enable"
+            " the dataset reader to encode labels correctly"
         )
 
         # class and index
         if not self.configs.digit_label:
             # initialize class
-            self.index2class = self.configs.index2class
-            self.label2index = {
-                v: k for k, v in self.index2class.items()
-            }
+            self._index2class = self.configs.index2class
+            self._class2index = {v: k for k, v in self._index2class.items()}
 
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
         self.set_up()
+        if "label" not in self.configs.data_fields:
+            raise ProcessorConfigError("There must be data field named 'label' in reader config.")
+
+        if len(self.configs.subtext_fields) == 0:
+            raise ProcessorConfigError("There must be at least one subtext to reader to select from")
+
+        if not set(self.configs.subtext_fields).issubset(set(self.configs.data_fields)):
+            raise ProcessorConfigError("subtext fields must be a subset of data fields")
 
     def _collect(self, csv_file: str) -> Iterator[Tuple[int, str]]:
         with open(csv_file, encoding="utf-8") as f:
             data = csv.reader(f, delimiter=",", quoting=csv.QUOTE_ALL)
-            next(data)
+            if self.config.skip_first_line:
+                next(data)
             for line_id, line in enumerate(data):
                 yield line_id, line
 
     def _cache_key_function(self, line_info: Tuple[int, str]) -> str:
         return str(line_info[0])
 
-    def _parse_pack(self, line_info: Tuple[int, str]) -> Iterator[DataPack]:
+    def _parse_pack(self, line_info: Tuple[int, List[str]]) -> Iterator[DataPack]:
         line_id, line = line_info
         # content label title
         pack = DataPack()
 
         # subtext fields must follow the ontology names
         data_fields = self.configs.data_fields
-        assert (
-            "label" in data_fields
-        ), "There must be label data field in reader config."
+
         assert len(self.configs.data_fields) == len(line), (
             "Data fields provided in config "
-            "is not aligned with the actual line info from dataset."
-            + str((data_fields, line))
+            "is not aligned with the actual line info from dataset.\n"
+            "Data fields length: " + str(len(self.configs.data_fields)) + "\n",
+            "Line length: " + str(len(line))
         )
-        assert (
-            len(self.configs.subtext_fields) > 0
-        ), "There must be at least one subtext to reader to select from"
 
         df_dict = OrderedDict()
         for df, value in zip(data_fields, line):
@@ -92,19 +118,16 @@ class ClassificationDatasetReader(PackReader):
 
         # it determines the order of concatenation
         subtext_fields = self.configs.subtext_fields
-        # get text and subtext indices
-        assert set(self.configs.subtext_fields).issubset(
-            set(self.configs.data_fields)
-        ), "subtext fields must be a subset of data fields"
 
+        # get text and subtext indices
         text, subtext_indices = generate_text_n_subtext_indices(
             subtext_fields, df_dict
         )
-        pack.set_text(text, replace_func=self.text_replace_operation)
+        self.set_text(pack, text)
         assert df_dict["label"].isdigit() == self.configs.digit_label, (
             "Label format from dataset"
             " is not consistent with the label format from"
-            " configs"
+            " configs."
         )
         if self.configs.digit_label:
             if self.configs.one_based_index_label:
@@ -112,7 +135,7 @@ class ClassificationDatasetReader(PackReader):
             else:
                 class_id = int(df_dict["label"])
         else:
-            class_id = self.label2index[df_dict["label"]]
+            class_id = self._class2index[df_dict["label"]]
         for subtext_field, (start_idx, end_idx) in subtext_indices.items():
             path_str, module_str = subtext_field.rsplit(".", 1)
             mod = importlib.import_module(path_str)  # sentence ontology module
@@ -122,9 +145,7 @@ class ClassificationDatasetReader(PackReader):
         doc = Document(pack, 0, subtext_indices[subtext_fields[-1]][1])
         doc.document_class = [
             self.configs.index2class[class_id]
-        ]  # takes names rather than id
-        # TODO: add labels in document_class
-        # TODO: some datasets have two sets of labels, but it should be controlled by the user
+        ]
 
         pack.pack_name = line_id
         yield pack
@@ -150,6 +171,7 @@ class ClassificationDatasetReader(PackReader):
                 "text_label": False,  # either digit label or text label
                 "one_based_index_label": True,
                 # if it's digit label, whether it's one-based so that reader can adjust it
+                "skip_first_line": True
             }
         )
         return config
@@ -160,9 +182,9 @@ def generate_text_n_subtext_indices(subtext_fields, data_fields_dict):
     Retrieve subtext from data fields and concatenate them into text.
     Also, we generate the indices for these subtext accordingly.
 
-    :param subtext_fields: subtext names
-    :param data_fields_dict: a dictionary with subtext names as key and subtext string as value.
-    :return: a tuple of aggregated text and indices for subtext.
+    Args:
+        subtext_fields: a list of ontology that needs to be concatenated into a input string
+        data_fields_dict: a dictionary with subtext names as key and subtext string as value.
     """
     end = -1
     text = ""
