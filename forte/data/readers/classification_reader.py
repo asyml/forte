@@ -83,14 +83,22 @@ class ClassificationDatasetReader(PackReader):
         super().initialize(resources, configs)
         self.set_up()
         if "label" not in self.configs.data_fields:
-            raise ProcessorConfigError("There must be data field named 'label' in reader config.")
+            raise ProcessorConfigError(
+                "There must be data field named 'label' in reader config."
+            )
 
         if not self.configs.subtext_fields:
-            raise ProcessorConfigError("There must be at least one subtext field " +
-                                       "to reader to select from.")
+            raise ProcessorConfigError(
+                "There must be at least one subtext field "
+                + "to reader to select from."
+            )
 
-        if not set(self.configs.subtext_fields).issubset(set(self.configs.data_fields)):
-            raise ProcessorConfigError("subtext fields must be a subset of data fields")
+        if not set(self.configs.subtext_fields).issubset(
+            set(self.configs.data_fields)
+        ):
+            raise ProcessorConfigError(
+                "subtext fields must be a subset of data fields"
+            )
 
     def _collect(self, csv_file: str) -> Iterator[Tuple[int, str]]:
         with open(csv_file, encoding="utf-8") as f:
@@ -103,7 +111,9 @@ class ClassificationDatasetReader(PackReader):
     def _cache_key_function(self, line_info: Tuple[int, List[str]]) -> str:
         return str(line_info[0])
 
-    def _parse_pack(self, line_info: Tuple[int, List[str]]) -> Iterator[DataPack]:
+    def _parse_pack(
+        self, line_info: Tuple[int, List[str]]
+    ) -> Iterator[DataPack]:
         line_id, line = line_info
         # content label title
         pack = DataPack()
@@ -115,8 +125,10 @@ class ClassificationDatasetReader(PackReader):
             raise ProcessorConfigError(
                 "Data fields provided in config "
                 "is not aligned with the actual line info from dataset.\n"
-                "Data fields length: " + str(len(self.configs.data_fields)) + "\n",
-                "Line length: " + str(len(line))
+                "Data fields length: "
+                + str(len(self.configs.data_fields))
+                + "\n",
+                "Line length: " + str(len(line)),
             )
 
         df_dict = OrderedDict()
@@ -136,8 +148,10 @@ class ClassificationDatasetReader(PackReader):
         if df_dict["label"].isdigit() != self.configs.digit_label:
             raise ProcessorConfigError(
                 "Label format from dataset "
-                "is not consistent with the label format from configs. \n" +
-                "dataset digit label status: " + str(df_dict["label"].isdigit()) + "\n"
+                "is not consistent with the label format from configs. \n"
+                + "dataset digit label status: "
+                + str(df_dict["label"].isdigit())
+                + "\n"
                 "config digit label status: " + str(self.configs.digit_label)
             )
 
@@ -158,9 +172,7 @@ class ClassificationDatasetReader(PackReader):
             entry_class(pack, start_idx, end_idx)
         # for now, we use document to store concatenated text and set the class here
         doc = Document(pack, 0, subtext_indices[subtext_fields[-1]][1])
-        doc.document_class = [
-            self.configs.index2class[class_id]
-        ]
+        doc.document_class = [self.configs.index2class[class_id]]
 
         pack.pack_name = line_id
         yield pack
@@ -186,7 +198,7 @@ class ClassificationDatasetReader(PackReader):
                 "text_label": False,  # either digit label or text label
                 "one_based_index_label": True,
                 # if it's digit label, whether it's one-based so that reader can adjust it
-                "skip_first_line": True
+                "skip_first_line": True,
             }
         )
         return config
