@@ -23,7 +23,9 @@ from forte.pipeline import Pipeline
 from forte.data.multi_pack import MultiPack
 from forte.data.readers import StringReader
 from forte.data.caster import MultiPackBoxer
-from forte.processors.data_augment.algorithms.word_splitting_processor import RandomWordSplitDataAugmentProcessor
+from forte.processors.data_augment.algorithms.word_splitting_processor import (
+    RandomWordSplitDataAugmentProcessor,
+)
 
 from forte.processors.misc import WhiteSpaceTokenizer
 from ft.onto.base_ontology import Token
@@ -44,6 +46,7 @@ class TestWordSplittingProcessor(unittest.TestCase):
         self.nlp.add(
             component=WhiteSpaceTokenizer(), selector=AllPackSelector()
         )
+
     @data(
         (
             [
@@ -77,17 +80,14 @@ class TestWordSplittingProcessor(unittest.TestCase):
                     ".",
                 ]
             ],
-            [
-                [
-                    "Mary",
-                    "early"
-                ]
-            ]
+            [["Mary", "early"]],
         )
     )
     @unpack
-    def test_word_splitting_processor(self, texts, expected_outputs, expected_tokens, unnecessary_tokens):
-        self.nlp.add(component = RandomWordSplitDataAugmentProcessor())
+    def test_word_splitting_processor(
+        self, texts, expected_outputs, expected_tokens, unnecessary_tokens
+    ):
+        self.nlp.add(component=RandomWordSplitDataAugmentProcessor())
         self.nlp.initialize()
 
         for idx, m_pack in enumerate(self.nlp.process_dataset(texts)):
@@ -97,7 +97,7 @@ class TestWordSplittingProcessor(unittest.TestCase):
 
             for j, token in enumerate(aug_pack.get(Token)):
                 self.assertEqual(token.text, expected_tokens[idx][j])
-        
+
             for token in unnecessary_tokens[idx]:
                 self.assertNotIn(token, aug_pack.text)
 

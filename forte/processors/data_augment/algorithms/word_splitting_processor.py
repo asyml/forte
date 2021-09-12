@@ -30,16 +30,13 @@ from forte.data.ontology import Annotation
 from forte.processors.data_augment import ReplacementDataAugmentProcessor
 from forte.utils.utils import get_class
 
-__all__ = [
-    "RandomWordSplitDataAugmentProcessor"
-]
+__all__ = ["RandomWordSplitDataAugmentProcessor"]
 
 
 class RandomWordSplitDataAugmentProcessor(ReplacementDataAugmentProcessor):
-
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
-        
+
     def _augment(self, input_pack: MultiPack, aug_pack_names: List[str]):
         augment_entry = get_class(self.configs["augment_entry"])
 
@@ -57,11 +54,11 @@ class RandomWordSplitDataAugmentProcessor(ReplacementDataAugmentProcessor):
                     annotation_to_split = random.choice(annotations)
                     src_anno = annotation_to_split[0]
                     insert_pos = annotation_to_split[1]
-                    splitting_position = random.randrange(1,len(src_anno.text))
+                    splitting_position = random.randrange(1, len(src_anno.text))
                     word_split = [
-                                    src_anno.text[:splitting_position], 
-                                    src_anno.text[splitting_position:]
-                                ]
+                        src_anno.text[:splitting_position],
+                        src_anno.text[splitting_position:],
+                    ]
                     if insert_pos != pos[-1]:
                         word_split[1] = word_split[1] + " "
 
@@ -71,9 +68,6 @@ class RandomWordSplitDataAugmentProcessor(ReplacementDataAugmentProcessor):
                     self._delete(src_anno)
                     self._insert(word_split[0], data_pack, first_position)
                     self._insert(word_split[1], data_pack, second_position)
-
-
-
 
     @classmethod
     def default_configs(cls):
