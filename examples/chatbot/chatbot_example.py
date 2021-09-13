@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import yaml
-
+import sys; sys.path.insert(0, "/Users/pengfei.he/Downloads/Project/forte")
 from termcolor import colored
 import torch
 
@@ -45,7 +45,7 @@ def setup(config: Config) -> Pipeline:
     )
     query_pipeline.add(component=SearchProcessor(), config=config.searcher)
 
-    top_response_pack_name = config.indexer.response_pack_name + "_0"
+    top_response_pack_name = config.indexer.response_pack_name_prefix + "_0"
 
     query_pipeline.add(
         component=NLTKSentenceSegmenter(),
@@ -127,5 +127,5 @@ def main(config: Config):
 
 
 if __name__ == "__main__":
-    all_config = Config(yaml.safe_load(open("config.yml", "r")), None)
+    all_config = Config(yaml.safe_load(open("examples/chatbot/config.yml", "r")), None)
     main(all_config)

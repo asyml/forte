@@ -201,12 +201,12 @@ class ClassificationDatasetReader(PackReader):
                 "data_fields": [
                     "label",
                     "ft.onto.base_ontology.Title",
-                    "ft.onto.ag_news.Description",
+                    "ftx.onto.ag_news.Description",
                 ],
                 "index2class": None,
                 "subtext_fields": [
                     "ft.onto.base_ontology.Title",
-                    "ft.onto.ag_news.Description",
+                    "ftx.onto.ag_news.Description",
                 ],
                 "digit_label": True,
                 "text_label": False,

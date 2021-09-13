@@ -1,6 +1,5 @@
 import sys
 from termcolor import colored
-
 from forte.data.readers import ClassificationDatasetReader
 from fortex.huggingface import ZeroShotClassifier
 from forte.pipeline import Pipeline
@@ -9,7 +8,7 @@ from forte.nltk import NLTKWordTokenizer, NLTKSentenceSegmenter
 from ft.onto.base_ontology import Sentence
 
 
-csv_path = "path_to_dataset/Downloads/amazon_review_polarity_csv/test.csv"
+csv_path = "path_to_dataset/amazon_review_polarity_csv/test.csv"
 
 pl = Pipeline()
 
@@ -19,17 +18,13 @@ index2class = dict(enumerate(class_names))
 
 # initialize reader config
 this_read_config = {"index2class": index2class}
-reader_config = Config(
-    this_read_config, ClassificationDatasetReader().default_configs()
-)
-
 
 # initialize model config
 model_config = Config(
     {"candidate_labels": class_names}, ZeroShotClassifier().default_configs()
 )
 
-pl.set_reader(ClassificationDatasetReader(), config=reader_config)
+pl.set_reader(ClassificationDatasetReader(), config=this_read_config)
 pl.add(NLTKSentenceSegmenter())
 pl.add(NLTKWordTokenizer())
 pl.add(ZeroShotClassifier(), config=model_config)
