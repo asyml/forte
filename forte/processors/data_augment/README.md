@@ -41,6 +41,11 @@ meaning as the input sentence, but possibly in a different presentation. We wrap
 Marian MT as the translator which comes with customized language pairs. Customized
 translators can be also implemented following our interface.
 
+### Typo Replacement Op
+
+This Op generates a typo by employing a typo replacement dictionary to replace a word with a relevant typo. 
+It uses a pre-defined spelling mistake dictionary to simulate spelling mistakes.
+
 ## Easy Data Augmentation (EDA)
 
 The Easy Data Augmentation (EDA) is a set of simple random text transformations, which
