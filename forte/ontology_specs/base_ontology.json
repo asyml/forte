@@ -379,6 +379,26 @@
       "entry_name": "ft.onto.base_ontology.Title",
       "parent_entry": "forte.data.ontology.top.Annotation",
       "description": "A span based annotation `Title`, normally used to represent a title."
+    },
+    {
+      "entry_name": "ft.onto.base_ontology.MCOption",
+      "parent_entry": "forte.data.ontology.top.Annotation"
+    },
+    {
+      "entry_name": "ft.onto.base_ontology.MCQuestion",
+      "parent_entry": "forte.data.ontology.top.Annotation",
+      "attributes": [
+        {
+          "name": "options",
+          "type": "List",
+          "item_type": "ft.onto.base_ontology.MCOption"
+        },
+        {
+          "name": "answers",
+          "type": "List",
+          "item_type": "int"
+        }
+      ]
     }
   ]
 }
