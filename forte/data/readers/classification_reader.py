@@ -180,6 +180,21 @@ class ClassificationDatasetReader(PackReader):
 
     @classmethod
     def default_configs(cls):
+        r""" "This defines a basic configuration structure for classification dataset reader.
+
+        Here:
+            - data_fields: these fields provides one-to-one correspondence
+                between given dataset fields and ontology paths.
+            - index2class: mapping from indices to classes
+            - subtext_fields: ordered subtext fields that the user want to
+                concatenate into an input text in the same order
+            - digit_label:  specify whether label in dataset is digit
+            - text_label: specify whether label in dataset is text
+            - one_based_index_label: if dataset provides digit label,
+                check if it's one-based index, if so set it to True.
+            - skip_first_line: many datasets' first line are columns names,
+                set this config to True if it's the case.
+        """
         config: dict = super().default_configs()
         config.update(
             {
@@ -188,17 +203,14 @@ class ClassificationDatasetReader(PackReader):
                     "ft.onto.base_ontology.Title",
                     "ft.onto.ag_news.Description",
                 ],
-                # data fields aligned with columns in dataset
                 "index2class": None,
                 "subtext_fields": [
                     "ft.onto.base_ontology.Title",
                     "ft.onto.ag_news.Description",
                 ],
-                # select subtexts to concatenate into text
-                "digit_label": True,  # specify whether label in dataset is digit
-                "text_label": False,  # either digit label or text label
+                "digit_label": True,
+                "text_label": False,
                 "one_based_index_label": True,
-                # if it's digit label, whether it's one-based so that reader can adjust it
                 "skip_first_line": True,
             }
         )
