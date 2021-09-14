@@ -41,7 +41,7 @@ class BaseDeserializeReader(PackReader, ABC):
     def _cache_key_function(self, _) -> str:
         return "cached_string_file"
 
-    def _parse_pack(self, data_source: Union[Path, str]) -> Iterator[DataPack]:
+    def _parse_pack(self, data_source: Any) -> Iterator[DataPack]:
         if data_source is None:
             raise ProcessExecutionException(
                 "Data source is None, cannot deserialize."
