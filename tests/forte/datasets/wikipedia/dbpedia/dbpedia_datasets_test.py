@@ -117,14 +117,11 @@ class TestDBpediaReaders(TestCase):
         output: str = os.path.join(self.output_dir.name, "anchor")
         write_results(pl, output, os.path.join(self.data_dir, "text_links.tql"))
 
-        print(self.raw_output)
-        print(output)
-
         self.num_packs_check(output, 1)
         self.num_indexed(output, 1)
 
-        with open(glob.glob(output + "/**/*.json.gz")[0]) as data:
-            pack = DataPack.deserialize(data.read())
+        with open(glob.glob(output + "/**/*.json.gz")[0]) as f:
+            pack = DataPack.deserialize(f)
             self.assertEqual(
                 len(list(pack.get("ft.onto.wikipedia.WikiAnchor"))), 4
             )

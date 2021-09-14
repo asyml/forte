@@ -49,22 +49,25 @@ class BaseIndex(Generic[EntryType]):
     """
 
     def __init__(self):
-        # List of basic indexes (switches always on).
+        # List of basic indexes (always on).
 
-        # Mapping from entry's tid to entry type.
+        # Mapping from entry's tid to the entries.
         self._entry_index: Dict[int, EntryType] = {}
 
         # Mapping from entry's type to entries' id.
-        self._type_index: DefaultDict[Type, SortedSet[int]] = defaultdict(
-            SortedSet
+        self._type_index: DefaultDict[Type[EntryType], Set[int]] = defaultdict(
+            set
         )
 
-        # List of other indexes (built when first looked up).
-        self._group_index: DefaultDict[Hashable, SortedSet[int]] = defaultdict(
-            SortedSet
-        )
+        # Indices below will be built when looked up:
 
-        self._link_index: Dict[str, DefaultDict[Hashable, SortedSet]] = {}
+        # A cache map to store all entries of a certain type including the
+        # sub-types. This index will be populated on demand when
+        # query_by_type_subtype is called.
+        self._subtype_index: Dict[Type[EntryType], Set[int]] = {}
+
+        self._group_index: DefaultDict[Hashable, Set[int]] = defaultdict(set)
+        self._link_index: Dict[str, DefaultDict[Hashable, Set[int]]] = {}
 
         # Indexing switches.
         self._group_index_switch = False
@@ -95,8 +98,32 @@ class BaseIndex(Generic[EntryType]):
     def indexed_types(self) -> KeysView[Type]:
         return self._type_index.keys()
 
-    def query_by_type(self, t: Type) -> SortedSet:
+    def query_by_type(self, t: Type[EntryType]) -> Set[int]:
         return self._type_index[t]
+
+    def query_by_type_subtype(self, t: Type[EntryType]) -> Set[int]:
+        r"""Look up the entry indices that are instances of ``entry_type``,
+        including children classes of ``entry_type``.
+
+        Internally, this method will try to cache the subtype information after
+        the first call.
+
+        Args:
+            t: The type of the entry you are looking for.
+
+        Returns:
+             A set of entry ids. The entries are instances of `entry_type` (
+             and also includes instances of the subclasses of `entry_type`).
+        """
+        if t in self._subtype_index:
+            return self._subtype_index[t]
+        else:
+            subclass_index: Set[int] = set()
+            for index_key, index_val in self.iter_type_index():
+                if issubclass(index_key, t):
+                    subclass_index.update(index_val)
+            self._subtype_index[t] = subclass_index
+            return subclass_index
 
     def iter_type_index(self) -> Iterable[Tuple[Type, Set[int]]]:
         for t, ids in self._type_index.items():

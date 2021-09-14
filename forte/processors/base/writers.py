@@ -37,7 +37,7 @@ from forte.utils.utils_io import maybe_create_dir, ensure_dir
 logger = logging.getLogger(__name__)
 
 __all__ = [
-    "JsonPackWriter",
+    "PackWriter",
     "MultiPackWriter",
 ]
 
@@ -50,6 +50,7 @@ def write_pack(
     zip_pack: bool = False,
     overwrite: bool = False,
     drop_record: bool = False,
+    serialize_method: str = "jsonpickle",
 ) -> str:
     """
     Write a pack to a path.
@@ -62,6 +63,9 @@ def write_pack(
         zip_pack: Whether to zip the output JSON.
         overwrite: Whether to overwrite the file if already exists.
         drop_record: Whether to drop the creation records in the serialization.
+        serialize_method: The method used to serialize the data. Current
+          available options are "jsonpickle" and "pickle".
+          Default is "jsonpickle".
 
     Returns:
         If successfully written, will return the path of the output file.
@@ -73,17 +77,30 @@ def write_pack(
     if overwrite or not os.path.exists(output_path):
         ensure_dir(output_path)
 
-        out_str: str = input_pack.serialize(drop_record)
-
-        if indent:
-            out_str = json.dumps(json.loads(out_str), indent=indent)
+        pickled = input_pack.serialize(
+            drop_record, serialize_method=serialize_method
+        )
 
         if zip_pack:
-            with gzip.open(output_path, "wt") as out:
-                out.write(out_str)
+            _open = gzip.open
         else:
-            with open(output_path, "w", encoding="utf-8") as out:
-                out.write(out_str)
+            _open = open
+
+        if serialize_method == "pickle":
+            encoding = None
+            mode = "wb"
+        elif serialize_method == "jsonpickle":
+            if indent:
+                pickled = json.dumps(json.loads(pickled), indent=indent)
+            encoding = "utf-8"
+            mode = "wt"
+        else:
+            raise NotImplementedError(
+                f"Serialize Method {serialize_method} " f"is not supported."
+            )
+
+        with _open(output_path, mode=mode, encoding=encoding) as out:
+            out.write(pickled)
     else:
         logging.info("Will not overwrite existing path %s", output_path)
 
@@ -91,11 +108,11 @@ def write_pack(
     return output_path
 
 
-class JsonPackWriter(PackProcessor, ABC):
+class PackWriter(PackProcessor, ABC):
     def __init__(self):
         super().__init__()
-        self.zip_pack: bool = False
-        self.indent: Optional[int] = None
+        self._zip_pack: bool = False
+        self._indent: Optional[int] = None
 
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
@@ -109,12 +126,18 @@ class JsonPackWriter(PackProcessor, ABC):
         if not os.path.exists(configs.output_dir):
             os.makedirs(configs.output_dir)
 
-        self.zip_pack = configs.zip_pack
-        self.indent = configs.indent
+        self._zip_pack = configs.zip_pack
+        self._indent = configs.indent
+
+        if self.configs.serialize_method == "jsonpickle":
+            self._suffix = ".json.gz" if self._zip_pack else ".json"
+        else:
+            self._suffix = ".pickle.gz" if self._zip_pack else ".pickle"
 
     @abstractmethod
     def sub_output_path(self, pack: DataPack) -> Optional[str]:
-        r"""Allow defining output path using the information of the pack.
+        r"""Allow defining output path using the information of the pack. If
+        `None` is returned,
 
         Args:
             pack: The input datapack.
@@ -127,13 +150,20 @@ class JsonPackWriter(PackProcessor, ABC):
 
         Here:
           - output_dir (str): the directory for writing the result.
+
           - zip_pack (bool): whether to zip the data pack. The default value is
              False.
+
           - indent (int): None not indented, if larger than 0, the JSON
              files will be written in the with the provided indention. The
              default value is None.
+
           - drop_record: whether to drop the creation records in the data pack,
              the default value is False.
+
+          - serialize_method: The method used to serialize the data. Current
+              available options are "jsonpickle" and "pickle". Default is
+              "jsonpickle".
 
         Returns: The default configuration of this writer.
         """
@@ -142,6 +172,7 @@ class JsonPackWriter(PackProcessor, ABC):
             "zip_pack": False,
             "indent": None,
             "drop_record": False,
+            "serialize_method": "jsonpickle",
         }
 
     def _process(self, input_pack: DataPack):
@@ -157,6 +188,7 @@ class JsonPackWriter(PackProcessor, ABC):
                 self.configs.zip_pack,
                 self.configs.overwrite,
                 self.configs.drop_record,
+                self.configs.serialize_method,
             )
 
 
@@ -178,21 +210,20 @@ class MultiPackWriter(MultiPackProcessor):
         ensure_dir(multi_index)
         self.multi_idx_out = open(multi_index, "w", encoding="utf-8")
 
-    def pack_name(self, pack: DataPack) -> str:
-        r"""Allow defining output name using the information of the datapack.
-
-        Args:
-            pack: The input datapack.
-        """
-        return f"{pack.pack_id}"
+        if self.configs.serialize_method == "jsonpickle":
+            self._suffix = ".json.gz" if self.configs.zip_pack else ".json"
+        else:
+            self._suffix = ".pickle.gz" if self.configs.zip_pack else ".pickle"
 
     def multipack_name(self, pack: MultiPack) -> str:
-        r"""Allow defining output path using the information of the multipack.
+        r"""Allow defining output path using the information of the multi-pack.
+        Extending this path allows one to specify the output file name. Default
+        value is a name including the `pack_id` of this multi-pack.
 
         Args:
-            pack: The input multipack.
+            pack: The input multi-pack.
         """
-        return f"mult_pack_{pack.pack_id}"
+        return f"multi_pack_{pack.pack_id}"
 
     def _process(self, input_pack: MultiPack):
         multi_out_dir = os.path.join(self.configs.output_dir, self.multi_base)
@@ -202,11 +233,12 @@ class MultiPackWriter(MultiPackProcessor):
             pack_out = write_pack(
                 pack,
                 pack_out_dir,
-                self.pack_name(pack),
+                str(pack.pack_id) + self._suffix,
                 self.configs.indent,
                 self.configs.zip_pack,
                 self.configs.overwrite,
                 self.configs.drop_record,
+                self.configs.serialize_method,
             )
 
             self.pack_idx_out.write(
@@ -217,11 +249,12 @@ class MultiPackWriter(MultiPackProcessor):
         multi_out = write_pack(
             input_pack,
             multi_out_dir,
-            self.multipack_name(input_pack),
+            self.multipack_name(input_pack) + self._suffix,
             self.configs.indent,
             self.configs.zip_pack,
             self.configs.overwrite,
             self.configs.drop_record,
+            self.configs.serialize_method,
         )
 
         self.multi_idx_out.write(
@@ -235,13 +268,10 @@ class MultiPackWriter(MultiPackProcessor):
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
-        config = super().default_configs()
-        config.update(
-            {
-                "output_dir": None,
-                "zip_pack": False,
-                "indent": None,
-                "drop_record": False,
-            }
-        )
-        return config
+        return {
+            "output_dir": None,
+            "zip_pack": False,
+            "indent": None,
+            "drop_record": False,
+            "serialize_method": "jsonpickle",
+        }

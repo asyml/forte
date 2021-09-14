@@ -151,7 +151,7 @@ class RemoteProcessor(PackProcessor):
                 "a valid pipeline service that is up and running."
             )
         result = response.json()["result"]
-        input_pack.update(DataPack.deserialize(result))
+        input_pack.update(DataPack.from_string(result))
 
     def set_test_mode(self, app: FastAPI):
         """
