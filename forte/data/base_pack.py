@@ -271,6 +271,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         self,
         drop_record: Optional[bool] = False,
         json_method: str = "jsonpickle",
+        indent: int = None,
     ) -> str:
         """
         Return the string representation (json encoded) of this method.
@@ -280,6 +281,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             json_method: What method is used to convert data pack to json.
               Only supports `json_pickle` for now. Default value is
               `json_pickle`.
+            indent: The indent used for json string.
 
         Returns: String representation of the data pack.
         """
@@ -287,7 +289,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             self._creation_records.clear()
             self._field_records.clear()
         if json_method == "jsonpickle":
-            return jsonpickle.encode(self, unpicklable=True)
+            return jsonpickle.encode(self, unpicklable=True, indent=indent)
         else:
             raise ValueError(f"Unsupported JSON method {json_method}.")
 
@@ -328,11 +330,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                 pickle.dump(self, pickle_out)  # type:ignore
         elif serialize_method == "jsonpickle":
             with _open(output_path, mode="wt", encoding="utf-8") as json_out:
-                json.dump(
-                    self.to_string(drop_record, "jsonpickle"),
-                    json_out,
-                    indent=indent,
-                )
+                json_out.write(
+                    self.to_string(drop_record, "jsonpickle", indent=indent))
         else:
             raise NotImplementedError(
                 f"Unsupported serialization method {serialize_method}"
