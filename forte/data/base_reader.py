@@ -354,9 +354,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
         logger.info("reading from cache file %s", cache_filename)
         with open(cache_filename, "r", encoding="utf-8") as cache_file:
             for line in cache_file:
-                pack = DataPack.deserialize(
-                    line.strip(), serialize_method="jsonpickle"
-                )
+                pack = DataPack.from_string(line.strip())
                 if not isinstance(pack, self.pack_type):
                     raise TypeError(
                         f"Pack deserialized from {cache_filename} "

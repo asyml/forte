@@ -421,7 +421,6 @@ class PipelineTest(unittest.TestCase):
         dummy = DummyPackProcessor()
         config = {"test": "successor"}
         nlp.add(dummy, config=config)
-        print(nlp.components)
 
         with self.assertRaises(ProcessorConfigError):
             nlp.initialize()

@@ -89,6 +89,9 @@ class BaseIndex(Generic[EntryType]):
         for entry in entries:
             self._entry_index[entry.tid] = entry
             self._type_index[type(entry)].add(entry.tid)
+            # Disable sub type index since new items are added and this will
+            #  be rebuilt in next query (`query_by_type_subtype`).
+            self._subtype_index.pop(type(entry), None)
 
     def get_entry(self, tid: int) -> EntryType:
         return self._entry_index[tid]

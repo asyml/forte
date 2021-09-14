@@ -94,6 +94,9 @@ class RawDataDeserializeReader(BaseDeserializeReader):
     def _collect(self, data_list: List[str]) -> Iterator[str]:  # type: ignore
         yield from data_list
 
+    def _parse_pack(self, data_source: str) -> Iterator[DataPack]:
+        yield DataPack.from_string(data_source)
+
 
 class RecursiveDirectoryDeserializeReader(BaseDeserializeReader):
     """
