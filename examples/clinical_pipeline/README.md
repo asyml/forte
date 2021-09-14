@@ -18,7 +18,7 @@ named entities corresponding to diseases, symptoms and related concepts.
 Before running the pipeline, we need to download the models
 
 ```bash
-python ../../fortex/huggingface/biobert_ner/download_models.py 
+python ./biober_ner/download_models.py 
 ```
 
 **Note**: The above script will save the model in `resources/NCBI-disease`. Use `--path` option to save the 
