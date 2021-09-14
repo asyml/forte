@@ -225,12 +225,14 @@ class WikiPackReader(PackReader):
                 self._pack_dir, self._pack_index[resource_name]
             )
 
-            # `smart_open` can handle the `gz` files.
             if os.path.exists(pack_path):
-                with open(pack_path) as pack_file:
-                    pack: DataPack = DataPack.deserialize(pack_file)
-                    self.add_wiki_info(pack, statements)
-                    yield pack
+                pack: DataPack = DataPack.deserialize(
+                    pack_path,
+                    self.configs.serialize_method,
+                    self.configs.zip_pack,
+                )
+                self.add_wiki_info(pack, statements)
+                yield pack
         else:
             logging.info("Resource %s pack not found.", resource_name)
 
