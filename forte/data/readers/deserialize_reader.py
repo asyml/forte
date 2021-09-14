@@ -15,17 +15,16 @@ import gzip
 import logging
 import os
 from abc import ABC, abstractmethod
-from pathlib import Path
-from typing import Iterator, List, Any, Union, Optional
+from typing import Iterator, List, Any, Optional
 
 from smart_open import open
 
 from forte.common import Resources
 from forte.common.configuration import Config
 from forte.common.exception import ProcessExecutionException
+from forte.data.base_reader import PackReader, MultiPackReader
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
-from forte.data.base_reader import PackReader, MultiPackReader
 
 __all__ = [
     "RawDataDeserializeReader",
