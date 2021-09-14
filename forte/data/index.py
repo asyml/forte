@@ -27,8 +27,6 @@ from typing import (
     KeysView,
 )
 
-from sortedcontainers import SortedSet
-
 from forte.common.exception import PackIndexError
 from forte.data.ontology.core import GroupType, LinkType, EntryType
 

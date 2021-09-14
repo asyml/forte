@@ -113,6 +113,7 @@ class PackWriter(PackProcessor, ABC):
         super().__init__()
         self._zip_pack: bool = False
         self._indent: Optional[int] = None
+        self._suffix: str = ""
 
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)

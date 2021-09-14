@@ -103,9 +103,6 @@ class RecursiveDirectoryDeserializeReader(BaseDeserializeReader):
     Compressed data are supported through smart open.
     """
 
-    def initialize(self, resources: Resources, configs: Config):
-        super().initialize(resources, configs)
-
     def _collect(self, data_dir: str) -> Iterator[str]:  # type: ignore
         """
         This function will collect the files of the given directory. If the
