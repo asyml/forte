@@ -124,8 +124,9 @@ def main(config: Config):
 
             input(colored("Press ENTER to continue...\n", "green"))
 
+
 import os
-os.environ['MICROSOFT_API_KEY'] = 'cce8ac9e04454cd2934a927056217dc1'
+
 if __name__ == "__main__":
     all_config = Config(yaml.safe_load(open("config.yml", "r")), None)
     main(all_config)
