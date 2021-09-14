@@ -270,7 +270,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
     def to_string(
         self,
         drop_record: Optional[bool] = False,
-        json_method: str = "json_pickle",
+        json_method: str = "jsonpickle",
     ) -> str:
         """
         Return the string representation (json encoded) of this method.
@@ -286,7 +286,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         if drop_record:
             self._creation_records.clear()
             self._field_records.clear()
-        if json_method == "json_pickle":
+        if json_method == "jsonpickle":
             return jsonpickle.encode(self, unpicklable=True)
         else:
             raise ValueError(f"Unsupported JSON method {json_method}.")
