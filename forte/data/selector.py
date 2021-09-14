@@ -42,19 +42,13 @@ __all__ = [
 class Selector(Generic[InputPackType, OutputPackType], Configurable):
     def __init__(self, configs: Optional[Union[Config, Dict[str, Any]]] = None):
         self.configs = self.make_configs(configs)
-        # The flag indicating whether the selector is initialized.
-        self.__is_initialized: bool = False
 
     def select(self, pack: InputPackType) -> Iterator[OutputPackType]:
         raise NotImplementedError
 
     def initialize(self):
         # Reset selector states
-        self.__is_initialized = True
-
-    @property
-    def is_initialized(self) -> bool:
-        return self.__is_initialized
+        pass
 
 
 class DummySelector(Selector[InputPackType, InputPackType]):
