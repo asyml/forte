@@ -613,8 +613,9 @@ class Pipeline(Generic[PackType]):
         else:
             self.reader.enforce_consistency(enforce=False)
 
-        # Handle other components.
+        # Handle other components and their selectors.
         self.initialize_components()
+        self.initialize_selectors()
         self._initialized = True
 
         # Create profiler
@@ -672,6 +673,17 @@ class Pipeline(Generic[PackType]):
                 raise e
 
             component.enforce_consistency(enforce=self._check_type_consistency)
+
+    def initialize_selectors(self):
+        """
+        This function will reset the states of selectors
+        """
+        for selector in self._selectors:
+            try:
+                selector.initialize()
+            except ValueError as e:
+                logging.error("Exception occur when initializing selectors")
+                raise e
 
     def set_reader(
         self,
