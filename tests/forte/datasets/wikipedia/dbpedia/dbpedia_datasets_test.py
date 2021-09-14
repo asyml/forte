@@ -95,7 +95,7 @@ class TestDBpediaReaders(TestCase):
             config={
                 "pack_index": os.path.join(self.raw_output, "article.idx"),
                 "pack_dir": self.raw_output,
-                "zip_pack": True
+                "zip_pack": True,
             },
         )
 
@@ -113,7 +113,7 @@ class TestDBpediaReaders(TestCase):
             config={
                 "pack_index": os.path.join(self.raw_output, "article.idx"),
                 "pack_dir": self.raw_output,
-                "zip_pack": True
+                "zip_pack": True,
             },
         )
         output: str = os.path.join(self.output_dir.name, "anchor")
@@ -123,12 +123,9 @@ class TestDBpediaReaders(TestCase):
         self.num_indexed(output, 1)
 
         pack = DataPack.deserialize(
-            glob.glob(output + "/**/*.json.gz")[0],
-            zip_pack=True
+            glob.glob(output + "/**/*.json.gz")[0], zip_pack=True
         )
-        self.assertEqual(
-            len(list(pack.get("ft.onto.wikipedia.WikiAnchor"))), 4
-        )
+        self.assertEqual(len(list(pack.get("ft.onto.wikipedia.WikiAnchor"))), 4)
 
     def test_property(self):
         pl = Pipeline[DataPack](self.resources)
@@ -137,7 +134,7 @@ class TestDBpediaReaders(TestCase):
             config={
                 "pack_index": os.path.join(self.raw_output, "article.idx"),
                 "pack_dir": self.raw_output,
-                "zip_pack": True
+                "zip_pack": True,
             },
         )
         output: str = os.path.join(self.output_dir.name, "property")
@@ -157,7 +154,7 @@ class TestDBpediaReaders(TestCase):
             config={
                 "pack_index": os.path.join(self.raw_output, "article.idx"),
                 "pack_dir": self.raw_output,
-                "zip_pack": True
+                "zip_pack": True,
             },
         )
         output: str = os.path.join(self.output_dir.name, "literals")

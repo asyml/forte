@@ -331,7 +331,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         elif serialize_method == "jsonpickle":
             with _open(output_path, mode="wt", encoding="utf-8") as json_out:
                 json_out.write(
-                    self.to_string(drop_record, "jsonpickle", indent=indent))
+                    self.to_string(drop_record, "jsonpickle", indent=indent)
+                )
         else:
             raise NotImplementedError(
                 f"Unsupported serialization method {serialize_method}"
