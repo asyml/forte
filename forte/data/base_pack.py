@@ -315,7 +315,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         Returns: Results of serialization.
         """
         if zip_pack:
-            _open = gzip.open  # type:ignore
+            _open = gzip.open
         else:
             _open = open  # type:ignore
 
@@ -325,12 +325,12 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
         if serialize_method == "pickle":
             with _open(output_path, mode="wb") as pickle_out:
-                pickle.dump(self, pickle_out)
+                pickle.dump(self, pickle_out)  # type:ignore
         elif serialize_method == "jsonpickle":
             with _open(output_path, mode="wt", encoding="utf-8") as json_out:
                 json.dump(
                     self.to_string(drop_record, "jsonpickle"),
-                    json_out,  # type:ignore
+                    json_out,
                     indent=indent,
                 )
         else:
