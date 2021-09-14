@@ -38,7 +38,7 @@ class DataPackTest(unittest.TestCase):
         self.data_pack2.set_text("This pack contains some other sample data.")
 
     def test_serialization(self):
-        ser_str: str = self.multi_pack.serialize()
+        ser_str: str = self.multi_pack.to_string()
         print(ser_str)
 
     def test_add_pack(self):

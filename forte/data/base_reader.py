@@ -331,18 +331,14 @@ class BaseReader(PipelineComponent[PackType], ABC):
                 "a",
                 encoding="utf-8",
             ) as cache:
-                cache.write(
-                    pack.serialize(serialize_method="jsonpickle") + "\n"
-                )
+                cache.write(pack.to_string() + "\n")
         else:
             with open(
                 cache_filename,
                 "w",
                 encoding="utf-8",
             ) as cache:
-                cache.write(
-                    pack.serialize(serialize_method="jsonpickle") + "\n"
-                )
+                cache.write(pack.to_string() + "\n")
 
     def read_from_cache(
         self, cache_filename: Union[Path, str]

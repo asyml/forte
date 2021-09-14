@@ -108,7 +108,7 @@ class IndexProcessorWithDatapack(PackProcessor, ABC):
         raise NotImplementedError
 
     def _process(self, input_pack: DataPack):
-        serialized_datapack: str = input_pack.serialize()
+        serialized_datapack: str = input_pack.to_string()
 
         self.documents.append(
             (str(input_pack.pack_id), input_pack.text, serialized_datapack)

@@ -54,7 +54,7 @@ def load_all_datapacks(
     c = conn.cursor()
     data_packs: Dict[int, DataPack] = {}
     for val in c.execute(f"SELECT * FROM {pack_table_name}"):
-        pack: DataPack = DataPack.from_string(val[pack_col])
+        pack: DataPack = DataPack.from_string(val[pack_col])  # type:ignore
         # Currently assume we do not have access to the id in the database,
         #  once we update all Stave db format, we can add the real id.
         data_packs[pack.pack_id] = pack
@@ -108,7 +108,7 @@ class StaveMultiDocSqlReader(MultiPackDeserializerBase):
             yield value[0]
 
     def _parse_multi_pack(self, multi_pack_source: str) -> MultiPack:
-        return BasePack.from_string(multi_pack_source)
+        return BasePack.from_string(multi_pack_source)  # type: ignore
 
     def _get_pack(self, pack_id: int) -> Optional[DataPack]:
         return self.data_packs.get(pack_id, None)
@@ -234,7 +234,7 @@ class StaveDataPackSqlReader(PackReader):
             yield value[0]
 
     def _parse_pack(self, pack_str: str) -> Iterator[DataPack]:
-        yield DataPack.from_string(pack_str)
+        yield DataPack.from_string(pack_str)  # type: ignore
 
     @classmethod
     def default_configs(cls):

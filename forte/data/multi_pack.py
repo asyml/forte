@@ -610,7 +610,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         cls,
         data_path: Union[Path, str],
         serialize_method: str = "jsonpickle",
-        zip_pack: bool = "False",
+        zip_pack: bool = False,
     ) -> "MultiPack":
         """
         Deserialize a Multi Pack from a string. Note that this will only

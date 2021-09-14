@@ -509,7 +509,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         cls,
         data_source: Union[Path, str],
         serialize_method: str = "jsonpickle",
-        zip_pack: bool = "False",
+        zip_pack: bool = False,
     ) -> "DataPack":
         """
         Deserialize a Data Pack from a string. This internally calls the

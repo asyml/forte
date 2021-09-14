@@ -15,13 +15,11 @@
 Writers are simply processors with the side-effect to write to the disk.
 This file provide some basic writer implementations.
 """
-import gzip
-import json
 import logging
 import os
+import posixpath
 from abc import abstractmethod, ABC
 from typing import Optional, Any, Dict
-import posixpath
 
 from forte.common.configuration import Config
 from forte.common.resources import Resources
@@ -76,31 +74,13 @@ def write_pack(
 
     if overwrite or not os.path.exists(output_path):
         ensure_dir(output_path)
-
-        pickled = input_pack.serialize(
-            drop_record, serialize_method=serialize_method
+        input_pack.serialize(
+            output_path,
+            zip_pack=zip_pack,
+            drop_record=drop_record,
+            serialize_method=serialize_method,
+            indent=indent,
         )
-
-        if zip_pack:
-            _open = gzip.open
-        else:
-            _open = open
-
-        if serialize_method == "pickle":
-            encoding = None
-            mode = "wb"
-        elif serialize_method == "jsonpickle":
-            if indent:
-                pickled = json.dumps(json.loads(pickled), indent=indent)
-            encoding = "utf-8"
-            mode = "wt"
-        else:
-            raise NotImplementedError(
-                f"Serialize Method {serialize_method} " f"is not supported."
-            )
-
-        with _open(output_path, mode=mode, encoding=encoding) as out:
-            out.write(pickled)
     else:
         logging.info("Will not overwrite existing path %s", output_path)
 
