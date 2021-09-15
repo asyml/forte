@@ -270,7 +270,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         self,
         drop_record: Optional[bool] = False,
         json_method: str = "jsonpickle",
-        indent: int = None,
+        indent: Optional[int] = None,
     ) -> str:
         """
         Return the string representation (json encoded) of this method.
