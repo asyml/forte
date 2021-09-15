@@ -335,7 +335,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         Returns:
             The text within this span.
         """
-        return self._text[begin : end]
+        return self._text[begin:end]
 
     def set_text(
         self,
@@ -1073,9 +1073,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                 yield self.get_entry(tid)  # type: ignore
         else:
             if issubclass(entry_type, Annotation):
-                range_begin = (
-                    range_annotation.begin if range_annotation else 0
-                )
+                range_begin = range_annotation.begin if range_annotation else 0
                 range_end = (
                     range_annotation.end
                     if range_annotation
@@ -1394,8 +1392,7 @@ class DataIndex(BaseIndex):
             )
 
         return not (
-            entry1_.begin >= entry2_.end
-            or entry1_.end <= entry2_.begin
+            entry1_.begin >= entry2_.end or entry1_.end <= entry2_.begin
         )
 
     def in_span(self, inner_entry: Union[int, Entry], span: Span) -> bool:

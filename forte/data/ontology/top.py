@@ -68,7 +68,7 @@ class Annotation(Entry):
         super().__init__(pack)
 
     def __getstate__(self):
-        r""" For serializing Annotation, we should create Span annotations for
+        r"""For serializing Annotation, we should create Span annotations for
         compatibility purposes.
         """
         self._span = Span(self._begin, self._end)
@@ -100,7 +100,6 @@ class Annotation(Entry):
     @property
     def end(self):
         return self._end
-
 
     def __eq__(self, other):
         r"""The eq function of :class:`Annotation`.
