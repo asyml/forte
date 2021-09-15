@@ -190,11 +190,10 @@ class AdvancedPipelineTest(unittest.TestCase):
         pl.set_reader(DummyMultiPackReader())
         pl.add(
             DummyProcessor(),
-            selector=RegexNameMatchSelector(
-                configs={
-                    "select_name": "^.*\\d$"
-                }
-            )
+            selector=RegexNameMatchSelector(),
+            selector_config={
+                "select_name": "^.*\\d$"
+            },
         )
         pl.save(self._pl_config_path)
 

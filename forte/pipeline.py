@@ -171,6 +171,7 @@ class Pipeline(Generic[PackType]):
         self._components: List[PipelineComponent] = []
         self._selectors: List[Selector] = []
         self._configs: List[Optional[Config]] = []
+        self._selectors_configs: List[Optional[Config]] = []
 
         # Maintain a set of the pipeline components to fast check whether
         # the component is already there.
@@ -210,6 +211,7 @@ class Pipeline(Generic[PackType]):
 
         # Create one copy of the dummy selector to reduce class creation.
         self.__default_selector: Selector = DummySelector()
+        self.__default_selector_config: Config = Config({}, {})
 
         # needed for time profiling of pipeline
         self._enable_profiling: bool = False
@@ -298,6 +300,7 @@ class Pipeline(Generic[PackType]):
                         class_name=selector_config["type"],
                         class_args=selector_config.get("kwargs", {}),
                     ),
+                    selector_config=selector_config.get("configs")
                 )
 
         # Set pipeline states and resources
@@ -387,8 +390,9 @@ class Pipeline(Generic[PackType]):
                 ),
             }
         )
-        for component, config, selector in zip(
-            self.components, self.component_configs, self._selectors
+        for component, config, selector, selector_config in zip(
+            self.components, self.component_configs,
+            self._selectors, self._selectors_configs
         ):
             configs["components"].append(
                 {
@@ -399,14 +403,12 @@ class Pipeline(Generic[PackType]):
                     ),
                     "selector": {
                         "type": get_full_module_name(selector),
-                        "kwargs": {
-                            "configs": test_jsonable(
-                                # pylint: disable=protected-access
-                                test_dict=selector.configs.todict(),
-                                # pylint: enable=protected-access
-                                err_msg=get_err_msg["selector"](selector),
-                            )
-                        },
+                        "configs": test_jsonable(
+                            # pylint: disable=protected-access
+                            test_dict=selector_config.todict(),
+                            # pylint: enable=protected-access
+                            err_msg=get_err_msg["selector"](selector),
+                        ),
                     },
                 }
             )
@@ -678,9 +680,9 @@ class Pipeline(Generic[PackType]):
         """
         This function will reset the states of selectors
         """
-        for selector in self._selectors:
+        for selector, config in zip(self._selectors, self._selectors_configs):
             try:
-                selector.initialize()
+                selector.initialize(config)
             except ValueError as e:
                 logging.error("Exception occur when initializing selectors")
                 raise e
@@ -744,6 +746,7 @@ class Pipeline(Generic[PackType]):
         component: PipelineComponent,
         config: Optional[Union[Config, Dict[str, Any]]] = None,
         selector: Optional[Selector] = None,
+        selector_config: Optional[Union[Config, Dict[str, Any]]] = None,
     ) -> "Pipeline":
         """
         Adds a pipeline component to the pipeline. The pipeline components
@@ -813,8 +816,10 @@ class Pipeline(Generic[PackType]):
 
         if selector is None:
             self._selectors.append(self.__default_selector)
+            self._selectors_configs.append(self.__default_selector_config)
         else:
             self._selectors.append(selector)
+            self._selectors_configs.append(selector.make_configs(selector_config))
 
         return self
 
