@@ -65,7 +65,6 @@ class Annotation(Entry):
         self._span: Optional[Span] = None
         self._begin: int = begin
         self._end: int = end
-        # self.set_span(begin, end)
         super().__init__(pack)
 
     def __getstate__(self):
@@ -102,14 +101,6 @@ class Annotation(Entry):
     def end(self):
         return self._end
 
-    # def set_span(self, begin: int, end: int):
-    #     r"""Set the span of the annotation."""
-    #     # # TODO: PERFORMANCE creating too many Span classes is unnecessary, but
-    #     # #   removing directly will create compatibility problems in
-    #     # #   serialization.
-    #     # self._span = Span(begin, end)
-    #     self._begin = begin
-    #     self._end = end
 
     def __eq__(self, other):
         r"""The eq function of :class:`Annotation`.
@@ -121,19 +112,29 @@ class Annotation(Entry):
         """
         if other is None:
             return False
-        return (type(self), self.span.begin, self.span.end) == (
+        return (type(self), self.begin, self.end) == (
             type(other),
-            other.span.begin,
-            other.span.end,
+            other.begin,
+            other.end,
         )
 
     def __lt__(self, other):
-        r"""To support total_ordering, :class:`Annotations` must provide
-        :meth:`__lt__`.
+        r"""To support total_ordering, `Annotation` must implement
+        `__lt__`. The ordering is defined in the following way:
+
+        1. If the begin of the annotations are different, the one with larger
+           begin will be larger.
+        2. In the case where the begins are the same, the one with larger
+           end will be larger.
+        3. In the case where both offsets are the same, we break the tie using
+           the normal sorting of the class name.
         """
-        if self.span != other.span:
-            return self.span < other.span
-        return (str(type(self)), self._tid) < (str(type(other)), other.tid)
+        if self.begin == other.begin:
+            if self.end == other.end:
+                return str(type(self)) < str(type(other))
+            return self.end < other.end
+        else:
+            return self.begin < other.begin
 
     @property
     def text(self):
@@ -142,7 +143,7 @@ class Annotation(Entry):
                 "Cannot get text because annotation is not "
                 "attached to any data pack."
             )
-        return self.pack.get_span_text(self.span)
+        return self.pack.get_span_text(self.begin, self.end)
 
     @property
     def index_key(self) -> int:

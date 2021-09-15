@@ -60,6 +60,8 @@ default_entry_fields = [
     "_tid",
     "_embedding",
     "_span",
+    "_begin",
+    "_end",
     "_parent",
     "_child",
     "_members",

@@ -96,7 +96,7 @@ class EntryContainer(Generic[E, L, G]):
     def get_entry(self, ptr: int) -> E:
         raise NotImplementedError
 
-    def get_span_text(self, span: Span):
+    def get_span_text(self, begin: int, end: int):
         raise NotImplementedError
 
     def get_all_creator(self) -> Iterator[str]:

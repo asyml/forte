@@ -150,7 +150,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     def get_subentry(self, pack_idx: int, entry_id: int):
         return self.get_pack_at(pack_idx).get_entry(entry_id)
 
-    def get_span_text(self, span: Span):
+    def get_span_text(self, begin: int, end: int):
         raise ValueError(
             "MultiPack objects do not contain text, please refer to a "
             "specific data pack to get text."
