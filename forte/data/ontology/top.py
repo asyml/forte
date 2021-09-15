@@ -62,28 +62,54 @@ class Annotation(Entry):
     """
 
     def __init__(self, pack: PackType, begin: int, end: int):
-        self._span: Optional[Span]
-        self.set_span(begin, end)
+        self._span: Optional[Span] = None
+        self._begin: int = begin
+        self._end: int = end
+        # self.set_span(begin, end)
         super().__init__(pack)
 
+    def __getstate__(self):
+        r""" For serializing Annotation, we should create Span annotations for
+        compatibility purposes.
+        """
+        self._span = Span(self._begin, self._end)
+        state = self.__dict__.copy()
+        state.pop("_begin")
+        state.pop("_end")
+        return state
+
+    def __setstate__(self, state):
+        """
+        For de-serializing Annotation, we load the begin, end from Span, for
+        compatibility purposes.
+        """
+        self.__dict__.update(state)
+        self._begin = self._span.begin
+        self._end = self._span.end
+
     @property
-    def span(self):
+    def span(self) -> Span:
+        # Delay span creation at usage.
+        if self._span is None:
+            self._span = Span(self._begin, self._end)
         return self._span
 
     @property
     def begin(self):
-        return self._span.begin
+        return self._begin
 
     @property
     def end(self):
-        return self._span.end
+        return self._end
 
-    def set_span(self, begin: int, end: int):
-        r"""Set the span of the annotation."""
-        # TODO: PERFORMANCE creating too many Span classes is unnecessary, but
-        #   removing directly will create compatibility problems in
-        #   serialization.
-        self._span = Span(begin, end)
+    # def set_span(self, begin: int, end: int):
+    #     r"""Set the span of the annotation."""
+    #     # # TODO: PERFORMANCE creating too many Span classes is unnecessary, but
+    #     # #   removing directly will create compatibility problems in
+    #     # #   serialization.
+    #     # self._span = Span(begin, end)
+    #     self._begin = begin
+    #     self._end = end
 
     def __eq__(self, other):
         r"""The eq function of :class:`Annotation`.
