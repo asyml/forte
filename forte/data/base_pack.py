@@ -306,7 +306,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
         Args:
             output_path: The path to write data to.
-            zip_pack: Whether to compress the result with "gz".
+            zip_pack: Whether to compress the result with `gzip`.
             drop_record: Whether to drop the creation records, default is False.
             serialize_method: The method used to serialize the data. Currently
               supports "jsonpickle" (outputs str) and Python's built-in

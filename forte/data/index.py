@@ -106,8 +106,10 @@ class BaseIndex(Generic[EntryType]):
         r"""Look up the entry indices that are instances of ``entry_type``,
         including children classes of ``entry_type``.
 
-        Internally, this method will try to cache the subtype information after
-        the first call.
+        Note: all the known types to this data pack will be scanned to find
+          all sub-types. This method will try to cache the sub-type information
+          after the first call, but the cached information could be invalidated
+          by other operations (such as adding new items to the data pack).
 
         Args:
             t: The type of the entry you are looking for.
