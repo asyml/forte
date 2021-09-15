@@ -14,6 +14,7 @@
 
 import copy
 import logging
+from pathlib import Path
 from typing import Dict, List, Set, Union, Iterator, Optional, Type, Any, Tuple
 
 from sortedcontainers import SortedList
@@ -605,7 +606,12 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             yield e  # type: ignore
 
     @classmethod
-    def deserialize(cls, string: str) -> "MultiPack":
+    def deserialize(
+        cls,
+        data_path: Union[Path, str],
+        serialize_method: str = "jsonpickle",
+        zip_pack: bool = False,
+    ) -> "MultiPack":
         """
         Deserialize a Multi Pack from a string. Note that this will only
         deserialize the native multi pack content, which means the associated
@@ -618,12 +624,18 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         function from the :class:`~forte.data.base_pack.BasePack`.
 
         Args:
-            string: The serialized string of a Multi pack to be deserialized.
+            data_path: The serialized string of a Multi pack to be deserialized.
+            serialize_method: The method used to serialize the data, this
+              should be the same as how serialization is done. The current
+              options are "jsonpickle" and "pickle". The default method
+              is "jsonpickle".
+            zip_pack: Boolean value indicating whether the input source is
+              zipped.
 
         Returns:
             An data pack object deserialized from the string.
         """
-        return cls._deserialize(string)
+        return cls._deserialize(data_path, serialize_method, zip_pack)
 
     def _add_entry(self, entry: EntryType) -> EntryType:
         r"""Force add an :class:`forte.data.ontology.core.Entry` object to the

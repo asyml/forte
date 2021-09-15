@@ -376,7 +376,7 @@ class Pipeline(Generic[PackType]):
             args = json.loads(body.args)
             kwargs = json.loads(body.kwargs)
             result = self.process(*args, **kwargs)
-            return {"status": "OK", "result": result.serialize()}
+            return {"status": "OK", "result": result.to_string()}
 
         # pylint: enable=unused-variable
 

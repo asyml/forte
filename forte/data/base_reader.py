@@ -95,13 +95,16 @@ class BaseReader(PipelineComponent[PackType], ABC):
         values. Used to replace the missing values of input `configs`
         during pipeline construction.
 
-        .. code-block:: python
+        Here:
+          - zip_pack (bool): whether to zip the results. The default value is
+             False.
 
-            {
-                "name": "reader"
-            }
+          - serialize_method: The method used to serialize the data. Current
+              available options are "jsonpickle" and "pickle". Default is
+              "jsonpickle".
+
         """
-        return {"name": "reader"}
+        return {"zip_pack": False, "serialize_method": "jsonpickle"}
 
     @property
     def pack_type(self):
@@ -323,11 +326,19 @@ class BaseReader(PipelineComponent[PackType], ABC):
 
         logger.info("Caching pack to %s", cache_filename)
         if append:
-            with open(cache_filename, "a", encoding="utf-8") as cache:
-                cache.write(pack.serialize() + "\n")
+            with open(
+                cache_filename,
+                "a",
+                encoding="utf-8",
+            ) as cache:
+                cache.write(pack.to_string() + "\n")
         else:
-            with open(cache_filename, "w", encoding="utf-8") as cache:
-                cache.write(pack.serialize() + "\n")
+            with open(
+                cache_filename,
+                "w",
+                encoding="utf-8",
+            ) as cache:
+                cache.write(pack.to_string() + "\n")
 
     def read_from_cache(
         self, cache_filename: Union[Path, str]
@@ -343,7 +354,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
         logger.info("reading from cache file %s", cache_filename)
         with open(cache_filename, "r", encoding="utf-8") as cache_file:
             for line in cache_file:
-                pack = DataPack.deserialize(line.strip())
+                pack = DataPack.from_string(line.strip())
                 if not isinstance(pack, self.pack_type):
                     raise TypeError(
                         f"Pack deserialized from {cache_filename} "

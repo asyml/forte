@@ -136,3 +136,4 @@ embedding
 embeddings
 docstrings
 numpy
+jsonpickle

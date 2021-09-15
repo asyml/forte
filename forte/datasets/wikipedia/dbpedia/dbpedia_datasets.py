@@ -48,7 +48,7 @@ from forte.datasets.wikipedia.dbpedia.db_utils import (
     ContextGroupedNIFReader,
     state_type,
 )
-from forte.processors.base import JsonPackWriter
+from forte.processors.base import PackWriter
 from ft.onto.wikipedia import (
     WikiPage,
     WikiSection,
@@ -225,12 +225,14 @@ class WikiPackReader(PackReader):
                 self._pack_dir, self._pack_index[resource_name]
             )
 
-            # `smart_open` can handle the `gz` files.
             if os.path.exists(pack_path):
-                with open(pack_path) as pack_file:
-                    pack: DataPack = DataPack.deserialize(pack_file.read())
-                    self.add_wiki_info(pack, statements)
-                    yield pack
+                pack: DataPack = DataPack.deserialize(
+                    pack_path,
+                    self.configs.serialize_method,
+                    self.configs.zip_pack,
+                )
+                self.add_wiki_info(pack, statements)
+                yield pack
         else:
             logging.info("Resource %s pack not found.", resource_name)
 
@@ -252,7 +254,7 @@ class WikiPackReader(PackReader):
         }
 
 
-class WikiArticleWriter(JsonPackWriter):
+class WikiArticleWriter(PackWriter):
     """
     This is a pack writer that writes out the Wikipedia articles to disk. It
     has two special behaviors:
@@ -342,7 +344,7 @@ class WikiArticleWriter(JsonPackWriter):
             sub_dir = str(int(self.article_count / 2000)).zfill(5)
             pid = pack.get_single(WikiPage).page_id
             doc_name = f"doc_{self.article_count}" if pid is None else pid
-            suffix = ".json.gz" if self.zip_pack else ".json"
+            suffix = ".json.gz" if self._zip_pack else ".json"
             return os.path.join(sub_dir, doc_name) + suffix
 
     def _process(self, input_pack: DataPack):
