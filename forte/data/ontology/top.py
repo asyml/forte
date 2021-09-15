@@ -80,6 +80,9 @@ class Annotation(Entry):
 
     def set_span(self, begin: int, end: int):
         r"""Set the span of the annotation."""
+        # TODO: PERFORMANCE creating too many Span classes is unnecessary, but
+        #   removing directly will create compatibility problems in
+        #   serialization.
         self._span = Span(begin, end)
 
     def __eq__(self, other):

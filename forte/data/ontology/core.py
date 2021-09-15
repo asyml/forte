@@ -37,7 +37,6 @@ from typing import (
 
 import numpy as np
 
-from forte.common import PackDataException
 from forte.data.container import ContainerType, BasePointer
 
 __all__ = [
@@ -255,36 +254,47 @@ class Entry(Generic[ContainerType]):
                     f"should be [{hints[key]}], but got [{type(value)}]."
                 )
 
-    def __setattr__(self, key, value):
-        self._check_attr_type(key, value)
+    # def __setattr__(self, key, value):
+    #     # TODO: this line is taking a lot of time
+    #     # self._check_attr_type(key, value)
+    #
+    #     if isinstance(value, Entry):
+    #         if value.pack == self.pack:
+    #             # Save a pointer to the value from this entry.
+    #             self.__dict__[key] = Pointer(value.tid)
+    #         else:
+    #             raise PackDataException(
+    #                 "An entry cannot refer to entries in another data pack."
+    #             )
+    #     else:
+    #         super().__setattr__(key, value)
+    #
+    #     # We add the record to the system.
+    #     if key not in default_entry_fields:
+    #         self.__pack.record_field(self.tid, key)
 
-        if isinstance(value, Entry):
-            if value.pack == self.pack:
-                # Save a pointer to the value from this entry.
-                self.__dict__[key] = Pointer(value.tid)
-            else:
-                raise PackDataException(
-                    "An entry cannot refer to entries in another data pack."
-                )
-        else:
-            super().__setattr__(key, value)
-
-        # We add the record to the system.
-        if key not in default_entry_fields:
-            self.__pack.record_field(self.tid, key)
-
-    def __getattribute__(self, item):
-        try:
-            v = super().__getattribute__(item)
-        except AttributeError:
-            # For all unknown attributes, return None.
-            return None
-
-        if isinstance(v, BasePointer):
-            # Using the pointer to get the entry.
-            return self.resolve_pointer(v)
-        else:
-            return v
+    # # TODO: get attribute checks for isinstance, significantly slow down.
+    # def __getattribute__(self, item):
+    #     try:
+    #         v = super().__getattribute__(item)
+    #     except AttributeError:
+    #         # For all unknown attributes, return None.
+    #         return None
+    #
+    #     # TODO: cannot cache like this because __getattribute__ is special.
+    #     # Cache the key to avoid calling isinstance too many times.
+    #     if item in self._regular_atts:
+    #         return v
+    #     elif item in self._pointer_atts:
+    #         return self.resolve_pointer(v)
+    #     else:
+    #         if isinstance(v, BasePointer):
+    #             # Using the pointer to get the entry.
+    #             self._pointer_atts.add(item)
+    #             return self.resolve_pointer(v)
+    #         else:
+    #             self._regular_atts.add(item)
+    #             return v
 
     def __eq__(self, other):
         r"""The eq function for :class:`Entry` objects.
