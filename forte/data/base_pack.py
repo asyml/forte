@@ -14,7 +14,6 @@
 
 import copy
 import gzip
-import json
 import pickle
 import uuid
 from abc import abstractmethod
