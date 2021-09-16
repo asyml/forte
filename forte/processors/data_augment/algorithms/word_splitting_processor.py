@@ -41,9 +41,6 @@ class RandomWordSplitDataAugmentProcessor(ReplacementDataAugmentProcessor):
     where n = alpha * input length.
     """
 
-    def initialize(self, resources: Resources, configs: Config):
-        super().initialize(resources, configs)
-
     def _augment(self, input_pack: MultiPack, aug_pack_names: List[str]):
         augment_entry = get_class(self.configs["augment_entry"])
 
@@ -69,8 +66,8 @@ class RandomWordSplitDataAugmentProcessor(ReplacementDataAugmentProcessor):
                 annotation_to_split = sorted(
                     annotation_to_split, key=lambda x: x[1], reverse=True
                 )
-                for i in range(len(annotation_to_split)):
-                    src_anno, src_idx = annotation_to_split[i]
+                for curr_anno in annotation_to_split:
+                    src_anno, src_idx = curr_anno
                     splitting_position = random.randrange(
                         1, (src_anno.end - src_anno.begin)
                     )
@@ -88,7 +85,7 @@ class RandomWordSplitDataAugmentProcessor(ReplacementDataAugmentProcessor):
                         word_split[1] = " " + word_split[1]
 
                     self._insert(word_split[1], data_pack, second_position)
-                    self._delete(annotation_to_split[i][0])
+                    self._delete(src_anno)
                     self._insert(word_split[0], data_pack, first_position)
 
     @classmethod
