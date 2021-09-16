@@ -40,15 +40,15 @@ __all__ = [
 
 
 class Selector(Generic[InputPackType, OutputPackType], Configurable):
-
     def __init__(self):
         self.configs: Config = Config({}, {})
 
     def select(self, pack: InputPackType) -> Iterator[OutputPackType]:
         raise NotImplementedError
 
-    def initialize(self,
-                   configs: Optional[Union[Config, Dict[str, Any]]] = None):
+    def initialize(
+        self, configs: Optional[Union[Config, Dict[str, Any]]] = None
+    ):
         self.configs = self.make_configs(configs)
 
 
@@ -103,12 +103,11 @@ class NameMatchSelector(SinglePackSelector):
                 f"Pack name {self.select_name}" f" not in the MultiPack"
             )
 
-    def initialize(self,
-                   configs: Optional[Union[Config, Dict[str, Any]]] = None):
+    def initialize(
+        self, configs: Optional[Union[Config, Dict[str, Any]]] = None
+    ):
         if self.select_name is not None:
-            super().initialize(
-                {"select_name": self.select_name}
-            )
+            super().initialize({"select_name": self.select_name})
         else:
             super().initialize(configs)
 
@@ -149,12 +148,11 @@ class RegexNameMatchSelector(SinglePackSelector):
                 if re.match(self.select_name, name):
                     yield pack
 
-    def initialize(self,
-                   configs: Optional[Union[Config, Dict[str, Any]]] = None):
+    def initialize(
+        self, configs: Optional[Union[Config, Dict[str, Any]]] = None
+    ):
         if self.select_name is not None:
-            super().initialize(
-                {"select_name": self.select_name}
-            )
+            super().initialize({"select_name": self.select_name})
         else:
             super().initialize(configs)
 

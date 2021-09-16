@@ -300,7 +300,7 @@ class Pipeline(Generic[PackType]):
                         class_name=selector_config["type"],
                         class_args=selector_config.get("kwargs", {}),
                     ),
-                    selector_config=selector_config.get("configs")
+                    selector_config=selector_config.get("configs"),
                 )
 
         # Set pipeline states and resources
@@ -391,8 +391,10 @@ class Pipeline(Generic[PackType]):
             }
         )
         for component, config, selector, selector_config in zip(
-            self.components, self.component_configs,
-            self._selectors, self._selectors_configs
+            self.components,
+            self.component_configs,
+            self._selectors,
+            self._selectors_configs,
         ):
             configs["components"].append(
                 {
@@ -819,7 +821,9 @@ class Pipeline(Generic[PackType]):
             self._selectors_configs.append(self.__default_selector_config)
         else:
             self._selectors.append(selector)
-            self._selectors_configs.append(selector.make_configs(selector_config))
+            self._selectors_configs.append(
+                selector.make_configs(selector_config)
+            )
 
         return self
 
