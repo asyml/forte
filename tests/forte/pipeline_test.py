@@ -699,11 +699,10 @@ class MultiPackPipelineTest(unittest.TestCase):
         nlp.add(
             DummyRelationExtractor(),
             config={"batcher": {"batch_size": 5}},
-            selector=NameMatchSelector(
-                configs={
-                    "select_name": pack_name
-                }
-            )
+            selector=NameMatchSelector(),
+            selector_config={
+                "select_name": pack_name
+            },
         )
         nlp.initialize()
 
@@ -1303,11 +1302,10 @@ class RecordCheckPipelineTest(unittest.TestCase):
         nlp.add(
             dummy,
             config={"test": "dummy1"},
-            selector=NameMatchSelector(
-                configs={
-                    "select_name": "default"
-                }
-            )
+            selector=NameMatchSelector(),
+            selector_config={
+                "select_name": "default"
+            },
         )
 
         # This will not add the component successfully because the processor is
@@ -1316,12 +1314,12 @@ class RecordCheckPipelineTest(unittest.TestCase):
             nlp.add(dummy, config={"test": "dummy2"})
 
         # This will add the component, with a different selector
-        nlp.add(dummy,
-             selector=NameMatchSelector(
-                configs={
-                    "select_name": "copy"
-                }
-            )
+        nlp.add(
+            dummy,
+            selector=NameMatchSelector(),
+            selector_config={
+                "select_name": "copy"
+            },
         )
         nlp.initialize()
 

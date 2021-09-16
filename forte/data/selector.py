@@ -40,11 +40,16 @@ __all__ = [
 
 
 class Selector(Generic[InputPackType, OutputPackType], Configurable):
-    def __init__(self, configs: Optional[Union[Config, Dict[str, Any]]] = None):
-        self.configs = self.make_configs(configs)
+
+    def __init__(self):
+        self.configs: Config = Config({}, {})
 
     def select(self, pack: InputPackType) -> Iterator[OutputPackType]:
         raise NotImplementedError
+
+    def initialize(self,
+                   configs: Optional[Union[Config, Dict[str, Any]]] = None):
+        self.configs = self.make_configs(configs)
 
 
 class DummySelector(Selector[InputPackType, InputPackType]):
@@ -74,26 +79,17 @@ class NameMatchSelector(SinglePackSelector):
         selector = NameMatchSelector(select_name="foo")
         selector = NameMatchSelector("foo")
     Now:
-        selector = NameMatchSelector(
+        selector = NameMatchSelector()
+        selector.initialize(
             configs={
                 "select_name": "foo"
             }
         )
     """
 
-    def __init__(self, *args, **kwargs):
-        assert (len(args) == 0) ^ (len(kwargs) == 0)
-        if args:
-            configs = {"select_name": args[0]}
-        else:
-            assert ("configs" in kwargs) or ("select_name" in kwargs)
-            if "select_name" in kwargs:
-                configs = {"select_name": kwargs["select_name"]}
-            else:
-                configs = kwargs["configs"]
-        super().__init__(configs=configs)
-        self.select_name = self.configs["select_name"]
-        assert self.select_name is not None
+    def __init__(self, select_name: str = None):
+        super().__init__()
+        self.select_name = select_name
 
     def select(self, m_pack: MultiPack) -> Iterator[DataPack]:
         matches = 0
@@ -106,6 +102,19 @@ class NameMatchSelector(SinglePackSelector):
             raise ValueError(
                 f"Pack name {self.select_name}" f" not in the MultiPack"
             )
+
+    def initialize(self,
+                   configs: Optional[Union[Config, Dict[str, Any]]] = None):
+        if self.select_name is not None:
+            super().initialize(
+                {"select_name": self.select_name}
+            )
+        else:
+            super().initialize(configs)
+
+        if self.configs["select_name"] is None:
+            raise ValueError("select_name shouldn't be None.")
+        self.select_name = self.configs["select_name"]
 
     @classmethod
     def default_configs(cls):
@@ -120,26 +129,17 @@ class RegexNameMatchSelector(SinglePackSelector):
         selector = RegexNameMatchSelector(select_name="^.*\\d$")
         selector = RegexNameMatchSelector("^.*\\d$")
     Now:
-        selector = RegexNameMatchSelector(
+        selector = RegexNameMatchSelector()
+        selector.initialize(
             configs={
                 "select_name": "^.*\\d$"
             }
         )
     """
 
-    def __init__(self, *args, **kwargs):
-        assert (len(args) == 0) ^ (len(kwargs) == 0)
-        if args:
-            configs = {"select_name": args[0]}
-        else:
-            assert ("configs" in kwargs) or ("select_name" in kwargs)
-            if "select_name" in kwargs:
-                configs = {"select_name": kwargs["select_name"]}
-            else:
-                configs = kwargs["configs"]
-        super().__init__(configs=configs)
-        self.select_name = self.configs["select_name"]
-        assert self.select_name is not None
+    def __init__(self, select_name: str = None):
+        super().__init__()
+        self.select_name = select_name
 
     def select(self, m_pack: MultiPack) -> Iterator[DataPack]:
         if len(m_pack.packs) == 0:
@@ -148,6 +148,19 @@ class RegexNameMatchSelector(SinglePackSelector):
             for name, pack in m_pack.iter_packs():
                 if re.match(self.select_name, name):
                     yield pack
+
+    def initialize(self,
+                   configs: Optional[Union[Config, Dict[str, Any]]] = None):
+        if self.select_name is not None:
+            super().initialize(
+                {"select_name": self.select_name}
+            )
+        else:
+            super().initialize(configs)
+
+        if self.configs["select_name"] is None:
+            raise ValueError("select_name shouldn't be None.")
+        self.select_name = self.configs["select_name"]
 
     @classmethod
     def default_configs(cls):
