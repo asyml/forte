@@ -145,7 +145,7 @@ class RegexNameMatchSelector(SinglePackSelector):
             raise ValueError("Multi-pack is empty")
         else:
             for name, pack in m_pack.iter_packs():
-                if re.match(self.select_name, name): # type: ignore
+                if re.match(self.select_name, name):  # type: ignore
                     yield pack
 
     def initialize(
