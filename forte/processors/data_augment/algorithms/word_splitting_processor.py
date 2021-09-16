@@ -23,8 +23,6 @@ from math import ceil
 import random
 from typing import List, Iterable
 
-from forte.common.configuration import Config
-from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology import Annotation
