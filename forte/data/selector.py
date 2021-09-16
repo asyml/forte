@@ -87,7 +87,7 @@ class NameMatchSelector(SinglePackSelector):
         )
     """
 
-    def __init__(self, select_name: str = None):
+    def __init__(self, select_name: Optional[str] = None):
         super().__init__()
         self.select_name = select_name
 
@@ -136,7 +136,7 @@ class RegexNameMatchSelector(SinglePackSelector):
         )
     """
 
-    def __init__(self, select_name: str = None):
+    def __init__(self, select_name: Optional[str] = None):
         super().__init__()
         self.select_name = select_name
 
@@ -145,7 +145,7 @@ class RegexNameMatchSelector(SinglePackSelector):
             raise ValueError("Multi-pack is empty")
         else:
             for name, pack in m_pack.iter_packs():
-                if re.match(self.select_name, name):
+                if re.match(self.select_name, name): # type: ignore
                     yield pack
 
     def initialize(
