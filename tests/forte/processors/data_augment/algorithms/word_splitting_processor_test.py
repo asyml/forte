@@ -23,6 +23,7 @@ from forte.pipeline import Pipeline
 from forte.data.multi_pack import MultiPack
 from forte.data.readers import StringReader
 from forte.data.caster import MultiPackBoxer
+from forte.processors.misc import PeriodSentenceSplitter
 from forte.processors.data_augment.algorithms.word_splitting_processor import (
     RandomWordSplitDataAugmentProcessor,
 )
@@ -36,12 +37,13 @@ from ddt import ddt, data, unpack
 @ddt
 class TestWordSplittingProcessor(unittest.TestCase):
     def setUp(self):
-        random.seed(5)
+        random.seed(8)
         self.nlp = Pipeline[MultiPack]()
 
         boxer_config = {"pack_name": "input_src"}
 
         self.nlp.set_reader(reader=StringReader())
+        self.nlp.add(PeriodSentenceSplitter())
         self.nlp.add(component=MultiPackBoxer(), config=boxer_config)
         self.nlp.add(
             component=WhiteSpaceTokenizer(), selector=AllPackSelector()
@@ -50,28 +52,34 @@ class TestWordSplittingProcessor(unittest.TestCase):
     @data(
         (
             [
-                "Mary and Samantha arrived at the bus station early "
-                "but waited until noon for the bus ."
+                "Mary and Samantha arrived at the bus station on time . "
+                "But they had to wait until noon for the bus ."
             ],
             [
-                "Ma ry and Samantha arrived at the bus station ear ly "
-                "but waited until noon for the bus ."
+                "Mary and Samantha arrived at the bus statio n on time . "
+                "But t hey h ad to wait until noon for the bus ."
             ],
             [
                 [
-                    "Ma",
-                    "ry ",
+                    "Mary",
                     "and",
                     "Samantha",
                     "arrived",
                     "at",
                     "the",
                     "bus",
-                    "station",
-                    "ear",
-                    "ly ",
-                    "but",
-                    "waited",
+                    "statio",
+                    " n",
+                    "on",
+                    "time",
+                    ".",
+                    "But",
+                    "t",
+                    " hey",
+                    "h",
+                    " ad",
+                    "to",
+                    "wait",
                     "until",
                     "noon",
                     "for",
@@ -80,7 +88,7 @@ class TestWordSplittingProcessor(unittest.TestCase):
                     ".",
                 ]
             ],
-            [["Mary", "early"]],
+            [["station", "they", "had"]],
         )
     )
     @unpack

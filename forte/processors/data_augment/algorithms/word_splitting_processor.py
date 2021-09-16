@@ -16,6 +16,7 @@
 Data augmentation processor for the Random Word Splitting operation.
 Randomly choose n words (With length greater than 1) and split it at a random position.
 Do this n times, where n = alpha * input length.
+Example: Original Text -> "I will be there soon." , Augmented Text -> "I w ill be there so on."
 """
 
 from math import ceil
@@ -34,6 +35,12 @@ __all__ = ["RandomWordSplitDataAugmentProcessor"]
 
 
 class RandomWordSplitDataAugmentProcessor(ReplacementDataAugmentProcessor):
+    r"""
+    This class creates a processor to perform Random Word Splitting.
+    It randomly chooses n words in a sentence and splits each word at a random position
+    where n = alpha * input length.
+    """
+
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
 
@@ -42,32 +49,47 @@ class RandomWordSplitDataAugmentProcessor(ReplacementDataAugmentProcessor):
 
         for pack_name in aug_pack_names:
             data_pack: DataPack = input_pack.get_pack(pack_name)
-            annotations: List[Annotation] = []
-            pos = []
+            annotations: List[List(Annotation, int)] = []
+            test: List[List(Annotation, int)] = []
+            endings = []
             annos: Iterable[Annotation] = data_pack.get(augment_entry)
-            for anno in annos:
-                if len(anno.text) > 1:
-                    annotations.append((anno, anno.end))
-                    pos.append(anno.end)
+            for idx, anno in enumerate(annos):
+                test.append([anno.text, idx])
+                annotations.append([anno, idx])
+                endings.append(anno.end)
             if len(annotations) > 0:
-                for _ in range(ceil(self.configs["alpha"] * len(annotations))):
-                    annotation_to_split = random.choice(annotations)
-                    src_anno = annotation_to_split[0]
-                    insert_pos = annotation_to_split[1]
-                    splitting_position = random.randrange(1, len(src_anno.text))
+                annotation_to_split = random.sample(
+                    [
+                        anno
+                        for anno in annotations
+                        if (anno[0].end - anno[0].begin) > 1
+                    ],
+                    ceil(self.configs["alpha"] * len(annotations)),
+                )
+                annotation_to_split = sorted(
+                    annotation_to_split, key=lambda x: x[1], reverse=True
+                )
+                for i in range(len(annotation_to_split)):
+                    src_anno, src_idx = annotation_to_split[i]
+                    splitting_position = random.randrange(
+                        1, (src_anno.end - src_anno.begin)
+                    )
                     word_split = [
                         src_anno.text[:splitting_position],
                         src_anno.text[splitting_position:],
                     ]
-                    if insert_pos != pos[-1]:
-                        word_split[1] = word_split[1] + " "
+                    if src_idx != 0:
+                        first_position = endings[src_idx - 1] + 1
+                        second_position = endings[src_idx]
+                        word_split[1] = " " + word_split[1]
+                    else:
+                        first_position = 0
+                        second_position = endings[0]
+                        word_split[1] = " " + word_split[1]
 
-                    first_position = insert_pos
-                    second_position = insert_pos + 1
-
-                    self._delete(src_anno)
-                    self._insert(word_split[0], data_pack, first_position)
                     self._insert(word_split[1], data_pack, second_position)
+                    self._delete(annotation_to_split[i][0])
+                    self._insert(word_split[0], data_pack, first_position)
 
     @classmethod
     def default_configs(cls):
