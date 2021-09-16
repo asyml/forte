@@ -113,6 +113,7 @@ class ProcessBuffer:
 
 
 class Pipeline(Generic[PackType]):
+    # pylint: disable=too-many-public-methods
     r"""This controls the main inference flow of the system. A pipeline is
     consisted of a set of Components (readers and processors). The data flows
     in the pipeline as data packs, and each component will use or add
