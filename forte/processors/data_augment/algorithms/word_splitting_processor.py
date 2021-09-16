@@ -95,11 +95,12 @@ class RandomWordSplitDataAugmentProcessor(ReplacementDataAugmentProcessor):
     def default_configs(cls):
         """
         Returns:
-            A dictionary with the default config for this processor.
-            Additional keys for determining how many words will be split:
-            - alpha: 0 <= alpha <= 1. indicates the percent of the words
-                in a sentence that are changed. The processor will perform
-                the Word Splitting operation 2 * (input length * alpha) times after deleting the original annotation.
+        A dictionary with the default config for this processor.
+        Additional keys for determining how many words will be split:
+        - alpha: 0 <= alpha <= 1. indicates the percent of the words
+        in a sentence that are changed. The processor will perform
+        the Word Splitting operation 2 * (input length * alpha) times after deleting the
+         original annotation.
         """
         config = super().default_configs()
         config.update(
