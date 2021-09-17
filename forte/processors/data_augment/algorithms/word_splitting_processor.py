@@ -44,18 +44,20 @@ class RandomWordSplitDataAugmentProcessor(ReplacementDataAugmentProcessor):
 
         for pack_name in aug_pack_names:
             data_pack: DataPack = input_pack.get_pack(pack_name)
-            annotations: List[List[Annotation, int]] = []
+            annotations: List[Annotation] = []
+            indexes: List[int] = []
             endings = []
             annos: Iterable[Annotation] = data_pack.get(augment_entry)
             for idx, anno in enumerate(annos):
-                annotations.append([anno, idx])
+                annotations.append(anno)
+                indexes.append(idx)
                 endings.append(anno.end)
             if len(annotations) > 0:
                 annotation_to_split = random.sample(
                     [
-                        anno
-                        for anno in annotations
-                        if (anno[0].end - anno[0].begin) > 1
+                        (anno, idx)
+                        for (anno, idx) in zip(annotations, indexes)
+                        if (anno.end - anno.begin) > 1
                     ],
                     ceil(self.configs["alpha"] * len(annotations)),
                 )
