@@ -154,7 +154,7 @@ class StaveProcessor(PackProcessor):
                 input_pack.pack_name
                 if self.configs.use_pack_name
                 else input_pack.pack_id,
-                input_pack.serialize(),
+                input_pack.to_string(),
             )
             if textpack_id == 0:
                 self._viewer.open()

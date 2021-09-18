@@ -37,7 +37,7 @@ class DeserializeReaderPipelineTest(unittest.TestCase):
 
         for pack in self.nlp.process_dataset(data):
             for new_pack in another_pipeline.process_dataset(
-                [pack.serialize()]
+                [pack.to_string()]
             ):
                 self.assertEqual(pack.text, new_pack.text)
 

@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import logging
+from pathlib import Path
 from typing import (
     Dict,
     Iterable,
@@ -504,20 +505,30 @@ class DataPack(BasePack[Entry, Link, Group]):
         return Span(orig_begin, orig_end)
 
     @classmethod
-    def deserialize(cls, data_pack_string: str) -> "DataPack":
+    def deserialize(
+        cls,
+        data_source: Union[Path, str],
+        serialize_method: str = "jsonpickle",
+        zip_pack: bool = False,
+    ) -> "DataPack":
         """
         Deserialize a Data Pack from a string. This internally calls the
         internal :meth:`~forte.data.base_pack.BasePack._deserialize` function
         from :class:`~forte.data.base_pack.BasePack`.
 
         Args:
-            data_pack_string: The serialized string of a data pack to be
-              deserialized.
+            data_source: The path storing data source.
+            serialize_method: The method used to serialize the data, this
+              should be the same as how serialization is done. The current
+              options are "jsonpickle" and "pickle". The default method
+              is "jsonpickle".
+            zip_pack: Boolean value indicating whether the input source is
+              zipped.
 
         Returns:
             An data pack object deserialized from the string.
         """
-        return cls._deserialize(data_pack_string)
+        return cls._deserialize(data_source, serialize_method, zip_pack)
 
     def _add_entry(self, entry: EntryType) -> EntryType:
         r"""Force add an :class:`~forte.data.ontology.core.Entry` object to the
@@ -586,25 +597,22 @@ class DataPack(BasePack[Entry, Link, Group]):
                 f"should be an instance of Annotation, Link, Group of Generics."
             )
 
-        # TODO: duplicate is ill-defined.
-        add_new = allow_duplicate or (entry not in target)
+        if not allow_duplicate:
+            index = target.index(entry)
+            if index < 0:
+                # Return the existing entry if duplicate is not allowed.
+                return target[index]
 
-        if add_new:
-            target.add(entry)
-
-            # update the data pack index if needed
-            self._index.update_basic_index([entry])
-            if self._index.link_index_on and isinstance(entry, Link):
-                self._index.update_link_index([entry])
-            if self._index.group_index_on and isinstance(entry, Group):
-                self._index.update_group_index([entry])
-            self._index.deactivate_coverage_index()
-
-            self._pending_entries.pop(entry.tid)
-
-            return entry
-        else:
-            return target[target.index(entry)]
+        target.add(entry)
+        # update the data pack index if needed
+        self._index.update_basic_index([entry])
+        if self._index.link_index_on and isinstance(entry, Link):
+            self._index.update_link_index([entry])
+        if self._index.group_index_on and isinstance(entry, Group):
+            self._index.update_group_index([entry])
+        self._index.deactivate_coverage_index()
+        self._pending_entries.pop(entry.tid)
+        return entry
 
     def delete_entry(self, entry: EntryType):
         r"""Delete an :class:`~forte.data.ontology.core.Entry` object from the
@@ -762,7 +770,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             context_type_, context_args
         )
 
-        valid_context_ids: Set[int] = self.get_ids_by_type_subtype(
+        valid_context_ids: Set[int] = self._index.query_by_type_subtype(
             context_type_
         )
         if context_components:

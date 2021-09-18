@@ -19,13 +19,13 @@ import os
 import unittest
 import warnings
 from dataclasses import dataclass
-from typing import Any, Dict, Iterator, Optional, Type, Set, List
+from typing import Any, Dict, Iterator, Optional, Set, List
 
 import numpy as np
 from ddt import ddt, data, unpack
 
 from forte.common import ProcessExecutionException, ProcessorConfigError
-from forte.common.configuration import merge_configs, Config
+from forte.common.configuration import Config
 from forte.data.base_pack import PackType
 from forte.data.base_reader import PackReader, MultiPackReader
 from forte.data.batchers import (
@@ -43,7 +43,6 @@ from forte.data.selector import (
     SinglePackSelector,
     AllPackSelector,
 )
-from forte.data.types import DataRequest
 from forte.evaluation.base import Evaluator
 from forte.pipeline import Pipeline
 from forte.processors.base import (
@@ -53,8 +52,6 @@ from forte.processors.base import (
 )
 from forte.processors.base.batch_processor import (
     Predictor,
-    BaseBatchProcessor,
-    PackingBatchProcessor,
 )
 from forte.processors.misc import PeriodSentenceSplitter
 from forte.utils import get_full_module_name
@@ -424,7 +421,6 @@ class PipelineTest(unittest.TestCase):
         dummy = DummyPackProcessor()
         config = {"test": "successor"}
         nlp.add(dummy, config=config)
-        print(nlp.components)
 
         with self.assertRaises(ProcessorConfigError):
             nlp.initialize()

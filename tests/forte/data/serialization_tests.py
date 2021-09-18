@@ -14,27 +14,35 @@
 import os
 import tempfile
 import unittest
-
 from typing import Dict
-import re
+
+from ddt import data, ddt
 
 from forte.data.caster import MultiPackBoxer
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
-from forte.data.readers import OntonotesReader, DirPackReader
+from forte.data.ontology import Annotation
+from forte.data.readers import (
+    OntonotesReader,
+    DirPackReader,
+    MultiPackDirectoryReader,
+)
 from forte.pipeline import Pipeline
 from forte.processors.base import (
     MultiPackProcessor,
-    MultiPackWriter,
     PackProcessor,
 )
 from forte.processors.writers import (
-    PackNameJsonPackWriter,
     PackIdJsonPackWriter,
-    PackNameMultiPackWriter,
     PackIdMultiPackWriter,
+    AutoNamePackWriter,
 )
-from ft.onto.base_ontology import Sentence
+from ft.onto.base_ontology import (
+    Sentence,
+    Token,
+    EntityMention,
+    CrossDocEntityRelation,
+)
 
 
 class CopySentence(MultiPackProcessor):
@@ -57,55 +65,148 @@ class CopySentence(MultiPackProcessor):
         for s in from_pack.get(Sentence):
             Sentence(copy_pack, s.begin, s.end)
 
+        e: EntityMention
+        for e in from_pack.get(EntityMention):
+            EntityMention(copy_pack, e.begin, e.end)
+
     @classmethod
     def default_configs(cls) -> Dict[str, str]:
         return {"copy_from": "default", "copy_to": "duplicate"}
 
 
+class NaiveCoref(MultiPackProcessor):
+    def _process(self, input_pack: MultiPack):
+        fp = input_pack.get_pack_at(0)
+        sp = input_pack.get_pack_at(1)
+
+        nes1 = list(fp.get(EntityMention))
+        nes2 = list(sp.get(EntityMention))
+
+        for ne1 in nes1:
+            for ne2 in nes2:
+                if ne1.text == ne2.text:
+                    CrossDocEntityRelation(input_pack, ne1, ne2)
+
+
+@ddt
 class SerializationTest(unittest.TestCase):
     def setUp(self):
         file_dir_path = os.path.dirname(__file__)
-        data_path = os.path.join(
-            file_dir_path, "../../../../", "data_samples", "ontonotes", "00"
+        self.data_path = os.path.join(
+            file_dir_path, "../../../", "data_samples", "ontonotes", "00"
         )
 
-        self.main_output = tempfile.TemporaryDirectory()
+    @data(
+        (True, "pickle"),
+        (False, "pickle"),
+        (True, "jsonpickle"),
+        (False, "jsonpickle"),
+    )
+    def testMultiPackWriting(self, config_data):
+        zip_pack, method = config_data
 
-        nlp = Pipeline[DataPack]()
-        nlp.set_reader(OntonotesReader())
-        nlp.add(
-            PackIdJsonPackWriter(),
-            {
-                "output_dir": os.path.join(self.main_output.name, "packs"),
-                "indent": 2,
-                "overwrite": True,
-            },
-        )
-        nlp.run(data_path)
+        # Use different sub-directory to avoid conflicting.
+        subdir = f"{zip_pack}_{method}"
 
-    def testMultiPackWriting(self):
-        coref_pl = Pipeline()
-        coref_pl.set_reader(DirPackReader())
-        coref_pl.add(MultiPackBoxer())
-        coref_pl.add(CopySentence())
+        with tempfile.TemporaryDirectory() as main_output:
+            # Prepare input data.
+            prepared_input: str = os.path.join(
+                main_output, subdir, "input_packs"
+            )
+            data_output: str = os.path.join(main_output, subdir, "output")
+            suffix = ".pickle" if method == "pickle" else ".json"
+            if zip_pack:
+                suffix = suffix + ".gz"
 
-        coref_pl.add(
-            PackIdMultiPackWriter(),
-            config={
-                "output_dir": os.path.join(self.main_output.name, "multi"),
-                "indent": 2,
-                "overwrite": True,
-            },
-        )
-        coref_pl.run(os.path.join(self.main_output.name, "packs"))
-        self.assertTrue(os.path.exists(os.path.join("multi_out", "multi.idx")))
-        self.assertTrue(os.path.exists(os.path.join("multi_out", "pack.idx")))
-        self.assertTrue(os.path.exists(os.path.join("multi_out", "packs")))
-        self.assertTrue(os.path.exists(os.path.join("multi_out", "multi")))
+            nlp = Pipeline[DataPack]()
+            nlp.set_reader(OntonotesReader())
+            nlp.add(
+                PackIdJsonPackWriter(),
+                {
+                    "output_dir": prepared_input,
+                    "overwrite": True,
+                    "serialize_method": method,
+                    "zip_pack": zip_pack,
+                },
+            )
+            nlp.run(self.data_path)
 
-    def testStaveFormat(self):
-        # TODO: call stave transform here.
-        pass
+            # Convert to multi pack.
+            coref_pl = Pipeline()
 
-    def tearDown(self):
-        self.main_output.cleanup()
+            coref_pl.set_reader(
+                DirPackReader(),
+                {
+                    "serialize_method": method,
+                    "zip_pack": zip_pack,
+                    "suffix": suffix,
+                },
+            )
+            coref_pl.add(MultiPackBoxer())
+            coref_pl.add(CopySentence())
+            coref_pl.add(NaiveCoref())
+
+            coref_pl.add(
+                PackIdMultiPackWriter(),
+                config={
+                    "output_dir": data_output,
+                    "overwrite": True,
+                    "serialize_method": method,
+                    "zip_pack": zip_pack,
+                },
+            )
+            coref_pl.run(prepared_input)
+
+            self.assertTrue(
+                os.path.exists(os.path.join(data_output, "multi.idx"))
+            )
+            self.assertTrue(
+                os.path.exists(os.path.join(data_output, "pack.idx"))
+            )
+            self.assertTrue(os.path.exists(os.path.join(data_output, "packs")))
+            self.assertTrue(os.path.exists(os.path.join(data_output, "multi")))
+
+            # Read the multi pack again.
+            mp_pipeline = Pipeline()
+
+            mp_pipeline.set_reader(
+                MultiPackDirectoryReader(),
+                config={
+                    "suffix": suffix,
+                    "zip_pack": zip_pack,
+                    "serialize_method": method,
+                    "data_pack_dir": os.path.join(data_output, "packs"),
+                    "multi_pack_dir": os.path.join(data_output, "multi"),
+                },
+            ).initialize()
+
+            re: CrossDocEntityRelation
+            for mp in mp_pipeline.process_dataset():
+                for re in mp.get(CrossDocEntityRelation):
+                    self.assertEqual(re.get_parent().text, re.get_child().text)
+
+    @data(
+        (True, "pickle"),
+        (False, "pickle"),
+        (True, "jsonpickle"),
+        (False, "jsonpickle"),
+    )
+    def testPackWriting(self, config_data):
+        zip_pack, method = config_data
+
+        with tempfile.TemporaryDirectory() as main_output:
+            write_pipeline = Pipeline[DataPack]()
+            write_pipeline.set_reader(OntonotesReader())
+            write_pipeline.add(
+                AutoNamePackWriter(),
+                {
+                    "output_dir": os.path.join(main_output, "packs"),
+                    "overwrite": True,
+                    "zip_pack": zip_pack,
+                    "serialize_method": method,
+                },
+            )
+            write_pipeline.run(self.data_path)
+
+            read_pipeline = Pipeline[DataPack]()
+            read_pipeline.set_reader(DirPackReader())

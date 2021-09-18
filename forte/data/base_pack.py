@@ -13,8 +13,11 @@
 # limitations under the License.
 
 import copy
+import gzip
+import pickle
 import uuid
 from abc import abstractmethod
+from pathlib import Path
 from typing import (
     List,
     Optional,
@@ -162,19 +165,44 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         self._meta.pack_name = pack_name
 
     @classmethod
-    def _deserialize(cls, string: str) -> "PackType":
+    def _deserialize(
+        cls,
+        data_source: Union[Path, str],
+        serialize_method: str = "jsonpickle",
+        zip_pack: bool = False,
+    ) -> "PackType":
         """
         This function should deserialize a Pack from a string. The
-         implementation should decide the specific pack type.
+        implementation should decide the specific pack type.
 
         Args:
-            string: The serialized string to be deserialized.
+            data_source: The data path containing pack data. The content
+              of the data could be string or bytes depending on the method of
+              serialization.
+            serialize_method: The method used to serialize the data, this
+              should be the same as how serialization is done. The current
+              options are "jsonpickle" and "pickle". The default method
+              is "jsonpickle".
+            zip_pack: Boolean value indicating whether the input source is
+              zipped.
 
         Returns:
-            An pack object deserialized from the string.
+            An pack object deserialized from the data.
         """
-        pack = jsonpickle.decode(string)
-        return pack
+        _open = gzip.open if zip_pack else open
+
+        if serialize_method == "jsonpickle":
+            with _open(data_source, mode="rt") as f:  # type: ignore
+                pack = cls.from_string(f.read())
+        else:
+            with _open(data_source, mode="rb") as f:  # type: ignore
+                pack = pickle.load(f)
+
+        return pack  # type: ignore
+
+    @classmethod
+    def from_string(cls, data_content: str) -> "BasePack":
+        return jsonpickle.decode(data_content)
 
     @abstractmethod
     def delete_entry(self, entry: EntryType):
@@ -238,13 +266,76 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             self.add_entry(entry, c_)
         self._pending_entries.clear()
 
-    def serialize(self, drop_record: Optional[bool] = False) -> str:
-        r"""Serializes a pack to a string."""
+    def to_string(
+        self,
+        drop_record: Optional[bool] = False,
+        json_method: str = "jsonpickle",
+        indent: Optional[int] = None,
+    ) -> str:
+        """
+        Return the string representation (json encoded) of this method.
+
+        Args:
+            drop_record: Whether to drop the creation records, default is False.
+            json_method: What method is used to convert data pack to json.
+              Only supports `json_pickle` for now. Default value is
+              `json_pickle`.
+            indent: The indent used for json string.
+
+        Returns: String representation of the data pack.
+        """
+        if drop_record:
+            self._creation_records.clear()
+            self._field_records.clear()
+        if json_method == "jsonpickle":
+            return jsonpickle.encode(self, unpicklable=True, indent=indent)
+        else:
+            raise ValueError(f"Unsupported JSON method {json_method}.")
+
+    def serialize(
+        self,
+        output_path: Union[str, Path],
+        zip_pack: bool = False,
+        drop_record: bool = False,
+        serialize_method: str = "jsonpickle",
+        indent: Optional[int] = None,
+    ):
+        r"""
+        Serializes the data pack to the provided path. The output of this
+        function depends on the serialization method chosen.
+
+        Args:
+            output_path: The path to write data to.
+            zip_pack: Whether to compress the result with `gzip`.
+            drop_record: Whether to drop the creation records, default is False.
+            serialize_method: The method used to serialize the data. Currently
+              supports "jsonpickle" (outputs str) and Python's built-in
+              "pickle" (outputs bytes).
+            indent: Whether to indent the file if written as JSON.
+
+        Returns: Results of serialization.
+        """
+        if zip_pack:
+            _open = gzip.open
+        else:
+            _open = open  # type:ignore
+
         if drop_record:
             self._creation_records.clear()
             self._field_records.clear()
 
-        return jsonpickle.encode(self, unpicklable=True)
+        if serialize_method == "pickle":
+            with _open(output_path, mode="wb") as pickle_out:
+                pickle.dump(self, pickle_out)  # type:ignore
+        elif serialize_method == "jsonpickle":
+            with _open(output_path, mode="wt", encoding="utf-8") as json_out:
+                json_out.write(
+                    self.to_string(drop_record, "jsonpickle", indent=indent)
+                )
+        else:
+            raise NotImplementedError(
+                f"Unsupported serialization method {serialize_method}"
+            )
 
     def view(self):
         return copy.deepcopy(self)
@@ -457,22 +548,6 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             valid_component_id |= self.get_ids_by_creator(component)
         return valid_component_id
 
-    def get_ids_by_type_subtype(self, entry_type: Type[EntryType]) -> Set[int]:
-        r"""Look up the type_index with key ``entry_type``.
-
-        Args:
-            entry_type: The type of the entry you are looking for.
-
-        Returns:
-             A set of entry ids. The entries are instances of `entry_type` (
-             and also includes instances of the subclasses of `entry_type`).
-        """
-        subclass_index: Set[int] = set()
-        for index_key, index_val in self._index.iter_type_index():
-            if issubclass(index_key, entry_type):
-                subclass_index.update(index_val)
-        return subclass_index
-
     def _expand_to_sub_types(self, entry_type: Type[EntryType]) -> Set[Type]:
         """
         Return all the types and the sub types that inherit from the provided
@@ -511,7 +586,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             for tid in self._index.query_by_type(entry_type):
                 yield self.get_entry(tid)
         else:
-            for tid in self.get_ids_by_type_subtype(entry_type):
+            for tid in self._index.query_by_type_subtype(entry_type):
                 yield self.get_entry(tid)
 
     @classmethod

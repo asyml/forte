@@ -141,7 +141,7 @@ class RemoteProcessor(PackProcessor):
         # Pack the input_pack and POST it to remote service
         response = self._requests.post(
             f"{self.configs.url}/process",
-            json={"args": json.dumps([[input_pack.serialize()]])},
+            json={"args": json.dumps([[input_pack.to_string()]])},
         )
         if response.status_code != 200 or response.json()["status"] != "OK":
             raise Exception(
@@ -151,7 +151,7 @@ class RemoteProcessor(PackProcessor):
                 "a valid pipeline service that is up and running."
             )
         result = response.json()["result"]
-        input_pack.update(DataPack.deserialize(result))
+        input_pack.update(DataPack.from_string(result))  # type: ignore
 
     def set_test_mode(self, app: FastAPI):
         """

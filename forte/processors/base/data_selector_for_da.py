@@ -64,7 +64,7 @@ class BaseElasticSearchDataSelector(BaseDataSelector):
         raise NotImplementedError
 
     def _parse_pack(self, pack_info: str) -> Iterator[DataPack]:
-        pack: DataPack = DataPack.deserialize(pack_info)
+        pack: DataPack = DataPack.from_string(pack_info)  # type: ignore
         yield pack
 
     @classmethod
