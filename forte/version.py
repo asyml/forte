@@ -18,3 +18,4 @@ _REVISION = "2"
 
 VERSION_SHORT = "{0}.{1}".format(_MAJOR, _MINOR)
 VERSION = "{0}.{1}.{2}".format(_MAJOR, _MINOR, _REVISION)
+FORTE_IR_VERSION = "0.0.1"

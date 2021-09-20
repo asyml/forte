@@ -15,10 +15,12 @@
 This defines some selector interface used as glue to combine
 DataPack/multiPack processors and Pipeline.
 """
-from typing import Generic, Iterator, TypeVar
+from typing import Generic, Iterator, TypeVar, Optional, Union, Dict, Any
 
 import re
 
+from forte.common.configuration import Config
+from forte.common.configurable import Configurable
 from forte.data.base_pack import BasePack
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
@@ -37,12 +39,17 @@ __all__ = [
 ]
 
 
-class Selector(Generic[InputPackType, OutputPackType]):
-    def __init__(self, **kwargs):
-        pass
+class Selector(Generic[InputPackType, OutputPackType], Configurable):
+    def __init__(self):
+        self.configs: Config = Config({}, {})
 
     def select(self, pack: InputPackType) -> Iterator[OutputPackType]:
         raise NotImplementedError
+
+    def initialize(
+        self, configs: Optional[Union[Config, Dict[str, Any]]] = None
+    ):
+        self.configs = self.make_configs(configs)
 
 
 class DummySelector(Selector[InputPackType, InputPackType]):
@@ -66,12 +73,23 @@ class SinglePackSelector(Selector[MultiPack, DataPack]):
 class NameMatchSelector(SinglePackSelector):
     r"""Select a :class:`DataPack` from a :class:`MultiPack` with specified
     name.
+
+    This implementation takes special care for backward compatability:
+    Deprecated:
+        selector = NameMatchSelector(select_name="foo")
+        selector = NameMatchSelector("foo")
+    Now:
+        selector = NameMatchSelector()
+        selector.initialize(
+            configs={
+                "select_name": "foo"
+            }
+        )
     """
 
-    def __init__(self, select_name: str):
+    def __init__(self, select_name: Optional[str] = None):
         super().__init__()
-        assert select_name is not None
-        self.select_name: str = select_name
+        self.select_name = select_name
 
     def select(self, m_pack: MultiPack) -> Iterator[DataPack]:
         matches = 0
@@ -85,22 +103,66 @@ class NameMatchSelector(SinglePackSelector):
                 f"Pack name {self.select_name}" f" not in the MultiPack"
             )
 
+    def initialize(
+        self, configs: Optional[Union[Config, Dict[str, Any]]] = None
+    ):
+        if self.select_name is not None:
+            super().initialize({"select_name": self.select_name})
+        else:
+            super().initialize(configs)
+
+        if self.configs["select_name"] is None:
+            raise ValueError("select_name shouldn't be None.")
+        self.select_name = self.configs["select_name"]
+
+    @classmethod
+    def default_configs(cls):
+        return {"select_name": None}
+
 
 class RegexNameMatchSelector(SinglePackSelector):
-    r"""Select a :class:`DataPack` from a :class:`MultiPack` using a regex."""
+    r"""Select a :class:`DataPack` from a :class:`MultiPack` using a regex.
 
-    def __init__(self, select_name: str):
+    This implementation takes special care for backward compatability:
+    Deprecated:
+        selector = RegexNameMatchSelector(select_name="^.*\\d$")
+        selector = RegexNameMatchSelector("^.*\\d$")
+    Now:
+        selector = RegexNameMatchSelector()
+        selector.initialize(
+            configs={
+                "select_name": "^.*\\d$"
+            }
+        )
+    """
+
+    def __init__(self, select_name: Optional[str] = None):
         super().__init__()
-        assert select_name is not None
-        self.select_name: str = select_name
+        self.select_name = select_name
 
     def select(self, m_pack: MultiPack) -> Iterator[DataPack]:
         if len(m_pack.packs) == 0:
             raise ValueError("Multi-pack is empty")
         else:
             for name, pack in m_pack.iter_packs():
-                if re.match(self.select_name, name):
+                if re.match(self.select_name, name):  # type: ignore
                     yield pack
+
+    def initialize(
+        self, configs: Optional[Union[Config, Dict[str, Any]]] = None
+    ):
+        if self.select_name is not None:
+            super().initialize({"select_name": self.select_name})
+        else:
+            super().initialize(configs)
+
+        if self.configs["select_name"] is None:
+            raise ValueError("select_name shouldn't be None.")
+        self.select_name = self.configs["select_name"]
+
+    @classmethod
+    def default_configs(cls):
+        return {"select_name": None}
 
 
 class FirstPackSelector(SinglePackSelector):
