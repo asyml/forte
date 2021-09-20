@@ -21,8 +21,6 @@ Forte Container module.
 from abc import abstractmethod
 from typing import Dict, Generic, Set, Tuple, TypeVar, Iterator
 
-from forte.data.span import Span
-
 __all__ = [
     "EntryContainer",
     "ContainerType",

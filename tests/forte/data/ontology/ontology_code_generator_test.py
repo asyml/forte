@@ -33,7 +33,8 @@ from forte.data.ontology.code_generation_exceptions import (
     TypeNotDeclaredException,
     UnsupportedTypeException,
     ParentEntryNotSupportedException,
-    InvalidIdentifierException, CodeGenerationException,
+    InvalidIdentifierException,
+    CodeGenerationException,
 )
 from forte.data.ontology.code_generation_objects import ImportManager
 from forte.data.ontology.ontology_code_generator import OntologyCodeGenerator
