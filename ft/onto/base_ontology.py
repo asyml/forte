@@ -48,6 +48,7 @@ __all__ = [
     "Title",
     "MCOption",
     "MCQuestion",
+    "QAQuestion"
 ]
 
 
@@ -493,3 +494,27 @@ class MCQuestion(Annotation):
         super().__init__(pack, begin, end)
         self.options: FList[MCOption] = FList(self)
         self.answers: List[int] = []
+
+@dataclass
+class QAQuestion(Annotation):
+    """[summary]
+
+    Args:
+        Annotation ([type]): [description]
+    """
+    answers:  List[int]
+
+    def __init__(self, pack:DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
+        self.answers: List[int] = []
+
+@dataclass
+class QAAnswer(Annotation):
+    """[summary]
+
+    Args:
+        Annotation ([type]): [description]
+    """
+
+    def __init__(self, pack:DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
