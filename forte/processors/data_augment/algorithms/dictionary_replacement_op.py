@@ -14,12 +14,11 @@
 import random
 from typing import Tuple, Union, Dict, Any
 
-from forte.data.ontology import Annotation
-from forte.utils.utils import create_class_with_kwargs
 from forte.common.configuration import Config
 from forte.processors.data_augment.algorithms.text_replacement_op import (
     TextReplacementOp,
 )
+from forte.utils.utils import create_class_with_kwargs
 
 __all__ = [
     "DictionaryReplacementOp",
