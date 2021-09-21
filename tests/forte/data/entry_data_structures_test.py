@@ -72,6 +72,17 @@ class EntryAsAttribute(Generics):
         super().__init__(pack)
 
 
+class EntryWithDictAndPointer(EntryWithDict):
+    another_dict_entry: FDict[str, ExampleEntry] = None
+    pointer_entry: Optional[ExampleEntry] = None
+
+    def __init__(self, pack: DataPack):
+        super().__init__(pack)
+        self.another_dict_entry = FDict[str, ExampleEntry](self)
+        self.entries = FDict[str, ExampleEntry](self)
+        self.pointer_entry = ExampleEntry(pack)
+
+
 class EmptyReader(PackReader):
     def _collect(self, names: List[str]) -> Iterator[Any]:
         yield from names
@@ -104,6 +115,15 @@ class EntryAnnotator(PackProcessor):
         ee = ExampleEntry(input_pack)
         e_with_a.att_entry = ee
         ee.secret_number = 27
+
+
+class ChildEntryAnnotator(PackProcessor):
+    def _process(self, input_pack: DataPack):
+        e: EntryWithDictAndPointer = EntryWithDictAndPointer(input_pack)
+        temp = ExampleEntry(input_pack)
+        e.entries["1"] = temp
+        e.another_dict_entry["2"] = temp
+        e.pointer_entry = ExampleEntry(input_pack)
 
 
 class EmptyMultiReader(MultiPackReader):
@@ -157,22 +177,6 @@ class MultiEntryStructure(unittest.TestCase):
         self.assertIsInstance(re_mpe.refer_entry, ExampleEntry)
         self.assertEqual(re_mpe.refer_entry.tid, mpe.refer_entry.tid)
         self.assertEqual(re_mpe.tid, mpe.tid)
-
-    # def test_wrong_attribute(self):
-    #     import warnings
-    #
-    #     input_pack = MultiPack()
-    #     mp_entry = ExampleMPEntry(input_pack)
-    #     p1 = input_pack.add_pack("pack1")
-    #     e1: DifferentEntry = p1.add_entry(DifferentEntry(p1))
-    #     with warnings.catch_warnings(record=True) as w:
-    #         warnings.simplefilter("always")
-    #         mp_entry.refer_entry = e1
-    #         mp_entry.regret_creation()
-    #
-    #         import pdb
-    #         pdb.set_trace()
-    #         assert issubclass(w[-1].category, UserWarning)
 
 
 class EntryDataStructure(unittest.TestCase):
@@ -240,7 +244,7 @@ class EntryDataStructure(unittest.TestCase):
 
         # Make sure the recovered entry is also correct.
         pack_str = self.pack.to_string(True)
-        recovered = self.pack.from_string(pack_str)
+        recovered = DataPack.from_string(pack_str)
 
         recovered_first = recovered.get_single(EntryWithDict)
 
@@ -249,6 +253,32 @@ class EntryDataStructure(unittest.TestCase):
         self.assertEqual(recovered_first, first_dict_entry)
 
         self.assertEqual(recovered_first.entries, first_dict_entry.entries)
+
+    def test_entry_key_memories(self):
+        pack = (
+            Pipeline[MultiPack]()
+            .set_reader(EmptyReader())
+            .add(ChildEntryAnnotator())
+            .initialize()
+            .process(["pack1", "pack2"])
+        )
+
+        DataPack.from_string(pack.to_string(True))
+
+        from forte.data.ontology import core
+
+        self.assertTrue(core._f_struct_keys["EntryWithDict_entries"])
+        self.assertNotIn(
+            "EntryWithDict_another_dict_entry", core._f_struct_keys
+        )
+        self.assertNotIn("EntryWithDict_pointer_entry", core._pointer_keys)
+
+        self.assertTrue(
+            core._f_struct_keys["EntryWithDictAndPointer_another_dict_entry"]
+        )
+        self.assertTrue(
+            core._pointer_keys["EntryWithDictAndPointer_pointer_entry"]
+        )
 
 
 class NotHashingTest(unittest.TestCase):

@@ -72,6 +72,9 @@ unserializable_fields = [
     "__orig_class__",
 ]
 
+_f_struct_keys: Dict[str, bool] = {}
+_pointer_keys: Dict[str, bool] = {}
+
 
 def set_state_func(instance, state):
     # pylint: disable=protected-access
@@ -94,15 +97,17 @@ def set_state_func(instance, state):
         state["_embedding"] = np.empty(0)
 
     # NOTE: the __pack will be set via set_pack from the Pack side.
+    cls_name = instance.__class__.__name__
     for k, v in state.items():
-        if instance._f_struct_keys.get(k, False):
+        key = cls_name + "_" + k
+        if _f_struct_keys.get(key, False):
             v._set_parent(instance)
         else:
             if isinstance(v, (FList, FDict)):
                 v._set_parent(instance)
-                instance._f_struct_keys[k] = True
+                _f_struct_keys[key] = True
             else:
-                instance._f_struct_keys[k] = False
+                _f_struct_keys[key] = False
 
     instance.__dict__.update(state)
 
@@ -124,16 +129,18 @@ def get_state_func(instance):
     else:
         state["_embedding"] = emb
 
+    cls_name = instance.__class__.__name__
     for k, v in state.items():
-        if k in instance._pointer_keys:
-            if instance._pointer_keys[k]:
+        key = cls_name + "_" + k
+        if k in _pointer_keys:
+            if _pointer_keys[key]:
                 state[k] = v.as_pointer(instance)
         else:
             if isinstance(v, Entry):
                 state[k] = v.as_pointer(instance)
-                instance._pointer_keys[k] = True
+                _pointer_keys[key] = True
             else:
-                instance._pointer_keys[k] = False
+                _pointer_keys[key] = False
 
     state.pop("_Entry__pack")
     return state
@@ -161,8 +168,6 @@ class Entry(Generic[ContainerType]):
     Args:
         pack: Each entry should be associated with one pack upon creation.
     """
-    _f_struct_keys = {}
-    _pointer_keys = {}
 
     def __init__(self, pack: ContainerType):
         # The Entry should have a reference to the data pack, and the data pack
@@ -244,15 +249,18 @@ class Entry(Generic[ContainerType]):
         when the pack reference of this entry is ready (i.e. after `set_pack`).
         The purpose is to convert the `Pointer` objects into actual entries.
         """
+        cls_name = self.__class__.__name__
         for k, v in self.__dict__.items():
-            if k in self._pointer_keys:
-                setattr(self, k, self._resolve_pointer(v))
+            key = cls_name + "_" + k
+            if k in _pointer_keys:
+                if _pointer_keys[key]:
+                    setattr(self, k, self._resolve_pointer(v))
             else:
                 if isinstance(v, BasePointer):
-                    self._pointer_keys[k] = True
+                    _pointer_keys[key] = True
                     setattr(self, k, self._resolve_pointer(v))
                 else:
-                    self._pointer_keys[k] = False
+                    _pointer_keys[key] = False
 
     def as_pointer(self, from_entry: "Entry"):
         """
@@ -388,11 +396,6 @@ class Entry(Generic[ContainerType]):
 
 
 class MultiEntry(Entry, ABC):
-    _f_struct_keys = (
-        {}
-    )  # TODO: class variables may not be different for inherited.
-    _pointer_keys = {}
-
     def __getstate__(self):
         r"""In serialization, the pack is not serialize, and it will be set
         by the container.
@@ -509,10 +512,12 @@ class FList(Generic[ParentEntryType], MutableSequence):
         value: Union[EntryType, Iterable[EntryType]],
     ) -> None:
         if isinstance(index, int):
-            self.__data[index] = value.as_pointer(self.__parent_entry)
+            self.__data[index] = value.as_pointer(  # type: ignore
+                self.__parent_entry
+            )
         else:
             self.__data[index] = [
-                v.as_pointer(self.__parent_entry) for v in value
+                v.as_pointer(self.__parent_entry) for v in value  # type: ignore
             ]
 
     def __delitem__(self, index: Union[int, slice]) -> None:

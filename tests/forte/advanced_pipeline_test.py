@@ -191,9 +191,7 @@ class AdvancedPipelineTest(unittest.TestCase):
         pl.add(
             DummyProcessor(),
             selector=RegexNameMatchSelector(),
-            selector_config={
-                "select_name": "^.*\\d$"
-            },
+            selector_config={"select_name": "^.*\\d$"},
         )
         pl.save(self._pl_config_path)
 

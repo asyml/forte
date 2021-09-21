@@ -342,7 +342,7 @@ class WikiArticleWriter(PackWriter):
         else:
             # Organize the data by IO ordering instead.
             sub_dir = str(int(self.article_count / 2000)).zfill(5)
-            pid = pack.get_single(WikiPage).page_id
+            pid = pack.get_single(WikiPage).page_id  # type: ignore
             doc_name = f"doc_{self.article_count}" if pid is None else pid
             suffix = ".json.gz" if self._zip_pack else ".json"
             return os.path.join(sub_dir, doc_name) + suffix

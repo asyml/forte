@@ -633,9 +633,9 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         # Get the children entries.
         children: List[Entry]
         if is_link:
-            children = [entry.get_parent(), entry.get_child()]
+            children = [entry.get_parent(), entry.get_child()]  # type: ignore
         else:
-            children = entry.get_members()
+            children = entry.get_members()  # type: ignore
 
         # Copy the children entries.
         new_children: List[Entry] = []
@@ -687,9 +687,9 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         is_link: bool = isinstance(entry, BaseLink)
         children: List[Entry]
         if is_link:
-            children = [entry.get_parent(), entry.get_child()]
+            children = [entry.get_parent(), entry.get_child()]  # type: ignore
         else:
-            children = entry.get_members()
+            children = entry.get_members()  # type: ignore
 
         # Get the copied children entries.
         new_children: List[Entry] = []

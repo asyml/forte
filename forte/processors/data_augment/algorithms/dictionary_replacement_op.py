@@ -25,6 +25,8 @@ __all__ = [
     "DictionaryReplacementOp",
 ]
 
+from ft.onto.base_ontology import Token
+
 
 class DictionaryReplacementOp(TextReplacementOp):
     r"""
@@ -47,12 +49,12 @@ class DictionaryReplacementOp(TextReplacementOp):
             configs["dictionary_class"], class_args={}
         )
 
-    def replace(self, input_anno: Annotation) -> Tuple[bool, str]:
+    def replace(self, input_anno: Token) -> Tuple[bool, str]:  # type: ignore
         r"""
         This function replaces a word with synonyms from a WORDNET dictionary.
 
         Args:
-            input_anno (Annotation): The input annotation.
+            input_anno (Token): The input word.
         Returns:
             A tuple of two values, where the first element is a boolean value
             indicating whether the replacement happens, and the second
