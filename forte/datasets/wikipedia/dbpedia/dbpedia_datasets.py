@@ -37,8 +37,8 @@ from smart_open import open
 from forte.common import Resources
 from forte.common.configuration import Config
 from forte.common.exception import ResourceError
-from forte.data.data_pack import DataPack
 from forte.data.base_reader import PackReader
+from forte.data.data_pack import DataPack
 from forte.datasets.wikipedia.dbpedia.db_utils import (
     NIFParser,
     get_resource_attribute,
@@ -344,8 +344,7 @@ class WikiArticleWriter(PackWriter):
             sub_dir = str(int(self.article_count / 2000)).zfill(5)
             pid = pack.get_single(WikiPage).page_id  # type: ignore
             doc_name = f"doc_{self.article_count}" if pid is None else pid
-            suffix = ".json.gz" if self._zip_pack else ".json"
-            return os.path.join(sub_dir, doc_name) + suffix
+            return os.path.join(sub_dir, doc_name) + self._suffix
 
     def _process(self, input_pack: DataPack):
         """
