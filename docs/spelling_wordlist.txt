@@ -86,8 +86,9 @@ Batcher
 Batchers
 Deserialize
 deserialize
+serialization
+deserialization
 deserialized
-OntonotesReader
 nlp
 io
 config
