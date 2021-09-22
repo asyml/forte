@@ -72,7 +72,7 @@ class Annotation(Entry):
         compatibility purposes.
         """
         self._span = Span(self._begin, self._end)
-        state = self.__dict__.copy()
+        state = super().__getstate__()
         state.pop("_begin")
         state.pop("_end")
         return state
@@ -82,7 +82,7 @@ class Annotation(Entry):
         For de-serializing Annotation, we load the begin, end from Span, for
         compatibility purposes.
         """
-        self.__dict__.update(state)
+        super().__setstate__(state)
         self._begin = self._span.begin
         self._end = self._span.end
 
