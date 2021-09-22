@@ -336,7 +336,12 @@ class WikiArticleWriter(PackWriter):
                 # Since datasets are built separated, there might be cases
                 # where the article referred later is not in the original
                 # parsed dataset, so we need to check if they exist.
-                return self._article_index[pack.pack_name]
+
+                # We could replace the suffix based on writing config.
+                return (
+                    self._article_index[pack.pack_name].split(".")[0]
+                    + self._suffix
+                )
             else:
                 return None
         else:
