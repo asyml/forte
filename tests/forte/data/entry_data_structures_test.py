@@ -283,12 +283,14 @@ class EntryDataStructure(unittest.TestCase):
 
         self.assertTrue(
             core._f_struct_keys[
-                "entry_data_structures_test.EntryWithDictAndPointer_another_dict_entry"
+                "entry_data_structures_test."
+                "EntryWithDictAndPointer_another_dict_entry"
             ]
         )
         self.assertTrue(
             core._pointer_keys[
-                "entry_data_structures_test.EntryWithDictAndPointer_pointer_entry"
+                "entry_data_structures_test."
+                "EntryWithDictAndPointer_pointer_entry"
             ]
         )
 
