@@ -17,23 +17,23 @@ Unit tests for remote processor.
 
 import os
 import unittest
+from typing import Dict, Set, Any, Iterator
+
 from ddt import ddt, data
 
-from typing import Dict, Set, Any, Iterator
+from forte.data.base_reader import MultiPackReader
+from forte.data.common_entry_utils import create_utterance, get_last_utterance
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
+from forte.data.ontology.code_generation_objects import EntryTreeNode
+from forte.data.ontology.top import Generics
+from forte.data.readers import RawDataDeserializeReader, StringReader
 from forte.data.selector import RegexNameMatchSelector
 from forte.pipeline import Pipeline
-from forte.data.base_reader import MultiPackReader
 from forte.processors.base import PackProcessor
-from forte.processors.nlp import ElizaProcessor
 from forte.processors.misc import RemoteProcessor
-from forte.data.readers import RawDataDeserializeReader, StringReader
-from forte.data.common_entry_utils import create_utterance, get_last_utterance
-from forte.data.ontology.code_generation_objects import EntryTreeNode
+from forte.processors.nlp import ElizaProcessor
 from ft.onto.base_ontology import Utterance
-from forte.data.ontology.top import Generics
-
 
 TEST_RECORDS_1 = {
     "Token": {"1", "2"},
@@ -220,24 +220,13 @@ class AdvancedPipelineTest(unittest.TestCase):
         service_name: str = "test_service_name"
         input_format: str = "DataPack"
 
-        class TestProcessor(PackProcessor):
-            def _process(self, input_pack: DataPack):
-                doc = input_pack.get_single("ft.onto.base_ontology.Document")
-                import pdb
-
-                pdb.set_trace()
-
         # Build service pipeline
         serve_pl: Pipeline[DataPack] = Pipeline[DataPack]()
         serve_pl.set_reader(RawDataDeserializeReader())
-        # input_pack.get_single("ft.onto.base_ontology.Document")
-        # serve_pl.add(TestProcessor())
-
         serve_pl.add(DummyProcessor(expected_records=TEST_RECORDS_1))
         serve_pl.add(UserSimulator(), config={"user_input": i_str})
         serve_pl.add(DummyProcessor(output_records=TEST_RECORDS_2))
         serve_pl.add(ElizaProcessor())
-
         serve_pl.initialize()
 
         # Configure RemoteProcessor into test mode
@@ -254,7 +243,6 @@ class AdvancedPipelineTest(unittest.TestCase):
         )
         test_pl.set_reader(StringReader())
         test_pl.add(DummyProcessor(output_records=TEST_RECORDS_1))
-
         test_pl.add(
             remote_processor,
             config={
