@@ -397,7 +397,8 @@ class DictProperty(Property):
             # This string value constraint is to conform with JSON format
             #  requirement: https://www.json.org/json-en.html
             raise CodeGenerationException(
-                "Dictionary keys can only be string values."
+                f"Dictionary keys can only be string values, find {key_type} "
+                f"at {name}."
             )
 
         self.value_is_forte_type = import_manager.is_imported(value_type)

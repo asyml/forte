@@ -267,17 +267,29 @@ class EntryDataStructure(unittest.TestCase):
 
         from forte.data.ontology import core
 
-        self.assertTrue(core._f_struct_keys["EntryWithDict_entries"])
-        self.assertNotIn(
-            "EntryWithDict_another_dict_entry", core._f_struct_keys
+        self.assertTrue(
+            core._f_struct_keys[
+                "entry_data_structures_test.EntryWithDict_entries"
+            ]
         )
-        self.assertNotIn("EntryWithDict_pointer_entry", core._pointer_keys)
+        self.assertNotIn(
+            "entry_data_structures_test.EntryWithDict_another_dict_entry",
+            core._f_struct_keys,
+        )
+        self.assertNotIn(
+            "entry_data_structures_test.EntryWithDict_pointer_entry",
+            core._pointer_keys,
+        )
 
         self.assertTrue(
-            core._f_struct_keys["EntryWithDictAndPointer_another_dict_entry"]
+            core._f_struct_keys[
+                "entry_data_structures_test.EntryWithDictAndPointer_another_dict_entry"
+            ]
         )
         self.assertTrue(
-            core._pointer_keys["EntryWithDictAndPointer_pointer_entry"]
+            core._pointer_keys[
+                "entry_data_structures_test.EntryWithDictAndPointer_pointer_entry"
+            ]
         )
 
 
