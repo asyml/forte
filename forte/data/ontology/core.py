@@ -151,7 +151,7 @@ def get_state_func(instance):
 class Entry(Generic[ContainerType]):
     r"""The base class inherited by all NLP entries. This is the main data type
     for all in-text NLP analysis results. The main sub-types are
-    ``Annotation``, ``Link`` and ``Group``.
+    ``Annotation``, ``Link``, ``Generics``, and ``Group``.
 
     An :class:`forte.data.ontology.top.Annotation` object represents a
     span in text.
@@ -162,7 +162,7 @@ class Entry(Generic[ContainerType]):
     A :class:`forte.data.ontology.top.Group` object represents a
     collection of multiple entries.
 
-    Attributes:
+    Main Attributes:
         - embedding: The embedding vectors (numpy array of floats) of this
           entry.
 
@@ -397,18 +397,15 @@ class Entry(Generic[ContainerType]):
 
 
 class MultiEntry(Entry, ABC):
-    # def __getstate__(self):
-    #     r"""In serialization, the pack is not serialize, and it will be set
-    #     by the container.
-    #
-    #     This also implies that it is not advised to serialize an entry on its
-    #     own, without the ``Container`` as the context, there is little semantics
-    #     remained in an entry.
-    #     """
-    #     return get_state_func(self)
-    #
-    # def __setstate__(self, state):
-    #     set_state_func(self, state)
+    r"""The base class for multi-pack entries. The main sub-types are
+    ``MultiPackLink``, ``MultiPackGenerics``, and ``MultiPackGroup``.
+
+    A :class:`forte.data.ontology.top.MultiPackLink` object represents a binary
+    link relation between two entries between different data packs.
+
+    A :class:`forte.data.ontology.top.MultiPackGroup` object represents a
+    collection of multiple entries among different data packs.
+    """
 
     def as_pointer(self, from_entry: "Entry") -> "Pointer":
         """
