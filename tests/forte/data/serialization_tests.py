@@ -21,7 +21,6 @@ from ddt import data, ddt
 from forte.data.caster import MultiPackBoxer
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
-from forte.data.ontology import Annotation
 from forte.data.readers import (
     OntonotesReader,
     DirPackReader,
@@ -30,7 +29,6 @@ from forte.data.readers import (
 from forte.pipeline import Pipeline
 from forte.processors.base import (
     MultiPackProcessor,
-    PackProcessor,
 )
 from forte.processors.writers import (
     PackIdJsonPackWriter,
@@ -39,7 +37,6 @@ from forte.processors.writers import (
 )
 from ft.onto.base_ontology import (
     Sentence,
-    Token,
     EntityMention,
     CrossDocEntityRelation,
 )

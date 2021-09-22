@@ -393,6 +393,14 @@ class DictProperty(Property):
         default_val: Any = None,
         self_ref: bool = False,
     ):
+        if not key_type == "str":
+            # This string value constraint is to conform with JSON format
+            #  requirement: https://www.json.org/json-en.html
+            raise CodeGenerationException(
+                f"Dictionary keys can only be string values, find {key_type} "
+                f"at {name}."
+            )
+
         self.value_is_forte_type = import_manager.is_imported(value_type)
         type_str = (
             "forte.data.ontology.core.FDict"

@@ -41,9 +41,7 @@ class SelectorTest(unittest.TestCase):
     def test_name_match_selector(self) -> None:
         selector = NameMatchSelector()
         selector.initialize(
-            configs={
-                "select_name": "pack1"
-            },
+            configs={"select_name": "pack1"},
         )
         packs = selector.select(self.multi_pack)
         doc_ids = ["1"]
@@ -66,9 +64,7 @@ class SelectorTest(unittest.TestCase):
     def test_regex_name_match_selector(self) -> None:
         selector = RegexNameMatchSelector()
         selector.initialize(
-            configs={
-                "select_name": "^.*\\d$"
-            },
+            configs={"select_name": "^.*\\d$"},
         )
         packs = selector.select(self.multi_pack)
         doc_ids = ["1", "2"]

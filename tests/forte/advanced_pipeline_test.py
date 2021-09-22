@@ -17,23 +17,23 @@ Unit tests for remote processor.
 
 import os
 import unittest
+from typing import Dict, Set, Any, Iterator
+
 from ddt import ddt, data
 
-from typing import Dict, Set, Any, Iterator
+from forte.data.base_reader import MultiPackReader
+from forte.data.common_entry_utils import create_utterance, get_last_utterance
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
+from forte.data.ontology.code_generation_objects import EntryTreeNode
+from forte.data.ontology.top import Generics
+from forte.data.readers import RawDataDeserializeReader, StringReader
 from forte.data.selector import RegexNameMatchSelector
 from forte.pipeline import Pipeline
-from forte.data.base_reader import MultiPackReader
 from forte.processors.base import PackProcessor
-from forte.processors.nlp import ElizaProcessor
 from forte.processors.misc import RemoteProcessor
-from forte.data.readers import RawDataDeserializeReader, StringReader
-from forte.data.common_entry_utils import create_utterance, get_last_utterance
-from forte.data.ontology.code_generation_objects import EntryTreeNode
+from forte.processors.nlp import ElizaProcessor
 from ft.onto.base_ontology import Utterance
-from forte.data.ontology.top import Generics
-
 
 TEST_RECORDS_1 = {
     "Token": {"1", "2"},
@@ -191,9 +191,7 @@ class AdvancedPipelineTest(unittest.TestCase):
         pl.add(
             DummyProcessor(),
             selector=RegexNameMatchSelector(),
-            selector_config={
-                "select_name": "^.*\\d$"
-            },
+            selector_config={"select_name": "^.*\\d$"},
         )
         pl.save(self._pl_config_path)
 

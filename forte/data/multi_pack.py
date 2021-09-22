@@ -32,7 +32,6 @@ from forte.data.ontology.top import (
     MultiPackEntries,
     MultiPackGeneric,
 )
-from forte.data.span import Span
 from forte.data.types import DataRequest
 from forte.utils import get_class
 
@@ -118,6 +117,27 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         # Create the pack list for adding them back.
         self._packs = []
 
+    def relink(self, packs: Iterator[DataPack]):
+        """
+        Re-link the reference of the multi-pack to other entries, including
+        the data packs in it, and the
+
+        Args:
+            packs:
+
+        Returns:
+
+        """
+        self._packs.extend(packs)
+        for a in self.links:
+            a.relink_pointer()
+
+        for a in self.groups:
+            a.relink_pointer()
+
+        for a in self.generics:
+            a.relink_pointer()
+
     def __getstate__(self):
         r"""
         Pop some recoverable information in serialization.
@@ -150,7 +170,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     def get_subentry(self, pack_idx: int, entry_id: int):
         return self.get_pack_at(pack_idx).get_entry(entry_id)
 
-    def get_span_text(self, span: Span):
+    def get_span_text(self, begin: int, end: int):
         raise ValueError(
             "MultiPack objects do not contain text, please refer to a "
             "specific data pack to get text."

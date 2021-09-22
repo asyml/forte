@@ -24,6 +24,7 @@ from forte.data.readers import RACEMultiChoiceQAReader
 from forte.pipeline import Pipeline
 from ft.onto.base_ontology import MCQuestion, Document
 
+
 class RACEMultiChoiceQAReaderTest(unittest.TestCase):
     def setUp(self):
         self.dataset_path = os.path.abspath(

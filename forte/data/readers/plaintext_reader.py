@@ -63,9 +63,7 @@ class PlainTextReader(PackReader):
 
     @classmethod
     def default_configs(cls):
-        config = super().default_configs()
-        config["file_ext"] = ".txt"
-        return config
+        return {"file_ext": ".txt"}
 
     def record(self, record_meta: Dict[str, Set[str]]):
         r"""Method to add output type record of `PlainTextReader` which is
