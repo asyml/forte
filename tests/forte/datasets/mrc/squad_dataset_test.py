@@ -14,9 +14,6 @@
 """
 Unit tests for SquadReader.
 """
-# import sys
-# sys.path.insert(1, '/Users/qinzzz/Desktop/forte')
-
 import json
 import os
 import unittest
@@ -34,7 +31,7 @@ class SquadReaderTest(unittest.TestCase):
             os.path.join(
                 os.path.dirname(os.path.realpath(__file__)),
                 *([os.path.pardir] * 4),
-                "data_samples/squad_v2.0/train-v2.0.json"
+                "data_samples/squad_v2.0/dev-v2.0-sample.json"
             )
         )
 
@@ -51,13 +48,15 @@ class SquadReaderTest(unittest.TestCase):
         file_path: str = self.dataset_path
         expected_file_dict = {}
         with open(file_path, "r", encoding="utf8", errors="ignore") as file:
-                expected_json = json.load(file)
-                for dic in expected_json["data"]:
-                    title = dic["title"]
-                    cnt = 0
-                    for qa_dic in dic["paragraphs"]:
-                        expected_file_dict[title+str(cnt)] = qa_dic # qas, context
-                        cnt += 1
+            expected_json = json.load(file)
+            for dic in expected_json["data"]:
+                title = dic["title"]
+                cnt = 0
+                for qa_dic in dic["paragraphs"]:
+                    expected_file_dict[
+                        title + str(cnt)
+                    ] = qa_dic  # qas, context
+                    cnt += 1
 
         count_packs = 0
         for pack in data_packs:
@@ -79,7 +78,7 @@ class SquadReaderTest(unittest.TestCase):
                 if not isinstance(expected_answers, list):
                     expected_answers = [expected_answers]
                 answers = question.answers
-                
+
                 for answer, expected_answer in zip(answers, expected_answers):
                     self.assertEqual(answer.text, expected_answer["text"])
                 expected_text += "\n" + expected_question

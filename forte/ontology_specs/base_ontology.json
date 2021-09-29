@@ -402,11 +402,13 @@
     },
     {
       "entry_name": "ft.onto.base_ontology.MRCAnswer",
-      "parent_entry": "forte.data.ontology.top.Annotation"
+      "parent_entry": "forte.data.ontology.top.Annotation",
+      "description": "An `Annotation` type entry which represents an answer to an MRC question, typically a span in the given paragraph."
     },
     {
       "entry_name": "ft.onto.base_ontology.MRCQuestion",
       "parent_entry": "forte.data.ontology.top.Annotation",
+      "description": "An `Annotation` type which represents an MRC question.",
       "attributes": [
         {
           "name": "answers",

@@ -28,16 +28,24 @@ __all__ = [
 class SquadReader(PackReader):
     r"""Reader for processing Stanford Question Answering Dataset (SQuAD).
 
+    Stanford Question Answering Dataset (SQuAD) is a reading comprehension dataset,
+    consisting of questions posed by crowdworkers on a set of Wikipedia articles,
+    where the answer to every question is a segment of text, or span.
+
+    Dataset can be downloaded at https://rajpurkar.github.io/SQuAD-explorer/.
+
+    SquadReader reads each paragraph in the dataset as a separate Document, and the questions
+    are concatenated behind the paragraph, form a Passage.
+    MRCAnswers are marked as text spans. Each MRCQuestion has a list of answers as its attribute.
     """
 
-    def _collect(self, file_path) -> Iterator[Any]:  # type: ignore
-        r"""Should be called with param ``text_directory`` which is a path to a
-        folder containing txt files.
+    def _collect(self, file_path: str) -> Iterator[Any]:  # type: ignore
+        r"""Given file_path to the dataset, return an iterator to every data point in it.
 
         Args:
-            text_directory: text directory containing the files.
+            file_path: path to the JSON file
 
-        Returns: Iterator over paths to .txt files
+        Returns: QA pairs and the context of a paragraph of a passage in SQuAD dataset.
         """
         with open(file_path, "r", encoding="utf8", errors="ignore") as file:
             jsonf = json.load(file)
@@ -45,39 +53,35 @@ class SquadReader(PackReader):
                 title = dic["title"]
                 cnt = 0
                 for qa_dic in dic["paragraphs"]:
-                    yield title+str(cnt), qa_dic["qas"], qa_dic["context"]
+                    yield title + str(cnt), qa_dic["qas"], qa_dic["context"]
                     cnt += 1
 
     def _cache_key_function(self, text_file: str) -> str:
         return os.path.basename(text_file)
 
-    # pylint: disable=unused-argument
-    def text_replace_operation(self, text: str):
-        return []
-
     def _parse_pack(self, qa_dict: Tuple[str, list, str]) -> Iterator[DataPack]:
         title, qas, context = qa_dict
         context_end = len(context)
-        offset = context_end+1
+        offset = context_end + 1
         text = context
 
-        pack = DataPack() # one datapack for a context
+        pack = DataPack()  # one datapack for a context
         for qa in qas:
-            if qa["is_impossible"] == True:
+            if qa["is_impossible"] is True:
                 continue
             ques_text = qa["question"]
             ans = qa["answers"]
             text += "\n" + ques_text
             ques_end = offset + len(ques_text)
             question = MRCQuestion(pack, offset, ques_end)
-            offset = ques_end+1
+            offset = ques_end + 1
             for a in ans:
                 ans_text = a["text"]
                 ans_start = a["answer_start"]
-                answer = MRCAnswer(pack, ans_start, ans_start+len(ans_text))
+                answer = MRCAnswer(pack, ans_start, ans_start + len(ans_text))
                 question.answers.append(answer)
 
-        pack.set_text(text, replace_func=self.text_replace_operation)
+        pack.set_text(text)
 
         Document(pack, 0, context_end)
         passage = Passage(pack, 0, len(pack.text))
@@ -88,9 +92,7 @@ class SquadReader(PackReader):
 
     @classmethod
     def default_configs(cls):
-        config = super().default_configs()
-        config["file_ext"] = ".txt"
-        return config
+        return {"file_ext": ".txt"}
 
     def record(self, record_meta: Dict[str, Set[str]]):
         r"""Method to add output type record of `PlainTextReader` which is
@@ -102,4 +104,3 @@ class SquadReader(PackReader):
                 fill in for consistency checking.
         """
         record_meta["ft.onto.base_ontology.Document"] = set()
-
