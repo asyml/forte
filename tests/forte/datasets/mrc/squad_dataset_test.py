@@ -14,18 +14,19 @@
 """
 Unit tests for SquadReader.
 """
-import sys
-sys.path.insert(1, '/Users/qinzzz/Desktop/forte')
+# import sys
+# sys.path.insert(1, '/Users/qinzzz/Desktop/forte')
 
 import json
 import os
 import unittest
-from typing import Iterator, Iterable
+from typing import Iterable
 
 from forte.data.data_pack import DataPack
-from forte.data.readers import SquadReader
+from forte.datasets.mrc.squad_reader import SquadReader
 from forte.pipeline import Pipeline
-from ft.onto.base_ontology import QAQuestion, QAAnswer, Document
+from ft.onto.base_ontology import MRCQuestion, Document
+
 
 class SquadReaderTest(unittest.TestCase):
     def setUp(self):
@@ -33,7 +34,7 @@ class SquadReaderTest(unittest.TestCase):
             os.path.join(
                 os.path.dirname(os.path.realpath(__file__)),
                 *([os.path.pardir] * 4),
-                "data_samples/squad_v2.0/dev-v2.0.json"
+                "data_samples/squad_v2.0/train-v2.0.json"
             )
         )
 
@@ -70,7 +71,7 @@ class SquadReaderTest(unittest.TestCase):
             self.assertEqual(docs[0].text, expected_context)
             expected_text += expected_context
 
-            for qid, question in enumerate(pack.get(QAQuestion)):
+            for qid, question in enumerate(pack.get(MRCQuestion)):
                 expected_qa = expected["qas"][qid]
                 expected_question = expected_qa["question"]
                 expected_answers = expected_qa["answers"]

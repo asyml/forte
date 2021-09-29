@@ -17,7 +17,7 @@ from typing import Any, Iterator, Dict, Set, Tuple
 
 from forte.data.data_pack import DataPack
 from forte.data.base_reader import PackReader
-from ft.onto.base_ontology import Document, QAQuestion, QAAnswer
+from ft.onto.base_ontology import Document, MRCQuestion, MRCAnswer
 from ftx.onto.race_qa import Passage
 
 __all__ = [
@@ -69,12 +69,12 @@ class SquadReader(PackReader):
             ans = qa["answers"]
             text += "\n" + ques_text
             ques_end = offset + len(ques_text)
-            question = QAQuestion(pack, offset, ques_end)
+            question = MRCQuestion(pack, offset, ques_end)
             offset = ques_end+1
             for a in ans:
                 ans_text = a["text"]
                 ans_start = a["answer_start"]
-                answer = QAAnswer(pack, ans_start, ans_start+len(ans_text))
+                answer = MRCAnswer(pack, ans_start, ans_start+len(ans_text))
                 question.answers.append(answer)
 
         pack.set_text(text, replace_func=self.text_replace_operation)

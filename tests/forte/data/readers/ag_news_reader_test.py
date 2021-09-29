@@ -19,7 +19,7 @@ import unittest
 from typing import Dict
 
 from forte.pipeline import Pipeline
-from ft.onto.ag_news import Description
+from ftx.onto.ag_news import Description
 from ft.onto.base_ontology import Document, Title
 
 from forte.data.readers import AGNewsReader
@@ -69,7 +69,6 @@ class AGNewsReaderTest(unittest.TestCase):
             self.assertIsInstance(data_pack, DataPack)
             # Test Article
             doc_entries = list(data_pack.get(Document))
-            print(doc_entries)
             self.assertTrue(len(doc_entries) == 1)
             article: Document = doc_entries[0]
             self.assertIsInstance(article, Document)

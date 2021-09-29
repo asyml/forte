@@ -496,25 +496,25 @@ class MCQuestion(Annotation):
         self.answers: List[int] = []
 
 @dataclass
-class QAQuestion(Annotation):
+class MRCAnswer(Annotation):
     """[summary]
 
     Args:
         Annotation ([type]): [description]
     """
-    answers:  List[int]
 
     def __init__(self, pack:DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
-        self.answers: List[int] = []
 
 @dataclass
-class QAAnswer(Annotation):
+class MRCQuestion(Annotation):
     """[summary]
 
     Args:
         Annotation ([type]): [description]
     """
+    answers:  List[MRCAnswer]
 
     def __init__(self, pack:DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
+        self.answers: List[MRCAnswer] = []
