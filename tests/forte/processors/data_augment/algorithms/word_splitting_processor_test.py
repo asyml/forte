@@ -18,7 +18,7 @@ Unit tests for Random Word Splitting Data Augmentation processor
 import unittest
 import random
 
-
+from ddt import ddt, data, unpack
 from forte.data.selector import AllPackSelector
 from forte.pipeline import Pipeline
 from forte.data.multi_pack import MultiPack
@@ -29,10 +29,8 @@ from forte.processors.data_augment.algorithms.word_splitting_processor import (
     RandomWordSplitDataAugmentProcessor,
 )
 
-from forte.processors.misc import WhiteSpaceTokenizer, EntityMentionInsertor
+from forte.processors.misc import WhiteSpaceTokenizer, EntityMentionInserter
 from ft.onto.base_ontology import Token, EntityMention
-
-from ddt import ddt, data, unpack
 
 
 @ddt
@@ -44,7 +42,7 @@ class TestWordSplittingProcessor(unittest.TestCase):
         boxer_config = {"pack_name": "input_src"}
         entity_config = {"entities_to_insert": ["Mary", "station"]}
         self.nlp.set_reader(reader=StringReader())
-        self.nlp.add(component=EntityMentionInsertor(), config=entity_config)
+        self.nlp.add(component=EntityMentionInserter(), config=entity_config)
         self.nlp.add(PeriodSentenceSplitter())
         self.nlp.add(component=MultiPackBoxer(), config=boxer_config)
         self.nlp.add(

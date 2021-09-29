@@ -20,7 +20,7 @@ from ft.onto.base_ontology import EntityMention, Sentence, Token
 __all__ = [
     "PeriodSentenceSplitter",
     "WhiteSpaceTokenizer",
-    "EntityMentionInsertor",
+    "EntityMentionInserter",
 ]
 
 
@@ -61,9 +61,12 @@ class WhiteSpaceTokenizer(PackProcessor):
             input_pack.add_entry(Token(input_pack, start, len(input_pack.text)))
 
 
-class EntityMentionInsertor(PackProcessor):
+class EntityMentionInserter(PackProcessor):
     """
-    A simple processor that inserts Entity Mentions into the data pack
+    A simple processor that inserts Entity Mentions into the data pack.
+    The input required is the annotations that wish to be tagged as Entity
+    Mentions. If the given annotations are not present in the given data pack,
+    an exception is raised.
     """
 
     def _process(self, input_pack: DataPack):
