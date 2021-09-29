@@ -18,6 +18,7 @@ Unit tests for Random Word Splitting Data Augmentation processor
 import unittest
 import random
 
+
 from forte.data.selector import AllPackSelector
 from forte.pipeline import Pipeline
 from forte.data.multi_pack import MultiPack
@@ -28,8 +29,8 @@ from forte.processors.data_augment.algorithms.word_splitting_processor import (
     RandomWordSplitDataAugmentProcessor,
 )
 
-from forte.processors.misc import WhiteSpaceTokenizer
-from ft.onto.base_ontology import Token
+from forte.processors.misc import WhiteSpaceTokenizer, EntityMentionInsertor
+from ft.onto.base_ontology import Token, EntityMention
 
 from ddt import ddt, data, unpack
 
@@ -41,8 +42,9 @@ class TestWordSplittingProcessor(unittest.TestCase):
         self.nlp = Pipeline[MultiPack]()
 
         boxer_config = {"pack_name": "input_src"}
-
+        entity_config = {"entities_to_insert": ["Mary", "station"]}
         self.nlp.set_reader(reader=StringReader())
+        self.nlp.add(component=EntityMentionInsertor(), config=entity_config)
         self.nlp.add(PeriodSentenceSplitter())
         self.nlp.add(component=MultiPackBoxer(), config=boxer_config)
         self.nlp.add(
@@ -89,16 +91,23 @@ class TestWordSplittingProcessor(unittest.TestCase):
                 ]
             ],
             [["station", "they", "had"]],
+            [["Mary", "statio n", "t hey"]],
         )
     )
     @unpack
     def test_word_splitting_processor(
-        self, texts, expected_outputs, expected_tokens, unnecessary_tokens
+        self,
+        texts,
+        expected_outputs,
+        expected_tokens,
+        unnecessary_tokens,
+        new_entities,
     ):
         self.nlp.add(component=RandomWordSplitDataAugmentProcessor())
         self.nlp.initialize()
 
         for idx, m_pack in enumerate(self.nlp.process_dataset(texts)):
+
             aug_pack = m_pack.get_pack("augmented_input_src")
 
             self.assertEqual(aug_pack.text, expected_outputs[idx])
@@ -108,6 +117,9 @@ class TestWordSplittingProcessor(unittest.TestCase):
 
             for token in unnecessary_tokens[idx]:
                 self.assertNotIn(token, aug_pack.text)
+
+            for j, token in enumerate(aug_pack.get(EntityMention)):
+                self.assertEqual(token.text, new_entities[idx][j])
 
 
 if __name__ == "__main__":

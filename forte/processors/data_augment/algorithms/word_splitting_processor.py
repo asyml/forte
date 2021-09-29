@@ -14,9 +14,10 @@
 
 """
 Data augmentation processor for the Random Word Splitting operation.
-Randomly choose n words (With length greater than 1) and split it at a random position.
-Do this n times, where n = alpha * input length.
-Example: Original Text -> "I will be there soon." , Augmented Text -> "I w ill be there so on."
+Randomly choose n words (With length greater than 1) and split it at a random
+position. Do this n times, where n = alpha * input length.
+Example: Original Text -> "I will be there soon." ,
+Augmented Text -> "I w ill be there so on."
 """
 
 from math import ceil
@@ -35,8 +36,8 @@ __all__ = ["RandomWordSplitDataAugmentProcessor"]
 class RandomWordSplitDataAugmentProcessor(ReplacementDataAugmentProcessor):
     r"""
     This class creates a processor to perform Random Word Splitting.
-    It randomly chooses n words in a sentence and splits each word at a random position
-    where n = alpha * input length.
+    It randomly chooses n words in a sentence and splits each word at
+    a random position where n = alpha * input length.
     """
 
     def _augment(self, input_pack: MultiPack, aug_pack_names: List[str]):
@@ -44,6 +45,7 @@ class RandomWordSplitDataAugmentProcessor(ReplacementDataAugmentProcessor):
 
         for pack_name in aug_pack_names:
             data_pack: DataPack = input_pack.get_pack(pack_name)
+
             annotations: List[Annotation] = []
             indexes: List[int] = []
             endings = []
@@ -94,8 +96,8 @@ class RandomWordSplitDataAugmentProcessor(ReplacementDataAugmentProcessor):
         Additional keys for determining how many words will be split:
         - alpha: 0 <= alpha <= 1. indicates the percent of the words
         in a sentence that are changed. The processor will perform
-        the Word Splitting operation 2 * (input length * alpha) times after deleting the
-         original annotation.
+        the Word Splitting operation 2 * (input length * alpha) times
+        after deleting the original annotation.
         """
         config = super().default_configs()
         config.update(
@@ -104,6 +106,7 @@ class RandomWordSplitDataAugmentProcessor(ReplacementDataAugmentProcessor):
                 "other_entry_policy": {
                     "type": "",
                     "kwargs": {
+                        "ft.onto.base_ontology.EntityMention": "auto_align",
                         "ft.onto.base_ontology.Document": "auto_align",
                         "ft.onto.base_ontology.Sentence": "auto_align",
                     },
