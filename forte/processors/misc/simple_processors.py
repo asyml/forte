@@ -70,9 +70,7 @@ class EntityMentionInsertor(PackProcessor):
         entity_text = self.configs.entities_to_insert
 
         input_text = input_pack.text
-        if not all(
-            bool(entity in input_text) for entity in entity_text
-        ):
+        if not all(bool(entity in input_text) for entity in entity_text):
             raise Exception(
                 "Entities to be added are not valid for the input text."
             )
