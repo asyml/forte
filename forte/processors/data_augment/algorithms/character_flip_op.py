@@ -25,6 +25,7 @@ from forte.processors.data_augment.algorithms.text_replacement_op import (
 
 __all__ = ["CharacterFlipOp"]
 
+
 class CharacterFlipOp(TextReplacementOp):
     r"""
     A uniform generator that randomly flips a character with a similar
@@ -64,7 +65,8 @@ class CharacterFlipOp(TextReplacementOp):
         """
         if char in self.data.keys():
             return random.choice(self.data[char])
-        else: return char
+        else:
+            return char
 
     def replace(self, input_anno: Annotation) -> str:
         r"""
@@ -77,7 +79,7 @@ class CharacterFlipOp(TextReplacementOp):
         """
         augmented_string = ""
         for char in input_anno.text:
-            if char == " " or random.random() > self.configs.prob: 
+            if char == " " or random.random() > self.configs.prob:
                 augmented_string += char
             else:
                 augmented_string += self.flip(char)
