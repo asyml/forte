@@ -37,10 +37,23 @@ class RandomWordSplitDataAugmentProcessor(ReplacementDataAugmentProcessor):
     r"""
     This class creates a processor to perform Random Word Splitting.
     It randomly chooses n words in a sentence and splits each word at
-    a random position where n = alpha * input length.
+    a random position where n = alpha * input length. alpha indicates the percent of the words
+    in a sentence that are changed. The processor will perform
+    the Word Splitting operation 2 * (input length * alpha) times
+    after deleting the original annotation.
     """
 
     def _augment(self, input_pack: MultiPack, aug_pack_names: List[str]):
+        r"""
+        This function splits a given word at a random position and replaces
+        the original word with 2 split parts of it.
+
+        Args:
+            input_pack (MultiPack): The collection of Data Packs that need to be augmented with this method
+            aug_pack_names (List[str]): Names of Data Packs who's contents will be augmented
+        Returns:
+            A MultiPack containing the DataPack of the augmented text.
+        """
         augment_entry = get_class(self.configs["augment_entry"])
 
         for pack_name in aug_pack_names:
@@ -92,12 +105,14 @@ class RandomWordSplitDataAugmentProcessor(ReplacementDataAugmentProcessor):
     def default_configs(cls):
         """
         Returns:
-        A dictionary with the default config for this processor.
-        Additional keys for determining how many words will be split:
-        - alpha: 0 <= alpha <= 1. indicates the percent of the words
-        in a sentence that are changed. The processor will perform
-        the Word Splitting operation 2 * (input length * alpha) times
-        after deleting the original annotation.
+            A dictionary with the default config for this processor.
+            Additional keys for determining how many words will be split:
+            - alpha: 0 <= alpha <= 1. indicates the percent of the words
+            in a sentence that are changed. The processor will perform
+            the Word Splitting operation 2 * (input length * alpha) times
+            after deleting the original annotation.
+        Config Values:
+            - `alpha` (float): The probability of splitting, should fall in [0, 1] (Default is set to 0.1).
         """
         config = super().default_configs()
         config.update(
@@ -111,7 +126,6 @@ class RandomWordSplitDataAugmentProcessor(ReplacementDataAugmentProcessor):
                         "ft.onto.base_ontology.Sentence": "auto_align",
                     },
                 },
-                "data_aug_op": "forte.processors.data_augment.algorithms.",
                 "alpha": 0.1,
                 "augment_pack_names": {
                     "type": "",

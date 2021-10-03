@@ -21,7 +21,7 @@ import random
 from ddt import ddt, data, unpack
 from forte.data.selector import AllPackSelector
 from forte.pipeline import Pipeline
-from forte.data.multi_pack import MultiPack
+from forte.data.multi_pack import MultiPack, DataPack
 from forte.data.readers import StringReader
 from forte.data.caster import MultiPackBoxer
 from forte.processors.misc import PeriodSentenceSplitter
@@ -29,8 +29,36 @@ from forte.processors.data_augment.algorithms.word_splitting_processor import (
     RandomWordSplitDataAugmentProcessor,
 )
 
-from forte.processors.misc import WhiteSpaceTokenizer, EntityMentionInserter
+from forte.processors.base import PackProcessor
+from forte.processors.misc import WhiteSpaceTokenizer
 from ft.onto.base_ontology import Token, EntityMention
+
+
+class EntityMentionInserter(PackProcessor):
+    """
+    A simple processor that inserts Entity Mentions into the data pack.
+    The input required is the annotations that wish to be tagged as Entity
+    Mentions. If the given annotations are not present in the given data pack,
+    an exception is raised.
+    """
+
+    def _process(self, input_pack: DataPack):
+        entity_text = self.configs.entities_to_insert
+
+        input_text = input_pack.text
+        if not all(bool(entity in input_text) for entity in entity_text):
+            raise Exception(
+                "Entities to be added are not valid for the input text."
+            )
+        for entity in entity_text:
+            start = input_text.index(entity)
+            end = start + len(entity)
+            entity_mention = EntityMention(input_pack, start, end)
+            input_pack.add_entry(entity_mention)
+
+    @classmethod
+    def default_configs(cls):
+        return {"entities_to_insert": []}
 
 
 @ddt
