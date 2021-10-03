@@ -32,7 +32,7 @@ __all__ = [
 
 class UniformTypoGenerator:
     r"""
-    A uniform generateor that generates a typo from a typo dictionary.
+    A uniform generator that generates a typo from a typo dictionary.
 
     Args:
         word: input word that needs to be replaced,

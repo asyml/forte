@@ -103,7 +103,7 @@ class RandomWordSplitDataAugmentProcessor(ReplacementDataAugmentProcessor):
             A dictionary with the default config for this processor.
             Additional keys for determining how many words will be split:
             - alpha: 0 <= alpha <= 1. indicates the percent of the words
-            in a sentence that are changed. 
+            in a sentence that are changed.
         Config Values:
             - `alpha` (float): The probability of splitting in [0, 1](Default = 0.1).
         """

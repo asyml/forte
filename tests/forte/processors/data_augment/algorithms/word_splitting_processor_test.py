@@ -72,6 +72,7 @@ class TestWordSplittingProcessor(unittest.TestCase):
     contained in the returned text
     - If the entities are retained after augmentation.
     """
+
     def setUp(self):
         random.seed(8)
         self.nlp = Pipeline[MultiPack]()
