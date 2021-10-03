@@ -130,7 +130,7 @@ class NameMatchSelector(SinglePackSelector):
     ):
         super().initialize(configs)
         try:
-            configs_ = configs.todict()
+            configs_ = configs.todict()  # type:ignore
         except AttributeError:
             configs_ = {} if configs is None else configs
 
@@ -170,7 +170,7 @@ class RegexNameMatchSelector(SinglePackSelector):
     def will_select(
         self, pack_name: str, pack: DataPack, multi_pack: MultiPack
     ) -> bool:
-        return re.match(self.select_name, pack_name) is not None
+        return re.match(self.select_name, pack_name) is not None  # type:ignore
 
     def initialize(
         self, configs: Optional[Union[Config, Dict[str, Any]]] = None
@@ -178,7 +178,7 @@ class RegexNameMatchSelector(SinglePackSelector):
         super().initialize(configs)
 
         try:
-            configs_ = configs.todict()
+            configs_ = configs.todict()  # type:ignore
         except AttributeError:
             configs_ = {} if configs is None else configs
 
