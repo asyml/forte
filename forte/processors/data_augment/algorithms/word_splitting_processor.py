@@ -107,8 +107,7 @@ class RandomWordSplitDataAugmentProcessor(ReplacementDataAugmentProcessor):
             the Word Splitting operation 2 * (input length * alpha) times
             after deleting the original annotation.
         Config Values:
-            - `alpha` (float): The probability of splitting in [0, 1]
-            (Default is set to 0.1).
+            - `alpha` (float): The probability of splitting in [0, 1](Default = 0.1).
         """
         config = super().default_configs()
         config.update(

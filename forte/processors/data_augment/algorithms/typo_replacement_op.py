@@ -72,7 +72,7 @@ class TypoReplacementOp(TextReplacementOp):
     Args:
         configs:
             The config should contain
-                `prob`(float): The probability of replacement,
+                prob (float): The probability of replacement,
                     should fall in [0, 1].
                 dict_path (str): the url or the path to the pre-defined
                     typo json file. The key is a word we want to replace.
