@@ -41,7 +41,7 @@ class TestCharacterFlipOp(unittest.TestCase):
         token_1 = Token(data_pack, 0, len(test_string))
         data_pack.add_entry(token_1)
 
-        self.assertIn(self.test.replace(token_1), test_result)
+        self.assertIn(self.test.replace(token_1)[1], test_result)
 
 
 if __name__ == "__main__":

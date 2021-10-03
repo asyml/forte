@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import requests
 import random
 import json
-from typing import Any, Dict, Union
+from typing import Tuple, Any, Dict, Union
+import requests
 
 from forte.data.ontology import Annotation
 from forte.common.configuration import Config
@@ -29,11 +29,13 @@ __all__ = ["CharacterFlipOp"]
 class CharacterFlipOp(TextReplacementOp):
     r"""
     A uniform generator that randomly flips a character with a similar
-     looking character from a predefined dictionary.
+     looking character from a predefined dictionary. (For example: a -> @)
 
     Args:
         string: input string whose characters need to be replaced,
-        configs: prob`(float): The probability of replacement,
+        dict_path (str): the url or the path to the pre-defined
+                    typo json file.
+        configs: prob(float): The probability of replacement,
                     should fall in [0, 1]
     """
 
@@ -54,7 +56,7 @@ class CharacterFlipOp(TextReplacementOp):
             with open(self.dict_path, encoding="utf8") as json_file:
                 self.data = json.load(json_file)
 
-    def flip(self, char: str):
+    def _flip(self, char: str):
         r"""
         Flips character with similar character from input dictionary
 
@@ -68,9 +70,10 @@ class CharacterFlipOp(TextReplacementOp):
         else:
             return char
 
-    def replace(self, input_anno: Annotation) -> str:
+    def replace(self, input_anno: Annotation) -> Tuple[bool, str]:
         r"""
-        Takes in the annotated string and randomly augments few characters from it
+        Takes in the annotated string and randomly augments few characters
+        from it based on the probability value in the configs
 
         Args:
             input_anno: the input annotation
@@ -82,5 +85,5 @@ class CharacterFlipOp(TextReplacementOp):
             if char == " " or random.random() > self.configs.prob:
                 augmented_string += char
             else:
-                augmented_string += self.flip(char)
-        return augmented_string
+                augmented_string += self._flip(char)
+        return True, augmented_string
