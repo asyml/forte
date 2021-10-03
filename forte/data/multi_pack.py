@@ -305,8 +305,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         return self._packs
 
     @property
-    def pack_names(self) -> Set[str]:
-        return set(self._pack_names)
+    def pack_names(self) -> List[str]:
+        return self._pack_names
 
     def update_pack(self, named_packs: Dict[str, DataPack]):
         for pack_name, pack in named_packs.items():
