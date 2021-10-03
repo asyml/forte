@@ -19,6 +19,7 @@ import unittest
 import random
 
 from ddt import ddt, data, unpack
+from ft.onto.base_ontology import Token, EntityMention
 from forte.data.selector import AllPackSelector
 from forte.pipeline import Pipeline
 from forte.data.multi_pack import MultiPack, DataPack
@@ -31,7 +32,6 @@ from forte.processors.data_augment.algorithms.word_splitting_processor import (
 
 from forte.processors.base import PackProcessor
 from forte.processors.misc import WhiteSpaceTokenizer
-from ft.onto.base_ontology import Token, EntityMention
 
 
 class EntityMentionInserter(PackProcessor):
@@ -63,6 +63,15 @@ class EntityMentionInserter(PackProcessor):
 
 @ddt
 class TestWordSplittingProcessor(unittest.TestCase):
+    """
+    This class tests the correctness of word splitting data augmentation.
+    It runs the following checks:
+    - If expected augmentation = augmented text returned by function.
+    - If return text containes all annotations as expected.
+    - If annotations that were supposed to be augmented are not
+    contained in the returned text
+    - If the entities are retained after augmentation.
+    """
     def setUp(self):
         random.seed(8)
         self.nlp = Pipeline[MultiPack]()
