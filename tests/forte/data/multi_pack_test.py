@@ -48,12 +48,12 @@ class DataPackTest(unittest.TestCase):
 
         self.assertEqual(len(self.multi_pack.packs), 3)
         self.assertEqual(
-            self.multi_pack.pack_names, {"left pack", "right pack", "new pack"}
+            self.multi_pack.pack_names, ["left pack", "right pack", "new pack"]
         )
 
     def test_rename_pack(self):
         self.multi_pack.rename_pack("right pack", "last pack")
-        self.assertEqual(self.multi_pack.pack_names, {"left pack", "last pack"})
+        self.assertEqual(self.multi_pack.pack_names, ["left pack", "last pack"])
 
     def test_multipack_groups(self):
         """
