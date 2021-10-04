@@ -393,6 +393,14 @@ class DictProperty(Property):
         default_val: Any = None,
         self_ref: bool = False,
     ):
+        if not key_type == "str":
+            # This string value constraint is to conform with JSON format
+            #  requirement: https://www.json.org/json-en.html
+            raise CodeGenerationException(
+                f"Dictionary keys can only be string values, find {key_type} "
+                f"at {name}."
+            )
+
         self.value_is_forte_type = import_manager.is_imported(value_type)
         type_str = (
             "forte.data.ontology.core.FDict"
@@ -784,6 +792,54 @@ class EntryTree:
                         found_node.parent.name
                     ] = found_node.parent.attributes
                     found_node = found_node.parent
+
+    def todict(self) -> Dict[str, Any]:
+        r"""Dump the EntryTree structure to a dictionary.
+
+        Returns:
+            dict: A dictionary storing the EntryTree.
+        """
+
+        def node_to_dict(node: EntryTreeNode):
+            return (
+                None
+                if not node
+                else {
+                    "name": node.name,
+                    "attributes": list(node.attributes),
+                    "children": [
+                        node_to_dict(child) for child in node.children
+                    ],
+                }
+            )
+
+        return node_to_dict(self.root)
+
+    def fromdict(
+        self, tree_dict: Dict[str, Any], parent_entry_name: Optional[str] = None
+    ) -> Optional["EntryTree"]:
+        r"""Load the EntryTree structure from a dictionary.
+
+        Args:
+            tree_dict: A dictionary storing the EntryTree.
+            parent_entry_name: The type name of the parent of the node to be
+                built. Default value is None.
+        """
+        if not tree_dict:
+            return None
+
+        if parent_entry_name is None:
+            self.root = EntryTreeNode(name=tree_dict["name"])
+            self.root.attributes = set(tree_dict["attributes"])
+        else:
+            self.add_node(
+                curr_entry_name=tree_dict["name"],
+                parent_entry_name=parent_entry_name,
+                curr_entry_attr=set(tree_dict["attributes"]),
+            )
+        for child in tree_dict["children"]:
+            self.fromdict(child, tree_dict["name"])
+        return self
 
 
 def search(node: EntryTreeNode, search_node_name: str):

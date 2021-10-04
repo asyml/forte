@@ -202,7 +202,7 @@ class CoNLLNERPredictor(RequestPackingProcessor):
                 token_ner = token.ner
                 assert isinstance(token_ner, str)
                 if token_ner[0] == "B":
-                    current_entity_mention = (token.span.begin, token_ner[2:])
+                    current_entity_mention = (token.begin, token_ner[2:])
                 elif token_ner[0] == "I":
                     continue
                 elif token_ner[0] == "O":
@@ -213,13 +213,13 @@ class CoNLLNERPredictor(RequestPackingProcessor):
                         continue
 
                     entity = EntityMention(
-                        pack, current_entity_mention[0], token.span.end
+                        pack, current_entity_mention[0], token.end
                     )
                     entity.ner_type = current_entity_mention[1]
                 elif token_ner[0] == "S":
-                    current_entity_mention = (token.span.begin, token_ner[2:])
+                    current_entity_mention = (token.begin, token_ner[2:])
                     entity = EntityMention(
-                        pack, current_entity_mention[0], token.span.end
+                        pack, current_entity_mention[0], token.end
                     )
                     entity.ner_type = current_entity_mention[1]
 

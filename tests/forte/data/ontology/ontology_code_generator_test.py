@@ -34,6 +34,7 @@ from forte.data.ontology.code_generation_exceptions import (
     UnsupportedTypeException,
     ParentEntryNotSupportedException,
     InvalidIdentifierException,
+    CodeGenerationException,
 )
 from forte.data.ontology.code_generation_objects import ImportManager
 from forte.data.ontology.ontology_code_generator import OntologyCodeGenerator
@@ -185,6 +186,7 @@ class GenerateOntologyTest(unittest.TestCase):
         (False, "test_unknown_item_type.json", TypeNotDeclaredException),
         (False, "test_invalid_entry_name.json", InvalidIdentifierException),
         (False, "test_invalid_attr_name.json", InvalidIdentifierException),
+        (False, "test_non_string_keys.json", CodeGenerationException),
     )
     def test_warnings_errors(self, value):
         expected_warning, file, msg_type = value

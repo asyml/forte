@@ -695,7 +695,8 @@ class MultiPackPipelineTest(unittest.TestCase):
         nlp.add(
             DummyRelationExtractor(),
             config={"batcher": {"batch_size": 5}},
-            selector=NameMatchSelector(select_name=pack_name),
+            selector=NameMatchSelector(),
+            selector_config={"select_name": pack_name},
         )
         nlp.initialize()
 
@@ -1295,7 +1296,8 @@ class RecordCheckPipelineTest(unittest.TestCase):
         nlp.add(
             dummy,
             config={"test": "dummy1"},
-            selector=NameMatchSelector("default"),
+            selector=NameMatchSelector(),
+            selector_config={"select_name": "default"},
         )
 
         # This will not add the component successfully because the processor is
@@ -1304,7 +1306,11 @@ class RecordCheckPipelineTest(unittest.TestCase):
             nlp.add(dummy, config={"test": "dummy2"})
 
         # This will add the component, with a different selector
-        nlp.add(dummy, selector=NameMatchSelector("copy"))
+        nlp.add(
+            dummy,
+            selector=NameMatchSelector(),
+            selector_config={"select_name": "copy"},
+        )
         nlp.initialize()
 
         # Check that the two processors have the same name.
@@ -1410,50 +1416,6 @@ class RecordCheckPipelineTest(unittest.TestCase):
                 }
             },
         )
-
-    def test_entry_adding_attribute_wrong_key(self):
-        r"""Tests the processor adding attributes content to entry with
-        the wrong key"""
-        nlp = Pipeline[DataPack](enforce_consistency=True)
-        reader = DummySentenceReaderTwo()
-        nlp.set_reader(reader)
-        dummy = DummyPackProcessorFour()
-        nlp.add(dummy)
-        nlp.initialize()
-        data_path = data_samples_root + "/random_texts/0.txt"
-        warning_content = (
-            "Base on attributes in entry definition, "
-            "the [ab] attribute_name "
-            "does not exist in the "
-            "[Sentence] that "
-            "you specified to add to."
-        )
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            with self.assertRaises(KeyError):
-                nlp.process(data_path)
-            self.assertEqual(str(w[-1].message), warning_content)
-
-    def test_entry_adding_attribute_wrong_type(self):
-        r"""Tests the processor adding attributes content to entry with
-        the wrong type"""
-        nlp = Pipeline[DataPack](enforce_consistency=True)
-        reader = DummySentenceReaderTwo()
-        nlp.set_reader(reader)
-        dummy = DummyPackProcessorFive()
-        nlp.add(dummy)
-        nlp.initialize()
-        data_path = data_samples_root + "/random_texts/0.txt"
-        warning_content = (
-            "Based on type annotation, the [classification] "
-            "attribute of [Sentence] "
-            "should be [typing.Dict[str, float]], but got "
-            "[<class 'float'>]."
-        )
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            nlp.process(data_path)
-            self.assertEqual(str(w[-1].message), warning_content)
 
 
 if __name__ == "__main__":

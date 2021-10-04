@@ -325,16 +325,17 @@ class DataPack(BasePack[Entry, Link, Group]):
         """
         return len(self.generics)
 
-    def get_span_text(self, span: Span) -> str:
-        r"""Get the text in the data pack contained in the span
+    def get_span_text(self, begin: int, end: int) -> str:
+        r"""Get the text in the data pack contained in the span.
 
         Args:
-            span (Span): Span object which contains a `begin` and an `end` index
+            begin (int): begin index to query.
+            end (int): end index to query.
 
         Returns:
-            The text within this span
+            The text within this span.
         """
-        return self._text[span.begin : span.end]
+        return self._text[begin:end]
 
     def set_text(
         self,
@@ -546,8 +547,8 @@ class DataPack(BasePack[Entry, Link, Group]):
     def __add_entry_with_check(
         self, entry: EntryType, allow_duplicate: bool = True
     ) -> EntryType:
-        r"""Internal method to add an :class:`Entry` object to the
-        :class:`DataPack` object.
+        r"""Internal method to add an :class:`~forte.data.ontology.core.Entry`
+        object to the :class:`~forte.data.DataPack` object.
 
         Args:
             entry (Entry): An :class:`Entry` object to be added to the datapack.
@@ -559,7 +560,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         if isinstance(entry, Annotation):
             target = self.annotations
 
-            begin, end = entry.span.begin, entry.span.end
+            begin, end = entry.begin, entry.end
 
             if begin < 0:
                 raise ValueError(
@@ -791,8 +792,8 @@ class DataPack(BasePack[Entry, Link, Group]):
                 continue
 
             data: Dict[str, Any] = {}
-            data["context"] = self.text[context.span.begin : context.span.end]
-            data["offset"] = context.span.begin
+            data["context"] = self.text[context.begin : context.end]
+            data["offset"] = context.begin
 
             for field in context_fields:
                 data[field] = getattr(context, field)
@@ -901,12 +902,12 @@ class DataPack(BasePack[Entry, Link, Group]):
                 )
             a_dict["unit_span"] = []
 
-        cont_begin = cont.span.begin if cont else 0
+        cont_begin = cont.begin if cont else 0
 
         annotation: Annotation
         for annotation in self.get(a_type, cont, components):
             # we provide span, text (and also tid) by default
-            a_dict["span"].append((annotation.span.begin, annotation.span.end))
+            a_dict["span"].append((annotation.begin, annotation.end))
             a_dict["text"].append(annotation.text)
 
             for field in fields:
@@ -915,8 +916,8 @@ class DataPack(BasePack[Entry, Link, Group]):
                 if field == "context_span":
                     a_dict[field].append(
                         (
-                            annotation.span.begin - cont_begin,
-                            annotation.span.end - cont_begin,
+                            annotation.begin - cont_begin,
+                            annotation.end - cont_begin,
                         )
                     )
                     continue
@@ -1072,13 +1073,11 @@ class DataPack(BasePack[Entry, Link, Group]):
                 yield self.get_entry(tid)  # type: ignore
         else:
             if issubclass(entry_type, Annotation):
-                range_begin = (
-                    range_annotation.span.begin if range_annotation else 0
-                )
+                range_begin = range_annotation.begin if range_annotation else 0
                 range_end = (
-                    range_annotation.span.end
+                    range_annotation.end
                     if range_annotation
-                    else self.annotations[-1].span.end
+                    else self.annotations[-1].end
                 )
 
                 if issubclass(entry_type, Annotation):
@@ -1393,8 +1392,7 @@ class DataIndex(BaseIndex):
             )
 
         return not (
-            entry1_.span.begin >= entry2_.span.end
-            or entry1_.span.end <= entry2_.span.begin
+            entry1_.begin >= entry2_.end or entry1_.end <= entry2_.begin
         )
 
     def in_span(self, inner_entry: Union[int, Entry], span: Span) -> bool:
@@ -1439,8 +1437,8 @@ class DataIndex(BaseIndex):
         inner_end = -1
 
         if isinstance(inner_entry, Annotation):
-            inner_begin = inner_entry.span.begin
-            inner_end = inner_entry.span.end
+            inner_begin = inner_entry.begin
+            inner_end = inner_entry.end
         elif isinstance(inner_entry, Link):
             if not issubclass(inner_entry.ParentType, Annotation):
                 return False
@@ -1460,8 +1458,8 @@ class DataIndex(BaseIndex):
             child_: Annotation = child
             parent_: Annotation = parent
 
-            inner_begin = min(child_.span.begin, parent_.span.begin)
-            inner_end = max(child_.span.end, parent_.span.end)
+            inner_begin = min(child_.begin, parent_.begin)
+            inner_end = max(child_.end, parent_.end)
         elif isinstance(inner_entry, Group):
             if not issubclass(inner_entry.MemberType, Annotation):
                 return False
@@ -1469,9 +1467,9 @@ class DataIndex(BaseIndex):
             for mem in inner_entry.get_members():
                 mem_: Annotation = mem  # type: ignore
                 if inner_begin == -1:
-                    inner_begin = mem_.span.begin
-                inner_begin = min(inner_begin, mem_.span.begin)
-                inner_end = max(inner_end, mem_.span.end)
+                    inner_begin = mem_.begin
+                inner_begin = min(inner_begin, mem_.begin)
+                inner_end = max(inner_end, mem_.end)
         else:
             # Generics or other user defined types will not be check here.
             return False

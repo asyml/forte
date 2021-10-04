@@ -244,7 +244,7 @@ class BaseIndex(Generic[EntryType]):
             raise PackIndexError("Group index has not been built.")
 
         for group in groups:
-            for member in group.members:
+            for member in group.members:  # type: ignore
                 self._group_index[member].add(group.tid)
 
     def add_link_parent(self, parent: EntryType, link: LinkType):

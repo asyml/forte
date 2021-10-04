@@ -458,7 +458,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         """
         raise NotImplementedError
 
-    def get_single(self, entry_type: Type[EntryType]) -> EntryType:
+    def get_single(self, entry_type: Union[str, Type[EntryType]]) -> EntryType:
         r"""Take a single entry of type :attr:`entry_type` from this data
         pack. This is useful when the target entry type appears only one
         time in the :class:`DataPack` for e.g., a Document entry. Or you just
