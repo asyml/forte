@@ -38,10 +38,7 @@ class RandomWordSplitDataAugmentProcessor(ReplacementDataAugmentProcessor):
     This class creates a processor to perform Random Word Splitting.
     It randomly chooses n words in a sentence and splits each word at
     a random position where n = alpha * input length.
-    alpha indicates the percent of the words
-    in a sentence that are changed. The processor will perform
-    the Word Splitting operation 2 * (input length * alpha) times
-    after deleting the original annotation.
+    alpha indicates the percent of the words in a sentence that are changed. 
     """
 
     def _augment(self, input_pack: MultiPack, aug_pack_names: List[str]):

@@ -73,7 +73,7 @@ Data Augmentation Ops
 :hidden:`WordnetDictionary`
 ----------------------------
 .. autoclass:: forte.processors.data_augment.algorithms.dictionary.WordnetDictionary
-    :members: 
+    :members:
 
 :hidden:`TypoReplacementOp`
 ----------------------------
