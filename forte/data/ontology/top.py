@@ -222,6 +222,8 @@ class Link(BaseLink):
         Args:
             parent: The parent entry.
         """
+        import pdb
+        pdb.set_trace()
         if not isinstance(parent, self.ParentType):
             raise TypeError(
                 f"The parent of {type(self)} should be an "
