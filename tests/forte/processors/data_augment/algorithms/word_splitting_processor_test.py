@@ -139,7 +139,15 @@ class TestWordSplittingProcessor(unittest.TestCase):
         unnecessary_tokens,
         new_entities,
     ):
-        self.nlp.add(component=RandomWordSplitDataAugmentProcessor())
+        entity_config = {
+            "other_entry_policy": {
+                "kwargs": {"ft.onto.base_ontology.EntityMention": "auto_align"}
+            }
+        }
+        self.nlp.add(
+            component=RandomWordSplitDataAugmentProcessor(),
+            config=entity_config,
+        )
         self.nlp.initialize()
 
         for idx, m_pack in enumerate(self.nlp.process_dataset(texts)):
