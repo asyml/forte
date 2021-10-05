@@ -124,16 +124,23 @@ class RandomWordSplitDataAugmentProcessor(ReplacementDataAugmentProcessor):
 
                         'other_entry_policy': {
                             "kwargs": {
-                                `"ft.onto.base_ontology.Document": "auto_align",`
-                                `"ft.onto.base_ontology.Sentence": "auto_align",`
+                                "ft.onto.base_ontology.Document": "auto_align",
+                                "ft.onto.base_ontology.Sentence": "auto_align",
                             }
                         }
+
             - `augment_pack_names` (dict): The name of the data pack that will
                 contain the augmented text `(Default: augmented_input_src)`.
                 To update it, pass a dict of form
+
                 Example:
-                config['augment_pack_names']['kwargs'] =
-                `{'input_src' : 'augmented_input_src'}`.
+                    .. code-block:: python
+
+                        'augment_pack_names': {
+                            "kwargs": {
+                                "input_src" : "augmented_input_src",
+                            }
+                        }
             - `alpha` (float):
                 The probability of splitting in `[0, 1](Default = 0.1)`.
         """
