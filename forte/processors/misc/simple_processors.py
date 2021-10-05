@@ -13,14 +13,11 @@
 # limitations under the License.
 import re
 
+from ft.onto.base_ontology import Sentence, Token
 from forte.data import DataPack
 from forte.processors.base import PackProcessor
-from ft.onto.base_ontology import Sentence, Token
 
-__all__ = [
-    "PeriodSentenceSplitter",
-    "WhiteSpaceTokenizer",
-]
+__all__ = ["PeriodSentenceSplitter", "WhiteSpaceTokenizer"]
 
 
 class PeriodSentenceSplitter(PackProcessor):
