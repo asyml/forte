@@ -60,6 +60,7 @@ from forte.data.ontology.code_generation_objects import (
     DictProperty,
     EntryTree,
 )
+
 # Builtin and local imports required in the generated python modules.
 from forte.data.ontology.ontology_code_const import (
     REQUIRED_IMPORTS,
