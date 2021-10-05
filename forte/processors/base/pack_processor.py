@@ -15,7 +15,6 @@
 Processors that process pack.
 """
 from abc import ABC
-from typing import Optional
 
 from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
@@ -49,16 +48,3 @@ class MultiPackProcessor(BasePackProcessor[MultiPack], ABC):
 
     def _process(self, input_pack: MultiPack):
         raise NotImplementedError
-
-    def new_data_pack(self, pack_name: Optional[str] = None) -> DataPack:
-        """
-        Create a new data pack using the current pack manager.
-
-        Args:
-            pack_name (str, Optional): The name to be used for the pack. If not
-              set, the pack name will remained unset.
-
-        Returns:
-
-        """
-        return DataPack(pack_name)
