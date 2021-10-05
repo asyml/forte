@@ -32,7 +32,7 @@ __all__ = [
 
 class UniformTypoGenerator:
     r"""
-    A uniform generateor that generates a typo from a typo dictionary.
+    A uniform generator that generates a typo from a typo dictionary.
 
     Args:
         word: input word that needs to be replaced,
@@ -72,9 +72,9 @@ class TypoReplacementOp(TextReplacementOp):
     Args:
         configs:
             The config should contain
-                `prob`(float): The probability of replacement,
+                prob (float): The probability of replacement,
                     should fall in [0, 1].
-                dict_path (str): the url or the path to the pre-defined
+                dict_path (str): the `url` or the path to the pre-defined
                     typo json file. The key is a word we want to replace.
                     The value is a list containing various typos
                     of the corresponding key.
