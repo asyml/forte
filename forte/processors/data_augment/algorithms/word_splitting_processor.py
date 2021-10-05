@@ -50,7 +50,6 @@ class RandomWordSplitDataAugmentProcessor(ReplacementDataAugmentProcessor):
 
         for pack_name in aug_pack_names:
             data_pack: DataPack = input_pack.get_pack(pack_name)
-
             annotations: List[Annotation] = []
             indexes: List[int] = []
             endings = []
