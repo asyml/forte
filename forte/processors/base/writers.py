@@ -186,7 +186,7 @@ class MultiPackWriter(MultiPackProcessor):
 
         if self.configs.output_dir is None:
             raise ProcessorConfigError(
-                f"`output_dir` is not specified for the writer."
+                "`output_dir` is not specified for the writer."
             )
 
         pack_paths = os.path.join(self.configs.output_dir, self.pack_idx)
