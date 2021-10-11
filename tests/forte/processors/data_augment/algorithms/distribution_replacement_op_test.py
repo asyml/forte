@@ -16,12 +16,11 @@ Unit tests for distribution word replacement op.
 """
 import unittest
 
-from forte.data.data_pack import DataPack
 from ft.onto.base_ontology import Token
+from forte.data.data_pack import DataPack
 from forte.processors.data_augment.algorithms.distribution_replacement_op import (
     DistributionReplacementOp,
 )
-from forte.processors.data_augment.algorithms.sampler import UniformSampler
 
 
 class TestDistributionReplacementOp(unittest.TestCase):
@@ -33,15 +32,15 @@ class TestDistributionReplacementOp(unittest.TestCase):
         data_pack.add_all_remaining_entries()
 
         self.word_list = ["apple", "banana", "orange"]
-        self.sampler = UniformSampler(self.word_list)
+        # self.sampler = UniformSampler(self.word_list)
 
     def test_replace(self):
-        configs = {"prob": 1.0}
-        replacement = DistributionReplacementOp(self.sampler, configs)
+        configs = {"prob": 1.0, "word_list": self.word_list}
+        replacement = DistributionReplacementOp(configs)
         word = replacement.replace(self.token)
         self.assertIn(word[1], self.word_list)
-        configs = {"prob": 0}
-        replacement = DistributionReplacementOp(self.sampler, configs)
+        configs = {"prob": 0, "word_list": self.word_list}
+        replacement = DistributionReplacementOp(configs)
         word = replacement.replace(self.token)
         self.assertEqual(word[1], self.word)
 

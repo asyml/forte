@@ -18,7 +18,7 @@ from forte.data.ontology import Annotation
 from forte.processors.data_augment.algorithms.text_replacement_op import (
     TextReplacementOp,
 )
-from forte.processors.data_augment.algorithms.sampler import Sampler
+from forte.processors.data_augment.algorithms.sampler import UniformSampler
 
 __all__ = [
     "DistributionReplacementOp",
@@ -37,11 +37,11 @@ class DistributionReplacementOp(TextReplacementOp):
             it should fall in [0, 1].
     """
 
-    def __init__(
-        self, sampler: Sampler, configs: Union[Config, Dict[str, Any]]
-    ):
+    def __init__(self, configs: Union[Config, Dict[str, Any]]):
         super().__init__(configs)
-        self.sampler = sampler
+        self.sampler = UniformSampler(
+            configs={"uniform_sampler_word_list": self.configs["word_list"]}
+        )
 
     def replace(self, input_anno: Annotation) -> Tuple[bool, str]:
         r"""
@@ -58,3 +58,7 @@ class DistributionReplacementOp(TextReplacementOp):
             return False, input_anno.text
         word: str = self.sampler.sample()
         return True, word
+
+    @classmethod
+    def default_configs(cls):
+        return {"prob": 0.1, "word_list": []}

@@ -13,7 +13,9 @@
 # limitations under the License.
 import random
 from abc import abstractmethod, ABC
-from typing import Dict, List
+from typing import Any, Dict, Union
+
+from forte.common.configuration import Config
 
 
 __all__ = [
@@ -28,12 +30,17 @@ class Sampler(ABC):
     An abstract sampler class.
     """
 
-    def __init__(self):
+    def __init__(self, configs: Union[Config, Dict[str, Any]]):
+        self.configs: Config = Config(configs, None, allow_new_hparam=True)
         random.seed()
 
     @abstractmethod
     def sample(self) -> str:
         raise NotImplementedError
+
+    @classmethod
+    def default_configs(cls):
+        return {}
 
 
 class UniformSampler(Sampler):
@@ -41,16 +48,29 @@ class UniformSampler(Sampler):
     A sampler that samples a word from a uniform distribution.
 
     Args:
-        word_list: A list of words that this sampler uniformly samples from.
+        configs:
+            word_list: A list of words that this sampler uniformly samples from.
     """
 
-    def __init__(self, word_list: List[str]):
-        super().__init__()
-        self.word_list: List[str] = word_list
+    def __init__(self, configs: Union[Config, Dict[str, Any]]):
+        super().__init__(configs)
+        # word_list: List[str]
+        self.word_list = self.configs["uniform_sampler_word_list"]
+        # self.word_list: List[str] = word_list
 
     def sample(self) -> str:
         word: str = random.choice(self.word_list)
         return word
+
+    @classmethod
+    def default_configs(cls):
+        config = super().default_configs()
+        config.update(
+            {
+                "uniform_sampler_word_list": [],
+            }
+        )
+        return config
 
 
 class UnigramSampler(Sampler):
@@ -58,17 +78,37 @@ class UnigramSampler(Sampler):
     A sampler that samples a word from a unigram distribution.
 
     Args:
-        unigram: A dictionary.
-            The key is a word, the value is the word count or a probability.
-            This sampler samples from this word distribution.
+        configs:
+            unigram_dict: A dictionary.
+                The key is a word, the value is the word count or a probability.
+                This sampler samples from this word distribution.
+            Example:
+                .. code-block:: python
+
+                    'unigram_dict': {
+                        "type": "",
+                        "kwargs": {
+                            "apple": 1,
+                            "banana": 2,
+                            "orange": 3
+                        }
+                    }
     """
 
-    def __init__(self, unigram: Dict[str, float]):
-        super().__init__()
-        self.unigram: Dict[str, float] = unigram
+    def __init__(self, configs: Union[Config, Dict[str, Any]]):
+        super().__init__(configs)
+        self.unigram = self.configs["unigram_dict"]["kwargs"].__dict__[
+            "_hparams"
+        ]
 
     def sample(self) -> str:
         word: str = random.choices(
             list(self.unigram.keys()), list(self.unigram.values())
         )[0]
         return word
+
+    @classmethod
+    def default_configs(cls):
+        config = super().default_configs()
+        config.update({"unigram_dict": {"type": "", "kwargs": {}}})
+        return config
