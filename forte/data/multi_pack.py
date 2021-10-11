@@ -176,7 +176,9 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             "specific data pack to get text."
         )
 
-    def add_pack(self, ref_name: Optional[str] = None) -> DataPack:
+    def add_pack(
+        self, ref_name: Optional[str] = None, pack_name: Optional[str] = None
+    ) -> DataPack:
         """
         Create a data pack and add it to this multi pack. If `ref_name` is
         provided, it will be used to index the data pack. Otherwise, a default
@@ -185,7 +187,9 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
         Args:
             ref_name (str): The pack name used to reference this data pack from
-              the multi pack.
+              the multi pack. If none, the reference name will not be set.
+            pack_name (str): The pack name of the data pack (itself). If none,
+              the name will not be set.
 
         Returns: The newly created data pack.
 
@@ -199,7 +203,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
                 f"{type(ref_name)}"
             )
 
-        pack: DataPack = DataPack()
+        pack: DataPack = DataPack(pack_name=pack_name)
         self.add_pack_(pack, ref_name)
         return pack
 

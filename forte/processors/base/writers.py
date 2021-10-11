@@ -21,6 +21,7 @@ import posixpath
 from abc import abstractmethod, ABC
 from typing import Optional, Any, Dict
 
+from forte.common import ProcessorConfigError
 from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.base_pack import BasePack
@@ -182,6 +183,11 @@ class MultiPackWriter(MultiPackProcessor):
     def initialize(self, resources: Resources, configs: Config):
         # pylint: disable=attribute-defined-outside-init,consider-using-with
         super().initialize(resources, configs)
+
+        if self.configs.output_dir is None:
+            raise ProcessorConfigError(
+                "`output_dir` is not specified for the writer."
+            )
 
         pack_paths = os.path.join(self.configs.output_dir, self.pack_idx)
         ensure_dir(pack_paths)
