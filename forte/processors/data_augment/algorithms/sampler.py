@@ -82,7 +82,7 @@ class UnigramSampler(Sampler):
             The key is a word, the value is the word count or a probability.
             This sampler samples from this word distribution.
             Example:
-            
+
                 .. code-block:: python
 
                     'unigram_dict': {
@@ -92,8 +92,7 @@ class UnigramSampler(Sampler):
                             "banana": 2,
                             "orange": 3
                         }
-                    }
-"""
+                    }"""
 
     def __init__(self, configs: Union[Config, Dict[str, Any]]):
         super().__init__(configs)
