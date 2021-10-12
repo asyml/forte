@@ -77,12 +77,12 @@ class UnigramSampler(Sampler):
     r"""
     A sampler that samples a word from a unigram distribution.
 
-    Args:
-        configs:
-            unigram_dict: A dictionary.
-                The key is a word, the value is the word count or a probability.
-                This sampler samples from this word distribution.
+    Config Values:
+        - unigram_dict: (dict)
+            The key is a word, the value is the word count or a probability.
+            This sampler samples from this word distribution.
             Example:
+            
                 .. code-block:: python
 
                     'unigram_dict': {
@@ -93,7 +93,7 @@ class UnigramSampler(Sampler):
                             "orange": 3
                         }
                     }
-    """
+"""
 
     def __init__(self, configs: Union[Config, Dict[str, Any]]):
         super().__init__(configs)
