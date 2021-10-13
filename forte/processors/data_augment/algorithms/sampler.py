@@ -14,6 +14,7 @@
 import random
 from abc import abstractmethod, ABC
 from typing import Any, Dict, Union
+from forte.common.configurable import Configurable
 
 from forte.common.configuration import Config
 
@@ -25,13 +26,13 @@ __all__ = [
 ]
 
 
-class Sampler(ABC):
+class Sampler(Configurable):
     r"""
     An abstract sampler class.
     """
 
     def __init__(self, configs: Union[Config, Dict[str, Any]]):
-        self.configs: Config = Config(configs, None, allow_new_hparam=True)
+        self.configs: Config =  self.make_configs(configs)
         random.seed()
 
     @abstractmethod

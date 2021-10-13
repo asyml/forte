@@ -32,18 +32,39 @@ class TestDistributionReplacementOp(unittest.TestCase):
         data_pack.add_all_remaining_entries()
 
         self.word_list = ["apple", "banana", "orange"]
-        # self.sampler = UniformSampler(self.word_list)
+        self.word_dict = {
+                            "apple": 1,
+                            "banana": 2,
+                            "mango": 3
+                        }
 
     def test_replace(self):
-        configs = {"prob": 1.0, "word_list": self.word_list}
+        configs = {
+            "prob": 1.0,
+            "uniform_sampler_data": self.word_list,
+            "sampler_type": "uniform"
+        }
         replacement = DistributionReplacementOp(configs)
         word = replacement.replace(self.token)
         self.assertIn(word[1], self.word_list)
-        configs = {"prob": 0, "word_list": self.word_list}
+
+        configs = {
+            "prob": 0,
+            "uniform_sampler_data": self.word_list,
+            "sampler_type": "uniform"
+        }
         replacement = DistributionReplacementOp(configs)
         word = replacement.replace(self.token)
         self.assertEqual(word[1], self.word)
 
+        configs = {
+            "prob": 1.0,
+            "sampler_type": "unigram",
+            "unigram_sampler_data": self.word_dict
+        }
+        replacement = DistributionReplacementOp(configs)
+        word = replacement.replace(self.token)
+        self.assertIn(word[1], self.word_dict.keys())
 
 if __name__ == "__main__":
     unittest.main()
