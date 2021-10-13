@@ -22,7 +22,8 @@ from typing import Iterable
 from forte.data.data_pack import DataPack
 from forte.datasets.mrc.squad_reader import SquadReader
 from forte.pipeline import Pipeline
-from ft.onto.base_ontology import MRCQuestion, Document
+from ft.onto.base_ontology import MRCQuestion
+from ftx.onto.race_qa import Passage
 
 
 class SquadReaderTest(unittest.TestCase):
@@ -64,10 +65,10 @@ class SquadReaderTest(unittest.TestCase):
             expected_text: str = ""
             expected = expected_file_dict[pack.pack_name]
 
-            docs = list(pack.get(Document))
-            self.assertEqual(len(docs), 1)
+            passage = list(pack.get(Passage))
+            self.assertEqual(len(passage), 1)
             expected_context = expected["context"]
-            self.assertEqual(docs[0].text, expected_context)
+            self.assertEqual(passage[0].text, expected_context)
             expected_text += expected_context
 
             for qid, question in enumerate(pack.get(MRCQuestion)):

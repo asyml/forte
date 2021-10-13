@@ -17,7 +17,7 @@ from typing import Any, Iterator, Dict, Set, Tuple
 
 from forte.data.data_pack import DataPack
 from forte.data.base_reader import PackReader
-from ft.onto.base_ontology import Document, MRCQuestion, MRCAnswer
+from ft.onto.base_ontology import Document, MRCQuestion, Phrase
 from ftx.onto.race_qa import Passage
 
 __all__ = [
@@ -36,7 +36,7 @@ class SquadReader(PackReader):
 
     SquadReader reads each paragraph in the dataset as a separate Document, and the questions
     are concatenated behind the paragraph, form a Passage.
-    MRCAnswers are marked as text spans. Each MRCQuestion has a list of answers as its attribute.
+    Phrase are MRC answers marked as text spans. Each MRCQuestion has a list of answers.
     """
 
     def _collect(self, file_path: str) -> Iterator[Any]:  # type: ignore
@@ -74,17 +74,18 @@ class SquadReader(PackReader):
             text += "\n" + ques_text
             ques_end = offset + len(ques_text)
             question = MRCQuestion(pack, offset, ques_end)
+            question.qid = qa["id"]
             offset = ques_end + 1
             for a in ans:
                 ans_text = a["text"]
                 ans_start = a["answer_start"]
-                answer = MRCAnswer(pack, ans_start, ans_start + len(ans_text))
+                answer = Phrase(pack, ans_start, ans_start + len(ans_text))
                 question.answers.append(answer)
 
         pack.set_text(text)
 
-        Document(pack, 0, context_end)
-        passage = Passage(pack, 0, len(pack.text))
+        passage = Passage(pack, 0, context_end)
+        Document(pack, 0, len(pack.text))
 
         passage.passage_id = title
         pack.pack_name = title

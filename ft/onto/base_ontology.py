@@ -48,7 +48,6 @@ __all__ = [
     "Title",
     "MCOption",
     "MCQuestion",
-    "MRCAnswer",
     "MRCQuestion",
 ]
 
@@ -498,25 +497,18 @@ class MCQuestion(Annotation):
 
 
 @dataclass
-class MRCAnswer(Annotation):
-    """
-    An `Annotation` type entry which represents an answer to an MRC question, typically a span in the given paragraph.
-    """
-
-    def __init__(self, pack: DataPack, begin: int, end: int):
-        super().__init__(pack, begin, end)
-
-
-@dataclass
 class MRCQuestion(Annotation):
     """
     An `Annotation` type which represents an MRC question.
     Attributes:
-        answers (FList[MRCAnswer]):
+        qid (Optional[int]):
+        answers (FList[Phrase]):
     """
 
-    answers: FList[MRCAnswer]
+    qid: Optional[int]
+    answers: FList[Phrase]
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
-        self.answers: FList[MRCAnswer] = FList(self)
+        self.qid: Optional[int] = None
+        self.answers: FList[Phrase] = FList(self)
