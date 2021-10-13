@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import random
-from abc import abstractmethod, ABC
+from abc import abstractmethod
 from typing import Any, Dict, Union
 from forte.common.configurable import Configurable
 
@@ -32,7 +32,7 @@ class Sampler(Configurable):
     """
 
     def __init__(self, configs: Union[Config, Dict[str, Any]]):
-        self.configs: Config =  self.make_configs(configs)
+        self.configs: Config = self.make_configs(configs)
         random.seed()
 
     @abstractmethod
