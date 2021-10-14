@@ -43,9 +43,9 @@ class DistributionReplacementOp(TextReplacementOp, Configurable):
 
         - `distribution_path`:
             A string representing the destination of data that will
-            be input to the sampler. Default will be an empty string
-            The data must be stored in json file as list for uniform sampler and dictionary
-            for unigram sampler
+            serve as input to the sampler. Default will be an empty string.
+            The data must be stored in a json file as list for uniform sampler
+            and dictionary for unigram sampler.
 
         - `sampler_type`:
             The type of sampler. It should be one
@@ -85,11 +85,11 @@ class DistributionReplacementOp(TextReplacementOp, Configurable):
     def cofigure_sampler(self) -> bool:
         r"""
         This function sets the sampler (Unigram or Uniform) that will be
-         used distribution replacement op.The sampler will be set
-         according to the configuration values
+        used by the distribution replacement op. The sampler will be set
+        according to the configuration values
 
         Returns:
-            A Boolean value indicating if the creation of a sampler was successful or not.
+            A Boolean value indicating if the creation of the sampler was successful or not.
 
         """
         sampler_type = self.configs["sampler_type"]
