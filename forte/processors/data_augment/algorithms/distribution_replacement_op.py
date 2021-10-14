@@ -37,22 +37,27 @@ class DistributionReplacementOp(TextReplacementOp, Configurable):
     with a new word that is sampled by a sampler from a distribution.
 
     Config Values:
-        - `prob`
-            The probability of whether to replace the input,
-            it should fall in [0, 1].
-        - `sampler_type`
-            The type of sampler. It should be one of ("uniform", "unigram")
-        - `distribution_path`
-            A string representing the destination of data that will be input to the sampler.
-            default will be an empty string
+        - `prob`:
+            The probability of whether to replace the
+            input, it should fall in `[0, 1]`.
+
+        - `distribution_path`:
+            A string representing the destination of data that will
+            be input to the sampler. Default will be an empty string
             The data must be stored in json file as list for uniform sampler and dictionary
-             for unigram sampler
-        - `uniform_sampler_data`
-            If the data is to be passed directly, it is passed as a list to initialize a
-             uniform sampler using this key.
-        - `unigram_sampler_data`
-            If the data is to be passed directly, it is passed as a dict to initialize a
-             unigram sampler using this key.
+            for unigram sampler
+
+        - `sampler_type`:
+            The type of sampler. It should be one
+            of `("uniform", "unigram")`
+
+        - `uniform_sampler_data`:
+            If the data is to be passed directly, it is passed as a list
+            to initialize a uniform sampler using this key.
+
+        - `unigram_sampler_data`:
+            If the data is to be passed directly, it is passed as a dict
+            to initialize a unigram sampler using this key.
     """
 
     def __init__(self, configs: Union[Config, Dict[str, Any]]):
@@ -80,10 +85,12 @@ class DistributionReplacementOp(TextReplacementOp, Configurable):
     def cofigure_sampler(self) -> bool:
         r"""
         This function sets the sampler (Unigram or Uniform) that will be
-         used distribution replacement op.
-        The sampler will be set according to the configuration values
+         used distribution replacement op.The sampler will be set
+         according to the configuration values
+
         Returns:
             A Boolean value indicating if the creation of a sampler was successful or not.
+
         """
         sampler_type = self.configs["sampler_type"]
         if sampler_type not in {"uniform", "unigram"}:
