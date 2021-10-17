@@ -37,11 +37,19 @@ class DistributionReplacementOp(TextReplacementOp):
             it should fall in [0, 1].
     """
 
+<<<<<<< HEAD
     def __init__(
         self, sampler: Sampler, configs: Union[Config, Dict[str, Any]]
     ):
         super().__init__(configs)
         self.sampler = sampler
+=======
+    def __init__(self, configs: Union[Config, Dict[str, Any]]):
+        super().__init__(configs)
+        self.sampler = UniformSampler(
+            configs={"uniform_sampler_word_list": self.configs["word_list"]}
+        )
+>>>>>>> 773b854 (Type Key Removal)
 
     def replace(self, input_anno: Annotation) -> Tuple[bool, str]:
         r"""
@@ -58,3 +66,10 @@ class DistributionReplacementOp(TextReplacementOp):
             return False, input_anno.text
         word: str = self.sampler.sample()
         return True, word
+<<<<<<< HEAD
+=======
+
+    @classmethod
+    def default_configs(cls):
+        return {"prob": 0.1, "word_list": []}
+>>>>>>> 773b854 (Type Key Removal)
