@@ -116,7 +116,7 @@ class DistributionReplacementOp(TextReplacementOp, Configurable):
                     }
                 },
             )
-        except Exception as error:
+        except KeyError as error:
             print("Could not configure Sampler: " + repr(error))
 
     @classmethod
