@@ -93,10 +93,6 @@ class DistributionReplacementOp(TextReplacementOp, Configurable):
         This function sets the sampler that will be
         used by the distribution replacement op. The sampler will be set
         according to the configuration values
-
-        Returns:
-            A Boolean value indicating if the creation of the sampler was successful or not.
-
         """
         try:
             if "data_path" in self.configs["sampler_config"]["kwargs"].keys():
