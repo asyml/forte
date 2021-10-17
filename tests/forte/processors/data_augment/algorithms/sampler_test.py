@@ -25,14 +25,7 @@ from forte.processors.data_augment.algorithms.sampler import (
 class TestSampler(unittest.TestCase):
     def test_unigram_sampler(self):
         word_count = {"apple": 1, "banana": 2, "orange": 3}
-        sampler = UnigramSampler(
-            configs={
-                "unigram_dict": {
-                    "type": "",
-                    "kwargs": word_count,
-                }
-            }
-        )
+        sampler = UnigramSampler(configs={"sampler_data": word_count})
         word = sampler.sample()
         self.assertIn(word, word_count)
         word_prob = {
@@ -40,22 +33,13 @@ class TestSampler(unittest.TestCase):
             "banana": 0.4,
             "orange": 0.2,
         }
-        sampler = UnigramSampler(
-            configs={
-                "unigram_dict": {
-                    "type": "",
-                    "kwargs": word_prob,
-                }
-            }
-        )
+        sampler = UnigramSampler(configs={"sampler_data": word_prob})
         word = sampler.sample()
         self.assertIn(word, word_prob)
 
     def test_uniform_sampler(self):
         word_list = ["apple", "banana", "orange"]
-        sampler = UniformSampler(
-            configs={"uniform_sampler_word_list": word_list}
-        )
+        sampler = UniformSampler(configs={"sampler_data": word_list})
         word = sampler.sample()
         self.assertIn(word, word_list)
 

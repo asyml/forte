@@ -41,22 +41,22 @@ class Sampler(Configurable):
 
     @classmethod
     def default_configs(cls):
-        return {}
+        return {"@no_typecheck": "sampler_data"}
 
 
 class UniformSampler(Sampler):
     r"""
     A sampler that samples a word from a uniform distribution.
 
-    Args:
-        configs:
-            word_list: A list of words that this sampler uniformly samples from.
+    Config Values:
+        - sampler_data: (list)
+            A list of words that this sampler uniformly samples from.
     """
 
     def __init__(self, configs: Union[Config, Dict[str, Any]]):
         super().__init__(configs)
         # word_list: List[str]
-        self.word_list = self.configs["uniform_sampler_word_list"]
+        self.word_list = self.configs["sampler_data"]
         # self.word_list: List[str] = word_list
 
     def sample(self) -> str:
@@ -68,7 +68,7 @@ class UniformSampler(Sampler):
         config = super().default_configs()
         config.update(
             {
-                "uniform_sampler_word_list": [],
+                "sampler_data": [],
             }
         )
         return config
@@ -79,27 +79,22 @@ class UnigramSampler(Sampler):
     A sampler that samples a word from a unigram distribution.
 
     Config Values:
-        - unigram_dict: (dict)
+        - sampler_data: (dict)
             The key is a word, the value is the word count or a probability.
             This sampler samples from this word distribution.
             Example:
 
                 .. code-block:: python
 
-                    'unigram_dict': {
-                        "type": "",
-                        "kwargs": {
+                    'sampler_data': {
                             "apple": 1,
                             "banana": 2,
                             "orange": 3
-                        }
                     }"""
 
     def __init__(self, configs: Union[Config, Dict[str, Any]]):
         super().__init__(configs)
-        self.unigram = self.configs["unigram_dict"]["kwargs"].__dict__[
-            "_hparams"
-        ]
+        self.unigram = self.configs["sampler_data"].__dict__["_hparams"]
 
     def sample(self) -> str:
         word: str = random.choices(
@@ -110,5 +105,5 @@ class UnigramSampler(Sampler):
     @classmethod
     def default_configs(cls):
         config = super().default_configs()
-        config.update({"unigram_dict": {"type": "", "kwargs": {}}})
+        config.update({"sampler_data": {}})
         return config

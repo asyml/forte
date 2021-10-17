@@ -21,10 +21,7 @@ from forte.data.ontology import Annotation
 from forte.processors.data_augment.algorithms.text_replacement_op import (
     TextReplacementOp,
 )
-from forte.processors.data_augment.algorithms.sampler import (
-    UniformSampler,
-    UnigramSampler,
-)
+from forte.utils.utils import create_class_with_kwargs
 
 __all__ = [
     "DistributionReplacementOp",
@@ -41,30 +38,39 @@ class DistributionReplacementOp(TextReplacementOp, Configurable):
             The probability of whether to replace the
             input, it should fall in `[0, 1]`.
 
-        - `distribution_path`:
-            A string representing the destination of data that will
-            serve as input to the sampler. Default will be an empty string.
-            The data must be stored in a json file as list for uniform sampler
-            and dictionary for unigram sampler.
+        - sampler_data:
+            A dictionary representing the configurations
+            required to create the required sampler.
 
-        - `sampler_type`:
-            The type of sampler. It should be one
-            of `("uniform", "unigram")`
+            type:
+                The type of sampler to be used (pass the
+                path of the class which defines the required sampler)
+            kwargs:
+                This dictionary contains the data that is to be
+                fed to the required sampler. 2 possible values are
 
-        - `uniform_sampler_data`:
-            If the data is to be passed directly, it is passed as a list
-            to initialize a uniform sampler using this key.
+                    `sampler_data`: Input to the sampler
 
-        - `unigram_sampler_data`:
-            If the data is to be passed directly, it is passed as a dict
-            to initialize a unigram sampler using this key.
+                    `data_path`: The path to the file that contains the
+
+                the input that will be given to the sampler
+                If both parameters are passed, the data read from the file
+                will be considered.
+
+            .. code-block:: python
+
+                {
+                    "type": "forte.processors.data_augment.algorithms.sampler.UniformSampler",
+                    "kwargs":{
+                        "sample": ["apple", "banana", "orange"]
+                    }
+                }
     """
 
     def __init__(self, configs: Union[Config, Dict[str, Any]]):
         super().__init__(configs)
         self.configs = self.make_configs(configs)
-        if not self.cofigure_sampler():
-            raise Exception("The sampler could not be created.")
+        self.cofigure_sampler()
 
     def replace(self, input_anno: Annotation) -> Tuple[bool, str]:
         r"""
@@ -82,9 +88,9 @@ class DistributionReplacementOp(TextReplacementOp, Configurable):
         word: str = self.sampler.sample()
         return True, word
 
-    def cofigure_sampler(self) -> bool:
+    def cofigure_sampler(self) -> None:
         r"""
-        This function sets the sampler (Unigram or Uniform) that will be
+        This function sets the sampler that will be
         used by the distribution replacement op. The sampler will be set
         according to the configuration values
 
@@ -92,52 +98,37 @@ class DistributionReplacementOp(TextReplacementOp, Configurable):
             A Boolean value indicating if the creation of the sampler was successful or not.
 
         """
-        sampler_type = self.configs["sampler_type"]
-        if sampler_type not in {"uniform", "unigram"}:
-            raise ValueError(
-                "The value of 'sampler_type' has to be one of ['uniform', 'unigram']."
-            )
+        try:
+            if "data_path" in self.configs["sampler_config"]["kwargs"].keys():
+                distribution_path = self.configs["sampler_config"]["kwargs"][
+                    "data_path"
+                ]
+                try:
+                    r = requests.get(distribution_path)
+                    data = r.json()
+                except requests.exceptions.RequestException:
+                    with open(distribution_path, encoding="utf8") as json_file:
+                        data = json.load(json_file)
+            else:
+                data = self.configs["sampler_config"]["kwargs"]["sampler_data"]
 
-        distribution_path = self.configs["distribution_path"]
-        if distribution_path:
-            try:
-                r = requests.get(distribution_path)
-                data = r.json()
-            except requests.exceptions.RequestException:
-                with open(distribution_path, encoding="utf8") as json_file:
-                    data = json.load(json_file)
-        else:
-            data = (
-                self.configs["unigram_sampler_data"].__dict__["_hparams"]
-                if sampler_type == "unigram"
-                else self.configs["uniform_sampler_data"]
+            self.sampler = create_class_with_kwargs(
+                self.configs["sampler_config"]["type"],
+                {
+                    "configs": {
+                        "sampler_data": data,
+                    }
+                },
             )
-
-        if sampler_type == "uniform":
-            if not isinstance(data, list):
-                raise TypeError("The input for uniform sampler must be a list")
-            self.sampler = UniformSampler(
-                configs={"uniform_sampler_word_list": data}
-            )
-            return True
-        if sampler_type == "unigram":
-            if not isinstance(data, dict):
-                raise TypeError(
-                    "The input for unigram sampler must be a dictionary"
-                )
-            self.sampler = UnigramSampler(
-                configs={"unigram_dict": {"type": "", "kwargs": data}}
-            )
-            return True
-        return False
+        except Exception as error:
+            print("Could not configure Sampler: " + repr(error))
 
     @classmethod
     def default_configs(cls):
         return {
             "prob": 0.1,
-            "sampler_type": "uniform",
-            "distribution_path": "",
-            "uniform_sampler_data": [],
-            "unigram_sampler_data": {},
-            "@no_typecheck": "unigram_sampler_data",
+            "sampler_config": {
+                "type": "forte.processors.data_augment.algorithms.sampler.UniformSampler",
+                "kwargs": {"sampler_data": []},
+            },
         }

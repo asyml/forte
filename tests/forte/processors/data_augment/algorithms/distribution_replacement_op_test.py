@@ -41,8 +41,10 @@ class TestDistributionReplacementOp(unittest.TestCase):
     def test_replace(self):
         configs = {
             "prob": 1.0,
-            "uniform_sampler_data": self.word_list,
-            "sampler_type": "uniform",
+            "sampler_config": {
+                "type": "forte.processors.data_augment.algorithms.sampler.UniformSampler",
+                "kwargs": {"sampler_data": self.word_list},
+            },
         }
         replacement = DistributionReplacementOp(configs)
         word = replacement.replace(self.token)
@@ -50,8 +52,10 @@ class TestDistributionReplacementOp(unittest.TestCase):
 
         configs = {
             "prob": 0,
-            "uniform_sampler_data": self.word_list,
-            "sampler_type": "uniform",
+            "sampler_config": {
+                "type": "forte.processors.data_augment.algorithms.sampler.UniformSampler",
+                "kwargs": {"sampler_data": self.word_list},
+            },
         }
         replacement = DistributionReplacementOp(configs)
         word = replacement.replace(self.token)
@@ -59,8 +63,10 @@ class TestDistributionReplacementOp(unittest.TestCase):
 
         configs = {
             "prob": 1.0,
-            "sampler_type": "unigram",
-            "unigram_sampler_data": self.word_dict,
+            "sampler_config": {
+                "type": "forte.processors.data_augment.algorithms.sampler.UnigramSampler",
+                "kwargs": {"sampler_data": self.word_dict},
+            },
         }
         replacement = DistributionReplacementOp(configs)
         word = replacement.replace(self.token)
