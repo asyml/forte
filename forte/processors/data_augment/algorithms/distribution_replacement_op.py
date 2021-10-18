@@ -59,7 +59,7 @@ class DistributionReplacementOp(TextReplacementOp, Configurable):
                     The path to the file that contains the
                     the input that will be given to the sampler. For example,
                     when using `UniformSampler`, `data_path` will point to a file
-                    (or URl) containing a list of values to be used as `sampler_data`
+                    (or `URl`) containing a list of values to be used as `sampler_data`
                     in `UniformSampler`.
 
             .. code-block:: python
