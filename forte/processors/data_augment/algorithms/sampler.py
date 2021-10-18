@@ -39,10 +39,6 @@ class Sampler(Configurable):
     def sample(self) -> str:
         raise NotImplementedError
 
-    @classmethod
-    def default_configs(cls):
-        return {"@no_typecheck": "sampler_data"}
-
 
 class UniformSampler(Sampler):
     r"""
@@ -55,9 +51,7 @@ class UniformSampler(Sampler):
 
     def __init__(self, configs: Union[Config, Dict[str, Any]]):
         super().__init__(configs)
-        # word_list: List[str]
         self.word_list = self.configs["sampler_data"]
-        # self.word_list: List[str] = word_list
 
     def sample(self) -> str:
         word: str = random.choice(self.word_list)
@@ -65,13 +59,7 @@ class UniformSampler(Sampler):
 
     @classmethod
     def default_configs(cls):
-        config = super().default_configs()
-        config.update(
-            {
-                "sampler_data": [],
-            }
-        )
-        return config
+        return {"sampler_data": {}, "@no_typecheck": "sampler_data"}
 
 
 class UnigramSampler(Sampler):
@@ -104,6 +92,4 @@ class UnigramSampler(Sampler):
 
     @classmethod
     def default_configs(cls):
-        config = super().default_configs()
-        config.update({"sampler_data": {}})
-        return config
+        return {"sampler_data": {}, "@no_typecheck": "sampler_data"}

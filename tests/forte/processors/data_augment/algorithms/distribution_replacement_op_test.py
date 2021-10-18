@@ -72,6 +72,18 @@ class TestDistributionReplacementOp(unittest.TestCase):
         word = replacement.replace(self.token)
         self.assertIn(word[1], self.word_dict.keys())
 
+        configs = {
+            "prob": 0.5,
+            "sampler_config": {
+                "type": "forte.processors.data_augment.algorithms.sampler.UnigramSampler",
+                "kwargs": {"sampler_data": self.word_dict},
+            },
+        }
+        replacement = DistributionReplacementOp(configs)
+        word = replacement.replace(self.token)
+        possible_values = list(self.word_dict.keys()) + [self.word]
+        self.assertIn(word[1], possible_values)
+
 
 if __name__ == "__main__":
     unittest.main()
