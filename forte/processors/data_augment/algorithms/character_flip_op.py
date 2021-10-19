@@ -30,8 +30,8 @@ class CharacterFlipOp(TextReplacementOp):
     r"""
     A uniform generator that randomly flips a character with a similar
     looking character from a predefined dictionary imported from
-    "https://github.com/facebookresearch/AugLy/blob/main/" +
-    "augly/text/augmenters/utils.py".
+    `"https://github.com/facebookresearch/AugLy/blob/main/" +
+    "augly/text/augmenters/utils.py"`.
     (For example: the cat drank milk -> t/-/3 c@t d12@nk m!|_1<).
 
     Args:
