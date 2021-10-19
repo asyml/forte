@@ -31,11 +31,31 @@ class DataPackTest(unittest.TestCase):
         self.data_pack1 = self.multi_pack.add_pack(ref_name="left pack")
         self.data_pack2 = self.multi_pack.add_pack(ref_name="right pack")
 
+        #self.multi_pack.remove_pack(index_of_pack=1)
+
+        self.data_pack10 = self.multi_pack.add_pack(ref_name="remove pack 10")
+        self.data_pack11 = self.multi_pack.add_pack(ref_name="remove pack 11")
+        self.data_pack12 = self.multi_pack.add_pack(ref_name="remove pack 12")
+
+        self.ref_id10 = self.multi_pack.get_pack_index(self.data_pack10.pack_id)
+        self.ref_id11 = self.multi_pack.get_pack_index(self.data_pack11.pack_id)
+        self.ref_id12 = self.multi_pack.get_pack_index(self.data_pack12.pack_id)
+
         self.data_pack1.pack_name = "some pack"
         self.data_pack1.set_text("This pack contains some sample data.")
 
         self.data_pack2.pack_name = "another pack"
         self.data_pack2.set_text("This pack contains some other sample data.")
+
+        self.data_pack10.pack_name = "the 1st pack for removing"
+        self.data_pack10.set_text("Test to see if we can delete the added pack for removing out of packgroup")
+
+        self.data_pack11.pack_name = "the 2nd pack for removing"
+        self.data_pack11.set_text("Test to see if we can delete the added pack for removing from packgroup")
+
+        self.data_pack12.pack_name = "the 3rd pack for removing"
+        self.data_pack12.set_text("Test to see if we can delete the added pack for removing from packgroup")
+
 
     def test_serialization(self):
         ser_str: str = self.multi_pack.to_string()
@@ -197,6 +217,62 @@ class DataPackTest(unittest.TestCase):
                 ("data.", "data."),
             ],
         )
+
+    def test_remove_pack01(self):
+
+        """
+        Test to remove pack from multi pack group.
+        Returns:
+
+        """
+
+        self.multi_pack.remove_pack(1)
+        #self.assertNotIn(["remove pack 10"], self.multi_pack.pack_names)
+
+    def test_remove_pack(self):
+
+        """
+        Test to remove pack from multi pack group.
+        Returns:
+
+        """
+        # Add tokens to each pack.
+        for pack in self.multi_pack.packs[3:5]:
+            _space_token(pack)
+
+        # Create some group.
+        token: Annotation
+
+        romove_tokens_1 = {}
+        for token in self.multi_pack.packs[2].get(Token):
+            romove_tokens_1[token.text] = token
+
+        romove_tokens_2 = {}
+        for token in self.multi_pack.packs[3].get(Token):
+            romove_tokens_2[token.text] = token
+
+        romove_tokens_3 = {}
+        for token in self.multi_pack.packs[4].get(Token):
+            romove_tokens_3[token.text] = token
+
+        for key, rt2 in romove_tokens_2.items():
+            if key in romove_tokens_3:
+                rt3 = romove_tokens_3[key]
+                self.multi_pack.add_entry(
+                    MultiPackGroup(self.multi_pack, [rt2, rt3])
+                )
+                self.multi_pack.add_entry(
+                    MultiPackLink(self.multi_pack, [rt2, rt3])
+                )
+
+        self.multi_pack.remove_pack(self.ref_id10)
+        self.assertNotIn(["remove pack 10"], self.multi_pack.pack_names)
+
+        self.multi_pack.remove_pack(self.ref_id11, True)
+        self.assertNotIn(["remove pack 11"], self.multi_pack.pack_names)
+
+        self.multi_pack.remove_pack(self.ref_id12, True)
+        self.assertNotIn(["remove pack 12"], self.multi_pack.pack_names)
 
 
 if __name__ == "__main__":

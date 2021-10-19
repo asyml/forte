@@ -176,6 +176,70 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             "specific data pack to get text."
         )
 
+    def remove_pack(
+        self,  index_of_pack: int, clean_invalid_entries: bool = False
+    ) -> bool:
+        """
+                Remove a data pack from multi pack. Remove the pack with index.
+
+                Note that remove_pack means some cross pack reference entries such as MultiPackLink
+                may become invalid.
+
+                Args:
+                    index_of_pack (int): The index of pack for removal from
+                      the multi pack. If invalid, no pack will be deleted (exception?).
+                    clean_invalid_entries (bool): .
+
+                Returns: .
+
+                """
+        pack = self.get_pack_at(index_of_pack)
+
+        if pack is None or (not isinstance(pack, DataPack)):
+            raise ValueError(
+                f"Object for the index should be pack, but got "
+                f""
+                f"{type(pack)}"
+            )
+
+        return self.remove_pack_(pack,index_of_pack)
+
+    def remove_pack_(
+            self, pack: DataPack, index_of_pack: int, clean_invalid_entries: bool = False
+    ) -> bool:
+        """
+        Remove a existing data pack in the multi pack.
+
+        Args:
+            pack (DataPack): The existing data pack.
+
+        Returns:
+
+        """
+
+        #if (clean_invalid_entries) :
+            # check links and groups
+        # else: if links / groups have references, should raise exception (?)
+
+        # Remove the pack ids of the subpacks. Note that these are UUIDs
+        self._pack_ref.remove(pack.pack_id)    #: List[int] = []
+        # Remove the reverse mapping from pack id to the pack index.
+        self._inverse_pack_ref.pop(pack.pack_id)    #: Dict[int, int] = {}
+
+        # Remove the pack names.
+        # bug here: pack.pack_name is None!
+        tmp_pack_name = self.pack_names[index_of_pack]
+        self._pack_names.remove(tmp_pack_name)  # pack.pack_name ?
+        # Remove the reverse mapping from name to the pack index.
+
+        self._name_index.pop(tmp_pack_name)  #pack.pack_name ?
+
+        # Remove Reference to the real packs.
+        self._packs.remove(pack)
+
+        return True
+
+
     def add_pack(
         self, ref_name: Optional[str] = None, pack_name: Optional[str] = None
     ) -> DataPack:
