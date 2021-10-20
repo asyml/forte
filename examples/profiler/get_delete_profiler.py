@@ -27,7 +27,7 @@ class DummyPackProcessor(PackProcessor):
         pass
 
 
-class OntonotesReaderPipelineTest(unittest.TestCase):
+class OntonoteGetterPipelineTest(unittest.TestCase):
     def setUp(self):
         root_path = os.path.abspath(
             os.path.join(
@@ -39,16 +39,25 @@ class OntonotesReaderPipelineTest(unittest.TestCase):
             )
         )
         # Define and config the Pipeline
-        self.dataset_path = os.path.join(root_path, "Documents/forte/examples/profiler/alldata")
+        self.dataset_path = os.path.join(root_path, "Documents/forte/examples/profiler/combine_data")
         self.nlp = Pipeline[DataPack]()
         self.nlp.set_reader(OntonotesReader())
 
-        # self.nlp.add(DummyPackProcessor())
+        self.nlp.add(DummyPackProcessor())
         
         self.nlp.initialize()
 
-    def test_read_only(self):
-        self.nlp.process_dataset(self.dataset_path)
+    def test_process_delete(self):
+        # get processed pack from dataset
+        for pack in self.nlp.process_dataset(self.dataset_path):
+            # get sentence from pack
+            sentences = list(pack.get(Sentence))
+            num_sent = len(sentences)
+            first_sent = sentences[0]
+            pack.delete_entry(first_sent)
+            self.assertEqual(
+                len(list(pack.get_data(Sentence))), num_sent - 1)
+
 
 if __name__ == "__main__":
-    unittest.main('reader_profiler')
+    unittest.main('get_delete_profiler')

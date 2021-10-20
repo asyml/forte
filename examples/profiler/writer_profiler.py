@@ -26,9 +26,10 @@ from forte.processors.writers import (
     PackNamePicklePackWriter
 )
 from forte.processors.misc import (
-    WhiteSpaceTokenizer,
     PeriodSentenceSplitter
 )
+from forte.processors.nlp import SubwordTokenizer
+import time
 
 class OntonotesWriterPipelineTest(unittest.TestCase):
     def setUp(self):
@@ -42,7 +43,7 @@ class OntonotesWriterPipelineTest(unittest.TestCase):
             )
         )
         # Define and config the Pipeline
-        self.dataset_path = os.path.join(root_path, "Documents/forte/examples/profiler/alldata")
+        self.dataset_path = os.path.join(root_path, "Documents/forte/examples/profiler/combine_data")
         
 
     def test_writer(self):
@@ -50,14 +51,14 @@ class OntonotesWriterPipelineTest(unittest.TestCase):
         pipe_serialize.set_reader(OntonotesReader())
 
         pipe_serialize.add(PeriodSentenceSplitter())
-        pipe_serialize.add(WhiteSpaceTokenizer())
+        pipe_serialize.add(SubwordTokenizer())
 
         with tempfile.TemporaryDirectory() as output_dir:
             pipe_serialize.add(
-                PackNamePicklePackWriter(),
-                #PackNameJsonPackWriter(),
+                #PackNamePicklePackWriter(),
+                PackNameJsonPackWriter(),
                 {
-                    "output_dir": output_dir,
+                    "output_dir": '/Users/lechuanwang/Documents/forte/examples/profiler/output',
                     "indent": 2,
                 }
             )
