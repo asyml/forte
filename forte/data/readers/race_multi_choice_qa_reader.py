@@ -97,4 +97,5 @@ class RACEMultiChoiceQAReader(PackReader):
             passage.passage_id = passage_id
 
             pack.pack_name = passage_id
+
             yield pack

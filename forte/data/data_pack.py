@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from collections import defaultdict
 import logging
 from pathlib import Path
 from typing import (
@@ -49,7 +50,7 @@ from forte.data.ontology.top import (
 )
 from forte.data.span import Span
 from forte.data.types import ReplaceOperationsType, DataRequest
-from forte.utils import get_class
+from forte.utils import get_class, create_class_with_kwargs
 
 logger = logging.getLogger(__name__)
 
@@ -156,7 +157,10 @@ class DataPack(BasePack[Entry, Link, Group]):
         super().__init__(pack_name)
         self._text = ""
 
-        self.annotations: SortedList[Annotation] = SortedList()
+        # anntations: list of (class_name, begin, end, args*[tuple])
+        self.annotations: SortedList[tuple] = SortedList(key = lambda x: (x[1], x[2]))
+
+        # list of (begin, end, class)
         self.links: SortedList[Link] = SortedList()
         self.groups: SortedList[Group] = SortedList()
         self.generics: SortedList[Generics] = SortedList()
@@ -531,6 +535,14 @@ class DataPack(BasePack[Entry, Link, Group]):
         """
         return cls._deserialize(data_source, serialize_method, zip_pack)
 
+    def _get_attributes(self, entry: EntryType) -> List:
+        attributes = []
+        for attr, value in entry.__dict__.items():
+            if attr == "_Entry__pack" or attr == "_begin" or attr == "_end":
+                continue
+            attributes.append((attr, value))
+        return attributes
+
     def _add_entry(self, entry: EntryType) -> EntryType:
         r"""Force add an :class:`~forte.data.ontology.core.Entry` object to the
         :class:`DataPack` object. Allow duplicate entries in a pack.
@@ -542,13 +554,15 @@ class DataPack(BasePack[Entry, Link, Group]):
         Returns:
             The input entry itself
         """
-        return self.__add_entry_with_check(entry, True)
+        # return self.__add_entry_with_check(entry, True)
+        return self.__add_entry_as_array(entry, True)
 
-    def __add_entry_with_check(
+    def __add_entry_as_array(
         self, entry: EntryType, allow_duplicate: bool = True
     ) -> EntryType:
         r"""Internal method to add an :class:`~forte.data.ontology.core.Entry`
         object to the :class:`~forte.data.DataPack` object.
+        For new Datapack data structure
 
         Args:
             entry (Entry): An :class:`Entry` object to be added to the datapack.
@@ -585,35 +599,49 @@ class DataPack(BasePack[Entry, Link, Group]):
                         f"problematic entry is of type {entry.__class__} "
                         f"at [{begin}:{end}], in pack {pack_ref}."
                     )
+            # add annotation to a list of tuples
+            # print(str(entry.__class__), type(entry))
+            fields = [type(entry), entry.begin, entry.end]
+            attrs = self._get_attributes(entry)
+            entry_tuple = tuple(fields + attrs)
+            target.add(entry_tuple)
+            # add other atrributes to another list/dict?
 
-        elif isinstance(entry, Link):
-            target = self.links
-        elif isinstance(entry, Group):
-            target = self.groups
-        elif isinstance(entry, Generics):
-            target = self.generics
+            self._index.update_anno_index([entry_tuple], [entry.tid])
+            self._index.deactivate_coverage_index()
+            self._pending_entries.pop(entry.tid)
+            
         else:
-            raise ValueError(
-                f"Invalid entry type {type(entry)}. A valid entry "
-                f"should be an instance of Annotation, Link, Group of Generics."
-            )
+            if isinstance(entry, Link):
+                target = self.links
+            elif isinstance(entry, Group):
+                target = self.groups
+            elif isinstance(entry, Generics):
+                target = self.generics
+            else:
+                raise ValueError(
+                    f"Invalid entry type {type(entry)}. A valid entry "
+                    f"should be an instance of Annotation, Link, Group of Generics."
+                )
 
-        if not allow_duplicate:
-            index = target.index(entry)
-            if index < 0:
-                # Return the existing entry if duplicate is not allowed.
-                return target[index]
+            if not allow_duplicate:
+                index = target.index(entry)
+                if index < 0:
+                    # Return the existing entry if duplicate is not allowed.
+                    return target[index]
 
-        target.add(entry)
-        # update the data pack index if needed
-        self._index.update_basic_index([entry])
-        if self._index.link_index_on and isinstance(entry, Link):
-            self._index.update_link_index([entry])
-        if self._index.group_index_on and isinstance(entry, Group):
-            self._index.update_group_index([entry])
-        self._index.deactivate_coverage_index()
-        self._pending_entries.pop(entry.tid)
+            target.add(entry)
+            # update the data pack index if needed
+            self._index.update_basic_index([entry])
+            if self._index.link_index_on and isinstance(entry, Link):
+                self._index.update_link_index([entry])
+            if self._index.group_index_on and isinstance(entry, Group):
+                self._index.update_group_index([entry])
+            self._index.deactivate_coverage_index()
+            self._pending_entries.pop(entry.tid)
+            
         return entry
+
 
     def delete_entry(self, entry: EntryType):
         r"""Delete an :class:`~forte.data.ontology.core.Entry` object from the
@@ -1101,6 +1129,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                     if self._index.in_span(group, range_annotation.span):
                         yield group
 
+
     def get(  # type: ignore
         self,
         entry_type: Union[str, Type[EntryType]],
@@ -1182,42 +1211,67 @@ class DataPack(BasePack[Entry, Link, Group]):
                 yield from []
                 return
 
-        # Valid entry ids based on type.
-        all_types: Set[Type]
-        if include_sub_type:
-            all_types = self._expand_to_sub_types(entry_type_)
-        else:
-            all_types = {entry_type_}
-
-        entry_iter: Iterator[Entry]
-        if issubclass(entry_type_, Generics):
-            entry_iter = self.generics
-        elif range_annotation is not None:
-            if (
-                issubclass(entry_type_, Annotation)
-                or issubclass(entry_type_, Link)
-                or issubclass(entry_type_, Group)
-            ):
-                entry_iter = self.iter_in_range(entry_type_, range_annotation)
-        elif issubclass(entry_type_, Annotation):
+        if issubclass(entry_type_, Annotation):
             entry_iter = self.annotations
-        elif issubclass(entry_type_, Link):
-            entry_iter = self.links
-        elif issubclass(entry_type_, Group):
-            entry_iter = self.groups
-        else:
-            raise ValueError(
-                f"The requested type {str(entry_type_)} is not supported."
-            )
-
-        for entry in entry_iter:
-            # Filter by type and components.
-            if type(entry) not in all_types:
-                continue
-            if components is not None:
-                if not self.is_created_by(entry, components):
+            for entry in entry_iter:
+                # Filter by type and components.
+                type_name = str(entry[0])
+                if type_name != str(entry_type_):
                     continue
-            yield entry  # type: ignore
+                if components is not None:
+                    if not self.is_created_by(entry, components):
+                        continue
+                print("yield entry", entry)
+
+                # create a class
+                class_args_dict = {"pack": self, "begin": entry[1], "end": entry[2]}
+                # TODO: dictionary or tuple?
+                attribut_dict = dict()
+                for i in range(3, len(entry)):
+                    attribut_dict[entry[i][0]] = entry[i][1]
+                # build base ontology
+                annotation_class = create_class_with_kwargs(type_name, class_args_dict)
+                annotation_class.__dict__.update(attribut_dict)
+
+                print("build class:", annotation_class)
+                yield annotation_class  # type: ignore
+        else:
+            # Valid entry ids based on type.
+            all_types: Set[Type]
+            if include_sub_type:
+                all_types = self._expand_to_sub_types(entry_type_)
+            else:
+                all_types = {entry_type_}
+
+            entry_iter: Iterator[Entry]
+            if issubclass(entry_type_, Generics):
+                entry_iter = self.generics
+            elif range_annotation is not None:
+                if (
+                    issubclass(entry_type_, Annotation)
+                    or issubclass(entry_type_, Link)
+                    or issubclass(entry_type_, Group)
+                ):
+                    entry_iter = self.iter_in_range(entry_type_, range_annotation)
+            elif issubclass(entry_type_, Annotation):
+                entry_iter = self.annotations
+            elif issubclass(entry_type_, Link):
+                entry_iter = self.links
+            elif issubclass(entry_type_, Group):
+                entry_iter = self.groups
+            else:
+                raise ValueError(
+                    f"The requested type {str(entry_type_)} is not supported."
+                )
+
+            for entry in entry_iter:
+                # Filter by type and components.
+                if type(entry) not in all_types:
+                    continue
+                if components is not None:
+                    if not self.is_created_by(entry, components):
+                        continue
+                yield entry  # type: ignore
 
     def update(self, datapack: "DataPack"):
         r"""Update the attributes and properties of the current DataPack with
