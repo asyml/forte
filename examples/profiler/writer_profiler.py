@@ -58,7 +58,7 @@ class OntonotesWriterPipelineTest(unittest.TestCase):
                 #PackNamePicklePackWriter(),
                 PackNameJsonPackWriter(),
                 {
-                    "output_dir": '/Users/lechuanwang/Documents/forte/examples/profiler/output',
+                    "output_dir": output_dir,
                     "indent": 2,
                 }
             )
