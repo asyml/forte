@@ -227,3 +227,4 @@ fr_gsd_models/
 ## profiler data
 conll-formatted-ontonotes-5.0/
 alldata/
+combine_data/
