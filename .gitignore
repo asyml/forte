@@ -223,3 +223,6 @@ docs/_build
 ### Project ###
 en_ewt_models/
 fr_gsd_models/
+
+## profiler data
+conll-formatted-ontonotes-5.0/
