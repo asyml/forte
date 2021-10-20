@@ -14,13 +14,14 @@
 
 import os
 import unittest
-from typing import Tuple, List
+from typing import List
 
 from forte.data.data_pack import DataPack
 from forte.data.readers.ontonotes_reader import OntonotesReader
 from forte.processors.base.pack_processor import PackProcessor
 from forte.pipeline import Pipeline
-from ft.onto.base_ontology import Token, Sentence
+from ft.onto.base_ontology import Sentence
+
 
 class DummyPackProcessor(PackProcessor):
     def _process(self, input_pack: DataPack):
@@ -38,26 +39,27 @@ class OntonoteGetterPipelineTest(unittest.TestCase):
                 os.pardir,
             )
         )
+        self.dataset_path = os.path.join(
+            root_path, "Documents/forte/examples/profiler/combine_data"
+        )
+
         # Define and config the Pipeline
-        self.dataset_path = os.path.join(root_path, "Documents/forte/examples/profiler/combine_data")
         self.nlp = Pipeline[DataPack]()
         self.nlp.set_reader(OntonotesReader())
-
         self.nlp.add(DummyPackProcessor())
-        
         self.nlp.initialize()
 
-    def test_process_delete(self):
+    def test_get_delete(self):
         # get processed pack from dataset
         for pack in self.nlp.process_dataset(self.dataset_path):
             # get sentence from pack
             sentences = list(pack.get(Sentence))
             num_sent = len(sentences)
             first_sent = sentences[0]
+            # delete first sentence
             pack.delete_entry(first_sent)
-            self.assertEqual(
-                len(list(pack.get_data(Sentence))), num_sent - 1)
+            self.assertEqual(len(list(pack.get_data(Sentence))), num_sent - 1)
 
 
 if __name__ == "__main__":
-    unittest.main('get_delete_profiler')
+    unittest.main("get_delete_profiler")

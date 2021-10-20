@@ -23,13 +23,11 @@ from forte.data.readers.ontonotes_reader import OntonotesReader
 from forte.pipeline import Pipeline
 from forte.processors.writers import (
     PackNameJsonPackWriter,
-    PackNamePicklePackWriter
+    PackNamePicklePackWriter,
 )
-from forte.processors.misc import (
-    PeriodSentenceSplitter
-)
+from forte.processors.misc import PeriodSentenceSplitter
 from forte.processors.nlp import SubwordTokenizer
-import time
+
 
 class OntonotesWriterPipelineTest(unittest.TestCase):
     def setUp(self):
@@ -43,29 +41,31 @@ class OntonotesWriterPipelineTest(unittest.TestCase):
             )
         )
         # Define and config the Pipeline
-        self.dataset_path = os.path.join(root_path, "Documents/forte/examples/profiler/combine_data")
-        
+        self.dataset_path = os.path.join(
+            root_path, "Documents/forte/examples/profiler/combine_data"
+        )
 
     def test_writer(self):
+
+        # initialize pipeline
         pipe_serialize = Pipeline[DataPack]()
         pipe_serialize.set_reader(OntonotesReader())
-
         pipe_serialize.add(PeriodSentenceSplitter())
         pipe_serialize.add(SubwordTokenizer())
 
         with tempfile.TemporaryDirectory() as output_dir:
             pipe_serialize.add(
-                #PackNamePicklePackWriter(),
+                # two types of writer: json or binary
+                # PackNamePicklePackWriter(),
                 PackNameJsonPackWriter(),
                 {
                     "output_dir": output_dir,
                     "indent": 2,
-                }
+                },
             )
 
             pipe_serialize.run(self.dataset_path)
 
 
-
 if __name__ == "__main__":
-    unittest.main('writer_profiler')
+    unittest.main("writer_profiler")
