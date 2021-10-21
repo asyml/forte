@@ -1049,6 +1049,14 @@ class OntologyCodeGenerator:
                     constraint_type_
                 )
 
+                if constraint_type_name is None:
+                    raise TypeNotDeclaredException(
+                        f"The type {constraint_type_} is not defined but it is "
+                        f"specified in {schema_key} of the definition of "
+                        f"{schema['entry_name']}. Please define them before "
+                        f"this entry type."
+                    )
+
                 # TODO: cannot handle constraints that contain self-references.
                 # self_ref = entry_name.class_name == constraint_type_
 

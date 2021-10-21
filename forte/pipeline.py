@@ -16,11 +16,10 @@ Base class for Pipeline module.
 """
 
 import itertools
-import logging
 import json
-from time import time
+import logging
 import sys
-
+from time import time
 from typing import (
     Any,
     Dict,
@@ -34,8 +33,8 @@ from typing import (
     Set,
 )
 
-import yaml
 import uvicorn
+import yaml
 from fastapi import FastAPI
 from pydantic import BaseModel
 
@@ -47,10 +46,10 @@ from forte.common.exception import (
 )
 from forte.common.resources import Resources
 from forte.data.base_pack import PackType
-from forte.data.ontology.ontology_code_generator import OntologyCodeGenerator
-from forte.data.ontology.code_generation_objects import EntryTree
 from forte.data.base_reader import BaseReader
 from forte.data.caster import Caster
+from forte.data.ontology.code_generation_objects import EntryTree
+from forte.data.ontology.ontology_code_generator import OntologyCodeGenerator
 from forte.data.selector import Selector, DummySelector
 from forte.evaluation.base.base_evaluator import Evaluator
 from forte.pipeline_component import PipelineComponent
@@ -301,7 +300,9 @@ class Pipeline(Generic[PackType]):
                         class_name=selector_config["type"],
                         class_args=selector_config.get("kwargs", {}),
                     ),
-                    selector_config=selector_config.get("configs"),
+                    selector_config=None
+                    if selector_config is None
+                    else selector_config.get("configs"),
                 )
 
         # Set pipeline states and resources
