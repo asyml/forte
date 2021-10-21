@@ -59,7 +59,7 @@ class UniformSampler(Sampler):
 
     @classmethod
     def default_configs(cls):
-        return {"sampler_data": {}, "@no_typecheck": "sampler_data"}
+        return {"sampler_data": [], "@no_typecheck": "sampler_data"}
 
 
 class UnigramSampler(Sampler):
