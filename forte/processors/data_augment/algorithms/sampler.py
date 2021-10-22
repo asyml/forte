@@ -12,8 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import random
-from abc import abstractmethod, ABC
-from typing import Dict, List
+from abc import abstractmethod
+from typing import Any, Dict, Union
+from forte.common.configurable import Configurable
+
+from forte.common.configuration import Config
 
 
 __all__ = [
@@ -23,12 +26,13 @@ __all__ = [
 ]
 
 
-class Sampler(ABC):
+class Sampler(Configurable):
     r"""
     An abstract sampler class.
     """
 
-    def __init__(self):
+    def __init__(self, configs: Union[Config, Dict[str, Any]]):
+        self.configs: Config = self.make_configs(configs)
         random.seed()
 
     @abstractmethod
@@ -40,35 +44,52 @@ class UniformSampler(Sampler):
     r"""
     A sampler that samples a word from a uniform distribution.
 
-    Args:
-        word_list: A list of words that this sampler uniformly samples from.
+    Config Values:
+        - sampler_data: (list)
+            A list of words that this sampler uniformly samples from.
     """
 
-    def __init__(self, word_list: List[str]):
-        super().__init__()
-        self.word_list: List[str] = word_list
+    def __init__(self, configs: Union[Config, Dict[str, Any]]):
+        super().__init__(configs)
+        self.word_list = self.configs["sampler_data"]
 
     def sample(self) -> str:
         word: str = random.choice(self.word_list)
         return word
+
+    @classmethod
+    def default_configs(cls):
+        return {"sampler_data": [], "@no_typecheck": "sampler_data"}
 
 
 class UnigramSampler(Sampler):
     r"""
     A sampler that samples a word from a unigram distribution.
 
-    Args:
-        unigram: A dictionary.
+    Config Values:
+        - sampler_data: (dict)
             The key is a word, the value is the word count or a probability.
             This sampler samples from this word distribution.
-    """
+            Example:
 
-    def __init__(self, unigram: Dict[str, float]):
-        super().__init__()
-        self.unigram: Dict[str, float] = unigram
+                .. code-block:: python
+
+                    'sampler_data': {
+                            "apple": 1,
+                            "banana": 2,
+                            "orange": 3
+                    }"""
+
+    def __init__(self, configs: Union[Config, Dict[str, Any]]):
+        super().__init__(configs)
+        self.unigram = self.configs["sampler_data"].__dict__["_hparams"]
 
     def sample(self) -> str:
         word: str = random.choices(
             list(self.unigram.keys()), list(self.unigram.values())
         )[0]
         return word
+
+    @classmethod
+    def default_configs(cls):
+        return {"sampler_data": {}, "@no_typecheck": "sampler_data"}
