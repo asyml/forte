@@ -39,7 +39,7 @@ from forte.common.exception import (
 from forte.data import data_utils_io
 from forte.data.base_pack import BaseMeta, BasePack
 from forte.data.index import BaseIndex
-from forte.data.ontology.core import Entry
+from forte.data.ontology.core import Entry, FDict, FList
 from forte.data.ontology.core import EntryType
 from forte.data.ontology.top import (
     Annotation,
@@ -543,7 +543,55 @@ class DataPack(BasePack[Entry, Link, Group]):
             attributes.append((attr, value))
         return attributes
 
-    def _add_entry(self, entry: EntryType) -> EntryType:
+    def _entry_to_tuple(self, entry: EntryType) -> Tuple:
+        """ turn an entry class into a tuple
+        """
+        fields = [type(entry), entry.begin, entry.end, entry._tid]
+        attrs = self._get_attributes(entry)
+        entry_tuple = tuple(fields + attrs)
+        return entry_tuple
+    
+    def _create_entry_with_tuple(self, entry):
+        type_name = str(entry[0])
+        class_args_dict = {
+            "pack": self,
+            "begin": entry[1],
+            "end": entry[2]
+            }
+        
+        attributes_dict = dict()
+        for i in range(4, len(entry)):
+            attr_tuple = entry[i]
+            if isinstance(attr_tuple[1], tuple): # attribute value is also a class
+                nested_class = self._create_entry_with_tuple(attr_tuple[1])
+                attributes_dict[attr_tuple[0]] = nested_class
+            elif isinstance(attr_tuple[1], FList): # turn Flist into a normal list
+                list = []
+                for element in attr_tuple[1]:
+                    if isinstance(element, tuple):
+                        nested_class = self._create_entry_with_tuple(element)
+                        list.append(nested_class)
+                    else:
+                        list.append(element)
+                attributes_dict[attr_tuple[0]] = list
+            elif isinstance(attr_tuple[1], FDict): # turn FDict into a normal dictionary
+                dic = dict()
+                for key, value in attr_tuple[1].items():
+                    if isinstance(value, tuple):
+                        nested_class = self._create_entry_with_tuple(element)
+                        dic[key] = value
+                    else:
+                        dic[key] = value
+                attributes_dict[attr_tuple[0]] = dic
+            else:
+                attributes_dict[attr_tuple[0]] = attr_tuple[1]
+                    
+        klass = create_class_with_kwargs(type_name, class_args_dict)
+        klass.__dict__.update(attributes_dict)
+        return klass
+
+
+    def _add_entry(self, entry: EntryType, allow_duplicate: bool = True) -> EntryType:
         r"""Force add an :class:`~forte.data.ontology.core.Entry` object to the
         :class:`DataPack` object. Allow duplicate entries in a pack.
 
@@ -554,63 +602,8 @@ class DataPack(BasePack[Entry, Link, Group]):
         Returns:
             The input entry itself
         """
-        # return self.__add_entry_with_check(entry, True)
-        return self.__add_entry_as_array(entry, True)
-
-    def __add_entry_as_array(
-        self, entry: EntryType, allow_duplicate: bool = True
-    ) -> EntryType:
-        r"""Internal method to add an :class:`~forte.data.ontology.core.Entry`
-        object to the :class:`~forte.data.DataPack` object.
-        For new Datapack data structure
-
-        Args:
-            entry (Entry): An :class:`Entry` object to be added to the datapack.
-            allow_duplicate (bool): Whether we allow duplicate in the datapack.
-
-        Returns:
-            The input entry itself
-        """
         if isinstance(entry, Annotation):
-            target = self.annotations
-
-            begin, end = entry.begin, entry.end
-
-            if begin < 0:
-                raise ValueError(
-                    f"The begin {begin} is smaller than 0, this"
-                    f"is not a valid begin."
-                )
-
-            if end > len(self.text):
-                if len(self.text) == 0:
-                    raise ValueError(
-                        f"The end {end} of span is greater than the text "
-                        f"length {len(self.text)}, which is invalid. The text "
-                        f"length is 0, so it may be the case the you haven't "
-                        f"set text for the data pack. Please set the text "
-                        f"before calling `add_entry` on the annotations."
-                    )
-                else:
-                    pack_ref = entry.pack.pack_id
-                    raise ValueError(
-                        f"The end {end} of span is greater than the text "
-                        f"length {len(self.text)}, which is invalid. The "
-                        f"problematic entry is of type {entry.__class__} "
-                        f"at [{begin}:{end}], in pack {pack_ref}."
-                    )
-            # add annotation to a list of tuples
-            # print(str(entry.__class__), type(entry))
-            fields = [type(entry), entry.begin, entry.end]
-            attrs = self._get_attributes(entry)
-            entry_tuple = tuple(fields + attrs)
-            target.add(entry_tuple)
-            # add other atrributes to another list/dict?
-
-            self._index.update_anno_index([entry_tuple], [entry.tid])
-            self._index.deactivate_coverage_index()
-            self._pending_entries.pop(entry.tid)
-            
+            return self.__add_entry_as_array(entry, True)
         else:
             if isinstance(entry, Link):
                 target = self.links
@@ -639,9 +632,59 @@ class DataPack(BasePack[Entry, Link, Group]):
                 self._index.update_group_index([entry])
             self._index.deactivate_coverage_index()
             self._pending_entries.pop(entry.tid)
+
+            return entry
+
+    def __add_entry_as_array(
+        self, entry: EntryType, allow_duplicate: bool = True
+    ) -> EntryType:
+        r"""Internal method to add an :class:`~forte.data.ontology.core.Entry`
+        object to the :class:`~forte.data.DataPack` object.
+        For new Datapack data structure
+
+        Args:
+            entry (Entry): An :class:`Entry` object to be added to the datapack.
+            allow_duplicate (bool): Whether we allow duplicate in the datapack.
+
+        Returns:
+            The input entry itself
+        """
+        target = self.annotations
+
+        begin, end = entry.begin, entry.end
+
+        if begin < 0:
+            raise ValueError(
+                f"The begin {begin} is smaller than 0, this"
+                f"is not a valid begin."
+            )
+
+        if end > len(self.text):
+            if len(self.text) == 0:
+                raise ValueError(
+                    f"The end {end} of span is greater than the text "
+                    f"length {len(self.text)}, which is invalid. The text "
+                    f"length is 0, so it may be the case the you haven't "
+                    f"set text for the data pack. Please set the text "
+                    f"before calling `add_entry` on the annotations."
+                )
+            else:
+                pack_ref = entry.pack.pack_id
+                raise ValueError(
+                    f"The end {end} of span is greater than the text "
+                    f"length {len(self.text)}, which is invalid. The "
+                    f"problematic entry is of type {entry.__class__} "
+                    f"at [{begin}:{end}], in pack {pack_ref}."
+                )
+        # add annotation to a list of tuples
+        entry_tuple = self._entry_to_tuple(entry)
+        target.add(entry_tuple)
+
+        self._index.update_anno_index([entry_tuple], [entry.tid])
+        self._index.deactivate_coverage_index()
+        self._pending_entries.pop(entry.tid)
             
         return entry
-
 
     def delete_entry(self, entry: EntryType):
         r"""Delete an :class:`~forte.data.ontology.core.Entry` object from the
@@ -659,43 +702,71 @@ class DataPack(BasePack[Entry, Link, Group]):
         """
         if isinstance(entry, Annotation):
             target = self.annotations
-        elif isinstance(entry, Link):
-            target = self.links
-        elif isinstance(entry, Group):
-            target = self.groups
-        elif isinstance(entry, Generics):
-            target = self.generics
+            entry_tuple = self._entry_to_tuple(entry)
+            begin: int = target.bisect_left(entry_tuple)
+
+            index_to_remove = -1
+            for i, e in enumerate(target[begin:]):
+                if e[3] == entry.tid:
+                    index_to_remove = begin + i
+                    break
+
+            if index_to_remove < 0:
+                logger.warning(
+                    "The entry with id %d that you are trying to removed "
+                    "does not exists in the data pack's index. Probably it is "
+                    "created but not added in the first place.",
+                    entry.tid,
+                )
+            else:
+                target.pop(index_to_remove)
+
+            # update basic index
+            self._index.remove_entry(entry)
+
+            # set other index invalid
+            self._index.turn_link_index_switch(on=False)
+            self._index.turn_group_index_switch(on=False)
+            self._index.deactivate_coverage_index()
+
         else:
-            raise ValueError(
-                f"Invalid entry type {type(entry)}. A valid entry "
-                f"should be an instance of Annotation, Link, or Group."
-            )
+            if isinstance(entry, Link):
+                target = self.links
+            elif isinstance(entry, Group):
+                target = self.groups
+            elif isinstance(entry, Generics):
+                target = self.generics
+            else:
+                raise ValueError(
+                    f"Invalid entry type {type(entry)}. A valid entry "
+                    f"should be an instance of Annotation, Link, or Group."
+                )
 
-        begin: int = target.bisect_left(entry)
+            begin: int = target.bisect_left(entry)
 
-        index_to_remove = -1
-        for i, e in enumerate(target[begin:]):
-            if e.tid == entry.tid:
-                index_to_remove = begin + i
-                break
+            index_to_remove = -1
+            for i, e in enumerate(target[begin:]):
+                if e.tid == entry.tid:
+                    index_to_remove = begin + i
+                    break
 
-        if index_to_remove < 0:
-            logger.warning(
-                "The entry with id %d that you are trying to removed "
-                "does not exists in the data pack's index. Probably it is "
-                "created but not added in the first place.",
-                entry.tid,
-            )
-        else:
-            target.pop(index_to_remove)
+            if index_to_remove < 0:
+                logger.warning(
+                    "The entry with id %d that you are trying to removed "
+                    "does not exists in the data pack's index. Probably it is "
+                    "created but not added in the first place.",
+                    entry.tid,
+                )
+            else:
+                target.pop(index_to_remove)
 
-        # update basic index
-        self._index.remove_entry(entry)
+            # update basic index
+            self._index.remove_entry(entry)
 
-        # set other index invalid
-        self._index.turn_link_index_switch(on=False)
-        self._index.turn_group_index_switch(on=False)
-        self._index.deactivate_coverage_index()
+            # set other index invalid
+            self._index.turn_link_index_switch(on=False)
+            self._index.turn_group_index_switch(on=False)
+            self._index.deactivate_coverage_index()
 
     @classmethod
     def validate_link(cls, entry: EntryType) -> bool:
@@ -704,6 +775,13 @@ class DataPack(BasePack[Entry, Link, Group]):
     @classmethod
     def validate_group(cls, entry: EntryType) -> bool:
         return isinstance(entry, Group)
+
+    def getattr_from_tuple(self, entry_tuple, field):
+        for i in range(4, len(entry_tuple)):
+            key, val = entry_tuple[i]
+            if key == field:
+                return val
+        return None
 
     def get_data(
         self,
@@ -730,7 +808,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                         "unit": "Token",
                     },
                 }
-                pack.get_data(base_ontology.Sentence, requests)
+                pack.get_data(base_ontology.zf, requests)
 
         Args:
             context_type (str): The granularity of the data context, which
@@ -810,23 +888,23 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         skipped = 0
         # must iterate through a copy here because self.annotations is changing
+        # `context` is now a tuple!
         for context in list(self.annotations):
-            if context.tid not in valid_context_ids or not isinstance(
-                context, context_type_
-            ):
+            if context[3] not in valid_context_ids or context[0] != context_type_ :
                 continue
             if skipped < skip_k:
                 skipped += 1
                 continue
 
             data: Dict[str, Any] = {}
-            data["context"] = self.text[context.begin : context.end]
-            data["offset"] = context.begin
+            data["context"] = self.text[context[1] : context[2]]
+            data["offset"] = context[1]
 
             for field in context_fields:
-                data[field] = getattr(context, field)
+                data[field] = self.getattr_from_tuple(context, field)
 
             if annotation_types:
+                # TODO: support tuple here
                 for a_type, a_args in annotation_types.items():
                     if issubclass(a_type, context_type_):
                         continue
@@ -930,7 +1008,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                 )
             a_dict["unit_span"] = []
 
-        cont_begin = cont.begin if cont else 0
+        cont_begin = cont[1] if cont else 0
 
         annotation: Annotation
         for annotation in self.get(a_type, cont, components):
@@ -951,7 +1029,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                     continue
 
                 a_dict[field].append(getattr(annotation, field))
-
+            
             if unit is not None:
                 while not self._index.in_span(
                     data[unit]["tid"][unit_begin], annotation.span
@@ -1109,16 +1187,16 @@ class DataPack(BasePack[Entry, Link, Group]):
                 )
 
                 if issubclass(entry_type, Annotation):
-                    temp_begin = Annotation(self, range_begin, range_begin)
-                    begin_index = self.annotations.bisect(temp_begin)
+                    # temp_begin = Annotation(self, range_begin, range_begin)
+                    begin_index = self.annotations.bisect((Annotation, range_begin, range_begin, 0))
 
-                    temp_end = Annotation(self, range_end, range_end)
-                    end_index = self.annotations.bisect(temp_end)
+                    # temp_end = Annotation(self, range_end, range_end)
+                    end_index = self.annotations.bisect((Annotation, range_end, range_end, 0))
 
                     # Make sure these temporary annotations are not part of the
                     # actual data.
-                    temp_begin.regret_creation()
-                    temp_end.regret_creation()
+                    # temp_begin.regret_creation()
+                    # temp_end.regret_creation()
                     yield from self.annotations[begin_index:end_index]
             elif issubclass(entry_type, Link):
                 for link in self.links:
@@ -1221,19 +1299,10 @@ class DataPack(BasePack[Entry, Link, Group]):
                 if components is not None:
                     if not self.is_created_by(entry, components):
                         continue
-                print("yield entry", entry)
-
-                # create a class
-                class_args_dict = {"pack": self, "begin": entry[1], "end": entry[2]}
-                # TODO: dictionary or tuple?
-                attribut_dict = dict()
-                for i in range(3, len(entry)):
-                    attribut_dict[entry[i][0]] = entry[i][1]
+                    
                 # build base ontology
-                annotation_class = create_class_with_kwargs(type_name, class_args_dict)
-                annotation_class.__dict__.update(attribut_dict)
-
-                print("build class:", annotation_class)
+                annotation_class = self._create_entry_with_tuple(entry)
+                self._pending_entries.clear()
                 yield annotation_class  # type: ignore
         else:
             # Valid entry ids based on type.
@@ -1272,6 +1341,22 @@ class DataPack(BasePack[Entry, Link, Group]):
                     if not self.is_created_by(entry, components):
                         continue
                 yield entry  # type: ignore
+
+    def get_raw(
+        self,
+        entry_type: Union[str, Type[EntryType]],
+    ):
+        entry_type_: Type[EntryType] = as_entry_type(entry_type)
+        if not issubclass(entry_type_, Annotation):
+            return None
+        entry_iter = self.annotations
+        for entry in entry_iter:
+            # Filter by type and components.
+            type_name = str(entry[0])
+            if type_name != str(entry_type_):
+                continue
+            # build base ontology
+            yield entry  # type: ignore
 
     def update(self, datapack: "DataPack"):
         r"""Update the attributes and properties of the current DataPack with

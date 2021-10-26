@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests for RACEMultiChoiceQAReader.
+TODO:
+get_Data
+iter_in_range
 """
 import json
 import os
@@ -71,17 +73,15 @@ class RACEMultiChoiceQAReaderTest(unittest.TestCase):
                 ]
                 self.assertEqual(question.answers, expected_answers)
                 expected_text += "\n" + expected_question
-                print(question.options)
 
                 for oid, option in enumerate(question.options):
-                    print(option)
                     expected_option = expected["options"][qid][oid]
                     self.assertEqual(option.text, expected_option)
                     expected_text += "\n" + expected_option
-
+                
             self.assertEqual(pack.text, expected_text)
+            # test delete
         self.assertEqual(count_packs, 2)
-
 
 if __name__ == "__main__":
     unittest.main()

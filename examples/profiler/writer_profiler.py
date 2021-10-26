@@ -36,17 +36,14 @@ class OntonotesWriterPipelineTest(unittest.TestCase):
                 os.path.dirname(os.path.abspath(__file__)),
                 os.pardir,
                 os.pardir,
-                os.pardir,
-                os.pardir,
             )
         )
         # Define and config the Pipeline
         self.dataset_path = os.path.join(
-            root_path, "Documents/forte/examples/profiler/combine_data"
+            root_path, "data_samples/profiler/combine_data"
         )
 
     def test_writer(self):
-
         # initialize pipeline
         pipe_serialize = Pipeline[DataPack]()
         pipe_serialize.set_reader(OntonotesReader())
