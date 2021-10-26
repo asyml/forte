@@ -31,31 +31,11 @@ class DataPackTest(unittest.TestCase):
         self.data_pack1 = self.multi_pack.add_pack(ref_name="left pack")
         self.data_pack2 = self.multi_pack.add_pack(ref_name="right pack")
 
-        #self.multi_pack.remove_pack(index_of_pack=1)
-
-        self.data_pack10 = self.multi_pack.add_pack(ref_name="remove pack 10")
-        self.data_pack11 = self.multi_pack.add_pack(ref_name="remove pack 11")
-        self.data_pack12 = self.multi_pack.add_pack(ref_name="remove pack 12")
-
-        self.ref_id10 = self.multi_pack.get_pack_index(self.data_pack10.pack_id)
-        self.ref_id11 = self.multi_pack.get_pack_index(self.data_pack11.pack_id)
-        self.ref_id12 = self.multi_pack.get_pack_index(self.data_pack12.pack_id)
-
         self.data_pack1.pack_name = "some pack"
         self.data_pack1.set_text("This pack contains some sample data.")
 
         self.data_pack2.pack_name = "another pack"
         self.data_pack2.set_text("This pack contains some other sample data.")
-
-        self.data_pack10.pack_name = "the 1st pack for removing"
-        self.data_pack10.set_text("Test to see if we can delete the added pack for removing out of packgroup")
-
-        self.data_pack11.pack_name = "the 2nd pack for removing"
-        self.data_pack11.set_text("Test to see if we can delete the added pack for removing from packgroup")
-
-        self.data_pack12.pack_name = "the 3rd pack for removing"
-        self.data_pack12.set_text("Test to see if we can delete the added pack for removing from packgroup")
-
 
     def test_serialization(self):
         ser_str: str = self.multi_pack.to_string()
@@ -157,6 +137,12 @@ class DataPackTest(unittest.TestCase):
                 self.multi_pack.add_entry(
                     MultiPackLink(self.multi_pack, lt, rt)
                 )
+                # rt1 = right_tokens[key]
+                # tmp_mpl_1 = MultiPackLink(self.multi_pack, lt, rt)
+                # self.multi_pack.add_entry(
+                #     MultiPackLink(self.multi_pack, rt1, tmp_mpl_1)
+                # )
+
 
         # One way to link tokens.
         linked_tokens = []
@@ -218,62 +204,124 @@ class DataPackTest(unittest.TestCase):
             ],
         )
 
-    def test_remove_pack01(self):
-
-        """
-        Test to remove pack from multi pack group.
-        Returns:
-
-        """
-
-        self.multi_pack.remove_pack(1)
-        #self.assertNotIn(["remove pack 10"], self.multi_pack.pack_names)
-
     def test_remove_pack(self):
 
         """
-        Test to remove pack from multi pack group.
+        1. Test to remove the added pack from multi_pack which is independent;
+        2. Test to remove the added pack from multi_pack with MultiPackGroup and MultiPackLink;
+
         Returns:
 
         """
+
+        self.data_pack10 = self.multi_pack.add_pack(ref_name="remove pack 10")
+        self.data_pack11 = self.multi_pack.add_pack(ref_name="remove pack 11")
+        self.data_pack12 = self.multi_pack.add_pack(ref_name="remove pack 12")
+        self.data_pack13 = self.multi_pack.add_pack(ref_name="remove pack 13")
+
+        self.ref_id10 = self.multi_pack.get_pack_index(self.data_pack10.pack_id)
+        self.ref_id11 = self.multi_pack.get_pack_index(self.data_pack11.pack_id)
+        self.ref_id12 = self.multi_pack.get_pack_index(self.data_pack12.pack_id)
+        self.ref_id13 = self.multi_pack.get_pack_index(self.data_pack13.pack_id)
+
+        self.ref_id1 = self.multi_pack.get_pack_index(self.data_pack1.pack_id)
+        self.ref_id2 = self.multi_pack.get_pack_index(self.data_pack2.pack_id)
+
+        self.data_pack10.pack_name = "the 1st pack for removing"
+        self.data_pack10.set_text("Test to see if we can remove the added pack which is independent")
+
+        self.data_pack11.pack_name = "the 2nd pack for removing"
+        self.data_pack11.set_text("Test to see if we can remove the added pack from MultiPackGroup and MultiPackLink")
+
+        self.data_pack12.pack_name = "the 3rd pack for removing"
+        self.data_pack12.set_text("Test to see if we can remove the added pack from MultiPackGroup and MultiPackLink")
+
+        self.data_pack13.pack_name = "the 4th pack for removing"
+        self.data_pack13.set_text("Test to see if we can remove the added pack from MultiPackGroup and MultiPackLink")
+
+        # Add MultiPackLink to data_pack11 and data_pack12 & Add MultiPackGroup to data_pack11, data_pack12 and data_pack13
         # Add tokens to each pack.
-        for pack in self.multi_pack.packs[3:5]:
+        for pack in self.multi_pack.packs[self.ref_id11:self.ref_id12+1]:
             _space_token(pack)
 
         # Create some group.
         token: Annotation
 
-        romove_tokens_1 = {}
-        for token in self.multi_pack.packs[2].get(Token):
-            romove_tokens_1[token.text] = token
+        remove_tokens_11 = {}
+        for token in self.multi_pack.packs[self.ref_id11].get(Token):
+            remove_tokens_11[token.text] = token
 
-        romove_tokens_2 = {}
-        for token in self.multi_pack.packs[3].get(Token):
-            romove_tokens_2[token.text] = token
+        remove_tokens_12 = {}
+        for token in self.multi_pack.packs[self.ref_id12].get(Token):
+            remove_tokens_12[token.text] = token
 
-        romove_tokens_3 = {}
-        for token in self.multi_pack.packs[4].get(Token):
-            romove_tokens_3[token.text] = token
+        remove_tokens_13 = {}
+        for token in self.multi_pack.packs[self.ref_id13].get(Token):
+            remove_tokens_13[token.text] = token
 
-        for key, rt2 in romove_tokens_2.items():
-            if key in romove_tokens_3:
-                rt3 = romove_tokens_3[key]
+        for key, rt11 in remove_tokens_11.items():
+            if key in remove_tokens_12:
+                rt12 = remove_tokens_12[key]
+                tmp_mpk_entry = MultiPackLink(self.multi_pack, rt11, rt12)
                 self.multi_pack.add_entry(
-                    MultiPackGroup(self.multi_pack, [rt2, rt3])
+                    tmp_mpk_entry   # Add Multi Pack Link
                 )
-                self.multi_pack.add_entry(
-                    MultiPackLink(self.multi_pack, [rt2, rt3])
-                )
+                # my_rt12 = remove_tokens_12[key]
+                # tmp_mpk_entry2 = MultiPackLink(self.multi_pack, my_rt12, rt11)
+                # self.multi_pack.add_entry(
+                #     MultiPackLink(self.multi_pack, tmp_mpk_entry2, rt12) # Add Multi Pack Link to Link
+                # )
 
+                if key in remove_tokens_13:
+                    rt13 = remove_tokens_13[key]
+                    self.multi_pack.add_entry(
+                        MultiPackGroup(self.multi_pack, [rt11, rt12, rt13]) # Add Multi Pack Group of 3 packs
+                    )
+
+        self.check_list_id = [self.ref_id1,self.ref_id2,self.ref_id10,self.ref_id11,self.ref_id12,self.ref_id13]
+        self.check_list_name = self.multi_pack.pack_names
+        # print('check_list_id_all:', self.check_list_id)
+        # print('check_list_name_all:', self.check_list_name)
+
+        ## Preparation for remaining pack ID list check ##
+        self.expected_id_list_1 = list(set(self.check_list_id) - set([self.ref_id10]))
+        self.expected_id_list_2 = list(set(self.check_list_id) - set([self.ref_id10]) - set([self.ref_id11]))
+        self.expected_id_list_3 = list(set(self.check_list_id) - set([self.ref_id10]) - set([self.ref_id11]) - set([self.ref_id12]))
+        ## Preparation for remaining pack name list check ##
+        self.expected_name_list_1 = ['left pack', 'right pack', None, 'remove pack 11', 'remove pack 12', 'remove pack 13']
+        self.expected_name_list_2 = ['left pack', 'right pack', None, None, 'remove pack 12', 'remove pack 13']
+        self.expected_name_list_3 = ['left pack', 'right pack', None, None, None, 'remove pack 13']
+        self.expected_name_list_purge = ['left pack', 'right pack', 'remove pack 13']
+
+        # Test to remove the data_pack10 which is independent
         self.multi_pack.remove_pack(self.ref_id10)
+        ## remaining ref_id alignment check
+        self.remaining_id_1 = [self.ref_id1,self.ref_id2,self.ref_id11,self.ref_id12,self.ref_id13]
+        self.assertListEqual(self.expected_id_list_1, self.remaining_id_1)
+        ## remaining pack name alignment check
         self.assertNotIn(["remove pack 10"], self.multi_pack.pack_names)
+        self.assertListEqual(self.multi_pack.pack_names, self.expected_name_list_1)
 
+        # Test to remove the added pack from multi_pack with MultiPackGroup
         self.multi_pack.remove_pack(self.ref_id11, True)
+        ## remaining ref_id alignment check
+        self.remaining_id_2 = [self.ref_id1,self.ref_id2,self.ref_id12,self.ref_id13]
+        self.assertListEqual(self.expected_id_list_2, self.remaining_id_2)
+        ## remaining pack name alignment check
         self.assertNotIn(["remove pack 11"], self.multi_pack.pack_names)
+        self.assertListEqual(self.multi_pack.pack_names, self.expected_name_list_2)
 
+        # Test to remove the added pack from multi_pack with MultiPackGroup and MultiPackLink
         self.multi_pack.remove_pack(self.ref_id12, True)
+        ## remaining ref_id alignment check
+        self.remaining_id_3 = [self.ref_id1,self.ref_id2,self.ref_id13]
+        self.assertListEqual(self.expected_id_list_3, self.remaining_id_3)
+        ## remaining pack name alignment check
         self.assertNotIn(["remove pack 12"], self.multi_pack.pack_names)
+        self.assertListEqual(self.multi_pack.pack_names, self.expected_name_list_3)
 
+        self.multi_pack.purge_deleted_packs()
+        self.assertListEqual(self.multi_pack.pack_names, self.expected_name_list_purge)
 
 if __name__ == "__main__":
     unittest.main()

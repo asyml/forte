@@ -177,7 +177,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         )
 
     def remove_pack(
-        self,  index_of_pack: int, clean_invalid_entries: bool = False
+            self, index_of_pack: int, clean_invalid_entries: bool = False
     ) -> bool:
         """
                 Remove a data pack from multi pack. Remove the pack with index.
@@ -191,6 +191,11 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
                     clean_invalid_entries (bool): .
 
                 Returns: .
+                    True if successful
+
+                Exceptions:
+                    if clean_invalid_entries is set to False and the DataPack to be removed have cross-pack-reference,
+                    ValueError will eb raised.
 
                 """
         pack = self.get_pack_at(index_of_pack)
@@ -202,46 +207,110 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
                 f"{type(pack)}"
             )
 
-        return self.remove_pack_(pack,index_of_pack)
+        return self.remove_pack_(pack, index_of_pack, clean_invalid_entries)
 
     def remove_pack_(
             self, pack: DataPack, index_of_pack: int, clean_invalid_entries: bool = False
     ) -> bool:
         """
-        Remove a existing data pack in the multi pack.
+        Remove a existing data pack in the multi pack. Per discussion on effects of the data pack removal,
+        to prevent index of other packs being changed, (temporarily) set this empty position to None in order
+        to keep the index for the packs intact
 
         Args:
             pack (DataPack): The existing data pack.
+            index_of_pack: the index of the pack to be removed
+            clean_invalid_entries: the switch for automatic deletion of cross-pack-references
+
+        Returns:
+            True if successful
+
+        Exceptions:
+            if clean_invalid_entries is set to False and the DataPack to be removed have cross-pack-reference,
+            ValueError will eb raised.
+        """
+
+        # check if the pack to be removed has any cross pack links/groups
+        links_with_pack_for_removal = []
+        link: MultiPackLink
+        for link in self.get(MultiPackLink):
+            parent_entry_pid = link.get_parent().pack_id
+            child_entry_pid = link.get_child().pack_id
+            if parent_entry_pid == pack.pack_id or child_entry_pid == pack.pack_id:
+                links_with_pack_for_removal.append(link)
+
+        groups_with_pack_for_removal = []
+        g: MultiPackGroup
+        for g in self.get(MultiPackGroup):
+            e: Annotation
+            for e in g.get_members():
+                if e.pack_id == pack.pack_id:
+                    groups_with_pack_for_removal.append(g)
+
+        if len(links_with_pack_for_removal) > 0 or len(groups_with_pack_for_removal) > 0:
+            if clean_invalid_entries:
+                # clean links and groups
+                for link in links_with_pack_for_removal:
+                    # delete_entry should be able to take care of related indexes
+                    self.delete_entry(link)
+                for g in groups_with_pack_for_removal:
+                    # delete_entry should be able to take care of related indexes
+                    self.delete_entry(g)
+            else:  # raise exception according to requirement
+                raise ValueError(
+                    f"The pack to be removed has cross-pack references."
+                    f" Please set clean_invalid_entries to be True to auto-remove all references to this pack"
+                )
+
+        # To keep the remaining element 's index unchanged, set to None in place instead of direct removal
+        self._pack_ref.__setitem__(index_of_pack, None)  # remove(pack.pack_id) if don't care index change
+        # Remove the reverse mapping from pack id to the pack index.
+        self._inverse_pack_ref.pop(pack.pack_id)
+
+        # Remove the pack names. To keep the remaining element's index unchanged, set to None instead of direct removal
+        tmp_pack_name = self.pack_names[index_of_pack]
+        self._pack_names.__setitem__(index_of_pack, None)  # remove(tmp_pack_name) if don't care index change
+
+        # Remove the reverse mapping from name to the pack index.
+        self._name_index.pop(tmp_pack_name)
+
+        # Remove Reference to the real packs.
+        self._packs.__setitem__(index_of_pack, None)  # remove(pack) if don't care index change
+
+        return True
+
+    def purge_deleted_packs(
+            self
+    ) -> bool:
+        """
+        Purge deleted packs from (3) lists previous set to None inplace (in order to keep index of the pack the same).
+        Caution after the purge the index would change (if there were deleted packs before the purge)
+
+        Args:
 
         Returns:
 
         """
 
-        #if (clean_invalid_entries) :
-            # check links and groups
-        # else: if links / groups have references, should raise exception (?)
+        # Remove those None in place and shrink the _pack_ref list. Caution: item index will change
+        for index in range(len(self._pack_ref) - 1, 0, -1):
+            if self._pack_ref.__getitem__(index) is None:
+                self._pack_ref.__delitem__(index)
 
-        # Remove the pack ids of the subpacks. Note that these are UUIDs
-        self._pack_ref.remove(pack.pack_id)    #: List[int] = []
-        # Remove the reverse mapping from pack id to the pack index.
-        self._inverse_pack_ref.pop(pack.pack_id)    #: Dict[int, int] = {}
+        # Remove those None in place and shrink the _pack_names list. Caution: item index will change
+        for index in range(len(self._pack_names) - 1, 0, -1):
+            if self._pack_names.__getitem__(index) is None:
+                self._pack_names.__delitem__(index)
 
-        # Remove the pack names.
-        # bug here: pack.pack_name is None!
-        tmp_pack_name = self.pack_names[index_of_pack]
-        self._pack_names.remove(tmp_pack_name)  # pack.pack_name ?
-        # Remove the reverse mapping from name to the pack index.
-
-        self._name_index.pop(tmp_pack_name)  #pack.pack_name ?
-
-        # Remove Reference to the real packs.
-        self._packs.remove(pack)
+        # Remove those None in place and shrink the _packs list. Caution: item index will change
+        for index in range(len(self._packs) - 1, 0, -1):
+            if self._packs.__getitem__(index) is None:
+                self._packs.__delitem__(index)
 
         return True
 
-
     def add_pack(
-        self, ref_name: Optional[str] = None, pack_name: Optional[str] = None
+            self, ref_name: Optional[str] = None, pack_name: Optional[str] = None
     ) -> DataPack:
         """
         Create a data pack and add it to this multi pack. If `ref_name` is
@@ -464,21 +533,21 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             pack.add_all_remaining_entries(component)
 
     def get_data(
-        self,
-        context_type,
-        request: Optional[DataRequest] = None,
-        skip_k: int = 0,
+            self,
+            context_type,
+            request: Optional[DataRequest] = None,
+            skip_k: int = 0,
     ) -> Iterator[Dict[str, Any]]:
         raise NotImplementedError(
             "We haven't implemented get data for multi pack data yet."
         )
 
     def get_single_pack_data(
-        self,
-        pack_index: int,
-        context_type: Type[Annotation],
-        request: Optional[DataRequest] = None,
-        skip_k: int = 0,
+            self,
+            pack_index: int,
+            context_type: Type[Annotation],
+            request: Optional[DataRequest] = None,
+            skip_k: int = 0,
     ) -> Iterator[Dict[str, Any]]:
         r"""Get pack data from one of the packs specified by the name. This is
         equivalent to calling the
@@ -514,8 +583,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         )
 
     def get_cross_pack_data(
-        self,
-        request: MdRequest,
+            self,
+            request: MdRequest,
     ):
         r"""
         NOTE: This function is not finished.
@@ -567,7 +636,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         pass
 
     def __add_entry_with_check(
-        self, entry: EntryType, allow_duplicate: bool = True
+            self, entry: EntryType, allow_duplicate: bool = True
     ) -> EntryType:
         r"""Internal method to add an :class:`Entry` object to the
         :class:`MultiPack` object.
@@ -612,10 +681,10 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             return target[target.index(entry)]
 
     def get(  # type: ignore
-        self,
-        entry_type: Union[str, Type[EntryType]],
-        components: Optional[Union[str, List[str]]] = None,
-        include_sub_type=True,
+            self,
+            entry_type: Union[str, Type[EntryType]],
+            components: Optional[Union[str, List[str]]] = None,
+            include_sub_type=True,
     ) -> Iterator[EntryType]:
         """Get entries of `entry_type` from this multi pack.
 
@@ -695,10 +764,10 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
     @classmethod
     def deserialize(
-        cls,
-        data_path: Union[Path, str],
-        serialize_method: str = "jsonpickle",
-        zip_pack: bool = False,
+            cls,
+            data_path: Union[Path, str],
+            serialize_method: str = "jsonpickle",
+            zip_pack: bool = False,
     ) -> "MultiPack":
         """
         Deserialize a Multi Pack from a string. Note that this will only
