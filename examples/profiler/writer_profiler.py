@@ -45,16 +45,16 @@ class OntonotesWriterPipelineTest(unittest.TestCase):
             root_path, "Documents/forte/examples/profiler/combine_data"
         )
 
-    def test_writer(self):
-
         # initialize pipeline
-        pipe_serialize = Pipeline[DataPack]()
-        pipe_serialize.set_reader(OntonotesReader())
-        pipe_serialize.add(PeriodSentenceSplitter())
-        pipe_serialize.add(SubwordTokenizer())
+        self.nlp = Pipeline[DataPack]()
+        self.nlp.set_reader(OntonotesReader())
+        self.nlp.add(PeriodSentenceSplitter())
+        self.nlp.add(SubwordTokenizer())
+        self.nlp.set_profiling(True)
 
+    def test_writer(self):
         with tempfile.TemporaryDirectory() as output_dir:
-            pipe_serialize.add(
+            self.nlp.add(
                 # two types of writer: json or binary
                 # PackNamePicklePackWriter(),
                 PackNameJsonPackWriter(),
@@ -64,7 +64,7 @@ class OntonotesWriterPipelineTest(unittest.TestCase):
                 },
             )
 
-            pipe_serialize.run(self.dataset_path)
+            self.nlp.run(self.dataset_path)
 
 
 if __name__ == "__main__":
