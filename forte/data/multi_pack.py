@@ -177,27 +177,27 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         )
 
     def remove_pack(
-            self, index_of_pack: int, clean_invalid_entries: bool = False
+        self, index_of_pack: int, clean_invalid_entries: bool = False
     ) -> bool:
         """
-                Remove a data pack from multi pack. Remove the pack with index.
+        Remove a data pack from multi pack. Remove the pack with index.
 
-                Note that remove_pack means some cross pack reference entries such as MultiPackLink
-                may become invalid.
+        Note that remove_pack means some cross pack reference entries such as MultiPackLink
+        may become invalid.
 
-                Args:
-                    index_of_pack (int): The index of pack for removal from
-                      the multi pack. If invalid, no pack will be deleted (exception?).
-                    clean_invalid_entries (bool): .
+        Args:
+            index_of_pack (int): The index of pack for removal from
+              the multi pack. If invalid, no pack will be deleted (exception?).
+            clean_invalid_entries (bool): .
 
-                Returns: .
-                    True if successful
+        Returns: .
+            True if successful
 
-                Exceptions:
-                    if clean_invalid_entries is set to False and the DataPack to be removed have cross-pack-reference,
-                    ValueError will eb raised.
+        Exceptions:
+            if clean_invalid_entries is set to False and the DataPack to be removed have cross-pack-reference,
+            ValueError will eb raised.
 
-                """
+        """
         pack = self.get_pack_at(index_of_pack)
 
         if pack is None or (not isinstance(pack, DataPack)):
@@ -210,7 +210,10 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         return self.remove_pack_(pack, index_of_pack, clean_invalid_entries)
 
     def remove_pack_(
-            self, pack: DataPack, index_of_pack: int, clean_invalid_entries: bool = False
+        self,
+        pack: DataPack,
+        index_of_pack: int,
+        clean_invalid_entries: bool = False,
     ) -> bool:
         """
         Remove a existing data pack in the multi pack. Per discussion on effects of the data pack removal,
@@ -236,7 +239,10 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         for link in self.get(MultiPackLink):
             parent_entry_pid = link.get_parent().pack_id
             child_entry_pid = link.get_child().pack_id
-            if parent_entry_pid == pack.pack_id or child_entry_pid == pack.pack_id:
+            if (
+                parent_entry_pid == pack.pack_id
+                or child_entry_pid == pack.pack_id
+            ):
                 links_with_pack_for_removal.append(link)
 
         groups_with_pack_for_removal = []
@@ -247,7 +253,10 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
                 if e.pack_id == pack.pack_id:
                     groups_with_pack_for_removal.append(g)
 
-        if len(links_with_pack_for_removal) > 0 or len(groups_with_pack_for_removal) > 0:
+        if (
+            len(links_with_pack_for_removal) > 0
+            or len(groups_with_pack_for_removal) > 0
+        ):
             if clean_invalid_entries:
                 # clean links and groups
                 for link in links_with_pack_for_removal:
@@ -263,25 +272,29 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
                 )
 
         # To keep the remaining element 's index unchanged, set to None in place instead of direct removal
-        self._pack_ref.__setitem__(index_of_pack, None)  # remove(pack.pack_id) if don't care index change
+        self._pack_ref.__setitem__(
+            index_of_pack, None
+        )  # remove(pack.pack_id) if don't care index change
         # Remove the reverse mapping from pack id to the pack index.
         self._inverse_pack_ref.pop(pack.pack_id)
 
         # Remove the pack names. To keep the remaining element's index unchanged, set to None instead of direct removal
         tmp_pack_name = self.pack_names[index_of_pack]
-        self._pack_names.__setitem__(index_of_pack, None)  # remove(tmp_pack_name) if don't care index change
+        self._pack_names.__setitem__(
+            index_of_pack, None
+        )  # remove(tmp_pack_name) if don't care index change
 
         # Remove the reverse mapping from name to the pack index.
         self._name_index.pop(tmp_pack_name)
 
         # Remove Reference to the real packs.
-        self._packs.__setitem__(index_of_pack, None)  # remove(pack) if don't care index change
+        self._packs.__setitem__(
+            index_of_pack, None
+        )  # remove(pack) if don't care index change
 
         return True
 
-    def purge_deleted_packs(
-            self
-    ) -> bool:
+    def purge_deleted_packs(self) -> bool:
         """
         Purge deleted packs from (3) lists previous set to None inplace (in order to keep index of the pack the same).
         Caution after the purge the index would change (if there were deleted packs before the purge)
@@ -310,7 +323,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         return True
 
     def add_pack(
-            self, ref_name: Optional[str] = None, pack_name: Optional[str] = None
+        self, ref_name: Optional[str] = None, pack_name: Optional[str] = None
     ) -> DataPack:
         """
         Create a data pack and add it to this multi pack. If `ref_name` is
@@ -533,21 +546,21 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             pack.add_all_remaining_entries(component)
 
     def get_data(
-            self,
-            context_type,
-            request: Optional[DataRequest] = None,
-            skip_k: int = 0,
+        self,
+        context_type,
+        request: Optional[DataRequest] = None,
+        skip_k: int = 0,
     ) -> Iterator[Dict[str, Any]]:
         raise NotImplementedError(
             "We haven't implemented get data for multi pack data yet."
         )
 
     def get_single_pack_data(
-            self,
-            pack_index: int,
-            context_type: Type[Annotation],
-            request: Optional[DataRequest] = None,
-            skip_k: int = 0,
+        self,
+        pack_index: int,
+        context_type: Type[Annotation],
+        request: Optional[DataRequest] = None,
+        skip_k: int = 0,
     ) -> Iterator[Dict[str, Any]]:
         r"""Get pack data from one of the packs specified by the name. This is
         equivalent to calling the
@@ -583,8 +596,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         )
 
     def get_cross_pack_data(
-            self,
-            request: MdRequest,
+        self,
+        request: MdRequest,
     ):
         r"""
         NOTE: This function is not finished.
@@ -636,7 +649,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         pass
 
     def __add_entry_with_check(
-            self, entry: EntryType, allow_duplicate: bool = True
+        self, entry: EntryType, allow_duplicate: bool = True
     ) -> EntryType:
         r"""Internal method to add an :class:`Entry` object to the
         :class:`MultiPack` object.
@@ -681,10 +694,10 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             return target[target.index(entry)]
 
     def get(  # type: ignore
-            self,
-            entry_type: Union[str, Type[EntryType]],
-            components: Optional[Union[str, List[str]]] = None,
-            include_sub_type=True,
+        self,
+        entry_type: Union[str, Type[EntryType]],
+        components: Optional[Union[str, List[str]]] = None,
+        include_sub_type=True,
     ) -> Iterator[EntryType]:
         """Get entries of `entry_type` from this multi pack.
 
@@ -764,10 +777,10 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
     @classmethod
     def deserialize(
-            cls,
-            data_path: Union[Path, str],
-            serialize_method: str = "jsonpickle",
-            zip_pack: bool = False,
+        cls,
+        data_path: Union[Path, str],
+        serialize_method: str = "jsonpickle",
+        zip_pack: bool = False,
     ) -> "MultiPack":
         """
         Deserialize a Multi Pack from a string. Note that this will only

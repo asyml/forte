@@ -143,7 +143,6 @@ class DataPackTest(unittest.TestCase):
                 #     MultiPackLink(self.multi_pack, rt1, tmp_mpl_1)
                 # )
 
-
         # One way to link tokens.
         linked_tokens = []
         for link in self.multi_pack.all_links:
@@ -228,20 +227,29 @@ class DataPackTest(unittest.TestCase):
         self.ref_id2 = self.multi_pack.get_pack_index(self.data_pack2.pack_id)
 
         self.data_pack10.pack_name = "the 1st pack for removing"
-        self.data_pack10.set_text("Test to see if we can remove the added pack which is independent")
+        self.data_pack10.set_text(
+            "Test to see if we can remove the added pack which is independent"
+        )
 
         self.data_pack11.pack_name = "the 2nd pack for removing"
-        self.data_pack11.set_text("Test to see if we can remove the added pack from MultiPackGroup and MultiPackLink")
+        self.data_pack11.set_text(
+            "Test to see if we can remove the added pack from MultiPackGroup and MultiPackLink"
+        )
 
         self.data_pack12.pack_name = "the 3rd pack for removing"
-        self.data_pack12.set_text("Test to see if we can remove the added pack from MultiPackGroup and MultiPackLink")
+        self.data_pack12.set_text(
+            "Test to see if we can remove the added pack from MultiPackGroup and MultiPackLink"
+        )
 
         self.data_pack13.pack_name = "the 4th pack for removing"
-        self.data_pack13.set_text("Test to see if we can remove the added pack from MultiPackGroup and MultiPackLink")
+        self.data_pack13.set_text(
+            "Test to see if we can remove the added pack from MultiPackGroup and MultiPackLink"
+        )
 
-        # Add MultiPackLink to data_pack11 and data_pack12 & Add MultiPackGroup to data_pack11, data_pack12 and data_pack13
+        # Add MultiPackLink to data_pack11 and data_pack12 & Add MultiPackGroup to data_pack11, data_pack12
+        # and data_pack13
         # Add tokens to each pack.
-        for pack in self.multi_pack.packs[self.ref_id11:self.ref_id12+1]:
+        for pack in self.multi_pack.packs[self.ref_id11 : self.ref_id12 + 1]:
             _space_token(pack)
 
         # Create some group.
@@ -263,9 +271,7 @@ class DataPackTest(unittest.TestCase):
             if key in remove_tokens_12:
                 rt12 = remove_tokens_12[key]
                 tmp_mpk_entry = MultiPackLink(self.multi_pack, rt11, rt12)
-                self.multi_pack.add_entry(
-                    tmp_mpk_entry   # Add Multi Pack Link
-                )
+                self.multi_pack.add_entry(tmp_mpk_entry)  # Add Multi Pack Link
                 # my_rt12 = remove_tokens_12[key]
                 # tmp_mpk_entry2 = MultiPackLink(self.multi_pack, my_rt12, rt11)
                 # self.multi_pack.add_entry(
@@ -275,53 +281,118 @@ class DataPackTest(unittest.TestCase):
                 if key in remove_tokens_13:
                     rt13 = remove_tokens_13[key]
                     self.multi_pack.add_entry(
-                        MultiPackGroup(self.multi_pack, [rt11, rt12, rt13]) # Add Multi Pack Group of 3 packs
+                        MultiPackGroup(
+                            self.multi_pack, [rt11, rt12, rt13]
+                        )  # Add Multi Pack Group of 3 packs
                     )
 
-        self.check_list_id = [self.ref_id1,self.ref_id2,self.ref_id10,self.ref_id11,self.ref_id12,self.ref_id13]
+        self.check_list_id = [
+            self.ref_id1,
+            self.ref_id2,
+            self.ref_id10,
+            self.ref_id11,
+            self.ref_id12,
+            self.ref_id13,
+        ]
         self.check_list_name = self.multi_pack.pack_names
         # print('check_list_id_all:', self.check_list_id)
         # print('check_list_name_all:', self.check_list_name)
 
         ## Preparation for remaining pack ID list check ##
-        self.expected_id_list_1 = list(set(self.check_list_id) - set([self.ref_id10]))
-        self.expected_id_list_2 = list(set(self.check_list_id) - set([self.ref_id10]) - set([self.ref_id11]))
-        self.expected_id_list_3 = list(set(self.check_list_id) - set([self.ref_id10]) - set([self.ref_id11]) - set([self.ref_id12]))
+        self.expected_id_list_1 = list(
+            set(self.check_list_id) - set([self.ref_id10])
+        )
+        self.expected_id_list_2 = list(
+            set(self.check_list_id)
+            - set([self.ref_id10])
+            - set([self.ref_id11])
+        )
+        self.expected_id_list_3 = list(
+            set(self.check_list_id)
+            - set([self.ref_id10])
+            - set([self.ref_id11])
+            - set([self.ref_id12])
+        )
         ## Preparation for remaining pack name list check ##
-        self.expected_name_list_1 = ['left pack', 'right pack', None, 'remove pack 11', 'remove pack 12', 'remove pack 13']
-        self.expected_name_list_2 = ['left pack', 'right pack', None, None, 'remove pack 12', 'remove pack 13']
-        self.expected_name_list_3 = ['left pack', 'right pack', None, None, None, 'remove pack 13']
-        self.expected_name_list_purge = ['left pack', 'right pack', 'remove pack 13']
+        self.expected_name_list_1 = [
+            "left pack",
+            "right pack",
+            None,
+            "remove pack 11",
+            "remove pack 12",
+            "remove pack 13",
+        ]
+        self.expected_name_list_2 = [
+            "left pack",
+            "right pack",
+            None,
+            None,
+            "remove pack 12",
+            "remove pack 13",
+        ]
+        self.expected_name_list_3 = [
+            "left pack",
+            "right pack",
+            None,
+            None,
+            None,
+            "remove pack 13",
+        ]
+        self.expected_name_list_purge = [
+            "left pack",
+            "right pack",
+            "remove pack 13",
+        ]
 
         # Test to remove the data_pack10 which is independent
         self.multi_pack.remove_pack(self.ref_id10)
         ## remaining ref_id alignment check
-        self.remaining_id_1 = [self.ref_id1,self.ref_id2,self.ref_id11,self.ref_id12,self.ref_id13]
+        self.remaining_id_1 = [
+            self.ref_id1,
+            self.ref_id2,
+            self.ref_id11,
+            self.ref_id12,
+            self.ref_id13,
+        ]
         self.assertListEqual(self.expected_id_list_1, self.remaining_id_1)
         ## remaining pack name alignment check
         self.assertNotIn(["remove pack 10"], self.multi_pack.pack_names)
-        self.assertListEqual(self.multi_pack.pack_names, self.expected_name_list_1)
+        self.assertListEqual(
+            self.multi_pack.pack_names, self.expected_name_list_1
+        )
 
         # Test to remove the added pack from multi_pack with MultiPackGroup
         self.multi_pack.remove_pack(self.ref_id11, True)
         ## remaining ref_id alignment check
-        self.remaining_id_2 = [self.ref_id1,self.ref_id2,self.ref_id12,self.ref_id13]
+        self.remaining_id_2 = [
+            self.ref_id1,
+            self.ref_id2,
+            self.ref_id12,
+            self.ref_id13,
+        ]
         self.assertListEqual(self.expected_id_list_2, self.remaining_id_2)
         ## remaining pack name alignment check
         self.assertNotIn(["remove pack 11"], self.multi_pack.pack_names)
-        self.assertListEqual(self.multi_pack.pack_names, self.expected_name_list_2)
+        self.assertListEqual(
+            self.multi_pack.pack_names, self.expected_name_list_2
+        )
 
         # Test to remove the added pack from multi_pack with MultiPackGroup and MultiPackLink
         self.multi_pack.remove_pack(self.ref_id12, True)
         ## remaining ref_id alignment check
-        self.remaining_id_3 = [self.ref_id1,self.ref_id2,self.ref_id13]
+        self.remaining_id_3 = [self.ref_id1, self.ref_id2, self.ref_id13]
         self.assertListEqual(self.expected_id_list_3, self.remaining_id_3)
         ## remaining pack name alignment check
         self.assertNotIn(["remove pack 12"], self.multi_pack.pack_names)
-        self.assertListEqual(self.multi_pack.pack_names, self.expected_name_list_3)
+        self.assertListEqual(
+            self.multi_pack.pack_names, self.expected_name_list_3
+        )
 
         self.multi_pack.purge_deleted_packs()
-        self.assertListEqual(self.multi_pack.pack_names, self.expected_name_list_purge)
+        self.assertListEqual(
+            self.multi_pack.pack_names, self.expected_name_list_purge
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
