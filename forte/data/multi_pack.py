@@ -176,9 +176,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             "specific data pack to get text."
         )
 
-    def remove_pack(
-        self, index_of_pack: int, clean_invalid_entries: bool = False
-    ) -> bool:
+    def remove_pack(self, index_of_pack: int, clean_invalid_entries: bool = False) -> bool:
         """
         Remove a data pack from multi pack. Remove the pack with index.
 
@@ -201,11 +199,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         pack = self.get_pack_at(index_of_pack)
 
         if pack is None or (not isinstance(pack, DataPack)):
-            raise ValueError(
-                f"Object for the index should be pack, but got "
-                f""
-                f"{type(pack)}"
-            )
+            raise ValueError(f"Object for the index should be pack, but got " f"" f"{type(pack)}")
 
         return self.remove_pack_(pack, index_of_pack, clean_invalid_entries)
 
@@ -239,10 +233,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         for link in self.get(MultiPackLink):
             parent_entry_pid = link.get_parent().pack_id
             child_entry_pid = link.get_child().pack_id
-            if (
-                parent_entry_pid == pack.pack_id
-                or child_entry_pid == pack.pack_id
-            ):
+            if parent_entry_pid == pack.pack_id or child_entry_pid == pack.pack_id:
                 links_with_pack_for_removal.append(link)
 
         groups_with_pack_for_removal = []
@@ -253,10 +244,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
                 if e.pack_id == pack.pack_id:
                     groups_with_pack_for_removal.append(g)
 
-        if (
-            len(links_with_pack_for_removal) > 0
-            or len(groups_with_pack_for_removal) > 0
-        ):
+        if len(links_with_pack_for_removal) > 0 or len(groups_with_pack_for_removal) > 0:
             if clean_invalid_entries:
                 # clean links and groups
                 for link in links_with_pack_for_removal:
@@ -288,9 +276,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         self._name_index.pop(tmp_pack_name)
 
         # Remove Reference to the real packs.
-        self._packs.__setitem__(
-            index_of_pack, None
-        )  # remove(pack) if don't care index change
+        self._packs.__setitem__(index_of_pack, None)  # remove(pack) if don't care index change
 
         return True
 
@@ -322,9 +308,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
         return True
 
-    def add_pack(
-        self, ref_name: Optional[str] = None, pack_name: Optional[str] = None
-    ) -> DataPack:
+    def add_pack(self, ref_name: Optional[str] = None, pack_name: Optional[str] = None) -> DataPack:
         """
         Create a data pack and add it to this multi pack. If `ref_name` is
         provided, it will be used to index the data pack. Otherwise, a default
@@ -343,11 +327,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         if ref_name in self._name_index:
             raise ValueError(f"The name {ref_name} has already been taken.")
         if ref_name is not None and not isinstance(ref_name, str):
-            raise ValueError(
-                f"key of the pack should be str, but got "
-                f""
-                f"{type(ref_name)}"
-            )
+            raise ValueError(f"key of the pack should be str, but got " f"" f"{type(ref_name)}")
 
         pack: DataPack = DataPack(pack_name=pack_name)
         self.add_pack_(pack, ref_name)
@@ -367,16 +347,9 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         if ref_name in self._name_index:
             raise ValueError(f"The name {ref_name} has already been taken.")
         if ref_name is not None and not isinstance(ref_name, str):
-            raise ValueError(
-                f"key of the pack should be str, but got "
-                f""
-                f"{type(ref_name)}"
-            )
+            raise ValueError(f"key of the pack should be str, but got " f"" f"{type(ref_name)}")
         if not isinstance(pack, DataPack):
-            raise ValueError(
-                f"value of the packs should be DataPack, but "
-                f"got {type(pack)}"
-            )
+            raise ValueError(f"value of the packs should be DataPack, but " f"got {type(pack)}")
 
         pid = pack.pack_id
 
@@ -419,9 +392,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         try:
             return self._inverse_pack_ref[pack_id]
         except KeyError as e:
-            raise ProcessExecutionException(
-                f"Pack {pack_id} is not in this multi-pack."
-            ) from e
+            raise ProcessExecutionException(f"Pack {pack_id} is not in this multi-pack.") from e
 
     def get_pack(self, name: str) -> DataPack:
         """
@@ -551,9 +522,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         request: Optional[DataRequest] = None,
         skip_k: int = 0,
     ) -> Iterator[Dict[str, Any]]:
-        raise NotImplementedError(
-            "We haven't implemented get data for multi pack data yet."
-        )
+        raise NotImplementedError("We haven't implemented get data for multi pack data yet.")
 
     def get_single_pack_data(
         self,
@@ -591,9 +560,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             containing the required annotations and context).
         """
 
-        yield from self.get_pack_at(pack_index).get_data(
-            context_type, request, skip_k
-        )
+        yield from self.get_pack_at(pack_index).get_data(context_type, request, skip_k)
 
     def get_cross_pack_data(
         self,
@@ -648,9 +615,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         # TODO: Not finished yet
         pass
 
-    def __add_entry_with_check(
-        self, entry: EntryType, allow_duplicate: bool = True
-    ) -> EntryType:
+    def __add_entry_with_check(self, entry: EntryType, allow_duplicate: bool = True) -> EntryType:
         r"""Internal method to add an :class:`Entry` object to the
         :class:`MultiPack` object.
 
@@ -751,9 +716,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         elif issubclass(entry_type_, MultiPackGeneric):
             entry_iter = self.generics
         else:
-            raise ValueError(
-                f"The entry type: {entry_type_} is not supported by MultiPack."
-            )
+            raise ValueError(f"The entry type: {entry_type_} is not supported by MultiPack.")
 
         all_types: Set[Type]
         if include_sub_type:
