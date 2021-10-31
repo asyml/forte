@@ -275,8 +275,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         # To keep the remaining element 's index unchanged, set to None in
         # place instead of direct removal
 
-        vin = int(0)
-        vin = None
+        # vin = int(0)
+        # vin = None
         self._pack_ref.__setitem__(
             index_of_pack, -1
         )  # remove(pack.pack_id) in case don't care index change
