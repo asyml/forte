@@ -267,9 +267,9 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
                     self.delete_entry(g)
             else:  # raise exception according to requirement
                 raise ValueError(
-                    f"The pack to be removed has cross-pack references."
-                    f" Please set clean_invalid_entries to be True to auto-remove all references"
-                    f" to this pack"
+                    "The pack to be removed has cross-pack references."
+                    " Please set clean_invalid_entries to be True to "
+                    " auto-remove all references to this pack"
                 )
 
         # To keep the remaining element 's index unchanged, set to None in
@@ -310,12 +310,14 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
         """
 
-        # Remove those None in place and shrink the _pack_ref list. Caution: item index will change
+        # Remove those None in place and shrink the _pack_ref list.
+        # Caution: item index will change
         for index in range(len(self._pack_ref) - 1, 0, -1):
             if self._pack_ref.__getitem__(index) is None:
                 self._pack_ref.__delitem__(index)
 
-        # Remove those None in place and shrink the _pack_names list. Caution: item index will change
+        # Remove those None in place and shrink the _pack_names list.
+        # Caution: item index will change
         for index in range(len(self._pack_names) - 1, 0, -1):
             if self._pack_names.__getitem__(index) is None:
                 self._pack_names.__delitem__(index)
