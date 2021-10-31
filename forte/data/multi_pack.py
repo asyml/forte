@@ -274,8 +274,13 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
         # To keep the remaining element 's index unchanged, set to None in
         # place instead of direct removal
+
+        """
+        @type vin: int
+        """
+        vin = None
         self._pack_ref.__setitem__(
-            index_of_pack, int(None)
+            index_of_pack, vin
         )  # remove(pack.pack_id) in case don't care index change
 
         # Remove the reverse mapping from pack id to the pack index.
@@ -284,8 +289,13 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         # Remove the pack names. To keep the remaining element's index
         # unchanged, set to None instead of direct removal
         tmp_pack_name = self.pack_names[index_of_pack]
+
+        """
+        @type vsn: str
+        """
+        vsn = None
         self._pack_names.__setitem__(
-            index_of_pack, str(None)
+            index_of_pack, vsn
         )  # remove(tmp_pack_name) in case don't care index change
 
         # Remove the reverse mapping from name to the pack index.
