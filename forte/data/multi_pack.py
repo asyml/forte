@@ -304,15 +304,13 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
     def purge_deleted_packs(self) -> bool:
         """
-        Purge deleted packs from (3) lists previous set to None inplace (in order to keep index
-        of the pack the same).
-        Caution: after the purge the index would change (if there were deleted packs before the
-        purge)
+        Purge deleted packs from lists previous set to -1, empty or none to keep index unchanged
+        Caution: after the purge the index would change.
 
         Args:
 
         Returns:
-
+            True if successful
         """
 
         # Remove those None in place and shrink the _pack_ref list.
