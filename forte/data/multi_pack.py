@@ -194,8 +194,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             True if successful
 
         Exceptions:
-            if clean_invalid_entries is set to False and the DataPack to be removed have cross-pack-reference,
-            ValueError will eb raised.
+            if clean_invalid_entries is set to False and the DataPack to be removed have
+            cross-pack-reference, ValueError will be raised.
 
         """
         pack = self.get_pack_at(index_of_pack)
@@ -216,9 +216,9 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         clean_invalid_entries: bool = False,
     ) -> bool:
         """
-        Remove a existing data pack in the multi pack. Per discussion on effects of the data pack removal,
-        to prevent index of other packs being changed, (temporarily) set this empty position to None in order
-        to keep the index for the packs intact
+        Remove a existing data pack in the multi pack. Per discussion on effects of the data pack
+        removal, to prevent index of other packs being changed, (temporarily) set this empty
+        position to None in order to keep the index for the packs intact
 
         Args:
             pack (DataPack): The existing data pack.
@@ -229,8 +229,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             True if successful
 
         Exceptions:
-            if clean_invalid_entries is set to False and the DataPack to be removed have cross-pack-reference,
-            ValueError will eb raised.
+            if clean_invalid_entries is set to False and the DataPack to be removed have
+            cross-pack-reference, ValueError will be raised.
         """
 
         # check if the pack to be removed has any cross pack links/groups
@@ -268,17 +268,20 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             else:  # raise exception according to requirement
                 raise ValueError(
                     f"The pack to be removed has cross-pack references."
-                    f" Please set clean_invalid_entries to be True to auto-remove all references to this pack"
+                    f" Please set clean_invalid_entries to be True to auto-remove all references"
+                    f" to this pack"
                 )
 
-        # To keep the remaining element 's index unchanged, set to None in place instead of direct removal
+        # To keep the remaining element 's index unchanged, set to None in
+        # place instead of direct removal
         self._pack_ref.__setitem__(
             index_of_pack, None
         )  # remove(pack.pack_id) if don't care index change
         # Remove the reverse mapping from pack id to the pack index.
         self._inverse_pack_ref.pop(pack.pack_id)
 
-        # Remove the pack names. To keep the remaining element's index unchanged, set to None instead of direct removal
+        # Remove the pack names. To keep the remaining element's index
+        # unchanged, set to None instead of direct removal
         tmp_pack_name = self.pack_names[index_of_pack]
         self._pack_names.__setitem__(
             index_of_pack, None
@@ -296,8 +299,10 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
     def purge_deleted_packs(self) -> bool:
         """
-        Purge deleted packs from (3) lists previous set to None inplace (in order to keep index of the pack the same).
-        Caution after the purge the index would change (if there were deleted packs before the purge)
+        Purge deleted packs from (3) lists previous set to None inplace (in order to keep index
+        of the pack the same).
+        Caution: after the purge the index would change (if there were deleted packs before the
+        purge)
 
         Args:
 
