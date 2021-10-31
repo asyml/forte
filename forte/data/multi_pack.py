@@ -275,9 +275,9 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         # To keep the remaining element 's index unchanged, set to None in
         # place instead of direct removal
 
-        """
-        @type vin: int
-        """
+        # """
+        # @type vin: int
+        # """
         vin = None
         self._pack_ref.__setitem__(
             index_of_pack, vin
@@ -290,9 +290,6 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         # unchanged, set to None instead of direct removal
         tmp_pack_name = self.pack_names[index_of_pack]
 
-        """
-        @type vsn: str
-        """
         vsn = None
         self._pack_names.__setitem__(
             index_of_pack, vsn
