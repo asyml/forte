@@ -248,7 +248,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         groups_with_pack_for_removal = []
         g: MultiPackGroup
         for g in self.get(MultiPackGroup):
-            #e: Annotation
+            # e: Annotation
             for e in g.get_members():
                 if e.pack_id == pack.pack_id:
                     groups_with_pack_for_removal.append(g)
@@ -260,10 +260,10 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             if clean_invalid_entries:
                 # clean links and groups
                 for link in links_with_pack_for_removal:
-                    # delete_entry should be able to take care of related indexes
+                    # delete_entry will take care of related indexes
                     self.delete_entry(link)
                 for g in groups_with_pack_for_removal:
-                    # delete_entry should be able to take care of related indexes
+                    # delete_entry will take care of related indexes
                     self.delete_entry(g)
             else:  # raise exception according to requirement
                 raise ValueError(
