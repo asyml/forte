@@ -317,7 +317,7 @@ class DataPackTest(unittest.TestCase):
         self.expected_name_list_1 = [
             "left pack",
             "right pack",
-            None,
+            "",
             "remove pack 11",
             "remove pack 12",
             "remove pack 13",
@@ -325,17 +325,17 @@ class DataPackTest(unittest.TestCase):
         self.expected_name_list_2 = [
             "left pack",
             "right pack",
-            None,
-            None,
+            "",
+            "",
             "remove pack 12",
             "remove pack 13",
         ]
         self.expected_name_list_3 = [
             "left pack",
             "right pack",
-            None,
-            None,
-            None,
+            "",
+            "",
+            "",
             "remove pack 13",
         ]
         self.expected_name_list_purge = [

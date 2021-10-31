@@ -289,7 +289,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         tmp_pack_name = self.pack_names[index_of_pack]
 
         self._pack_names.__setitem__(
-            index_of_pack, None
+            index_of_pack, ""
         )  # remove(tmp_pack_name) in case don't care index change
 
         # Remove the reverse mapping from name to the pack index.
@@ -297,7 +297,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
         # Remove Reference to the real packs.
         self._packs.__setitem__(
-            index_of_pack, None
+            index_of_pack, DataPack(None)
         )  # remove(pack) if don't care index change
 
         return True
@@ -324,7 +324,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         # Remove those None in place and shrink the _pack_names list.
         # Caution: item index will change
         for index in range(len(self._pack_names) - 1, 0, -1):
-            if self._pack_names.__getitem__(index) is None:
+            if not self._pack_names.__getitem__(index):
                 self._pack_names.__delitem__(index)
 
         # Remove those None in place and shrink the _packs list. Caution: item index will change
