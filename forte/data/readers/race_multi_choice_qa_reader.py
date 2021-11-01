@@ -58,8 +58,51 @@ class RACEMultiChoiceQAReader(PackReader):
             "Wrong datatype for Answers: expected int or str, "
             f"got {type(ch).__name__}"
         )
-
+    
     def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
+        with open(file_path, "r", encoding="utf8", errors="ignore") as file:
+            dataset = json.load(file)
+
+            pack = DataPack()
+            text: str = dataset["article"]
+            article_end = len(text)
+            offset = article_end + 1
+
+            print("parse", file_path)
+
+            for qid, ques_text in enumerate(dataset["questions"]):
+                text += "\n" + ques_text
+                ques_end = offset + len(ques_text)
+                question = pack.add_entry(MCQuestion, offset, ques_end)
+                offset = ques_end + 1
+
+                options_text = dataset["options"][qid]
+                for option_text in options_text:
+                    text += "\n" + option_text
+                    option_end = offset + len(option_text)
+                    option = pack.add_entry(MCOption, offset, option_end)
+                    offset = option_end + 1
+                    # pack.set_attribute(question)
+                    # question.options.append(option)
+
+                answers = dataset["answers"][qid]
+                if not isinstance(answers, list):
+                    answers = [answers]
+                # answers = [self._convert_to_int(ans) for ans in answers]
+                # question.answers = answers
+
+            pack.set_text(text, replace_func=self.text_replace_operation)
+
+            pack.add_entry(Document, 0, article_end)
+
+            passage_id: str = dataset["id"]
+            passage = pack.add_entry(Passage, 0, len(pack.text))
+            # passage.passage_id = passage_id
+            pack.pack_name = passage_id
+
+            yield pack
+
+    def _parse_pack_old(self, file_path: str) -> Iterator[DataPack]:
         with open(file_path, "r", encoding="utf8", errors="ignore") as file:
             dataset = json.load(file)
 

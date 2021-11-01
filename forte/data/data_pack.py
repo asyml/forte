@@ -335,7 +335,7 @@ class DataPack(BasePack[Entry, Link, Group]):
     """
     New methods for tuple-based opertaions
     """
-    def add_entry(self, entry_type, begin, end):
+    def add_entry_tuple(self, entry_type, begin, end):
         # add an entry and return a unique id for it
         tid: int = uuid.uuid4().int
         eid = self.eid
@@ -346,12 +346,24 @@ class DataPack(BasePack[Entry, Link, Group]):
         # update index
         self._index.update_anno_index([entry_tuple], [tid])
         self._index.deactivate_coverage_index()
-        self._pending_entries.pop(tid)
+        # self._pending_entries.pop(tid)
         return eid
 
-    def add_entry_attribute(self, eid, attr_name, attr_value):
+    def set_entry_attribute(self, eid, attr_name, attr_value):
+        # check if it exists
         entry_tuple = self.entry_dict[eid]
         entry_tuple.append((attr_name, attr_value))
+
+    def get_attributes(self, eid, attr_name) -> List:
+        entry_attrs = self._get_attributes(eid)
+        for attr, val in entry_attrs:
+            if attr == attr_name:
+                return val
+        return None
+
+    def _get_attributes(self, eid) -> List:
+        entry_tuple = self.entry_dict[eid]
+        return entry_tuple[4:]
 
     def delete_entry(self, eid):
         target = self.annotations

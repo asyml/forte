@@ -77,7 +77,8 @@ class OntonoteGetterPipelineTest(unittest.TestCase):
             # get sentence from pack
             sentences = list(pack.get_raw(Sentence))
             num_sent = len(sentences)
-            self.assertNotEqual(num_sent, 0)
+            tokens = list(pack.get_raw(Token))
+            self.assertNotEqual(tokens, 0)
             # delete first sentence
             print("get&delete sentence", time.time()-t1)
 
@@ -126,6 +127,6 @@ class OntonoteGetterPipelineTest(unittest.TestCase):
 if __name__ == "__main__":
     test = OntonoteGetterPipelineTest()
     test.setUp()
-    # test.test_get_raw()
-    test.test_get_attributes()
+    test.test_get_raw()
+    # test.test_get_attributes()
     # unittest.main()
