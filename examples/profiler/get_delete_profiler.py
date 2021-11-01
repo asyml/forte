@@ -126,6 +126,6 @@ class OntonoteGetterPipelineTest(unittest.TestCase):
 if __name__ == "__main__":
     test = OntonoteGetterPipelineTest()
     test.setUp()
-    test.test_get_raw()
-    # test.test_get_attributes()
+    # test.test_get_raw()
+    test.test_get_attributes()
     # unittest.main()

@@ -29,6 +29,7 @@ from typing import (
     Tuple,
 )
 
+import uuid
 import numpy as np
 from sortedcontainers import SortedList
 
@@ -159,6 +160,8 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         # anntations: list of (class_name, begin, end, args*[tuple])
         self.annotations: SortedList[tuple] = SortedList(key = lambda x: (x[1], x[2]))
+        self.entry_dict: dict = dict()
+        self.eid = 0
 
         # list of (begin, end, class)
         self.links: SortedList[Link] = SortedList()
@@ -328,6 +331,60 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         """
         return len(self.generics)
+
+    """
+    New methods for tuple-based opertaions
+    """
+    def add_entry(self, entry_type, begin, end):
+        # add an entry and return a unique id for it
+        tid: int = uuid.uuid4().int
+        eid = self.eid
+        self.eid += 1
+        entry_tuple = [entry_type, begin, end, tid]
+        self.annotations.add(entry_tuple)
+        self.entry_dict[eid] = entry_tuple
+        # update index
+        self._index.update_anno_index([entry_tuple], [tid])
+        self._index.deactivate_coverage_index()
+        self._pending_entries.pop(tid)
+        return eid
+
+    def add_entry_attribute(self, eid, attr_name, attr_value):
+        entry_tuple = self.entry_dict[eid]
+        entry_tuple.append((attr_name, attr_value))
+
+    def delete_entry(self, eid):
+        target = self.annotations
+        entry_tuple = self.entry_dict[eid]
+        tid = entry_tuple[4]
+
+        begin: int = target.bisect_left(entry_tuple)
+
+        index_to_remove = -1
+        for i, e in enumerate(target[begin:]):
+            if e[3] == tid:
+                index_to_remove = begin + i
+                break
+
+        if index_to_remove < 0:
+            logger.warning(
+                "The entry with id %d that you are trying to removed "
+                "does not exists in the data pack's index. Probably it is "
+                "created but not added in the first place.",
+                tid,
+            )
+        else:
+            target.pop(index_to_remove)
+        # update basic index
+        # self._index.remove_entry(entry)
+
+        self._index.turn_link_index_switch(on=False)
+        self._index.turn_group_index_switch(on=False)
+        self._index.deactivate_coverage_index()
+
+    """
+    End of new methods for tuple-based opertaions
+    """
 
     def get_span_text(self, begin: int, end: int) -> str:
         r"""Get the text in the data pack contained in the span.
@@ -590,7 +647,6 @@ class DataPack(BasePack[Entry, Link, Group]):
         klass.__dict__.update(attributes_dict)
         return klass
 
-
     def _add_entry(self, entry: EntryType, allow_duplicate: bool = True) -> EntryType:
         r"""Force add an :class:`~forte.data.ontology.core.Entry` object to the
         :class:`DataPack` object. Allow duplicate entries in a pack.
@@ -603,7 +659,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             The input entry itself
         """
         if isinstance(entry, Annotation):
-            return self.__add_entry_as_array(entry, True)
+            return self.__add_entry_for_annot(entry, True)
         else:
             if isinstance(entry, Link):
                 target = self.links
@@ -635,7 +691,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
             return entry
 
-    def __add_entry_as_array(
+    def __add_entry_for_annot(
         self, entry: EntryType, allow_duplicate: bool = True
     ) -> EntryType:
         r"""Internal method to add an :class:`~forte.data.ontology.core.Entry`
