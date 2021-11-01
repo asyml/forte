@@ -16,10 +16,13 @@ import os
 import unittest
 import tempfile
 
-from typing import List
+from typing import List, Tuple
 
 from forte.data.data_pack import DataPack
-from forte.data.readers.ontonotes_reader import OntonotesReader
+from forte.data.readers import (
+    OntonotesReader,
+    DirPackReader,
+)
 from forte.pipeline import Pipeline
 from forte.processors.writers import (
     PackNameJsonPackWriter,
@@ -27,6 +30,7 @@ from forte.processors.writers import (
 )
 from forte.processors.misc import PeriodSentenceSplitter
 from forte.processors.nlp import SubwordTokenizer
+from ft.onto.base_ontology import Sentence, Document
 
 
 class OntonotesWriterPipelineTest(unittest.TestCase):
@@ -63,6 +67,23 @@ class OntonotesWriterPipelineTest(unittest.TestCase):
 
             pipe_serialize.run(self.dataset_path)
 
+            read_pipeline = Pipeline[DataPack]()
+            read_pipeline.set_reader(DirPackReader())
+            read_pipeline.set_profiling(True)
+            read_pipeline.initialize()
+            sent_texts: List[Tuple[int, str]] = []
+            for pack in read_pipeline.process_dataset(output_dir):
+                for doc in pack.get(Document):
+                    for sent in pack.get(Sentence, doc):
+                        sent_texts.append(sent.text)
+            read_pipeline.finish()
+            self.assertTrue(
+                "Powerful Tools for Biotechnology - Biochips" in sent_texts
+            )
+
 
 if __name__ == "__main__":
-    unittest.main("writer_profiler")
+    # unittest.main("writer_profiler")
+    test = OntonotesWriterPipelineTest()
+    test.setUp()
+    test.test_writer()

@@ -15,13 +15,13 @@
 import os
 import unittest
 from typing import List, Tuple
-from time import time
+import time
 
 from forte.data.data_pack import DataPack
 from forte.data.readers.ontonotes_reader import OntonotesReader
 from forte.processors.base.pack_processor import PackProcessor
 from forte.pipeline import Pipeline
-from ft.onto.base_ontology import Sentence, Token, EntityMention, Document
+from ft.onto.base_ontology import Sentence, Document
 
 
 class DummyPackProcessor(PackProcessor):
@@ -62,7 +62,9 @@ class OntonoteGetterPipelineTest(unittest.TestCase):
             num_sent = len(sentences)
             first_sent = sentences[0]
             # delete first sentence
+            t3 = time.time()
             pack.delete_entry(first_sent)
+            print("Delete pack: ", time.time() - t3)
             self.assertEqual(len(list(pack.get_data(Sentence))), num_sent - 1)
             print("get&delete sentence", time.time()-t1)
 
