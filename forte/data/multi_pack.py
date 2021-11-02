@@ -277,9 +277,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
         # vin = int(0)
         # vin = None
-        self._pack_ref.__setitem__(
-            index_of_pack, None  # type: ignore
-        )  # remove(pack.pack_id) in case don't care index change
+        self._pack_ref.__setitem__(index_of_pack, None)  # type: ignore
+        # remove(pack.pack_id) in case don't care index change
 
         # Remove the reverse mapping from pack id to the pack index.
         self._inverse_pack_ref.pop(pack.pack_id)
@@ -296,9 +295,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         self._name_index.pop(tmp_pack_name)
 
         # Remove Reference to the real packs.
-        self._packs.__setitem__(
-            index_of_pack, None  # type: ignore
-        )  # remove(pack) if don't care index change
+        self._packs.__setitem__(index_of_pack, None)  # type: ignore
+        # remove(pack) if don't care index change
 
         return True
 
