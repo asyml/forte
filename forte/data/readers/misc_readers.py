@@ -98,12 +98,12 @@ class BaseRawPackReader(BaseReader, ABC):
 
 
 class RawPackReader(BaseRawPackReader):
-    @property
-    def pack_type(self):
+    @staticmethod
+    def pack_type():
         return DataPack
 
 
 class RawMultiPackReader(BaseRawPackReader):
-    @property
-    def pack_type(self):
+    @staticmethod
+    def pack_type():
         return MultiPack
