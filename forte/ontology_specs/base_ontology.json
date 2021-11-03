@@ -399,6 +399,22 @@
           "item_type": "int"
         }
       ]
+    },
+    {
+      "entry_name": "ft.onto.base_ontology.MRCQuestion",
+      "parent_entry": "forte.data.ontology.top.Annotation",
+      "description": "An `Annotation` type which represents an MRC question.",
+      "attributes": [
+        {
+          "name": "qid",
+          "type": "int"
+        },
+        {
+          "name": "answers",
+          "type": "List",
+          "item_type": "ft.onto.base_ontology.Phrase"
+        }
+      ]
     }
   ]
 }
