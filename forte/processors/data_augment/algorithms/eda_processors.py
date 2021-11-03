@@ -276,27 +276,12 @@ class RandomSwapDataAugmentProcessor(ReplacementDataAugmentProcessor):
         return {
             "augment_entry": "ft.onto.base_ontology.Token",
             "other_entry_policy": {
-<<<<<<< HEAD
-                # to use Texar hyperparams 'kwargs' must
-                # accompany with 'type'
-                "type": "",
-                "kwargs": {
-                    "ft.onto.base_ontology.Document": "auto_align",
-                    "ft.onto.base_ontology.Sentence": "auto_align",
-                },
-            },
-            "alpha": 0.1,
-            "augment_pack_names": {
-                "type": "",
-                "kwargs": {"input_src": "augmented_input_src"},
-=======
                     "ft.onto.base_ontology.Document": "auto_align",
                     "ft.onto.base_ontology.Sentence": "auto_align"
             },
             "alpha": 0.1,
             "augment_pack_names": {
               "input_src": "augmented_input_src"
->>>>>>> 773b854 (Type Key Removal)
             },
         }
 
@@ -318,11 +303,7 @@ class RandomInsertionDataAugmentProcessor(ReplacementDataAugmentProcessor):
         replacement_op = create_class_with_kwargs(
             self.configs["data_aug_op"],
             class_args={
-<<<<<<< HEAD
-                "configs": self.configs["data_aug_op_config"]["kwargs"]
-=======
                 "configs": self.configs["data_aug_op_config"]
->>>>>>> 773b854 (Type Key Removal)
             },
         )
         augment_entry = get_class(self.configs["augment_entry"])
@@ -365,44 +346,22 @@ class RandomInsertionDataAugmentProcessor(ReplacementDataAugmentProcessor):
             {
                 "augment_entry": "ft.onto.base_ontology.Token",
                 "other_entry_policy": {
-<<<<<<< HEAD
-                    "type": "",
-                    "kwargs": {
-                        "ft.onto.base_ontology.Document": "auto_align",
-                        "ft.onto.base_ontology.Sentence": "auto_align",
-                    },
-=======
                         "ft.onto.base_ontology.Document": "auto_align",
                         "ft.onto.base_ontology.Sentence": "auto_align"
->>>>>>> 773b854 (Type Key Removal)
                 },
                 "data_aug_op": "forte.processors.data_augment.algorithms."
                 "dictionary_replacement_op.DictionaryReplacementOp",
                 "data_aug_op_config": {
-<<<<<<< HEAD
-                    "type": "",
-                    "kwargs": {
-=======
->>>>>>> 773b854 (Type Key Removal)
                         "dictionary_class": (
                             "forte.processors.data_augment."
                             "algorithms.dictionary.WordnetDictionary"
                         ),
                         "prob": 1.0,
                         "lang": "eng",
-<<<<<<< HEAD
-                    },
-                },
-                "alpha": 0.1,
-                "augment_pack_names": {
-                    "type": "",
-                    "kwargs": {"input_src": "augmented_input_src"},
-=======
                 },
                 "alpha": 0.1,
                 "augment_pack_names": {
                     "input_src": "augmented_input_src"
->>>>>>> 773b854 (Type Key Removal)
                 },
                 "stopwords": english_stopwords,
             }
@@ -439,19 +398,6 @@ class RandomDeletionDataAugmentProcessor(ReplacementDataAugmentProcessor):
             {
                 "augment_entry": "ft.onto.base_ontology.Token",
                 "other_entry_policy": {
-<<<<<<< HEAD
-                    "type": "",
-                    "kwargs": {
-                        "ft.onto.base_ontology.Document": "auto_align",
-                        "ft.onto.base_ontology.Sentence": "auto_align",
-                    },
-                },
-                "data_aug_op_config": {"type": "", "kwargs": {}},
-                "alpha": 0.1,
-                "augment_pack_names": {
-                    "type": "",
-                    "kwargs": {"input_src": "augmented_input_src"},
-=======
                         "ft.onto.base_ontology.Document": "auto_align",
                         "ft.onto.base_ontology.Sentence": "auto_align"
                 },
@@ -459,7 +405,6 @@ class RandomDeletionDataAugmentProcessor(ReplacementDataAugmentProcessor):
                 "alpha": 0.1,
                 "augment_pack_names": {
                     "input_src": "augmented_input_src"
->>>>>>> 773b854 (Type Key Removal)
                 },
             }
         )

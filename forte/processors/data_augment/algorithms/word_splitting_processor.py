@@ -149,7 +149,6 @@ class RandomWordSplitDataAugmentProcessor(ReplacementDataAugmentProcessor):
             {
                 "augment_entry": "ft.onto.base_ontology.Token",
                 "other_entry_policy": {
-<<<<<<< HEAD
                     "type": "",
                     "kwargs": {
                         "ft.onto.base_ontology.Document": "auto_align",
@@ -160,20 +159,6 @@ class RandomWordSplitDataAugmentProcessor(ReplacementDataAugmentProcessor):
                 "augment_pack_names": {
                     "type": "",
                     "kwargs": {"input_src": "augmented_input_src"},
-=======
-                    # "type": "",
-                    # "kwargs": {
-                        "ft.onto.base_ontology.Document": "auto_align",
-                        "ft.onto.base_ontology.Sentence": "auto_align"
-                    # },
-                },
-                "alpha": 0.1,
-                "augment_pack_names": {
-                    # "type": "",
-                    # "kwargs": {
-                        "input_src": "augmented_input_src"
-                    # },     
->>>>>>> 773b854 (Type Key Removal)
                 },
             }
         )
