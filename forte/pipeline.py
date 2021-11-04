@@ -507,13 +507,16 @@ class Pipeline(Generic[PackType]):
                 # Collect records of each pipeline component for validation
                 records = {}
                 for component in [self._reader] + self.components:
-                    component.record(records)
+                    if hasattr(component, "record"):
+                        component.record(records)
             return {"status": "OK", "records": records}
 
         @app.get("/expectation")
         def get_expectation():
             expectation: Dict[str, Set[str]] = {}
-            if len(self.components) > 0:
+            if len(self.components) > 0 and hasattr(
+                self.components[0], "expected_types_and_attributes"
+            ):
                 expectation = self.components[0].expected_types_and_attributes()
             return {"status": "OK", "expectation": expectation}
 
@@ -997,6 +1000,7 @@ class Pipeline(Generic[PackType]):
                 # added into the index.
                 pack.add_all_remaining_entries()
             except ValueError as e:
+                logger.error(e, exc_info=True)
                 raise ProcessExecutionException(
                     f"Exception occurred when running " f"{component.name}"
                 ) from e
