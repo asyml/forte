@@ -149,16 +149,12 @@ class RandomWordSplitDataAugmentProcessor(ReplacementDataAugmentProcessor):
             {
                 "augment_entry": "ft.onto.base_ontology.Token",
                 "other_entry_policy": {
-                    "type": "",
-                    "kwargs": {
-                        "ft.onto.base_ontology.Document": "auto_align",
-                        "ft.onto.base_ontology.Sentence": "auto_align",
-                    },
+                    "ft.onto.base_ontology.Document": "auto_align",
+                    "ft.onto.base_ontology.Sentence": "auto_align",
                 },
                 "alpha": 0.1,
                 "augment_pack_names": {
-                    "type": "",
-                    "kwargs": {"input_src": "augmented_input_src"},
+                    "input_src": "augmented_input_src",
                 },
             }
         )
