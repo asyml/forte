@@ -33,6 +33,7 @@ from typing import (
 )
 
 import jsonpickle
+import logging
 
 from forte.common import ProcessExecutionException, EntryNotFoundError
 from forte.data.container import EntryContainer
