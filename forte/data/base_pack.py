@@ -32,9 +32,9 @@ from typing import (
     Iterable,
 )
 
-import jsonpickle
-
 import logging
+
+import jsonpickle
 
 from forte.common import ProcessExecutionException, EntryNotFoundError
 from forte.data.container import EntryContainer
@@ -203,7 +203,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                         "deserialization and broke the process."
                         "It might be caused by adding"
                         "new classes or new attributes to the ontology."
-                        "Details are: %s" % e
+                        "Details are: %s", e
                     )
                     # raise AttributeError(
                     #     "There was an unknown type or attribute during"
@@ -222,7 +222,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                         "deserialization and broke the process."
                         "It might be caused by adding"
                         "new classes or new attributes to the ontology."
-                        "Details are: %s" % e
+                        "Details are: %s", e
                     )
                     # raise AttributeError(
                     #     "There was an unknown type or attribute during"
