@@ -32,7 +32,6 @@ from typing import (
     Iterable,
 )
 
-import logging
 
 import jsonpickle
 
@@ -198,40 +197,24 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                 try:
                     pack = cls.from_string(f.read())
                 except AttributeError as e:
-                    logging.exception(
+                    raise AttributeError(
                         "There was an unknown type or attribute during"
                         "deserialization and broke the process."
                         "It might be caused by adding"
                         "new classes or new attributes to the ontology."
-                        "Details are: %s",
-                        e,
-                    )
-                    # raise AttributeError(
-                    #     "There was an unknown type or attribute during"
-                    #     "deserialization and broke the process."
-                    #     "It might be caused by adding"
-                    #     "new classes or new attributes to the ontology."
-                    # ) from e
+                    ) from e
 
         else:
             with _open(data_source, mode="rb") as f:  # type: ignore
                 try:
                     pack = pickle.load(f)
                 except AttributeError as e:
-                    logging.exception(
+                    raise AttributeError(
                         "There was an unknown type or attribute during"
                         "deserialization and broke the process."
                         "It might be caused by adding"
                         "new classes or new attributes to the ontology."
-                        "Details are: %s",
-                        e,
-                    )
-                    # raise AttributeError(
-                    #     "There was an unknown type or attribute during"
-                    #     "deserialization and broke the process."
-                    #     "It might be caused by adding"
-                    #     "new classes or new attributes to the ontology."
-                    # ) from e
+                    ) from e
 
         return pack  # type: ignore
 
