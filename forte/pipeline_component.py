@@ -46,6 +46,7 @@ class PipelineComponent(Generic[PackType], Configurable):
         self._check_type_consistency: bool = False
         # The flag indicating whether the component is initialized.
         self.__is_initialized: bool = False
+        # ~ self.ref_name = "<unknown>"  # don't define self.ref_name, let subclasses try/except up-call
 
     def enforce_consistency(self, enforce: bool = True):
         r"""This function determines whether the pipeline will enforce
@@ -117,6 +118,14 @@ class PipelineComponent(Generic[PackType], Configurable):
     @property
     def name(self):
         return get_full_module_name(self)
+
+    def setRefName(self, ref_name):
+        """
+        Allow assigning a reference name for this component, besides of using only the class path, which is not unique.
+
+        """
+        self.ref_name = ref_name
+        return self
 
     def flush(self):
         r"""Indicate that there will be no more packs to be passed in, handle

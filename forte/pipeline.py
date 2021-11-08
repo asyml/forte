@@ -183,6 +183,8 @@ class Pipeline(Generic[PackType]):
 
         self.evaluator_indices: List[int] = []
 
+        self.evaluator_names: List[str] = []
+
         # needed for evaluator
         self._predict_to_gold: Dict[int, PackType] = {}
 
@@ -798,6 +800,10 @@ class Pipeline(Generic[PackType]):
             # This will ask the job to keep a copy of the gold standard.
             self.evaluator_indices.append(len(self.components))
 
+        if isinstance(component, Evaluator):
+            # This will ask the job to keep a reference name copy of the gold standard.
+            self.evaluator_names.append(component.ref_name)
+
         if component not in self.__component_set:
             # The case where the component is not found.
             self._components.append(component)
@@ -1333,6 +1339,22 @@ class Pipeline(Generic[PackType]):
             p = self.components[i]
             assert isinstance(p, Evaluator)
             yield p.name, p.get_result()
+
+    def get_eval_result(self, ref_name) -> Iterator[Tuple[str, Any]]:
+        """
+        Call the evaluator in the pipeline by the reference name to collect it's results.
+
+        Returns:
+            Iterator of the evaluator results. The element is a tuple, which
+            is the output of the evaluator (see
+            :func:`~forte.evaluation.base.evaluator.get_result`).
+        """
+        if ref_name in self.evaluator_names:
+            p = self.components[self.evaluator_names.index(ref_name)]
+            assert isinstance(p, Evaluator)
+            return p.get_result()
+        else:
+            raise ValueError(f"{ref_name} is not one of the component names.")
 
 
 def serve(

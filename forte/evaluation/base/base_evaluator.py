@@ -37,6 +37,7 @@ class Evaluator(PipelineComponent[PackType]):
         super().__init__()
         self._pred_pack_expectation: Dict[str, Set[str]] = None
         self._ref_pack_expectation: Dict[str, Set[str]] = None
+        self.ref_name = "unknown"
 
     @abstractmethod
     def consume_next(self, pred_pack: PackType, ref_pack: PackType):

@@ -1210,6 +1210,33 @@ class DummyEvaluatorThree(Evaluator):
     def get_result(self):
         pass
 
+class DummyEvaluatorFour(Evaluator):
+    """This evaluator does nothing, just for test purpose."""
+
+    def __init__(self):
+        super().__init__()
+        self.ref_name = "unknown"
+
+    def pred_pack_record(self, record_meta: Dict[str, Set[str]]):
+        record_meta["Token"] = {"1", "2"}
+
+    def consume_next(self, pred_pack: PackType, ref_pack: PackType):
+        pred_pack_expectation: Dict[str, Set[str]] = {
+            "Sentence": {"1", "2", "3"}
+        }
+        ref_pack_expectation: Dict[str, Set[str]] = {
+            "Sentence": {"1", "2", "3"}
+        }
+
+        self.expected_types_and_attributes(
+            pred_pack_expectation, ref_pack_expectation
+        )
+        self.check_record(pred_pack, ref_pack)
+        self.writes_record(pred_pack, ref_pack)
+
+    def get_result(self):
+        return self.ref_name
+
 
 class RecordCheckPipelineTest(unittest.TestCase):
     def test_pipeline_reader_record_writing(self):
@@ -1417,6 +1444,21 @@ class RecordCheckPipelineTest(unittest.TestCase):
             },
         )
 
+    def test_pipeline_processor_get_eval_result_by_ref_name(self):
+        """Tests to get the processor result by it's reference name"""
+
+        nlp = Pipeline[DataPack](enforce_consistency=True)
+        reader = DummySentenceReaderOne()
+        nlp.set_reader(reader)
+        dummy = DummyEvaluatorFour()
+        dummy.setRefName('ref_dummy')
+        nlp.add(dummy)
+        nlp.initialize()
+        data_path = data_samples_root + "/random_texts/0.txt"
+        pack = nlp.process(data_path)
+        # print('dummy.ref_name is', dummy.ref_name)
+        # print('nlp.get_eval_result is:', nlp.get_eval_result("ref_dummy"))
+        self.assertEqual(nlp.get_eval_result("ref_dummy"), "ref_dummy")
 
 if __name__ == "__main__":
     unittest.main()
