@@ -1210,6 +1210,7 @@ class DummyEvaluatorThree(Evaluator):
     def get_result(self):
         pass
 
+
 class DummyEvaluatorFour(Evaluator):
     """This evaluator does nothing, just for test purpose."""
 
@@ -1451,7 +1452,7 @@ class RecordCheckPipelineTest(unittest.TestCase):
         reader = DummySentenceReaderOne()
         nlp.set_reader(reader)
         dummy = DummyEvaluatorFour()
-        dummy.setRefName('ref_dummy')
+        dummy.setRefName("ref_dummy")
         nlp.add(dummy)
         nlp.initialize()
         data_path = data_samples_root + "/random_texts/0.txt"
@@ -1459,6 +1460,7 @@ class RecordCheckPipelineTest(unittest.TestCase):
         # print('dummy.ref_name is', dummy.ref_name)
         # print('nlp.get_eval_result is:', nlp.get_eval_result("ref_dummy"))
         self.assertEqual(nlp.get_eval_result("ref_dummy"), "ref_dummy")
+
 
 if __name__ == "__main__":
     unittest.main()
