@@ -1214,10 +1214,6 @@ class DummyEvaluatorThree(Evaluator):
 class DummyEvaluatorFour(Evaluator):
     """This evaluator does nothing, just for test purpose."""
 
-    def __init__(self):
-        super().__init__()
-        self.ref_name = "unknown"
-
     def pred_pack_record(self, record_meta: Dict[str, Set[str]]):
         record_meta["Token"] = {"1", "2"}
 
@@ -1236,7 +1232,7 @@ class DummyEvaluatorFour(Evaluator):
         self.writes_record(pred_pack, ref_pack)
 
     def get_result(self):
-        return self.ref_name
+        return "Reference name of DummyEvaluatorFour is ref_dummy"
 
 
 class RecordCheckPipelineTest(unittest.TestCase):
@@ -1452,14 +1448,11 @@ class RecordCheckPipelineTest(unittest.TestCase):
         reader = DummySentenceReaderOne()
         nlp.set_reader(reader)
         dummy = DummyEvaluatorFour()
-        dummy.setRefName("ref_dummy")
-        nlp.add(dummy)
+        nlp.add(dummy, ref_name = "ref_dummy")
         nlp.initialize()
         data_path = data_samples_root + "/random_texts/0.txt"
         pack = nlp.process(data_path)
-        # print('dummy.ref_name is', dummy.ref_name)
-        # print('nlp.get_eval_result is:', nlp.get_eval_result("ref_dummy"))
-        self.assertEqual(nlp.get_eval_result("ref_dummy"), "ref_dummy")
+        self.assertEqual(nlp.get_component("ref_dummy").get_result(), "Reference name of DummyEvaluatorFour is ref_dummy")
 
 
 if __name__ == "__main__":

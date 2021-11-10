@@ -172,6 +172,7 @@ class Pipeline(Generic[PackType]):
         self._selectors: List[Selector] = []
         self._configs: List[Optional[Config]] = []
         self._selectors_configs: List[Optional[Config]] = []
+        self._ref_names: List[str] = []
 
         # Maintain a set of the pipeline components to fast check whether
         # the component is already there.
@@ -182,8 +183,6 @@ class Pipeline(Generic[PackType]):
         self._proc_mgr: ProcessManager = None  # type: ignore
 
         self.evaluator_indices: List[int] = []
-
-        self.evaluator_names: List[str] = []
 
         # needed for evaluator
         self._predict_to_gold: Dict[int, PackType] = {}
@@ -741,6 +740,16 @@ class Pipeline(Generic[PackType]):
         return self._components
 
     @property
+    def ref_names(self) -> List[str]:
+        """
+        Return all the reference names in this pipeline, except the reader.
+
+        Returns: A list containing the reference names.
+
+        """
+        return self._ref_names
+
+    @property
     def component_configs(self) -> List[Optional[Config]]:
         """
         Return the configs related to the components, except the reader.
@@ -756,6 +765,7 @@ class Pipeline(Generic[PackType]):
         config: Optional[Union[Config, Dict[str, Any]]] = None,
         selector: Optional[Selector] = None,
         selector_config: Optional[Union[Config, Dict[str, Any]]] = None,
+        ref_name: Optional[str] = None,
     ) -> "Pipeline":
         """
         Adds a pipeline component to the pipeline. The pipeline components
@@ -800,9 +810,10 @@ class Pipeline(Generic[PackType]):
             # This will ask the job to keep a copy of the gold standard.
             self.evaluator_indices.append(len(self.components))
 
-        if isinstance(component, Evaluator):
-            # This will ask the job to keep a reference name copy of the gold standard.
-            self.evaluator_names.append(component.ref_name)
+        if ref_name is None:
+            self._ref_names.append("unknown")
+        else:
+            self._ref_names.append(ref_name)
 
         if component not in self.__component_set:
             # The case where the component is not found.
@@ -1340,21 +1351,14 @@ class Pipeline(Generic[PackType]):
             assert isinstance(p, Evaluator)
             yield p.name, p.get_result()
 
-    def get_eval_result(self, ref_name) -> Iterator[Tuple[str, Any]]:
+    def get_component(self, ref_name) -> Iterator[Tuple[str, Any]]: # get_component 名字映射
         """
-        Call the evaluator in the pipeline by the reference name to collect it's results.
+        Call the evaluator in the pipeline by the reference name to get a component.
 
-        Returns:
-            Iterator of the evaluator results. The element is a tuple, which
-            is the output of the evaluator (see
-            :func:`~forte.evaluation.base.evaluator.get_result`).
         """
-        if ref_name in self.evaluator_names:
-            p = self.components[self.evaluator_names.index(ref_name)]
-            assert isinstance(p, Evaluator)
-            return p.get_result()
-        else:
-            raise ValueError(f"{ref_name} is not one of the component names.")
+        p = self.components[self.ref_names.index(ref_name)]
+        assert isinstance(p, Evaluator)
+        return p
 
 
 def serve(
