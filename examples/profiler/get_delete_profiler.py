@@ -55,7 +55,7 @@ class OntonoteGetterPipelineTest(unittest.TestCase):
         t2 = time.time()
         print("process_dataset", t2-t1)
         
-        for pack in iter:
+        for pack  w iter:
             print("Get pack", time.time()-t1)
             # get sentence from pack
             sentences = list(pack.get(Sentence))
