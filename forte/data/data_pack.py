@@ -56,6 +56,7 @@ logger = logging.getLogger(__name__)
 __all__ = [
     "Meta",
     "DataPack",
+    "DataIndex"
 ]
 
 
@@ -559,7 +560,6 @@ class DataPack(BasePack[Entry, Link, Group]):
         """
         if isinstance(entry, Annotation):
             target = self.annotations
-
             begin, end = entry.begin, entry.end
 
             if begin < 0:

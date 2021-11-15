@@ -21,7 +21,7 @@ from forte.data.data_pack import DataPack
 from forte.data.readers.ontonotes_reader import OntonotesReader
 from forte.processors.base.pack_processor import PackProcessor
 from forte.pipeline import Pipeline
-from ft.onto.base_ontology import Sentence, Document
+from ft.onto.base_ontology import Sentence, Document, Token
 
 
 class DummyPackProcessor(PackProcessor):
@@ -41,7 +41,6 @@ class OntonoteGetterPipelineTest(unittest.TestCase):
         self.dataset_path = os.path.join(
             root_path, "data_samples/profiler/combine_data"
         )
-
         # Define and config the Pipeline
         self.nlp = Pipeline[DataPack]()
         self.nlp.set_reader(OntonotesReader())
@@ -55,8 +54,8 @@ class OntonoteGetterPipelineTest(unittest.TestCase):
         t2 = time.time()
         print("process_dataset", t2-t1)
         
-        for pack  w iter:
-            print("Get pack", time.time()-t1)
+        for pack in iter:
+            print(pack)
             # get sentence from pack
             sentences = list(pack.get(Sentence))
             num_sent = len(sentences)

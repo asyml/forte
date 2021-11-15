@@ -26,6 +26,7 @@ from forte.common.exception import ProcessExecutionException
 from forte.common.resources import Resources
 from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
+from forte.data.data_tuple import DataTuple
 from forte.data.multi_pack import MultiPack
 from forte.data.types import ReplaceOperationsType
 from forte.pipeline_component import PipelineComponent
@@ -138,7 +139,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
             )
 
         for p in self._parse_pack(collection):
-            p.add_all_remaining_entries(self.name)
+            # p.add_all_remaining_entries(self.name)
             yield p
 
     @abstractmethod
@@ -210,7 +211,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
                     if self._cache_directory is not None:
                         self.cache_data(collection, pack, not_first)
 
-                    if not isinstance(pack, self.pack_type):
+                    if not isinstance(pack, self.pack_type.__args__):
                         raise ValueError(
                             f"No Pack object read from the given "
                             f"collection {collection}, returned {type(pack)}."
@@ -382,7 +383,7 @@ class PackReader(BaseReader[DataPack], ABC):
 
     @property
     def pack_type(self):
-        return DataPack
+        return Union[DataPack, DataTuple]
 
 
 class MultiPackReader(BaseReader[MultiPack], ABC):

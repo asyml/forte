@@ -366,18 +366,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             except KeyError:
                 self._creation_records[c] = {entry.tid}
 
-    def record_entry_tuple(self, entry: tuple, component_name: Optional[str] = None):
-        c = component_name
 
-        if c is None:
-            # Use the auto-inferred control component.
-            c = self.__control_component
-
-        if c is not None:
-            try:
-                self._creation_records[c].add(entry[3])
-            except KeyError:
-                self._creation_records[c] = {entry[3]}
 
 
     def record_field(self, entry_id: int, field_name: str):

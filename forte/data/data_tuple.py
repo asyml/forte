@@ -25,35 +25,121 @@ from forte.data.ontology.top import (
     SinglePackEntries,
     Generics,
 )
+from forte.data import data_utils_io
+from forte.data.types import DataRequest
+from forte.utils import create_class_with_kwargs
+from forte.data.data_pack import as_entry_type, get_class
+from forte.data.base_data_structure import BaseDataStructure
+from forte.data.types import ReplaceOperationsType, DataRequest
+
 
 logger = logging.getLogger(__name__)
 
-class DataTuple():
+def typeof(tuple):
+    return tuple[0]
+    
+def begin(tuple):
+    return tuple[1]
+
+def end(tuple):
+    return tuple[2]
+
+def tid(tuple):
+    return tuple[3]
+
+class DataTuple(BaseDataStructure):
     def __init__(self, pack_name: Optional[str] = None):
-        super().__init__(pack_name)
+        super().__init__()
         self._text = ""
 
         # anntations: list of (class_name, begin, end, args*[tuple])
         self.elements: SortedList[tuple] = SortedList(key = lambda x: (x[1], x[2]))
         self.entry_dict: dict = dict()
-        self.eid = 0
+
+    def __iter__(self):
+        yield from self.elements
+    
+    def _validate(self, entry) -> bool:
+        return isinstance(entry, tuple)
+
+    def get_span_text(self, begin: int, end: int) -> str:
+        r"""Get the text in the data pack contained in the span.
+
+        Args:
+            begin (int): begin index to query.
+            end (int): end index to query.
+
+        Returns:
+            The text within this span.
+        """
+        return self._text[begin:end]
+
+    def set_text(
+        self,
+        text: str,
+        replace_func: Optional[Callable[[str], ReplaceOperationsType]] = None,
+    ):
+
+        if len(text) < len(self._text):
+            raise ProcessExecutionException(
+                "The new text is overwriting the original one with shorter "
+                "length, which might cause unexpected behavior."
+            )
+
+        if len(self._text):
+            logging.warning(
+                "Need to be cautious when changing the text of a "
+                "data pack, existing entries may get affected. "
+            )
+
+        span_ops = [] if replace_func is None else replace_func(text)
+
+        # The spans should be mutually exclusive
+        (
+            self._text,
+            self.__replace_back_operations,
+            self.__processed_original_spans,
+            self.__orig_text_len,
+        ) = data_utils_io.modify_text_and_track_ops(text, span_ops)
+
+    def get_original_text(self):
+        r"""Get original unmodified text from the :class:`DataPack` object.
+
+        Returns:
+            Original text after applying the `replace_back_operations` of
+            :class:`DataPack` object to the modified text
+        """
+        original_text, _, _, _ = data_utils_io.modify_text_and_track_ops(
+            self._text, self.__replace_back_operations
+        )
+        return original_text
 
     """
     New methods for tuple-based opertaions
     """
+    def get_entry(self, tid: int):
+        entry = self.entry_dict[tid]
+        if entry is None:
+            raise KeyError(
+                f"There is no entry with tid '{tid}'' in this datapack"
+            )
+        return entry
+
     def get_raw(
         self,
         entry_type: Union[str, Type[EntryType]],
-        range_annotation: Optional[Annotation] = None,
-        components: Optional[Union[str, Iterable[str]]] = None,
+        range_annotation: Optional[int] = None,
         include_sub_type=True,
     ):
         entry_type_: Type[EntryType] = as_entry_type(entry_type)
+        
+        range_annotation_ = None
+        if range_annotation is not None:
+            range_annotation_ = self.entry_dict[range_annotation]
 
-        if len(self.annotations) == 0 and range_annotation is not None:
-            if self._require_annotations(entry_type_):
-                yield from []
-                return
+        if len(self.elements) == 0 and range_annotation_ is not None:
+            yield from []
+            return
 
         if not issubclass(entry_type_, Annotation):
             # temporarily only support get raw for annotation type
@@ -62,24 +148,21 @@ class DataTuple():
                 )
         
         all_types: Set[Type]
-        if include_sub_type:
+        if include_sub_type: # not supported currently
             all_types = self._expand_to_sub_types(entry_type_)
         else:
             all_types = {entry_type_}
 
         entry_iter: Iterator[Entry]
-        if range_annotation is not None:
-            entry_iter = self.iter_in_range(entry_type_, range_annotation)
+        if range_annotation_ is not None:
+            entry_iter = self.iter_in_range(entry_type_, range_annotation_)
         else:
-            entry_iter = self.annotations
+            entry_iter = self.elements
 
         for entry in entry_iter:
             # Filter by type and components.
             if entry[0] not in all_types:
                 continue
-            if components is not None:
-                if not self.raw_is_created_by(entry, components):
-                    continue
             yield entry  # type: ignore
     
     def get_data_raw(
@@ -167,12 +250,6 @@ class DataTuple():
                     raise ValueError(
                         r"Entry type other than Annotation is not support by raw currently"
                     )
-                # elif issubclass(key, Link):
-                #     link_types[key] = value
-                # elif issubclass(key, Group):
-                #     group_types[key] = value
-                # elif issubclass(key, Generics):
-                #     generics_types[key] = value
 
         context_args = annotation_types.get(context_type_)
 
@@ -180,20 +257,11 @@ class DataTuple():
             context_type_, context_args
         )
 
-        valid_context_ids: Set[int] = self._index.query_by_type_subtype(
-            context_type_
-        )
-        if context_components:
-            valid_component_id: Set[int] = set()
-            for component in context_components:
-                valid_component_id |= self.get_ids_by_creator(component)
-            valid_context_ids &= valid_component_id
-
         skipped = 0
         # must iterate through a copy here because self.annotations is changing
         # `context` is now a tuple!
-        for context in list(self.annotations):
-            if context[3] not in valid_context_ids or context[0] != context_type_ :
+        for context in list(self.elements):
+            if context[0] != context_type_:
                 continue
             if skipped < skip_k:
                 skipped += 1
@@ -207,7 +275,6 @@ class DataTuple():
                 data[field] = self.getattr_from_tuple(context, field)
 
             if annotation_types:
-                # TODO: support tuple here
                 for a_type, a_args in annotation_types.items():
                     if issubclass(a_type, context_type_):
                         continue
@@ -251,39 +318,30 @@ class DataTuple():
         # add an entry and return a unique id for it
 
         tid: int = uuid.uuid4().int
-        eid = self.eid
-        self.eid += 1
         entry_tuple = [entry_type, begin, end, tid]
 
-        self.record_entry_tuple(entry_tuple, component_name)
+        self.elements.add(entry_tuple)
+        self.entry_dict[tid] = entry_tuple
+        return tid
 
-        self.annotations.add(entry_tuple)
-        self.entry_dict[eid] = entry_tuple
-        # update index
-        self._index.update_anno_index([entry_tuple], [tid])
-        self._index.deactivate_coverage_index()
-        # self._pending_entries.pop(tid)
-        return eid
-
-    def set_attr(self, eid, attr_name, attr_value):
+    def set_attr(self, tid, attr_name, attr_value):
         # check if it exists
-        entry_tuple = self.entry_dict[eid]
+        entry_tuple = self.entry_dict[tid]
         entry_tuple.append((attr_name, attr_value))
 
-    def get_attr(self, eid, attr_name) -> List:
-        entry_attrs = self._get_attributes(eid)
-        for attr, val in entry_attrs:
+    def get_attr(self, tid, attr_name) -> List:
+        entry = self.entry_dict[tid]
+        return self.get_attr_from_tuple(entry, attr_name)
+
+    def get_attr_from_tuple(self, entry: tuple, attr_name: str):
+        for attr, val in entry[4:]:
             if attr == attr_name:
                 return val
         return None
 
-    def _get_attributes(self, eid) -> List:
-        entry_tuple = self.entry_dict[eid]
-        return entry_tuple[4:]
-
-    def delete_entry(self, eid):
-        target = self.annotations
-        entry_tuple = self.entry_dict[eid]
+    def delete_entry(self, tid):
+        target = self.elements
+        entry_tuple = self.entry_dict[tid]
         tid = entry_tuple[4]
 
         begin: int = target.bisect_left(entry_tuple)
@@ -303,28 +361,10 @@ class DataTuple():
             )
         else:
             target.pop(index_to_remove)
-        # update basic index
-        # self._index.remove_entry(entry)
-
-        self._index.turn_link_index_switch(on=False)
-        self._index.turn_group_index_switch(on=False)
-        self._index.deactivate_coverage_index()
 
     """
     helper functions
     """
-
-    def _require_annotations(self, entry_type_: Type[EntryType]) -> bool:
-        if issubclass(entry_type_, Annotation):
-            return True
-        if issubclass(entry_type_, Link):
-            return issubclass(
-                entry_type_.ParentType, Annotation
-            ) and issubclass(entry_type_.ChildType, Annotation)
-        if issubclass(entry_type_, Group):
-            return issubclass(entry_type_.MemberType, Annotation)
-        return False
-    
     def _get_attributes(self, entry: EntryType) -> List:
         attributes = []
         for attr, value in entry.__dict__.items():
@@ -334,7 +374,9 @@ class DataTuple():
         return attributes
 
     def _entry_to_tuple(self, entry: EntryType) -> Tuple:
-        """ turn an entry class into a tuple
+        """ 
+            turn an entry class into a tuple
+            entry is a class of EntryType
         """
         fields = [type(entry), entry.begin, entry.end, entry._tid]
         attrs = self._get_attributes(entry)
@@ -380,6 +422,90 @@ class DataTuple():
         klass.__dict__.update(attributes_dict)
         return klass
 
+    def iter_in_range(
+        self, entry_type: Type[EntryType], range_annotation: tuple
+    ) -> Iterator[EntryType]:
+        """
+        Iterate the entries of the provided type within or fulfill the
+        constraints of the `range_annotation`. The constraint is True if
+        an entry is `in_span` of the provided `range_annotation`.
+
+        Internally, if the coverage index between the entry type and the
+        type of the `range_annotation` is built, then this will create the
+        iterator from the index. Otherwise, the function will iterate them
+        from scratch (which is slower). If there are frequent usage of this
+        function, it is suggested to build the coverage index.
+
+        Args:
+            entry_type: The type of entry to iterate over.
+            range_annotation: The range annotation that serve as the constraint.
+
+        Returns:
+            An iterator of the entries with in the `range_annotation`.
+
+        """
+
+        if issubclass(entry_type, Annotation):
+            range_begin = begin(range_annotation) if range_annotation else 0
+            range_end = (
+                end(range_annotation)
+                if range_annotation
+                else end(self.elements[-1])
+            )
+
+            # if issubclass(entry_type, Annotation):
+            temp_begin = Annotation(self, range_begin, range_begin)
+            begin_index = self.elements.bisect(temp_begin)
+
+            temp_end = Annotation(self, range_end, range_end)
+            end_index = self.elements.bisect(temp_end)
+
+            # Make sure these temporary annotations are not part of the
+            # actual data.
+            temp_begin.regret_creation()
+            temp_end.regret_creation()
+            yield from self.elements[begin_index:end_index]
+        else:
+            raise ValueError (
+                f"only support annotation type"
+            )
+
+    def _parse_request_args(self, a_type, a_args):
+        # request which fields generated by which component
+        components = None
+        unit = None
+        fields = set()
+        if isinstance(a_args, dict):
+            components = a_args.get("component")
+            # pylint: disable=isinstance-second-argument-not-valid-type
+            # TODO: until fix: https://github.com/PyCQA/pylint/issues/3507
+            if components is not None and not isinstance(components, Iterable):
+                raise TypeError(
+                    "Invalid request format for 'components'. "
+                    "The value of 'components' should be of an iterable type."
+                )
+            unit = a_args.get("unit")
+            if unit is not None and not isinstance(unit, str):
+                raise TypeError(
+                    "Invalid request format for 'unit'. "
+                    "The value of 'unit' should be a string."
+                )
+            a_args = a_args.get("fields", set())
+
+        # pylint: disable=isinstance-second-argument-not-valid-type
+        # TODO: disable until fix: https://github.com/PyCQA/pylint/issues/3507
+        if isinstance(a_args, Iterable):
+            fields = set(a_args)
+        elif a_args is not None:
+            raise TypeError(
+                f"Invalid request format for '{a_type}'. "
+                f"The request should be of an iterable type or a dict."
+            )
+
+        fields.add("tid")
+        return components, unit, fields
+
+
     def __add_entry_for_annot(
         self, entry: EntryType, allow_duplicate: bool = True
     ) -> EntryType:
@@ -394,7 +520,7 @@ class DataTuple():
         Returns:
             The input entry itself
         """
-        target = self.annotations
+        target = self.elements
 
         begin, end = entry.begin, entry.end
 
@@ -424,9 +550,7 @@ class DataTuple():
         # add annotation to a list of tuples
         entry_tuple = self._entry_to_tuple(entry)
         target.add(entry_tuple)
-
-        self._index.update_anno_index([entry_tuple], [entry.tid])
-        self._index.deactivate_coverage_index()
-        self._pending_entries.pop(entry.tid)
             
         return entry
+
+    
