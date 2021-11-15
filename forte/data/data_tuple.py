@@ -117,6 +117,9 @@ class DataTuple(BaseDataStructure):
     """
     New methods for tuple-based opertaions
     """
+    def text(self, entry: tuple) -> str:
+        return self.get_span_text(begin(entry), end(entry))
+
     def get_entry(self, tid: int):
         entry = self.entry_dict[tid]
         if entry is None:
@@ -128,14 +131,17 @@ class DataTuple(BaseDataStructure):
     def get_raw(
         self,
         entry_type: Union[str, Type[EntryType]],
-        range_annotation: Optional[int] = None,
+        range_annotation: Union[int, tuple] = None,
         include_sub_type=True,
     ):
         entry_type_: Type[EntryType] = as_entry_type(entry_type)
         
-        range_annotation_ = None
-        if range_annotation is not None:
+        range_annotation_: Tuple
+
+        if isinstance(range_annotation, int):
             range_annotation_ = self.entry_dict[range_annotation]
+        else:
+            range_annotation_ = range_annotation
 
         if len(self.elements) == 0 and range_annotation_ is not None:
             yield from []
@@ -268,11 +274,11 @@ class DataTuple(BaseDataStructure):
                 continue
 
             data: Dict[str, Any] = {}
-            data["context"] = self.text[context[1] : context[2]]
+            data["context"] = self._text[context[1] : context[2]]
             data["offset"] = context[1]
 
             for field in context_fields:
-                data[field] = self.getattr_from_tuple(context, field)
+                data[field] = self.get_attr_from_tuple(context, field)
 
             if annotation_types:
                 for a_type, a_args in annotation_types.items():
@@ -454,16 +460,15 @@ class DataTuple(BaseDataStructure):
             )
 
             # if issubclass(entry_type, Annotation):
-            temp_begin = Annotation(self, range_begin, range_begin)
+            temp_begin = (entry_type, range_begin, range_begin, 0)
             begin_index = self.elements.bisect(temp_begin)
 
-            temp_end = Annotation(self, range_end, range_end)
+            temp_end = (entry_type, range_end, range_end, 0)
             end_index = self.elements.bisect(temp_end)
 
             # Make sure these temporary annotations are not part of the
             # actual data.
-            temp_begin.regret_creation()
-            temp_end.regret_creation()
+           
             yield from self.elements[begin_index:end_index]
         else:
             raise ValueError (

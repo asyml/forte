@@ -39,7 +39,7 @@ class OntonoteGetterPipelineTest(unittest.TestCase):
             )
         )
         self.dataset_path = os.path.join(
-            root_path, "examples/profiler/combine_data"
+            root_path, "data_samples/profiler/combine_data"
         )
         # Define and config the Pipeline
         self.nlp = Pipeline[DataPack]()
