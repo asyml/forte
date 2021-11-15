@@ -577,20 +577,20 @@ class DataPack(BasePack[Entry, Link, Group]):
         entry_tuple.append((attr_name, attr_value))
 
     def get_attributes(self, eid, attr_name) -> List:
-        entry_attrs = self._get_attributes(eid)
+        entry_attrs = self._get_attributes_new(eid)
         for attr, val in entry_attrs:
             if attr == attr_name:
                 return val
         return None
 
-    def _get_attributes(self, eid) -> List:
+    def _get_attributes_new(self, eid) -> List:
         entry_tuple = self.entry_dict[eid]
         return entry_tuple[4:]
 
-    def delete_entry(self, eid):
+    def delete_entry_new(self, eid):
         target = self.annotations
         entry_tuple = self.entry_dict[eid]
-        tid = entry_tuple[4]
+        tid = entry_tuple[3]
 
         begin: int = target.bisect_left(entry_tuple)
 
@@ -876,7 +876,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                 attributes_dict[attr_tuple[0]] = dic
             else:
                 attributes_dict[attr_tuple[0]] = attr_tuple[1]
-                    
+
         klass = create_class_with_kwargs(type_name, class_args_dict)
         klass.__dict__.update(attributes_dict)
         return klass
