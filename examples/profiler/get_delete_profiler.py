@@ -39,21 +39,24 @@ class OntonoteGetterPipelineTest(unittest.TestCase):
             )
         )
         self.dataset_path = os.path.join(
-            root_path, "data_samples/profiler/combine_data"
+            root_path, "examples/profiler/combine_data"
         )
         # Define and config the Pipeline
         self.nlp = Pipeline[DataPack]()
         self.nlp.set_reader(OntonotesReader())
         self.nlp.add(DummyPackProcessor())
+        self.nlp.set_profiling(True)
         self.nlp.initialize()
+        self.data_pack: DataPack = self.nlp.process_one(self.dataset_path)
 
-    def test_get_delete(self):
+    def test_delete(self):
         t1 = time.time()
         # get processed pack from dataset
         iter = self.nlp.process_dataset(self.dataset_path)
         t2 = time.time()
-        print("process_dataset", t2-t1)
-        
+        print("process_dataset", t2 - t1)
+        count_del = 0
+        c = 0
         for pack in iter:
             print(pack)
             # get sentence from pack
@@ -62,43 +65,82 @@ class OntonoteGetterPipelineTest(unittest.TestCase):
             first_sent = sentences[0]
             # delete first sentence
             t3 = time.time()
-            pack.delete_entry(first_sent)
-            print("Delete pack: ", time.time() - t3)
-            self.assertEqual(len(list(pack.get_data(Sentence))), num_sent - 1)
-            print("get&delete sentence", time.time()-t1)
+            pack.delete_entry_new(0)
+            count_del += time.time() - t3
+        print("Delete pack avg: ", count_del / c)
+
+    def test_get_entry_raw(self):
+        t1 = time.time()
+        # get processed pack from dataset
+        iter = self.nlp.process_dataset(self.dataset_path)
+        t2 = time.time()
+        print("process_dataset", t2 - t1)
+        count_setence = 0
+        count_token = 0
+        sent_total = 0
+        token_total = 0
+        for pack in iter:
+            t3 = time.time()
+            # get sentence from pack
+            for sent in pack.get_raw(Sentence):
+                # get tokens from every sentence.
+                token_entries = pack.get_raw(
+                    entry_type=Token,
+                    # range_annotation=sent
+                )
+                tok = list(token_entries)
+                num_tok = len(tok)
+                token_total += num_tok
+            count_token += time.time() - t3
+            self.assertNotEqual(num_tok, 0)
+
+            t4 = time.time()
+            sentence = list(pack.get_raw(Sentence))
+            count_setence += time.time() - t4
+            num_sent = len(sentence)
+            sent_total += num_sent
+            self.assertNotEqual(num_sent, 0)
+
+        print("Get sentence avg: ", count_setence / sent_total)
+        print("Get token avg: ", count_token / token_total)
 
     def test_get_raw(self):
         t1 = time.time()
         # get processed pack from dataset
         iter = self.nlp.process_dataset(self.dataset_path)
         t2 = time.time()
-        print("process_dataset", t2-t1)
-        
+        print("process_dataset", t2 - t1)
+        get_total = 0
+        pack_total = 0
         for pack in iter:
-            print("Get pack", time.time()-t1)
-            # get sentence from pack
+            t3 = time.time()
             sentences = list(pack.get_raw(Sentence))
-            num_sent = len(sentences)
-            tokens = list(pack.get_raw(Token))
-            self.assertNotEqual(tokens, 0)
-            # delete first sentence
-            print("get&delete sentence", time.time()-t1)
+            get_total += time.time() - t3
+            pack_total += 1
+        print("Get pack avg: ", get_total / pack_total)
 
-
-    def test_get_attributes(self):
+    def test_get_request(self):
+        pack_total = 0
         t1 = time.time()
-        for pack in self.nlp.process_dataset(self.dataset_path):
+        iter = self.nlp.process_dataset(self.dataset_path)
+        t2 = time.time()
+        get_total = 0
+        print("process_dataset", t2 - t1)
+        for pack in iter:
+            pack_total += 1
             # case 1: get sentence context from the beginning
             requests = {
                 Sentence: ["speaker"],
                 # Token: ["pos", "sense"],
                 # EntityMention: []
             }
+            t3 = time.time()
             instances = list(
                 pack.get_data(Sentence, request=requests, skip_k=1)
             )
+            get_total += time.time() - t3
             self.assertIsNotNone(instances)
-        
+
             # instances = list(pack.get_data(Sentence))
             # self.assertEqual(len(instances), 2)
             # self.assertEqual(
@@ -123,12 +165,75 @@ class OntonoteGetterPipelineTest(unittest.TestCase):
             # instances = list(pack.get_data(Sentence, skip_k=10))
             # self.assertEqual(len(instances), 0)
 
-        print("test_get_attributes", time.time()-t1)
+        print("Get attribute avg: ", get_total / pack_total)
+
+    def test_get_raw_request(self):
+        pack_total = 0
+        t1 = time.time()
+        iter = self.nlp.process_dataset(self.dataset_path)
+        t2 = time.time()
+        get_total = 0
+        print("process_dataset", t2 - t1)
+        for pack in iter:
+            pack_total += 1
+            # case 1: get sentence context from the beginning
+            requests = {
+                Sentence: ["speaker"],
+                # Token: ["pos", "sense"],
+                # EntityMention: []
+            }
+            t3 = time.time()
+            instances = list(
+                pack.get_data_raw(Sentence, request=requests, skip_k=1)
+            )
+            get_total += time.time() - t3
+            self.assertIsNotNone(instances)
+        print("Get attribute avg: ", get_total / pack_total)
+
+    def test_get_attribute(self):
+        pack_total = 0
+        t1 = time.time()
+        iter = self.nlp.process_dataset(self.dataset_path)
+        t2 = time.time()
+        print("process_dataset", t2 - t1)
+        get_total = 0
+        for pack in iter:
+            pack_total += 1
+            t3 = time.time()
+            pack.get_attributes(0, "pos")
+            get_total += time.time() - t3
+        print("Get attribute avg: ", get_total / pack_total)
+
+    # for old data pack structure only
+    def test_get(self):
+        t1 = time.time()
+        # get processed pack from dataset
+        iter = self.nlp.process_dataset(self.dataset_path)
+        t2 = time.time()
+        print("process_dataset", t2 - t1)
+        pack_total = 0
+        get_total = 0
+        for pack in iter:
+            pack_total += 1
+            t3 = time.time()
+            sentences = list(pack.get(Sentence))
+            get_total += time.time() - t3
+        print("Get pack avg: ", get_total / pack_total)
+
+    def test_iter_pack(self):
+        pack_total = 0
+        t1 = time.time()
+        iter = self.nlp.process_dataset(self.dataset_path)
+        t2 = time.time()
+        print("process_dataset", t2 - t1)
+        for pack in iter:
+            pack_total += 1
+        get_total = time.time() - t2
+        print("Get attribute avg: ", get_total / pack_total)
 
 
 if __name__ == "__main__":
     test = OntonoteGetterPipelineTest()
     test.setUp()
-    test.test_get_raw()
-    # test.test_get_attributes()
+    test.test_get_raw_request()
     # unittest.main()
