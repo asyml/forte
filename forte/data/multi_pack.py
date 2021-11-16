@@ -168,7 +168,9 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
     # TODO: get_subentry maybe useless
     def get_subentry(self, pack_idx: int, entry_id: int):
-        return self.get_pack_at(pack_idx).get_entry(entry_id)
+        # fix bug/enhancement #559: use pack_idx as pack_id in new version
+        return self._packs[self.get_pack_index(pack_idx)].get_entry(entry_id)
+        # return self.get_pack_at(pack_idx).get_entry(entry_id) #old version
 
     def get_span_text(self, begin: int, end: int):
         raise ValueError(

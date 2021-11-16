@@ -176,6 +176,15 @@ class DataPackTest(unittest.TestCase):
             ],
         )
 
+        # fix bug 559: additional test for index to pack_id changes
+        serialized_mp = self.multi_pack.to_string(drop_record=False)
+        recovered_mp = MultiPack.from_string(serialized_mp)
+        s_packs = [p.to_string() for p in self.multi_pack.packs]
+        recovered_packs = [DataPack.from_string(s) for s in s_packs]
+
+        recovered_mp.relink(recovered_packs)
+
+
         # 3. Test deletion
 
         # Delete the second link.
