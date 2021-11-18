@@ -1351,9 +1351,7 @@ class Pipeline(Generic[PackType]):
             assert isinstance(p, Evaluator)
             yield p.name, p.get_result()
 
-    def get_component(
-        self, ref_name
-    ) -> Evaluator[Any]:
+    def get_component(self, ref_name) -> Evaluator[Any]:
         """
         Call the evaluator in the pipeline by the reference name to get a component.
 
