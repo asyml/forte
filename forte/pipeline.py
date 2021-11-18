@@ -1353,7 +1353,7 @@ class Pipeline(Generic[PackType]):
 
     def get_component(
         self, ref_name
-    ) -> Iterator[Tuple[str, Any]]:  # get_component 名字映射
+    ) -> Evaluator[Any]:
         """
         Call the evaluator in the pipeline by the reference name to get a component.
 
