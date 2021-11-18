@@ -1448,11 +1448,14 @@ class RecordCheckPipelineTest(unittest.TestCase):
         reader = DummySentenceReaderOne()
         nlp.set_reader(reader)
         dummy = DummyEvaluatorFour()
-        nlp.add(dummy, ref_name = "ref_dummy")
+        nlp.add(dummy, ref_name="ref_dummy")
         nlp.initialize()
         data_path = data_samples_root + "/random_texts/0.txt"
         pack = nlp.process(data_path)
-        self.assertEqual(nlp.get_component("ref_dummy").get_result(), "Reference name of DummyEvaluatorFour is ref_dummy")
+        self.assertEqual(
+            nlp.get_component("ref_dummy").get_result(),
+            "Reference name of DummyEvaluatorFour is ref_dummy",
+        )
 
 
 if __name__ == "__main__":
