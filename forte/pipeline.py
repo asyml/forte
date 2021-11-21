@@ -43,6 +43,7 @@ from forte.common.configuration import Config
 from forte.common.exception import (
     ProcessExecutionException,
     ProcessFlowException,
+    ValidationError,
 )
 from forte.common.resources import Resources
 from forte.data.base_pack import PackType
@@ -172,7 +173,11 @@ class Pipeline(Generic[PackType]):
         self._selectors: List[Selector] = []
         self._configs: List[Optional[Config]] = []
         self._selectors_configs: List[Optional[Config]] = []
-        self._ref_names: List[str] = []
+        self._ref_names: List[
+            str
+        ] = (
+            []
+        )  # corresponding to the new added parameter "ref_name", indicating a list of reference names that are used to identify different components
 
         # Maintain a set of the pipeline components to fast check whether
         # the component is already there.
@@ -811,7 +816,11 @@ class Pipeline(Generic[PackType]):
             self.evaluator_indices.append(len(self.components))
 
         if ref_name is None:
-            self._ref_names.append("unknown")
+            self._ref_names.append(None)
+        elif ref_name in self._ref_names:
+            raise ValidationError(
+                f"This reference name {ref_name} already exists, please specify a new one"
+            )
         else:
             self._ref_names.append(ref_name)
 
@@ -1351,13 +1360,13 @@ class Pipeline(Generic[PackType]):
             assert isinstance(p, Evaluator)
             yield p.name, p.get_result()
 
-    def get_component(self, ref_name) -> Evaluator[Any]:
+    def get_component(self, ref_name) -> PipelineComponent[Any]:
         """
         Call the evaluator in the pipeline by the reference name to get a component.
 
         """
-        p = self.components[self.ref_names.index(ref_name)]
-        assert isinstance(p, Evaluator)
+        ref_name_dict = dict(zip(self.ref_names, range(len(self.ref_names))))
+        p = self.components[ref_name_dict[ref_name]]
         return p
 
 

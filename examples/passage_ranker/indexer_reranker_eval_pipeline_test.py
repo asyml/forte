@@ -16,7 +16,7 @@ import argparse
 
 import yaml
 
-# from forte.elastic import ElasticSearchQueryCreator, ElasticSearchProcessor
+from forte.elastic import ElasticSearchQueryCreator, ElasticSearchProcessor
 
 from ms_marco_evaluator import MSMarcoEvaluator
 from reader import EvalReader
@@ -51,8 +51,8 @@ if __name__ == "__main__":
     nlp: Pipeline = Pipeline[MultiPack]()
     eval_reader = EvalReader()
     nlp.set_reader(reader=eval_reader, config=config.reader)
-    # nlp.add(ElasticSearchQueryCreator(), config=config.query_creator)
-    # nlp.add(ElasticSearchProcessor(), config=config.indexer)
+    nlp.add(ElasticSearchQueryCreator(), config=config.query_creator)
+    nlp.add(ElasticSearchProcessor(), config=config.indexer)
     nlp.add(BertRerankingProcessor(), config=config.reranker)
     nlp.add(MSMarcoEvaluator(), config=config.evaluator)
     nlp.initialize()
