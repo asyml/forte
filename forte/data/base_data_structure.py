@@ -57,9 +57,80 @@ class BaseDataStructure(EntryContainer[EntryType, LinkType, GroupType]):
     @abstractmethod
     def __iter__(self) -> Iterator[EntryType]:
         raise NotImplementedError
+    
+    def to_string(
+        self,
+        drop_record: Optional[bool] = False,
+        json_method: str = "jsonpickle",
+        indent: Optional[int] = None,
+    ) -> str:
+        """
+        Return the string representation (json encoded) of this method.
+
+        Args:
+            drop_record: Whether to drop the creation records, default is False.
+            json_method: What method is used to convert data pack to json.
+              Only supports `json_pickle` for now. Default value is
+              `json_pickle`.
+            indent: The indent used for json string.
+
+        Returns: String representation of the data pack.
+        """
+        if drop_record:
+            self._creation_records.clear()
+            self._field_records.clear()
+        if json_method == "jsonpickle":
+            return jsonpickle.encode(self, unpicklable=True, indent=indent)
+        else:
+            raise ValueError(f"Unsupported JSON method {json_method}.")
+
+    def serialize(
+        self,
+        output_path: Union[str, Path],
+        zip_pack: bool = False,
+        drop_record: bool = False,
+        serialize_method: str = "jsonpickle",
+        indent: Optional[int] = None,
+    ):
+        r"""
+        Serializes the data pack to the provided path. The output of this
+        function depends on the serialization method chosen.
+
+        Args:
+            output_path: The path to write data to.
+            zip_pack: Whether to compress the result with `gzip`.
+            drop_record: Whether to drop the creation records, default is False.
+            serialize_method: The method used to serialize the data. Currently
+              supports "jsonpickle" (outputs str) and Python's built-in
+              "pickle" (outputs bytes).
+            indent: Whether to indent the file if written as JSON.
+
+        Returns: Results of serialization.
+        """
+        if zip_pack:
+            _open = gzip.open
+        else:
+            _open = open  # type:ignore
+
+        if drop_record:
+            self._creation_records.clear()
+            self._field_records.clear()
+
+        if serialize_method == "pickle":
+            with _open(output_path, mode="wb") as pickle_out:
+                pickle.dump(self, pickle_out)  # type:ignore
+        elif serialize_method == "jsonpickle":
+            with _open(output_path, mode="wt", encoding="utf-8") as json_out:
+                json_out.write(
+                    self.to_string(drop_record, "jsonpickle", indent=indent)
+                )
+        else:
+            raise NotImplementedError(
+                f"Unsupported serialization method {serialize_method}"
+            )
 
     @classmethod
-    def _deserialize(
+    def deserialize(
         cls,
         data_source: Union[Path, str],
         serialize_method: str = "jsonpickle",
