@@ -12,6 +12,7 @@ from typing import (
     Tuple,
 )
 
+import dill
 import logging
 from collections import defaultdict
 import uuid
@@ -51,13 +52,20 @@ class DataTuple(BaseDataStructure):
     def __init__(self, pack_name: Optional[str] = None):
         super().__init__()
         self._text = ""
-
+        
         # anntations: list of (class_name, begin, end, args*[tuple])
-        self.elements: SortedList[tuple] = SortedList(key = lambda x: (x[1], x[2]))
+        self.elements: SortedList[tuple] = SortedList(key = self.key_function)
         self.entry_dict: dict = dict()
 
     def __iter__(self):
         yield from self.elements
+    
+    @property
+    def text(self):
+        return self._text
+    
+    def key_function(self, x):
+        return x[1], x[2]
     
     def _validate(self, entry) -> bool:
         return isinstance(entry, tuple)
@@ -117,7 +125,7 @@ class DataTuple(BaseDataStructure):
     """
     New methods for tuple-based opertaions
     """
-    def text(self, entry: tuple) -> str:
+    def get_text(self, entry: tuple) -> str:
         return self.get_span_text(begin(entry), end(entry))
 
     def get_entry(self, tid: int):
@@ -132,6 +140,7 @@ class DataTuple(BaseDataStructure):
         self,
         entry_type: Union[str, Type[EntryType]],
         range_annotation: Union[int, tuple] = None,
+        components = None,
         include_sub_type=True,
     ):
         entry_type_: Type[EntryType] = as_entry_type(entry_type)
@@ -535,11 +544,11 @@ class DataTuple(BaseDataStructure):
                 f"is not a valid begin."
             )
 
-        if end > len(self.text):
-            if len(self.text) == 0:
+        if end > len(self.get_text):
+            if len(self.get_text) == 0:
                 raise ValueError(
                     f"The end {end} of span is greater than the text "
-                    f"length {len(self.text)}, which is invalid. The text "
+                    f"length {len(self.get_text)}, which is invalid. The text "
                     f"length is 0, so it may be the case the you haven't "
                     f"set text for the data pack. Please set the text "
                     f"before calling `add_entry` on the annotations."
@@ -548,7 +557,7 @@ class DataTuple(BaseDataStructure):
                 pack_ref = entry.pack.pack_id
                 raise ValueError(
                     f"The end {end} of span is greater than the text "
-                    f"length {len(self.text)}, which is invalid. The "
+                    f"length {len(self.get_text)}, which is invalid. The "
                     f"problematic entry is of type {entry.__class__} "
                     f"at [{begin}:{end}], in pack {pack_ref}."
                 )
