@@ -180,7 +180,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         self, index_of_pack: int, clean_invalid_entries: bool = False
     ) -> bool:
         """
-        Remove a data pack at index `index_of_pack ` from this multi pack.
+        Remove a data pack at index `index_of_pack` from this multi pack.
 
         Note that if the data pack to be removed is associated with entries
         in for example MultiPackLink, such entries will become invalid after
@@ -296,9 +296,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         # unchanged, set to None instead of direct removal
         tmp_pack_name = self.pack_names[index_of_pack]
 
-        self._pack_names.__setitem__(
-            index_of_pack, ""
-        )  # remove(tmp_pack_name) in case don't care index change
+        self._pack_names[index_of_pack] = ""
+        # remove(tmp_pack_name) in case don't care index change
 
         # Remove the reverse mapping from name to the pack index.
         self._name_index.pop(tmp_pack_name)
@@ -364,7 +363,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             if ref_name is not None:
                 type_name = type(ref_name)
             raise ValueError(
-                f"key of the pack should be str, but got " f"type: {type_name}"
+                f"key of the pack should be str, but got type: {type_name}"
             )
 
         pack: DataPack = DataPack(pack_name=pack_name)
