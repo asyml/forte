@@ -180,31 +180,37 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         self, index_of_pack: int, clean_invalid_entries: bool = False
     ) -> bool:
         """
-        Remove a data pack from multi pack. Remove the pack with index.
+        Remove a data pack at index `index_of_pack ` from this multi pack.
 
-        Note that remove_pack means some cross pack reference entries such as MultiPackLink
-        may become invalid.
+        Note that if the data pack to be removed is associated with entries
+        in for example MultiPackLink, such entries will become invalid after
+        the data pack is removed so needs to set clean_invalid_entries=True.
 
         Args:
             index_of_pack (int): The index of pack for removal from
-              the multi pack. If invalid, no pack will be deleted (exception?).
-            clean_invalid_entries (bool): .
+              the multi pack. If invalid, no pack will be deleted.
+            clean_invalid_entries (bool): Switch for automatically
+              cleaning the entries associated with the data pack
+              being deleted which will become invalid after the
+              removal of the pack. Default is False.
 
-        Returns: .
+        Returns:
             True if successful
 
         Exceptions:
             if clean_invalid_entries is set to False and the DataPack to be removed have
-            cross-pack-reference, ValueError will be raised.
+            entries (in links, groups) associated with it, ValueError will be raised.
 
         """
         pack = self.get_pack_at(index_of_pack)
 
         if pack is None or (not isinstance(pack, DataPack)):
+            type_name = "None"
+            if pack is not None:
+                type_name = type(pack)
             raise ValueError(
                 f"Object for the index should be pack, but got "
-                f""
-                f"{type(pack)}"
+                f"type: {type_name}"
             )
 
         return self.remove_pack_(pack, index_of_pack, clean_invalid_entries)
@@ -216,21 +222,24 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         clean_invalid_entries: bool = False,
     ) -> bool:
         """
-        Remove a existing data pack in the multi pack. Per discussion on effects of the data pack
-        removal, to prevent index of other packs being changed, (temporarily) set this empty
-        position to None in order to keep the index for the packs intact
+        Remove a existing data pack in the multi pack. To prevent index of the
+        packs following it being changed, set this empty position to None
+        in order to keep the index for the packs intact
 
         Args:
             pack (DataPack): The existing data pack.
             index_of_pack: the index of the pack to be removed
-            clean_invalid_entries: the switch for automatic deletion of cross-pack-references
+            clean_invalid_entries: Switch for automatically
+              cleaning the entries associated with the data pack
+              being deleted which will become invalid after the
+              removal of the pack. Default is False.
 
         Returns:
             True if successful
 
         Exceptions:
             if clean_invalid_entries is set to False and the DataPack to be removed have
-            cross-pack-reference, ValueError will be raised.
+            entries (in links, groups) associated with it, ValueError will be raised.
         """
 
         # check if the pack to be removed has any cross pack links/groups
@@ -277,7 +286,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
         # vin = int(0)
         # vin = None
-        self._pack_ref.__setitem__(index_of_pack, None)  # type: ignore
+        self._pack_ref[index_of_pack] = None   # type: ignore
         # remove(pack.pack_id) in case don't care index change
 
         # Remove the reverse mapping from pack id to the pack index.
@@ -294,8 +303,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         # Remove the reverse mapping from name to the pack index.
         self._name_index.pop(tmp_pack_name)
 
-        # Remove Reference to the real packs.
-        self._packs.__setitem__(index_of_pack, None)  # type: ignore
+        # Remove Reference to the data pack.
+        self._packs[index_of_pack] = None   # type: ignore
         # remove(pack) if don't care index change
 
         return True
@@ -351,10 +360,12 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         if ref_name in self._name_index:
             raise ValueError(f"The name {ref_name} has already been taken.")
         if ref_name is not None and not isinstance(ref_name, str):
+            type_name = "None"
+            if ref_name is not None:
+                type_name = type(ref_name)
             raise ValueError(
                 f"key of the pack should be str, but got "
-                f""
-                f"{type(ref_name)}"
+                f"type: {type_name}"
             )
 
         pack: DataPack = DataPack(pack_name=pack_name)
