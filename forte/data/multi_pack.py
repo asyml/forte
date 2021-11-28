@@ -182,24 +182,28 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         """
         Remove a data pack at index `index_of_pack` from this multi pack.
 
-        Note that if the data pack to be removed is associated with entries
-        in for example MultiPackLink, such entries will become invalid after
-        the data pack is removed so needs to set clean_invalid_entries=True.
+        In a multi pack, the data pack to be removed may be associated with
+        some multi pack entries, such as `MultiPackLinks` that are connected
+        with other packs. These entries will become dangling and invalid,
+        thus need to be removed. One can consider removing these links before
+        calling this function, or set the `clean_invalid_entries` to `True` so
+        that they will be automatically pruned.
 
         Args:
-            index_of_pack (int): The index of pack for removal from
-              the multi pack. If invalid, no pack will be deleted.
-            clean_invalid_entries (bool): Switch for automatically
-              cleaning the entries associated with the data pack
-              being deleted which will become invalid after the
-              removal of the pack. Default is False.
+            index_of_pack (int): The index of pack for removal from the
+              multi pack. If invalid, no pack will be deleted.
+            clean_invalid_entries (bool): Switch for automatically cleaning
+              the entries associated with the data pack being deleted which
+              will become invalid after the removal of the pack. Default is
+              False.
 
         Returns:
             True if successful
 
         Exceptions:
-            if clean_invalid_entries is set to False and the DataPack to be removed have
-            entries (in links, groups) associated with it, ValueError will be raised.
+            if clean_invalid_entries is set to False and the DataPack to be
+            removed have entries (in links, groups) associated with it,
+            ValueError will be raised.
 
         """
         pack = self.get_pack_at(index_of_pack)
