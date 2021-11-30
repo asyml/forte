@@ -746,7 +746,7 @@ class Pipeline(Generic[PackType]):
         """
         Return all the reference names in this pipeline, except the reader.
 
-        Returns: A list containing the reference names.
+        Returns: A dictionary containing the reference names.
 
         """
         return self._ref_names
