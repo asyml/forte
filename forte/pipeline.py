@@ -767,7 +767,7 @@ class Pipeline(Generic[PackType]):
         config: Optional[Union[Config, Dict[str, Any]]] = None,
         selector: Optional[Selector] = None,
         selector_config: Optional[Union[Config, Dict[str, Any]]] = None,
-        ref_name: Optional[str] = None, # use Dict directly
+        ref_name: Optional[str] = None,
     ) -> "Pipeline":
         """
         Adds a pipeline component to the pipeline. The pipeline components
