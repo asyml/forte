@@ -175,7 +175,7 @@ class Pipeline(Generic[PackType]):
         self._selectors_configs: List[Optional[Config]] = []
         # corresponding to the new added parameter "ref_name", indicating a list of
         # reference names that are used to identify different components
-        self._ref_names: List[Any] = []
+        self._ref_names: Dict[Optional[str], int] = {}
         # Maintain a set of the pipeline components to fast check whether
         # the component is already there.
         self.__component_set: Set[PipelineComponent] = set()
@@ -742,7 +742,7 @@ class Pipeline(Generic[PackType]):
         return self._components
 
     @property
-    def ref_names(self) -> List[str]:
+    def ref_names(self) -> Dict[Optional[str], int]:
         """
         Return all the reference names in this pipeline, except the reader.
 
@@ -767,7 +767,7 @@ class Pipeline(Generic[PackType]):
         config: Optional[Union[Config, Dict[str, Any]]] = None,
         selector: Optional[Selector] = None,
         selector_config: Optional[Union[Config, Dict[str, Any]]] = None,
-        ref_name: Optional[str] = None,
+        ref_name: Optional[str] = None, # use Dict directly
     ) -> "Pipeline":
         """
         Adds a pipeline component to the pipeline. The pipeline components
@@ -813,13 +813,14 @@ class Pipeline(Generic[PackType]):
             self.evaluator_indices.append(len(self.components))
 
         if ref_name is None:
-            self._ref_names.append(None)
-        elif ref_name in self._ref_names:
+            self._ref_names[ref_name] = List[Optional[str]]
+            self._ref_names[ref_name].append(len(self.components))
+        elif ref_name in self._ref_names.keys():
             raise ValidationError(
                 f"This reference name {ref_name} already exists, please specify a new one"
             )
         else:
-            self._ref_names.append(ref_name)
+            self._ref_names[ref_name] = len(self.components)
 
         if component not in self.__component_set:
             # The case where the component is not found.
@@ -1362,8 +1363,7 @@ class Pipeline(Generic[PackType]):
         Call the evaluator in the pipeline by the reference name to get a component.
 
         """
-        ref_name_dict = dict(zip(self.ref_names, range(len(self.ref_names))))
-        p = self.components[ref_name_dict[ref_name]]
+        p = self.components[self.ref_names[ref_name]]
         return p
 
 
