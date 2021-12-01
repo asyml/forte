@@ -22,8 +22,8 @@ class OntonoteDataProcessing():
         self.dataset_path = os.path.join(
             root_path, file_path
         )
-        self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-        
+        # self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+        self.tokenizer = tx.data.BERTTokenizer(pretrained_model_name="bert-base-uncased")
 
     def data_processing(self):
         sentence = []
@@ -58,7 +58,11 @@ class OntonoteDataProcessing():
                     process_time += time.time() - bg 
 
                     t3 = time.time()
-                    subword_token.append(self.tokenizer(conll_components[3], return_tensors="pt"))
+                    tokenized_tokens = self.tokenizer.map_text_to_id(conll_components[3])
+                    # token_ids = self.tokenizer.map_token_to_id(tokens)
+                    # entity_ids = self.tokenizer.map_token_to_id(entities)
+                    subword_token.append(tokenized_tokens)
+                    # subword_token.append(self.tokenizer(conll_components[3], return_tensors="pt"))
                     tokenize_time += time.time() - t3
 
                 if line == "":
@@ -75,24 +79,26 @@ class OntonoteDataProcessing():
                     sen = ''
 
         # query NLTK word_tokenize or self.tokenizer( subword Tokenizer )
-
+        get_sents = []
         t0 = time.time()
         for sent in sentence:
-            pass    
+            get_sents.append(sent)
         get_sentence_time = time.time() - t0
 
+        get_docs = []
         t5 = time.time()
         for d in document:
-            pass    
+            get_docs.append(d)
         get_doc_time = time.time() - t5
  
+        get_nltk_pipelines = []
         t2 = time.time()
         for s in NLTK_token:
-            pass
+            get_nltk_pipelines.append(s)
         for t in NLTK_tags:
-            pass
+            get_nltk_pipelines.append(t)
         for w in subword_token:  
-            pass
+            get_nltk_pipelines.append(w)
         get_token_entity_time = time.time() - t2
 
         time_dict = {

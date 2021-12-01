@@ -430,8 +430,8 @@ class OntonoteDataProcessing():
 if __name__ == "__main__":
     data_pipeline = OntonoteDataProcessing()
     t1 = time.time()
-    # time_dict = data_pipeline.data_processing()
-    time_dict = data_pipeline.whole_data_processing()
+    time_dict = data_pipeline.data_processing()
+    # time_dict = data_pipeline.whole_data_processing()
     # time_dict = data_pipeline.deserialize_whole_datapack()
     t2 = time.time()
     print("total time spent: ", t2-t1)
