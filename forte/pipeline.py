@@ -175,7 +175,7 @@ class Pipeline(Generic[PackType]):
         self._selectors_configs: List[Optional[Config]] = []
         # corresponding to the new added parameter "ref_name", indicating a list of
         # reference names that are used to identify different components
-        self._ref_names: Dict[Optional[str], Union[List[int],int]] = {}
+        self._ref_names: Dict[Optional[str], Union[List[int], int]] = {}
         # Maintain a set of the pipeline components to fast check whether
         # the component is already there.
         self.__component_set: Set[PipelineComponent] = set()
