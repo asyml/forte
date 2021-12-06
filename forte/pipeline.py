@@ -175,9 +175,7 @@ class Pipeline(Generic[PackType]):
         self._selectors_configs: List[Optional[Config]] = []
         # corresponding to the new added parameter "ref_name", indicating a list of
         # reference names that are used to identify different components
-        self._ref_names: Dict[
-            Optional[str],
-        ] = {}
+        self._ref_names = {}
         # Maintain a set of the pipeline components to fast check whether
         # the component is already there.
         self.__component_set: Set[PipelineComponent] = set()
@@ -815,6 +813,7 @@ class Pipeline(Generic[PackType]):
             self.evaluator_indices.append(len(self.components))
 
         if ref_name is None:
+            self._ref_names[ref_name] = []
             self._ref_names[ref_name].append(len(self.components))
         elif ref_name in self._ref_names.keys():
             raise ValidationError(
