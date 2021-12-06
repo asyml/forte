@@ -819,7 +819,7 @@ class Pipeline(Generic[PackType]):
                 f"This reference name {ref_name} already exists, please specify a new one"
             )
         else:
-            self._ref_names[ref_name].append(len(self.components))
+            self._ref_names[ref_name] = len(self.components)
 
         if component not in self.__component_set:
             # The case where the component is not found.
