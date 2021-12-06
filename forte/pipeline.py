@@ -813,7 +813,7 @@ class Pipeline(Generic[PackType]):
             self.evaluator_indices.append(len(self.components))
 
         if ref_name is None:
-            # self._ref_names[ref_name] = List[Optional[str]]
+            self._ref_names[ref_name] = List[int]
             self._ref_names[ref_name].append(len(self.components))
         elif ref_name in self._ref_names.keys():
             raise ValidationError(
