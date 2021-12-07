@@ -219,13 +219,13 @@ class BaseDataStructure(EntryContainer[EntryType, LinkType, GroupType]):
         raise NotImplementedError
 
     @abstractmethod
-    def get_data_raw(
+    def get_data(
         self, context_type, request, skip_k
     ) -> Iterator[Dict[str, Any]]:
         raise NotImplementedError
 
     @abstractmethod
-    def get_raw(
+    def get(
         self, entry_type: Union[str, Type[EntryType]], **kwargs
     ) -> Iterator[Tuple]:
         """
@@ -254,7 +254,7 @@ class BaseDataStructure(EntryContainer[EntryType, LinkType, GroupType]):
         Returns:
             A single data entry.
         """
-        for a in self.get_raw(entry_type):
+        for a in self.get(entry_type):
             return a
 
         raise EntryNotFoundError(
