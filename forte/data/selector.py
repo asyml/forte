@@ -18,6 +18,7 @@ DataPack/multiPack processors and Pipeline.
 from typing import Generic, Iterator, TypeVar, Optional, Union, Dict, Any
 
 import re
+import warnings
 
 from forte.common.configuration import Config
 from forte.common.configurable import Configurable
@@ -123,8 +124,6 @@ class NameMatchSelector(SinglePackSelector):
         super().__init__()
         self.select_name = select_name
         if select_name is not None:
-            import warnings
-
             warnings.warn(
                 (
                     "Passing parameters through __init__ is deprecated,"
@@ -182,8 +181,6 @@ class RegexNameMatchSelector(SinglePackSelector):
         super().__init__()
         self.select_name = select_name
         if select_name is not None:
-            import warnings
-
             warnings.warn(
                 (
                     "Passing parameters through __init__ is deprecated,"
