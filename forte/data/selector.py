@@ -124,8 +124,13 @@ class NameMatchSelector(SinglePackSelector):
         self.select_name = select_name
         if select_name is not None:
             import warnings
-            warnings.warn(("Passing parameters through __init__ is deprecated,"
-                           " and does not work well with pipeline serialization."))
+
+            warnings.warn(
+                (
+                    "Passing parameters through __init__ is deprecated,"
+                    " and does not work well with pipeline serialization."
+                )
+            )
 
     def will_select(
         self, pack_name: str, pack: DataPack, multi_pack: MultiPack
@@ -178,8 +183,13 @@ class RegexNameMatchSelector(SinglePackSelector):
         self.select_name = select_name
         if select_name is not None:
             import warnings
-            warnings.warn(("Passing parameters through __init__ is deprecated,"
-                           " and does not work well with pipeline serialization."))
+
+            warnings.warn(
+                (
+                    "Passing parameters through __init__ is deprecated,"
+                    " and does not work well with pipeline serialization."
+                )
+            )
 
     def will_select(
         self, pack_name: str, pack: DataPack, multi_pack: MultiPack
