@@ -22,7 +22,7 @@ from forte.data.data_pack import DataPack
 from forte.data.readers import PlainTextReader
 from forte.pipeline import Pipeline
 from forte.processors.nlp import CoNLLNERPredictor, SRLPredictor
-from forte.nltk import NLTKWordTokenizer, NLTKPOSTagger, NLTKSentenceSegmenter
+from fortex.nltk import NLTKWordTokenizer, NLTKPOSTagger, NLTKSentenceSegmenter
 from ft.onto.base_ontology import (
     Token,
     Sentence,
