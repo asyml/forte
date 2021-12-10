@@ -29,7 +29,7 @@
         "description": "A N-dimensional metric entity, used to present a metric of N-d array (e.g. confusion matrix).", 
         "attributes": [ 
           {
-              "name": "values",
+              "name": "value",
               "type": "ndarray"
           }
         ] 
