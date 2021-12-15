@@ -54,12 +54,12 @@ class MultiPackBoxer(Caster[DataPack, MultiPack]):
 
     def cast(self, pack: DataPack) -> MultiPack:
         """
-        Auto-box the data-pack into a multi-pack by simple wrapping.
+        Auto-box the DataPack into a MultiPack by simple wrapping.
 
         Args:
-            pack: The data pack to be boxed
+            pack: The DataPack to be boxed
 
-        Returns: An iterator that produces the boxed multi pack.
+        Returns: An iterator that produces the boxed MultiPack.
 
         """
         pack_name = pack.pack_name + "_multi" if pack.pack_name else None
@@ -83,28 +83,20 @@ class MultiPackBoxer(Caster[DataPack, MultiPack]):
 class DataPackBoxer(Caster[MultiPack, DataPack]):
     """
     This class creates a DataPack from a MultiPack, this DataPack is the only
-    contain of the original MultiPack, indexed by the :attr:`pack_name`.
+    content of the original MultiPack.
     """
 
-    def cast(self, pack: MultiPack) -> DataPack:
+    def cast(self, pack: MultiPack, pack_index: int = 0) -> DataPack:
         """
-        Auto-box the multi-pack into a data-pack by simple getting pack.
+        Auto-box the MultiPack into a DataPack by using pack_index to take the unique pack.
 
         Args:
-            pack: The data pack to be boxed
+            pack: The MultiPack to be boxed.
 
-        Returns: An iterator that produces the boxed data-pack.
+        Returns: A DataPack boxed from the MultiPack.
 
         """
-        if pack.pack_name:
-            pack_name = (
-                pack.pack_name.strip("_multi")
-                if "_multi" in pack.pack_name
-                else pack.pack_name
-            )
-        else:
-            pack_name = None
-        p = pack.get_pack(pack_name)
+        p = pack.get_pack_at(pack_index)
         return p
 
     @classmethod
