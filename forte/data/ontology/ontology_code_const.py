@@ -81,7 +81,7 @@ def get_ignore_error_lines(json_filepath: str) -> List[str]:
 
 DEFAULT_PREFIX = "ft.onto"
 
-SUPPORTED_PRIMITIVES = {"int", "float", "str", "bool"}
+SUPPORTED_PRIMITIVES = {"int", "float", "str", "bool", "ndarray"}
 NON_COMPOSITES = {key: key for key in SUPPORTED_PRIMITIVES}
 COMPOSITES = {"List", "Dict"}
 
