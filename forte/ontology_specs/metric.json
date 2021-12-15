@@ -9,6 +9,10 @@
           { 
               "name": "metric_name", 
               "type": "str" 
+          },
+          {
+              "name": "dtype",
+              "type": "str"
           }
         ]
       },
@@ -31,6 +35,11 @@
           {
               "name": "value",
               "type": "ndarray"
+          },
+          {
+              "name": "shape",
+              "type": "List",
+              "item_type": "int"
           }
         ] 
       }
