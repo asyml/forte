@@ -86,7 +86,7 @@ class DataPackBoxer(Caster[MultiPack, DataPack]):
     content of the original MultiPack.
     """
 
-    def cast(self, pack: MultiPack, pack_index: int = 0) -> DataPack:
+    def cast(self, pack: MultiPack) -> DataPack:
         """
         Auto-box the MultiPack into a DataPack by using pack_index to take the unique pack.
 
@@ -96,7 +96,18 @@ class DataPackBoxer(Caster[MultiPack, DataPack]):
         Returns: A DataPack boxed from the MultiPack.
 
         """
-        p = pack.get_pack_at(pack_index)
+
+        p = pack.get_pack_at(0)
+
+        if p.pack_name:
+            self.configs.pack_name = (
+                p.pack_name.strip("_multi")
+                if "_multi" in p.pack_name
+                else p.pack_name
+            )
+        else:
+            self.configs.pack_name = None
+
         return p
 
     @classmethod
