@@ -408,7 +408,7 @@ class NdArrayProperty(Property):
         return f"{self._full_class()}"
 
     def default_value(self) -> str:
-        return None
+        return "None"
 
     def _full_class(self):
         item_type = self.import_manager.get_name_to_use(self.value_type)
