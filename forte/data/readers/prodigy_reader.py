@@ -44,7 +44,7 @@ class ProdigyReader(PackReader):
 
         Returns: Iterator of each line in the prodigy file.
         """
-        with open(prodigy_annotation_file) as f:
+        with open(prodigy_annotation_file, encoding="utf-8") as f:
             for line in f:
                 yield json.loads(line)
 

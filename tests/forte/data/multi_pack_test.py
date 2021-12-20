@@ -38,7 +38,7 @@ class DataPackTest(unittest.TestCase):
         self.data_pack2.set_text("This pack contains some other sample data.")
 
     def test_serialization(self):
-        ser_str: str = self.multi_pack.serialize()
+        ser_str: str = self.multi_pack.to_string()
         print(ser_str)
 
     def test_add_pack(self):
@@ -48,12 +48,12 @@ class DataPackTest(unittest.TestCase):
 
         self.assertEqual(len(self.multi_pack.packs), 3)
         self.assertEqual(
-            self.multi_pack.pack_names, {"left pack", "right pack", "new pack"}
+            self.multi_pack.pack_names, ["left pack", "right pack", "new pack"]
         )
 
     def test_rename_pack(self):
         self.multi_pack.rename_pack("right pack", "last pack")
-        self.assertEqual(self.multi_pack.pack_names, {"left pack", "last pack"})
+        self.assertEqual(self.multi_pack.pack_names, ["left pack", "last pack"])
 
     def test_multipack_groups(self):
         """

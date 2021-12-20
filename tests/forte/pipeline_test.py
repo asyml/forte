@@ -19,19 +19,23 @@ import os
 import unittest
 import warnings
 from dataclasses import dataclass
-from typing import Any, Dict, Iterator, Optional, Type, Set
+from typing import Any, Dict, Iterator, Optional, Set, List
 
 import numpy as np
 from ddt import ddt, data, unpack
 
 from forte.common import ProcessExecutionException, ProcessorConfigError
+from forte.common.configuration import Config
 from forte.data.base_pack import PackType
 from forte.data.base_reader import PackReader, MultiPackReader
-from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
+from forte.data.batchers import (
+    ProcessingBatcher,
+    FixedSizeRequestDataPackBatcher,
+)
 from forte.data.caster import MultiPackBoxer
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
-from forte.data.ontology.top import Generics
+from forte.data.ontology.top import Generics, Annotation
 from forte.data.readers import PlainTextReader, StringReader, OntonotesReader
 from forte.data.selector import (
     FirstPackSelector,
@@ -39,15 +43,16 @@ from forte.data.selector import (
     SinglePackSelector,
     AllPackSelector,
 )
-from forte.data.types import DataRequest
 from forte.evaluation.base import Evaluator
 from forte.pipeline import Pipeline
 from forte.processors.base import (
     PackProcessor,
-    FixedSizeBatchProcessor,
+    RequestPackingProcessor,
     MultiPackProcessor,
 )
-from forte.processors.base.batch_processor import Predictor, BatchProcessor
+from forte.processors.base.batch_processor import (
+    Predictor,
+)
 from forte.processors.misc import PeriodSentenceSplitter
 from forte.utils import get_full_module_name
 from ft.onto.base_ontology import Token, Sentence, EntityMention, RelationLink
@@ -165,7 +170,7 @@ class MultiPackCopier(MultiPackProcessor):
         pack.set_text(input_pack.get_pack_at(0).text)
 
 
-class DummyRelationExtractor(BatchProcessor):
+class DummyRelationExtractor(RequestPackingProcessor):
     r"""A dummy relation extractor.
 
     Note that to use :class:`DummyRelationExtractor`, the :attr:`ontology` of
@@ -173,26 +178,25 @@ class DummyRelationExtractor(BatchProcessor):
     ``ft.onto.base_ontology.Sentence``.
     """
 
-    def __init__(self):
-        super().__init__()
+    @classmethod
+    def define_batcher(cls) -> ProcessingBatcher:
+        return FixedSizeRequestDataPackBatcher()
 
-    @staticmethod
-    def define_batcher() -> ProcessingBatcher:
-        return FixedSizeDataPackBatcher()
-
-    @staticmethod
-    def _define_context() -> Type[Sentence]:
-        return Sentence
-
-    @staticmethod
-    def _define_input_info() -> DataRequest:
-        input_info: DataRequest = {
-            Token: [],
-            EntityMention: {"fields": ["ner_type", "tid"]},
+    @classmethod
+    def default_configs(cls) -> Dict[str, Any]:
+        return {
+            "batcher": {
+                "context_type": "ft.onto.base_ontology.Sentence",
+                "requests": {
+                    "ft.onto.base_ontology.Token": [],
+                    "ft.onto.base_ontology.EntityMention": {
+                        "fields": ["ner_type", "tid"]
+                    },
+                },
+            }
         }
-        return input_info
 
-    def predict(self, data_batch: Dict):
+    def predict(self, data_batch: Dict) -> Dict[str, List[Any]]:
         entities_span = data_batch["EntityMention"]["span"]
         entities_tid = data_batch["EntityMention"]["tid"]
 
@@ -218,32 +222,37 @@ class DummyRelationExtractor(BatchProcessor):
             pred["RelationLink"]["parent.tid"].append(np.array(parent))
             pred["RelationLink"]["child.tid"].append(np.array(child))
             pred["RelationLink"]["rel_type"].append(np.array(rel_type))
-
         return pred
 
-    def pack(self, data_pack: DataPack, output_dict: Optional[Dict] = None):
+    def pack(
+        self,
+        pack: PackType,
+        predict_results: Dict[str, List[Any]],
+        context: Optional[Annotation] = None,
+    ):
+        #     pass
+        # def pack(self, data_pack: DataPack, output_dict: Optional[Dict] =
+        # None):
         r"""Add corresponding fields to data_pack"""
-        if output_dict is None:
+        if predict_results is None:
             return
 
-        for i in range(len(output_dict["RelationLink"]["parent.tid"])):
-            for j in range(len(output_dict["RelationLink"]["parent.tid"][i])):
-                link = RelationLink(data_pack)
-                link.rel_type = output_dict["RelationLink"]["rel_type"][i][j]
-                parent: EntityMention = data_pack.get_entry(  # type: ignore
-                    output_dict["RelationLink"]["parent.tid"][i][j]
+        for i in range(len(predict_results["RelationLink"]["parent.tid"])):
+            for j in range(
+                len(predict_results["RelationLink"]["parent.tid"][i])
+            ):
+                link = RelationLink(pack)
+                link.rel_type = predict_results["RelationLink"]["rel_type"][i][
+                    j
+                ]
+                parent: EntityMention = pack.get_entry(  # type: ignore
+                    predict_results["RelationLink"]["parent.tid"][i][j]
                 )
                 link.set_parent(parent)
-                child: EntityMention = data_pack.get_entry(  # type: ignore
-                    output_dict["RelationLink"]["child.tid"][i][j]
+                child: EntityMention = pack.get_entry(  # type: ignore
+                    predict_results["RelationLink"]["child.tid"][i][j]
                 )
                 link.set_child(child)
-
-    @classmethod
-    def default_configs(cls):
-        configs = super().default_configs()
-        configs["batcher"] = {"batch_size": 10}
-        return configs
 
 
 class DummyEvaluator(Evaluator):
@@ -282,41 +291,33 @@ class DummyPackProcessor(PackProcessor):
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
-        configs = super().default_configs()
-        configs["test"] = "test, successor"
-        return configs
+        return {"test": "test, successor"}
 
 
-class DummyFixedSizeBatchProcessor(FixedSizeBatchProcessor):
+class DummyFixedSizeBatchProcessor(RequestPackingProcessor):
     def __init__(self):
         super().__init__()
         self.counter = 0
 
-    @staticmethod
-    def _define_context() -> Type[Sentence]:
-        return Sentence
-
-    @staticmethod
-    def _define_input_info() -> Dict:
-        return {}
+    def initialize(self, resources, configs: Optional[Config]):
+        super().initialize(resources, configs)
 
     def predict(self, data_batch: Dict):
         self.counter += 1
         return data_batch
 
-    def pack(self, data_pack: DataPack, output_dict: Optional[Dict] = None):
-        entries = list(data_pack.get_entries_of(NewType))
+    def pack(
+        self,
+        pack: DataPack,
+        predict_results: Optional[Dict],
+        context: Optional[Annotation] = None,
+    ):
+        entries = list(pack.get_entries_of(NewType))
         if len(entries) == 0:
-            NewType(pack=data_pack, value="[BATCH]")
+            NewType(pack=pack, value="[BATCH]")
         else:
             entry = entries[0]  # type: ignore
             entry.value += "[BATCH]"
-
-    @classmethod
-    def default_configs(cls):
-        config = super().default_configs()
-        config.update({"batcher": {"batch_size": 4}})
-        return config
 
 
 class DummyModel:
@@ -355,8 +356,7 @@ class PredictorPipelineTest(unittest.TestCase):
         model = DummyModel()
         predictor = DummyPredictor()
         predictor_config = {
-            "scope": "ft.onto.base_ontology.Sentence",
-            "batch_size": batch_size,
+            "context_type": "ft.onto.base_ontology.Sentence",
             "feature_scheme": {
                 "text_tag": {
                     "extractor": {
@@ -366,6 +366,7 @@ class PredictorPipelineTest(unittest.TestCase):
                     "type": "data_input",
                 },
             },
+            "batcher": {"batch_size": batch_size},
         }
         predictor.load(model)
 
@@ -376,7 +377,7 @@ class PredictorPipelineTest(unittest.TestCase):
         nlp.add(DummyEvaluator())
         nlp.initialize()
 
-        text_extractor = predictor.configs.feature_scheme.text_tag.extractor
+        text_extractor = predictor._request["schemes"]["text_tag"]["extractor"]
         for pack in pipeline.process_dataset(data_path):
             for instance in pack.get(Sentence):
                 text_extractor.update_vocab(pack, instance)
@@ -420,7 +421,6 @@ class PipelineTest(unittest.TestCase):
         dummy = DummyPackProcessor()
         config = {"test": "successor"}
         nlp.add(dummy, config=config)
-        print(nlp.components)
 
         with self.assertRaises(ProcessorConfigError):
             nlp.initialize()
@@ -452,7 +452,12 @@ class PipelineTest(unittest.TestCase):
         reader = SentenceReader()
         nlp.set_reader(reader)
         dummy = DummyFixedSizeBatchProcessor()
-        config = {"batcher": {"batch_size": 4}}
+        config = {
+            "batcher": {
+                "batch_size": 4,
+                "context_type": "ft.onto.base_ontology.Sentence",
+            },
+        }
         nlp.add(component=dummy, config=config)
         nlp.initialize()
         data_path = data_samples_root + "/random_texts/0.txt"
@@ -474,12 +479,22 @@ class PipelineTest(unittest.TestCase):
         reader = SentenceReader()
         nlp.set_reader(reader)
         dummy1 = DummyFixedSizeBatchProcessor()
-        config = {"batcher": {"batch_size": batch_size}}
+        config = {
+            "batcher": {
+                "batch_size": batch_size,
+                "context_type": "ft.onto.base_ontology.Sentence",
+            },
+        }
         nlp.add(component=dummy1, config=config)
         dummy2 = DummyPackProcessor()
         nlp.add(component=dummy2)
         dummy3 = DummyFixedSizeBatchProcessor()
-        config = {"batcher": {"batch_size": 2 * batch_size}}
+        config = {
+            "batcher": {
+                "batch_size": batch_size * 2,
+                "context_type": "ft.onto.base_ontology.Sentence",
+            },
+        }
         nlp.add(component=dummy3, config=config)
         nlp.initialize()
         data_path = data_samples_root + "/random_texts/0.txt"
@@ -505,7 +520,12 @@ class PipelineTest(unittest.TestCase):
         nlp.add(component=dummy1)
 
         dummy2 = DummyFixedSizeBatchProcessor()
-        config = {"batcher": {"batch_size": batch_size}}
+        config = {
+            "batcher": {
+                "batch_size": batch_size,
+                "context_type": "ft.onto.base_ontology.Sentence",
+            },
+        }
         nlp.add(component=dummy2, config=config)
 
         dummy3 = DummyPackProcessor()
@@ -533,12 +553,22 @@ class PipelineTest(unittest.TestCase):
         reader = SentenceReader()
         nlp.set_reader(reader)
         dummy1 = DummyFixedSizeBatchProcessor()
-        config = {"batcher": {"batch_size": batch_size1}}
+        config = {
+            "batcher": {
+                "batch_size": batch_size1,
+                "context_type": "ft.onto.base_ontology.Sentence",
+            },
+        }
         nlp.add(component=dummy1, config=config)
         dummy2 = DummyPackProcessor()
         nlp.add(component=dummy2)
         dummy3 = DummyFixedSizeBatchProcessor()
-        config = {"batcher": {"batch_size": batch_size2}}
+        config = {
+            "batcher": {
+                "batch_size": batch_size2,
+                "context_type": "ft.onto.base_ontology.Sentence",
+            },
+        }
         nlp.add(component=dummy3, config=config)
         nlp.initialize()
         data_path = data_samples_root + "/random_texts/0.txt"
@@ -564,13 +594,28 @@ class PipelineTest(unittest.TestCase):
         reader = SentenceReader()
         nlp.set_reader(reader)
         dummy1 = DummyFixedSizeBatchProcessor()
-        config = {"batcher": {"batch_size": batch_size1}}
+        config = {
+            "batcher": {
+                "batch_size": batch_size1,
+                "context_type": "ft.onto.base_ontology.Sentence",
+            },
+        }
         nlp.add(component=dummy1, config=config)
         dummy2 = DummyFixedSizeBatchProcessor()
-        config = {"batcher": {"batch_size": batch_size2}}
+        config = {
+            "batcher": {
+                "batch_size": batch_size2,
+                "context_type": "ft.onto.base_ontology.Sentence",
+            },
+        }
         nlp.add(component=dummy2, config=config)
         dummy3 = DummyFixedSizeBatchProcessor()
-        config = {"batcher": {"batch_size": batch_size3}}
+        config = {
+            "batcher": {
+                "batch_size": batch_size3,
+                "context_type": "ft.onto.base_ontology.Sentence",
+            },
+        }
         nlp.add(component=dummy3, config=config)
         nlp.initialize()
         data_path = data_samples_root + "/random_texts/0.txt"
@@ -596,13 +641,29 @@ class PipelineTest(unittest.TestCase):
         reader = SentenceReader()
         nlp.set_reader(reader)
         dummy1 = DummyFixedSizeBatchProcessor()
-        config = {"batcher": {"batch_size": batch_size1}}
+        config = {
+            "batcher": {
+                "batch_size": batch_size1,
+                "context_type": "ft.onto.base_ontology.Sentence",
+            },
+        }
         nlp.add(component=dummy1, config=config)
         dummy2 = DummyFixedSizeBatchProcessor()
-        config = {"batcher": {"batch_size": batch_size2}}
+        config = {
+            "batcher": {
+                "batch_size": batch_size2,
+                "context_type": "ft.onto.base_ontology.Sentence",
+            },
+        }
+
         nlp.add(component=dummy2, config=config)
         dummy3 = DummyFixedSizeBatchProcessor()
-        config = {"batcher": {"batch_size": batch_size3}}
+        config = {
+            "batcher": {
+                "batch_size": batch_size3,
+                "context_type": "ft.onto.base_ontology.Sentence",
+            },
+        }
         nlp.add(component=dummy3, config=config)
         dummy4 = DummyPackProcessor()
         nlp.add(component=dummy4)
@@ -634,7 +695,8 @@ class MultiPackPipelineTest(unittest.TestCase):
         nlp.add(
             DummyRelationExtractor(),
             config={"batcher": {"batch_size": 5}},
-            selector=NameMatchSelector(select_name=pack_name),
+            selector=NameMatchSelector(),
+            selector_config={"select_name": pack_name},
         )
         nlp.initialize()
 
@@ -679,7 +741,12 @@ class MultiPackPipelineTest(unittest.TestCase):
         reader = MultiPackSentenceReader()
         nlp.set_reader(reader)
         dummy = DummyFixedSizeBatchProcessor()
-        config = {"batcher": {"batch_size": 4}}
+        config = {
+            "batcher": {
+                "batch_size": 4,
+                "context_type": "ft.onto.base_ontology.Sentence",
+            },
+        }
         nlp.add(component=dummy, config=config, selector=FirstPackSelector())
         nlp.initialize()
         data_path = data_samples_root + "/random_texts/0.txt"
@@ -698,7 +765,12 @@ class MultiPackPipelineTest(unittest.TestCase):
         nlp = Pipeline[DataPack]()
         nlp.set_reader(StringReader())
         batch_processor = DummyFixedSizeBatchProcessor()
-        config = {"batcher": {"batch_size": batch_size}}
+        config = {
+            "batcher": {
+                "batch_size": batch_size,
+                "context_type": "ft.onto.base_ontology.Sentence",
+            },
+        }
         nlp.add(PeriodSentenceSplitter())
         nlp.add(batch_processor, config=config)
         nlp.initialize()
@@ -720,12 +792,27 @@ class MultiPackPipelineTest(unittest.TestCase):
         nlp.set_reader(PlainTextReader())
         dummy1 = DummyFixedSizeBatchProcessor()
         dummy2 = DummyFixedSizeBatchProcessor()
-        config = {"batcher": {"batch_size": batch_size}}
-        nlp.add(PeriodSentenceSplitter())
 
-        nlp.add(dummy1, config=config)
-        config = {"batcher": {"batch_size": 2 * batch_size}}
-        nlp.add(dummy2, config=config)
+        nlp.add(PeriodSentenceSplitter())
+        nlp.add(
+            dummy1,
+            config={
+                "batcher": {
+                    "batch_size": batch_size,
+                    "context_type": "ft.onto.base_ontology.Sentence",
+                }
+            },
+        )
+
+        nlp.add(
+            dummy2,
+            config={
+                "batcher": {
+                    "batch_size": 2 * batch_size,
+                    "context_type": "ft.onto.base_ontology.Sentence",
+                }
+            },
+        )
 
         nlp.initialize()
         data_path = os.path.join(data_samples_root, "random_texts")
@@ -749,12 +836,22 @@ class MultiPackPipelineTest(unittest.TestCase):
         reader = MultiPackSentenceReader()
         nlp.set_reader(reader)
         dummy1 = DummyFixedSizeBatchProcessor()
-        config = {"batcher": {"batch_size": batch_size}}
+        config = {
+            "batcher": {
+                "batch_size": batch_size,
+                "context_type": "ft.onto.base_ontology.Sentence",
+            },
+        }
         nlp.add(component=dummy1, config=config, selector=FirstPackSelector())
         dummy2 = DummyPackProcessor()
         nlp.add(component=dummy2, selector=FirstPackSelector())
         dummy3 = DummyFixedSizeBatchProcessor()
-        config = {"batcher": {"batch_size": 2 * batch_size}}
+        config = {
+            "batcher": {
+                "batch_size": batch_size * 2,
+                "context_type": "ft.onto.base_ontology.Sentence",
+            },
+        }
         nlp.add(component=dummy3, config=config, selector=FirstPackSelector())
         nlp.initialize()
         data_path = os.path.join(data_samples_root, "random_texts", "0.txt")
@@ -780,7 +877,12 @@ class MultiPackPipelineTest(unittest.TestCase):
         nlp.add(component=dummy1, selector=FirstPackSelector())
 
         dummy2 = DummyFixedSizeBatchProcessor()
-        config = {"batcher": {"batch_size": batch_size}}
+        config = {
+            "batcher": {
+                "batch_size": batch_size,
+                "context_type": "ft.onto.base_ontology.Sentence",
+            },
+        }
         nlp.add(component=dummy2, config=config, selector=FirstPackSelector())
 
         dummy3 = DummyPackProcessor()
@@ -809,12 +911,22 @@ class MultiPackPipelineTest(unittest.TestCase):
         reader = MultiPackSentenceReader()
         nlp.set_reader(reader)
         dummy1 = DummyFixedSizeBatchProcessor()
-        config = {"batcher": {"batch_size": batch_size1}}
+        config = {
+            "batcher": {
+                "batch_size": batch_size1,
+                "context_type": "ft.onto.base_ontology.Sentence",
+            },
+        }
         nlp.add(component=dummy1, config=config, selector=FirstPackSelector())
         dummy2 = DummyPackProcessor()
         nlp.add(component=dummy2, selector=FirstPackSelector())
         dummy3 = DummyFixedSizeBatchProcessor()
-        config = {"batcher": {"batch_size": batch_size2}}
+        config = {
+            "batcher": {
+                "batch_size": batch_size2,
+                "context_type": "ft.onto.base_ontology.Sentence",
+            },
+        }
         nlp.add(component=dummy3, config=config, selector=FirstPackSelector())
         nlp.initialize()
         data_path = os.path.join(data_samples_root, "random_texts", "0.txt")
@@ -840,13 +952,28 @@ class MultiPackPipelineTest(unittest.TestCase):
         reader = MultiPackSentenceReader()
         nlp.set_reader(reader)
         dummy1 = DummyFixedSizeBatchProcessor()
-        config = {"batcher": {"batch_size": batch_size1}}
+        config = {
+            "batcher": {
+                "batch_size": batch_size1,
+                "context_type": "ft.onto.base_ontology.Sentence",
+            },
+        }
         nlp.add(component=dummy1, config=config, selector=FirstPackSelector())
         dummy2 = DummyFixedSizeBatchProcessor()
-        config = {"batcher": {"batch_size": batch_size2}}
+        config = {
+            "batcher": {
+                "batch_size": batch_size2,
+                "context_type": "ft.onto.base_ontology.Sentence",
+            },
+        }
         nlp.add(component=dummy2, config=config, selector=FirstPackSelector())
         dummy3 = DummyFixedSizeBatchProcessor()
-        config = {"batcher": {"batch_size": batch_size3}}
+        config = {
+            "batcher": {
+                "batch_size": batch_size3,
+                "context_type": "ft.onto.base_ontology.Sentence",
+            },
+        }
         nlp.add(component=dummy3, config=config, selector=FirstPackSelector())
         nlp.initialize()
         data_path = os.path.join(data_samples_root, "random_texts", "0.txt")
@@ -872,13 +999,28 @@ class MultiPackPipelineTest(unittest.TestCase):
         reader = MultiPackSentenceReader()
         nlp.set_reader(reader)
         dummy1 = DummyFixedSizeBatchProcessor()
-        config = {"batcher": {"batch_size": batch_size1}}
+        config = {
+            "batcher": {
+                "batch_size": batch_size1,
+                "context_type": "ft.onto.base_ontology.Sentence",
+            },
+        }
         nlp.add(component=dummy1, config=config, selector=FirstPackSelector())
         dummy2 = DummyFixedSizeBatchProcessor()
-        config = {"batcher": {"batch_size": batch_size2}}
+        config = {
+            "batcher": {
+                "batch_size": batch_size2,
+                "context_type": "ft.onto.base_ontology.Sentence",
+            },
+        }
         nlp.add(component=dummy2, config=config, selector=FirstPackSelector())
         dummy3 = DummyFixedSizeBatchProcessor()
-        config = {"batcher": {"batch_size": batch_size3}}
+        config = {
+            "batcher": {
+                "batch_size": batch_size3,
+                "context_type": "ft.onto.base_ontology.Sentence",
+            },
+        }
         nlp.add(component=dummy3, config=config, selector=FirstPackSelector())
         dummy4 = DummyPackProcessor()
         nlp.add(component=dummy4, selector=FirstPackSelector())
@@ -960,8 +1102,7 @@ class DummyPackProcessorOne(DummyPackProcessor):
         record_meta["Token"] = {"1", "2"}
         record_meta["Document"] = {"2"}
 
-    @classmethod
-    def expected_types_and_attributes(cls):
+    def expected_types_and_attributes(self):
         expectation: Dict[str, Set[str]] = {"Sentence": {"1", "2", "3"}}
 
         return expectation
@@ -972,16 +1113,14 @@ class DummyPackProcessorTwo(DummyPackProcessor):
         record_meta["Token"] = {"1", "2"}
         record_meta["Document"] = {"2"}
 
-    @classmethod
-    def expected_types_and_attributes(cls):
+    def expected_types_and_attributes(self):
         expectation: Dict[str, Set[str]] = {"Document": {"1", "2", "3", "4"}}
 
         return expectation
 
 
 class DummyPackProcessorThree(DummyPackProcessor):
-    @classmethod
-    def expected_types_and_attributes(cls):
+    def expected_types_and_attributes(self):
         expectation: Dict[str, Set[str]] = {
             "ft.onto.example_import_ontology.Token": {"pos", "lemma"}
         }
@@ -1157,7 +1296,8 @@ class RecordCheckPipelineTest(unittest.TestCase):
         nlp.add(
             dummy,
             config={"test": "dummy1"},
-            selector=NameMatchSelector("default"),
+            selector=NameMatchSelector(),
+            selector_config={"select_name": "default"},
         )
 
         # This will not add the component successfully because the processor is
@@ -1166,7 +1306,11 @@ class RecordCheckPipelineTest(unittest.TestCase):
             nlp.add(dummy, config={"test": "dummy2"})
 
         # This will add the component, with a different selector
-        nlp.add(dummy, selector=NameMatchSelector("copy"))
+        nlp.add(
+            dummy,
+            selector=NameMatchSelector(),
+            selector_config={"select_name": "copy"},
+        )
         nlp.initialize()
 
         # Check that the two processors have the same name.
@@ -1272,50 +1416,6 @@ class RecordCheckPipelineTest(unittest.TestCase):
                 }
             },
         )
-
-    def test_entry_adding_attribute_wrong_key(self):
-        r"""Tests the processor adding attributes content to entry with
-        the wrong key"""
-        nlp = Pipeline[DataPack](enforce_consistency=True)
-        reader = DummySentenceReaderTwo()
-        nlp.set_reader(reader)
-        dummy = DummyPackProcessorFour()
-        nlp.add(dummy)
-        nlp.initialize()
-        data_path = data_samples_root + "/random_texts/0.txt"
-        warning_content = (
-            "Base on attributes in entry definition, "
-            "the [ab] attribute_name "
-            "does not exist in the "
-            "[Sentence] that "
-            "you specified to add to."
-        )
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            with self.assertRaises(KeyError):
-                nlp.process(data_path)
-            self.assertEqual(str(w[-1].message), warning_content)
-
-    def test_entry_adding_attribute_wrong_type(self):
-        r"""Tests the processor adding attributes content to entry with
-        the wrong type"""
-        nlp = Pipeline[DataPack](enforce_consistency=True)
-        reader = DummySentenceReaderTwo()
-        nlp.set_reader(reader)
-        dummy = DummyPackProcessorFive()
-        nlp.add(dummy)
-        nlp.initialize()
-        data_path = data_samples_root + "/random_texts/0.txt"
-        warning_content = (
-            "Based on type annotation, the [classification] "
-            "attribute of [Sentence] "
-            "should be [typing.Dict[str, float]], but got "
-            "[<class 'float'>]."
-        )
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            nlp.process(data_path)
-            self.assertEqual(str(w[-1].message), warning_content)
 
 
 if __name__ == "__main__":

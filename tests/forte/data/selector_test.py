@@ -39,27 +39,96 @@ class SelectorTest(unittest.TestCase):
         data_pack3.pack_name = "Three"
 
     def test_name_match_selector(self) -> None:
+        selector = NameMatchSelector()
+        selector.initialize(
+            configs={"select_name": "pack1"},
+        )
+        packs = selector.select(self.multi_pack)
+        doc_ids = ["1"]
+        for doc_id, pack in zip(doc_ids, packs):
+            self.assertEqual(doc_id, pack.pack_name)
+
+        # Test reverse selection.
+        selector.initialize(
+            configs={"select_name": "pack1", "reverse_selection": True},
+        )
+        packs = selector.select(self.multi_pack)
+        doc_ids = ["2", "Three"]
+        for doc_id, pack in zip(doc_ids, packs):
+            self.assertEqual(doc_id, pack.pack_name)
+
+    def test_name_match_selector_backward_compatability(self) -> None:
         selector = NameMatchSelector(select_name="pack1")
+        selector.initialize()
+        packs = selector.select(self.multi_pack)
+        doc_ids = ["1"]
+        for doc_id, pack in zip(doc_ids, packs):
+            self.assertEqual(doc_id, pack.pack_name)
+
+        selector = NameMatchSelector("pack1")
+        selector.initialize()
         packs = selector.select(self.multi_pack)
         doc_ids = ["1"]
         for doc_id, pack in zip(doc_ids, packs):
             self.assertEqual(doc_id, pack.pack_name)
 
     def test_regex_name_match_selector(self) -> None:
-        selector = RegexNameMatchSelector(select_name="^.*\\d$")
+        selector = RegexNameMatchSelector()
+        selector.initialize(
+            configs={"select_name": "^.*\\d$"},
+        )
         packs = selector.select(self.multi_pack)
         doc_ids = ["1", "2"]
         for doc_id, pack in zip(doc_ids, packs):
             self.assertEqual(doc_id, pack.pack_name)
 
+        # Test reverse selection.
+        selector.initialize(
+            {"select_name": "^.*\\d$", "reverse_selection": True}
+        )
+        packs = selector.select(self.multi_pack)
+        doc_ids = ["Three"]
+        for doc_id, pack in zip(doc_ids, packs):
+            self.assertEqual(doc_id, pack.pack_name)
+
+    def test_regex_name_match_selector_backward_compatability(self) -> None:
+        selector = RegexNameMatchSelector(select_name="^.*\\d$")
+        selector.initialize()
+        packs = selector.select(self.multi_pack)
+        doc_ids = ["1", "2"]
+        for doc_id, pack in zip(doc_ids, packs):
+            self.assertEqual(doc_id, pack.pack_name)
+
+        # Test different configuration method (backward compatibility)
+        selector = RegexNameMatchSelector("^.*\\d$")
+        selector.initialize()
+        packs = selector.select(self.multi_pack)
+        doc_ids = ["1", "2"]
+        for doc_id, pack in zip(doc_ids, packs):
+            self.assertEqual(doc_id, pack.pack_name)
+
+        # Test reverse selection.
+        selector.initialize({"reverse_selection": True})
+        packs = selector.select(self.multi_pack)
+        doc_ids = ["Three"]
+        for doc_id, pack in zip(doc_ids, packs):
+            self.assertEqual(doc_id, pack.pack_name)
+
     def test_first_pack_selector(self) -> None:
         selector = FirstPackSelector()
+        selector.initialize()
         packs = list(selector.select(self.multi_pack))
         self.assertEqual(len(packs), 1)
         self.assertEqual(packs[0].pack_name, "1")
 
+        # Test reverse selection.
+        selector.initialize({"reverse_selection": True})
+        packs = list(selector.select(self.multi_pack))
+        self.assertEqual(len(packs), len(self.multi_pack.packs) - 1)
+
     def test_all_pack_selector(self) -> None:
         selector = AllPackSelector()
+        selector.initialize()
         packs = selector.select(self.multi_pack)
         doc_ids = ["1", "2", "Three"]
         for doc_id, pack in zip(doc_ids, packs):

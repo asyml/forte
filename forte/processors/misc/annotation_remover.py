@@ -21,6 +21,4 @@ class AnnotationRemover(PackProcessor):
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
-        config = super().default_configs()
-        config.update({"removal_types": []})
-        return config
+        return {"removal_types": []}

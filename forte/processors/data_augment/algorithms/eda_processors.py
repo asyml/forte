@@ -255,11 +255,11 @@ class RandomSwapDataAugmentProcessor(ReplacementDataAugmentProcessor):
                     replace_map[swap_idx[0]] = new_idx_0
                     replace_map[swap_idx[1]] = new_idx_1
                 pid: int = data_pack.pack_id
-                for idx in replace_map:
+                for idx, replace_target in replace_map.items():
                     self._replaced_annos[pid].add(
                         (
                             annotations[idx].span,
-                            annotations[replace_map[idx]].text,
+                            annotations[replace_target].text,
                         )
                     )
 
@@ -273,27 +273,19 @@ class RandomSwapDataAugmentProcessor(ReplacementDataAugmentProcessor):
                 in a sentence that are changed. The processor will perform
                 the Random Swap operation (input length * alpha) times.
         """
-        config = super().default_configs()
-        config.update(
-            {
-                "augment_entry": "ft.onto.base_ontology.Token",
-                "other_entry_policy": {
-                    # to use Texar hyperparams 'kwargs' must
-                    # accompany with 'type'
-                    "type": "",
-                    "kwargs": {
-                        "ft.onto.base_ontology.Document": "auto_align",
-                        "ft.onto.base_ontology.Sentence": "auto_align",
-                    },
-                },
-                "alpha": 0.1,
-                "augment_pack_names": {
-                    "type": "",
-                    "kwargs": {"input_src": "augmented_input_src"},
-                },
-            }
-        )
-        return config
+        return {
+            "augment_entry": "ft.onto.base_ontology.Token",
+            "other_entry_policy": {
+                # to use Texar hyperparams 'kwargs' must
+                # accompany with 'type'
+                "ft.onto.base_ontology.Document": "auto_align",
+                "ft.onto.base_ontology.Sentence": "auto_align",
+            },
+            "alpha": 0.1,
+            "augment_pack_names": {
+                "input_src": "augmented_input_src",
+            },
+        }
 
 
 class RandomInsertionDataAugmentProcessor(ReplacementDataAugmentProcessor):
@@ -312,9 +304,7 @@ class RandomInsertionDataAugmentProcessor(ReplacementDataAugmentProcessor):
     def _augment(self, input_pack: MultiPack, aug_pack_names: List[str]):
         replacement_op = create_class_with_kwargs(
             self.configs["data_aug_op"],
-            class_args={
-                "configs": self.configs["data_aug_op_config"]["kwargs"]
-            },
+            class_args={"configs": self.configs["data_aug_op_config"]},
         )
         augment_entry = get_class(self.configs["augment_entry"])
 
@@ -356,29 +346,22 @@ class RandomInsertionDataAugmentProcessor(ReplacementDataAugmentProcessor):
             {
                 "augment_entry": "ft.onto.base_ontology.Token",
                 "other_entry_policy": {
-                    "type": "",
-                    "kwargs": {
-                        "ft.onto.base_ontology.Document": "auto_align",
-                        "ft.onto.base_ontology.Sentence": "auto_align",
-                    },
+                    "ft.onto.base_ontology.Document": "auto_align",
+                    "ft.onto.base_ontology.Sentence": "auto_align",
                 },
                 "data_aug_op": "forte.processors.data_augment.algorithms."
                 "dictionary_replacement_op.DictionaryReplacementOp",
                 "data_aug_op_config": {
-                    "type": "",
-                    "kwargs": {
-                        "dictionary_class": (
-                            "forte.processors.data_augment."
-                            "algorithms.dictionary.WordnetDictionary"
-                        ),
-                        "prob": 1.0,
-                        "lang": "eng",
-                    },
+                    "dictionary_class": (
+                        "forte.processors.data_augment."
+                        "algorithms.dictionary.WordnetDictionary"
+                    ),
+                    "prob": 1.0,
+                    "lang": "eng",
                 },
                 "alpha": 0.1,
                 "augment_pack_names": {
-                    "type": "",
-                    "kwargs": {"input_src": "augmented_input_src"},
+                    "input_src": "augmented_input_src",
                 },
                 "stopwords": english_stopwords,
             }
@@ -415,17 +398,13 @@ class RandomDeletionDataAugmentProcessor(ReplacementDataAugmentProcessor):
             {
                 "augment_entry": "ft.onto.base_ontology.Token",
                 "other_entry_policy": {
-                    "type": "",
-                    "kwargs": {
-                        "ft.onto.base_ontology.Document": "auto_align",
-                        "ft.onto.base_ontology.Sentence": "auto_align",
-                    },
+                    "ft.onto.base_ontology.Document": "auto_align",
+                    "ft.onto.base_ontology.Sentence": "auto_align",
                 },
-                "data_aug_op_config": {"type": "", "kwargs": {}},
+                "data_aug_op_config": {},
                 "alpha": 0.1,
                 "augment_pack_names": {
-                    "type": "",
-                    "kwargs": {"input_src": "augmented_input_src"},
+                    "input_src": "augmented_input_src",
                 },
             }
         )

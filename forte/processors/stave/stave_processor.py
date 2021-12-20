@@ -29,8 +29,8 @@ import logging
 import collections
 from typing import Dict, Set, Any
 
-from nlpviewer_backend.lib.stave_viewer import StaveViewer
-from nlpviewer_backend.lib.stave_project import StaveProjectWriter
+from stave_backend.lib.stave_viewer import StaveViewer
+from stave_backend.lib.stave_project import StaveProjectWriter
 
 from forte.common import Resources, ProcessorConfigError
 from forte.common.configuration import Config
@@ -154,7 +154,7 @@ class StaveProcessor(PackProcessor):
                 input_pack.pack_name
                 if self.configs.use_pack_name
                 else input_pack.pack_id,
-                input_pack.serialize(),
+                input_pack.to_string(),
             )
             if textpack_id == 0:
                 self._viewer.open()
@@ -164,7 +164,9 @@ class StaveProcessor(PackProcessor):
         """
         Create default project configuration based on ontology.
         This is translated from JavaScript function `createDefaultConfig` in
-        https://github.com/asyml/stave/blob/d82383de3d74bf09c0d30f33d8a902595f5aff80/src/app/pages/Projects.tsx#L140
+        https://github.com/asyml/stave/blob
+        /d82383de3d74bf09c0d30f33d8a902595f5aff80/src/app/pages/Projects.tsx
+        #L140
 
         Returns:
             configs: A dictionary with the default config for project.
@@ -190,6 +192,13 @@ class StaveProcessor(PackProcessor):
                 "left": "default-meta",
                 "right": "default-attribute",
                 "center-bottom": "disable",
+            },
+            "remoteConfigs": {
+                "pipelineUrl": "",
+                "doValidation": False,
+                "expectedName": "",
+                "inputFormat": "string",
+                "expectedRecords": {},
             },
         }
 
@@ -252,20 +261,14 @@ class StaveProcessor(PackProcessor):
         Returns:
             dict: A dictionary with the default config for this processor.
         """
-        config = super().default_configs()
-
-        config.update(
-            {
-                "project_path": None,
-                "port": 8888,
-                "host": "localhost",
-                "project_type": "single_pack",
-                "project_name": "Auto generated project",
-                "multi_ontology": None,
-                "project_configs": None,
-                "server_thread_daemon": False,
-                "use_pack_name": False,
-            }
-        )
-
-        return config
+        return {
+            "project_path": None,
+            "port": 8888,
+            "host": "localhost",
+            "project_type": "single_pack",
+            "project_name": "Auto generated project",
+            "multi_ontology": None,
+            "project_configs": None,
+            "server_thread_daemon": False,
+            "use_pack_name": False,
+        }

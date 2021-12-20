@@ -75,6 +75,21 @@ Data Augmentation Ops
 .. autoclass:: forte.processors.data_augment.algorithms.dictionary.WordnetDictionary
     :members:
 
+:hidden:`TypoReplacementOp`
+----------------------------
+.. autoclass:: forte.processors.data_augment.algorithms.typo_replacement_op.TypoReplacementOp
+    :members:
+
+:hidden:`WordSplittingOp`
+----------------------------
+.. autoclass:: forte.processors.data_augment.algorithms.word_splitting_processor.RandomWordSplitDataAugmentProcessor
+    :members:
+
+:hidden:`CharacterFlipOp`
+----------------------------
+.. autoclass:: forte.processors.data_augment.algorithms.character_flip_op.CharacterFlipOp
+    :members:
+
 Data Augmentation Models
 ========================================
 

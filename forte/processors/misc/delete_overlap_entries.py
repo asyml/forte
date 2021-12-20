@@ -81,10 +81,7 @@ class DeleteOverlapEntry(PackProcessor):
         Returns:
 
         """
-        configs = super().default_configs()
-        configs.update(
-            {
-                "entry_type": None,
-            }
-        )
-        return configs
+
+        return {
+            "entry_type": None,
+        }

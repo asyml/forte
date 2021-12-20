@@ -16,10 +16,11 @@ The reader that reads AG News data into Datapacks.
 """
 from typing import Iterator, Tuple
 
+from ftx.onto.ag_news import Description
+from ft.onto.base_ontology import Document, Title
 from forte.data.data_pack import DataPack
 from forte.data.base_reader import PackReader
-from ft.onto.ag_news import Description
-from ft.onto.base_ontology import Document, Title
+
 
 __all__ = [
     "AGNewsReader",
@@ -52,7 +53,7 @@ class AGNewsReader(PackReader):
 
         Returns: Iterator of each line in the csv file.
         """
-        with open(csv_file, "r") as f:
+        with open(csv_file, "r", encoding="utf-8") as f:
             for line_id, line in enumerate(f):
                 yield line_id, line
 

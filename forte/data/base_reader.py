@@ -95,16 +95,19 @@ class BaseReader(PipelineComponent[PackType], ABC):
         values. Used to replace the missing values of input `configs`
         during pipeline construction.
 
-        .. code-block:: python
+        Here:
+          - zip_pack (bool): whether to zip the results. The default value is
+             False.
 
-            {
-                "name": "reader"
-            }
+          - serialize_method: The method used to serialize the data. Current
+              available options are "jsonpickle" and "pickle". Default is
+              "jsonpickle".
+
         """
-        return {"name": "reader"}
+        return {"zip_pack": False, "serialize_method": "jsonpickle"}
 
-    @property
-    def pack_type(self):
+    @staticmethod
+    def pack_type():
         raise NotImplementedError
 
     @abstractmethod
@@ -207,7 +210,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
                     if self._cache_directory is not None:
                         self.cache_data(collection, pack, not_first)
 
-                    if not isinstance(pack, self.pack_type):
+                    if not isinstance(pack, self.pack_type()):
                         raise ValueError(
                             f"No Pack object read from the given "
                             f"collection {collection}, returned {type(pack)}."
@@ -263,14 +266,16 @@ class BaseReader(PipelineComponent[PackType], ABC):
         if self._cache_in_memory and self._cache_ready:
             # Read from memory
             for pack in self._data_packs:
-                if hasattr(pack._meta, "record"):
-                    self.record(pack._meta.record)
+                if self._check_type_consistency:
+                    if hasattr(pack._meta, "record"):
+                        self.record(pack._meta.record)
                 yield from self.timer_yield(pack)
         else:
             # Read via parsing dataset
             for pack in self._lazy_iter(*args, **kwargs):
-                if hasattr(pack._meta, "record"):
-                    self.record(pack._meta.record)
+                if self._check_type_consistency:
+                    if hasattr(pack._meta, "record"):
+                        self.record(pack._meta.record)
                 if self._cache_in_memory:
                     self._data_packs.append(pack)
 
@@ -321,11 +326,19 @@ class BaseReader(PipelineComponent[PackType], ABC):
 
         logger.info("Caching pack to %s", cache_filename)
         if append:
-            with open(cache_filename, "a") as cache:
-                cache.write(pack.serialize() + "\n")
+            with open(
+                cache_filename,
+                "a",
+                encoding="utf-8",
+            ) as cache:
+                cache.write(pack.to_string() + "\n")
         else:
-            with open(cache_filename, "w") as cache:
-                cache.write(pack.serialize() + "\n")
+            with open(
+                cache_filename,
+                "w",
+                encoding="utf-8",
+            ) as cache:
+                cache.write(pack.to_string() + "\n")
 
     def read_from_cache(
         self, cache_filename: Union[Path, str]
@@ -339,17 +352,17 @@ class BaseReader(PipelineComponent[PackType], ABC):
         Returns: List of cached data packs.
         """
         logger.info("reading from cache file %s", cache_filename)
-        with open(cache_filename, "r") as cache_file:
+        with open(cache_filename, "r", encoding="utf-8") as cache_file:
             for line in cache_file:
-                pack = DataPack.deserialize(line.strip())
-                if not isinstance(pack, self.pack_type):
+                pack = DataPack.from_string(line.strip())
+                if not isinstance(pack, self.pack_type()):
                     raise TypeError(
                         f"Pack deserialized from {cache_filename} "
-                        f"is {type(pack)}, but expect {self.pack_type}"
+                        f"is {type(pack)}, but expect {self.pack_type()}"
                     )
                 yield pack
 
-    def finish(self, resources: Resources):
+    def finish(self, resource: Resources):
         pass
 
     def set_text(self, pack: DataPack, text: str):
@@ -367,8 +380,8 @@ class BaseReader(PipelineComponent[PackType], ABC):
 class PackReader(BaseReader[DataPack], ABC):
     r"""A Pack Reader reads data into :class:`DataPack`."""
 
-    @property
-    def pack_type(self):
+    @staticmethod
+    def pack_type():
         return DataPack
 
 
@@ -377,6 +390,6 @@ class MultiPackReader(BaseReader[MultiPack], ABC):
     data readers which return :class:`MultiPack`.
     """
 
-    @property
-    def pack_type(self):
+    @staticmethod
+    def pack_type():
         return MultiPack

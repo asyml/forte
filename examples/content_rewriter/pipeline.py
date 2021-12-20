@@ -29,9 +29,9 @@ def do_process(input_pack_str: str):
     # Let's assume there is a JSON string for us to use.
     datapack: DataPack = pipeline.process([input_pack_str])
     # You can get the JSON form like this.
-    data_json = datapack.serialize()
+    data_json = datapack.to_string()
     # Let's write it out.
-    with open("generation.txt", "w") as fo:
+    with open("generation.txt", "w", encoding="utf-8") as fo:
         fo.write(data_json)
 
 
@@ -42,6 +42,6 @@ if __name__ == "__main__":
     # You should initialize the model here, so we only do it once.
     pipeline.initialize()
 
-    with open("rewriting_input.json") as fi:
+    with open("rewriting_input.json", encoding="utf-8") as fi:
         test_str = fi.read()
         do_process(test_str)

@@ -47,7 +47,7 @@
           "name": "token_ranks",
           "description": "To demonstrate that an attribute can be a Dict, and the values can be other entries.",
           "type": "Dict",
-          "key_type": "int",
+          "key_type": "str",
           "value_type": "ft.onto.example_ontology.Word"
         }
       ]

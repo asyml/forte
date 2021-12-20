@@ -14,8 +14,9 @@
 
 _MAJOR = "0"
 _MINOR = "1"
-_REVISION = "0post2"
+_REVISION = "2"
 
 VERSION_SHORT = "{0}.{1}".format(_MAJOR, _MINOR)
 VERSION = "{0}.{1}.{2}".format(_MAJOR, _MINOR, _REVISION)
+FORTE_IR_VERSION = "0.0.1"
 PACK_VERSION = [0,0,1]

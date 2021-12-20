@@ -41,6 +41,13 @@
     {
       "entry_name": "ft.onto.wikipedia.WikiTitle",
       "parent_entry": "forte.data.ontology.top.Annotation",
+      "description": "Title for the wikipedia sections.",
+      "attributes": []
+    },
+    {
+      "entry_name": "ft.onto.wikipedia.WikiArticleTitle",
+      "parent_entry": "forte.data.ontology.top.Annotation",
+      "description": "The title for the whole article.",
       "attributes": []
     },
     {
@@ -83,6 +90,17 @@
         {
           "name": "value",
           "type": "str"
+        }
+      ]
+    },
+    {
+      "entry_name": "ft.onto.wikipedia.WikiCategory",
+      "parent_entry": "forte.data.ontology.top.Generics",
+      "attributes": [
+        {
+          "name": "values",
+          "type": "List",
+          "item_type": "str"
         }
       ]
     }

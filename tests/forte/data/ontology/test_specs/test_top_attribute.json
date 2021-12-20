@@ -1,0 +1,39 @@
+{
+    "name": "test_top_attribute",
+    "definitions": [
+        {
+            "entry_name": "ft.onto.test_top_attribute.Item",
+            "parent_entry": "forte.data.ontology.top.Annotation",
+            "attributes": [
+                {
+                    "name": "query",
+                    "type": "forte.data.ontology.top.Query"
+                },
+                {
+                    "name": "generics",
+                    "type": "forte.data.ontology.top.Generics"
+                },
+                {
+                    "name": "link",
+                    "type": "forte.data.ontology.top.Link"
+                },
+                {
+                    "name": "group",
+                    "type": "forte.data.ontology.top.Group"
+                },
+                {
+                    "name": "multiPackLink",
+                    "type": "forte.data.ontology.top.MultiPackLink"
+                },
+                {
+                    "name": "multiPackGroup",
+                    "type": "forte.data.ontology.top.MultiPackGroup"
+                },
+                {
+                    "name": "multiPackGeneric",
+                    "type": "forte.data.ontology.top.MultiPackGeneric"
+                }
+            ]
+        }
+    ]
+}

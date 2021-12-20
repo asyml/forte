@@ -54,8 +54,7 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
         """
         pass
 
-    @classmethod
-    def expected_types_and_attributes(cls) -> Dict[str, Set[str]]:
+    def expected_types_and_attributes(self) -> Dict[str, Set[str]]:
         r"""Method to add expected types and attributes for the input of the
         current processor which would be checked before running the processor if
         if the pipeline is initialized with
@@ -95,13 +94,14 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
 
         """
         # pylint: disable=protected-access
-        try:
-            self.record(input_pack._meta.record)
-        except AttributeError:
-            # For backward compatibility, no record to write.
-            logging.info(
-                "Packs of the old format do not have the record field."
-            )
+        if self._check_type_consistency:
+            try:
+                self.record(input_pack._meta.record)
+            except AttributeError:
+                # For backward compatibility, no record to write.
+                logging.info(
+                    "Packs of the old format do not have the record field."
+                )
 
     def process(self, input_pack: PackType):
         self.check_record(input_pack)
@@ -127,15 +127,6 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
         values. Used to replace the missing values of input ``configs`` during
         pipeline construction.
         """
-        config = super().default_configs()
-        config.update(
-            {
-                "selector": {
-                    "type": "forte.data.selector.DummySelector",
-                    "args": None,
-                    "kwargs": {},
-                },
-                "overwrite": False,
-            }
-        )
-        return config
+        return {
+            "overwrite": False,
+        }

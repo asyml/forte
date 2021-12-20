@@ -14,7 +14,6 @@
 """
 Forte Span module.
 """
-
 from functools import total_ordering
 
 __all__ = [
@@ -62,3 +61,6 @@ class Span:
 
     def __eq__(self, other):
         return (self.begin, self.end) == (other.begin, other.end)
+
+    def __hash__(self):
+        return hash((self.begin, self.end))

@@ -144,16 +144,13 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
         processor_config = {
             "augment_entry": "ft.onto.base_ontology.Token",
             "other_entry_policy": {
-                "type": "",
-                "kwargs": {
-                    "ft.onto.base_ontology.Document": "auto_align",
-                    "ft.onto.base_ontology.Sentence": "auto_align",
-                },
+                "ft.onto.base_ontology.Document": "auto_align",
+                "ft.onto.base_ontology.Sentence": "auto_align",
             },
             "type": "data_augmentation_op",
             "data_aug_op": replacer_op,
-            "data_aug_op_config": {"type": "", "kwargs": {}},
-            "augment_pack_names": {"kwargs": {"input": "augmented_input"}},
+            "data_aug_op_config": {},
+            "augment_pack_names": {},
         }
 
         nlp.set_reader(reader=StringReader())
@@ -230,12 +227,12 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
         processor_config = {
             "augment_entry": "ft.onto.base_ontology.Token",
             "other_entry_policy": {
-                "kwargs": {"ft.onto.base_ontology.Sentence": "auto_align"}
+                "ft.onto.base_ontology.Sentence": "auto_align"
             },
             "type": "data_augmentation_op",
             "data_aug_op": replacer_op,
-            "data_aug_op_config": {"kwargs": {}},
-            "augment_pack_names": {"kwargs": {}},
+            "data_aug_op_config": {},
+            "augment_pack_names": {},
         }
 
         nlp.initialize()

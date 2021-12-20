@@ -35,14 +35,11 @@ class IndexProcessor(PackProcessor, ABC):
     # pylint: disable=useless-super-delegation
     def __init__(self) -> None:
         super().__init__()
-        # self.documents: List[List[str]] = []
         self.documents: List[Dict[str, str]] = []
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
-        config = super().default_configs()
-        config.update({"batch_size": 128})
-        return config
+        return {"batch_size": 128}
 
     def _bulk_process(self):
         r"""Subclasses of :class:`IndexProcessor` should implement this method
@@ -111,7 +108,7 @@ class IndexProcessorWithDatapack(PackProcessor, ABC):
         raise NotImplementedError
 
     def _process(self, input_pack: DataPack):
-        serialized_datapack: str = input_pack.serialize()
+        serialized_datapack: str = input_pack.to_string()
 
         self.documents.append(
             (str(input_pack.pack_id), input_pack.text, serialized_datapack)

@@ -17,8 +17,8 @@ Unit tests for back translation replacement op.
 
 import unittest
 import random
-from forte.data.data_pack import DataPack
 from ft.onto.base_ontology import Sentence
+from forte.data.data_pack import DataPack
 from forte.processors.data_augment.algorithms.back_translation_op import (
     BackTranslationOp,
 )
@@ -50,7 +50,7 @@ class TestBackTranslationAugmenter(unittest.TestCase):
         data_pack.add_entry(sent)
 
         translated_text = (
-            "The treatment of natural language " "has never been easier!"
+            "The treatment of natural language has never been easier!"
         )
         assert translated_text == self.bta.replace(sent)[1]
 

@@ -34,6 +34,7 @@ from forte.data.ontology.code_generation_exceptions import (
     UnsupportedTypeException,
     ParentEntryNotSupportedException,
     InvalidIdentifierException,
+    CodeGenerationException,
 )
 from forte.data.ontology.code_generation_objects import ImportManager
 from forte.data.ontology.ontology_code_generator import OntologyCodeGenerator
@@ -84,6 +85,7 @@ class GenerateOntologyTest(unittest.TestCase):
             ["ft/onto/ft_module", "custom/user/custom_module"],
         ),
         ("race_qa_onto", ["ft/onto/race_qa_ontology"]),
+        ("test_top_attribute", ["ft/onto/test_top_attribute"]),
     )
     def test_generated_code(self, value):
         input_file_name, file_paths = value
@@ -184,6 +186,7 @@ class GenerateOntologyTest(unittest.TestCase):
         (False, "test_unknown_item_type.json", TypeNotDeclaredException),
         (False, "test_invalid_entry_name.json", InvalidIdentifierException),
         (False, "test_invalid_attr_name.json", InvalidIdentifierException),
+        (False, "test_non_string_keys.json", CodeGenerationException),
     )
     def test_warnings_errors(self, value):
         expected_warning, file, msg_type = value
@@ -213,15 +216,15 @@ class GenerateOntologyTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             os.mkdir(os.path.join(temp_dir, "ft"))
             temp_filename = _get_temp_filename(json_file_path, temp_dir)
-            with LogCapture() as l:
+            with LogCapture() as lc:
                 self.generator.generate(temp_filename, temp_dir, False)
-                l.check_present(
+                lc.check_present(
                     (
                         "root",
                         "WARNING",
-                        f"The directory with the name ft is already present in "
-                        f"{temp_dir}. New files will be merge into the existing "
-                        f"directory.",
+                        f"The directory with the name ft is already present "
+                        f"in {temp_dir}. New files will be merge into the "
+                        f"existing directory.",
                     )
                 )
 

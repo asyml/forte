@@ -21,7 +21,7 @@ from forte.data.data_pack import DataPack
 from forte.data.readers import StringReader
 from forte.pipeline import Pipeline
 from forte.processors.nlp import CoNLLNERPredictor, SRLPredictor
-from forte.nltk import NLTKWordTokenizer, NLTKPOSTagger, NLTKSentenceSegmenter
+from fortex.nltk import NLTKWordTokenizer, NLTKPOSTagger, NLTKSentenceSegmenter
 
 from ft.onto.base_ontology import (
     Token,
@@ -44,7 +44,8 @@ def main():
 
     config = Config(config, default_hparams=None)
 
-    pl.add(CoNLLNERPredictor(), config=config.NER)
+    # TODO: update this with models from tagging.
+    # pl.add(CoNLLNERPredictor(), config=config.NER)
     pl.add(SRLPredictor(), config=config.SRL)
 
     pl.initialize()

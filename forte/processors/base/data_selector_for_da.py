@@ -54,7 +54,7 @@ class BaseElasticSearchDataSelector(BaseDataSelector):
         super().initialize(resources, configs)
         self.index = create_class_with_kwargs(
             self.configs.indexer_class,
-            class_args={"config": self.configs.index_configs},
+            class_args={"config": self.configs.index_config},
         )
 
     def _create_search_key(self, data: Optional[str]) -> Dict[str, Any]:
@@ -64,7 +64,7 @@ class BaseElasticSearchDataSelector(BaseDataSelector):
         raise NotImplementedError
 
     def _parse_pack(self, pack_info: str) -> Iterator[DataPack]:
-        pack: DataPack = DataPack.deserialize(pack_info)
+        pack: DataPack = DataPack.from_string(pack_info)  # type: ignore
         yield pack
 
     @classmethod
@@ -96,7 +96,7 @@ class QueryDataSelector(BaseElasticSearchDataSelector):
         Returns: Selected document's original datapack.
         """
         data_path: str = args[0]
-        with open(data_path, "r") as file:
+        with open(data_path, "r", encoding="utf-8") as file:
             for line in file:
                 query: Dict = self._create_search_key(line.strip())
                 results = self.index.search(query)

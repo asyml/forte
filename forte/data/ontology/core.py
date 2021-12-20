@@ -16,7 +16,6 @@ Defines the basic data structures and interfaces for the Forte data
 representation system.
 """
 import uuid
-import warnings
 from abc import abstractmethod, ABC
 from collections.abc import MutableSequence, MutableMapping
 from dataclasses import dataclass
@@ -30,14 +29,12 @@ from typing import (
     Union,
     Dict,
     Iterator,
-    get_type_hints,
     overload,
     List,
 )
 
 import numpy as np
 
-from forte.common import PackDataException
 from forte.data.container import ContainerType, BasePointer
 
 __all__ = [
@@ -54,13 +51,15 @@ __all__ = [
     "MultiEntry",
 ]
 
-from forte.utils.utils import check_type
+from forte.utils import get_full_module_name
 
 default_entry_fields = [
     "_Entry__pack",
     "_tid",
     "_embedding",
     "_span",
+    "_begin",
+    "_end",
     "_parent",
     "_child",
     "_members",
@@ -70,12 +69,89 @@ default_entry_fields = [
     "_id_manager",
 ]
 
+unserializable_fields = [
+    # This may be related to typing, but cannot be supported by typing.
+    "__orig_class__",
+]
+
+_f_struct_keys: Dict[str, bool] = {}
+_pointer_keys: Dict[str, bool] = {}
+
+
+def set_state_func(instance, state):
+    # pylint: disable=protected-access
+    """
+    An internal used function. `instance` is an instance of Entry or a
+    MultiEntry. This function will populate the internal states for them.
+
+    Args:
+        instance:
+        state:
+
+    Returns:
+
+    """
+    # During de-serialization, convert the list back to numpy array.
+    if "_embedding" in state:
+        state["_embedding"] = np.array(state["_embedding"])
+    else:
+        state["_embedding"] = np.empty(0)
+
+    # NOTE: the __pack will be set via set_pack from the Pack side.
+    cls_name = get_full_module_name(instance)
+    for k, v in state.items():
+        key = cls_name + "_" + k
+        if _f_struct_keys.get(key, False):
+            v._set_parent(instance)
+        else:
+            if isinstance(v, (FList, FDict)):
+                v._set_parent(instance)
+                _f_struct_keys[key] = True
+            else:
+                _f_struct_keys[key] = False
+
+    instance.__dict__.update(state)
+
+
+def get_state_func(instance):
+    # pylint: disable=protected-access
+    r"""In serialization, the reference to pack is not set, and
+    it will be set by the container.
+
+    This also implies that it is not advised to serialize an entry on its
+    own, without the ``Container`` as the context, there is little semantics
+    remained in an entry and unexpected errors could occur.
+    """
+    state = instance.__dict__.copy()
+    # During serialization, convert the numpy array as a list.
+    emb = list(instance._embedding.tolist())
+    if len(emb) == 0:
+        state.pop("_embedding")
+    else:
+        state["_embedding"] = emb
+
+    cls_name = get_full_module_name(instance)
+    for k, v in state.items():
+        key = cls_name + "_" + k
+        if k in _pointer_keys:
+            if _pointer_keys[key]:
+                state[k] = v.as_pointer(instance)
+        else:
+            if isinstance(v, Entry):
+                state[k] = v.as_pointer(instance)
+                _pointer_keys[key] = True
+            else:
+                _pointer_keys[key] = False
+
+    state.pop("_Entry__pack")
+    return state
+
 
 @dataclass
 class Entry(Generic[ContainerType]):
     r"""The base class inherited by all NLP entries. This is the main data type
     for all in-text NLP analysis results. The main sub-types are
-    ``Annotation``, ``Link`` and ``Group``.
+    ``Annotation``, ``Link``, ``Generics``, and ``Group``.
 
     An :class:`forte.data.ontology.top.Annotation` object represents a
     span in text.
@@ -86,9 +162,9 @@ class Entry(Generic[ContainerType]):
     A :class:`forte.data.ontology.top.Group` object represents a
     collection of multiple entries.
 
-    Attributes:
-        self.embedding: The embedding vectors (numpy array of floats) of this
-            entry.
+    Main Attributes:
+        - embedding: The embedding vectors (numpy array of floats) of this
+          entry.
 
     Args:
         pack: Each entry should be associated with one pack upon creation.
@@ -118,27 +194,10 @@ class Entry(Generic[ContainerType]):
         own, without the ``Container`` as the context, there is little semantics
         remained in an entry.
         """
-        state = self.__dict__.copy()
-        # During serialization, convert the numpy array as a list.
-        emb = list(self._embedding.tolist())
-        if len(emb) == 0:
-            state.pop("_embedding")
-        else:
-            state["_embedding"] = emb
-        state.pop("_Entry__pack")
-        return state
+        return get_state_func(self)
 
     def __setstate__(self, state):
-        # Recover the internal __field_modified dict for the entry.
-        # NOTE: the __pack will be set via set_pack from the Pack side.
-        # self.__dict__['_Entry__field_modified'] = set()
-
-        # During de-serialization, convert the list back to numpy array.
-        if "_embedding" in state:
-            state["_embedding"] = np.array(state["_embedding"])
-        else:
-            state["_embedding"] = np.empty(0)
-        self.__dict__.update(state)
+        set_state_func(self, state)
 
     # using property decorator
     # a getter function for self._embedding
@@ -185,6 +244,25 @@ class Entry(Generic[ContainerType]):
     def set_pack(self, pack: ContainerType):
         self.__pack = pack
 
+    def relink_pointer(self):
+        """
+        This function is normally called after deserialization. It can be called
+        when the pack reference of this entry is ready (i.e. after `set_pack`).
+        The purpose is to convert the `Pointer` objects into actual entries.
+        """
+        cls_name = get_full_module_name(self)
+        for k, v in self.__dict__.items():
+            key = cls_name + "_" + k
+            if k in _pointer_keys:
+                if _pointer_keys[key]:
+                    setattr(self, k, self._resolve_pointer(v))
+            else:
+                if isinstance(v, BasePointer):
+                    _pointer_keys[key] = True
+                    setattr(self, k, self._resolve_pointer(v))
+                else:
+                    _pointer_keys[key] = False
+
     def as_pointer(self, from_entry: "Entry"):
         """
         Return this entry as a pointer of this entry relative to the
@@ -203,12 +281,12 @@ class Entry(Generic[ContainerType]):
         elif isinstance(from_entry, Entry):
             return Pointer(self.tid)
 
-    def resolve_pointer(self, ptr: BasePointer):
+    def _resolve_pointer(self, ptr: BasePointer):
         """
         Resolve into an entry on the provided pointer ``ptr`` from this entry.
 
         Args:
-            ptr:
+            ptr: A pointer that refer to an entity.
 
         Returns:
 
@@ -228,67 +306,74 @@ class Entry(Generic[ContainerType]):
         else:
             return module + "." + self.__class__.__name__
 
-    def _check_attr_type(self, key, value):
-        """
-        Use the type hint to validate whether the provided value is as expected.
+    # def _check_attr_type(self, key, value):
+    #     """
+    #     Use the type hint to validate whether the provided value is as expected.
+    #
+    #     Args:
+    #         key:  The field name.
+    #         value: The field value.
+    #
+    #     Returns:
+    #
+    #     """
+    #     if key not in default_entry_fields:
+    #         hints = get_type_hints(self.__class__)
+    #         if key not in hints.keys():
+    #             warnings.warn(
+    #                 f"Base on attributes in entry definition, "
+    #                 f"the [{key}] attribute_name does not exist in the "
+    #                 f"[{type(self).__name__}] that you specified to add to."
+    #             )
+    #         is_valid = check_type(value, hints[key])
+    #         if not is_valid:
+    #             warnings.warn(
+    #                 f"Based on type annotation, "
+    #                 f"the [{key}] attribute of [{type(self).__name__}] "
+    #                 f"should be [{hints[key]}], but got [{type(value)}]."
+    #             )
+
+    # def __setattr__(self, key, value):
+    #     super().__setattr__(key, value)
+    #
+    #     if isinstance(value, Entry):
+    #         if value.pack == self.pack:
+    #             # Save a pointer to the value from this entry.
+    #             self.__dict__[key] = Pointer(value.tid)
+    #         else:
+    #             raise PackDataException(
+    #                 "An entry cannot refer to entries in another data pack."
+    #             )
+    #     else:
+    #         super().__setattr__(key, value)
+    #
+    #     # We add the record to the system.
+    #     if key not in default_entry_fields:
+    #         self.__pack.record_field(self.tid, key)
+
+    # def __getattribute__(self, item):
+    #     try:
+    #         v = super().__getattribute__(item)
+    #     except AttributeError:
+    #         # For all unknown attributes, return None.
+    #         return None
+    #
+    #     if isinstance(v, BasePointer):
+    #         # Using the pointer to get the entry.
+    #         return self._resolve_pointer(v)
+    #     else:
+    #         return v
+
+    def __eq__(self, other):
+        r"""
+        The eq function for :class:`Entry` objects.
+        Can be further implemented in each subclass.
 
         Args:
-            key:  The field name.
-            value: The field value.
+            other:
 
         Returns:
 
-        """
-        if key not in default_entry_fields:
-            hints = get_type_hints(self.__class__)
-            if key not in hints.keys():
-                warnings.warn(
-                    f"Base on attributes in entry definition, "
-                    f"the [{key}] attribute_name does not exist in the "
-                    f"[{type(self).__name__}] that you specified to add to."
-                )
-            is_valid = check_type(value, hints[key])
-            if not is_valid:
-                warnings.warn(
-                    f"Based on type annotation, "
-                    f"the [{key}] attribute of [{type(self).__name__}] "
-                    f"should be [{hints[key]}], but got [{type(value)}]."
-                )
-
-    def __setattr__(self, key, value):
-        self._check_attr_type(key, value)
-
-        if isinstance(value, Entry):
-            if value.pack == self.pack:
-                # Save a pointer to the value from this entry.
-                self.__dict__[key] = Pointer(value.tid)
-            else:
-                raise PackDataException(
-                    "An entry cannot refer to entries in another data pack."
-                )
-        else:
-            super().__setattr__(key, value)
-
-        # We add the record to the system.
-        if key not in default_entry_fields:
-            self.__pack.record_field(self.tid, key)
-
-    def __getattribute__(self, item):
-        try:
-            v = super().__getattribute__(item)
-        except AttributeError:
-            # For all unknown attributes, return None.
-            return None
-
-        if isinstance(v, BasePointer):
-            # Using the pointer to get the entry.
-            return self.resolve_pointer(v)
-        else:
-            return v
-
-    def __eq__(self, other):
-        r"""The eq function for :class:`Entry` objects.
-        To be implemented in each subclass.
         """
         if other is None:
             return False
@@ -312,24 +397,15 @@ class Entry(Generic[ContainerType]):
 
 
 class MultiEntry(Entry, ABC):
-    def __setattr__(self, key, value):
-        """
-        Handle the special sub-entry case in the multi pack case.
+    r"""The base class for multi-pack entries. The main sub-types are
+    ``MultiPackLink``, ``MultiPackGenerics``, and ``MultiPackGroup``.
 
-        Args:
-            key:
-            value:
+    A :class:`forte.data.ontology.top.MultiPackLink` object represents a binary
+    link relation between two entries between different data packs.
 
-        Returns:
-
-        """
-        self._check_attr_type(key, value)
-
-        if isinstance(value, Entry):
-            # Save a pointer of the value.
-            self.__dict__[key] = value.as_pointer(self)
-        else:
-            super().__setattr__(key, value)
+    A :class:`forte.data.ontology.top.MultiPackGroup` object represents a
+    collection of multiple entries among different data packs.
+    """
 
     def as_pointer(self, from_entry: "Entry") -> "Pointer":
         """
@@ -348,7 +424,7 @@ class MultiEntry(Entry, ABC):
                 "Do not support reference a multi pack entry from an entry."
             )
 
-    def resolve_pointer(self, ptr: BasePointer) -> Entry:
+    def _resolve_pointer(self, ptr: BasePointer) -> Entry:
         if isinstance(ptr, Pointer):
             return self.pack.get_entry(ptr.tid)
         elif isinstance(ptr, MpPointer):
@@ -362,7 +438,6 @@ EntryType = TypeVar("EntryType", bound=Entry)
 ParentEntryType = TypeVar("ParentEntryType", bound=Entry)
 
 
-# TODO: Cannot pickle with FList[CorefQuestionAnswers], have generic problems.
 class FList(Generic[ParentEntryType], MutableSequence):
     """
     FList allows the elements to be Forte entries. FList will internally
@@ -380,10 +455,30 @@ class FList(Generic[ParentEntryType], MutableSequence):
         if data is not None:
             self.__data = [d.as_pointer(self.__parent_entry) for d in data]
 
+    def __eq__(self, other):
+        return self.__data == other._FList__data
+
     def __getstate__(self):
         state = self.__dict__.copy()
+        # Parent entry cannot be serialized, should be set by the parent with
+        #  _set_parent.
         state.pop("_FList__parent_entry")
+
+        state["data"] = state.pop("_FList__data")
+
+        # We make a copy of the whole state but there are items cannot be
+        # serialized.
+        for f in unserializable_fields:
+            if f in state:
+                state.pop(f)
         return state
+
+    def __setstate__(self, state):
+        state["_FList__data"] = state.pop("data")
+        self.__dict__.update(state)
+
+    def _set_parent(self, parent_entry: ParentEntryType):
+        self.__parent_entry = parent_entry
 
     def insert(self, index: int, entry: EntryType):
         self.__data.insert(index, entry.as_pointer(self.__parent_entry))
@@ -403,27 +498,24 @@ class FList(Generic[ParentEntryType], MutableSequence):
     ) -> Union[EntryType, MutableSequence]:
         if isinstance(index, slice):
             return [
-                self.__parent_entry.resolve_pointer(d)
+                self.__parent_entry._resolve_pointer(d)
                 for d in self.__data[index]
             ]
         else:
-            return self.__parent_entry.resolve_pointer(self.__data[index])
+            return self.__parent_entry._resolve_pointer(self.__data[index])
 
     def __setitem__(
         self,
         index: Union[int, slice],
         value: Union[EntryType, Iterable[EntryType]],
     ) -> None:
-        # pylint: disable=isinstance-second-argument-not-valid-type
-        # TODO: Disable until fix: https://github.com/PyCQA/pylint/issues/3507
         if isinstance(index, int):
-            # Assert for mypy: https://github.com/python/mypy/issues/7858
-            assert isinstance(value, Entry)
-            self.__data[index] = value.as_pointer(self.__parent_entry)
+            self.__data[index] = value.as_pointer(  # type: ignore
+                self.__parent_entry
+            )
         else:
-            assert isinstance(value, Iterable)
             self.__data[index] = [
-                v.as_pointer(self.__parent_entry) for v in value
+                v.as_pointer(self.__parent_entry) for v in value  # type: ignore
             ]
 
     def __delitem__(self, index: Union[int, slice]) -> None:
@@ -459,6 +551,31 @@ class FDict(Generic[KeyType, ValueType], MutableMapping):
                 k: v.as_pointer(self.__parent_entry) for k, v in data.items()
             }
 
+    def _set_parent(self, parent_entry: ParentEntryType):
+        self.__parent_entry = parent_entry
+
+    def __eq__(self, other):
+        return self.__data == other._FDict__data
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        # The __parent_entry need to be assigned via its parent entry,
+        # so a serialized dict may not have the following key ready sometimes.
+        state.pop("_FDict__parent_entry")
+
+        state["data"] = state.pop("_FDict__data")
+
+        # We make a copy of the whole state but there are items cannot be
+        # serialized.
+        for f in unserializable_fields:
+            if f in state:
+                state.pop(f)
+        return state
+
+    def __setstate__(self, state):
+        state["_FDict__data"] = state.pop("data")
+        self.__dict__.update(state)
+
     def __setitem__(self, k: KeyType, v: ValueType) -> None:
         try:
             self.__data[k] = v.as_pointer(self.__parent_entry)
@@ -472,7 +589,7 @@ class FDict(Generic[KeyType, ValueType], MutableMapping):
         del self.__data[k]
 
     def __getitem__(self, k: KeyType) -> ValueType:
-        return self.__parent_entry.resolve_pointer(self.__data[k])
+        return self.__parent_entry._resolve_pointer(self.__data[k])
 
     def __len__(self) -> int:
         return len(self.__data)
@@ -495,7 +612,10 @@ class Pointer(BasePointer):
         return self._tid
 
     def __str__(self):
-        return str(self.tid)
+        return f"[Entry Pointer]:{self.tid}"
+
+    def __eq__(self, other):
+        return self.tid == other.tid
 
 
 class MpPointer(BasePointer):
@@ -517,7 +637,10 @@ class MpPointer(BasePointer):
         return self._tid
 
     def __str__(self):
-        return str((self.pack_index, self.tid))
+        return f"[Entry Pointer]:{self.pack_index},{self.tid}"
+
+    def __eq__(self, other):
+        return self._pack_index == other._pack_index and self.tid == other.tid
 
 
 class BaseLink(Entry, ABC):
