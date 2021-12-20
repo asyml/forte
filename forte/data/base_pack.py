@@ -38,6 +38,7 @@ from forte.common import ProcessExecutionException, EntryNotFoundError
 from forte.data.container import EntryContainer
 from forte.data.index import BaseIndex
 from forte.data.ontology.core import Entry, EntryType, GroupType, LinkType
+from forte.version import PACK_VERSION
 
 __all__ = ["BasePack", "BaseMeta", "PackType"]
 
