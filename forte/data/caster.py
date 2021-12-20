@@ -62,7 +62,10 @@ class MultiPackBoxer(Caster[DataPack, MultiPack]):
         Returns: An iterator that produces the boxed MultiPack.
 
         """
+        # p = MultiPack()
         pack_name = pack.pack_name + "_multi" if pack.pack_name else None
+        # if pack_name in p._name_index:
+        #     raise ValueError(f"The name {pack_name} has already been taken.")
         p = MultiPack(pack_name=pack_name)
         p.add_pack_(pack, self.configs.pack_name)
         return p
