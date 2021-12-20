@@ -734,35 +734,35 @@ class MultiPackPipelineTest(unittest.TestCase):
         # check that all packs are yielded
         self.assertEqual(num_packs, reader.count)
 
-    def test_multi_pack_to_data_pack_boxer(self):
-        from forte.data.readers import OntonotesReader
-
-        # Define and config the Pipeline for MultiPackBoxer test
-        nlp_1 = Pipeline[DataPack]()
-        nlp_1.set_reader(OntonotesReader())
-        pack_name = "test_pack"
-        nlp_1.add(MultiPackBoxer(), {"pack_name": pack_name})
-        nlp_1.initialize()
-
-        # Define and config the Pipeline for DataPackBoxer test
-        nlp_2 = Pipeline[DataPack]()
-        nlp_2.set_reader(OntonotesReader())
-        pack_name = "test_pack"
-        nlp_2.add(MultiPackBoxer(), {"pack_name": pack_name})
-        nlp_2.add(DataPackBoxer())
-        nlp_2.initialize()
-
-        dataset_path = data_samples_root + "/ontonotes/00"
-        expected_pack_name_multi = "bn/abc/00/abc_0049_multi"
-        expected_pack_name = "bn/abc/00/abc_0049"
-
-        # check that the MultiPack is yielded
-        pack_1 = nlp_1.process(dataset_path)
-        self.assertEqual(pack_1.pack_name, expected_pack_name_multi)
-
-        # check that the unboxed DataPack is yielded from the corresponding MultiPack
-        pack_2 = nlp_2.process(dataset_path)
-        self.assertEqual(pack_2.pack_name, expected_pack_name)
+    # def test_multi_pack_to_data_pack_boxer(self):
+    #     from forte.data.readers import OntonotesReader
+    #
+    #     # Define and config the Pipeline for MultiPackBoxer test
+    #     nlp_1 = Pipeline[DataPack]()
+    #     nlp_1.set_reader(OntonotesReader())
+    #     pack_name = "test_pack"
+    #     nlp_1.add(MultiPackBoxer(), {"pack_name": pack_name})
+    #     nlp_1.initialize()
+    #
+    #     # Define and config the Pipeline for DataPackBoxer test
+    #     nlp_2 = Pipeline[DataPack]()
+    #     nlp_2.set_reader(OntonotesReader())
+    #     pack_name = "test_pack"
+    #     nlp_2.add(MultiPackBoxer(), {"pack_name": pack_name})
+    #     nlp_2.add(DataPackBoxer())
+    #     nlp_2.initialize()
+    #
+    #     dataset_path = data_samples_root + "/ontonotes/00"
+    #     expected_pack_name_multi = "bn/abc/00/abc_0049_multi"
+    #     expected_pack_name = "bn/abc/00/abc_0049"
+    #
+    #     # check that the MultiPack is yielded
+    #     pack_1 = nlp_1.process(dataset_path)
+    #     self.assertEqual(pack_1.pack_name, expected_pack_name_multi)
+    #
+    #     # check that the unboxed DataPack is yielded from the corresponding MultiPack
+    #     pack_2 = nlp_2.process(dataset_path)
+    #     self.assertEqual(pack_2.pack_name, expected_pack_name)
 
     def test_pipeline_multipack_selector(self):
         """Tests a batch processor only."""
