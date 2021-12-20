@@ -474,7 +474,6 @@ class OntologyCodeGenerator:
             the temporary directory or `destination_dir`.
 
         """
-        import ipdb; ipdb.set_trace()
         # Update the list of directories to be examined for imported configs
         self.import_dirs.append(os.path.dirname(os.path.realpath(spec_path)))
 
@@ -1275,7 +1274,6 @@ class OntologyCodeGenerator:
         default_val = schema.get(SchemaKeywords.default_value, None)
 
         # element type should be present in the validation tree
-        import ipdb; ipdb.set_trace()
         if att_type in COMPOSITES:
             if att_type == "List":
                 return self.parse_list(
