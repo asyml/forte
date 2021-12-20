@@ -18,3 +18,4 @@ _REVISION = "0post2"
 
 VERSION_SHORT = "{0}.{1}".format(_MAJOR, _MINOR)
 VERSION = "{0}.{1}.{2}".format(_MAJOR, _MINOR, _REVISION)
+PACK_VERSION = [0,0,1]

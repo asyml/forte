@@ -94,6 +94,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         super().__init__()
         self.links: List[LinkType] = []
         self.groups: List[GroupType] = []
+        self.pack_version: List[int] = PACK_VERSION
 
         self._meta: BaseMeta = self._init_meta(pack_name)
         self._index: BaseIndex = BaseIndex()
