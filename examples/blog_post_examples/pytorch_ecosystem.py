@@ -14,12 +14,12 @@
 """
 Example code for pytorch blog post
 """
-from fortex.spacy import SpacyProcessor
 
 from forte.data.readers import HTMLReader
 from forte.pipeline import Pipeline
 from forte.data.data_pack import DataPack
 from forte.processors.stave import StaveProcessor
+from fortex.spacy import SpacyProcessor
 
 from ft.onto.base_ontology import Dependency
 from ftx.medical import MedicalEntityMention
