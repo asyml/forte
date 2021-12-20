@@ -16,7 +16,6 @@ import yaml
 from termcolor import colored
 import torch
 
-from forte.nltk import NLTKSentenceSegmenter, NLTKWordTokenizer, NLTKPOSTagger
 from forte.common.configuration import Config
 from forte.data.multi_pack import MultiPack
 from forte.data.readers import MultiPackTerminalReader
@@ -26,6 +25,7 @@ from forte.processors.third_party import MicrosoftBingTranslator
 from forte.processors.nlp import SRLPredictor
 from forte.processors.ir import SearchProcessor, BertBasedQueryCreator
 from forte.data.selector import NameMatchSelector
+from fortex.nltk import NLTKSentenceSegmenter, NLTKWordTokenizer, NLTKPOSTagger
 from ft.onto.base_ontology import PredicateLink, Sentence
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
