@@ -429,7 +429,10 @@ class MultiEntry(Entry, ABC):
             return self.pack.get_entry(ptr.tid)
         elif isinstance(ptr, MpPointer):
             # bugfix/new feature 559: in new version pack_index will be using pack_id internally
-            pack_array_index = self.pack.get_pack_index(ptr.pack_index)  # using multi_pack methods
+            pack_array_index = ptr.pack_index  #old version
+            if self.pack.version[0] > 0 or self.pack.version[1] > 0 or self.pack.version[2] > 0 : #new version
+                pack_array_index = self.pack.get_pack_index(ptr.pack_index)  # using multi_pack methods
+
             return self.pack.packs[pack_array_index].get_entry(ptr.tid)
             # return self.pack.packs[ptr.pack_index].get_entry(ptr.tid)  #old version use as array index
         else:
