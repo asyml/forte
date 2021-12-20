@@ -28,9 +28,19 @@
         "parent_entry": "ft.onto.metric.BaseMetric", 
         "description": "A N-dimensional metric entity, used to present a metric of N-d array (e.g. confusion matrix).", 
         "attributes": [ 
+          { 
+              "name": "value", 
+              "type": "NdArray",
+              "value_type": "numpy.ndarray"
+          },
           {
-              "name": "value",
-              "type": "ndarray"
+             "name": "shape",
+             "type": "List",
+             "item_type": "int"
+          },
+          {
+             "name": "dtype",
+             "type": "str"
           }
         ] 
       }

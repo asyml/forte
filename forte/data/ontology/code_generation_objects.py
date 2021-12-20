@@ -382,6 +382,45 @@ class NonCompositeProperty(Property):
         return self.name
 
 
+class NdArrayProperty(Property):
+    def __init__(
+        self,
+        import_manager: ImportManager,
+        name: str,
+        value_type: str,
+        description: Optional[str] = None,
+        default_val: Any = None,
+        self_ref: bool = False,
+    ):
+        self.value_is_forte_type = import_manager.is_imported(value_type)
+        super().__init__(
+            import_manager,
+            name,
+            value_type,
+            description=description,
+            default_val=default_val,
+        )
+        self.value_type: str = value_type
+        self.self_ref: bool = self_ref
+
+    def internal_type_str(self) -> str:
+        # option_type = self.import_manager.get_name_to_use('typing.Optional')
+        return f"{self._full_class()}"
+
+    def default_value(self) -> str:
+        return None
+
+    def _full_class(self):
+        item_type = self.import_manager.get_name_to_use(self.value_type)
+        if self.self_ref:
+            item_type = f"'{item_type}'"
+
+        return item_type
+
+    def to_field_value(self):
+        return self.name
+
+
 class DictProperty(Property):
     def __init__(
         self,

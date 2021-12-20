@@ -28,6 +28,7 @@ class SchemaKeywords:
     element_type = "item_type"
     dict_key_type = "key_type"
     dict_value_type = "value_type"
+    ndarray_value_type = "value_type"
 
 
 # Some names are used as properties by the core types, they should not be
@@ -81,9 +82,9 @@ def get_ignore_error_lines(json_filepath: str) -> List[str]:
 
 DEFAULT_PREFIX = "ft.onto"
 
-SUPPORTED_PRIMITIVES = {"int", "float", "str", "bool", "ndarray"}
+SUPPORTED_PRIMITIVES = {"int", "float", "str", "bool"}
 NON_COMPOSITES = {key: key for key in SUPPORTED_PRIMITIVES}
-COMPOSITES = {"List", "Dict"}
+COMPOSITES = {"List", "Dict", "NdArray"}
 
 ALL_INBUILT_TYPES = set(list(NON_COMPOSITES.keys()) + list(COMPOSITES))
 

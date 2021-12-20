@@ -48,6 +48,7 @@ from forte.data.ontology.code_generation_exceptions import (
     OntologySourceNotFoundException,
 )
 from forte.data.ontology.code_generation_objects import (
+    NdArrayProperty,
     NonCompositeProperty,
     ListProperty,
     ClassTypeDefinition,
@@ -473,6 +474,7 @@ class OntologyCodeGenerator:
             the temporary directory or `destination_dir`.
 
         """
+        import ipdb; ipdb.set_trace()
         # Update the list of directories to be examined for imported configs
         self.import_dirs.append(os.path.dirname(os.path.realpath(spec_path)))
 
@@ -1078,6 +1080,38 @@ class OntologyCodeGenerator:
 
         return entry_item, property_names
 
+    def parse_ndarray(
+        self,
+        manager: ImportManager,
+        schema: Dict,
+        entry_name: EntryName,
+        att_name: str,
+        att_type: str,
+        desc: str,
+    ):
+        if SchemaKeywords.ndarray_value_type not in schema:
+            raise TypeNotDeclaredException(
+                f"Item type for the attribute {att_name} of the entry "
+                f"[{entry_name.class_name}] not declared. This attribute is "
+                f"a composite type: {att_type}, it should have a "
+                f"{SchemaKeywords.ndarray_value_type}."
+            )
+        value_type = schema[SchemaKeywords.ndarray_value_type]
+        # TODO: add validaton
+        manager.add_object_to_import(value_type)
+
+        self_ref = entry_name.class_name == value_type
+
+        default_val = None
+        return NdArrayProperty(
+            manager,
+            att_name,
+            value_type,
+            description=desc,
+            default_val=default_val,
+            self_ref=self_ref,
+        )
+
     def parse_dict(
         self,
         manager: ImportManager,
@@ -1241,6 +1275,7 @@ class OntologyCodeGenerator:
         default_val = schema.get(SchemaKeywords.default_value, None)
 
         # element type should be present in the validation tree
+        import ipdb; ipdb.set_trace()
         if att_type in COMPOSITES:
             if att_type == "List":
                 return self.parse_list(
@@ -1248,6 +1283,10 @@ class OntologyCodeGenerator:
                 )
             elif att_type == "Dict":
                 return self.parse_dict(
+                    manager, schema, entry_name, att_name, att_type, desc
+                )
+            elif att_type == "NdArray":
+                return self.parse_ndarray(
                     manager, schema, entry_name, att_name, att_type, desc
                 )
         elif att_type in NON_COMPOSITES or manager.is_imported(att_type):
