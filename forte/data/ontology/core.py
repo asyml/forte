@@ -53,6 +53,8 @@ __all__ = [
 
 from forte.utils import get_full_module_name
 
+BACKWARD_COMPATIBLE_VER = (0, 0, 1)
+
 default_entry_fields = [
     "_Entry__pack",
     "_tid",
@@ -429,9 +431,11 @@ class MultiEntry(Entry, ABC):
             return self.pack.get_entry(ptr.tid)
         elif isinstance(ptr, MpPointer):
             # bugfix/new feature 559: in new version pack_index will be using pack_id internally
-            pack_array_index = ptr.pack_index  #old version
-            if self.pack.version[0] > 0 or self.pack.version[1] > 0 or self.pack.version[2] > 0 : #new version
-                pack_array_index = self.pack.get_pack_index(ptr.pack_index)  # using multi_pack methods
+            pack_array_index = self.pack.get_pack_index(ptr.pack_index)  # default: new version
+            if self.pack.pack_version[0] <= BACKWARD_COMPATIBLE_VER[0] and \
+                self.pack.pack_version[1] <= BACKWARD_COMPATIBLE_VER[1] and \
+                 self.pack.pack_version[2] < BACKWARD_COMPATIBLE_VER[2]:
+                 pack_array_index = ptr.pack_index    # old version
 
             return self.pack.packs[pack_array_index].get_entry(ptr.tid)
             # return self.pack.packs[ptr.pack_index].get_entry(ptr.tid)  #old version use as array index
