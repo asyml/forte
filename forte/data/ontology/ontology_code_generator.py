@@ -1285,9 +1285,7 @@ class OntologyCodeGenerator:
                     manager, schema, entry_name, att_name, att_type, desc
                 )
             elif att_type == "NdArray":
-                return self.parse_ndarray(
-                    manager, schema, att_name, desc
-                )
+                return self.parse_ndarray(manager, schema, att_name, desc)
         elif att_type in NON_COMPOSITES or manager.is_imported(att_type):
             self_ref = entry_name.class_name == att_type
             return self.parse_non_composite(
