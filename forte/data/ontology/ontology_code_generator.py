@@ -1084,9 +1084,7 @@ class OntologyCodeGenerator:
         self,
         manager: ImportManager,
         schema: Dict,
-        entry_name: EntryName,
         att_name: str,
-        att_type: str,
         desc: str,
     ):
         ndarray_dtype = None
@@ -1096,10 +1094,10 @@ class OntologyCodeGenerator:
 
         ndarray_shape = None
         if SchemaKeywords.ndarray_shape in schema:
-            # TODO: validate size
+            # TODO: validate shape
             ndarray_shape = schema[SchemaKeywords.ndarray_shape]
 
-        # TODO: Throw warning if either dtype or size is missing
+        # TODO: Throw warning if either dtype or shape is missing
 
         default_val = None
         if ndarray_dtype and ndarray_shape:
@@ -1288,7 +1286,7 @@ class OntologyCodeGenerator:
                 )
             elif att_type == "NdArray":
                 return self.parse_ndarray(
-                    manager, schema, entry_name, att_name, att_type, desc
+                    manager, schema, att_name, desc
                 )
         elif att_type in NON_COMPOSITES or manager.is_imported(att_type):
             self_ref = entry_name.class_name == att_type
