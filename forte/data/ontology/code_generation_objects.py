@@ -30,8 +30,8 @@ from forte.data.ontology.ontology_code_const import (
     AUTO_GEN_SIGNATURE,
     AUTO_GEN_FILENAME,
 )
-from forte.data.ontology.utils import split_file_path
 from numpy import ndarray
+from forte.data.ontology.utils import split_file_path
 
 
 class ImportManager:
