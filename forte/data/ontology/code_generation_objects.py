@@ -15,9 +15,9 @@ import itertools as it
 import logging
 import os
 from abc import ABC
-from numpy import ndarray
 from pathlib import Path
 from typing import Optional, Any, List, Dict, Set, Tuple
+from numpy import ndarray
 
 from forte.data.ontology.code_generation_exceptions import (
     CodeGenerationException,

@@ -25,7 +25,6 @@ import warnings
 from collections import defaultdict
 from datetime import datetime
 from distutils import dir_util
-from numpy import ndarray
 from pathlib import Path
 from types import ModuleType
 from typing import Dict, List, Optional, Tuple, Set, no_type_check, Any
@@ -33,6 +32,7 @@ from typing import Dict, List, Optional, Tuple, Set, no_type_check, Any
 import jsonschema
 import typed_ast.ast3 as ast
 import typed_astunparse as ast_unparse
+from numpy import ndarray
 
 from forte.data.ontology import top, utils
 from forte.data.ontology.code_generation_exceptions import (
