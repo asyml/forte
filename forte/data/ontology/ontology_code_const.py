@@ -28,7 +28,8 @@ class SchemaKeywords:
     element_type = "item_type"
     dict_key_type = "key_type"
     dict_value_type = "value_type"
-    ndarray_value_type = "value_type"
+    ndarray_dtype = "ndarray_dtype"
+    ndarray_size = "ndarray_size"
 
 
 # Some names are used as properties by the core types, they should not be

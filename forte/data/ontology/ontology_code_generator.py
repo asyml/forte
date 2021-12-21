@@ -81,6 +81,7 @@ from forte.data.ontology.ontology_code_const import (
     RESERVED_ATTRIBUTE_NAMES,
 )
 from forte.utils.utils_io import get_resource
+from numpy import ndarray
 
 
 def name_validation(name):
@@ -1088,27 +1089,29 @@ class OntologyCodeGenerator:
         att_type: str,
         desc: str,
     ):
-        if SchemaKeywords.ndarray_value_type not in schema:
-            raise TypeNotDeclaredException(
-                f"Item type for the attribute {att_name} of the entry "
-                f"[{entry_name.class_name}] not declared. This attribute is "
-                f"a composite type: {att_type}, it should have a "
-                f"{SchemaKeywords.ndarray_value_type}."
-            )
-        value_type = schema[SchemaKeywords.ndarray_value_type]
-        # TODO: add validaton
-        manager.add_object_to_import(value_type)
+        ndarray_dtype = None
+        if SchemaKeywords.ndarray_dtype in schema:
+            # TODO: validate dtype
+            ndarray_dtype = schema[SchemaKeywords.ndarray_dtype]
 
-        self_ref = entry_name.class_name == value_type
+        ndarray_size = None
+        if SchemaKeywords.ndarray_size in schema:
+            # TODO: validate size
+            ndarray_size = schema[SchemaKeywords.ndarray_size]
+
+        # TODO: Throw warning if either dtype or size is missing
 
         default_val = None
+        if ndarray_dtype and ndarray_size:
+            default_val = ndarray(ndarray_size, dtype=ndarray_dtype)
+
         return NdArrayProperty(
             manager,
             att_name,
-            value_type,
+            ndarray_dtype,
+            ndarray_size,
             description=desc,
             default_val=default_val,
-            self_ref=self_ref,
         )
 
     def parse_dict(

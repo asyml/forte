@@ -95,6 +95,14 @@
                 "value_type": {
                   "description": "Item type for the case of Dice attributes",
                   "type": "string"
+                },
+                "ndarray_dtype": {
+                  "description": "Item type for the case of Dice attributes",
+                  "type": "string"
+                },
+                "ndarray_size": {
+                  "description": "Item type for the case of Dice attributes",
+                  "type": "array"
                 }
               },
               "anyOf": [
@@ -131,6 +139,23 @@
                         "type",
                         "key_type",
                         "value_type"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "allOf": [
+                    {
+                      "properties": {
+                        "name": {
+                          "enum": [
+                            "NdArray"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "type"
                       ]
                     }
                   ]

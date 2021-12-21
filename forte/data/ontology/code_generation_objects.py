@@ -31,6 +31,7 @@ from forte.data.ontology.ontology_code_const import (
     AUTO_GEN_FILENAME,
 )
 from forte.data.ontology.utils import split_file_path
+from numpy import ndarray
 
 
 class ImportManager:
@@ -387,34 +388,40 @@ class NdArrayProperty(Property):
         self,
         import_manager: ImportManager,
         name: str,
-        value_type: str,
+        ndarray_dtype: Optional[str] = None,
+        ndarray_size: Optional[List[int]] = None,
         description: Optional[str] = None,
-        default_val: Any = None,
-        self_ref: bool = False,
+        default_val: Optional[ndarray] = None,
     ):
-        self.value_is_forte_type = import_manager.is_imported(value_type)
+        self.type_str = "numpy.ndarray"
+        import_manager.add_object_to_import(self.type_str)
         super().__init__(
             import_manager,
             name,
-            value_type,
+            self.type_str,
             description=description,
             default_val=default_val,
         )
-        self.value_type: str = value_type
-        self.self_ref: bool = self_ref
+        self.ndarray_dtype: Optional[str] = ndarray_dtype
+        self.ndarray_size: Optional[List[int]] = ndarray_size
+
+        # NdArray type will use optional in type string, so we add the
+        # optional here.
+        self.option_type = "typing.Optional"
+        import_manager.add_object_to_import(self.option_type)
 
     def internal_type_str(self) -> str:
-        # option_type = self.import_manager.get_name_to_use('typing.Optional')
-        return f"{self._full_class()}"
+        option_type = self.import_manager.get_name_to_use(self.option_type)
+        type_str = self.import_manager.get_name_to_use(self.type_str)
+        return f"{option_type}[{type_str}]"
 
     def default_value(self) -> str:
+        if self.ndarray_dtype and self.ndarray_size:
+            return f"ndarray({self.ndarray_size}, dtype={self.ndarray_dtype})"
         return "None"
 
     def _full_class(self):
-        item_type = self.import_manager.get_name_to_use(self.value_type)
-        if self.self_ref:
-            item_type = f"'{item_type}'"
-
+        item_type = self.import_manager.get_name_to_use(self.type_str)
         return item_type
 
     def to_field_value(self):
