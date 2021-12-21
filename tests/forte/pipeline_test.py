@@ -753,8 +753,8 @@ class MultiPackPipelineTest(unittest.TestCase):
     #     nlp_2.initialize()
     #
     #     dataset_path = data_samples_root + "/ontonotes/00"
-    #     expected_pack_name_multi = "bn/abc/00/abc_0049_multi"
-    #     expected_pack_name = "bn/abc/00/abc_0049"
+    #     expected_pack_name_multi = "bn/abc/00/abc_0039_multi"
+    #     expected_pack_name = "bn/abc/00/abc_0039"
     #
     #     # check that the MultiPack is yielded
     #     pack_1 = nlp_1.process(dataset_path)
@@ -763,6 +763,7 @@ class MultiPackPipelineTest(unittest.TestCase):
     #     # check that the unboxed DataPack is yielded from the corresponding MultiPack
     #     pack_2 = nlp_2.process(dataset_path)
     #     self.assertEqual(pack_2.pack_name, expected_pack_name)
+
 
     def test_pipeline_multipack_selector(self):
         """Tests a batch processor only."""
