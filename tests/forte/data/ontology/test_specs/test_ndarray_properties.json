@@ -17,7 +17,7 @@
       { 
         "entry_name": "ft.onto.test_ontology.NdEntry2", 
         "parent_entry": "forte.data.ontology.top.Generics", 
-        "description": "A N-dimensional entity, having dtype and shape specified.", 
+        "description": "A N-dimensional entity. Only dtype is specified", 
         "attributes": [ 
           { 
               "name": "value", 
@@ -29,7 +29,7 @@
       { 
         "entry_name": "ft.onto.test_ontology.NdEntry3", 
         "parent_entry": "forte.data.ontology.top.Generics", 
-        "description": "A N-dimensional entity, having dtype and shape specified.", 
+        "description": "A N-dimensional entity. Only shape is specified", 
         "attributes": [ 
           { 
               "name": "value", 
