@@ -25,6 +25,7 @@ import warnings
 from collections import defaultdict
 from datetime import datetime
 from distutils import dir_util
+from numpy import ndarray
 from pathlib import Path
 from types import ModuleType
 from typing import Dict, List, Optional, Tuple, Set, no_type_check, Any
@@ -81,7 +82,6 @@ from forte.data.ontology.ontology_code_const import (
     RESERVED_ATTRIBUTE_NAMES,
 )
 from forte.utils.utils_io import get_resource
-from numpy import ndarray
 
 
 def name_validation(name):

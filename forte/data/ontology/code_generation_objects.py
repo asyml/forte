@@ -15,6 +15,7 @@ import itertools as it
 import logging
 import os
 from abc import ABC
+from numpy import ndarray
 from pathlib import Path
 from typing import Optional, Any, List, Dict, Set, Tuple
 
@@ -30,7 +31,6 @@ from forte.data.ontology.ontology_code_const import (
     AUTO_GEN_SIGNATURE,
     AUTO_GEN_FILENAME,
 )
-from numpy import ndarray
 from forte.data.ontology.utils import split_file_path
 
 
