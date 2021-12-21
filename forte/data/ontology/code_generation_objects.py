@@ -389,7 +389,7 @@ class NdArrayProperty(Property):
         import_manager: ImportManager,
         name: str,
         ndarray_dtype: Optional[str] = None,
-        ndarray_size: Optional[List[int]] = None,
+        ndarray_shape: Optional[List[int]] = None,
         description: Optional[str] = None,
         default_val: Optional[ndarray] = None,
     ):
@@ -403,7 +403,7 @@ class NdArrayProperty(Property):
             default_val=default_val,
         )
         self.ndarray_dtype: Optional[str] = ndarray_dtype
-        self.ndarray_size: Optional[List[int]] = ndarray_size
+        self.ndarray_shape: Optional[List[int]] = ndarray_shape
 
         # NdArray type will use optional in type string, so we add the
         # optional here.
@@ -416,8 +416,8 @@ class NdArrayProperty(Property):
         return f"{option_type}[{type_str}]"
 
     def default_value(self) -> str:
-        if self.ndarray_dtype and self.ndarray_size:
-            return f"ndarray({self.ndarray_size}, dtype={self.ndarray_dtype})"
+        if self.ndarray_dtype and self.ndarray_shape:
+            return f"ndarray({self.ndarray_shape}, dtype={self.ndarray_dtype})"
         return "None"
 
     def _full_class(self):

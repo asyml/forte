@@ -1094,22 +1094,22 @@ class OntologyCodeGenerator:
             # TODO: validate dtype
             ndarray_dtype = schema[SchemaKeywords.ndarray_dtype]
 
-        ndarray_size = None
-        if SchemaKeywords.ndarray_size in schema:
+        ndarray_shape = None
+        if SchemaKeywords.ndarray_shape in schema:
             # TODO: validate size
-            ndarray_size = schema[SchemaKeywords.ndarray_size]
+            ndarray_shape = schema[SchemaKeywords.ndarray_shape]
 
         # TODO: Throw warning if either dtype or size is missing
 
         default_val = None
-        if ndarray_dtype and ndarray_size:
-            default_val = ndarray(ndarray_size, dtype=ndarray_dtype)
+        if ndarray_dtype and ndarray_shape:
+            default_val = ndarray(ndarray_shape, dtype=ndarray_dtype)
 
         return NdArrayProperty(
             manager,
             att_name,
             ndarray_dtype,
-            ndarray_size,
+            ndarray_shape,
             description=desc,
             default_val=default_val,
         )

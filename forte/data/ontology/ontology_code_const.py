@@ -29,7 +29,7 @@ class SchemaKeywords:
     dict_key_type = "key_type"
     dict_value_type = "value_type"
     ndarray_dtype = "ndarray_dtype"
-    ndarray_size = "ndarray_size"
+    ndarray_shape = "ndarray_shape"
 
 
 # Some names are used as properties by the core types, they should not be

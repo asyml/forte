@@ -100,7 +100,7 @@
                   "description": "Item type for the case of Dice attributes",
                   "type": "string"
                 },
-                "ndarray_size": {
+                "ndarray_shape": {
                   "description": "Item type for the case of Dice attributes",
                   "type": "array"
                 }
