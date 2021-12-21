@@ -103,7 +103,9 @@ class DataPackBoxer(Caster[MultiPack, DataPack]):
             p = pack.get_pack_at(pack_index)
             return p
         else:
-            raise KeyError(f"pack_index: {pack_index} is not in this multi-pack.")
+            raise KeyError(
+                f"pack_index: {pack_index} is not in this multi-pack."
+            )
 
     @classmethod
     def default_configs(cls):

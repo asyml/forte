@@ -764,7 +764,6 @@ class MultiPackPipelineTest(unittest.TestCase):
     #     pack_2 = nlp_2.process(dataset_path)
     #     self.assertEqual(pack_2.pack_name, expected_pack_name)
 
-
     def test_pipeline_multipack_selector(self):
         """Tests a batch processor only."""
 

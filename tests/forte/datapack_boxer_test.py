@@ -44,7 +44,6 @@ onto_specs_samples_root = os.path.abspath(
 
 @ddt
 class DataPackBoxerTest(unittest.TestCase):
-
     def test_multi_pack_to_data_pack_boxer(self):
         from forte.data.readers import OntonotesReader
 
