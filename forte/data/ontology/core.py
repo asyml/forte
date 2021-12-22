@@ -458,7 +458,6 @@ class MultiEntry(Entry, ABC):
                 pack_array_index = ptr.pack_index  # old version
 
             return self.pack.packs[pack_array_index].get_entry(ptr.tid)
-            # return self.pack.packs[ptr.pack_index].get_entry(ptr.tid)  #old version use as array index
         else:
             raise TypeError(f"Unknown pointer type {ptr.__class__}")
 
