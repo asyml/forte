@@ -416,9 +416,10 @@ class NdArrayProperty(Property):
         return f"{option_type}[{type_str}]"
 
     def default_value(self) -> str:
-        return (
-            f"FNdArray(shape={self.ndarray_shape}, dtype={self.ndarray_dtype})"
-        )
+        if self.ndarray_dtype is None:
+            return f"FNdArray(shape={self.ndarray_shape}, dtype={self.ndarray_dtype})"
+        else:
+            return f"FNdArray(shape={self.ndarray_shape}, dtype='{self.ndarray_dtype}')"
 
     def _full_class(self):
         item_type = self.import_manager.get_name_to_use(self.type_str)
