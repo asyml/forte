@@ -427,9 +427,9 @@ class MultiEntry(Entry, ABC):
             )
 
     def version_older_than(self, pack_version, compare_version) -> bool:
-        if pack_version[0] < compare_version[0] :
+        if pack_version[0] < compare_version[0]:
             return True
-        elif  pack_version[0] > compare_version[0] :
+        elif pack_version[0] > compare_version[0]:
             return False
         else:  # equal
             if pack_version[1] < compare_version[1]:
@@ -447,11 +447,15 @@ class MultiEntry(Entry, ABC):
             return self.pack.get_entry(ptr.tid)
         elif isinstance(ptr, MpPointer):
             # bugfix/new feature 559: in new version pack_index will be using pack_id internally
-            pack_array_index = self.pack.get_pack_index(ptr.pack_index)  # default: new version
-            if self.version_older_than(self.pack.pack_version, BACKWARD_COMPATIBLE_VER):
+            pack_array_index = self.pack.get_pack_index(
+                ptr.pack_index
+            )  # default: new version
+            if self.version_older_than(
+                self.pack.pack_version, BACKWARD_COMPATIBLE_VER
+            ):
                 # self.pack.pack_version[1] <= BACKWARD_COMPATIBLE_VER[1] and \
                 #  self.pack.pack_version[2] < BACKWARD_COMPATIBLE_VER[2]:
-                 pack_array_index = ptr.pack_index    # old version
+                pack_array_index = ptr.pack_index  # old version
 
             return self.pack.packs[pack_array_index].get_entry(ptr.tid)
             # return self.pack.packs[ptr.pack_index].get_entry(ptr.tid)  #old version use as array index
