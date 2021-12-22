@@ -18,6 +18,7 @@ DataPack/multiPack processors and Pipeline.
 from typing import Generic, Iterator, TypeVar, Optional, Union, Dict, Any
 
 import re
+import warnings
 
 from forte.common.configuration import Config
 from forte.common.configurable import Configurable
@@ -114,11 +115,21 @@ class NameMatchSelector(SinglePackSelector):
                 "select_name": "foo"
             }
         )
+    WARNING:
+        Passing parameters through __init__ is deprecated, and does not
+        work well with pipeline serialization.
     """
 
     def __init__(self, select_name: Optional[str] = None):
         super().__init__()
         self.select_name = select_name
+        if select_name is not None:
+            warnings.warn(
+                (
+                    "Passing parameters through __init__ is deprecated,"
+                    " and does not work well with pipeline serialization."
+                )
+            )
 
     def will_select(
         self, pack_name: str, pack: DataPack, multi_pack: MultiPack
@@ -161,11 +172,21 @@ class RegexNameMatchSelector(SinglePackSelector):
                 "select_name": "^.*\\d$"
             }
         )
+    WARNING:
+        Passing parameters through __init__ is deprecated, and does not
+        work well with pipeline serialization.
     """
 
     def __init__(self, select_name: Optional[str] = None):
         super().__init__()
         self.select_name = select_name
+        if select_name is not None:
+            warnings.warn(
+                (
+                    "Passing parameters through __init__ is deprecated,"
+                    " and does not work well with pipeline serialization."
+                )
+            )
 
     def will_select(
         self, pack_name: str, pack: DataPack, multi_pack: MultiPack

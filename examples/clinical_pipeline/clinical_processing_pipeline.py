@@ -5,7 +5,6 @@ import yaml
 from mimic3_note_reader import Mimic3DischargeNoteReader
 
 from forte.elastic import ElasticSearchPackIndexProcessor
-from forte.nltk import NLTKSentenceSegmenter
 from forte.hugginface.bio_ner_predictor import BioBERTNERPredictor
 from forte.hugginface.transformers_processor import BERTTokenizer
 
@@ -13,6 +12,7 @@ from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
 from forte.processors.writers import PackIdJsonPackWriter
+from fortex.nltk import NLTKSentenceSegmenter
 
 
 def main(input_path: str, output_path: str, max_packs: int = -1):
