@@ -598,6 +598,18 @@ class FDict(Generic[KeyType, ValueType], MutableMapping):
         yield from self.__data
 
 
+class FNdArray:
+    def __init__(
+        self, dtype: Optional[str] = None, shape: Optional[Iterable[int]] = None
+    ):
+        super().__init__()
+        self.dtype = dtype
+        self.shape = shape
+        self.value: Optional[np.ndarray] = None
+        if dtype and shape:
+            self.value = np.ndarray(shape, dtype=dtype)
+
+
 class Pointer(BasePointer):
     """
     A pointer that points to an entry in the current pack, this is basically
