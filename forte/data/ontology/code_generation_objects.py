@@ -393,11 +393,10 @@ class NdArrayProperty(Property):
         description: Optional[str] = None,
         default_val: Optional[ndarray] = None,
     ):
-        self.name = name
         self.type_str = "forte.data.ontology.core.FNdArray"
         super().__init__(
             import_manager,
-            self.name,
+            name,
             self.type_str,
             description=description,
             default_val=default_val,
@@ -405,15 +404,9 @@ class NdArrayProperty(Property):
         self.ndarray_dtype: Optional[str] = ndarray_dtype
         self.ndarray_shape: Optional[List[int]] = ndarray_shape
 
-        # NdArray type will use optional in type string, so we add the
-        # optional here.
-        self.option_type = "typing.Optional"
-        import_manager.add_object_to_import(self.option_type)
-
     def internal_type_str(self) -> str:
-        option_type = self.import_manager.get_name_to_use(self.option_type)
         type_str = self.import_manager.get_name_to_use(self.type_str)
-        return f"{option_type}[{type_str}]"
+        return f"{type_str}"
 
     def default_value(self) -> str:
         if self.ndarray_dtype is None:
