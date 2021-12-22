@@ -427,6 +427,16 @@ class MultiEntry(Entry, ABC):
             )
 
     def version_older_than(self, pack_version, compare_version) -> bool:
+        """
+        Check if the version of pack is older than the compare_version
+
+        Args:
+            pack_version: The version to be examined.
+            compare_version: The standard version number to be compared.
+
+        Returns:
+            bool indicating compare result.
+        """
         if pack_version[0] < compare_version[0]:
             return True
         elif pack_version[0] > compare_version[0]:
@@ -441,6 +451,8 @@ class MultiEntry(Entry, ABC):
                     return True
                 elif pack_version[2] >= compare_version[2]:
                     return False
+
+        return False
 
     def _resolve_pointer(self, ptr: BasePointer) -> Entry:
         if isinstance(ptr, Pointer):
