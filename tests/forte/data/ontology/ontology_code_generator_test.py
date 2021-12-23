@@ -86,6 +86,7 @@ class GenerateOntologyTest(unittest.TestCase):
         ),
         ("race_qa_onto", ["ft/onto/race_qa_ontology"]),
         ("test_top_attribute", ["ft/onto/test_top_attribute"]),
+        ("test_ndarray_attribute", ["ft/onto/test_ndarray"])
     )
     def test_generated_code(self, value):
         input_file_name, file_paths = value
