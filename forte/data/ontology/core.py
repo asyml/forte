@@ -603,8 +603,12 @@ class FNdArray:
         self, dtype: Optional[str] = None, shape: Optional[Iterable[int]] = None
     ):
         super().__init__()
-        self._dtype: Optional[np.dtype] = np.dtype(dtype) if dtype is not None else dtype
-        self._shape: Optional[tuple] = tuple(shape) if shape is not None else shape
+        self._dtype: Optional[np.dtype] = (
+            np.dtype(dtype) if dtype is not None else dtype
+        )
+        self._shape: Optional[tuple] = (
+            tuple(shape) if shape is not None else shape
+        )
         self._array: Optional[np.ndarray] = None
         if dtype and shape:
             self._array = np.ndarray(shape, dtype=dtype)
@@ -625,19 +629,27 @@ class FNdArray:
     def array(self, array: Union[np.ndarray, List]):
         if isinstance(array, np.ndarray):
             if self.dtype and not np.issubdtype(array.dtype, self.dtype):
-                raise TypeError(f"Expecting type or subtype of {self.dtype}, but got {array.dtype}.")
+                raise TypeError(
+                    f"Expecting type or subtype of {self.dtype}, but got {array.dtype}."
+                )
             if self.shape and self.shape != array.shape:
-                raise AttributeError(f"Expecting shape {self.shape}, but got {array.shape}.")
+                raise AttributeError(
+                    f"Expecting shape {self.shape}, but got {array.shape}."
+                )
             self._array = array
 
         elif isinstance(array, list):
             array_np = np.array(array, dtype=self.dtype)
             if self.shape and self.shape != array_np.shape:
-                raise AttributeError(f"Expecting shape {self.shape}, but got {array_np.shape}.")
+                raise AttributeError(
+                    f"Expecting shape {self.shape}, but got {array_np.shape}."
+                )
             self._array = array_np
 
         else:
-            raise ValueError(f"Can only accept numpy array or python list, but got {type(array)}")
+            raise ValueError(
+                f"Can only accept numpy array or python list, but got {type(array)}"
+            )
 
         self._dtype = self._array.dtype
         self._shape = self._array.shape
