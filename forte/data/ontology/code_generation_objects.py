@@ -608,7 +608,11 @@ class ModuleWriter:
         self.entries.append((entry_name, entry_item))
 
     def make_module_dirs(
-        self, tempdir: str, destination: str, include_init: bool
+        self,
+        tempdir: str,
+        destination: str,
+        include_init: bool,
+        with_init: bool,
     ):
         """
         Create entry sub-directories with .generated file to indicate the
@@ -638,12 +642,21 @@ class ModuleWriter:
                 Path(os.path.join(temp_path, AUTO_GEN_FILENAME)).touch()
 
             # Create init file
-            if not dest_path_exists or include_init:
-                init_file_path = os.path.join(temp_path, "__init__.py")
-                with open(init_file_path, "w", encoding="utf-8") as init_file:
-                    init_file.write(f"# {AUTO_GEN_SIGNATURE}\n")
+            if with_init:
+                if not dest_path_exists or include_init:
+                    init_file_path = os.path.join(temp_path, "__init__.py")
+                    with open(
+                        init_file_path, "w", encoding="utf-8"
+                    ) as init_file:
+                        init_file.write(f"# {AUTO_GEN_SIGNATURE}\n")
 
-    def write(self, tempdir: str, destination: str, include_init: bool):
+    def write(
+        self,
+        tempdir: str,
+        destination: str,
+        include_init: bool,
+        with_init: bool,
+    ):
         """
         Write the entry information to file.
 
@@ -657,7 +670,7 @@ class ModuleWriter:
 
         """
 
-        self.make_module_dirs(tempdir, destination, include_init)
+        self.make_module_dirs(tempdir, destination, include_init, with_init)
         full_path = os.path.join(tempdir, self.pkg_dir, self.file_name) + ".py"
 
         with open(full_path, "w", encoding="utf-8") as f:

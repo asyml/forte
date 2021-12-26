@@ -446,6 +446,7 @@ class OntologyCodeGenerator:
         include_init: bool = True,
         merged_path: Optional[str] = None,
         lenient_prefix=False,
+        with_init: bool = True,
     ) -> Optional[str]:
         r"""Function to generate and save the python ontology code after reading
         ontology from the input json file. This is the main entry point to
@@ -503,7 +504,7 @@ class OntologyCodeGenerator:
         logging.info("Working on %s", spec_path)
         for writer in self.module_writers.writers():
             logging.info("Writing module: %s", writer.module_name)
-            writer.write(tempdir, destination_dir, include_init)
+            writer.write(tempdir, destination_dir, include_init, with_init)
             logging.info("Done writing.")
 
         if merged_path is not None:
