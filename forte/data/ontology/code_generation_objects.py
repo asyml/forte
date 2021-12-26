@@ -628,6 +628,7 @@ class ModuleWriter:
               packages in which `__init__.py` does not already exists
             with_init: True if `__init__.py` is to be generated automatically;
                 False, the `__init__.py` is not to be generated automatically
+
         Returns:
         """
         entry_dir_split = split_file_path(self.pkg_dir)
