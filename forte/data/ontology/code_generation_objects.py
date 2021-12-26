@@ -626,6 +626,8 @@ class ModuleWriter:
               placed
             include_init: True if `__init__.py` is to be generated in existing
               packages in which `__init__.py` does not already exists
+            with_init: True if `__init__.py` is to be generated automatically;
+                False, the `__init__.py` is not to be generated automatically
         Returns:
         """
         entry_dir_split = split_file_path(self.pkg_dir)
@@ -665,6 +667,8 @@ class ModuleWriter:
             destination: The actual folder to place the generated code.
             include_init: Whether to include `__init__.py` in the existing
             directories if it does not already exist.
+            with_init: True if `__init__.py` is to be generated automatically;
+                False, the `__init__.py` is not to be generated automatically
 
         Returns:
 

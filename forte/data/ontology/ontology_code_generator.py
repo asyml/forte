@@ -468,6 +468,8 @@ class OntologyCodeGenerator:
                 be written at this path.
             lenient_prefix: if `True`, will not enforce the entry name to
                 match a known prefix.
+            with_init: True if `__init__.py` is to be generated automatically;
+                False, the `__init__.py` is not to be generated automatically
 
         Returns:
             Directory path in which the modules are created: either one of
