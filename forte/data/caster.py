@@ -99,7 +99,7 @@ class DataPackBoxer(Caster[MultiPack, DataPack]):
 
         """
 
-        if pack_index in range(len(pack._pack_names)):
+        if pack_index in range(pack.num_pack):
             p = pack.get_pack_at(pack_index)
             return p
         else:
