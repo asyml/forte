@@ -36,11 +36,3 @@ class DataPackTypeInferTest(unittest.TestCase):
         caster = component()
         self.assertTrue(caster.input_pack_type() is DataPack)
         self.assertTrue(caster.output_pack_type() is MultiPack)
-
-    @data(
-        DataPackBoxer,
-    )
-    def test_datapack_boxer(self, component):
-        caster = component()
-        self.assertTrue(caster.input_pack_type() is MultiPack)
-        self.assertTrue(caster.output_pack_type() is DataPack)
