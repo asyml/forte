@@ -83,12 +83,12 @@ class MultiPackBoxer(Caster[DataPack, MultiPack]):
         return MultiPack
 
 
-class DataPackBoxer(Caster[MultiPack, DataPack]):
+class MultiPackUnboxer(Caster[MultiPack, DataPack]):
     """
-    This pass on a single DataPack within the MultiPack.
+    This passes on a single DataPack within the MultiPack.
     """
 
-    def cast(self, pack: MultiPack, pack_index: int = 0) -> DataPack:
+    def cast(self, pack: MultiPack) -> DataPack:
         """
         Auto-box the MultiPack into a DataPack by using pack_index to take the unique pack.
 
@@ -99,17 +99,17 @@ class DataPackBoxer(Caster[MultiPack, DataPack]):
 
         """
 
-        if pack_index in range(pack.num_pack):
-            p = pack.get_pack_at(pack_index)
+        if self.configs.pack_index < pack.num_pack:
+            p = pack.get_pack_at(self.configs.pack_index)
             return p
         else:
-            raise KeyError(
-                f"pack_index: {pack_index} is not in this multi-pack."
+            raise IndexError(
+                f"pack_index: {self.configs.pack_index} is not in this multi-pack."
             )
 
     @classmethod
     def default_configs(cls):
-        return {"pack_name": "default_multi"}
+        return {"pack_index": 0}
 
     @staticmethod
     def input_pack_type():

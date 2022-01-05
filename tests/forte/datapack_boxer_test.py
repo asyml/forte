@@ -18,8 +18,9 @@ Unit tests for DataPack Boxer.
 import os
 import unittest
 from ddt import ddt, data, unpack
-from forte.data.caster import MultiPackBoxer, DataPackBoxer
+from forte.data.caster import MultiPackBoxer, MultiPackUnboxer
 from forte.data.data_pack import DataPack
+from forte.data.multi_pack import MultiPack
 from forte.pipeline import Pipeline
 
 data_samples_root = os.path.abspath(
@@ -43,8 +44,8 @@ onto_specs_samples_root = os.path.abspath(
 
 
 @ddt
-class DataPackBoxerTest(unittest.TestCase):
-    def test_multi_pack_to_data_pack_boxer(self):
+class MultiPackUnboxerTest(unittest.TestCase):
+    def test_multi_pack_to_data_pack_unboxer(self):
         from forte.data.readers import OntonotesReader
 
         # Define and config the Pipeline for MultiPackBoxer test
@@ -59,7 +60,7 @@ class DataPackBoxerTest(unittest.TestCase):
         nlp_2.set_reader(OntonotesReader())
         pack_name = "test_pack"
         nlp_2.add(MultiPackBoxer(), {"pack_name": pack_name})
-        nlp_2.add(DataPackBoxer())
+        nlp_2.add(MultiPackUnboxer())
         nlp_2.initialize()
 
         dataset_path = data_samples_root + "/ontonotes/00_1"
@@ -69,10 +70,12 @@ class DataPackBoxerTest(unittest.TestCase):
         # check that the MultiPack is yielded
         pack_1 = nlp_1.process(dataset_path)
         self.assertEqual(pack_1.pack_name, expected_pack_name_multi)
+        self.assertTrue(isinstance(pack_1, MultiPack))
 
         # check that the unboxed DataPack is yielded from the corresponding MultiPack
         pack_2 = nlp_2.process(dataset_path)
         self.assertEqual(pack_2.pack_name, expected_pack_name)
+        self.assertTrue(isinstance(pack_2, DataPack))
 
 
 if __name__ == "__main__":
