@@ -32,7 +32,7 @@ from forte.data.batchers import (
     ProcessingBatcher,
     FixedSizeRequestDataPackBatcher,
 )
-from forte.data.caster import MultiPackBoxer, DataPackBoxer
+from forte.data.caster import MultiPackBoxer
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology.top import Generics, Annotation
