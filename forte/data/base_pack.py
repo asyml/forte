@@ -201,7 +201,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                 pack = pickle.load(f)
 
         if not hasattr(pack, "pack_version"):
-            pack.pack_version: List[int] = OLD_PACK_VERSION
+            pack.pack_version = OLD_PACK_VERSION
 
         return pack  # type: ignore
 
