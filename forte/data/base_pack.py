@@ -200,7 +200,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             with _open(data_source, mode="rb") as f:  # type: ignore
                 pack = pickle.load(f)
 
-        if False == hasattr(pack, "pack_version"):
+        if not hasattr(pack, "pack_version"):
             pack.pack_version: List[int] = OLD_PACK_VERSION
 
         return pack  # type: ignore
