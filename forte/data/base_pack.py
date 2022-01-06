@@ -38,7 +38,7 @@ from forte.common import ProcessExecutionException, EntryNotFoundError
 from forte.data.container import EntryContainer
 from forte.data.index import BaseIndex
 from forte.data.ontology.core import Entry, EntryType, GroupType, LinkType
-from forte.version import PACK_VERSION,OLD_PACK_VERSION
+from forte.version import PACK_VERSION, OLD_PACK_VERSION
 
 __all__ = ["BasePack", "BaseMeta", "PackType"]
 
@@ -200,7 +200,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             with _open(data_source, mode="rb") as f:  # type: ignore
                 pack = pickle.load(f)
 
-        if False == hasattr(pack,'pack_version'):
+        if False == hasattr(pack, "pack_version"):
             pack.pack_version: List[int] = OLD_PACK_VERSION
 
         return pack  # type: ignore
