@@ -1089,15 +1089,17 @@ class OntologyCodeGenerator:
     ):
         ndarray_dtype = None
         if SchemaKeywords.ndarray_dtype in schema:
-            # TODO: validate dtype
             ndarray_dtype = schema[SchemaKeywords.ndarray_dtype]
 
         ndarray_shape = None
         if SchemaKeywords.ndarray_shape in schema:
-            # TODO: validate shape
             ndarray_shape = schema[SchemaKeywords.ndarray_shape]
 
-        # TODO: Throw warning if either dtype or shape is missing
+        if ndarray_dtype is None or ndarray_shape is None:
+            warnings.warn(
+                "Either dtype or shape is not specified."
+                " It is recommended to specify both of them."
+            )
 
         default_val = None
         if ndarray_dtype and ndarray_shape:

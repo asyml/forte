@@ -384,6 +384,12 @@ class NonCompositeProperty(Property):
 
 
 class NdArrayProperty(Property):
+    """
+    NdArrayProperty accepts parsed properties of NdArray and
+    instructs import manager to import and instanciate FNdArray
+    as default value in the generated code.
+    """
+
     def __init__(
         self,
         import_manager: ImportManager,

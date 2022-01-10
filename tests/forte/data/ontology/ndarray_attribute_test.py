@@ -37,8 +37,8 @@ class SerializationTest(unittest.TestCase):
                 self.assertEqual(nd_entry.value.dtype, nd_entry_deseri.value.dtype)
             if nd_entry.value.shape:
                 self.assertEqual(nd_entry.value.shape, nd_entry_deseri.value.shape)
-            if nd_entry.value.array is not None:
-                self.assertEqual(np.sum(nd_entry.value.array - nd_entry_deseri.value.array), 0)
+            if nd_entry.value.data is not None:
+                self.assertEqual(np.sum(nd_entry.value.data - nd_entry_deseri.value.data), 0)
 
 
 @ddt
@@ -58,11 +58,11 @@ class PropertyTest(unittest.TestCase):
         nd_entry = TestEntry(data_pack)
         if nd_entry.value.dtype and input_array.dtype != nd_entry.value.dtype:
             with self.assertRaises(TypeError):
-                nd_entry.value.array = input_array
+                nd_entry.value.data = input_array
 
         if nd_entry.value.shape and input_array.shape != nd_entry.value.shape:
             with self.assertRaises(AttributeError):
-                nd_entry.value.array = input_array
+                nd_entry.value.data = input_array
 
     @data(
         (NdEntry1, [1]),
@@ -80,7 +80,7 @@ class PropertyTest(unittest.TestCase):
         input_array = np.array(input_list)
         if nd_entry.value.shape and input_array.shape != nd_entry.value.shape:
             with self.assertRaises(AttributeError):
-                nd_entry.value.array = input_list
+                nd_entry.value.data = input_list
 
     @data(
         (NdEntry1, 1),
@@ -95,7 +95,7 @@ class PropertyTest(unittest.TestCase):
         data_pack = DataPack()
         nd_entry = TestEntry(data_pack)
         with self.assertRaises(ValueError):
-            nd_entry.value.array = invalid_value
+            nd_entry.value.data = invalid_value
 
     @data(
         (NdEntry1, [[1, 1], [1, 1]]),
@@ -112,7 +112,7 @@ class PropertyTest(unittest.TestCase):
         data_pack = DataPack()
         nd_entry = TestEntry(data_pack)
         try:
-            nd_entry.value.array = input_list
+            nd_entry.value.data = input_list
         except Exception:
             self.fail()
 
@@ -128,7 +128,7 @@ class PropertyTest(unittest.TestCase):
         data_pack = DataPack()
         nd_entry = TestEntry(data_pack)
         try:
-            nd_entry.value.array = input_array
+            nd_entry.value.data = input_array
         except Exception:
             self.fail()
 
@@ -136,4 +136,4 @@ class PropertyTest(unittest.TestCase):
         #   nd_entry.value should match to input_array's.
         self.assertEqual(nd_entry.value.dtype, input_array.dtype)
         self.assertEqual(nd_entry.value.shape, input_array.shape)
-        self.assertEqual(np.sum(nd_entry.value.array - input_array), 0)
+        self.assertEqual(np.sum(nd_entry.value.data - input_array), 0)

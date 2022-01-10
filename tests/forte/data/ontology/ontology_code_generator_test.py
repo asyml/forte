@@ -25,6 +25,7 @@ import jsonschema
 from ddt import ddt, data
 from testfixtures import LogCapture, log_capture
 
+from jsonschema.exceptions import ValidationError
 from forte.data.ontology import utils
 from forte.data.ontology.code_generation_exceptions import (
     DuplicatedAttributesWarning,
@@ -188,6 +189,7 @@ class GenerateOntologyTest(unittest.TestCase):
         (False, "test_invalid_entry_name.json", InvalidIdentifierException),
         (False, "test_invalid_attr_name.json", InvalidIdentifierException),
         (False, "test_non_string_keys.json", CodeGenerationException),
+        (False, "test_invalid_ndarray_shape.json", ValidationError),
     )
     def test_warnings_errors(self, value):
         expected_warning, file, msg_type = value

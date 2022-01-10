@@ -599,6 +599,12 @@ class FDict(Generic[KeyType, ValueType], MutableMapping):
 
 
 class FNdArray:
+    """
+    FNdArray is a wrapper of a NumPy array that stores shape and data type
+    of the array when they are specified. Only when both shape and data type
+    are provided, will FNdArray initializes an empty array accordingly.
+    """
+
     def __init__(
         self, dtype: Optional[str] = None, shape: Optional[Iterable[int]] = None
     ):
@@ -609,9 +615,9 @@ class FNdArray:
         self._shape: Optional[tuple] = (
             tuple(shape) if shape is not None else shape
         )
-        self._array: Optional[np.ndarray] = None
+        self._data: Optional[np.ndarray] = None
         if dtype and shape:
-            self._array = np.ndarray(shape, dtype=dtype)
+            self._data = np.ndarray(shape, dtype=dtype)
 
     @property
     def dtype(self):
@@ -622,11 +628,11 @@ class FNdArray:
         return self._shape
 
     @property
-    def array(self):
-        return self._array
+    def data(self):
+        return self._data
 
-    @array.setter
-    def array(self, array: Union[np.ndarray, List]):
+    @data.setter
+    def data(self, array: Union[np.ndarray, List]):
         if isinstance(array, np.ndarray):
             if self.dtype and not np.issubdtype(array.dtype, self.dtype):
                 raise TypeError(
@@ -636,7 +642,7 @@ class FNdArray:
                 raise AttributeError(
                     f"Expecting shape {self.shape}, but got {array.shape}."
                 )
-            self._array = array
+            self._data = array
 
         elif isinstance(array, list):
             array_np = np.array(array, dtype=self.dtype)
@@ -644,15 +650,16 @@ class FNdArray:
                 raise AttributeError(
                     f"Expecting shape {self.shape}, but got {array_np.shape}."
                 )
-            self._array = array_np
+            self._data = array_np
 
         else:
             raise ValueError(
                 f"Can only accept numpy array or python list, but got {type(array)}"
             )
 
-        self._dtype = self._array.dtype
-        self._shape = self._array.shape
+        # Stored dtype and shape should match to the provided array's.
+        self._dtype = self._data.dtype
+        self._shape = self._data.shape
 
 
 class Pointer(BasePointer):
