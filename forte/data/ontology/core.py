@@ -602,7 +602,10 @@ class FNdArray:
     """
     FNdArray is a wrapper of a NumPy array that stores shape and data type
     of the array if they are specified. Only when both shape and data type
-    are provided, will FNdArray initialize an empty array accordingly.
+    are provided, will FNdArray initialize a placeholder array through
+    np.ndarray(shape, dtype=dtype).
+    More details about np.ndarray(...):
+    https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html
     """
 
     def __init__(
