@@ -601,8 +601,8 @@ class FDict(Generic[KeyType, ValueType], MutableMapping):
 class FNdArray:
     """
     FNdArray is a wrapper of a NumPy array that stores shape and data type
-    of the array when they are specified. Only when both shape and data type
-    are provided, will FNdArray initializes an empty array accordingly.
+    of the array if they are specified. Only when both shape and data type
+    are provided, will FNdArray initialize an empty array accordingly.
     """
 
     def __init__(
