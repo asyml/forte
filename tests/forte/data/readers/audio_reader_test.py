@@ -24,7 +24,7 @@ from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.common.exception import ProcessFlowException
 from forte.data.data_pack import DataPack
-from forte.data.readers import AudioReader
+from forte.data.readers.audio_reader import AudioReader
 from forte.pipeline import Pipeline
 from forte.processors.base.pack_processor import PackProcessor
 

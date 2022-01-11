@@ -122,7 +122,6 @@ jobs:
             ${{ runner.os }}-
       - name: Install dependencies
         run: |
-          sudo apt-get install -y libsndfile1-dev
           python -m pip install --progress-bar off --upgrade pip
           pip install --progress-bar off -r requirements.txt
           pip install --progress-bar off -r docs/requirements.txt

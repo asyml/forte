@@ -70,10 +70,13 @@ class Meta(BaseMeta):
         language: The language used by this data pack, default is English.
         span_unit: The unit used for interpreting the Span object of this
           data pack. Default is character.
+        sample_rate: An integer specifying the sample rate of audio payload.
+          Default is None.
         info: Store additional string based information that the user add.
     Attributes:
         pack_name:  storing the provided `pack_name`.
         language: storing the provided `language`.
+        sample_rate: storing the provided `sample_rate`.
         info: storing the provided `info`.
         record: Initialized as a dictionary. This is not a required field.
             The key of the record should be the entry type and values should
@@ -378,7 +381,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             self.__orig_text_len,
         ) = data_utils_io.modify_text_and_track_ops(text, span_ops)
 
-    def set_audio(self, audio: np.ndarray, sample_rate: Optional[int]):
+    def set_audio(self, audio: np.ndarray, sample_rate: int):
         r"""Set the audio payload and sample rate of the :class:`DataPack`
         object.
 
@@ -387,8 +390,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             sample_rate: An integer specifying the sample rate.
         """
         self._audio = audio
-        if sample_rate is not None:
-            self.set_meta(sample_rate=sample_rate)
+        self.set_meta(sample_rate=sample_rate)
 
     def get_original_text(self):
         r"""Get original unmodified text from the :class:`DataPack` object.
