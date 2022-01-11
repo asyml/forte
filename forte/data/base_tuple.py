@@ -189,21 +189,6 @@ class BaseTuple(EntryContainer[EntryType, LinkType, GroupType]):
 
         return pack  # type: ignore
 
-    def on_entry_creation(self, entry):
-        pass
-
-    def regret_creation(self, entry):
-        pass
-
-    def record_field(self, entry_id: int, field_name: str):
-        pass
-
-    def add_all_remaining_entries(self):
-        pass
-
-    def set_control_component(self, component):
-        pass
-
     @classmethod
     def from_string(cls, data_content: str) -> "BaseTuple":
         return jsonpickle.decode(data_content)
@@ -441,3 +426,22 @@ class BaseTuple(EntryContainer[EntryType, LinkType, GroupType]):
         #         all_types.add(data_type)
         all_types.add(entry_type)
         return all_types
+
+    """
+    old functions from data pack class
+    """
+
+    def on_entry_creation(self, entry):
+        pass
+
+    def regret_creation(self, entry):
+        pass
+
+    def record_field(self, entry_id: int, field_name: str):
+        pass
+
+    def add_all_remaining_entries(self):
+        pass
+
+    def set_control_component(self, component):
+        pass
