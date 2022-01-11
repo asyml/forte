@@ -62,3 +62,11 @@ class MultiPackBoxer(Caster[DataPack, MultiPack]):
     @classmethod
     def default_configs(cls):
         return {"pack_name": "default"}
+
+    @staticmethod
+    def input_pack_type():
+        return DataPack
+
+    @staticmethod
+    def output_pack_type():
+        return MultiPack
