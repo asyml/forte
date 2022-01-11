@@ -16,7 +16,6 @@ The reader that reads audio files into Datapacks.
 """
 import os
 from typing import Any, Iterator
-import soundfile
 
 from forte.data.data_pack import DataPack
 from forte.data.data_utils_io import dataset_path_iterator
@@ -29,6 +28,21 @@ __all__ = [
 
 class AudioReader(PackReader):
     r""":class:`AudioReader` is designed to read in audio files."""
+
+    def initialize(self, resources, configs):
+        # pylint: disable=attribute-defined-outside-init
+        super().initialize(resources, configs)
+        try:
+            import soundfile  # pylint: disable=import-outside-toplevel
+        except ModuleNotFoundError as e:
+            raise ModuleNotFoundError(
+                "AudioReader requires 'soundfile' package to be installed."
+                " You can run 'pip install soundfile' or 'pip install forte"
+                "[audio_ext]'. Note that additional steps might apply to Linux"
+                " users (refer to "
+                "https://pysoundfile.readthedocs.io/en/latest/#installation)."
+            ) from e
+        self._soundfile = soundfile
 
     def _collect(self, audio_directory) -> Iterator[Any]:  # type: ignore
         r"""Should be called with param ``audio_directory`` which is a path to a
@@ -48,7 +62,7 @@ class AudioReader(PackReader):
         pack: DataPack = DataPack()
 
         # Read in audio data and store in DataPack
-        audio, sample_rate = soundfile.read(
+        audio, sample_rate = self._soundfile.read(
             file=file_path, **(self.configs.read_kwargs or {})
         )
         pack.set_audio(audio=audio, sample_rate=sample_rate)
