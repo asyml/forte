@@ -612,7 +612,7 @@ class ModuleWriter:
         tempdir: str,
         destination: str,
         include_init: bool,
-        with_init: bool,
+        use_name_space_packaging: bool,
     ):
         """
         Create entry sub-directories with .generated file to indicate the
@@ -626,7 +626,7 @@ class ModuleWriter:
               placed
             include_init: True if `__init__.py` is to be generated in existing
               packages in which `__init__.py` does not already exists
-            with_init: True if `__init__.py` is to be generated automatically;
+            use_name_space_packaging: True if `__init__.py` is to be generated automatically;
                 False, the `__init__.py` is not to be generated automatically
         Returns:
         """
@@ -644,7 +644,7 @@ class ModuleWriter:
                 Path(os.path.join(temp_path, AUTO_GEN_FILENAME)).touch()
 
             # Create init file
-            if with_init:
+            if use_name_space_packaging:
                 if not dest_path_exists or include_init:
                     init_file_path = os.path.join(temp_path, "__init__.py")
                     with open(
@@ -657,7 +657,7 @@ class ModuleWriter:
         tempdir: str,
         destination: str,
         include_init: bool,
-        with_init: bool,
+        use_name_space_packaging: bool,
     ):
         """
         Write the entry information to file.
@@ -667,14 +667,14 @@ class ModuleWriter:
             destination: The actual folder to place the generated code.
             include_init: Whether to include `__init__.py` in the existing
             directories if it does not already exist.
-            with_init: True if `__init__.py` is to be generated automatically;
+            use_name_space_packaging: True if `__init__.py` is to be generated automatically;
                 False, the `__init__.py` is not to be generated automatically
 
         Returns:
 
         """
 
-        self.make_module_dirs(tempdir, destination, include_init, with_init)
+        self.make_module_dirs(tempdir, destination, include_init, use_name_space_packaging)
         full_path = os.path.join(tempdir, self.pkg_dir, self.file_name) + ".py"
 
         with open(full_path, "w", encoding="utf-8") as f:

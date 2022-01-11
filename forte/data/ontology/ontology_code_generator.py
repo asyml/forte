@@ -446,7 +446,7 @@ class OntologyCodeGenerator:
         include_init: bool = True,
         merged_path: Optional[str] = None,
         lenient_prefix=False,
-        with_init: bool = True,
+        use_name_space_packaging: bool = True,
     ) -> Optional[str]:
         r"""Function to generate and save the python ontology code after reading
         ontology from the input json file. This is the main entry point to
@@ -468,7 +468,7 @@ class OntologyCodeGenerator:
                 be written at this path.
             lenient_prefix: if `True`, will not enforce the entry name to
                 match a known prefix.
-            with_init: True if `__init__.py` is to be generated automatically;
+            use_name_space_packaging: True if `__init__.py` is to be generated automatically;
                 False, the `__init__.py` is not to be generated automatically
 
         Returns:
@@ -506,7 +506,7 @@ class OntologyCodeGenerator:
         logging.info("Working on %s", spec_path)
         for writer in self.module_writers.writers():
             logging.info("Writing module: %s", writer.module_name)
-            writer.write(tempdir, destination_dir, include_init, with_init)
+            writer.write(tempdir, destination_dir, include_init, use_name_space_packaging)
             logging.info("Done writing.")
 
         if merged_path is not None:

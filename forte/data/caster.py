@@ -54,18 +54,12 @@ class MultiPackBoxer(Caster[DataPack, MultiPack]):
 
     def cast(self, pack: DataPack) -> MultiPack:
         """
-        Auto-box the DataPack into a MultiPack by simple wrapping.
-
+        Auto-box the data-pack into a multi-pack by simple wrapping.
         Args:
-            pack: The DataPack to be boxed
-
-        Returns: An iterator that produces the boxed MultiPack.
-
+            pack: The data pack to be boxed
+        Returns: An iterator that produces the boxed multi pack.
         """
-        # p = MultiPack()
         pack_name = pack.pack_name + "_multi" if pack.pack_name else None
-        # if pack_name in p._name_index:
-        #     raise ValueError(f"The name {pack_name} has already been taken.")
         p = MultiPack(pack_name=pack_name)
         p.add_pack_(pack, self.configs.pack_name)
         return p
