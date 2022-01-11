@@ -2,6 +2,7 @@ import os
 import tempfile
 import unittest
 from ddt import data, ddt
+
 import numpy as np
 from forte.data.data_pack import DataPack
 from .test_outputs.ft.onto.test_ndarray import NdEntry1, NdEntry2, NdEntry3

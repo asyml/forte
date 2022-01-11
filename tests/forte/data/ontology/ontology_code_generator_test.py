@@ -20,6 +20,7 @@ import sys
 import tempfile
 import unittest
 import warnings
+from string import Template
 
 import jsonschema
 from ddt import ddt, data
@@ -180,6 +181,8 @@ class GenerateOntologyTest(unittest.TestCase):
     @data(
         (True, "test_duplicate_entry.json", DuplicateEntriesWarning),
         (True, "test_duplicate_attr_name.json", DuplicatedAttributesWarning),
+        (True, "test_ndarray_dtype_only.json", UserWarning),
+        (True, "test_ndarray_shape_only.json", UserWarning),
         (False, "example_ontology.json", OntologySourceNotFoundException),
         (False, "test_invalid_parent.json", ParentEntryNotSupportedException),
         (False, "test_invalid_attribute.json", TypeNotDeclaredException),
@@ -189,7 +192,6 @@ class GenerateOntologyTest(unittest.TestCase):
         (False, "test_invalid_entry_name.json", InvalidIdentifierException),
         (False, "test_invalid_attr_name.json", InvalidIdentifierException),
         (False, "test_non_string_keys.json", CodeGenerationException),
-        (False, "test_invalid_ndarray_shape.json", ValidationError),
     )
     def test_warnings_errors(self, value):
         expected_warning, file, msg_type = value
@@ -279,6 +281,99 @@ class GenerateOntologyTest(unittest.TestCase):
             utils.validate_json_schema(input_filepath)
         self.assertTrue(error_msg in cm.exception.args[0])
 
+    @data(
+        [1],
+        [3, ],
+        [2, 2],
+        [[1, 2], [3, 4]]
+    )
+    def test_ndarray_valid_shape(self, shape):
+        mapping = {
+            "dtype": '"int"',
+            "shape": f"{shape}"
+        }
+        template_file = os.path.join(self.spec_dir, "test_ndarray_template.json")
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_filename = _get_temp_filename(template_file, temp_dir)
+            _modify_test_template(
+                template_file=temp_filename,
+                mapping=mapping,
+                output_path=temp_filename)
+            utils.validate_json_schema(temp_filename)
+
+    @data(
+        (False, 3),
+        (True, [2, 2])
+    )
+    def test_ndarray_invalid_shape(self, value):
+        is_string, shape = value
+        mapping = {
+            "dtype": '"int"',
+            "shape": '"' + f"{shape}" + '"' if is_string else f"{shape}"
+        }
+        template_file = "./tests/forte/data/ontology/test_specs/test_ndarray_template.json"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_filename = _get_temp_filename(template_file, temp_dir)
+            _modify_test_template(
+                template_file=temp_filename,
+                mapping=mapping,
+                output_path=temp_filename)
+            with self.assertRaises(ValidationError):
+                utils.validate_json_schema(temp_filename)
+
+    @data(
+        "bool",
+        "bool8",
+        "int",
+        "int8",
+        "int32",
+        "int64",
+        "uint8",
+        "uint32",
+        "uint64",
+        "float",
+        "float32",
+        "float64",
+        "float96",
+        "float128",
+        "complex",
+        "complex128",
+        "complex192",
+        "complex256"
+    )
+    def test_ndarray_valid_dtype(self, dtype):
+        mapping = {
+            "dtype": '"' + f"{dtype}" + '"',
+            "shape": [2, 2]
+        }
+        template_file = "./tests/forte/data/ontology/test_specs/test_ndarray_template.json"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_filename = _get_temp_filename(template_file, temp_dir)
+            _modify_test_template(
+                template_file=temp_filename,
+                mapping=mapping,
+                output_path=temp_filename)
+            utils.validate_json_schema(temp_filename)
+
+    @data(
+        "xint",
+        "undefined_dtype"
+    )
+    def test_ndarray_invalid_dtype(self, dtype):
+        mapping = {
+            "dtype": '"' + f"{dtype}" + '"',
+            "shape": [2, 2]
+        }
+        template_file = "./tests/forte/data/ontology/test_specs/test_ndarray_template.json"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_filename = _get_temp_filename(template_file, temp_dir)
+            _modify_test_template(
+                template_file=temp_filename,
+                mapping=mapping,
+                output_path=temp_filename)
+            with self.assertRaises(ValidationError):
+                utils.validate_json_schema(temp_filename)
+
 
 def _get_temp_filename(json_file_path, temp_dir):
     with open(json_file_path, "r") as f:
@@ -297,3 +392,23 @@ def _get_init_paths(paths):
             tmp_path = tmp_path.rsplit("/", 1)[0]
             inits.add(os.path.join(tmp_path, "__init__"))
     return list(inits)
+
+
+def _modify_test_template(template_file, mapping, output_path):
+    """
+    This helper function takes in a template of ontology config
+    and a mapping to substitute key words in the template.
+
+    Args:
+        template_file (str): path to the template JSON file.
+        mapping (dict): mapping to substitute key words.
+        output_path (str): output path of the generated file.
+    """
+    with open(template_file, 'r') \
+            as template_file:
+        data = template_file.read()
+    data = Template(data)
+    data = data.substitute(mapping)
+    with open(output_path, 'w') \
+            as output_json:
+        output_json.write(data)

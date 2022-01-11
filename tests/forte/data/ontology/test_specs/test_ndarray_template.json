@@ -2,15 +2,15 @@
     "name": "NdArrayEntry", 
     "definitions": [ 
       { 
-        "entry_name": "ft.onto.test_ndarray.BadShapeNdEntry1", 
+        "entry_name": "ft.onto.test_ndarray.TestNdEntry", 
         "parent_entry": "forte.data.ontology.top.Generics", 
-        "description": "A N-dimensional entity having invalid shape.", 
+        "description": "A N-dimensional entity", 
         "attributes": [ 
           { 
               "name": "value", 
               "type": "NdArray",
-              "ndarray_dtype": "int",
-              "ndarray_shape": "[2, 2]"
+              "ndarray_dtype": $dtype,
+              "ndarray_shape": $shape
           }
         ] 
       }
