@@ -56,7 +56,7 @@ class MultiPackUnboxerTest(unittest.TestCase):
 
         # Define and config the Pipeline for DataPackBoxer test
         nlp_2 = Pipeline[DataPack]()
-        nlp_2.set_reader(OntonotesReader()) # random text, plain text reader
+        nlp_2.set_reader(OntonotesReader())
         pack_name = "test_pack"
         nlp_2.add(MultiPackBoxer(), {"pack_name": pack_name})
         nlp_2.add(MultiPackUnboxer())
