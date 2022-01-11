@@ -58,15 +58,21 @@ class BaseTuple(EntryContainer[EntryType, LinkType, GroupType]):
         # A dictionary that records all entrys with structure {tid: entry}.
         self.entry_dict: dict = dict()
 
-        # A sorted list of (class_name, begin, end, tid, speaker, part_id, 
+        # A sorted list of (class_name, begin, end, tid, speaker, part_id,
         #                   sentiment, classification, classifications)
         # If the field has not been initialized, we use None as a place holder.
-        # Need to implement all types of entries as separate lists 
+        # Need to implement all types of entries as separate lists
         self.sentence: List[tuple] = []
 
         # Field dictionaries which record all possible fields
-        # Need to implement all types of entries as separate dictionaries 
-        self.sentence_field_dict = {'speaker':4, 'part_id':5, 'sentiment':6, 'classification':7, "classifications":8}
+        # Need to implement all types of entries as separate dictionaries
+        self.sentence_field_dict = {
+            "speaker": 4,
+            "part_id": 5,
+            "sentiment": 6,
+            "classification": 7,
+            "classifications": 8,
+        }
 
     @abstractmethod
     def __iter__(self) -> Iterator[EntryType]:
@@ -205,7 +211,7 @@ class BaseTuple(EntryContainer[EntryType, LinkType, GroupType]):
     @abstractmethod
     def add_entry_raw(self, entry_type, begin, end):
         r"""Add an entry to the data_tuple and return a unique tid for it.
-        We need to add the entry to the corresponding sorted list and the 
+        We need to add the entry to the corresponding sorted list and the
         entry_dict. We assign a tid to it.
 
         Args:
@@ -253,7 +259,7 @@ class BaseTuple(EntryContainer[EntryType, LinkType, GroupType]):
     @abstractmethod
     def get_attr_from_tuple(self, entry, attr_name):
         r"""Get the value of `attr_name` of an entry.
-        We first find the type of the entry. We then locate the index of the 
+        We first find the type of the entry. We then locate the index of the
         attribute from the field dictionary and get the field.
 
         Args:
@@ -269,7 +275,7 @@ class BaseTuple(EntryContainer[EntryType, LinkType, GroupType]):
     @abstractmethod
     def delete_entry(self, tid):
         r"""Remove the entry from the tuple.
-        We locate the entry from entry_dict using tid and remove it from both 
+        We locate the entry from entry_dict using tid and remove it from both
         entry_dict and the corresponding sorted list.
 
         Args:
@@ -289,7 +295,7 @@ class BaseTuple(EntryContainer[EntryType, LinkType, GroupType]):
 
         Returns:
             The entry which tid corresponds to.
-        
+
         """
         raise NotImplementedError
 
@@ -317,7 +323,7 @@ class BaseTuple(EntryContainer[EntryType, LinkType, GroupType]):
                 pack.get_data_raw(base_ontology.Sentence, requests)
 
         Args:
-            context_type (str or EntryType): The granularity of the data 
+            context_type (str or EntryType): The granularity of the data
                 context, which could be any ``Annotation`` type.
             request (dict): The entry types and fields required.
                 The keys of the requests dict are the required entry types
