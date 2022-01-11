@@ -468,8 +468,10 @@ class OntologyCodeGenerator:
                 be written at this path.
             lenient_prefix: if `True`, will not enforce the entry name to
                 match a known prefix.
-            use_name_space_packaging: True if `__init__.py` is to be generated automatically;
-                False, the `__init__.py` is not to be generated automatically
+            use_name_space_packaging: True if namespace packaging is to be used,
+                and `__init__.py` is to be generated at the top level;
+                False, namespace packaging is to be used,
+                and the `__init__.py` is not to be generated at the top level
 
         Returns:
             Directory path in which the modules are created: either one of
@@ -506,7 +508,9 @@ class OntologyCodeGenerator:
         logging.info("Working on %s", spec_path)
         for writer in self.module_writers.writers():
             logging.info("Writing module: %s", writer.module_name)
-            writer.write(tempdir, destination_dir, include_init, use_name_space_packaging)
+            writer.write(
+                tempdir, destination_dir, include_init, use_name_space_packaging
+            )
             logging.info("Done writing.")
 
         if merged_path is not None:
