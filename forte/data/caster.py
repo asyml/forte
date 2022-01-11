@@ -37,14 +37,6 @@ class Caster(
     def cast(self, pack: InputPackType) -> OutputPackType:
         raise NotImplementedError
 
-    @staticmethod
-    def input_pack_type():
-        raise NotImplementedError
-
-    @staticmethod
-    def output_pack_type():
-        raise NotImplementedError
-
 
 class MultiPackBoxer(Caster[DataPack, MultiPack]):
     """
@@ -55,9 +47,12 @@ class MultiPackBoxer(Caster[DataPack, MultiPack]):
     def cast(self, pack: DataPack) -> MultiPack:
         """
         Auto-box the data-pack into a multi-pack by simple wrapping.
+
         Args:
             pack: The data pack to be boxed
+
         Returns: An iterator that produces the boxed multi pack.
+
         """
         pack_name = pack.pack_name + "_multi" if pack.pack_name else None
         p = MultiPack(pack_name=pack_name)
@@ -67,11 +62,3 @@ class MultiPackBoxer(Caster[DataPack, MultiPack]):
     @classmethod
     def default_configs(cls):
         return {"pack_name": "default"}
-
-    @staticmethod
-    def input_pack_type():
-        return DataPack
-
-    @staticmethod
-    def output_pack_type():
-        return MultiPack
