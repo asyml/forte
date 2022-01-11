@@ -56,15 +56,15 @@ class MultiPackUnboxerTest(unittest.TestCase):
 
         # Define and config the Pipeline for DataPackBoxer test
         nlp_2 = Pipeline[DataPack]()
-        nlp_2.set_reader(OntonotesReader())
+        nlp_2.set_reader(OntonotesReader()) # random text, plain text reader
         pack_name = "test_pack"
         nlp_2.add(MultiPackBoxer(), {"pack_name": pack_name})
         nlp_2.add(MultiPackUnboxer())
         nlp_2.initialize()
 
-        dataset_path = data_samples_root + "/ontonotes/00_1"
-        expected_pack_name_multi = "bn/abc/00/abc_0039_multi"
-        expected_pack_name = "bn/abc/00/abc_0039"
+        dataset_path = data_samples_root + "/ontonotes/one_file"
+        expected_pack_name_multi = "bn/abc/00/abc_0059_multi"
+        expected_pack_name = "bn/abc/00/abc_0059"
 
         # check that the MultiPack is yielded
         pack_1 = nlp_1.process(dataset_path)
