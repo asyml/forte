@@ -37,3 +37,6 @@ nltk==3.4.5
 # FastAPI
 fastapi==0.65.2
 uvicorn==0.14.0
+
+# soundfile
+soundfile>=0.10.3

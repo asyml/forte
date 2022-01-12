@@ -70,10 +70,13 @@ class Meta(BaseMeta):
         language: The language used by this data pack, default is English.
         span_unit: The unit used for interpreting the Span object of this
           data pack. Default is character.
+        sample_rate: An integer specifying the sample rate of audio payload.
+          Default is None.
         info: Store additional string based information that the user add.
     Attributes:
         pack_name:  storing the provided `pack_name`.
         language: storing the provided `language`.
+        sample_rate: storing the provided `sample_rate`.
         info: storing the provided `info`.
         record: Initialized as a dictionary. This is not a required field.
             The key of the record should be the entry type and values should
@@ -87,11 +90,13 @@ class Meta(BaseMeta):
         pack_name: Optional[str] = None,
         language: str = "eng",
         span_unit: str = "character",
+        sample_rate: Optional[int] = None,
         info: Optional[Dict[str, str]] = None,
     ):
         super().__init__(pack_name)
         self.language = language
         self.span_unit = span_unit
+        self.sample_rate: Optional[int] = sample_rate
         self.record: Dict[str, Set[str]] = {}
         self.info: Dict[str, str]
         if info is None:
@@ -155,6 +160,7 @@ class DataPack(BasePack[Entry, Link, Group]):
     def __init__(self, pack_name: Optional[str] = None):
         super().__init__(pack_name)
         self._text = ""
+        self._audio: Optional[np.ndarray] = None
 
         self.annotations: SortedList[Annotation] = SortedList()
         self.links: SortedList[Link] = SortedList()
@@ -241,6 +247,16 @@ class DataPack(BasePack[Entry, Link, Group]):
     def text(self) -> str:
         r"""Return the text of the data pack"""
         return self._text
+
+    @property
+    def audio(self) -> Optional[np.ndarray]:
+        r"""Return the audio of the data pack"""
+        return self._audio
+
+    @property
+    def sample_rate(self) -> Optional[int]:
+        r"""Return the sample rate of the audio data"""
+        return getattr(self._meta, "sample_rate")
 
     @property
     def all_annotations(self) -> Iterator[Annotation]:
@@ -364,6 +380,17 @@ class DataPack(BasePack[Entry, Link, Group]):
             self.__processed_original_spans,
             self.__orig_text_len,
         ) = data_utils_io.modify_text_and_track_ops(text, span_ops)
+
+    def set_audio(self, audio: np.ndarray, sample_rate: int):
+        r"""Set the audio payload and sample rate of the :class:`DataPack`
+        object.
+
+        Args:
+            audio: A numpy array storing the audio waveform.
+            sample_rate: An integer specifying the sample rate.
+        """
+        self._audio = audio
+        self.set_meta(sample_rate=sample_rate)
 
     def get_original_text(self):
         r"""Get original unmodified text from the :class:`DataPack` object.
