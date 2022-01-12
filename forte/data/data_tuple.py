@@ -53,7 +53,7 @@ class DataTuple(BaseDataStructure):
         super().__init__()
         self._text = ""
         
-        # anntations: list of (class_name, begin, end, args*[tuple])
+        # anntations: list of (class_name, id, begin, end, attr_1, attr_2, ..., attr_n)
         self.elements: SortedList[tuple] = SortedList(key = self.key_function)
         
         self.entry_dict: dict = dict()

@@ -157,7 +157,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         super().__init__(pack_name)
         self._text = ""
 
-        self.annotations: SortedList[Annotation] = SortedList()
+        self.a: SortedList[Annotation] = SortedList()
         self.links: SortedList[Link] = SortedList()
         self.groups: SortedList[Group] = SortedList()
         self.generics: SortedList[Generics] = SortedList()

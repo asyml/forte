@@ -47,7 +47,6 @@ class BaseDataStructure(EntryContainer[EntryType, LinkType, GroupType]):
 
     Args:
         pack_name (str, optional): a string name of the pack.
-
     """
 
     # pylint: disable=too-many-public-methods
@@ -159,12 +158,15 @@ class BaseDataStructure(EntryContainer[EntryType, LinkType, GroupType]):
         if serialize_method == "jsonpickle":
             with _open(data_source, mode="rt") as f:  # type: ignore
                 pack = cls.from_string(f.read())
-        else:
+        else: # pickle
             with _open(data_source, mode="rb") as f:  # type: ignore
                 pack = pickle.load(f)
 
         return pack  # type: ignore
     
+    """ 
+    Those are methods for compatability with datapack; Not used for now.
+    """
     def on_entry_creation(self, entry):
         pass
 
@@ -182,10 +184,26 @@ class BaseDataStructure(EntryContainer[EntryType, LinkType, GroupType]):
 
     @classmethod
     def from_string(cls, data_content: str) -> "BaseDataStructure":
+        """convert a serialized string to a BaseDataStructure object
+        Args:
+            data_content: serialized string
+        Returns:
+            BaseDataStructure: An object deserialized from this string
+        """
         return jsonpickle.decode(data_content)
 
     @abstractmethod
     def add_entry_raw(self, entry_type, begin, end):
+        """Add an entry as a tuple into the annotations
+
+        Args:
+            entry_type ([type]): [description]
+            begin ([type]): [description]
+            end ([type]): [description]
+
+        Raises:
+            NotImplementedError: [description]
+        """
         raise NotImplementedError
     
     @abstractmethod
