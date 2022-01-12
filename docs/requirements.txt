@@ -32,7 +32,7 @@ jsonschema==3.0.2
 transformers>=3.1
 
 # NLTK
-nltk==3.4.5
+nltk==3.6.6
 
 # FastAPI
 fastapi==0.65.2
