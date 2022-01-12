@@ -1,4 +1,4 @@
-from typing import (
+gfrom typing import (
     Dict,
     Iterable,
     Iterator,
@@ -58,11 +58,11 @@ class DataTuple(BaseTuple):
     def __init__(self, pack_name: Optional[str] = None):
         super().__init__()
         self._text = ""
-        # A dictionary that records all entrys with structure {tid: entry}.
-        self.entry_dict: dict = dict()
-
-        # A sorted list of annotation (class_name, begin, end, tid, args*[tuple])
-        self.elements: SortedList[tuple] = SortedList(key=self.key_function)
+        
+        # anntations: list of (class_name, id, begin, end, attr_1, attr_2, ..., attr_n)
+        self.elements: SortedList[tuple] = SortedList(key = self.key_function)
+        
+        self.entry_dict: dict = dict()g
 
         # Sorted lists of entries, need to add all types
         # self.sentence: SortedList[tuple] = SortedList(key = self.key_function)
@@ -143,7 +143,7 @@ class DataTuple(BaseTuple):
             )
         return entry
 
-    def get_raw(
+    def get(
         self,
         entry_type: Union[str, Type[EntryType]],
         range_annotation: Union[int, tuple] = None,
@@ -151,7 +151,6 @@ class DataTuple(BaseTuple):
         include_sub_type=True,
     ):
         entry_type_: Type[EntryType] = as_entry_type(entry_type)
-
         range_annotation_: Tuple
 
         if isinstance(range_annotation, int):
@@ -186,8 +185,76 @@ class DataTuple(BaseTuple):
             if entry[0] not in all_types:
                 continue
             yield entry  # type: ignore
+    
+    def co_iterate(
+        self, 
+        entry_type_outer: Union[str, Type[EntryType]],
+        entry_type_inner: Union[str, Type[EntryType]],
+        range_annotation = None,
+    ):
+        range_annotation_: Tuple
 
-    def get_data_raw(
+        if isinstance(range_annotation, int):
+            range_annotation_ = self.entry_dict[range_annotation]
+        else:
+            range_annotation_ = range_annotation
+
+        entry_type_outer_: Type[EntryType] = as_entry_type(entry_type_outer)
+        entry_type_inner_: Type[EntryType] = as_entry_type(entry_type_inner)
+        
+        if not issubclass(entry_type_outer_, Annotation):
+            # temporarily only support get raw for annotation type
+            raise ValueError(
+                    f"The requested type {str(entry_type_outer_)} is not supported."
+                )
+        if not issubclass(entry_type_inner_, Annotation):
+            # temporarily only support get raw for annotation type
+            raise ValueError(
+                    f"The requested type {str(entry_type_inner_)} is not supported."
+                )
+
+        entry_iter: Iterator[Entry]
+        if range_annotation_ is not None:
+            entry_iter = self.iter_in_range(entry_type_outer_, range_annotation_)
+        else:
+            entry_iter = self.elements
+        
+        last_pos = 0
+        inner_entry_buf = []
+        for entry in entry_iter:
+            # Filter by type and components.
+            if entry[0] != entry_type_outer_ and entry[0] != entry_type_inner_:
+                continue
+            if entry[0] == entry_type_outer_:
+                yield entry
+            else: # entry_type_inner_
+                if entry[1] > last_pos:
+                    yield from inner_entry_buf
+                    inner_entry_buf = [entry]
+                    last_pos = entry[1]
+                else:
+                    inner_entry_buf.append(entry)
+        if len(inner_entry_buf) > 0:
+            yield from inner_entry_buf
+
+    def part_iterate(
+        self,
+        begin_annotation: Union[int, tuple],
+        end_annotation: Union[int, tuple],
+        entry_type: Union[str, Type[EntryType]] = None,
+    ):
+        begin_index = self.elements.bisect(begin_annotation)
+        end_index = self.elements.bisect(end_annotation)
+
+        iter = self.elements[begin_index:end_index]
+        if entry_type is None:
+            yield from iter
+
+        for entry in iter:
+            if entry[0] == entry_type:
+                yield entry
+
+    def get_data(
         self,
         context_type: Union[str, Type[Annotation]],
         request: Optional[DataRequest] = None,
