@@ -626,10 +626,8 @@ class ModuleWriter:
               placed
             include_init: True if `__init__.py` is to be generated in existing
               packages in which `__init__.py` does not already exists
-            use_name_space_packaging: True if namespace packaging is to be used,
-                and `__init__.py` is to be generated at the top level;
-                False, namespace packaging is to be used,
-                and the `__init__.py` is not to be generated at the top level
+            use_name_space_packaging: True if `__init__.py` is not to be generated at the top level;
+                False, the `__init__.py` is to be generated at the top level
         Returns:
         """
         entry_dir_split = split_file_path(self.pkg_dir)
@@ -646,7 +644,7 @@ class ModuleWriter:
                 Path(os.path.join(temp_path, AUTO_GEN_FILENAME)).touch()
 
             # Create init file
-            if use_name_space_packaging:
+            if not use_name_space_packaging:
                 if not dest_path_exists or include_init:
                     init_file_path = os.path.join(temp_path, "__init__.py")
                     with open(
@@ -669,10 +667,8 @@ class ModuleWriter:
             destination: The actual folder to place the generated code.
             include_init: Whether to include `__init__.py` in the existing
             directories if it does not already exist.
-            use_name_space_packaging: True if namespace packaging is to be used,
-                and `__init__.py` is to be generated at the top level;
-                False, namespace packaging is to be used,
-                and the `__init__.py` is not to be generated at the top level
+            use_name_space_packaging: True if `__init__.py` is not to be generated at the top level;
+                False, the `__init__.py` is to be generated at the top level
 
         Returns:
 

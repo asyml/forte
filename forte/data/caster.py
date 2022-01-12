@@ -37,6 +37,14 @@ class Caster(
     def cast(self, pack: InputPackType) -> OutputPackType:
         raise NotImplementedError
 
+    @staticmethod
+    def input_pack_type():
+        raise NotImplementedError
+
+    @staticmethod
+    def output_pack_type():
+        raise NotImplementedError
+
 
 class MultiPackBoxer(Caster[DataPack, MultiPack]):
     """
