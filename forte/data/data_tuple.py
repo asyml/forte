@@ -1,4 +1,4 @@
-gfrom typing import (
+from typing import (
     Dict,
     Iterable,
     Iterator,
@@ -30,7 +30,7 @@ from forte.data import data_utils_io
 from forte.data.types import DataRequest
 from forte.utils import create_class_with_kwargs
 from forte.data.data_pack import as_entry_type, get_class
-from forte.data.base_tuple import BaseTuple
+from forte.data.base_data_structure import BaseDataStructure
 from forte.data.types import ReplaceOperationsType, DataRequest
 from ft.onto.base_ontology import Sentence
 
@@ -54,7 +54,7 @@ def tid(tuple):
     return tuple[3]
 
 
-class DataTuple(BaseTuple):
+class DataTuple(BaseDataStructure):
     def __init__(self, pack_name: Optional[str] = None):
         super().__init__()
         self._text = ""

@@ -12,14 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import gzip
-import pickle
 from abc import abstractmethod
-from pathlib import Path
 from typing import (
     List,
-    Optional,
-    Set,
     Type,
     Union,
     Iterator,
@@ -28,7 +23,6 @@ from typing import (
     Any,
 )
 
-import jsonpickle
 from sortedcontainers import SortedList
 from forte.common import EntryNotFoundError
 from forte.data.ontology.core import EntryType
@@ -37,19 +31,14 @@ __all__ = ["BaseTank"]
 
 
 class BaseTank:
-    r"""The base class of :class:`~forte.data.data_tank.DataTank`.
-
-    Args:
-        tank_name (str, optional): a string name of the data tank.
-
-    """
+    r"""The base class which will be
+    used by :class:`~forte.data.data_pack.DataPack`."""
 
     # pylint: disable=too-many-public-methods
-    def __init__(self, tank_name: Optional[str] = None):
-        super().__init__()
+    def __init__(self):
 
         # A dictionary that records all entrys with structure {tid: entry}.
-        self.entry_dict: dict = dict()
+        self.entry_dict: dict = {}
 
         # A sorted list of (class_name, begin, end, tid, speaker, part_id,
         #                   sentiment, classification, classifications)
