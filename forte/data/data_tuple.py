@@ -1,4 +1,4 @@
-from typing import (
+gfrom typing import (
     Dict,
     Iterable,
     Iterator,
@@ -30,25 +30,31 @@ from forte.data import data_utils_io
 from forte.data.types import DataRequest
 from forte.utils import create_class_with_kwargs
 from forte.data.data_pack import as_entry_type, get_class
-from forte.data.base_data_structure import BaseDataStructure
+from forte.data.base_tuple import BaseTuple
 from forte.data.types import ReplaceOperationsType, DataRequest
+from ft.onto.base_ontology import Sentence
 
 
 logger = logging.getLogger(__name__)
 
+
 def typeof(tuple):
     return tuple[0]
-    
+
+
 def begin(tuple):
     return tuple[1]
+
 
 def end(tuple):
     return tuple[2]
 
+
 def tid(tuple):
     return tuple[3]
 
-class DataTuple(BaseDataStructure):
+
+class DataTuple(BaseTuple):
     def __init__(self, pack_name: Optional[str] = None):
         super().__init__()
         self._text = ""
@@ -56,18 +62,29 @@ class DataTuple(BaseDataStructure):
         # anntations: list of (class_name, id, begin, end, attr_1, attr_2, ..., attr_n)
         self.elements: SortedList[tuple] = SortedList(key = self.key_function)
         
-        self.entry_dict: dict = dict()
+        self.entry_dict: dict = dict()g
+
+        # Sorted lists of entries, need to add all types
+        # self.sentence: SortedList[tuple] = SortedList(key = self.key_function)
+        # self.document: SortedList[tuple] = SortedList(key = self.key_function)
+        # self.token: SortedList[tuple] = SortedList(key = self.key_function)
+
+        # Dictionaries which record all possible fields
+        # self.sentence_dict = {'speaker':4, 'part_id':5, 'sentiment':6, 'classification':7, "classifications":8}
+        # self.document_dict = {}
+        # self.token_dict = {}
 
     def __iter__(self):
         yield from self.elements
-    
+
     @property
     def text(self):
         return self._text
-    
+
     def key_function(self, x):
+        # return begin and end indexes of the tuple
         return x[1], x[2]
-    
+
     def _validate(self, entry) -> bool:
         return isinstance(entry, tuple)
 
@@ -111,21 +128,10 @@ class DataTuple(BaseDataStructure):
             self.__orig_text_len,
         ) = data_utils_io.modify_text_and_track_ops(text, span_ops)
 
-    def get_original_text(self):
-        r"""Get original unmodified text from the :class:`DataPack` object.
-
-        Returns:
-            Original text after applying the `replace_back_operations` of
-            :class:`DataPack` object to the modified text
-        """
-        original_text, _, _, _ = data_utils_io.modify_text_and_track_ops(
-            self._text, self.__replace_back_operations
-        )
-        return original_text
-
     """
     New methods for tuple-based opertaions
     """
+
     def get_text(self, entry: tuple) -> str:
         return self.get_span_text(begin(entry), end(entry))
 
@@ -141,7 +147,7 @@ class DataTuple(BaseDataStructure):
         self,
         entry_type: Union[str, Type[EntryType]],
         range_annotation: Union[int, tuple] = None,
-        components = None,
+        components=None,
         include_sub_type=True,
     ):
         entry_type_: Type[EntryType] = as_entry_type(entry_type)
@@ -159,11 +165,11 @@ class DataTuple(BaseDataStructure):
         if not issubclass(entry_type_, Annotation):
             # temporarily only support get raw for annotation type
             raise ValueError(
-                    f"The requested type {str(entry_type_)} is not supported."
-                )
-        
+                f"The requested type {str(entry_type_)} is not supported."
+            )
+
         all_types: Set[Type]
-        if include_sub_type: # not supported currently
+        if include_sub_type:  # not supported currently
             all_types = self._expand_to_sub_types(entry_type_)
         else:
             all_types = {entry_type_}
@@ -254,7 +260,7 @@ class DataTuple(BaseDataStructure):
         request: Optional[DataRequest] = None,
         skip_k: int = 0,
     ) -> Iterator[Dict[str, Any]]:
-        r"""Fetch entries from the data_pack of type `context_type`.
+        r"""Fetch entries from the data_tuple of type `context_type`.
 
         Currently, we do not support Groups and Generics in the request.
 
@@ -273,7 +279,7 @@ class DataTuple(BaseDataStructure):
                         "unit": "Token",
                     },
                 }
-                pack.get_data(base_ontology.zf, requests)
+                pack.get_data_raw(base_ontology.Sentence, requests)
 
         Args:
             context_type (str): The granularity of the data context, which
@@ -394,39 +400,70 @@ class DataTuple(BaseDataStructure):
 
             yield data
 
-    def add_entry_raw(self,
-        entry_type, begin, end,
-        component_name: Optional[str] = None
+    def add_entry_raw(
+        self, entry_type, begin, end, component_name: Optional[str] = None
     ) -> int:
-        # add an entry and return a unique id for it
+        r"""Add an entry to the data_tuple and return a unique id for it.
 
+        Args:
+            entry_type (EntryType): The type of the entry to be added to the tuple.
+            begin (int): begin index of the entry.
+            end (int): end index of the entry.
+
+        Returns:
+            The tid of the entry.
+
+        """
         tid: int = uuid.uuid4().int
-        entry_tuple = [entry_type, begin, end, tid]
+        entry_tuple = (entry_type, begin, end, tid)
 
         self.elements.add(entry_tuple)
         self.entry_dict[tid] = entry_tuple
         return tid
 
     def set_attr(self, tid, attr_name, attr_value):
-        # check if it exists
-        entry_tuple = self.entry_dict[tid]
-        entry_tuple.append((attr_name, attr_value))
+        r"""Set the attribute `attr_name` of an entry with value `attr_value`.
 
-    def get_attr(self, tid, attr_name) -> List:
-        entry = self.entry_dict[tid]
-        return self.get_attr_from_tuple(entry, attr_name)
+        Args:
+            tid (int): Unique id of the entry.
+            attr_name (str): name of the attribute.
+            attr_value: value of the attribute.
+
+        Returns:
+
+        """
+        # need to check whether the attribute already exists
+        entry_tuple_list = list(self.entry_dict[tid])
+        entry_tuple_list.append((attr_name, attr_value))
+        self.entry_dict[tid] = tuple(entry_tuple_list)
 
     def get_attr_from_tuple(self, entry: tuple, attr_name: str):
+        r"""Get the value of `attr_name` of an entry.
+
+        Args:
+            entry (tuple): the entry we query.
+            attr_name (str): name of the attribute.
+
+        Returns:
+            Value of the attribute.
+
+        """
         for attr, val in entry[4:]:
             if attr == attr_name:
                 return val
         return None
 
     def delete_entry(self, tid):
+        r"""Remove the entry from the tuple.
+
+        Args:
+            tid (int): Unique id of the entry.
+
+        Returns:
+
+        """
         target = self.elements
         entry_tuple = self.entry_dict[tid]
-        tid = entry_tuple[4]
-
         begin: int = target.bisect_left(entry_tuple)
 
         index_to_remove = -1
@@ -445,9 +482,30 @@ class DataTuple(BaseDataStructure):
         else:
             target.pop(index_to_remove)
 
+    def next_entry(self, tid):
+        target = list(self.elements)
+        entry_tuple = self.entry_dict[tid]
+        begin = self.elements.bisect(entry_tuple)
+        for entry in target[begin:]:
+            # Filter by type and components.
+            if entry[0] not in {entry_tuple[0]}:
+                continue
+            return entry  # type: ignore
+
+    def prev_entry(self, tid):
+        target = list(self.elements)
+        entry_tuple = self.entry_dict[tid]
+        begin = self.elements.bisect_left(entry_tuple)
+        for entry in target[begin - 1 :: -1]:
+            # Filter by type and components.
+            if entry[0] not in {entry_tuple[0]}:
+                continue
+            return entry  # type: ignore
+
     """
     helper functions
     """
+
     def _get_attributes(self, entry: EntryType) -> List:
         attributes = []
         for attr, value in entry.__dict__.items():
@@ -457,30 +515,30 @@ class DataTuple(BaseDataStructure):
         return attributes
 
     def _entry_to_tuple(self, entry: EntryType) -> Tuple:
-        """ 
-            turn an entry class into a tuple
-            entry is a class of EntryType
+        """
+        turn an entry class into a tuple
+        entry is a class of EntryType
         """
         fields = [type(entry), entry.begin, entry.end, entry._tid]
         attrs = self._get_attributes(entry)
         entry_tuple = tuple(fields + attrs)
         return entry_tuple
-    
+
     def _create_entry_with_tuple(self, entry):
         type_name = str(entry[0])
-        class_args_dict = {
-            "pack": self,
-            "begin": entry[1],
-            "end": entry[2]
-            }
-        
+        class_args_dict = {"pack": self, "begin": entry[1], "end": entry[2]}
+
         attributes_dict = dict()
         for i in range(4, len(entry)):
             attr_tuple = entry[i]
-            if isinstance(attr_tuple[1], tuple): # attribute value is also a class
+            if isinstance(
+                attr_tuple[1], tuple
+            ):  # attribute value is also a class
                 nested_class = self._create_entry_with_tuple(attr_tuple[1])
                 attributes_dict[attr_tuple[0]] = nested_class
-            elif isinstance(attr_tuple[1], FList): # turn Flist into a normal list
+            elif isinstance(
+                attr_tuple[1], FList
+            ):  # turn Flist into a normal list
                 list = []
                 for element in attr_tuple[1]:
                     if isinstance(element, tuple):
@@ -489,7 +547,9 @@ class DataTuple(BaseDataStructure):
                     else:
                         list.append(element)
                 attributes_dict[attr_tuple[0]] = list
-            elif isinstance(attr_tuple[1], FDict): # turn FDict into a normal dictionary
+            elif isinstance(
+                attr_tuple[1], FDict
+            ):  # turn FDict into a normal dictionary
                 dic = dict()
                 for key, value in attr_tuple[1].items():
                     if isinstance(value, tuple):
@@ -500,7 +560,7 @@ class DataTuple(BaseDataStructure):
                 attributes_dict[attr_tuple[0]] = dic
             else:
                 attributes_dict[attr_tuple[0]] = attr_tuple[1]
-                    
+
         klass = create_class_with_kwargs(type_name, class_args_dict)
         klass.__dict__.update(attributes_dict)
         return klass
@@ -545,12 +605,10 @@ class DataTuple(BaseDataStructure):
 
             # Make sure these temporary annotations are not part of the
             # actual data.
-           
+
             yield from self.elements[begin_index:end_index]
         else:
-            raise ValueError (
-                f"only support annotation type"
-            )
+            raise ValueError(f"only support annotation type")
 
     def _parse_request_args(self, a_type, a_args):
         # request which fields generated by which component
@@ -586,7 +644,6 @@ class DataTuple(BaseDataStructure):
 
         fields.add("tid")
         return components, unit, fields
-
 
     def __add_entry_for_annot(
         self, entry: EntryType, allow_duplicate: bool = True
@@ -632,7 +689,5 @@ class DataTuple(BaseDataStructure):
         # add annotation to a list of tuples
         entry_tuple = self._entry_to_tuple(entry)
         target.add(entry_tuple)
-            
-        return entry
 
-    
+        return entry
