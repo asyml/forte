@@ -29,20 +29,16 @@ __all__ = [
 class AudioReader(PackReader):
     r""":class:`AudioReader` is designed to read in audio files."""
 
-    def initialize(self, resources, configs):
-        # pylint: disable=attribute-defined-outside-init
-        super().initialize(resources, configs)
-        try:
-            import soundfile  # pylint: disable=import-outside-toplevel
-        except ModuleNotFoundError as e:
-            raise ModuleNotFoundError(
-                "AudioReader requires 'soundfile' package to be installed."
-                " You can run 'pip install soundfile' or 'pip install forte"
-                "[audio_ext]'. Note that additional steps might apply to Linux"
-                " users (refer to "
-                "https://pysoundfile.readthedocs.io/en/latest/#installation)."
-            ) from e
-        self._soundfile = soundfile
+    try:
+        import soundfile  # pylint: disable=import-outside-toplevel
+    except ModuleNotFoundError as e:
+        raise ModuleNotFoundError(
+            "AudioReader requires 'soundfile' package to be installed."
+            " You can run 'pip install soundfile' or 'pip install forte"
+            "[audio_ext]'. Note that additional steps might apply to Linux"
+            " users (refer to "
+            "https://pysoundfile.readthedocs.io/en/latest/#installation)."
+        ) from e
 
     def _collect(self, audio_directory) -> Iterator[Any]:  # type: ignore
         r"""Should be called with param ``audio_directory`` which is a path to a
@@ -62,7 +58,7 @@ class AudioReader(PackReader):
         pack: DataPack = DataPack()
 
         # Read in audio data and store in DataPack
-        audio, sample_rate = self._soundfile.read(
+        audio, sample_rate = self.soundfile.read(
             file=file_path, **(self.configs.read_kwargs or {})
         )
         pack.set_audio(audio=audio, sample_rate=sample_rate)
