@@ -133,7 +133,7 @@ Each entry definition will define a couple (can be empty) attributes, mimicking 
 * The `description` keyword is optionally used as the comment to describe the attribute.
 * The `type` keyword is used to define the type of the attribute. Currently supported types are:
     * Primitive types - `int`, `float`, `str`, `bool`
-    * Composite types - `List`, `Dict`
+    * Composite types - `List`, `Dict`, `NdArray`
     * Entries defined in the `top` module - The attributes can be of the type base
     entries (defined in the `forte.data.ontology.top` module) and can be directly 
     referred by the class name.
@@ -146,6 +146,7 @@ Each entry definition will define a couple (can be empty) attributes, mimicking 
 * `key_type` and `value_type`: If the `type` of the property is a `Dict`,
    then these two represent the types of the key and value of the dictionary,
    currently, only primitive types are supported as the `key_type`.
+* `ndarray_dtype: str` and `ndarray_shape: array`: If the `type` of the property is a `NdArray` (n-dimensional array), then these two represent the data type and the shape of the array.
 
 ## Major ontology types, Annotations, Links, Groups and Generics
 There are some very frequently used types in NLP: 
