@@ -101,6 +101,7 @@ class DataTupleDF(BaseDataStructure):
         """
         A dictionary that keeps record of all entrys with their tid.
         It is a key-value map of {tid: entry data in list format}.
+
         e.g., {1423543453: [type, id, begin, end, attr_1, ..., attr_n]}
         """
         self.entry_dict: dict = dict()
@@ -112,9 +113,6 @@ class DataTupleDF(BaseDataStructure):
     @property
     def text(self):
         return self._text
-    
-    def key_function(self, x):
-        return x[1], x[2]
     
     def _validate(self, entry) -> bool:
         return isinstance(entry, tuple)
@@ -149,15 +147,6 @@ class DataTupleDF(BaseDataStructure):
                 "data pack, existing entries may get affected. "
             )
 
-        span_ops = [] if replace_func is None else replace_func(text)
-
-        # The spans should be mutually exclusive
-        # (
-        #     self._text,
-        #     self.__replace_back_operations,
-        #     self.__processed_original_spans,
-        #     self.__orig_text_len,
-        # ) = data_utils_io.modify_text_and_track_ops(text, span_ops)
         self.text = text
 
     def get_original_text(self):
@@ -187,6 +176,19 @@ class DataTupleDF(BaseDataStructure):
     """
     New methods for tuple-based opertaions
     """
+    def add_entry_raw(self,
+        entry_type, begin, end,
+        component_name: Optional[str] = None
+    ) -> int:
+        # add an entry and return a unique id for it
+
+        entry_tuple = self._new_entry(entry_type, begin, end)
+
+        self.elements[entry_type].add(entry_tuple)
+        self.entry_dict[tid] = entry_tuple
+
+        return tid
+
     def get_text(self, entry: tuple) -> str:
         return self.get_span_text(begin(entry), end(entry))
 
@@ -316,25 +318,7 @@ class DataTupleDF(BaseDataStructure):
         skip_k: int = 0,
     ) -> Iterator[Dict[str, Any]]:
         r"""Fetch entries from the data_pack of type `context_type`.
-
         Currently, we do not support Groups and Generics in the request.
-
-        Example:
-
-            .. code-block:: python
-
-                requests = {
-                    base_ontology.Sentence:
-                        {
-                            "component": ["dummy"],
-                            "fields": ["speaker"],
-                        },
-                    base_ontology.Token: ["pos", "sense""],
-                    base_ontology.EntityMention: {
-                        "unit": "Token",
-                    },
-                }
-                pack.get_data(base_ontology.zf, requests)
 
         Args:
             context_type (str): The granularity of the data context, which
@@ -454,19 +438,6 @@ class DataTupleDF(BaseDataStructure):
                 )
 
             yield data
-
-    def add_entry_raw(self,
-        entry_type, begin, end,
-        component_name: Optional[str] = None
-    ) -> int:
-        # add an entry and return a unique id for it
-
-        entry_tuple = self._new_entry(entry_type, begin, end)
-
-        self.elements[entry_type].add(entry_tuple)
-        self.entry_dict[tid] = entry_tuple
-
-        return tid
 
     def set_attr(self, tid, attr_name, attr_value):
         # check if it exists
