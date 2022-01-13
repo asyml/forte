@@ -31,46 +31,19 @@ __all__ = ["BaseStore"]
 
 class BaseStore:
     r"""The base class which will be used by :class:
-    `~forte.data.data_pack.DataPack`."""
+    `~forte.data.data_store.DataStore`."""
 
     # pylint: disable=too-many-public-methods
     def __init__(self):
-        r"""This class stores entries by types in different SortedLists. It
-        uses an array to store these SortedLists with the structure:
-        array([Document SortedList, Sentence SortedList, ...]).
-        Different types of annotations, like sentence, tokens and documents,
-        are stored in different SortedLists.
+        r"""
+        This is a base class for the efficient underlying data structure. A current
+        implementation of `BaseStore` is `DataStore`.
 
-        This class records the order of the array and assigns type id,
-        which is the index of each sortedlist, to each entry type.
-
-        Each entry list in the SortedList has the format of
-        [entry_type, tid, begin, end, attr_1, attr_2, ..., attr_n]
-        The first four fields are compulsory for every entry type.
-        Each entry type has a fixed field of attributes.
-        E.g. Document SortedList has lists of structure:
-        [entry_type, tid, begin, end, document_class,sentiment,classifications]
-
-
-        The type_attributes dictionay will be passed in. It provides entry
-        types and their corresponding attribues. The keys are all valid
-        ontology types as strings, including all the types defined in ft.onto
-        and ftx.onto. The values are all the valid attributes for this type,
-        also defined in ft.onto and ftx.onto.
-        Example:
-        type_attributes = {
-            "Token": ["pos", "ud_xpos", "lemma", "chunk", "ner", "sense",
-                    "is_root", "ud_features", "ud_misc"],
-            "Document": ["document_class", "sentiment", "classifications"],
-            "Sentence": ["speaker", "part_id", "sentiment", "classification",
-                        "classifications"],...
-        }
+        A `BaseStore` contains a piece of natural language text and a
+        collection of NLP entries (annotations, links, and groups). The natural
+        language text could be a document, paragraph or in any other granularity.
         """
 
-        # A dictionary that stores of all entriess with their tid.
-        # It is a key-value map of {tid: entry data in list format}.
-        # e.g., {1423543453: [type, id, begin, end, attr_1, ..., attr_n]}
-        self.entry_dict: dict = {}
 
     @abstractmethod
     def add_annotation_raw(self, type_id: int, begin: int, end: int) -> int:
@@ -87,10 +60,6 @@ class BaseStore:
             The tid of the entry.
 
         """
-        # We create an unique tid for the entry. We create the entry list with
-        # the format [entry_type, tid, begin, end, none, ...] with all fields
-        # filled. We add the entry list to the `entry_type` sortedlist.
-        # We add {tid: entry list} to the entry_dict.
         raise NotImplementedError
 
     @abstractmethod
@@ -104,10 +73,7 @@ class BaseStore:
             attr_value: value of the attribute.
 
         """
-        # We retrieve the entry list from entry_dict using tid. We get its
-        # entry type. We then locate the index of the attribute using the entry
-        # type, field dictionary and attr_name, and update the attribute.
-
+ 
         raise NotImplementedError
 
     @abstractmethod
@@ -122,10 +88,7 @@ class BaseStore:
         Returns:
 
         """
-        # We retrieve the entry list from entry_dict using tid. We get its
-        # entry type. We then locate the index of the attribute using the entry
-        # type, field dictionary and attr_name, and get the attribute.
-
+    
         raise NotImplementedError
 
     @abstractmethod
@@ -138,11 +101,7 @@ class BaseStore:
             tid (int): Unique id of the entry.
 
         """
-        # We retrieve the entry list from entry_dict using tid. We get its
-        # entry type, type id, begin and end indexes. Then, we find the
-        # `entry_type` sortedlist using type id. We bisect the sortedlist
-        # to find the entry list. We then remove the entry list from both
-        # entry_dict and the `entry_type` sortedlist.
+     
 
         raise NotImplementedError
 
@@ -175,9 +134,6 @@ class BaseStore:
 
         """
 
-        # We find the type id according to entry_type and locate sortedlist.
-        # We create an iterator to generate entries from the sortedlist.
-
         raise NotImplementedError
 
     @abstractmethod
@@ -191,10 +147,7 @@ class BaseStore:
             The next entry of the same type as the tid entry.
 
         """
-        # We retrieve the entry list from entry_dict using tid. We get its
-        # entry type, type id, begin and end indexes. Then, we find the
-        # `entry_type` sortedlist using type id. We bisect the sortedlist
-        # to find the next same type entry.
+      
 
         raise NotImplementedError
 
@@ -209,9 +162,5 @@ class BaseStore:
             The previous entry of the same type as the tid entry.
 
         """
-        # We retrieve the entry list from entry_dict using tid. We get its
-        # entry type, type id, begin and end indexes. Then, we find the
-        # `entry_type` sortedlist using type id. We bisect the sortedlist
-        # to find the next same type entry.
 
         raise NotImplementedError
