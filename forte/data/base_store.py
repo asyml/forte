@@ -18,12 +18,8 @@ from typing import (
     Type,
     Union,
     Iterator,
-    Dict,
-    Tuple,
-    Any,
 )
 
-from forte.common import EntryNotFoundError
 from forte.data.ontology.core import EntryType
 
 __all__ = ["BaseStore"]
@@ -43,7 +39,6 @@ class BaseStore:
         collection of NLP entries (annotations, links, and groups). The natural
         language text could be a document, paragraph or in any other granularity.
         """
-
 
     @abstractmethod
     def add_annotation_raw(self, type_id: int, begin: int, end: int) -> int:
@@ -73,7 +68,7 @@ class BaseStore:
             attr_value: value of the attribute.
 
         """
- 
+
         raise NotImplementedError
 
     @abstractmethod
@@ -88,7 +83,7 @@ class BaseStore:
         Returns:
 
         """
-    
+
         raise NotImplementedError
 
     @abstractmethod
@@ -101,7 +96,6 @@ class BaseStore:
             tid (int): Unique id of the entry.
 
         """
-     
 
         raise NotImplementedError
 
@@ -147,7 +141,6 @@ class BaseStore:
             The next entry of the same type as the tid entry.
 
         """
-      
 
         raise NotImplementedError
 
