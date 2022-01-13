@@ -62,7 +62,7 @@ class DataTuple(BaseDataStructure):
         # anntations: list of (class_name, id, begin, end, attr_1, attr_2, ..., attr_n)
         self.elements: SortedList[tuple] = SortedList(key = self.key_function)
         
-        self.entry_dict: dict = dict()g
+        self.entry_dict: dict = dict()
 
         # Sorted lists of entries, need to add all types
         # self.sentence: SortedList[tuple] = SortedList(key = self.key_function)
