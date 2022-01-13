@@ -281,7 +281,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         """
         try:
             return self._inverse_pack_ref[pack_id]
-        except KeyError as e:  # sometimes after deserialization the dict have string as key
+        except KeyError:  # sometimes after deserialization the dict have string as key
             s_dict: dict = self._inverse_pack_ref
             s_key = str(pack_id)
             try:
