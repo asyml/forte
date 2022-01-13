@@ -52,8 +52,7 @@ __all__ = [
 ]
 
 from forte.utils import get_full_module_name
-
-BACKWARD_COMPATIBLE_VER = (0, 0, 1)
+from forte.version import BACKWARD_COMPATIBLE_VER
 
 default_entry_fields = [
     "_Entry__pack",
@@ -278,7 +277,9 @@ class Entry(Generic[ContainerType]):
         """
         if isinstance(from_entry, MultiEntry):
             return MpPointer(
-                from_entry.pack.get_pack_index(self.pack_id), self.tid
+                # bug fix/enhancement 559: change pack index to pack_id for multi-entry/multi-pack
+                self.pack_id,
+                self.tid,  # from_entry.pack.get_pack_index(self.pack_id)
             )
         elif isinstance(from_entry, Entry):
             return Pointer(self.tid)
@@ -426,48 +427,22 @@ class MultiEntry(Entry, ABC):
                 "Do not support reference a multi pack entry from an entry."
             )
 
-    def version_older_than(self, pack_version, compare_version) -> bool:
-        """
-        Check if the version of pack is older than the compare_version
-
-        Args:
-            pack_version: The version to be examined.
-            compare_version: The standard version number to be compared.
-
-        Returns:
-            bool indicating compare result.
-        """
-        if pack_version[0] < compare_version[0]:
-            return True
-        elif pack_version[0] > compare_version[0]:
-            return False
-        else:  # equal
-            if pack_version[1] < compare_version[1]:
-                return True
-            elif pack_version[1] > compare_version[1]:
-                return False
-            else:  # equal
-                if pack_version[2] < compare_version[2]:
-                    return True
-                elif pack_version[2] >= compare_version[2]:
-                    return False
-
-        return False
-
     def _resolve_pointer(self, ptr: BasePointer) -> Entry:
         if isinstance(ptr, Pointer):
             return self.pack.get_entry(ptr.tid)
         elif isinstance(ptr, MpPointer):
             # bugfix/new feature 559: in new version pack_index will be using pack_id internally
-            pack_array_index = self.pack.get_pack_index(
-                ptr.pack_index
-            )  # default: new version
-            if self.version_older_than(
-                self.pack.pack_version, BACKWARD_COMPATIBLE_VER
-            ):
-                # self.pack.pack_version[1] <= BACKWARD_COMPATIBLE_VER[1] and \
-                #  self.pack.pack_version[2] < BACKWARD_COMPATIBLE_VER[2]:
-                pack_array_index = ptr.pack_index  # old version
+            pack_array_index = ptr.pack_index  # old version
+            pack_version = [0, 0, 0]
+            try:
+                pack_version = self.pack.pack_version
+            except AttributeError as ae:
+                print(ae)  # the version is not set : print or log the exception
+
+            if pack_version >= BACKWARD_COMPATIBLE_VER:
+                pack_array_index = self.pack.get_pack_index(
+                    ptr.pack_index
+                )  # default: new version
 
             return self.pack.packs[pack_array_index].get_entry(ptr.tid)
         else:

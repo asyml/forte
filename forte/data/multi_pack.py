@@ -34,6 +34,7 @@ from forte.data.ontology.top import (
 )
 from forte.data.types import DataRequest
 from forte.utils import get_class
+from forte.version import BACKWARD_COMPATIBLE_VER
 
 logger = logging.getLogger(__name__)
 
@@ -169,7 +170,13 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     # TODO: get_subentry maybe useless
     def get_subentry(self, pack_idx: int, entry_id: int):
         # fix bug/enhancement #559: use pack_idx as pack_id in new version
-        return self._packs[self.get_pack_index(pack_idx)].get_entry(entry_id)
+        pack_array_index: int = pack_idx  # the old way
+        if self.pack.pack_version >= BACKWARD_COMPATIBLE_VER:
+            pack_array_index = self.pack.get_pack_index(
+                pack_idx
+            )  # the new way: using pack_id instead of array index
+
+        return self._packs[pack_array_index].get_entry(entry_id)
         # return self.get_pack_at(pack_idx).get_entry(entry_id) #old version
 
     def get_span_text(self, begin: int, end: int):
@@ -273,7 +280,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
         """
         try:
-            return self._inverse_pack_ref[pack_id]
+            return self._inverse_pack_ref[str(pack_id)]
         except KeyError as e:
             raise ProcessExecutionException(
                 f"Pack {pack_id} is not in this multi-pack."
