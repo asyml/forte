@@ -96,6 +96,7 @@ class WordnetDictionary(Dictionary):
             wordnet.synsets("computer")
         except LookupError:
             nltk.download("wordnet")
+            nltk.download("omw-1.4")
         self.model = wordnet
 
     def _get_wordnet_pos(self, treebank_tag: str) -> str:
