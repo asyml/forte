@@ -215,7 +215,13 @@ class DataPack(BasePack[Entry, Link, Group]):
         self.links = as_sorted_error_check(self.links)
         self.groups = as_sorted_error_check(self.groups)
         self.generics = as_sorted_error_check(self.generics)
-        self.audio_annotations = as_sorted_error_check(self.audio_annotations)
+
+        # Add `hasattr` checking here for backward compatibility
+        self.audio_annotations = (
+            as_sorted_error_check(self.audio_annotations)
+            if hasattr(self, "audio_annotations")
+            else SortedList()
+        )
 
         self._index = DataIndex()
         self._index.update_basic_index(list(self.annotations))
@@ -1536,9 +1542,7 @@ class DataIndex(BaseIndex):
         inner_begin = -1
         inner_end = -1
 
-        if isinstance(inner_entry, Annotation) or isinstance(
-            inner_entry, AudioAnnotation
-        ):
+        if isinstance(inner_entry, (Annotation, AudioAnnotation)):
             inner_begin = inner_entry.begin
             inner_end = inner_entry.end
         elif isinstance(inner_entry, Link):

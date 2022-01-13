@@ -36,6 +36,7 @@ class RecordingProcessor(PackProcessor):
             pack=input_pack, begin=0, end=len(input_pack.audio)
         )
 
+
 class AudioUtteranceProcessor(PackProcessor):
     """
     A processor to add an AudioUtterance annotation to the specified span of
@@ -91,7 +92,7 @@ class AudioAnnotationTest(unittest.TestCase):
 
         # Verify the annotations of each datapack
         for pack in self._pipeline.process_dataset(self._test_audio_path):
-            
+
             # Check Recording
             recordings = list(pack.get(Recording))
             self.assertEqual(len(recordings), 1)
@@ -100,7 +101,7 @@ class AudioAnnotationTest(unittest.TestCase):
             # Check total number of AudioAnnotations which should be 3
             # (1 Recording + 2 AudioUtterance).
             self.assertEqual(pack.num_audio_annotations, 3)
-            
+
             # Check `DataPack.get(AudioUtterance)` and
             # `AudioAnnotation.get(AudioUtterance)`
             for object in (pack, recordings[0]):
