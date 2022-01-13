@@ -186,7 +186,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         )
 
     def add_pack(
-            self, ref_name: Optional[str] = None, pack_name: Optional[str] = None
+        self, ref_name: Optional[str] = None, pack_name: Optional[str] = None
     ) -> DataPack:
         """
         Create a data pack and add it to this multi pack. If `ref_name` is
@@ -414,21 +414,21 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             pack.add_all_remaining_entries(component)
 
     def get_data(
-            self,
-            context_type,
-            request: Optional[DataRequest] = None,
-            skip_k: int = 0,
+        self,
+        context_type,
+        request: Optional[DataRequest] = None,
+        skip_k: int = 0,
     ) -> Iterator[Dict[str, Any]]:
         raise NotImplementedError(
             "We haven't implemented get data for multi pack data yet."
         )
 
     def get_single_pack_data(
-            self,
-            pack_index: int,
-            context_type: Type[Annotation],
-            request: Optional[DataRequest] = None,
-            skip_k: int = 0,
+        self,
+        pack_index: int,
+        context_type: Type[Annotation],
+        request: Optional[DataRequest] = None,
+        skip_k: int = 0,
     ) -> Iterator[Dict[str, Any]]:
         r"""Get pack data from one of the packs specified by the name. This is
         equivalent to calling the
@@ -464,8 +464,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         )
 
     def get_cross_pack_data(
-            self,
-            request: MdRequest,
+        self,
+        request: MdRequest,
     ):
         r"""
         NOTE: This function is not finished.
@@ -517,7 +517,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         pass
 
     def __add_entry_with_check(
-            self, entry: EntryType, allow_duplicate: bool = True
+        self, entry: EntryType, allow_duplicate: bool = True
     ) -> EntryType:
         r"""Internal method to add an :class:`Entry` object to the
         :class:`MultiPack` object.
@@ -562,10 +562,10 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             return target[target.index(entry)]
 
     def get(  # type: ignore
-            self,
-            entry_type: Union[str, Type[EntryType]],
-            components: Optional[Union[str, List[str]]] = None,
-            include_sub_type=True,
+        self,
+        entry_type: Union[str, Type[EntryType]],
+        components: Optional[Union[str, List[str]]] = None,
+        include_sub_type=True,
     ) -> Iterator[EntryType]:
         """Get entries of `entry_type` from this multi pack.
 
@@ -645,10 +645,10 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
     @classmethod
     def deserialize(
-            cls,
-            data_path: Union[Path, str],
-            serialize_method: str = "jsonpickle",
-            zip_pack: bool = False,
+        cls,
+        data_path: Union[Path, str],
+        serialize_method: str = "jsonpickle",
+        zip_pack: bool = False,
     ) -> "MultiPack":
         """
         Deserialize a Multi Pack from a string. Note that this will only
