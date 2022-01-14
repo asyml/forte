@@ -8,12 +8,14 @@ Automatically generated ontology base_ontology. Do not change manually.
 """
 
 from dataclasses import dataclass
+from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology.core import Entry
 from forte.data.ontology.core import FDict
 from forte.data.ontology.core import FList
 from forte.data.ontology.top import Annotation
+from forte.data.ontology.top import AudioAnnotation
 from forte.data.ontology.top import Generics
 from forte.data.ontology.top import Group
 from forte.data.ontology.top import Link
@@ -49,6 +51,8 @@ __all__ = [
     "MCOption",
     "MCQuestion",
     "MRCQuestion",
+    "Recording",
+    "AudioUtterance",
 ]
 
 
@@ -512,3 +516,33 @@ class MRCQuestion(Annotation):
         super().__init__(pack, begin, end)
         self.qid: Optional[int] = None
         self.answers: FList[Phrase] = FList(self)
+
+
+@dataclass
+class Recording(AudioAnnotation):
+    """
+    A span based annotation `Recording`, normally used to represent a recording.
+    Attributes:
+        recording_class (List[str]):	A list of class names that the recording belongs to.
+    """
+
+    recording_class: List[str]
+
+    def __init__(self, pack: PackType, begin: int, end: int):
+        super().__init__(pack, begin, end)
+        self.recording_class: List[str] = []
+
+
+@dataclass
+class AudioUtterance(AudioAnnotation):
+    """
+    A span based annotation `AudioUtterance`, normally used to represent an utterance in dialogue.
+    Attributes:
+        speaker (Optional[str]):
+    """
+
+    speaker: Optional[str]
+
+    def __init__(self, pack: PackType, begin: int, end: int):
+        super().__init__(pack, begin, end)
+        self.speaker: Optional[str] = None
