@@ -9,10 +9,6 @@
           { 
               "name": "metric_name", 
               "type": "str" 
-          },
-          {
-              "name": "dtype",
-              "type": "str"
           }
         ]
       },
@@ -34,12 +30,8 @@
         "attributes": [ 
           {
               "name": "value",
-              "type": "ndarray"
-          },
-          {
-              "name": "shape",
-              "type": "List",
-              "item_type": "int"
+              "type": "NdArray",
+              "ndarray_dtype": "float"
           }
         ] 
       }
