@@ -44,13 +44,14 @@ class DataStore(BaseStore):
 
         Example: 
         type_attributes = {
-            "Token": ["pos", "ud_xpos", "lemma", "chunk", "ner", "sense", "is_root", "ud_features", "ud_misc"],
-            "Document": ["document_class", "sentiment", "classifications"],
-            "Sentence": ["speaker", "part_id", "sentiment", "classification", "classifications"],
+            "ft.onto.base_ontology.Token": ["pos", "ud_xpos", "lemma", "chunk", "ner", "sense", "is_root", "ud_features", "ud_misc"],
+            "ft.onto.base_ontology.Document": ["document_class", "sentiment", "classifications"],
+            "ft.onto.base_ontology.Sentence": ["speaker", "part_id", "sentiment", "classification", "classifications"],
         }
         TODO: implement get_type_attributes() (Issue #570)
         """
         self.type_attributes: dict = get_type_attributes()
+        self._generate_attr_index()
         
         """
         A dictionary that maps each type to a list of elements.
@@ -58,9 +59,9 @@ class DataStore(BaseStore):
             
             Example:
             self.elements = {
-                "Token": SortedList(),
-                "Document": SortedList(),
-                "Sentence": SortedList(),
+                "ft.onto.base_ontology.Token": SortedList(),
+                "ft.onto.base_ontology.Document": SortedList(),
+                "ft.onto.base_ontology.Sentence": SortedList(),
                 ......
             }
         """
@@ -89,6 +90,19 @@ class DataStore(BaseStore):
         entry = [type, tid, begin, end]
         entry += len(self.type_attributes[type]) * [None]
         return entry
+    
+    def _generate_attr_index(self):
+        """
+        For every type in type_attributes, we need to convert the attribute list to
+        a dictionary, mapping each attribute string to a unique index.
+        The index should be the actual index of this attribute in the entry's list.
+        Index 0, 1, 2, and 3 should be reserved for begin, end, tid and type.
+
+        For example, for type `ft.onto.base_ontology.Sentence`, the attribute ``speaker`` 
+        has index 4, and attribute ``part_id`` has index 5.
+
+        """
+        raise NotImplementedError
 
     def add_annotation_raw(self, type_id: int, begin: int, end: int) -> int:
         r"""This function adds an annotation entry with `begin` and `end` index
