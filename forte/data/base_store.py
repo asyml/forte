@@ -32,12 +32,12 @@ class BaseStore:
     # pylint: disable=too-many-public-methods
     def __init__(self):
         r"""
-        This is a base class for the efficient underlying data structure. A current
-        implementation of `BaseStore` is `DataStore`.
+        This is a base class for the efficient underlying data structure. A
+        current implementation of `BaseStore` is `DataStore`.
 
-        A `BaseStore` contains a piece of natural language text and a
-        collection of NLP entries (annotations, links, and groups). The natural
-        language text could be a document, paragraph or in any other granularity.
+        A `BaseStore` contains a collection of NLP entries (annotations, links,
+        and groups). Each entry type contains some subtypes, which could have
+        various fields stored in entry lists.
         """
 
     @abstractmethod

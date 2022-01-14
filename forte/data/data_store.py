@@ -7,33 +7,32 @@ from forte.data.base_store import BaseStore
 
 class DataStore(BaseStore):
     def __init__(self):
-        """An implementation from the dataframe-like data tuple object.
+        """An implementation from the dataframe-like data store object.
 
-                This class stores entries by types in different lists. It
-                uses an array to store these SortedLists with the structure:
-                array([Document SortedList, Sentence SortedList, ...]).
-                Different types of annotations, like sentence, tokens and documents,
-                are stored in different SortedLists.
+        A collection of NLP entries are stored by types in SortedLists.
+        For example, subtypes of annotations, links, and groups are stored in
+        separate SortedLists.
+        An array records all SortedLists in the format of:
+        [..., Document SortedList, Sentence SortedList, ...].
+        This class records the order of the array and assigns type id,
+        which is the index of each sortedlist, to each entry type.
 
-                This class records the order of the array and assigns type id,
-                which is the index of each sortedlist, to each entry type.
+        Each entry list in the SortedList has the format of
+        [entry_type, tid, begin, end, attr_1, attr_2, ..., attr_n]
+        The first four fields are compulsory for every entry type.
+        Each entry type has a fixed field of attributes.
+        E.g. Document SortedList has lists of structure:
+        [entry_type, tid, begin, end, document_class,sentiment,classifications]
 
-                Each entry list in the SortedList has the format of
-                [entry_type, tid, begin, end, attr_1, attr_2, ..., attr_n]
-                The first four fields are compulsory for every entry type.
-                Each entry type has a fixed field of attributes.
-                E.g. Document SortedList has lists of structure:
-                [entry_type, tid, begin, end, document_class,sentiment,classifications]
-        #
-                Args:
-                    pack_name (Optional[str], optional): A name for this data store.
+        Args:
+            pack_name (Optional[str], optional): A name for this data store.
         """
         super().__init__()
         self._text = ""
 
         """
-        The type_attributes dictionay provides entry types and their
-        corresponding attribues.
+        The _type_attributes is a private dictionay that provides entry types
+        and their corresponding attribues.
         The keys are all valid ontology types as strings, including all the
         types defined in ft.onto and ftx.onto.
         The values are all the valid attributes for this type, also defined in
@@ -42,7 +41,7 @@ class DataStore(BaseStore):
         get_type_attributes() and ready to use in DataStore.
 
         Example:
-        type_attributes = {
+        _type_attributes = {
             "Token": ["pos", "ud_xpos", "lemma", "chunk", "ner", "sense",
                     "is_root", "ud_features", "ud_misc"],
             "Document": ["document_class", "sentiment", "classifications"],
@@ -51,29 +50,25 @@ class DataStore(BaseStore):
         }
         TODO: implement get_type_attributes() (Issue #570)
         """
-        # self.type_attributes: dict = get_type_attributes()
-        self.type_attributes: dict = {}
+        # self._type_attributes: dict = get_type_attributes()
+        self._type_attributes: dict = {}
 
         """
-        A dictionary that maps each type to a list of elements.
+        An array that stores a list of elements for each type.
         It is an underlying storage structure for all the entries added by
         users in this DataStore.
 
             Example:
-            self.elements = {
-                "Token": SortedList(),
-                "Document": SortedList(),
-                "Sentence": SortedList(),
-                ......
-            }
+            self.elements = [Token SortedList(), Document SortedList(),
+                            Sentence SortedList()]
         """
-        self.elements: dict = {}
+        self.elements: List = []
 
         """
         A dictionary that keeps record of all entrys with their tid.
         It is a key-value map of {tid: entry data in list format}.
 
-        e.g., {1423543453: [type, id, begin, end, attr_1, ..., attr_n]}
+        e.g., {1423543453: [type, tid, begin, end, attr_1, ..., attr_n]}
         """
         self.entry_dict: dict = {}
 
@@ -90,7 +85,7 @@ class DataStore(BaseStore):
 
         tid: int = uuid.uuid4().int
         entry = [type, tid, begin, end]
-        entry += len(self.type_attributes[type]) * [None]
+        entry += len(self._type_attributes[type]) * [None]
         return entry
 
     def add_annotation_raw(self, type_id: int, begin: int, end: int) -> int:
