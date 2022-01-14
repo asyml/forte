@@ -21,4 +21,5 @@ A clear and concise description of any alternative solutions or features you've 
 
 **Additional context**
 - This is part of the data efficiency project
-- This PR should be made to the `new_datapack` branch.
+- This PR should be made to the `master` branch.
+- After the data tuple class is finished, we may switch to a new branch for integration.

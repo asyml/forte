@@ -598,6 +598,73 @@ class FDict(Generic[KeyType, ValueType], MutableMapping):
         yield from self.__data
 
 
+class FNdArray:
+    """
+    FNdArray is a wrapper of a NumPy array that stores shape and data type
+    of the array if they are specified. Only when both shape and data type
+    are provided, will FNdArray initialize a placeholder array through
+    np.ndarray(shape, dtype=dtype).
+    More details about np.ndarray(...):
+    https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html
+    """
+
+    def __init__(
+        self, dtype: Optional[str] = None, shape: Optional[Iterable[int]] = None
+    ):
+        super().__init__()
+        self._dtype: Optional[np.dtype] = (
+            np.dtype(dtype) if dtype is not None else dtype
+        )
+        self._shape: Optional[tuple] = (
+            tuple(shape) if shape is not None else shape
+        )
+        self._data: Optional[np.ndarray] = None
+        if dtype and shape:
+            self._data = np.ndarray(shape, dtype=dtype)
+
+    @property
+    def dtype(self):
+        return self._dtype
+
+    @property
+    def shape(self):
+        return self._shape
+
+    @property
+    def data(self):
+        return self._data
+
+    @data.setter
+    def data(self, array: Union[np.ndarray, List]):
+        if isinstance(array, np.ndarray):
+            if self.dtype and not np.issubdtype(array.dtype, self.dtype):
+                raise TypeError(
+                    f"Expecting type or subtype of {self.dtype}, but got {array.dtype}."
+                )
+            if self.shape and self.shape != array.shape:
+                raise AttributeError(
+                    f"Expecting shape {self.shape}, but got {array.shape}."
+                )
+            self._data = array
+
+        elif isinstance(array, list):
+            array_np = np.array(array, dtype=self.dtype)
+            if self.shape and self.shape != array_np.shape:
+                raise AttributeError(
+                    f"Expecting shape {self.shape}, but got {array_np.shape}."
+                )
+            self._data = array_np
+
+        else:
+            raise ValueError(
+                f"Can only accept numpy array or python list, but got {type(array)}"
+            )
+
+        # Stored dtype and shape should match to the provided array's.
+        self._dtype = self._data.dtype
+        self._shape = self._data.shape
+
+
 class Pointer(BasePointer):
     """
     A pointer that points to an entry in the current pack, this is basically
