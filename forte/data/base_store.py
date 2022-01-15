@@ -29,14 +29,13 @@ class BaseStore:
     r"""The base class which will be used by :class:
     `~forte.data.data_store.DataStore`."""
 
-    # pylint: disable=too-many-public-methods
     def __init__(self):
         r"""
         This is a base class for the efficient underlying data structure. A
         current implementation of `BaseStore` is `DataStore`.
 
-        A `BaseStore` contains a collection of NLP entries (annotations, links,
-        and groups). Each entry type contains some subtypes, which could have
+        A `BaseStore` contains a collection of Forte entries.
+        Each entry type contains some subtypes, which could have
         various fields stored in entry lists.
         """
 
@@ -52,14 +51,14 @@ class BaseStore:
             end (int): end index of the entry.
 
         Returns:
-            The tid of the entry.
+            The `tid` of the entry.
 
         """
         raise NotImplementedError
 
     @abstractmethod
     def set_attr(self, tid: int, attr_name: str, attr_value):
-        r"""This function locates the entry list with tid and sets its
+        r"""This function locates the entry list with `tid` and sets its
         attribute `attr_name` with value `attr_value`.
 
         Args:
@@ -73,7 +72,7 @@ class BaseStore:
 
     @abstractmethod
     def get_attr(self, tid: int, attr_name: str):
-        r"""This function locates the entry list with tid and gets the value
+        r"""This function locates the entry list with `tid` and gets the value
         of `attr_name` of this entry.
 
         Args:
@@ -81,7 +80,7 @@ class BaseStore:
             attr_name (str): name of the attribute.
 
         Returns:
-            The value of attr_name for the entry with tid.
+            The value of `attr_name` for the entry with `tid`.
 
         """
 
@@ -89,9 +88,8 @@ class BaseStore:
 
     @abstractmethod
     def delete_entry(self, tid: int):
-        r"""This function locates the entry list with tid and removes it
-        from the data store. It removes the entry list from both entry_dict
-        and the sortedlist of its type.
+        r"""This function locates the entry list with `tid` and removes it
+        from the data store.
 
         Args:
             tid (int): Unique id of the entry.
@@ -102,13 +100,14 @@ class BaseStore:
 
     @abstractmethod
     def get_entry(self, tid: int) -> List:
-        r"""Look up the entry_dict with key `tid`.
+        r"""Look up the entry_dict with key `tid`. Find its type_id and its
+        index in the `entry_type` sortedlist.
 
         Args:
             tid (int): Unique id of the entry.
 
         Returns:
-            The entry which tid corresponds to.
+            The entry which `tid` corresponds to.
 
         """
         raise NotImplementedError
@@ -119,7 +118,7 @@ class BaseStore:
     ) -> Iterator[List]:
         """
         Implementation of this method should provide to obtain the entries of
-        type entry_type.
+        type `entry_type`.
 
         Args:
             entry_type: The type of the entry to obtain.
@@ -133,13 +132,13 @@ class BaseStore:
 
     @abstractmethod
     def next_entry(self, tid: int) -> List:
-        r"""Get the next entry of the same type as the tid entry.
+        r"""Get the next entry of the same type as the `tid` entry.
 
         Args:
             tid (int): Unique id of the entry.
 
         Returns:
-            The next entry of the same type as the tid entry.
+            The next entry of the same type as the `tid` entry.
 
         """
 
@@ -147,13 +146,13 @@ class BaseStore:
 
     @abstractmethod
     def prev_entry(self, tid: int) -> List:
-        r"""Get the previous entry of the same type as the tid entry.
+        r"""Get the previous entry of the same type as the `tid` entry.
 
         Args:
             tid (int): Unique id of the entry.
 
         Returns:
-            The previous entry of the same type as the tid entry.
+            The previous entry of the same type as the `tid` entry.
 
         """
 
