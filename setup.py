@@ -50,6 +50,7 @@ setuptools.setup(
         # transformers 4.10.0 will break the translation model we used here
         "augment": ["transformers>=3.1, <=4.9.2", "nltk"],
         "stave": ["stave>=0.0.1.dev12"],
+        "audio_ext": ["soundfile>=0.10.3"],
     },
     entry_points={
         "console_scripts": [
