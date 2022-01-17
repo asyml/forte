@@ -6,8 +6,10 @@ from forte.data.base_store import BaseStore
 
 
 class DataStore(BaseStore):
+    # pylint: disable=pointless-string-statement
+
     def __init__(self):
-        """An implementation from the dataframe-like data store object.
+        r"""An implementation from the dataframe-like data store object.
 
         A DataStore object is used to store a collection of NLP entries in a piece of text.
         We store every entry in a data structure `elements`, which is a list of `entry lists`.
@@ -59,28 +61,29 @@ class DataStore(BaseStore):
             type_attributes_list: dict = get_type_attributes()
             self._type_attributes = attribute_dict_helper(type_attributes_list)
 
-            type_attributes_list is:
-            {
-                "ft.onto.base_ontology.Token": ["pos", "ud_xpos", "lemma",
-                          "chunk", "ner", "sense", "is_root", "ud_features",
-                          "ud_misc"],
-                "ft.onto.base_ontology.Document": ["document_class",
-                          "sentiment", "classifications"],
-                "ft.onto.base_ontology.Sentence": ["speaker", "part_id",
-                          "sentiment", "classification","classifications"],
-            }
-            self._type_attributes is:
-            {
-                "ft.onto.base_ontology.Token": {"pos": 4, "ud_xpos": 5,
-                          "lemma": 6, "chunk": 7, "ner": 8, "sense": 9,
-                          "is_root": 10, "ud_features": 11, "ud_misc": 12},
-                "ft.onto.base_ontology.Document": {"document_class": 4,
-                          "sentiment": 5, "classifications": 6},
-                "ft.onto.base_ontology.Sentence": {"speaker": 4,
-                          "part_id": 5, "sentiment": 6, "classification": 7,
-                          "classifications": 8},
-            }
+            # type_attributes_list is:
+            # {
+            #     "ft.onto.base_ontology.Token": ["pos", "ud_xpos", "lemma",
+            #               "chunk", "ner", "sense", "is_root", "ud_features",
+            #               "ud_misc"],
+            #     "ft.onto.base_ontology.Document": ["document_class",
+            #               "sentiment", "classifications"],
+            #     "ft.onto.base_ontology.Sentence": ["speaker", "part_id",
+            #               "sentiment", "classification","classifications"],
+            # }
+            # self._type_attributes is:
+            # {
+            #     "ft.onto.base_ontology.Token": {"pos": 4, "ud_xpos": 5,
+            #               "lemma": 6, "chunk": 7, "ner": 8, "sense": 9,
+            #               "is_root": 10, "ud_features": 11, "ud_misc": 12},
+            #     "ft.onto.base_ontology.Document": {"document_class": 4,
+            #               "sentiment": 5, "classifications": 6},
+            #     "ft.onto.base_ontology.Sentence": {"speaker": 4,
+            #               "part_id": 5, "sentiment": 6, "classification": 7,
+            #               "classifications": 8},
+            # }
         """
+        # self._type_attributes = get_type_attributes()
         # Issue #570 implements get_type_attributes()
         # see https://github.com/asyml/forte/issues/570
         self._type_attributes: dict = {}
