@@ -149,19 +149,6 @@ class DataStore(BaseStore):
         entry += len(self._type_attributes[type]) * [None]
         return entry
 
-    def _generate_attr_index(self):
-        """
-        For every type in `_type_attributes`, we need to convert the attribute
-        list to a dictionary, mapping each attribute string to a unique index.
-        The index should be the actual index of this attribute in the entry's
-        list. Index 0, 1, 2, 3 should be reserved for begin, end, tid, type.
-
-        For example, for type `ft.onto.base_ontology.Sentence`, the attribute
-        ``speaker`` has index 4, and attribute ``part_id`` has index 5.
-
-        """
-        raise NotImplementedError
-
     def add_annotation_raw(
         self, type_id: int, begin: int, end: int
     ) -> Tuple[int, int]:
