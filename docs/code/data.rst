@@ -186,6 +186,11 @@ Readers
 .. autoclass:: forte.data.readers.openie_reader.OpenIEReader
     :members:
 
+:hidden:`SquadReader`
+------------------------
+.. autoclass:: forte.datasets.mrc.squad_reader.SquadReader
+    :members:
+
 DataPack Dataset
 =================
 

@@ -272,7 +272,7 @@ class HTMLReader(PackReader):
             )
 
     def _parse_pack(self, data_source: str) -> Iterator[DataPack]:
-        r"""Takes a string which could be either a filepath or html_content and
+        r"""Takes a string which could be either a filepath or html content and
         converts into a DataPack.
 
         Args:

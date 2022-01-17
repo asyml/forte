@@ -31,3 +31,4 @@ from forte.data.readers.ag_news_reader import *
 from forte.data.readers.largemovie_reader import *
 from forte.data.readers.misc_readers import *
 from forte.data.readers.classification_reader import *
+from forte.data.readers.audio_reader import *

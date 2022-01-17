@@ -32,6 +32,7 @@ from typing import Dict, List, Optional, Tuple, Set, no_type_check, Any
 import jsonschema
 import typed_ast.ast3 as ast
 import typed_astunparse as ast_unparse
+from numpy import ndarray
 
 from forte.data.ontology import top, utils
 from forte.data.ontology.code_generation_exceptions import (
@@ -48,6 +49,7 @@ from forte.data.ontology.code_generation_exceptions import (
     OntologySourceNotFoundException,
 )
 from forte.data.ontology.code_generation_objects import (
+    NdArrayProperty,
     NonCompositeProperty,
     ListProperty,
     ClassTypeDefinition,
@@ -1049,6 +1051,14 @@ class OntologyCodeGenerator:
                     constraint_type_
                 )
 
+                if constraint_type_name is None:
+                    raise TypeNotDeclaredException(
+                        f"The type {constraint_type_} is not defined but it is "
+                        f"specified in {schema_key} of the definition of "
+                        f"{schema['entry_name']}. Please define them before "
+                        f"this entry type."
+                    )
+
                 # TODO: cannot handle constraints that contain self-references.
                 # self_ref = entry_name.class_name == constraint_type_
 
@@ -1069,6 +1079,40 @@ class OntologyCodeGenerator:
         )
 
         return entry_item, property_names
+
+    def parse_ndarray(
+        self,
+        manager: ImportManager,
+        schema: Dict,
+        att_name: str,
+        desc: str,
+    ):
+        ndarray_dtype = None
+        if SchemaKeywords.ndarray_dtype in schema:
+            ndarray_dtype = schema[SchemaKeywords.ndarray_dtype]
+
+        ndarray_shape = None
+        if SchemaKeywords.ndarray_shape in schema:
+            ndarray_shape = schema[SchemaKeywords.ndarray_shape]
+
+        if ndarray_dtype is None or ndarray_shape is None:
+            warnings.warn(
+                "Either dtype or shape is not specified."
+                " It is recommended to specify both of them."
+            )
+
+        default_val = None
+        if ndarray_dtype and ndarray_shape:
+            default_val = ndarray(ndarray_shape, dtype=ndarray_dtype)
+
+        return NdArrayProperty(
+            manager,
+            att_name,
+            ndarray_dtype,
+            ndarray_shape,
+            description=desc,
+            default_val=default_val,
+        )
 
     def parse_dict(
         self,
@@ -1242,6 +1286,8 @@ class OntologyCodeGenerator:
                 return self.parse_dict(
                     manager, schema, entry_name, att_name, att_type, desc
                 )
+            elif att_type == "NdArray":
+                return self.parse_ndarray(manager, schema, att_name, desc)
         elif att_type in NON_COMPOSITES or manager.is_imported(att_type):
             self_ref = entry_name.class_name == att_type
             return self.parse_non_composite(

@@ -14,16 +14,17 @@
 import random
 from typing import Tuple, Union, Dict, Any
 
-from forte.data.ontology import Annotation
-from forte.utils.utils import create_class_with_kwargs
 from forte.common.configuration import Config
 from forte.processors.data_augment.algorithms.text_replacement_op import (
     TextReplacementOp,
 )
+from forte.utils.utils import create_class_with_kwargs
 
 __all__ = [
     "DictionaryReplacementOp",
 ]
+
+from ft.onto.base_ontology import Token
 
 
 class DictionaryReplacementOp(TextReplacementOp):
@@ -47,12 +48,12 @@ class DictionaryReplacementOp(TextReplacementOp):
             configs["dictionary_class"], class_args={}
         )
 
-    def replace(self, input_anno: Annotation) -> Tuple[bool, str]:
+    def replace(self, input_anno: Token) -> Tuple[bool, str]:  # type: ignore
         r"""
         This function replaces a word with synonyms from a WORDNET dictionary.
 
         Args:
-            input_anno (Annotation): The input annotation.
+            input_anno (Token): The input word.
         Returns:
             A tuple of two values, where the first element is a boolean value
             indicating whether the replacement happens, and the second

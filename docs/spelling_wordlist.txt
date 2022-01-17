@@ -86,8 +86,9 @@ Batcher
 Batchers
 Deserialize
 deserialize
+serialization
+deserialization
 deserialized
-OntonotesReader
 nlp
 io
 config
@@ -136,3 +137,5 @@ embedding
 embeddings
 docstrings
 numpy
+jsonpickle
+crowdworkers

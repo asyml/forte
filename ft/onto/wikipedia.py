@@ -20,6 +20,7 @@ __all__ = [
     "WikiSection",
     "WikiParagraph",
     "WikiTitle",
+    "WikiArticleTitle",
     "WikiAnchor",
     "WikiInfoBoxProperty",
     "WikiInfoBoxMapped",
@@ -74,6 +75,19 @@ class WikiParagraph(Annotation):
 
 @dataclass
 class WikiTitle(Annotation):
+    """
+    Title for the wikipedia sections.
+    """
+
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
+
+
+@dataclass
+class WikiArticleTitle(Annotation):
+    """
+    The title for the whole article.
+    """
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
