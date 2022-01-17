@@ -4,6 +4,8 @@ import uuid
 from forte.data.ontology.core import EntryType
 from forte.data.base_store import BaseStore
 
+__all__ = ["DataStore"]
+
 
 class DataStore(BaseStore):
     # pylint: disable=pointless-string-statement
