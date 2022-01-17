@@ -41,7 +41,9 @@ class BaseStore:
         """
 
     @abstractmethod
-    def add_annotation_raw(self, type_id: int, begin: int, end: int) -> Tuple[int, int]:
+    def add_annotation_raw(
+        self, type_id: int, begin: int, end: int
+    ) -> Tuple[int, int]:
         r"""This function adds an annotation entry with `begin` and `end` index
         to the sortedlist at index `type_id` of the array which records all
         sortedlists, return tid for the entry.
