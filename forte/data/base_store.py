@@ -18,6 +18,7 @@ from typing import (
     Type,
     Union,
     Iterator,
+    Tuple,
 )
 
 from forte.data.ontology.core import EntryType
@@ -40,7 +41,7 @@ class BaseStore:
         """
 
     @abstractmethod
-    def add_annotation_raw(self, type_id: int, begin: int, end: int) -> int:
+    def add_annotation_raw(self, type_id: int, begin: int, end: int) -> Tuple[int, int]:
         r"""This function adds an annotation entry with `begin` and `end` index
         to the sortedlist at index `type_id` of the array which records all
         sortedlists, return tid for the entry.
@@ -57,13 +58,13 @@ class BaseStore:
         raise NotImplementedError
 
     @abstractmethod
-    def set_attr(self, tid: int, attr_name: str, attr_value):
-        r"""This function locates the entry list with `tid` and sets its
-        attribute `attr_name` with value `attr_value`.
+    def set_attr(self, tid: int, attr_id: int, attr_value):
+        r"""This function locates the entry data with `tid` and sets its
+        attribute `attr_id` with value `attr_value`.
 
         Args:
             tid (int): Unique id of the entry.
-            attr_name (str): name of the attribute.
+            attr_id (int): id of the attribute.
             attr_value: value of the attribute.
 
         """
@@ -71,17 +72,16 @@ class BaseStore:
         raise NotImplementedError
 
     @abstractmethod
-    def get_attr(self, tid: int, attr_name: str):
-        r"""This function locates the entry list with `tid` and gets the value
-        of `attr_name` of this entry.
+    def get_attr(self, tid: int, attr_id: int):
+        r"""This function locates the entry data with `tid` and gets the value
+        of `attr_id` of this entry.
 
         Args:
             tid (int): Unique id of the entry.
-            attr_name (str): name of the attribute.
+            attr_id (int): id of the attribute.
 
         Returns:
-            The value of `attr_name` for the entry with `tid`.
-
+            The value of `attr_id` for the entry with `tid`.
         """
 
         raise NotImplementedError
@@ -99,7 +99,7 @@ class BaseStore:
         raise NotImplementedError
 
     @abstractmethod
-    def get_entry(self, tid: int) -> List:
+    def get_entry(self, tid: int) -> Tuple[List, int, int]:
         r"""Look up the entry_dict with key `tid`. Find its type_id and its
         index in the `entry_type` sortedlist.
 
