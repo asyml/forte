@@ -20,9 +20,7 @@ index2class = dict(enumerate(class_names))
 this_read_config = {"index2class": index2class}
 
 # initialize model config
-model_config = Config(
-    {"candidate_labels": class_names}, ZeroShotClassifier().default_configs()
-)
+model_config = {"candidate_labels": class_names}
 
 pl.set_reader(ClassificationDatasetReader(), config=this_read_config)
 pl.add(NLTKSentenceSegmenter())

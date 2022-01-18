@@ -108,16 +108,10 @@ this_reader_config = {
     "one_based_index_label": False,  # if it's digit label,
     # whether it's one-based so that reader can adjust it
 }
-reader_config = Config(
-    this_reader_config, ClassificationDatasetReader().default_configs()
-)
-
 # initialize model config
-model_config = Config(
-    {"candidate_labels": class_names}, ZeroShotClassifier().default_configs()
-)
+model_config = {"candidate_labels": class_names}
 
-pl.set_reader(ClassificationDatasetReader(), config=reader_config)
+pl.set_reader(ClassificationDatasetReader(), config=this_reader_config)
 
 pl.add(NLTKSentenceSegmenter())
 pl.add(NLTKWordTokenizer())
