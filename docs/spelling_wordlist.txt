@@ -139,4 +139,3 @@ docstrings
 numpy
 jsonpickle
 crowdworkers
-AudioAnnotation

@@ -29,16 +29,19 @@ __all__ = [
 class AudioReader(PackReader):
     r""":class:`AudioReader` is designed to read in audio files."""
 
-    try:
-        import soundfile  # pylint: disable=import-outside-toplevel
-    except ModuleNotFoundError as e:
-        raise ModuleNotFoundError(
-            "AudioReader requires 'soundfile' package to be installed."
-            " You can run 'pip install soundfile' or 'pip install forte"
-            "[audio_ext]'. Note that additional steps might apply to Linux"
-            " users (refer to "
-            "https://pysoundfile.readthedocs.io/en/latest/#installation)."
-        ) from e
+    def __init__(self):
+        super().__init__()
+        try:
+            import soundfile  # pylint: disable=import-outside-toplevel
+        except ModuleNotFoundError as e:
+            raise ModuleNotFoundError(
+                "AudioReader requires 'soundfile' package to be installed."
+                " You can run 'pip install soundfile' or 'pip install forte"
+                "[audio_ext]'. Note that additional steps might apply to Linux"
+                " users (refer to "
+                "https://pysoundfile.readthedocs.io/en/latest/#installation)."
+            ) from e
+        self.soundfile = soundfile
 
     def _collect(self, audio_directory) -> Iterator[Any]:  # type: ignore
         r"""Should be called with param ``audio_directory`` which is a path to a

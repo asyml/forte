@@ -674,5 +674,5 @@ class AudioAnnotation(Entry):
         yield from self.pack.get(entry_type, self, components, include_sub_type)
 
 
-SinglePackEntries = (Link, Group, Annotation, Generics)
+SinglePackEntries = (Link, Group, Annotation, Generics, AudioAnnotation)
 MultiPackEntries = (MultiPackLink, MultiPackGroup, MultiPackGeneric)

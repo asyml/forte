@@ -391,6 +391,9 @@ class DataPack(BasePack[Entry, Link, Group]):
 
     def get_span_audio(self, begin: int, end: int) -> str:
         r"""Get the audio in the data pack contained in the span.
+        `begin` and `end` represent the starting and ending indices of the span
+        in audio payload respectively. Each index corresponds to one sample in
+        audio time series.
 
         Args:
             begin (int): begin index to query.
@@ -1196,12 +1199,6 @@ class DataPack(BasePack[Entry, Link, Group]):
                 for group in self.groups:
                     if self._index.in_span(group, range_annotation.span):
                         yield group
-            elif issubclass(entry_type, AudioAnnotation):
-                for audio_annotation in self.audio_annotations:
-                    if self._index.in_span(
-                        audio_annotation, range_annotation.span
-                    ):
-                        yield audio_annotation
 
     def get(  # type: ignore
         self,
@@ -1299,9 +1296,16 @@ class DataPack(BasePack[Entry, Link, Group]):
                 issubclass(entry_type_, Annotation)
                 or issubclass(entry_type_, Link)
                 or issubclass(entry_type_, Group)
-                or issubclass(entry_type_, AudioAnnotation)
             ):
                 entry_iter = self.iter_in_range(entry_type_, range_annotation)
+            elif issubclass(entry_type_, AudioAnnotation):
+                entry_iter = (
+                    audio_annotation
+                    for audio_annotation in self.audio_annotations
+                    if self._index.in_audio_span(
+                        audio_annotation, range_annotation.span
+                    )
+                )
         elif issubclass(entry_type_, Annotation):
             entry_iter = self.annotations
         elif issubclass(entry_type_, Link):
@@ -1504,7 +1508,7 @@ class DataIndex(BaseIndex):
         r"""Check whether the ``inner entry`` is within the given ``span``. The
         criterion are as followed:
 
-        Annotation/AudioAnnotation entries: they are considered in a span if the
+        Annotation entries: they are considered in a span if the
         begin is not smaller than `span.begin` and the end is not larger than
         `span.end`.
 
@@ -1519,8 +1523,9 @@ class DataIndex(BaseIndex):
         `in_span` of the provided `span`. If the child type is not `Annotation`
         type, this function will always return `False`.
 
-        Other entries (i.e Generics): they will not be considered `in_span` of
-        any spans. The function will always return `False`.
+        Other entries (i.e Generics and `AudioAnnotation`): they will not be
+        considered `in_span` of any spans. The function will always return
+        `False`.
 
         Args:
             inner_entry (int or Entry): The inner entry object to be checked
@@ -1542,7 +1547,7 @@ class DataIndex(BaseIndex):
         inner_begin = -1
         inner_end = -1
 
-        if isinstance(inner_entry, (Annotation, AudioAnnotation)):
+        if isinstance(inner_entry, Annotation):
             inner_begin = inner_entry.begin
             inner_end = inner_entry.end
         elif isinstance(inner_entry, Link):
@@ -1577,6 +1582,90 @@ class DataIndex(BaseIndex):
                 inner_begin = min(inner_begin, mem_.begin)
                 inner_end = max(inner_end, mem_.end)
         else:
-            # Generics or other user defined types will not be check here.
+            # Generics, AudioAnnotation, or other user defined types will not
+            # be check here.
+            return False
+        return inner_begin >= span.begin and inner_end <= span.end
+
+    def in_audio_span(self, inner_entry: Union[int, Entry], span: Span) -> bool:
+        r"""Check whether the ``inner entry`` is within the given audio span.
+        This method is identical to :meth:`in_span` except that it operates on
+        the audio payload of datapack. The criterion are as followed:
+
+        `AudioAnnotation` entries: they are considered in a span if the
+        begin is not smaller than `span.begin` and the end is not larger than
+        `span.end`.
+
+        Link entries: if the parent and child of the links are both
+        `AudioAnnotation` type, this link will be considered in span if both
+        parent and child are `in_span` of the provided `span`. If either the
+        parent and the child is not of type `AudioAnnotation`, this function
+        will always return `False`.
+
+        Group entries: if the child type of the group is `AudioAnnotation` type,
+        then the group will be considered in span if all the elements are
+        `in_span` of the provided `span`. If the child type is not
+        `AudioAnnotation` type, this function will always return `False`.
+
+        Other entries (i.e Generics and Annotation): they will not be considered
+        `in_span` of any spans. The function will always return `False`.
+
+        Args:
+            inner_entry (int or Entry): The inner entry object to be checked
+             whether it is within ``span``. The argument can be the entry id
+             or the entry object itself.
+            span (Span): A :class:`Span` object to be checked. We will check
+                whether the ``inner_entry`` is within this span.
+
+        Returns:
+            True if the `inner_entry` is considered to be in span of the
+            provided span.
+        """
+        # The reason of this check is that the get_data method will use numpy
+        # integers. This might create problems when other unexpected integers
+        # are used.
+        if isinstance(inner_entry, (int, np.integer)):
+            inner_entry = self._entry_index[inner_entry]
+
+        inner_begin = -1
+        inner_end = -1
+
+        if isinstance(inner_entry, AudioAnnotation):
+            inner_begin = inner_entry.begin
+            inner_end = inner_entry.end
+        elif isinstance(inner_entry, Link):
+            if not issubclass(inner_entry.ParentType, AudioAnnotation):
+                return False
+
+            if not issubclass(inner_entry.ChildType, AudioAnnotation):
+                return False
+
+            child = inner_entry.get_child()
+            parent = inner_entry.get_parent()
+
+            if not isinstance(child, AudioAnnotation) or not isinstance(
+                parent, AudioAnnotation
+            ):
+                # Cannot check in_span for non-AudioAnnotation.
+                return False
+
+            child_: AudioAnnotation = child
+            parent_: AudioAnnotation = parent
+
+            inner_begin = min(child_.begin, parent_.begin)
+            inner_end = max(child_.end, parent_.end)
+        elif isinstance(inner_entry, Group):
+            if not issubclass(inner_entry.MemberType, AudioAnnotation):
+                return False
+
+            for mem in inner_entry.get_members():
+                mem_: AudioAnnotation = mem  # type: ignore
+                if inner_begin == -1:
+                    inner_begin = mem_.begin
+                inner_begin = min(inner_begin, mem_.begin)
+                inner_end = max(inner_end, mem_.end)
+        else:
+            # Generics, Annotation, or other user defined types will not be
+            # check here.
             return False
         return inner_begin >= span.begin and inner_end <= span.end

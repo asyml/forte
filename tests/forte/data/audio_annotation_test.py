@@ -98,6 +98,10 @@ class AudioAnnotationTest(unittest.TestCase):
             self.assertEqual(len(recordings), 1)
             self.assertTrue(array_equal(recordings[0].audio, pack.audio))
 
+            # Check serialization/deserialization of AudioAnnotation
+            new_pack = DataPack.from_string(pack.to_string())
+            self.assertEqual(new_pack.audio_annotations, pack.audio_annotations)
+
             # Check total number of AudioAnnotations which should be 3
             # (1 Recording + 2 AudioUtterance).
             self.assertEqual(pack.num_audio_annotations, 3)
