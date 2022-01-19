@@ -23,7 +23,7 @@ from forte.pipeline import Pipeline
 from forte.processors.base.pack_processor import PackProcessor
 from forte.data.data_pack import DataPack
 from forte.data.readers import AudioReader
-from forte.data.ontology.top import AudioAnnotation
+from forte.data.ontology.top import AudioAnnotation, Group, Link
 from ft.onto.base_ontology import Recording, AudioUtterance
 
 
@@ -49,6 +49,10 @@ class AudioUtteranceProcessor(PackProcessor):
             end=self.configs.end
         )
         audio_utter.speaker = self.configs.speaker
+
+        recording: Recording = input_pack.get_single(Recording)
+        Group(pack=input_pack, members=(audio_utter, recording))
+        Link(pack=input_pack, parent=recording, child=audio_utter)
 
     @classmethod
     def default_configs(cls) -> Dict:
@@ -118,6 +122,13 @@ class AudioAnnotationTest(unittest.TestCase):
                         audio_utter.audio,
                         pack.audio[configs["begin"]:configs["end"]]
                     ))
+
+            # Check `AudioAnnotation.get(Group/Link)`
+            for entry_type in (Group, Link):
+                self.assertEqual(
+                    len(list(recordings[0].get(entry_type))),
+                    len(self._test_configs)
+                )
 
             # Check `DataPack.delete_entry(AudioAnnotation)`
             for audio_annotation in list(pack.get(AudioAnnotation)):
