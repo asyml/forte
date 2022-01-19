@@ -62,25 +62,44 @@ class Annotation(Entry):
     """
 
     def __init__(self, pack: PackType, begin: int, end: int):
-        self._span: Optional[Span]
-        self.set_span(begin, end)
+        self._span: Optional[Span] = None
+        self._begin: int = begin
+        self._end: int = end
         super().__init__(pack)
 
+    def __getstate__(self):
+        r"""For serializing Annotation, we should create Span annotations for
+        compatibility purposes.
+        """
+        self._span = Span(self._begin, self._end)
+        state = super().__getstate__()
+        state.pop("_begin")
+        state.pop("_end")
+        return state
+
+    def __setstate__(self, state):
+        """
+        For de-serializing Annotation, we load the begin, end from Span, for
+        compatibility purposes.
+        """
+        super().__setstate__(state)
+        self._begin = self._span.begin
+        self._end = self._span.end
+
     @property
-    def span(self):
+    def span(self) -> Span:
+        # Delay span creation at usage.
+        if self._span is None:
+            self._span = Span(self._begin, self._end)
         return self._span
 
     @property
     def begin(self):
-        return self._span.begin
+        return self._begin
 
     @property
     def end(self):
-        return self._span.end
-
-    def set_span(self, begin: int, end: int):
-        r"""Set the span of the annotation."""
-        self._span = Span(begin, end)
+        return self._end
 
     def __eq__(self, other):
         r"""The eq function of :class:`Annotation`.
@@ -92,19 +111,29 @@ class Annotation(Entry):
         """
         if other is None:
             return False
-        return (type(self), self.span.begin, self.span.end) == (
+        return (type(self), self.begin, self.end) == (
             type(other),
-            other.span.begin,
-            other.span.end,
+            other.begin,
+            other.end,
         )
 
     def __lt__(self, other):
-        r"""To support total_ordering, :class:`Annotations` must provide
-        :meth:`__lt__`.
+        r"""To support total_ordering, `Annotation` must implement
+        `__lt__`. The ordering is defined in the following way:
+
+        1. If the begin of the annotations are different, the one with larger
+           begin will be larger.
+        2. In the case where the begins are the same, the one with larger
+           end will be larger.
+        3. In the case where both offsets are the same, we break the tie using
+           the normal sorting of the class name.
         """
-        if self.span != other.span:
-            return self.span < other.span
-        return (str(type(self)), self._tid) < (str(type(other)), other.tid)
+        if self.begin == other.begin:
+            if self.end == other.end:
+                return str(type(self)) < str(type(other))
+            return self.end < other.end
+        else:
+            return self.begin < other.begin
 
     @property
     def text(self):
@@ -113,7 +142,7 @@ class Annotation(Entry):
                 "Cannot get text because annotation is not "
                 "attached to any data pack."
             )
-        return self.pack.get_span_text(self.span)
+        return self.pack.get_span_text(self.begin, self.end)
 
     @property
     def index_key(self) -> int:

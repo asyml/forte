@@ -60,7 +60,7 @@ currently stored in two different repositories, as different projects.
   project and can be installed independently. *The project will be installed as
   `forte.xxx` and under `forte/xxx` folder in the site-packages.* For
   example, `forte.nltk` will be installed under `site_packages/forte/nltk` folder, and
-  the tool can be imported via `import forte.nltk` and uninstalled
+  the tool can be imported via `import fortex.nltk` and uninstalled
   via `pip uninstall forte.nltk`.
 
 ### Report Bugs

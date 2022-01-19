@@ -48,6 +48,7 @@ __all__ = [
     "Title",
     "MCOption",
     "MCQuestion",
+    "MRCQuestion",
 ]
 
 
@@ -493,3 +494,21 @@ class MCQuestion(Annotation):
         super().__init__(pack, begin, end)
         self.options: FList[MCOption] = FList(self)
         self.answers: List[int] = []
+
+
+@dataclass
+class MRCQuestion(Annotation):
+    """
+    An `Annotation` type which represents an MRC question.
+    Attributes:
+        qid (Optional[int]):
+        answers (FList[Phrase]):
+    """
+
+    qid: Optional[int]
+    answers: FList[Phrase]
+
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
+        self.qid: Optional[int] = None
+        self.answers: FList[Phrase] = FList(self)

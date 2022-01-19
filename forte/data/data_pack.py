@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import logging
+from pathlib import Path
 from typing import (
     Dict,
     Iterable,
@@ -69,10 +70,13 @@ class Meta(BaseMeta):
         language: The language used by this data pack, default is English.
         span_unit: The unit used for interpreting the Span object of this
           data pack. Default is character.
+        sample_rate: An integer specifying the sample rate of audio payload.
+          Default is None.
         info: Store additional string based information that the user add.
     Attributes:
         pack_name:  storing the provided `pack_name`.
         language: storing the provided `language`.
+        sample_rate: storing the provided `sample_rate`.
         info: storing the provided `info`.
         record: Initialized as a dictionary. This is not a required field.
             The key of the record should be the entry type and values should
@@ -86,11 +90,13 @@ class Meta(BaseMeta):
         pack_name: Optional[str] = None,
         language: str = "eng",
         span_unit: str = "character",
+        sample_rate: Optional[int] = None,
         info: Optional[Dict[str, str]] = None,
     ):
         super().__init__(pack_name)
         self.language = language
         self.span_unit = span_unit
+        self.sample_rate: Optional[int] = sample_rate
         self.record: Dict[str, Set[str]] = {}
         self.info: Dict[str, str]
         if info is None:
@@ -154,6 +160,7 @@ class DataPack(BasePack[Entry, Link, Group]):
     def __init__(self, pack_name: Optional[str] = None):
         super().__init__(pack_name)
         self._text = ""
+        self._audio: Optional[np.ndarray] = None
 
         self.annotations: SortedList[Annotation] = SortedList()
         self.links: SortedList[Link] = SortedList()
@@ -242,6 +249,16 @@ class DataPack(BasePack[Entry, Link, Group]):
         return self._text
 
     @property
+    def audio(self) -> Optional[np.ndarray]:
+        r"""Return the audio of the data pack"""
+        return self._audio
+
+    @property
+    def sample_rate(self) -> Optional[int]:
+        r"""Return the sample rate of the audio data"""
+        return getattr(self._meta, "sample_rate")
+
+    @property
     def all_annotations(self) -> Iterator[Annotation]:
         """
         An iterator of all annotations in this data pack.
@@ -324,16 +341,17 @@ class DataPack(BasePack[Entry, Link, Group]):
         """
         return len(self.generics)
 
-    def get_span_text(self, span: Span) -> str:
-        r"""Get the text in the data pack contained in the span
+    def get_span_text(self, begin: int, end: int) -> str:
+        r"""Get the text in the data pack contained in the span.
 
         Args:
-            span (Span): Span object which contains a `begin` and an `end` index
+            begin (int): begin index to query.
+            end (int): end index to query.
 
         Returns:
-            The text within this span
+            The text within this span.
         """
-        return self._text[span.begin : span.end]
+        return self._text[begin:end]
 
     def set_text(
         self,
@@ -362,6 +380,17 @@ class DataPack(BasePack[Entry, Link, Group]):
             self.__processed_original_spans,
             self.__orig_text_len,
         ) = data_utils_io.modify_text_and_track_ops(text, span_ops)
+
+    def set_audio(self, audio: np.ndarray, sample_rate: int):
+        r"""Set the audio payload and sample rate of the :class:`DataPack`
+        object.
+
+        Args:
+            audio: A numpy array storing the audio waveform.
+            sample_rate: An integer specifying the sample rate.
+        """
+        self._audio = audio
+        self.set_meta(sample_rate=sample_rate)
 
     def get_original_text(self):
         r"""Get original unmodified text from the :class:`DataPack` object.
@@ -504,20 +533,30 @@ class DataPack(BasePack[Entry, Link, Group]):
         return Span(orig_begin, orig_end)
 
     @classmethod
-    def deserialize(cls, data_pack_string: str) -> "DataPack":
+    def deserialize(
+        cls,
+        data_source: Union[Path, str],
+        serialize_method: str = "jsonpickle",
+        zip_pack: bool = False,
+    ) -> "DataPack":
         """
         Deserialize a Data Pack from a string. This internally calls the
         internal :meth:`~forte.data.base_pack.BasePack._deserialize` function
         from :class:`~forte.data.base_pack.BasePack`.
 
         Args:
-            data_pack_string: The serialized string of a data pack to be
-              deserialized.
+            data_source: The path storing data source.
+            serialize_method: The method used to serialize the data, this
+              should be the same as how serialization is done. The current
+              options are "jsonpickle" and "pickle". The default method
+              is "jsonpickle".
+            zip_pack: Boolean value indicating whether the input source is
+              zipped.
 
         Returns:
             An data pack object deserialized from the string.
         """
-        return cls._deserialize(data_pack_string)
+        return cls._deserialize(data_source, serialize_method, zip_pack)
 
     def _add_entry(self, entry: EntryType) -> EntryType:
         r"""Force add an :class:`~forte.data.ontology.core.Entry` object to the
@@ -535,8 +574,8 @@ class DataPack(BasePack[Entry, Link, Group]):
     def __add_entry_with_check(
         self, entry: EntryType, allow_duplicate: bool = True
     ) -> EntryType:
-        r"""Internal method to add an :class:`Entry` object to the
-        :class:`DataPack` object.
+        r"""Internal method to add an :class:`~forte.data.ontology.core.Entry`
+        object to the :class:`~forte.data.DataPack` object.
 
         Args:
             entry (Entry): An :class:`Entry` object to be added to the datapack.
@@ -548,7 +587,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         if isinstance(entry, Annotation):
             target = self.annotations
 
-            begin, end = entry.span.begin, entry.span.end
+            begin, end = entry.begin, entry.end
 
             if begin < 0:
                 raise ValueError(
@@ -586,25 +625,22 @@ class DataPack(BasePack[Entry, Link, Group]):
                 f"should be an instance of Annotation, Link, Group of Generics."
             )
 
-        # TODO: duplicate is ill-defined.
-        add_new = allow_duplicate or (entry not in target)
+        if not allow_duplicate:
+            index = target.index(entry)
+            if index < 0:
+                # Return the existing entry if duplicate is not allowed.
+                return target[index]
 
-        if add_new:
-            target.add(entry)
-
-            # update the data pack index if needed
-            self._index.update_basic_index([entry])
-            if self._index.link_index_on and isinstance(entry, Link):
-                self._index.update_link_index([entry])
-            if self._index.group_index_on and isinstance(entry, Group):
-                self._index.update_group_index([entry])
-            self._index.deactivate_coverage_index()
-
-            self._pending_entries.pop(entry.tid)
-
-            return entry
-        else:
-            return target[target.index(entry)]
+        target.add(entry)
+        # update the data pack index if needed
+        self._index.update_basic_index([entry])
+        if self._index.link_index_on and isinstance(entry, Link):
+            self._index.update_link_index([entry])
+        if self._index.group_index_on and isinstance(entry, Group):
+            self._index.update_group_index([entry])
+        self._index.deactivate_coverage_index()
+        self._pending_entries.pop(entry.tid)
+        return entry
 
     def delete_entry(self, entry: EntryType):
         r"""Delete an :class:`~forte.data.ontology.core.Entry` object from the
@@ -762,7 +798,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             context_type_, context_args
         )
 
-        valid_context_ids: Set[int] = self.get_ids_by_type_subtype(
+        valid_context_ids: Set[int] = self._index.query_by_type_subtype(
             context_type_
         )
         if context_components:
@@ -783,8 +819,8 @@ class DataPack(BasePack[Entry, Link, Group]):
                 continue
 
             data: Dict[str, Any] = {}
-            data["context"] = self.text[context.span.begin : context.span.end]
-            data["offset"] = context.span.begin
+            data["context"] = self.text[context.begin : context.end]
+            data["offset"] = context.begin
 
             for field in context_fields:
                 data[field] = getattr(context, field)
@@ -893,12 +929,12 @@ class DataPack(BasePack[Entry, Link, Group]):
                 )
             a_dict["unit_span"] = []
 
-        cont_begin = cont.span.begin if cont else 0
+        cont_begin = cont.begin if cont else 0
 
         annotation: Annotation
         for annotation in self.get(a_type, cont, components):
             # we provide span, text (and also tid) by default
-            a_dict["span"].append((annotation.span.begin, annotation.span.end))
+            a_dict["span"].append((annotation.begin, annotation.end))
             a_dict["text"].append(annotation.text)
 
             for field in fields:
@@ -907,8 +943,8 @@ class DataPack(BasePack[Entry, Link, Group]):
                 if field == "context_span":
                     a_dict[field].append(
                         (
-                            annotation.span.begin - cont_begin,
-                            annotation.span.end - cont_begin,
+                            annotation.begin - cont_begin,
+                            annotation.end - cont_begin,
                         )
                     )
                     continue
@@ -1064,13 +1100,11 @@ class DataPack(BasePack[Entry, Link, Group]):
                 yield self.get_entry(tid)  # type: ignore
         else:
             if issubclass(entry_type, Annotation):
-                range_begin = (
-                    range_annotation.span.begin if range_annotation else 0
-                )
+                range_begin = range_annotation.begin if range_annotation else 0
                 range_end = (
-                    range_annotation.span.end
+                    range_annotation.end
                     if range_annotation
-                    else self.annotations[-1].span.end
+                    else self.annotations[-1].end
                 )
 
                 if issubclass(entry_type, Annotation):
@@ -1385,8 +1419,7 @@ class DataIndex(BaseIndex):
             )
 
         return not (
-            entry1_.span.begin >= entry2_.span.end
-            or entry1_.span.end <= entry2_.span.begin
+            entry1_.begin >= entry2_.end or entry1_.end <= entry2_.begin
         )
 
     def in_span(self, inner_entry: Union[int, Entry], span: Span) -> bool:
@@ -1431,8 +1464,8 @@ class DataIndex(BaseIndex):
         inner_end = -1
 
         if isinstance(inner_entry, Annotation):
-            inner_begin = inner_entry.span.begin
-            inner_end = inner_entry.span.end
+            inner_begin = inner_entry.begin
+            inner_end = inner_entry.end
         elif isinstance(inner_entry, Link):
             if not issubclass(inner_entry.ParentType, Annotation):
                 return False
@@ -1452,8 +1485,8 @@ class DataIndex(BaseIndex):
             child_: Annotation = child
             parent_: Annotation = parent
 
-            inner_begin = min(child_.span.begin, parent_.span.begin)
-            inner_end = max(child_.span.end, parent_.span.end)
+            inner_begin = min(child_.begin, parent_.begin)
+            inner_end = max(child_.end, parent_.end)
         elif isinstance(inner_entry, Group):
             if not issubclass(inner_entry.MemberType, Annotation):
                 return False
@@ -1461,9 +1494,9 @@ class DataIndex(BaseIndex):
             for mem in inner_entry.get_members():
                 mem_: Annotation = mem  # type: ignore
                 if inner_begin == -1:
-                    inner_begin = mem_.span.begin
-                inner_begin = min(inner_begin, mem_.span.begin)
-                inner_end = max(inner_end, mem_.span.end)
+                    inner_begin = mem_.begin
+                inner_begin = min(inner_begin, mem_.begin)
+                inner_end = max(inner_end, mem_.end)
         else:
             # Generics or other user defined types will not be check here.
             return False

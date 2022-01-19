@@ -14,6 +14,7 @@
 
 import copy
 import logging
+from pathlib import Path
 from typing import Dict, List, Set, Union, Iterator, Optional, Type, Any, Tuple
 
 from sortedcontainers import SortedList
@@ -31,7 +32,6 @@ from forte.data.ontology.top import (
     MultiPackEntries,
     MultiPackGeneric,
 )
-from forte.data.span import Span
 from forte.data.types import DataRequest
 from forte.utils import get_class
 
@@ -117,6 +117,27 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         # Create the pack list for adding them back.
         self._packs = []
 
+    def relink(self, packs: Iterator[DataPack]):
+        """
+        Re-link the reference of the multi-pack to other entries, including
+        the data packs in it, and the
+
+        Args:
+            packs:
+
+        Returns:
+
+        """
+        self._packs.extend(packs)
+        for a in self.links:
+            a.relink_pointer()
+
+        for a in self.groups:
+            a.relink_pointer()
+
+        for a in self.generics:
+            a.relink_pointer()
+
     def __getstate__(self):
         r"""
         Pop some recoverable information in serialization.
@@ -149,13 +170,15 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     def get_subentry(self, pack_idx: int, entry_id: int):
         return self.get_pack_at(pack_idx).get_entry(entry_id)
 
-    def get_span_text(self, span: Span):
+    def get_span_text(self, begin: int, end: int):
         raise ValueError(
             "MultiPack objects do not contain text, please refer to a "
             "specific data pack to get text."
         )
 
-    def add_pack(self, ref_name: Optional[str] = None) -> DataPack:
+    def add_pack(
+        self, ref_name: Optional[str] = None, pack_name: Optional[str] = None
+    ) -> DataPack:
         """
         Create a data pack and add it to this multi pack. If `ref_name` is
         provided, it will be used to index the data pack. Otherwise, a default
@@ -164,7 +187,9 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
         Args:
             ref_name (str): The pack name used to reference this data pack from
-              the multi pack.
+              the multi pack. If none, the reference name will not be set.
+            pack_name (str): The pack name of the data pack (itself). If none,
+              the name will not be set.
 
         Returns: The newly created data pack.
 
@@ -178,7 +203,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
                 f"{type(ref_name)}"
             )
 
-        pack: DataPack = DataPack()
+        pack: DataPack = DataPack(pack_name=pack_name)
         self.add_pack_(pack, ref_name)
         return pack
 
@@ -284,8 +309,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         return self._packs
 
     @property
-    def pack_names(self) -> Set[str]:
-        return set(self._pack_names)
+    def pack_names(self) -> List[str]:
+        return self._pack_names
 
     def update_pack(self, named_packs: Dict[str, DataPack]):
         for pack_name, pack in named_packs.items():
@@ -605,7 +630,12 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             yield e  # type: ignore
 
     @classmethod
-    def deserialize(cls, string: str) -> "MultiPack":
+    def deserialize(
+        cls,
+        data_path: Union[Path, str],
+        serialize_method: str = "jsonpickle",
+        zip_pack: bool = False,
+    ) -> "MultiPack":
         """
         Deserialize a Multi Pack from a string. Note that this will only
         deserialize the native multi pack content, which means the associated
@@ -618,12 +648,18 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         function from the :class:`~forte.data.base_pack.BasePack`.
 
         Args:
-            string: The serialized string of a Multi pack to be deserialized.
+            data_path: The serialized string of a Multi pack to be deserialized.
+            serialize_method: The method used to serialize the data, this
+              should be the same as how serialization is done. The current
+              options are "jsonpickle" and "pickle". The default method
+              is "jsonpickle".
+            zip_pack: Boolean value indicating whether the input source is
+              zipped.
 
         Returns:
             An data pack object deserialized from the string.
         """
-        return cls._deserialize(string)
+        return cls._deserialize(data_path, serialize_method, zip_pack)
 
     def _add_entry(self, entry: EntryType) -> EntryType:
         r"""Force add an :class:`forte.data.ontology.core.Entry` object to the

@@ -95,6 +95,7 @@ class TestDBpediaReaders(TestCase):
             config={
                 "pack_index": os.path.join(self.raw_output, "article.idx"),
                 "pack_dir": self.raw_output,
+                "zip_pack": True,
             },
         )
 
@@ -112,22 +113,19 @@ class TestDBpediaReaders(TestCase):
             config={
                 "pack_index": os.path.join(self.raw_output, "article.idx"),
                 "pack_dir": self.raw_output,
+                "zip_pack": True,
             },
         )
         output: str = os.path.join(self.output_dir.name, "anchor")
         write_results(pl, output, os.path.join(self.data_dir, "text_links.tql"))
 
-        print(self.raw_output)
-        print(output)
-
         self.num_packs_check(output, 1)
         self.num_indexed(output, 1)
 
-        with open(glob.glob(output + "/**/*.json.gz")[0]) as data:
-            pack = DataPack.deserialize(data.read())
-            self.assertEqual(
-                len(list(pack.get("ft.onto.wikipedia.WikiAnchor"))), 4
-            )
+        pack = DataPack.deserialize(
+            glob.glob(output + "/**/*.json.gz")[0], zip_pack=True
+        )
+        self.assertEqual(len(list(pack.get("ft.onto.wikipedia.WikiAnchor"))), 4)
 
     def test_property(self):
         pl = Pipeline[DataPack](self.resources)
@@ -136,6 +134,7 @@ class TestDBpediaReaders(TestCase):
             config={
                 "pack_index": os.path.join(self.raw_output, "article.idx"),
                 "pack_dir": self.raw_output,
+                "zip_pack": True,
             },
         )
         output: str = os.path.join(self.output_dir.name, "property")
@@ -155,6 +154,7 @@ class TestDBpediaReaders(TestCase):
             config={
                 "pack_index": os.path.join(self.raw_output, "article.idx"),
                 "pack_dir": self.raw_output,
+                "zip_pack": True,
             },
         )
         output: str = os.path.join(self.output_dir.name, "literals")

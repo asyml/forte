@@ -1,5 +1,6 @@
 import sys
 from pathlib import Path
+
 import setuptools
 
 long_description = (Path(__file__).parent / "README.md").read_text()
@@ -26,7 +27,7 @@ setuptools.setup(
         "numpy>=1.16.6",
         "jsonpickle==1.4",
         "pyyaml==5.4",
-        "smart-open==1.8.4",
+        "smart-open>=1.8.4",
         "typed_astunparse==2.1.4",
         "funcsigs==1.0.2",
         "mypy_extensions==0.4.3",
@@ -49,6 +50,7 @@ setuptools.setup(
         # transformers 4.10.0 will break the translation model we used here
         "augment": ["transformers>=3.1, <=4.9.2", "nltk"],
         "stave": ["stave>=0.0.1.dev12"],
+        "audio_ext": ["soundfile>=0.10.3"],
     },
     entry_points={
         "console_scripts": [

@@ -66,7 +66,7 @@ class Configurable(ABC):
     ) -> Config:
         """
         Create the configuration by merging the
-        provided config with the default_configs.
+        provided config with the `default_configs`.
 
         The following config conventions are expected:
           - The top level key can be a special `@config_path`.

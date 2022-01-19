@@ -23,7 +23,9 @@ from typing import Iterator, Dict, Optional
 
 from forte.common import Resources, ProcessorConfigError
 from forte.common.configuration import Config
+from forte.data.base_pack import BasePack
 from forte.data.data_pack import DataPack
+from forte.data.multi_pack import MultiPack
 from forte.data.base_reader import PackReader
 from forte.data.readers.deserialize_reader import MultiPackDeserializerBase
 
@@ -52,7 +54,7 @@ def load_all_datapacks(
     c = conn.cursor()
     data_packs: Dict[int, DataPack] = {}
     for val in c.execute(f"SELECT * FROM {pack_table_name}"):
-        pack: DataPack = DataPack.deserialize(val[pack_col])
+        pack: DataPack = DataPack.from_string(val[pack_col])  # type:ignore
         # Currently assume we do not have access to the id in the database,
         #  once we update all Stave db format, we can add the real id.
         data_packs[pack.pack_id] = pack
@@ -105,7 +107,10 @@ class StaveMultiDocSqlReader(MultiPackDeserializerBase):
         ):
             yield value[0]
 
-    def _get_pack_content(self, pack_id: int) -> Optional[DataPack]:
+    def _parse_multi_pack(self, multi_pack_source: str) -> MultiPack:
+        return BasePack.from_string(multi_pack_source)  # type: ignore
+
+    def _get_pack(self, pack_id: int) -> Optional[DataPack]:
         return self.data_packs.get(pack_id, None)
 
     @classmethod
@@ -229,7 +234,7 @@ class StaveDataPackSqlReader(PackReader):
             yield value[0]
 
     def _parse_pack(self, pack_str: str) -> Iterator[DataPack]:
-        yield DataPack.deserialize(pack_str)
+        yield DataPack.from_string(pack_str)  # type: ignore
 
     @classmethod
     def default_configs(cls):

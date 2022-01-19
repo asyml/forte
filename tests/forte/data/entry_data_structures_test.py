@@ -2,11 +2,11 @@ import unittest
 from dataclasses import dataclass
 from typing import Optional, List, Any, Iterator
 
+from forte.data.base_reader import PackReader, MultiPackReader
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology import Generics, MultiPackGeneric, Annotation
-from forte.data.ontology.core import FList, FDict, MpPointer, Pointer
-from forte.data.base_reader import PackReader, MultiPackReader
+from forte.data.ontology.core import FList, FDict, Pointer
 from forte.pipeline import Pipeline
 from forte.processors.base import PackProcessor, MultiPackProcessor
 from ft.onto.base_ontology import EntityMention
@@ -54,11 +54,11 @@ class EntryWithDict(Generics):
     Test whether entries are stored correctly as a Dict using FDict.
     """
 
-    entries: FDict[int, ExampleEntry] = None
+    entries: FDict[str, ExampleEntry] = None
 
     def __init__(self, pack: DataPack):
         super().__init__(pack)
-        self.entries = FDict[int, ExampleEntry](self)
+        self.entries = FDict[str, ExampleEntry](self)
 
 
 class EntryAsAttribute(Generics):
@@ -70,6 +70,17 @@ class EntryAsAttribute(Generics):
 
     def __init__(self, pack: DataPack):
         super().__init__(pack)
+
+
+class EntryWithDictAndPointer(EntryWithDict):
+    another_dict_entry: FDict[str, ExampleEntry] = None
+    pointer_entry: Optional[ExampleEntry] = None
+
+    def __init__(self, pack: DataPack):
+        super().__init__(pack)
+        self.another_dict_entry = FDict[str, ExampleEntry](self)
+        self.entries = FDict[str, ExampleEntry](self)
+        self.pointer_entry = ExampleEntry(pack)
 
 
 class EmptyReader(PackReader):
@@ -97,13 +108,22 @@ class EntryAnnotator(PackProcessor):
         for i in range(10, 20):
             e = ExampleEntry(input_pack)
             e.secret_number = i
-            de.entries[i] = e
+            de.entries[str(i)] = e
 
         # Add a EntryWithEntry
         e_with_a: EntryAsAttribute = EntryAsAttribute(input_pack)
         ee = ExampleEntry(input_pack)
         e_with_a.att_entry = ee
         ee.secret_number = 27
+
+
+class ChildEntryAnnotator(PackProcessor):
+    def _process(self, input_pack: DataPack):
+        e: EntryWithDictAndPointer = EntryWithDictAndPointer(input_pack)
+        temp = ExampleEntry(input_pack)
+        e.entries["1"] = temp
+        e.another_dict_entry["2"] = temp
+        e.pointer_entry = ExampleEntry(input_pack)
 
 
 class EmptyMultiReader(MultiPackReader):
@@ -140,24 +160,23 @@ class MultiEntryStructure(unittest.TestCase):
         p.initialize()
         self.pack: MultiPack = p.process(["doc1", "doc2"])
 
-    def test_entry_attribute(self):
+    def test_entry_attribute_mp_pointer(self):
         mpe: ExampleMPEntry = self.pack.get_single(ExampleMPEntry)
         self.assertIsInstance(mpe.refer_entry, ExampleEntry)
-        self.assertIsInstance(mpe.__dict__["refer_entry"], MpPointer)
+        self.assertIsInstance(mpe.__dict__["refer_entry"], ExampleEntry)
 
-    def test_wrong_attribute(self):
-        import warnings
+        serialized_mp = self.pack.to_string(drop_record=True)
+        recovered_mp = MultiPack.from_string(serialized_mp)
 
-        input_pack = MultiPack()
-        mp_entry = ExampleMPEntry(input_pack)
-        p1 = input_pack.add_pack("pack1")
-        e1: DifferentEntry = p1.add_entry(DifferentEntry(p1))
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            mp_entry.refer_entry = e1
-            mp_entry.regret_creation()
-            assert issubclass(w[-1].category, UserWarning)
-            # self.assertEqual(str(w[-1].message), warning_content)
+        s_packs = [p.to_string() for p in self.pack.packs]
+        recovered_packs = [DataPack.from_string(s) for s in s_packs]
+
+        recovered_mp.relink(recovered_packs)
+
+        re_mpe: ExampleMPEntry = recovered_mp.get_single(ExampleMPEntry)
+        self.assertIsInstance(re_mpe.refer_entry, ExampleEntry)
+        self.assertEqual(re_mpe.refer_entry.tid, mpe.refer_entry.tid)
+        self.assertEqual(re_mpe.tid, mpe.tid)
 
 
 class EntryDataStructure(unittest.TestCase):
@@ -177,7 +196,16 @@ class EntryDataStructure(unittest.TestCase):
         # Make sure we can get the entry of correct type and data.
         self.assertIsInstance(entry_with_attr.att_entry, ExampleEntry)
         self.assertEqual(entry_with_attr.att_entry.secret_number, 27)
-        self.assertIsInstance(entry_with_attr.__dict__["att_entry"], Pointer)
+        self.assertIsInstance(
+            entry_with_attr.__dict__["att_entry"], ExampleEntry
+        )
+
+        # Make sure the recovered entry is also correct.
+        pack_str = self.pack.to_string(True)
+        recovered = self.pack.from_string(pack_str)
+        self.assertEqual(
+            recovered.get_single(EntryAsAttribute), entry_with_attr
+        )
 
     def test_entry_list(self):
         list_entry: EntryWithList = self.pack.get_single(EntryWithList)
@@ -191,17 +219,80 @@ class EntryDataStructure(unittest.TestCase):
         for v in list_entry.entries.__dict__["_FList__data"]:
             self.assertIsInstance(v, Pointer)
 
+        # Make sure the recovered entry is also correct.
+        pack_str = self.pack.to_string(True)
+        recovered = self.pack.from_string(pack_str)
+
+        origin_list = list_entry.entries
+        recovered_list = recovered.get_single(EntryWithList).entries
+
+        self.assertEqual(origin_list, recovered_list)
+
+        self.assertEqual(recovered.get_single(EntryWithList), list_entry)
+
     def test_entry_dict(self):
-        dict_entry: EntryWithDict = self.pack.get_single(EntryWithDict)
+        first_dict_entry: EntryWithDict = self.pack.get_single(EntryWithDict)
 
         # Make sure the dict data types are correct.
-        for e in dict_entry.entries.values():
+        for e in first_dict_entry.entries.values():
             self.assertTrue(isinstance(e, ExampleEntry))
-        self.assertEqual(len(dict_entry.entries), 10)
+        self.assertEqual(len(first_dict_entry.entries), 10)
 
         # Make sure we stored index (pointers) instead of raw data in dict.
-        for v in dict_entry.entries.__dict__["_FDict__data"].values():
+        for v in first_dict_entry.entries.__dict__["_FDict__data"].values():
             self.assertTrue(isinstance(v, Pointer))
+
+        # Make sure the recovered entry is also correct.
+        pack_str = self.pack.to_string(True)
+        recovered = DataPack.from_string(pack_str)
+
+        recovered_first = recovered.get_single(EntryWithDict)
+
+        self.assertTrue("10" in recovered_first.entries)
+
+        self.assertEqual(recovered_first, first_dict_entry)
+
+        self.assertEqual(recovered_first.entries, first_dict_entry.entries)
+
+    def test_entry_key_memories(self):
+        pack = (
+            Pipeline[MultiPack]()
+            .set_reader(EmptyReader())
+            .add(ChildEntryAnnotator())
+            .initialize()
+            .process(["pack1", "pack2"])
+        )
+
+        DataPack.from_string(pack.to_string(True))
+
+        from forte.data.ontology import core
+
+        self.assertTrue(
+            core._f_struct_keys[
+                "entry_data_structures_test.EntryWithDict_entries"
+            ]
+        )
+        self.assertNotIn(
+            "entry_data_structures_test.EntryWithDict_another_dict_entry",
+            core._f_struct_keys,
+        )
+        self.assertNotIn(
+            "entry_data_structures_test.EntryWithDict_pointer_entry",
+            core._pointer_keys,
+        )
+
+        self.assertTrue(
+            core._f_struct_keys[
+                "entry_data_structures_test."
+                "EntryWithDictAndPointer_another_dict_entry"
+            ]
+        )
+        self.assertTrue(
+            core._pointer_keys[
+                "entry_data_structures_test."
+                "EntryWithDictAndPointer_pointer_entry"
+            ]
+        )
 
 
 class NotHashingTest(unittest.TestCase):
