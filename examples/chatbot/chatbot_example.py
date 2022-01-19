@@ -124,9 +124,6 @@ def main(config: Config):
 
             input(colored("Press ENTER to continue...\n", "green"))
 
-
-import os
-
 if __name__ == "__main__":
     all_config = Config(yaml.safe_load(open("config.yml", "r")), None)
     main(all_config)
