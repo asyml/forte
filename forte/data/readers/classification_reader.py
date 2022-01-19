@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# mypy: ignore-errors
 import csv
 import importlib
 from typing import Iterator, Tuple, List
@@ -27,37 +26,32 @@ __all__ = ["ClassificationDatasetReader"]
 
 
 class ClassificationDatasetReader(PackReader):
-    r"""
-    A generic dataset reader class for classification dataset.
-    In general, it works with any classification tasks that
-    require concatenating a sequence of strings from dataset and predicting a class.
+    r"""class:`ClassificationDatasetReader` is designed to read general text classification dataset.
+
+    User must specify the mapping from input data fields to ontologies or
+    labels and it should be one-to-one correspondence. This configuration help
+    the class generate labels and initialize data fields within corresponding
+    ontologies wrappers. For example, for amazon polarity dataset,
+    https://huggingface.co/datasets/amazon_polarity, the original data fields
+    are [label, title, content]. We want to identify them as either class
+    label or specific ontologies by specifying
+    "forte_data_fields: ['label', 'ft.onto.base_ontology.Title',
+    'ft.onto.ag_news.Description']" in the configuration.
+
+    User must also specify ontologies that will be concatenate as input text
+    in a list. The number of input ontologies and the order of concatenation
+    can be customized in the list. For example, if we only want titles and
+    descriptions in our input text, we specify "input_ontologies":
+    ['ft.onto.base_ontology.Title', 'ftx.onto.ag_news.Description']" in the
+    configuration. We can also only include descriptions by specifying
+    "input_ontologies":['ftx.onto.ag_news.Description']" which is very
+    flexible in customizing input text.
 
 
-    The user must specify the index2label mapping, data fields and subtext fields
-    and other parameters in configs based on their tasks in order to initialize
-    the dataset reader properly.
-    Index2label mapping is a dictionary with indices as keys and string labels as values,
-    it helps encoding and decoding string labels.
-    Data fields is a list of ontology paths representing data fields in the dataset.
-    They must have the same length and align with each other.
-    Subtext fields is also a list of ontology paths that represent data fields that
-     will be concatenated into input strings in the same order as the list.
-    User can select an arbitrary sequence of subtexts to concatenate
-     as long as there is at least one subtext in the sequence.
-     The number and the order of subtexts can be customized depending on the use cases.
+    User must also specify the mapping from zero-based indices to classes.
+    For example, `index2class: {0: negative, 1: positive}` for polarity
+    sentiment classification. 
 
-
-
-    The first line of dataset usually specifies column names of data fields,
-    and the user needs to write a list of data ontology paths.
-    For example, in Amazon review sentiment dataset, the first line specifies [content, label,
-     title].
-    By checking the actual data, except for label, we must find their corresponding ontology names
-    and its relative path in the given or customized ontology.
-    Here we define data_fields = ["label", "ft.onto.base_ontology.Title",
-     "ft.onto.ag_news.Description"]
-    And we want both Title and Description to be included in input string, so we define
-    subtext fields = [ "ft.onto.base_ontology.Title",  "ft.onto.ag_news.Description"].
     To see a full example, please refer to
     https://github.com/asyml/forte/examples/classification
     """
@@ -82,22 +76,22 @@ class ClassificationDatasetReader(PackReader):
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
         self.set_up()
-        if "label" not in self.configs.data_fields:
+        if "label" not in self.configs.forte_data_fields:
             raise ProcessorConfigError(
                 "There must be data field named 'label' in reader config."
             )
 
-        if not self.configs.subtext_fields:
+        if not self.configs.input_ontologies:
             raise ProcessorConfigError(
-                "There must be at least one subtext field "
+                "There must be at least one ontology field "
                 + "to reader to select from."
             )
 
-        if not set(self.configs.subtext_fields).issubset(
-            set(self.configs.data_fields)
+        if not set(self.configs.input_ontologies).issubset(
+            set(self.configs.forte_data_fields)
         ):
             raise ProcessorConfigError(
-                "subtext fields must be a subset of data fields"
+                "ontology fields must be a subset of data fields"
             )
 
     def _collect(self, csv_file: str) -> Iterator[Tuple[int, str]]:
@@ -118,41 +112,36 @@ class ClassificationDatasetReader(PackReader):
         # content label title
         pack = DataPack()
 
-        # subtext fields must follow the ontology names
-        data_fields = self.configs.data_fields
-
-        if len(self.configs.data_fields) != len(line):
+        if len(self.configs.forte_data_fields) != len(line):
             raise ProcessorConfigError(
                 "Data fields provided in config "
                 "is not aligned with the actual line info from dataset.\n"
-                "Data fields length: "
-                + str(len(self.configs.data_fields))
-                + "\n",
-                "Line length: " + str(len(line)),
+                f"Data fields length: {len(self.configs.forte_data_fields)} \n"
+                f"Line length: {len(line)}"
             )
 
         df_dict = OrderedDict()
-        for df, value in zip(data_fields, line):
-            df_dict[
-                df
-            ] = value  # in general, value can be subtext or other types of data
+        for df, value in zip(self.configs.forte_data_fields, line):
+            if df is not None:
+                df_dict[
+                    df
+                ] = value  # in general, value can be ontology or other types of data
 
         # it determines the order of concatenation
-        subtext_fields = self.configs.subtext_fields
+        input_ontologies = self.configs.input_ontologies
 
-        # get text and subtext indices
-        text, subtext_indices = generate_text_n_subtext_indices(
-            subtext_fields, df_dict
+        # get text and ontology indices
+        text, ontology_indices = generate_text_n_ontology_indices(
+            input_ontologies, df_dict
         )
         self.set_text(pack, text)
         if df_dict["label"].isdigit() != self.configs.digit_label:
+            dataset_digit_label = df_dict["label"].isdigit()
             raise ProcessorConfigError(
                 "Label format from dataset "
                 "is not consistent with the label format from configs. \n"
-                + "dataset digit label status: "
-                + str(df_dict["label"].isdigit())
-                + "\n"
-                "config digit label status: " + str(self.configs.digit_label)
+                f"dataset digit label: {dataset_digit_label}"
+                f"config digit label: {self.configs.digit_label}",
             )
 
         if self.configs.digit_label:
@@ -164,15 +153,15 @@ class ClassificationDatasetReader(PackReader):
         else:
             # decode string label from dataset into digit label
             class_id = self._class2index[df_dict["label"]]
-        # initialize all subtexts instances as data pack module
+        # initialize all ontologies instances as data pack module
         # to add corresponding variables and functions
-        for subtext_field, (start_idx, end_idx) in subtext_indices.items():
-            path_str, module_str = subtext_field.rsplit(".", 1)
+        for ontology_field, (start_idx, end_idx) in ontology_indices.items():
+            path_str, module_str = ontology_field.rsplit(".", 1)
             mod = importlib.import_module(path_str)  # sentence ontology module
             entry_class = getattr(mod, module_str)
             entry_class(pack, start_idx, end_idx)
         # for now, we use document to store concatenated text and set the class here
-        doc = Document(pack, 0, subtext_indices[subtext_fields[-1]][1])
+        doc = Document(pack, 0, ontology_indices[input_ontologies[-1]][1])
         doc.document_class = [self.configs.index2class[class_id]]
 
         pack.pack_name = line_id
@@ -180,60 +169,56 @@ class ClassificationDatasetReader(PackReader):
 
     @classmethod
     def default_configs(cls):
-        r""" "This defines a basic configuration structure for classification dataset reader.
+        r""" This defines a basic configuration structure for classification dataset reader.
 
         Here:
-            - data_fields: these fields provides one-to-one correspondence
-                between given dataset fields and ontology paths.
+            - forte_data_fields: these fields provides one-to-one correspondence
+                between given original dataset data fields and 
+                labels/ontologies. For data fields without usage, user can
+                specify None for them.
             - index2class: mapping from indices to classes
-            - subtext_fields: ordered subtext fields that the user want to
-                concatenate into an input text in the same order
-            - digit_label:  specify whether label in dataset is digit
-            - text_label: specify whether label in dataset is text
+            - input_ontologies: ordered input ontologies that the user want to
+                concatenate into an input text.
+            - digit_label:  specify whether label in dataset is digit.
             - one_based_index_label: if dataset provides digit label,
                 check if it's one-based index, if so set it to True.
             - skip_first_line: many datasets' first line are columns names,
                 set this config to True if it's the case.
         """
-        config: dict = super().default_configs()
-        config.update(
-            {
-                "data_fields": [
+        return {
+                "forte_data_fields": [
                     "label",
                     "ft.onto.base_ontology.Title",
                     "ftx.onto.ag_news.Description",
                 ],
                 "index2class": None,
-                "subtext_fields": [
+                "input_ontologies": [
                     "ft.onto.base_ontology.Title",
                     "ftx.onto.ag_news.Description",
                 ],
                 "digit_label": True,
-                "text_label": False,
                 "one_based_index_label": True,
                 "skip_first_line": True,
             }
-        )
-        return config
 
 
-def generate_text_n_subtext_indices(subtext_fields, data_fields_dict):
+def generate_text_n_ontology_indices(input_ontologies, forte_data_fields_dict):
     """
-    Retrieve subtexts from data fields and concatenate them into text.
-    Also, we generate the indices for these subtexts accordingly.
+    Retrieve ontologies from data fields and concatenate them into text.
+    Also, we generate the indices for these ontologies accordingly.
 
     Args:
-        subtext_fields: a list of ontology that needs to be concatenated into a input string
-        data_fields_dict: a dictionary with subtext names as key and subtext string as value.
+        input_ontologies: a list of ontology that needs to be concatenated into a input string
+        forte_data_fields_dict: a dictionary with ontology names as key and ontology string as value.
     """
     end = -1
     text = ""
-    indices = {}  # a dictionary of (subtext_name: (start_index, end_index) )
-    for i, sub_text_field in enumerate(subtext_fields):
+    indices = {}  # a dictionary of (ontology_name: (start_index, end_index) )
+    for i, sub_text_field in enumerate(input_ontologies):
         if not i:
             text += "\n"
-        text += data_fields_dict[sub_text_field]
+        text += forte_data_fields_dict[sub_text_field]
         start = end + 1
         end = len(text)
-        indices[subtext_fields[i]] = (start, end)
+        indices[input_ontologies[i]] = (start, end)
     return text, indices

@@ -95,27 +95,25 @@ index2class = dict(enumerate(class_names))
 
 # initialize reader config
 this_reader_config = {
-    "data_fields": [
+    "forte_data_fields": [
         "ft.onto.ag_news.Description",
         "label",
     ],  # data fields aligned with columns in dataset
     "index2class": index2class,
-    "subtext_fields": [
+    "input_ontologies": [
         "ft.onto.ag_news.Description"
-    ],  # select subtexts to concatenate into text
+    ],  # select ontologys to concatenate into text
     "digit_label": False,  # specify whether label in dataset is digit
     "text_label": True,  # either digit label or text label
     "one_based_index_label": False,  # if it's digit label,
     # whether it's one-based so that reader can adjust it
 }
-# initialize model config
-model_config = {"candidate_labels": class_names}
 
 pl.set_reader(ClassificationDatasetReader(), config=this_reader_config)
 
 pl.add(NLTKSentenceSegmenter())
 pl.add(NLTKWordTokenizer())
-pl.add(ZeroShotClassifier(), config=model_config)
+pl.add(ZeroShotClassifier(), config={"candidate_labels": class_names})
 pl.initialize()
 
 for pack in pl.process_dataset(csv_path):

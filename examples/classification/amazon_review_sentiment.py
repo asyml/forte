@@ -4,28 +4,29 @@ from forte.data.readers import ClassificationDatasetReader
 from fortex.huggingface import ZeroShotClassifier
 from forte.pipeline import Pipeline
 from forte.common.configuration import Config
-from forte.nltk import NLTKWordTokenizer, NLTKSentenceSegmenter
+from fortex.nltk import NLTKWordTokenizer, NLTKSentenceSegmenter
 from ft.onto.base_ontology import Sentence
 
 
 csv_path = "path_to_dataset/amazon_review_polarity_csv/test.csv"
-
+csv_path = "/Users/pengfeihe/Downloads/amazon_review_polarity_csv/test.csv"
 pl = Pipeline()
 
 # initialize labels
 class_names = ["negative", "positive"]
 index2class = dict(enumerate(class_names))
 
-# initialize reader config
-this_read_config = {"index2class": index2class}
-
-# initialize model config
-model_config = {"candidate_labels": class_names}
-
-pl.set_reader(ClassificationDatasetReader(), config=this_read_config)
+pl.set_reader(ClassificationDatasetReader(),
+              config={
+                  "forte_data_fields": [
+                    "label", None, "ftx.onto.ag_news.Description"],
+                  "index2class": index2class,
+                  "input_ontologies": ["ftx.onto.ag_news.Description"]
+                  })
 pl.add(NLTKSentenceSegmenter())
 pl.add(NLTKWordTokenizer())
-pl.add(ZeroShotClassifier(), config=model_config)
+pl.add(ZeroShotClassifier(),
+       config= {"candidate_labels": class_names})
 pl.initialize()
 
 
