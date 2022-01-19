@@ -48,6 +48,7 @@ __all__ = [
     "MpPointer",
     "FDict",
     "FList",
+    "FNdArray",
     "MultiEntry",
 ]
 
