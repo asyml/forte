@@ -14,7 +14,6 @@ pl = Pipeline()
 # initialize labels
 class_names = ["negative", "positive"]
 index2class = dict(enumerate(class_names))
-
 pl.set_reader(ClassificationDatasetReader(),
               config={"index2class": index2class})
 pl.add(NLTKSentenceSegmenter())

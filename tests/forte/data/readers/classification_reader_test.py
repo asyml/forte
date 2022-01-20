@@ -64,7 +64,7 @@ class ClassificationDatasetReaderTest(unittest.TestCase):
     def test_classification_dataset_reader(self):
         self.pipeline.set_reader(ClassificationDatasetReader(),
                                  config={"index2class": self.index2class1,
-                                         "skip_first_line": False})
+                                         "skip_k_starting_lines": 0})
         self.pipeline.add(NLTKSentenceSegmenter())
         self.pipeline.add(NLTKWordTokenizer())
         self.pipeline.add(ZeroShotClassifier(),
