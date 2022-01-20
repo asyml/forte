@@ -14,7 +14,6 @@
 import csv
 import importlib
 from typing import Iterator, Tuple, List
-from collections import OrderedDict
 from forte.common import Resources, ProcessorConfigError
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
@@ -41,7 +40,7 @@ class ClassificationDatasetReader(PackReader):
     'ft.onto.ag_news.Description']" in the configuration.
 
     User must also specify `input_ontologies` that will be concatenate as
-    input text in a list. 
+    input text in a list.
     The number of input ontologies and the order of concatenation
     can be customized in the list. For example, if we only want titles and
     descriptions in our input text, we specify "input_ontologies":
@@ -198,8 +197,10 @@ class ClassificationDatasetReader(PackReader):
             - one_based_index_label: boolean value that specifies if dataset
                 provides one-based digit label.
                 True for one-based index, false otherwise.
-            - skip_k_starting_lines: many datasets' first line are columns names, set it to 1 if it's the case. Otherwise set to 0.
-                User can also set it to other integers to skip multiple lines.
+            - skip_k_starting_lines: many datasets' first line are columns
+                names, set it to 1 if it's the case. Otherwise set to 0.
+                User can also set it to other positive integers to skip
+                multiple lines.
         """
         return {
             "forte_data_fields": [
