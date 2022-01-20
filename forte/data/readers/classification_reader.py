@@ -170,7 +170,7 @@ class ClassificationDatasetReader(PackReader):
 
     @classmethod
     def default_configs(cls):
-        r""" This defines a basic configuration structure for classification dataset reader.
+        r"""This defines a basic configuration structure for classification dataset reader.
 
         Here:
             - forte_data_fields: these fields provides one-to-one
