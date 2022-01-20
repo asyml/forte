@@ -51,13 +51,6 @@ class ClassificationDatasetReaderTest(unittest.TestCase):
             1: "negative",
             2: "positive",
         }
-    def set_reader_wo_index2class(self):
-        self.pipeline.set_reader(ClassificationDatasetReader())
-    
-    def test_exceptions(self):
-        self.assertRaises(ProcessorConfigError,
-                          self.set_reader_wo_index2class())
-        
 
     def test_classification_dataset_reader(self):
         self.pipeline.set_reader(ClassificationDatasetReader(),
