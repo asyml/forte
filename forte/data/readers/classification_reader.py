@@ -26,7 +26,8 @@ __all__ = ["ClassificationDatasetReader"]
 
 
 class ClassificationDatasetReader(PackReader):
-    r"""class:`ClassificationDatasetReader` is designed to read general text classification dataset.
+    r"""class:`ClassificationDatasetReader` is designed to read text
+    classification dataset that contains input text and digit/text labels.
 
     User must specify the mapping from input data fields to ontologies or
     labels and it should be one-to-one correspondence. This configuration help
@@ -50,7 +51,7 @@ class ClassificationDatasetReader(PackReader):
 
     User must also specify the mapping from zero-based indices to classes.
     For example, `index2class: {0: negative, 1: positive}` for polarity
-    sentiment classification. 
+    sentiment classifications.
 
     To see a full example, please refer to
     https://github.com/asyml/forte/examples/classification
@@ -63,8 +64,8 @@ class ClassificationDatasetReader(PackReader):
 
     def set_up(self):
         assert self.configs.index2class is not None, (
-            "User must set _index2class to enable"
-            " the dataset reader to encode labels correctly"
+            "User must set index2class to enable"
+            " the dataset reader to encode labels correctly."
         )
 
         # class and index
@@ -172,16 +173,18 @@ class ClassificationDatasetReader(PackReader):
         r""" This defines a basic configuration structure for classification dataset reader.
 
         Here:
-            - forte_data_fields: these fields provides one-to-one correspondence
-                between given original dataset data fields and 
-                labels/ontologies. For data fields without usage, user can
-                specify None for them.
-            - index2class: mapping from indices to classes
-            - input_ontologies: ordered input ontologies that the user want to
-                concatenate into an input text.
-            - digit_label:  specify whether label in dataset is digit.
-            - one_based_index_label: if dataset provides digit label,
-                check if it's one-based index, if so set it to True.
+            - forte_data_fields: these fields provides one-to-one
+            correspondence between given original dataset data fields and
+            labels/ontologies. For data fields without usage, user can
+            specify None for them.
+            - index2class: a dictionary that maps from zero-based indices to
+                classes
+            - input_ontologies: a list of ordered input ontologies that
+                user want to concatenate into an input text.
+            - digit_label:  boolean value that specifies whether label in dataset is digit.
+            - one_based_index_label: boolean value that specifies if dataset
+                provides one-based digit label.
+                True for one-based index, false otherwise.
             - skip_first_line: many datasets' first line are columns names,
                 set this config to True if it's the case.
         """
@@ -208,8 +211,9 @@ def generate_text_n_ontology_indices(input_ontologies, forte_data_fields_dict):
     Also, we generate the indices for these ontologies accordingly.
 
     Args:
-        input_ontologies: a list of ontology that needs to be concatenated into a input string
-        forte_data_fields_dict: a dictionary with ontology names as key and ontology string as value.
+        input_ontologies: a list of ontology that needs to be concatenated into a input string.
+        forte_data_fields_dict: a dictionary with ontology names as key and
+            ontology string as value.
     """
     end = -1
     text = ""
