@@ -20,11 +20,14 @@ from typing import Dict
 from numpy import array_equal
 
 from forte.pipeline import Pipeline
+from forte.common.exception import ProcessExecutionException
 from forte.processors.base.pack_processor import PackProcessor
 from forte.data.data_pack import DataPack
 from forte.data.readers import AudioReader
-from forte.data.ontology.top import AudioAnnotation, Group, Link
-from ft.onto.base_ontology import Recording, AudioUtterance
+from forte.data.ontology.top import (
+    Annotation, AudioAnnotation, Generics, Group, Link
+)
+from ft.onto.base_ontology import Recording, AudioUtterance, Utterance
 
 
 class RecordingProcessor(PackProcessor):
@@ -35,6 +38,36 @@ class RecordingProcessor(PackProcessor):
         Recording(
             pack=input_pack, begin=0, end=len(input_pack.audio)
         )
+
+
+class DummyGroup(Group):
+    """
+    A dummpy `Group` ontology that sets the type of members to
+    `AudioAnnotation`.
+    """
+
+    MemberType = AudioAnnotation
+
+
+class DummyLink(Link):
+    """
+    A dummpy `Link` ontology that sets the type of parent and child to
+    `AudioAnnotation`.
+    """
+
+    ParentType = AudioAnnotation
+    ChildType = AudioAnnotation
+
+
+class TextUtteranceProcessor(PackProcessor):
+    """
+    A processor that sets a random text and adds an `Utterance`
+    annotation to input datapack.
+    """
+
+    def _process(self, input_pack: DataPack):
+        input_pack.set_text("test text")
+        Utterance(pack=input_pack, begin=0, end=len(input_pack.text))
 
 
 class AudioUtteranceProcessor(PackProcessor):
@@ -50,9 +83,12 @@ class AudioUtteranceProcessor(PackProcessor):
         )
         audio_utter.speaker = self.configs.speaker
 
+        # Create a series of annotations for test case
         recording: Recording = input_pack.get_single(Recording)
         Group(pack=input_pack, members=(audio_utter, recording))
         Link(pack=input_pack, parent=recording, child=audio_utter)
+        DummyGroup(pack=input_pack, members=(audio_utter, recording))
+        DummyLink(pack=input_pack, parent=recording, child=audio_utter)
 
     @classmethod
     def default_configs(cls) -> Dict:
@@ -90,9 +126,16 @@ class AudioAnnotationTest(unittest.TestCase):
             self._pipeline.add(
                 AudioUtteranceProcessor(), config={"speaker": speaker, **span}
             )
+        self._pipeline.add(TextUtteranceProcessor())
         self._pipeline.initialize()
 
     def test_audio_annotation(self):
+
+        # Test `DataPack.get_span_audio()` with None audio payload
+        with self.assertRaises(ProcessExecutionException):
+            pack: DataPack = DataPack()
+            pack.set_text("test text")
+            pack.get_span_audio(begin=0, end=1)
 
         # Verify the annotations of each datapack
         for pack in self._pipeline.process_dataset(self._test_audio_path):
@@ -123,12 +166,31 @@ class AudioAnnotationTest(unittest.TestCase):
                         pack.audio[configs["begin"]:configs["end"]]
                     ))
 
-            # Check `AudioAnnotation.get(Group/Link)`
+            # Check `AudioAnnotation.get(Group/Link/Generics)`. Note that only
+            # `DummyGroup` and `DummyLink` entries can be retrieved because
+            # they have the correct type of MemberType/ParentType/ChildType.
             for entry_type in (Group, Link):
                 self.assertEqual(
                     len(list(recordings[0].get(entry_type))),
                     len(self._test_configs)
                 )
+            self.assertEqual(len(list(recordings[0].get(Generics))), 0)
+
+            # Check operations with mixing types of entries.
+            self.assertEqual(len(list(pack.get(Utterance))), 1)
+            utter: Utterance = pack.get_single(Utterance)
+            self.assertEqual(len(list(utter.get(AudioAnnotation))), 0)
+            self.assertEqual(len(list(recordings[0].get(Utterance))), 0)
+
+            # Verify the new conditional branches in DataPack.get() when dealing
+            # with empty annotation/audio_annotation list.
+            empty_pack: DataPack = DataPack()
+            self.assertEqual(len(list(empty_pack.get(
+                entry_type=Annotation, range_annotation=utter
+            ))), 0)
+            self.assertEqual(len(list(empty_pack.get(
+                entry_type=AudioAnnotation, range_annotation=recordings[0]
+            ))), 0)
 
             # Check `DataPack.delete_entry(AudioAnnotation)`
             for audio_annotation in list(pack.get(AudioAnnotation)):

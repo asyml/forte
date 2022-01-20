@@ -1669,6 +1669,12 @@ class DataIndex(BaseIndex):
             inner_begin = inner_entry.begin
             inner_end = inner_entry.end
         elif isinstance(inner_entry, Link):
+            if not (
+                issubclass(inner_entry.ParentType, AudioAnnotation)
+                and issubclass(inner_entry.ChildType, AudioAnnotation)
+            ):
+                return False
+
             child = inner_entry.get_child()
             parent = inner_entry.get_parent()
 
@@ -1684,6 +1690,9 @@ class DataIndex(BaseIndex):
             inner_begin = min(child_.begin, parent_.begin)
             inner_end = max(child_.end, parent_.end)
         elif isinstance(inner_entry, Group):
+            if not issubclass(inner_entry.MemberType, AudioAnnotation):
+                return False
+
             for mem in inner_entry.get_members():
                 mem_: AudioAnnotation = mem  # type: ignore
                 if inner_begin == -1:
