@@ -46,6 +46,7 @@ from forte.data.ontology.top import (
     Group,
     SinglePackEntries,
     Generics,
+    AudioAnnotation,
 )
 from forte.data.span import Span
 from forte.data.types import ReplaceOperationsType, DataRequest
@@ -166,6 +167,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         self.links: SortedList[Link] = SortedList()
         self.groups: SortedList[Group] = SortedList()
         self.generics: SortedList[Generics] = SortedList()
+        self.audio_annotations: SortedList[AudioAnnotation] = SortedList()
 
         self.__replace_back_operations: ReplaceOperationsType = []
         self.__processed_original_spans: List[Tuple[Span, Span]] = []
@@ -185,6 +187,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         state["links"] = list(state["links"])
         state["groups"] = list(state["groups"])
         state["generics"] = list(state["generics"])
+        state["audio_annotations"] = list(state["audio_annotations"])
         return state
 
     def __setstate__(self, state):
@@ -213,11 +216,19 @@ class DataPack(BasePack[Entry, Link, Group]):
         self.groups = as_sorted_error_check(self.groups)
         self.generics = as_sorted_error_check(self.generics)
 
+        # Add `hasattr` checking here for backward compatibility
+        self.audio_annotations = (
+            as_sorted_error_check(self.audio_annotations)
+            if hasattr(self, "audio_annotations")
+            else SortedList()
+        )
+
         self._index = DataIndex()
         self._index.update_basic_index(list(self.annotations))
         self._index.update_basic_index(list(self.links))
         self._index.update_basic_index(list(self.groups))
         self._index.update_basic_index(list(self.generics))
+        self._index.update_basic_index(list(self.audio_annotations))
 
         for a in self.annotations:
             a.set_pack(self)
@@ -231,11 +242,15 @@ class DataPack(BasePack[Entry, Link, Group]):
         for a in self.generics:
             a.set_pack(self)
 
+        for a in self.audio_annotations:
+            a.set_pack(self)
+
     def __iter__(self):
         yield from self.annotations
         yield from self.links
         yield from self.groups
         yield from self.generics
+        yield from self.audio_annotations
 
     def _init_meta(self, pack_name: Optional[str] = None) -> Meta:
         return Meta(pack_name)
@@ -341,6 +356,27 @@ class DataPack(BasePack[Entry, Link, Group]):
         """
         return len(self.generics)
 
+    @property
+    def all_audio_annotations(self) -> Iterator[AudioAnnotation]:
+        """
+        An iterator of all audio annotations in this data pack.
+
+        Returns: Iterator of all audio annotations, of
+        type :class:`~forte.data.ontology.top.AudioAnnotation`.
+
+        """
+        yield from self.audio_annotations
+
+    @property
+    def num_audio_annotations(self):
+        """
+        Number of audio annotations in this data pack.
+
+        Returns: Number of audio annotations.
+
+        """
+        return len(self.audio_annotations)
+
     def get_span_text(self, begin: int, end: int) -> str:
         r"""Get the text in the data pack contained in the span.
 
@@ -352,6 +388,26 @@ class DataPack(BasePack[Entry, Link, Group]):
             The text within this span.
         """
         return self._text[begin:end]
+
+    def get_span_audio(self, begin: int, end: int) -> str:
+        r"""Get the audio in the data pack contained in the span.
+        `begin` and `end` represent the starting and ending indices of the span
+        in audio payload respectively. Each index corresponds to one sample in
+        audio time series.
+
+        Args:
+            begin (int): begin index to query.
+            end (int): end index to query.
+
+        Returns:
+            The audio within this span.
+        """
+        if self._audio is None:
+            raise ProcessExecutionException(
+                "The audio payload of this DataPack is not set. Please call"
+                " method `set_audio` before running `get_span_audio`."
+            )
+        return self._audio[begin:end]
 
     def set_text(
         self,
@@ -619,10 +675,13 @@ class DataPack(BasePack[Entry, Link, Group]):
             target = self.groups
         elif isinstance(entry, Generics):
             target = self.generics
+        elif isinstance(entry, AudioAnnotation):
+            target = self.audio_annotations
         else:
             raise ValueError(
                 f"Invalid entry type {type(entry)}. A valid entry "
-                f"should be an instance of Annotation, Link, Group of Generics."
+                f"should be an instance of Annotation, Link, Group, Generics "
+                "or AudioAnnotation."
             )
 
         if not allow_duplicate:
@@ -664,6 +723,8 @@ class DataPack(BasePack[Entry, Link, Group]):
             target = self.groups
         elif isinstance(entry, Generics):
             target = self.generics
+        elif isinstance(entry, AudioAnnotation):
+            target = self.audio_annotations
         else:
             raise ValueError(
                 f"Invalid entry type {type(entry)}. A valid entry "
@@ -779,6 +840,9 @@ class DataPack(BasePack[Entry, Link, Group]):
         link_types: Dict[Type[Link], Union[Dict, List]] = {}
         group_types: Dict[Type[Group], Union[Dict, List]] = {}
         generics_types: Dict[Type[Generics], Union[Dict, List]] = {}
+        audio_annotation_types: Dict[
+            Type[AudioAnnotation], Union[Dict, List]
+        ] = {}
 
         if request is not None:
             for key_, value in request.items():
@@ -791,6 +855,8 @@ class DataPack(BasePack[Entry, Link, Group]):
                     group_types[key] = value
                 elif issubclass(key, Generics):
                     generics_types[key] = value
+                elif issubclass(key, AudioAnnotation):
+                    audio_annotation_types[key] = value
 
         context_args = annotation_types.get(context_type_)
 
@@ -863,6 +929,12 @@ class DataPack(BasePack[Entry, Link, Group]):
             if generics_types:
                 raise NotImplementedError(
                     "Querying generic types based on ranges is "
+                    "currently not supported."
+                )
+
+            if audio_annotation_types:
+                raise NotImplementedError(
+                    "Querying audio annotation types based on ranges is "
                     "currently not supported."
                 )
 
@@ -1131,7 +1203,7 @@ class DataPack(BasePack[Entry, Link, Group]):
     def get(  # type: ignore
         self,
         entry_type: Union[str, Type[EntryType]],
-        range_annotation: Optional[Annotation] = None,
+        range_annotation: Optional[Union[Annotation, AudioAnnotation]] = None,
         components: Optional[Union[str, Iterable[str]]] = None,
         include_sub_type=True,
     ) -> Iterable[EntryType]:
@@ -1147,10 +1219,11 @@ class DataPack(BasePack[Entry, Link, Group]):
         default behavior).
 
         The `range_annotation` controls the search area of the sub-types. An
-        entry `E` will be returned if :meth:`in_span(E, range_annotation`
-        returns True. If this function is called frequently with queries
-        related to the `range_annotation`, please consider to build the coverage
-        index regarding the related entry types.
+        entry `E` will be returned if :meth:`in_span(E, range_annotation:
+        Annotation)` or :meth:`in_audio_span(E, range_annotation:
+        AudioAnnotation)` returns True. If this function is called frequently
+        with queries related to the `range_annotation`, please consider to build
+        the coverage index regarding the related entry types.
 
         The `components` list will filter the results by the `component` (i.e
         the creator of the entry). If `components` is provided, only the entries
@@ -1176,9 +1249,9 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         Args:
             entry_type (type): The type of entries requested.
-            range_annotation (Annotation, optional): The range of entries
-                requested. If `None`, will return valid entries in the range of
-                whole data pack.
+            range_annotation (Annotation, `AudioAnnotation`, optional): The
+                range of entries requested. If `None`, will return valid entries
+                in the range of whole data pack.
             components (str or list, optional): The component (creator)
                 generating the entries requested. If `None`, will return valid
                 entries generated by any component.
@@ -1191,23 +1264,50 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         entry_type_: Type[EntryType] = as_entry_type(entry_type)
 
-        def require_annotations() -> bool:
-            if issubclass(entry_type_, Annotation):
+        def require_annotations(entry_class=Annotation) -> bool:
+            if issubclass(entry_type_, entry_class):
                 return True
             if issubclass(entry_type_, Link):
                 return issubclass(
-                    entry_type_.ParentType, Annotation
-                ) and issubclass(entry_type_.ChildType, Annotation)
+                    entry_type_.ParentType, entry_class
+                ) and issubclass(entry_type_.ChildType, entry_class)
             if issubclass(entry_type_, Group):
-                return issubclass(entry_type_.MemberType, Annotation)
+                return issubclass(entry_type_.MemberType, entry_class)
             return False
 
         # If we don't have any annotations but the items to check requires them,
         # then we simply yield from an empty list.
-        if len(self.annotations) == 0 and range_annotation is not None:
-            if require_annotations():
-                yield from []
-                return
+        if (
+            len(self.annotations) == 0
+            and isinstance(range_annotation, Annotation)
+            and require_annotations(Annotation)
+        ) or (
+            len(self.audio_annotations) == 0
+            and isinstance(range_annotation, AudioAnnotation)
+            and require_annotations(AudioAnnotation)
+        ):
+            yield from []
+            return
+
+        # If the `entry_type` and `range_annotation` are for different types of
+        # payload, then we yield from an empty list with a warning.
+        if (
+            require_annotations(Annotation)
+            and isinstance(range_annotation, AudioAnnotation)
+        ) or (
+            require_annotations(AudioAnnotation)
+            and isinstance(range_annotation, Annotation)
+        ):
+            logger.warning(
+                "Incompatible combination of `entry_type` and "
+                "`range_annotation` found in the input of `DataPack.get()`"
+                " method. An empty iterator will be returned when inputs "
+                "contain multi-media entries. Please double check the input "
+                "arguments and make sure they are associated with the same type"
+                " of payload (i.e., either text or audio)."
+            )
+            yield from []
+            return
 
         # Valid entry ids based on type.
         all_types: Set[Type]
@@ -1219,19 +1319,36 @@ class DataPack(BasePack[Entry, Link, Group]):
         entry_iter: Iterator[Entry]
         if issubclass(entry_type_, Generics):
             entry_iter = self.generics
-        elif range_annotation is not None:
+        elif isinstance(range_annotation, Annotation):
             if (
                 issubclass(entry_type_, Annotation)
                 or issubclass(entry_type_, Link)
                 or issubclass(entry_type_, Group)
             ):
                 entry_iter = self.iter_in_range(entry_type_, range_annotation)
+        elif isinstance(range_annotation, AudioAnnotation):
+            for entry_class, entry_list in (
+                (Link, self.links),
+                (Group, self.groups),
+                (AudioAnnotation, self.audio_annotations),
+            ):
+                if issubclass(entry_type_, entry_class):
+                    entry_iter = (
+                        entry
+                        for entry in entry_list
+                        if self._index.in_audio_span(
+                            entry, range_annotation.span
+                        )
+                    )
+                    break
         elif issubclass(entry_type_, Annotation):
             entry_iter = self.annotations
         elif issubclass(entry_type_, Link):
             entry_iter = self.links
         elif issubclass(entry_type_, Group):
             entry_iter = self.groups
+        elif issubclass(entry_type_, AudioAnnotation):
+            entry_iter = self.audio_annotations
         else:
             raise ValueError(
                 f"The requested type {str(entry_type_)} is not supported."
@@ -1426,8 +1543,9 @@ class DataIndex(BaseIndex):
         r"""Check whether the ``inner entry`` is within the given ``span``. The
         criterion are as followed:
 
-        Annotation entries: they are considered in a span if the begin is not
-        smaller than `span.begin` and the end is not larger than `span.end`.
+        Annotation entries: they are considered in a span if the
+        begin is not smaller than `span.begin` and the end is not larger than
+        `span.end`.
 
         Link entries: if the parent and child of the links are both
         `Annotation` type, this link will be considered in span if both parent
@@ -1440,8 +1558,9 @@ class DataIndex(BaseIndex):
         `in_span` of the provided `span`. If the child type is not `Annotation`
         type, this function will always return `False`.
 
-        Other entries (i.e Generics): they will not be considered `in_span` of
-        any spans. The function will always return `False`.
+        Other entries (i.e Generics and `AudioAnnotation`): they will not be
+        considered `in_span` of any spans. The function will always return
+        `False`.
 
         Args:
             inner_entry (int or Entry): The inner entry object to be checked
@@ -1498,6 +1617,90 @@ class DataIndex(BaseIndex):
                 inner_begin = min(inner_begin, mem_.begin)
                 inner_end = max(inner_end, mem_.end)
         else:
-            # Generics or other user defined types will not be check here.
+            # Generics, AudioAnnotation, or other user defined types will not
+            # be check here.
+            return False
+        return inner_begin >= span.begin and inner_end <= span.end
+
+    def in_audio_span(self, inner_entry: Union[int, Entry], span: Span) -> bool:
+        r"""Check whether the ``inner entry`` is within the given audio span.
+        This method is identical to :meth:`in_span` except that it operates on
+        the audio payload of datapack. The criterion are as followed:
+
+        `AudioAnnotation` entries: they are considered in a span if the
+        begin is not smaller than `span.begin` and the end is not larger than
+        `span.end`.
+
+        Link entries: if the parent and child of the links are both
+        `AudioAnnotation` type, this link will be considered in span if both
+        parent and child are `in_span` of the provided `span`. If either the
+        parent and the child is not of type `AudioAnnotation`, this function
+        will always return `False`.
+
+        Group entries: if the child type of the group is `AudioAnnotation` type,
+        then the group will be considered in span if all the elements are
+        `in_span` of the provided `span`. If the child type is not
+        `AudioAnnotation` type, this function will always return `False`.
+
+        Other entries (i.e Generics and Annotation): they will not be considered
+        `in_span` of any spans. The function will always return `False`.
+
+        Args:
+            inner_entry (int or Entry): The inner entry object to be checked
+             whether it is within ``span``. The argument can be the entry id
+             or the entry object itself.
+            span (Span): A :class:`Span` object to be checked. We will check
+                whether the ``inner_entry`` is within this span.
+
+        Returns:
+            True if the `inner_entry` is considered to be in span of the
+            provided span.
+        """
+        # The reason of this check is that the get_data method will use numpy
+        # integers. This might create problems when other unexpected integers
+        # are used.
+        if isinstance(inner_entry, (int, np.integer)):
+            inner_entry = self._entry_index[inner_entry]
+
+        inner_begin = -1
+        inner_end = -1
+
+        if isinstance(inner_entry, AudioAnnotation):
+            inner_begin = inner_entry.begin
+            inner_end = inner_entry.end
+        elif isinstance(inner_entry, Link):
+            if not (
+                issubclass(inner_entry.ParentType, AudioAnnotation)
+                and issubclass(inner_entry.ChildType, AudioAnnotation)
+            ):
+                return False
+
+            child = inner_entry.get_child()
+            parent = inner_entry.get_parent()
+
+            if not isinstance(child, AudioAnnotation) or not isinstance(
+                parent, AudioAnnotation
+            ):
+                # Cannot check in_span for non-AudioAnnotation.
+                return False
+
+            child_: AudioAnnotation = child
+            parent_: AudioAnnotation = parent
+
+            inner_begin = min(child_.begin, parent_.begin)
+            inner_end = max(child_.end, parent_.end)
+        elif isinstance(inner_entry, Group):
+            if not issubclass(inner_entry.MemberType, AudioAnnotation):
+                return False
+
+            for mem in inner_entry.get_members():
+                mem_: AudioAnnotation = mem  # type: ignore
+                if inner_begin == -1:
+                    inner_begin = mem_.begin
+                inner_begin = min(inner_begin, mem_.begin)
+                inner_end = max(inner_end, mem_.end)
+        else:
+            # Generics, Annotation, or other user defined types will not be
+            # check here.
             return False
         return inner_begin >= span.begin and inner_end <= span.end

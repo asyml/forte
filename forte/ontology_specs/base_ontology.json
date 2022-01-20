@@ -415,6 +415,30 @@
           "item_type": "ft.onto.base_ontology.Phrase"
         }
       ]
+    },
+    {
+      "entry_name": "ft.onto.base_ontology.Recording",
+      "parent_entry": "forte.data.ontology.top.AudioAnnotation",
+      "description": "A span based annotation `Recording`, normally used to represent a recording.",
+      "attributes": [
+        {
+          "name": "recording_class",
+          "type": "List",
+          "item_type": "str",
+          "description": "A list of class names that the recording belongs to."
+        }
+      ]
+    },
+    {
+      "entry_name": "ft.onto.base_ontology.AudioUtterance",
+      "parent_entry": "forte.data.ontology.top.AudioAnnotation",
+      "description": "A span based annotation `AudioUtterance`, normally used to represent an utterance in dialogue.",
+      "attributes": [
+        {
+          "name": "speaker",
+          "type": "str"
+        }
+      ]
     }
   ]
 }
