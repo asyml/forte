@@ -189,20 +189,20 @@ class ClassificationDatasetReader(PackReader):
                 set this config to True if it's the case.
         """
         return {
-                "forte_data_fields": [
-                    "label",
-                    "ft.onto.base_ontology.Title",
-                    "ftx.onto.ag_news.Description",
-                ],
-                "index2class": None,
-                "input_ontologies": [
-                    "ft.onto.base_ontology.Title",
-                    "ftx.onto.ag_news.Description",
-                ],
-                "digit_label": True,
-                "one_based_index_label": True,
-                "skip_first_line": True,
-            }
+            "forte_data_fields": [
+                "label",
+                "ft.onto.base_ontology.Title",
+                "ftx.onto.ag_news.Description",
+            ],
+            "index2class": None,
+            "input_ontologies": [
+                "ft.onto.base_ontology.Title",
+                "ftx.onto.ag_news.Description",
+            ],
+            "digit_label": True,
+            "one_based_index_label": True,
+            "skip_first_line": True,
+        }
 
 
 def generate_text_n_ontology_indices(input_ontologies, forte_data_fields_dict):
