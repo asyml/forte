@@ -25,8 +25,6 @@ from ft.onto.base_ontology import Document, Title
 from forte.common import Resources, ProcessorConfigError
 from forte.data.readers import ClassificationDatasetReader
 from forte.data.data_pack import DataPack
-from fortex.nltk import NLTKWordTokenizer, NLTKSentenceSegmenter
-from fortex.huggingface import ZeroShotClassifier
 
 class ClassificationDatasetReaderTest(unittest.TestCase):
     def setUp(self):
@@ -65,10 +63,6 @@ class ClassificationDatasetReaderTest(unittest.TestCase):
         self.pipeline.set_reader(ClassificationDatasetReader(),
                                  config={"index2class": self.index2class1,
                                          "skip_k_starting_lines": 0})
-        self.pipeline.add(NLTKSentenceSegmenter())
-        self.pipeline.add(NLTKWordTokenizer())
-        self.pipeline.add(ZeroShotClassifier(),
-                config= {"candidate_labels": self.class_names1})
         self.pipeline.initialize()
         for data_pack in self.pipeline.process_dataset(self.sample_file1):
             (
