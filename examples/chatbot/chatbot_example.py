@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import yaml
-import sys; sys.path.insert(0, "/Users/pengfei.he/Downloads/Project/forte")
 from termcolor import colored
 import torch
 from fortex.nltk import NLTKSentenceSegmenter, NLTKWordTokenizer, NLTKPOSTagger
