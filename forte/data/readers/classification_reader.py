@@ -95,7 +95,9 @@ class ClassificationDatasetReader(PackReader):
                 "ontology fields must be a subset of data fields"
             )
 
-    def _collect(self, csv_file: str) -> Iterator[Tuple[int, List[str]]]:
+    def _collect(  # type: ignore
+        self, csv_file: str
+    ) -> Iterator[Tuple[int, List[str]]]:
         with open(csv_file, encoding="utf-8") as f:
             data = csv.reader(f, delimiter=",", quoting=csv.QUOTE_ALL)
             if self.configs.skip_first_line:
