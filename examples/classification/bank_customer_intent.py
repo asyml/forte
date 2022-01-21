@@ -98,14 +98,13 @@ this_reader_config = {
     "forte_data_fields": [
         "ftx.onto.base.Document",
         "label",
-    ],  # data fields aligned with columns in dataset
+    ],
     "index2class": index2class,
     "text_fields": [
         "ftx.onto.base.Document"
-    ],  # select ontologys to concatenate into text
-    "digit_label": False,  # specify whether label in dataset is digit
-    "one_based_index_label": False,  # if it's digit label,
-    # whether it's one-based so that reader can adjust it
+    ],
+    "digit_label": True,
+    "one_based_index_label": False,
 }
 
 pl.set_reader(ClassificationDatasetReader(), config=this_reader_config)

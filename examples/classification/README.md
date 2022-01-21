@@ -9,8 +9,19 @@ The dataset can be downloaded from [link](https://s3.amazonaws.com/fast-ai-nlp/a
 Banking77 is a multi-class datasets. It has 77 classes which are fine-grained intents in a banking domain.
 The train data can be downloaded from [link](https://raw.githubusercontent.com/PolyAI-LDN/task-specific-datasets/master/banking_data/train.csv) and test data can be downloaded from [link](https://raw.githubusercontent.com/PolyAI-LDN/task-specific-datasets/master/banking_data/test.csv).
 
+## Run classifier
+After User downloads the dataset and set the dataset path correctly in the script below,
+User can run the following command to run the classifier.
+```bash
+python amazon_review_sentiment.py
+```
 
-## Configuration
+```bash
+python bank_customer_intent.py
+```
+
+
+## Reader Configuration
 `ClassificationDatasetReader` is designed to read table-like classification datasets and currently it only support `csv` file which is a common file format. To use the reader correctly, User needs to check the dataset and configure the reader correspondingly. To better explain this, we will use ARS dataset as an example throughout the explanation.
 * User needs to check column names of the dataset. In the example dataset, we have column names [label, title, content]. First, we need know the first column is about data labels. Second, we know the second and third column can be input text. Therefore, we can set `forte_data_fields` to be `['label', 'ft.onto.base_ontology.Title', 'ft.onto.base.Document']` that each element matches column names from dataset. `label` is just a keyword that reader needs to identify the label. `'ft.onto.base_ontology.Title'` and `'ft.onto.base.Document'` are two forte data entries that stores input text in proper wrappers. In some cases that dataset might contain unnecessary columns that User doesn't want to use at all, User can set corresponding list elements in `forte_data_fields` to `None` so that the reader can skip processing them. 
 * User also needs to check if how many classes in the dataset to configure `index2class` which is a dictionary mapping from zero-based indices to class names. In ARS dataset, User can simply set it to
