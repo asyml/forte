@@ -5,12 +5,9 @@ from termcolor import colored
 from forte import Pipeline
 from forte.data.readers import ClassificationDatasetReader
 from fortex.huggingface import ZeroShotClassifier
-from forte.common.configuration import Config
-from fortex.nltk import NLTKWordTokenizer, NLTKSentenceSegmenter
 from ft.onto.base_ontology import Sentence
 
-# For dataset download link, please refer to:
-# https://github.com/huggingface/datasets/blob/master/datasets/banking77/banking77.py
+
 csv_path = "dataset_path/banking77/test.csv"
 
 pl = Pipeline()
@@ -99,12 +96,12 @@ index2class = dict(enumerate(class_names))
 # initialize reader config
 this_reader_config = {
     "forte_data_fields": [
-        "ftx.onto.ag_news.Description",
+        "ftx.onto.base.Document",
         "label",
     ],  # data fields aligned with columns in dataset
     "index2class": index2class,
     "text_fields": [
-        "ftx.onto.ag_news.Description"
+        "ftx.onto.base.Document"
     ],  # select ontologys to concatenate into text
     "digit_label": False,  # specify whether label in dataset is digit
     "one_based_index_label": False,  # if it's digit label,

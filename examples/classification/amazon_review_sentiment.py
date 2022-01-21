@@ -3,8 +3,6 @@ from termcolor import colored
 from forte.data.readers import ClassificationDatasetReader
 from fortex.huggingface import ZeroShotClassifier
 from forte.pipeline import Pipeline
-from forte.common.configuration import Config
-from fortex.nltk import NLTKWordTokenizer, NLTKSentenceSegmenter
 from ft.onto.base_ontology import Sentence
 
 
@@ -14,10 +12,10 @@ pl = Pipeline()
 # initialize labels
 class_names = ["negative", "positive"]
 index2class = dict(enumerate(class_names))
-pl.set_reader(ClassificationDatasetReader(),
-              config={"index2class": index2class})
-pl.add(ZeroShotClassifier(),
-       config= {"candidate_labels": class_names})
+pl.set_reader(
+    ClassificationDatasetReader(), config={"index2class": index2class}
+)
+pl.add(ZeroShotClassifier(), config={"candidate_labels": class_names})
 pl.initialize()
 
 

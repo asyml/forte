@@ -19,7 +19,6 @@ from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.data.base_reader import PackReader
 from ft.onto.base_ontology import *
-from forte.data.ontology.top import Annotation
 
 __all__ = ["ClassificationDatasetReader"]
 
@@ -44,7 +43,7 @@ class ClassificationDatasetReader(PackReader):
     while the latter two ontology types will be used by the reader to store the
     text from the `title` and `content` column respectively.
 
-    `text_fields` is a list of Forte entry types that indicate texts in the 
+    `text_fields` is a list of Forte entry types that indicate texts in the
     forte data fields will be kept and concatenated as input text.
     Apparently, it's a subset of `forte_data_fields`.
     For example, if we only want titles and documents in our input text, we
@@ -58,7 +57,7 @@ class ClassificationDatasetReader(PackReader):
 
     `index2class` is a dictionary that the mapping from zero-based
     indices to classes. For example, in amazon polarity dataset, we have two
-    classes, negative and positive. 
+    classes, negative and positive.
     We can configure `index2class` to be `{0: negative, 1: positive}`.
     sentiment classifications.
 
@@ -100,22 +99,23 @@ class ClassificationDatasetReader(PackReader):
                 " in the reader config."
             )
 
-        if not self.configs.text_fields:
-            raise ProcessorConfigError(
-                "There must be at least one ontology field "
-                + "to reader to select from."
-            )
-
-        if not set(self.configs.text_fields).issubset(
-            set(self.configs.forte_data_fields)
-        ):
-            raise ProcessorConfigError(
-                "text_fields must be a subset of forte_data_fields."
-                f"text_fields: {self.configs.text_fields}"
-                f"forte_data_fields: {self.configs.forte_data_fields}"
-                "Please correct text_fields and forte_data_fields in the"
-                " configuration to satisfy the condition."
-            )
+        if self.configs.text_fields is None:
+            self.configs.text_fields = [
+                df
+                for df in self.configs.forte_data_fields
+                if df is not None and df != "label"
+            ]
+        else:
+            if not set(self.configs.text_fields).issubset(
+                set(self.configs.forte_data_fields)
+            ):
+                raise ProcessorConfigError(
+                    "text_fields must be a subset of forte_data_fields."
+                    f"text_fields: {self.configs.text_fields}"
+                    f"forte_data_fields: {self.configs.forte_data_fields}"
+                    "Please correct text_fields and forte_data_fields in the"
+                    " configuration to satisfy the condition."
+                )
 
     def _collect(  # type: ignore
         self, csv_file: str
@@ -221,10 +221,7 @@ class ClassificationDatasetReader(PackReader):
                 "ft.onto.base_ontology.Document",
             ],
             "index2class": None,
-            "text_fields": [
-                "ft.onto.base_ontology.Title",
-                "ft.onto.base_ontology.Document",
-            ],
+            "text_fields": None,
             "digit_label": True,
             "one_based_index_label": True,
             "skip_k_starting_lines": 1,
@@ -232,8 +229,7 @@ class ClassificationDatasetReader(PackReader):
 
 
 def generate_text_n_input_ontology_indices(
-    text_fields: List[str],
-    forte_data_fields_dict: Dict[str, str]
+    text_fields: List[str], forte_data_fields_dict: Dict[str, str]
 ):
     """
     Retrieve ontologies from data fields and concatenate them into text.
@@ -243,9 +239,10 @@ def generate_text_n_input_ontology_indices(
         text_fields: a list of ontology that needs to be concatenated into a input string.
         forte_data_fields_dict: a dictionary with ontology names as keys and
             ontology strings as values.
-    
+
     Returns:
-        str, dict: a concatenated text and dictionary that keys are forte data entry and values are start and end indices of the data entries.
+        str, dict: a concatenated text and dictionary that keys are forte data
+            entries and values are start and end indices of the data entries.
     """
     end = -1
     text = ""
