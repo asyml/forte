@@ -112,9 +112,6 @@ this_reader_config = {
 }
 
 pl.set_reader(ClassificationDatasetReader(), config=this_reader_config)
-
-pl.add(NLTKSentenceSegmenter())
-pl.add(NLTKWordTokenizer())
 pl.add(ZeroShotClassifier(), config={"candidate_labels": class_names})
 pl.initialize()
 

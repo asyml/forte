@@ -16,8 +16,6 @@ class_names = ["negative", "positive"]
 index2class = dict(enumerate(class_names))
 pl.set_reader(ClassificationDatasetReader(),
               config={"index2class": index2class})
-pl.add(NLTKSentenceSegmenter())
-pl.add(NLTKWordTokenizer())
 pl.add(ZeroShotClassifier(),
        config= {"candidate_labels": class_names})
 pl.initialize()

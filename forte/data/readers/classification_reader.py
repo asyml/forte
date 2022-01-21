@@ -241,8 +241,8 @@ def generate_text_n_input_ontology_indices(
 
     Args:
         text_fields: a list of ontology that needs to be concatenated into a input string.
-        forte_data_fields_dict: a dictionary with ontology names as key and
-            ontology string as value.
+        forte_data_fields_dict: a dictionary with ontology names as keys and
+            ontology strings as values.
     
     Returns:
         str, dict: a concatenated text and dictionary that keys are forte data entry and values are start and end indices of the data entries.
