@@ -13,46 +13,53 @@
 # limitations under the License.
 import csv
 import importlib
-from typing import Iterator, Tuple, List
+from typing import Iterator, Tuple, List, Dict
 from forte.common import Resources, ProcessorConfigError
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.data.base_reader import PackReader
 from ft.onto.base_ontology import *
-
+from forte.data.ontology.top import Annotation
 
 __all__ = ["ClassificationDatasetReader"]
 
 
 class ClassificationDatasetReader(PackReader):
-    r"""class:`ClassificationDatasetReader` is designed to read text
-    classification dataset that contains input text and digit/text labels.
+    r"""class:`ClassificationDatasetReader` is designed to read table-like
+    classification datasets that contain input text and digit/text labels.
+    There are a couple of values that need to be provided via configuration,
+    including `forte_data_fields`, `text_fields`, and `index2class`.
 
-    User must specify `forte_data_fields` which is a list of forte ontologies
-    or labels and it should be one-to-one correspondence with the original data
-    fields. This configuration helps generating labels and initializing data
-    fields within corresponding ontologies wrappers.
+    `forte_data_fields` is a list representing the column headers of the
+    dataset. Each element in the `forte_data_fields` list is either a label
+    that indicates the document class or a Forte entry type that will be used
+    to store the content. Apparently, the list should follow the column order
+    of the dataset.
+
     For example, for amazon polarity dataset,
-    https://huggingface.co/datasets/amazon_polarity, the original data fields
-    are [label, title, content]. We want to identify them as either class
-    label or specific ontologies by specifying
-    "forte_data_fields: ['label', 'ft.onto.base_ontology.Title',
-    'ft.onto.ag_news.Description']" in the configuration.
+    (https://huggingface.co/datasets/amazon_polarity), the column names
+    are [label, title, content]. We can configure `forte_data_fields`to be
+    ['label', 'ft.onto.base_ontology.Title', 'ft.onto.base.Document'].
+    `label` is a special keyword to specify the label/document class column,
+    while the latter two ontology types will be used by the reader to store the
+    text from the `title` and `content` column respectively.
 
-    User must also specify `input_ontologies` that will be concatenate as
-    input text in a list.
-    The number of input ontologies and the order of concatenation
-    can be customized in the list. For example, if we only want titles and
-    descriptions in our input text, we specify "input_ontologies":
-    ['ft.onto.base_ontology.Title', 'ftx.onto.ag_news.Description']" in the
-    configuration. We can also only include descriptions by specifying
-    "input_ontologies":['ftx.onto.ag_news.Description']" which is very
+    `text_fields` is a list of Forte entry types that indicate texts in the 
+    forte data fields will be kept and concatenated as input text.
+    Apparently, it's a subset of `forte_data_fields`.
+    For example, if we only want titles and documents in our input text, we
+    specify "text_fields":
+    ['ft.onto.base_ontology.Title', 'ft.onto.base_ontology.Document']" in the
+    configuration. If titles are not needed, we can also only include
+    documents by specifying
+    "text_fields":['ft.onto.base_ontology.Document']" which is very
     flexible in customizing input text.
 
 
-    User must also specify `index2class` which is the mapping from zero-based
-    indices to classes.
-    For example, `index2class: {0: negative, 1: positive}` for polarity
+    `index2class` is a dictionary that the mapping from zero-based
+    indices to classes. For example, in amazon polarity dataset, we have two
+    classes, negative and positive. 
+    We can configure `index2class` to be `{0: negative, 1: positive}`.
     sentiment classifications.
 
     To see a full example, please refer to
@@ -89,20 +96,25 @@ class ClassificationDatasetReader(PackReader):
         self.set_up()
         if "label" not in self.configs.forte_data_fields:
             raise ProcessorConfigError(
-                "There must be data field named 'label' in reader config."
+                "There must be a forte data field named 'label'"
+                " in the reader config."
             )
 
-        if not self.configs.input_ontologies:
+        if not self.configs.text_fields:
             raise ProcessorConfigError(
                 "There must be at least one ontology field "
                 + "to reader to select from."
             )
 
-        if not set(self.configs.input_ontologies).issubset(
+        if not set(self.configs.text_fields).issubset(
             set(self.configs.forte_data_fields)
         ):
             raise ProcessorConfigError(
-                "ontology fields must be a subset of data fields"
+                "text_fields must be a subset of forte_data_fields."
+                f"text_fields: {self.configs.text_fields}"
+                f"forte_data_fields: {self.configs.forte_data_fields}"
+                "Please correct text_fields and forte_data_fields in the"
+                " configuration to satisfy the condition."
             )
 
     def _collect(  # type: ignore
@@ -137,11 +149,11 @@ class ClassificationDatasetReader(PackReader):
         df_dict = dict(zip(self.configs.forte_data_fields, line))
 
         # it determines the order of concatenation
-        input_ontologies = self.configs.input_ontologies
+        text_fields = self.configs.text_fields
 
         # get text and ontology indices
         text, input_ontology_indices = generate_text_n_input_ontology_indices(
-            input_ontologies, df_dict
+            text_fields, df_dict
         )
         pack.set_text(text)
         # self.set_text(pack, text)
@@ -174,7 +186,7 @@ class ClassificationDatasetReader(PackReader):
             entry_class = getattr(mod, module_str)
             entry_class(pack, start_idx, end_idx)
         # for now, we use document to store concatenated text and set the class here
-        doc = Document(pack, 0, input_ontology_indices[input_ontologies[-1]][1])
+        doc = Document(pack, 0, input_ontology_indices[text_fields[-1]][1])
         doc.document_class = [self.configs.index2class[class_id]]
 
         pack.pack_name = line_id
@@ -186,12 +198,12 @@ class ClassificationDatasetReader(PackReader):
 
         Here:
             - forte_data_fields: these fields provides one-to-one
-            correspondence between given original dataset data fields and
-            labels/ontologies. For data fields without usage, user can
-            specify None for them.
+            correspondence between given original dataset column names and
+            labels or forte ontologies. For column names without usage,
+            user can specify None for them.
             - index2class: a dictionary that maps from zero-based indices to
                 classes
-            - input_ontologies: a list of ordered input ontologies that
+            - text_fields: a list of ordered input ontologies that
                 user want to concatenate into an input text.
             - digit_label:  boolean value that specifies whether label in dataset is digit.
             - one_based_index_label: boolean value that specifies if dataset
@@ -209,7 +221,7 @@ class ClassificationDatasetReader(PackReader):
                 "ft.onto.base_ontology.Document",
             ],
             "index2class": None,
-            "input_ontologies": [
+            "text_fields": [
                 "ft.onto.base_ontology.Title",
                 "ft.onto.base_ontology.Document",
             ],
@@ -220,26 +232,30 @@ class ClassificationDatasetReader(PackReader):
 
 
 def generate_text_n_input_ontology_indices(
-    input_ontologies, forte_data_fields_dict
+    text_fields: List[str],
+    forte_data_fields_dict: Dict[str, str]
 ):
     """
     Retrieve ontologies from data fields and concatenate them into text.
     Also, we generate the indices for these ontologies accordingly.
 
     Args:
-        input_ontologies: a list of ontology that needs to be concatenated into a input string.
+        text_fields: a list of ontology that needs to be concatenated into a input string.
         forte_data_fields_dict: a dictionary with ontology names as key and
             ontology string as value.
+    
+    Returns:
+        str, dict: a concatenated text and dictionary that keys are forte data entry and values are start and end indices of the data entries.
     """
     end = -1
     text = ""
     indices = {}  # a dictionary of (ontology_name: (start_index, end_index) )
-    for i, input_onto in enumerate(input_ontologies):
+    for i, input_onto in enumerate(text_fields):
         text += forte_data_fields_dict[input_onto]
         start = end + 1
         end = len(text)
-        if i != len(input_ontologies) - 1:  # not last input ontology
+        if i != len(text_fields) - 1:  # not last input ontology
             text += "\n"
-        indices[input_ontologies[i]] = (start, end)
+        indices[text_fields[i]] = (start, end)
 
     return text, indices

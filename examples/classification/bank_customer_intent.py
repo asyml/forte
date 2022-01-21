@@ -103,7 +103,7 @@ this_reader_config = {
         "label",
     ],  # data fields aligned with columns in dataset
     "index2class": index2class,
-    "input_ontologies": [
+    "text_fields": [
         "ftx.onto.ag_news.Description"
     ],  # select ontologys to concatenate into text
     "digit_label": False,  # specify whether label in dataset is digit
