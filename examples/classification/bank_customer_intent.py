@@ -96,12 +96,12 @@ index2class = dict(enumerate(class_names))
 # initialize reader config
 this_reader_config = {
     "forte_data_fields": [
-        "ftx.onto.base.Document",
+        "ft.onto.base.Document",
         "label",
     ],
     "index2class": index2class,
     "text_fields": [
-        "ftx.onto.base.Document"
+        "ft.onto.base.Document"
     ],
     "digit_label": True,
     "one_based_index_label": False,

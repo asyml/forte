@@ -31,27 +31,27 @@ class ClassificationDatasetReader(PackReader):
 
     `forte_data_fields` is a list representing the column headers of the
     dataset. Each element in the `forte_data_fields` list is either a label
-    that indicates the document class or a Forte entry type that will be used
+    that indicates the body class or a Forte entry type that will be used
     to store the content. Apparently, the list should follow the column order
     of the dataset.
 
     For example, for amazon polarity dataset,
     (https://huggingface.co/datasets/amazon_polarity), the column names
     are [label, title, content]. We can configure `forte_data_fields`to be
-    ['label', 'ft.onto.base_ontology.Title', 'ft.onto.base.Document'].
-    `label` is a special keyword to specify the label/document class column,
+    ['label', 'ft.onto.base_ontology.Title', 'ft.onto.base.Body'].
+    `label` is a special keyword to specify the label/body class column,
     while the latter two ontology types will be used by the reader to store the
     text from the `title` and `content` column respectively.
 
     `text_fields` is a list of Forte entry types that indicate texts in the
     forte data fields will be kept and concatenated as input text.
     Apparently, it's a subset of `forte_data_fields`.
-    For example, if we only want titles and documents in our input text, we
+    For example, if we only want titles and bodys in our input text, we
     specify "text_fields":
-    ['ft.onto.base_ontology.Title', 'ft.onto.base_ontology.Document']" in the
+    ['ft.onto.base_ontology.Title', 'ft.onto.base_ontology.Body']" in the
     configuration. If titles are not needed, we can also only include
-    documents by specifying
-    "text_fields":['ft.onto.base_ontology.Document']" which is very
+    bodys by specifying
+    "text_fields":['ft.onto.base_ontology.Body']" which is very
     flexible in customizing input text.
 
 
@@ -155,8 +155,7 @@ class ClassificationDatasetReader(PackReader):
         text, input_ontology_indices = generate_text_n_input_ontology_indices(
             text_fields, df_dict
         )
-        pack.set_text(text)
-        # self.set_text(pack, text)
+        self.set_text(pack, text)
         if df_dict["label"].isdigit() != self.configs.digit_label:
             dataset_digit_label = df_dict["label"].isdigit()
             raise ProcessorConfigError(
@@ -185,8 +184,8 @@ class ClassificationDatasetReader(PackReader):
             mod = importlib.import_module(path_str)  # sentence ontology module
             entry_class = getattr(mod, module_str)
             entry_class(pack, start_idx, end_idx)
-        # for now, we use document to store concatenated text and set the class here
-        doc = Document(pack, 0, input_ontology_indices[text_fields[-1]][1])
+        # for now, we use body to store concatenated text and set the class here
+        doc = Body(pack, 0, input_ontology_indices[text_fields[-1]][1])
         doc.document_class = [self.configs.index2class[class_id]]
 
         pack.pack_name = line_id
@@ -197,28 +196,29 @@ class ClassificationDatasetReader(PackReader):
         r"""This defines a basic configuration structure for classification dataset reader.
 
         Here:
-            - forte_data_fields: these fields provides one-to-one
-            correspondence between given original dataset column names and
-            labels or forte ontologies. For column names without usage,
-            user can specify None for them.
-            - index2class: a dictionary that maps from zero-based indices to
-                classes
-            - text_fields: a list of ordered input ontologies that
-                user want to concatenate into an input text.
-            - digit_label:  boolean value that specifies whether label in dataset is digit.
-            - one_based_index_label: boolean value that specifies if dataset
-                provides one-based digit label.
-                True for one-based index, false otherwise.
-            - skip_k_starting_lines: many datasets' first line are columns
-                names, set it to 1 if it's the case. Otherwise set to 0.
-                User can also set it to other positive integers to skip
-                multiple lines.
+          - forte_data_fields: these fields provides one-to-one
+              correspondence between given original dataset column names and
+              labels or forte ontologies. For column names without usage,
+              user can specify None for them.
+          - index2class: a dictionary that maps from zero-based indices to
+              classes
+          - text_fields: a list of ordered input ontologies that
+              user want to concatenate into an input text.
+          - digit_label:  boolean value that specifies whether label in dataset
+              is digit.
+          - one_based_index_label: boolean value that specifies if dataset
+              provides one-based digit label.
+              True for one-based index, false otherwise.
+          - skip_k_starting_lines: many datasets' first line are columns
+              names, set it to 1 if it's the case. Otherwise set to 0.
+              User can also set it to other positive integers to skip
+              multiple lines.
         """
         return {
             "forte_data_fields": [
                 "label",
                 "ft.onto.base_ontology.Title",
-                "ft.onto.base_ontology.Document",
+                "ft.onto.base_ontology.Body",
             ],
             "index2class": None,
             "text_fields": None,
@@ -236,12 +236,12 @@ def generate_text_n_input_ontology_indices(
     Also, we generate the indices for these ontologies accordingly.
 
     Args:
-        text_fields: a list of ontology that needs to be concatenated into a input string.
-        forte_data_fields_dict: a dictionary with ontology names as keys and
+        text_fields(List[str]): a list of ontology that needs to be concatenated into a input string.
+        forte_data_fields_dict(Dict[str, str]): a dictionary with ontology names as keys and
             ontology strings as values.
 
     Returns:
-        str, dict: a concatenated text and dictionary that keys are forte data
+        Tuple[str, dict[str, Tuple[int, int]]]: a concatenated text and dictionary that keys are forte data
             entries and values are start and end indices of the data entries.
     """
     end = -1
