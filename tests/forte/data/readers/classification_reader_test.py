@@ -21,7 +21,7 @@ from typing import Dict
 
 from forte.pipeline import Pipeline
 from ftx.onto.ag_news import Description
-from ft.onto.base_ontology import Body, Title
+from ft.onto.base_ontology import Body, Title, Document
 from forte.common import Resources, ProcessorConfigError
 from forte.data.readers import ClassificationDatasetReader
 from forte.data.data_pack import DataPack
@@ -65,13 +65,13 @@ class ClassificationDatasetReaderTest(unittest.TestCase):
             ) = self.expected_content[data_pack.pack_name]
             self.assertIsInstance(data_pack, DataPack)
             # Test Article
-            doc_entries = list(data_pack.get(Body))
+            doc_entries = list(data_pack.get(Document))
             # in our example, we have one body instance
             # stores one input ontology
             # and document instance stores all concatenated text
-            self.assertTrue(len(doc_entries) == 2) 
-            article: Body = doc_entries[0]
-            self.assertIsInstance(article, Body)
+            self.assertTrue(len(doc_entries) == 1)
+            article: Document = doc_entries[0]
+            self.assertIsInstance(article, Document)
             self.assertEqual(
                 article.text, expected_title + "\n" + expected_content
             )
@@ -89,7 +89,7 @@ class ClassificationDatasetReaderTest(unittest.TestCase):
 
             self.assertEqual(title.text, expected_title)
             # Test Description
-            content: Body =  doc_entries[1]
+            content: Body =  list(data_pack.get(Body))[0]
             self.assertEqual(content.text, expected_content)
 
 
