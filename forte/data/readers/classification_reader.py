@@ -24,7 +24,7 @@ __all__ = ["ClassificationDatasetReader"]
 
 
 class ClassificationDatasetReader(PackReader):
-    r"""class:`ClassificationDatasetReader` is designed to read table-like
+    r""":class:`ClassificationDatasetReader` is designed to read table-like
     classification datasets that contain input text and digit/text labels.
     There are a couple of values that need to be provided via configuration,
     including `forte_data_fields`, `text_fields`, and `index2class`.
@@ -184,8 +184,8 @@ class ClassificationDatasetReader(PackReader):
             mod = importlib.import_module(path_str)  # sentence ontology module
             entry_class = getattr(mod, module_str)
             entry_class(pack, start_idx, end_idx)
-        # for now, we use body to store concatenated text and set the class here
-        doc = Body(pack, 0, input_ontology_indices[text_fields[-1]][1])
+        # for now, we use Document to store concatenated text and set the class here
+        doc = Document(pack, 0, input_ontology_indices[text_fields[-1]][1])
         doc.document_class = [self.configs.index2class[class_id]]
 
         pack.pack_name = line_id
@@ -236,13 +236,15 @@ def generate_text_n_input_ontology_indices(
     Also, we generate the indices for these ontologies accordingly.
 
     Args:
-        text_fields(List[str]): a list of ontology that needs to be concatenated into a input string.
+        text_fields(List[str]): a list of ontology that needs to be
+            concatenated into a input string.
         forte_data_fields_dict(Dict[str, str]): a dictionary with ontology names as keys and
             ontology strings as values.
 
     Returns:
-        Tuple[str, dict[str, Tuple[int, int]]]: a concatenated text and dictionary that keys are forte data
-            entries and values are start and end indices of the data entries.
+        Tuple[str, dict[str, Tuple[int, int]]]: a concatenated text and
+            dictionary that keys are forte data entries and values are start
+            and end indices of the data entries.
     """
     end = -1
     text = ""
