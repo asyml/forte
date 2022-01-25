@@ -1,0 +1,4 @@
+soundfile>=0.10.3
+sounddevice>=0.4.4
+transformers>=4.15.0
+https://github.com/pyannote/pyannote-audio/archive/develop.zip
