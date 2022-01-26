@@ -49,6 +49,8 @@ from forte.data.base_pack import PackType
 from forte.data.base_reader import BaseReader
 from forte.data.caster import Caster
 from forte.data.ontology.code_generation_objects import EntryTree
+from forte.data.ontology.core import Entry
+from forte.data.ontology.ontology_code_const import TOP_MOST_MODULE_NAME
 from forte.data.ontology.ontology_code_generator import OntologyCodeGenerator
 from forte.data.selector import Selector, DummySelector
 from forte.evaluation.base.base_evaluator import Evaluator
@@ -192,10 +194,8 @@ class Pipeline(Generic[PackType]):
             self.resource = resource
 
         if ontology_file is None:
-            with resources.path(
-                "forte.ontology_specs", "base_ontology.json"
-            ) as data_path:
-                ontology_file = str(data_path)
+            spec_dict = self.parse_entry(Entry)
+            self.resource.update(onto_specs_dict=spec_dict)
 
         if ontology_file is not None:
             with open(ontology_file, "r", encoding="ascii") as f:
@@ -221,6 +221,34 @@ class Pipeline(Generic[PackType]):
 
         # Indicate whether do type checking during pipeline initialization
         self._do_init_type_check: bool = do_init_type_check
+
+    def parse_entry(self, entry: Entry):
+        spec_dict = {'name': '', 'additional_prefixes': [], 'definitions': []}
+        for subclass in entry.__subclasses__():
+            self.find_spec_dict(subclass, spec_dict['definitions'], spec_dict['additional_prefixes'])
+        return spec_dict
+
+    def find_spec_dict(
+            self,
+            entry: Entry,
+            spec_definitions: List[Dict],
+            spec_additional_prefixes: List[str]
+            ):
+        try:
+            entry_list = entry.__subclasses__()
+            if len(entry_list) < 1:
+                return -1
+        except:
+            return -1
+
+        for subclass in entry_list:
+            if str(entry).startswith(TOP_MOST_MODULE_NAME):
+                continue
+            if not 'ft.onto' in str(subclass):
+                subclass_split = str(subclass).split('.')
+                spec_additional_prefixes.append(subclass_split[0] + '.' + subclass_split[1])
+            spec_definitions.append({'entry_name': str(subclass), 'parent_entry': str(entry)})
+            self.find_spec_dict(subclass, spec_definitions, spec_additional_prefixes)
 
     def enforce_consistency(self, enforce: bool = True):
         r"""This function determines whether the pipeline will check
