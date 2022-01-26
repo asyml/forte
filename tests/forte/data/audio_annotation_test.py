@@ -139,7 +139,6 @@ class AudioAnnotationTest(unittest.TestCase):
 
         # Verify the annotations of each datapack
         for pack in self._pipeline.process_dataset(self._test_audio_path):
-
             # Check Recording
             recordings = list(pack.get(Recording))
             self.assertEqual(len(recordings), 1)
@@ -149,13 +148,19 @@ class AudioAnnotationTest(unittest.TestCase):
             new_pack = DataPack.from_string(pack.to_string())
             self.assertEqual(new_pack.audio_annotations, pack.audio_annotations)
 
+
             # Check total number of AudioAnnotations which should be 3
             # (1 Recording + 2 AudioUtterance).
             self.assertEqual(pack.num_audio_annotations, 3)
-
+            # import pdb; pdb.set_trace()
+            # print('check annotation')
+            aaa = list(pack.get_data(Annotation))
+            print(aaa)
+            
             # Check `DataPack.get(AudioUtterance)` and
             # `AudioAnnotation.get(AudioUtterance)`
             for object in (pack, recordings[0]):
+
                 audio_utters = list(object.get(AudioUtterance))
                 self.assertEqual(len(audio_utters), len(self._test_configs))
 
