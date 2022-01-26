@@ -874,114 +874,40 @@ class DataPack(BasePack[Entry, Link, Group]):
                 valid_component_id |= self.get_ids_by_creator(component)
             valid_context_ids &= valid_component_id
 
-        # skipped = 0
-        def generate_data(c_type):
-            import pdb; pdb.set_trace()
-            print('')
-            
+        def get_annotation_list(c_type):
+            """
+            Get an annotation list of a given context type.
+            """
             if c_type == Annotation:
-                anns = list(self.annotations)
+                return list(self.annotations)
             elif c_type == AudioAnnotation:
-                anns = list(self.audio_annotations)
+                return list(self.audio_annotations)
             else:
                 raise NotImplementedError(f"Context type is set to {c_type}"
                                           "but currently we only support"
                                           "{Annotation, AudioAnnotation}")
-            print("*************************")
-            for context in anns:
-                if context.tid not in valid_context_ids  or not isinstance(context, context_type_):
-                    continue
-                # if skipped < skip_k:
-                #     skipped += 1
-                #     continue
-
-                data: Dict[str, Any] = {}
-                if c_type == Annotation:
-                    data["context"] = self.text[context.begin : context.end]
-                elif c_type == AudioAnnotation:
-                    data["context"] = self.audio[context.begin : context.end]
-                else:
-                    raise NotImplementedError(f"Context is set to {c_type}"
-                                            "but currently we only support"
-                                            "{Annotation, AudioAnnotation}")
-                data["offset"] = context.begin
-
-                for field in context_fields:
-                    data[field] = getattr(context, field)
-                    print(getattr(context, field))
-
-                if annotation_types:
-                    for a_type, a_args in annotation_types.items():
-                        if issubclass(a_type, context_type_):
-                            continue
-                        if a_type.__name__ in data.keys():
-                            raise KeyError(
-                                f"Requesting two types of entries with the "
-                                f"same class name {a_type.__name__} at the "
-                                f"same time is not allowed"
-                            )
-                        data[
-                            a_type.__name__
-                        ] = self._generate_annotation_entry_data(
-                            a_type, a_args, data, context
-                        )
-
-                if link_types:
-                    for l_type, l_args in link_types.items():
-                        if l_type.__name__ in data.keys():
-                            raise KeyError(
-                                f"Requesting two types of entries with the "
-                                f"same class name {l_type.__name__} at the "
-                                f"same time is not allowed"
-                            )
-                        data[l_type.__name__] = self._generate_link_entry_data(
-                            l_type, l_args, data, context
-                        )
-                # TODO: Getting Group based on range is not done yet.
-                if group_types:
-                    raise NotImplementedError(
-                        "Querying groups based on ranges is "
-                        "currently not supported."
-                    )
-                if generics_types:
-                    raise NotImplementedError(
-                        "Querying generic types based on ranges is "
-                        "currently not supported."
-                    )
-                yield data
-        # import pdb; pdb.set_trace()
-        # print('ddddd')
-        
-        # generate_data(context_type)
-        # generate_data(AudioAnnotation)
-        
-        
-        # # type = AudioAnnotation
-        if context_type == Annotation:
-            anns = list(self.annotations)
-        elif context_type == AudioAnnotation:
-            anns = list(self.audio_annotations)
-        else:
-            raise NotImplementedError(f"Type is set to {context_type} "
-                                        "but currently we only support "
-                                        "{Annotation, AudioAnnotation}")
-        # print("*************************")
-        for context in anns:
-            if context.tid not in valid_context_ids or not isinstance(context, context_type_):
-                continue
-            # if skipped < skip_k:
-            #     skipped += 1
-            #     continue
-
-            data: Dict[str, Any] = {}
-            if context_type == Annotation:
-                data["context"] = self.text[context.begin : context.end]
-            elif context_type == AudioAnnotation:
-                data["context"] = self.audio[context.begin : context.end]
+        def get_context_data(c_type, context):
+            """
+            Get context data of a given context type and context.
+            """
+            if c_type == Annotation:
+                return self.text[context.begin : context.end]
+            elif c_type == AudioAnnotation:
+                return self.audio[context.begin : context.end]
             else:
                 raise NotImplementedError(f"Type is set to {context_type}"
                                         "but currently we only support"
                                         "{Annotation, AudioAnnotation}")
+        anns = get_annotation_list(context_type)
+        skipped = 0
+        for context in anns:
+            if context.tid not in valid_context_ids or not isinstance(context, context_type_):
+                continue
+            if skipped < skip_k:
+                skipped += 1
+                continue
+            data: Dict[str, Any] = {}
+            data["context"] = get_context_data(context_type, context)
             data["offset"] = context.begin
 
             for field in context_fields:
