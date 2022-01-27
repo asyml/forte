@@ -1,5 +1,5 @@
 import unittest
-from mock import patch
+from unittest.mock import patch
 from forte.data.entry_type_generator import EntryTypeGenerator
 
 class EntryTypeGeneratorTest(unittest.TestCase):
