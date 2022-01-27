@@ -532,11 +532,6 @@ class Recording(AudioAnnotation):
         super().__init__(pack, begin, end)
         self.recording_class: List[str] = []
 
-    def __hash__(self) -> int:
-        r"""The hash function for :class:`Entry` objects.
-        To be implemented in each subclass.
-        """
-        return hash((type(self), self._tid))
 
 @dataclass
 class AudioUtterance(AudioAnnotation):
