@@ -673,7 +673,24 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         Returns:
             An data pack object deserialized from the string.
         """
-        return cls._deserialize(data_path, serialize_method, zip_pack)
+        mp = cls._deserialize(data_path, serialize_method, zip_pack)
+
+        # fix 595 : change the dictionary's key after deserialization from str back to int
+        mp._inverse_pack_ref = {
+            int(k): v for k, v in mp._inverse_pack_ref.items()
+        }
+
+        return mp
+
+    @classmethod
+    def from_string(cls, data_content: str) -> "MultiPack":
+        mp = super().from_string(data_content)
+        # fix 595 : change the dictionary's key after deserialization from str back to int
+        mp._inverse_pack_ref = {
+            int(k): v for k, v in mp._inverse_pack_ref.items()
+        }
+
+        return mp
 
     def _add_entry(self, entry: EntryType) -> EntryType:
         r"""Force add an :class:`forte.data.ontology.core.Entry` object to the

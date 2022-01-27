@@ -38,7 +38,7 @@ from forte.common import ProcessExecutionException, EntryNotFoundError
 from forte.data.container import EntryContainer
 from forte.data.index import BaseIndex
 from forte.data.ontology.core import Entry, EntryType, GroupType, LinkType
-from forte.version import PACK_VERSION, OLD_PACK_VERSION
+from forte.version import PACK_VERSION, DEFAULT_PACK_VERSION
 
 __all__ = ["BasePack", "BaseMeta", "PackType"]
 
@@ -201,13 +201,17 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                 pack = pickle.load(f)
 
             if not hasattr(pack, "pack_version"):
-                pack.pack_version = OLD_PACK_VERSION
+                pack.pack_version = DEFAULT_PACK_VERSION
 
         return pack  # type: ignore
 
     @classmethod
     def from_string(cls, data_content: str) -> "BasePack":
-        return jsonpickle.decode(data_content)
+        pack = jsonpickle.decode(data_content)
+        if not hasattr(pack, "pack_version"):
+            pack.pack_version = DEFAULT_PACK_VERSION
+
+        return pack
 
     @abstractmethod
     def delete_entry(self, entry: EntryType):

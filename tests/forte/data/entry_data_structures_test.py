@@ -191,6 +191,8 @@ class MultiEntryStructure(unittest.TestCase):
          "_MultiPack__default_pack_prefix": "_pack"}}"""
 
         recovered_mp = MultiPack.from_string(old_serialized_mp)
+        from forte.version import DEFAULT_PACK_VERSION
+        self.assertEqual(recovered_mp.pack_version, DEFAULT_PACK_VERSION)
 
         s_packs: List[str] = ["""{"py/object": "forte.data.data_pack.DataPack", "py/state": {"_creation_records": {}, 
         "_field_records": {}, "links": [], "groups": [], "_meta": {"py/object": "forte.data.data_pack.Meta", 
@@ -213,6 +215,16 @@ class MultiEntryStructure(unittest.TestCase):
 
         re_mpe: ExampleMPEntry = recovered_mp.get_single(ExampleMPEntry)
         self.assertIsInstance(re_mpe.refer_entry, ExampleEntry)
+
+    def test_multipack_deserialized_dictionary_recover(self):
+        serialized_mp = self.pack.to_string(drop_record=True)
+        recovered_mp = MultiPack.from_string(serialized_mp)
+
+        s_packs = [p.to_string() for p in self.pack.packs]
+        recovered_packs = [DataPack.from_string(s) for s in s_packs]
+        pid = recovered_packs[0].pack_id
+        self.assertEqual(recovered_mp._inverse_pack_ref[pid], 0)
+        recovered_mp.relink(recovered_packs)
 
 
 class EntryDataStructure(unittest.TestCase):
