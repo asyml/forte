@@ -213,6 +213,24 @@ class DataStore(BaseStore):
         entry = self.entry_dict[tid]
         return entry[attr_id]
 
+    def set_attribute(self, tid: int, attr_name: str, attr_value):
+        if tid not in self.entry_dict.keys():
+            raise ValueError(f"Entry with tid {tid} not found.")
+        entry_type = self.entry_dict[tid][3]
+        if attr_name not in self._type_attributes[entry_type].keys():
+            raise ValueError(f"{entry_type} has no {attr_name} attribute.")
+        attr_id = self._type_attributes[entry_type][attr_name]
+        self.set_attr(tid, attr_id, attr_value)
+
+    def get_attribute(self, tid: int, attr_name: str):
+        if tid not in self.entry_dict.keys():
+            raise ValueError(f"Entry with tid {tid} not found.")
+        entry_type = self.entry_dict[tid][3]
+        if attr_name not in self._type_attributes[entry_type].keys():
+            raise ValueError(f"{entry_type} has no {attr_name} attribute.")
+        attr_id = self._type_attributes[entry_type][attr_name]
+        return self.get_attr(tid, attr_id)
+
     def delete_entry(self, tid: int):
         r"""This function locates the entry data with `tid` and removes it
         from the data store. This function first removes it from `entry_dict`.
