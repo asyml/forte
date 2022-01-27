@@ -139,36 +139,16 @@ class AudioAnnotationTest(unittest.TestCase):
             pack: DataPack = DataPack()
             pack.set_text("test text")
             pack.get_span_audio(begin=0, end=1)
-        idx = 0
         # Verify the annotations of each datapack
         for pack in self._pipeline.process_dataset(self._test_audio_path):
             # test get all audio annotation
             # test get selective fields data from subclass of AudioAnnotation
-            # data = list(pack.get_data(AudioAnnotation))
-            # audio_data = [d["context"] for d in data]
-            # for datum in audio_data:
-            #     # import pdb; pdb.set_trace()
-            #     # print('ddd')
-            #     if idx == 0:
-            #         self.assertTrue(array_equal(self.audio_data1, datum))
-            #     elif idx == 1:
-            #         self.assertTrue(array_equal(self.audio_data1[200:35000], datum))
-            #     elif idx == 2:
-            #         import pdb; pdb.set_trace()
-            #         print('')
-                    
-            #         self.assertTrue(array_equal(self.audio_data1[35200:72000], datum))
-            #     elif idx == 3:
-            #         self.assertTrue(array_equal(self.audio_data2, datum))
-            #     idx += 1
-
             raw_data_generator = pack.get_data(AudioAnnotation,
                                      {Recording:
                                          {"fields": ["recording_class"]},
                                     AudioUtterance:
                                         {"fields": ["speaker"]}}
                                     )
-            print('check get')
             for data_instance, raw_data  in zip(pack.get(AudioAnnotation),
                                                 raw_data_generator):
                 # check existence of requested data fields
@@ -176,17 +156,15 @@ class AudioAnnotationTest(unittest.TestCase):
                                 "recording_class" in raw_data['Recording'])
                 self.assertTrue('AudioUtterance' in raw_data.keys() and
                                 "speaker" in raw_data['AudioUtterance'])
-                
                 # check if primitive data are same as data from data instance
                 if isinstance(data_instance, Recording):
                     # check recording's data
-                    # for some reason, raw_data['Recording']['audio'] is 3-d
-                    # numpy array
                     self.assertTrue(array_equal(data_instance.audio, raw_data['Recording']['audio']))
                     self.assertTrue(data_instance.recording_class ==np.squeeze(raw_data['Recording']['recording_class']).tolist())
                 elif isinstance(data_instance, AudioUtterance):
                     self.assertTrue(array_equal(data_instance.audio, raw_data['AudioUtterance']['audio']))
                     self.assertTrue(data_instance.speaker ==raw_data['AudioUtterance']['speaker'][0])
+
             # check non-existence of non-requested data fields
             raw_data_generator = pack.get_data(AudioAnnotation)
             for raw_data  in raw_data_generator:

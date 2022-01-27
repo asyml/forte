@@ -866,7 +866,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         valid_context_ids: Set[int] = self._index.query_by_type_subtype(
             context_type_
         )
-        
+
         if context_components:
             valid_component_id: Set[int] = set()
             for component in context_components:
@@ -882,9 +882,12 @@ class DataPack(BasePack[Entry, Link, Group]):
             elif issubclass(c_type, AudioAnnotation):
                 return list(self.audio_annotations)
             else:
-                raise NotImplementedError(f"Context type is set to {c_type}"
-                                          "but currently we only support"
-                                          "{Annotation, AudioAnnotation}")
+                raise NotImplementedError(
+                    f"Context type is set to {c_type}"
+                    "but currently we only support"
+                    "{Annotation, AudioAnnotation}"
+                )
+
         def get_context_data(c_type, context):
             """
             Get context data of a given context type and context.
@@ -897,11 +900,15 @@ class DataPack(BasePack[Entry, Link, Group]):
                 raise NotImplementedError(
                     f"Context type is set to {context_type}"
                     "but currently we only support"
-                    "{Annotation, AudioAnnotation}")
+                    "{Annotation, AudioAnnotation}"
+                )
+
         anns = get_annotation_list(context_type_)
         skipped = 0
         for context in anns:
-            if context.tid not in valid_context_ids or not isinstance(context, context_type_):
+            if context.tid not in valid_context_ids or not isinstance(
+                context, context_type_
+            ):
                 continue
             if skipped < skip_k:
                 skipped += 1
@@ -937,9 +944,12 @@ class DataPack(BasePack[Entry, Link, Group]):
                             f"same class name {a_type.__name__} at the "
                             f"same time is not allowed"
                         )
-                    data[a_type.__name__] = self._generate_annotation_entry_data(
-                        a_type, a_args, data, context)
-                
+                    data[
+                        a_type.__name__
+                    ] = self._generate_annotation_entry_data(
+                        a_type, a_args, data, context
+                    )
+
             if link_types:
                 for l_type, l_args in link_types.items():
                     if l_type.__name__ in data.keys():
@@ -1037,10 +1047,12 @@ class DataPack(BasePack[Entry, Link, Group]):
             elif isinstance(annotation, AudioAnnotation):
                 a_dict["audio"] = annotation.audio
             else:
-                raise NotImplementedError(f"Annotation is set to {annotation}"
-                                        "but currently we only support"
-                                        "instances of {Annotation, "
-                                        "AudioAnnotation} and their subclass.")
+                raise NotImplementedError(
+                    f"Annotation is set to {annotation}"
+                    "but currently we only support"
+                    "instances of {Annotation, "
+                    "AudioAnnotation} and their subclass."
+                )
             for field in fields:
                 if field in ("span", "text", "audio"):
                     continue
