@@ -161,7 +161,25 @@ class AudioAnnotationTest(unittest.TestCase):
                 elif idx == 3:
                     self.assertTrue(array_equal(self.audio_data2, datum))
                 idx += 1
-            # list(pack.get_data(AudioAnnotation))
+
+            data = list(pack.get_data(AudioAnnotation,
+                                     {Recording:
+                                         {"fields": ["recording_class"]},
+                                    AudioUtterance:
+                                        {"fields": ["speaker"]}}
+                                    ))
+            # check get_data requests parameter effect
+            # by checking if requested fields exist when the datum is for
+            # the correct Entry.
+            for datum in data:
+                if 'Recording' in datum.keys():
+                    import pdb; pdb.set_trace()
+                    print('')
+                    
+                    self.assertTrue("recording_class" in datum['Recording'].keys())
+                if 'AudioUtterance' in datum.keys():
+                    self.assertTrue("speaker" in datum['AudioUtterance'].keys())
+
             # Check Recording
             recordings = list(pack.get(Recording))
             self.assertEqual(len(recordings), 1)

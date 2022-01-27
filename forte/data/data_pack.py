@@ -1012,10 +1012,9 @@ class DataPack(BasePack[Entry, Link, Group]):
         # a_dict: Dict[str, Any] = {}
         from collections import defaultdict
         a_dict = defaultdict(list)
-        a_dict["span"] = []
-        a_dict["text"] = []
-        for field in fields:
-            a_dict[field] = []
+
+        # import pdb; pdb.set_trace()
+        # print('check fields a_type a_args ')
 
         unit_begin = 0
         if unit is not None:
@@ -1028,7 +1027,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         cont_begin = cont.begin if cont else 0
 
-        annotation: Annotation
+
         for annotation in self.get(a_type, cont, components):
             # we provide span, text (and also tid) by default
             a_dict["span"].append((annotation.begin, annotation.end))
