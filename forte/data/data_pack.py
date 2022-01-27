@@ -787,7 +787,6 @@ class DataPack(BasePack[Entry, Link, Group]):
                         },
                     base_ontology.Token: ["pos", "sense""],
                     base_ontology.EntityMention: {
-                        "unit": "Token",
                     },
                 }
                 pack.get_data(base_ontology.Sentence, requests)
@@ -878,9 +877,9 @@ class DataPack(BasePack[Entry, Link, Group]):
             """
             Get an annotation list of a given context type.
             """
-            if c_type == Annotation:
+            if issubclass(c_type, Annotation):
                 return list(self.annotations)
-            elif c_type == AudioAnnotation:
+            elif issubclass(c_type, AudioAnnotation):
                 return list(self.audio_annotations)
             else:
                 raise NotImplementedError(f"Context type is set to {c_type}"
@@ -890,15 +889,16 @@ class DataPack(BasePack[Entry, Link, Group]):
             """
             Get context data of a given context type and context.
             """
-            if c_type == Annotation:
+            if issubclass(c_type, Annotation):
                 return self.text[context.begin : context.end]
-            elif c_type == AudioAnnotation:
+            elif issubclass(c_type, AudioAnnotation):
                 return self.audio[context.begin : context.end]
             else:
-                raise NotImplementedError(f"Type is set to {context_type}"
-                                        "but currently we only support"
-                                        "{Annotation, AudioAnnotation}")
-        anns = get_annotation_list(context_type)
+                raise NotImplementedError(
+                    f"Context type is set to {context_type}"
+                    "but currently we only support"
+                    "{Annotation, AudioAnnotation}")
+        anns = get_annotation_list(context_type_)
         skipped = 0
         for context in anns:
             if context.tid not in valid_context_ids or not isinstance(context, context_type_):
@@ -907,12 +907,11 @@ class DataPack(BasePack[Entry, Link, Group]):
                 skipped += 1
                 continue
             data: Dict[str, Any] = {}
-            data["context"] = get_context_data(context_type, context)
+            data["context"] = get_context_data(context_type_, context)
             data["offset"] = context.begin
 
             for field in context_fields:
                 data[field] = getattr(context, field)
-                print(getattr(context, field))
 
             if annotation_types:
                 for a_type, a_args in annotation_types.items():
@@ -930,6 +929,17 @@ class DataPack(BasePack[Entry, Link, Group]):
                         a_type, a_args, data, context
                     )
 
+            if audio_annotation_types:
+                for a_type, a_args in audio_annotation_types.items():
+                    if a_type.__name__ in data.keys():
+                        raise KeyError(
+                            f"Requesting two types of entries with the "
+                            f"same class name {a_type.__name__} at the "
+                            f"same time is not allowed"
+                        )
+                    data[a_type.__name__] = self._generate_annotation_entry_data(
+                        a_type, a_args, data, context)
+                
             if link_types:
                 for l_type, l_args in link_types.items():
                     if l_type.__name__ in data.keys():
@@ -999,8 +1009,9 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         components, unit, fields = self._parse_request_args(a_type, a_args)
 
-        a_dict: Dict[str, Any] = {}
-
+        # a_dict: Dict[str, Any] = {}
+        from collections import defaultdict
+        a_dict = defaultdict(list)
         a_dict["span"] = []
         a_dict["text"] = []
         for field in fields:
@@ -1021,10 +1032,17 @@ class DataPack(BasePack[Entry, Link, Group]):
         for annotation in self.get(a_type, cont, components):
             # we provide span, text (and also tid) by default
             a_dict["span"].append((annotation.begin, annotation.end))
-            a_dict["text"].append(annotation.text)
-
+            if isinstance(annotation, Annotation):
+                a_dict["text"].append(annotation.text)
+            elif isinstance(annotation, AudioAnnotation):
+                a_dict["audio"].append(annotation.audio)
+            else:
+                raise NotImplementedError(f"Annotation is set to {annotation}"
+                                        "but currently we only support"
+                                        "instances of {Annotation, "
+                                        "AudioAnnotation} and their subclass.")
             for field in fields:
-                if field in ("span", "text"):
+                if field in ("span", "text", "audio"):
                     continue
                 if field == "context_span":
                     a_dict[field].append(

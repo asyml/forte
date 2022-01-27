@@ -16,6 +16,7 @@ Unit tests for AudioAnnotation.
 """
 import os
 import unittest
+import soundfile
 from typing import Dict
 from numpy import array_equal
 
@@ -129,6 +130,11 @@ class AudioAnnotationTest(unittest.TestCase):
         self._pipeline.add(TextUtteranceProcessor())
         self._pipeline.initialize()
 
+        audio_file_names = os.listdir(self._test_audio_path)
+
+        self.audio_data1, _ = soundfile.read(os.path.join(self._test_audio_path, "test_audio_1.flac"), always_2d = True)
+        self.audio_data2, _ = soundfile.read(os.path.join(self._test_audio_path, "test_audio_0.flac"), always_2d = True)
+
     def test_audio_annotation(self):
 
         # Test `DataPack.get_span_audio()` with None audio payload
@@ -136,10 +142,26 @@ class AudioAnnotationTest(unittest.TestCase):
             pack: DataPack = DataPack()
             pack.set_text("test text")
             pack.get_span_audio(begin=0, end=1)
-
+        idx = 0
         # Verify the annotations of each datapack
         for pack in self._pipeline.process_dataset(self._test_audio_path):
-            print(list(pack.get_data(AudioAnnotation)))
+            # test get all audio annotation
+            # test get selective fields data from subclass of AudioAnnotation
+            data = list(pack.get_data(AudioAnnotation))
+            audio_data = [d["context"] for d in data]
+            for datum in audio_data:
+                # import pdb; pdb.set_trace()
+                # print('ddd')
+                if idx == 0:
+                    self.assertTrue(array_equal(self.audio_data1, datum))
+                elif idx == 1:
+                    self.assertTrue(array_equal(self.audio_data1[200:35000], datum))
+                elif idx == 2:
+                    self.assertTrue(array_equal(self.audio_data1[35200:72000], datum))
+                elif idx == 3:
+                    self.assertTrue(array_equal(self.audio_data2, datum))
+                idx += 1
+            # list(pack.get_data(AudioAnnotation))
             # Check Recording
             recordings = list(pack.get(Recording))
             self.assertEqual(len(recordings), 1)
