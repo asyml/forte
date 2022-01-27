@@ -1010,17 +1010,14 @@ class DataPack(BasePack[Entry, Link, Group]):
         components, unit, fields = self._parse_request_args(a_type, a_args)
 
         a_dict: Dict[str, Any] = {}
-        from collections import defaultdict
         a_dict["span"] = []
         if issubclass(a_type, Annotation):
             a_dict["text"] = []
-        elif issubclass(a_type, AudioAnnotation):
-            a_dict["audio"] = []
+        # elif issubclass(a_type, AudioAnnotation):
+        #     a_dict["audio"] = []
 
         for field in fields:
             a_dict[field] = []
-        # import pdb; pdb.set_trace()
-        # print('check fields  ')
         unit_begin = 0
         if unit is not None:
             if unit not in data.keys():
@@ -1032,14 +1029,13 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         cont_begin = cont.begin if cont else 0
 
-        annotation: Annotation
         for annotation in self.get(a_type, cont, components):
             # we provide span, text (and also tid) by default
             a_dict["span"].append((annotation.begin, annotation.end))
             if isinstance(annotation, Annotation):
                 a_dict["text"].append(annotation.text)
             elif isinstance(annotation, AudioAnnotation):
-                a_dict["audio"].append(annotation.audio)
+                a_dict["audio"] = annotation.audio
             else:
                 raise NotImplementedError(f"Annotation is set to {annotation}"
                                         "but currently we only support"
