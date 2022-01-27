@@ -27,7 +27,8 @@ class DataStore(BaseStore):
         For example, annotation type entry has the following format:
         [<begin>, <end>, <tid>, <entry_type>, <attr_1>, <attr_2>, ..., <attr_n>].
         Group type entry has the following format:
-        [<member_type>, <[members_tid_list]>, <tid>, <entry_type>, <attr_1>, <attr_2>, ..., <attr_n>].
+        [<member_type>, <[members_tid_list]>, <tid>, <entry_type>, <attr_1>,
+            <attr_2>, ..., <attr_n>].
         Link type entry has the following format:
         [<parent_tid>, <child_tid>, <tid>, <entry_type>, <attr_1>, <attr_2>, ..., <attr_n>].
 
@@ -207,8 +208,8 @@ class DataStore(BaseStore):
         """
         # We retrieve the entry data from entry_dict using tid.
         # We then locate the attribute using attr_id, and get the attribute.
-
-        raise NotImplementedError
+        entry = self.entry_dict[tid]
+        return entry[attr_id]
 
     def delete_entry(self, tid: int):
         r"""This function locates the entry data with `tid` and removes it
