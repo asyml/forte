@@ -823,7 +823,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             A data generator, which generates one piece of data (a dict
             containing the required entries, fields, and context).
         """
-        context_type_: Type[Annotation]
+        context_type_: Union[Type[Annotation], Type[AudioAnnotation]]
         if isinstance(context_type, str):
             context_type_ = get_class(context_type)
             if not issubclass(context_type_, Entry):
