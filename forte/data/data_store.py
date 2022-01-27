@@ -3,6 +3,7 @@ from typing import Union, Type, List, Iterator, Tuple
 import uuid
 from forte.data.ontology.core import EntryType
 from forte.data.base_store import BaseStore
+from forte.data.entry_type_generator import EntryTypeGenerator
 
 __all__ = ["DataStore"]
 
@@ -10,7 +11,7 @@ __all__ = ["DataStore"]
 class DataStore(BaseStore):
     # pylint: disable=pointless-string-statement
 
-    def __init__(self):
+    def __init__(self, onto_file_path=None):
         r"""An implementation from the dataframe-like data store object.
 
         A DataStore object is used to store a collection of NLP entries in a piece of text.
@@ -42,13 +43,14 @@ class DataStore(BaseStore):
         E.g. an annotation-type `entry data` with type Document has the following structure:
         [<begin>, <end>, <tid>, <entry_type>, <document_class>, <sentiment>, <classifications>]
 
-        Different annotation entries are sorted by the `begin` attribute of the entry.
+        Different entries are sorted by the `begin` attribute of the entry.
         If two entries have the same begin position, then we used the `end` attribute to sort them.
 
         Args:
             pack_name (Optional[str], optional): A name for this data store.
         """
         super().__init__()
+        self.onto_file_path = onto_file_path
 
         """
         The `_type_attributes` is a private dictionary that provides entry types
@@ -94,7 +96,7 @@ class DataStore(BaseStore):
         # self._type_attributes = get_type_attributes()
         # Issue #570 implements get_type_attributes()
         # see https://github.com/asyml/forte/issues/570
-        self._type_attributes: dict = {}
+        self._type_attributes: dict = EntryTypeGenerator.get_type_attributes()
 
         """
         Element is an underlying storage structure for all the entry data added by
