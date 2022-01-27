@@ -157,6 +157,9 @@ class AudioAnnotationTest(unittest.TestCase):
                 elif idx == 1:
                     self.assertTrue(array_equal(self.audio_data1[200:35000], datum))
                 elif idx == 2:
+                    import pdb; pdb.set_trace()
+                    print('')
+                    
                     self.assertTrue(array_equal(self.audio_data1[35200:72000], datum))
                 elif idx == 3:
                     self.assertTrue(array_equal(self.audio_data2, datum))
@@ -171,13 +174,10 @@ class AudioAnnotationTest(unittest.TestCase):
             # check get_data requests parameter effect
             # by checking if requested fields exist when the datum is for
             # the correct Entry.
-            for datum in data:
-                if 'Recording' in datum.keys():
-                    import pdb; pdb.set_trace()
-                    print('')
-                    
+            for idx, datum in enumerate(data):
+                if idx == 0:
                     self.assertTrue("recording_class" in datum['Recording'].keys())
-                if 'AudioUtterance' in datum.keys():
+                else:
                     self.assertTrue("speaker" in datum['AudioUtterance'].keys())
 
             # Check Recording

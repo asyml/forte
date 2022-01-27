@@ -1009,13 +1009,18 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         components, unit, fields = self._parse_request_args(a_type, a_args)
 
-        # a_dict: Dict[str, Any] = {}
+        a_dict: Dict[str, Any] = {}
         from collections import defaultdict
-        a_dict = defaultdict(list)
+        a_dict["span"] = []
+        if issubclass(a_type, Annotation):
+            a_dict["text"] = []
+        elif issubclass(a_type, AudioAnnotation):
+            a_dict["audio"] = []
 
+        for field in fields:
+            a_dict[field] = []
         # import pdb; pdb.set_trace()
-        # print('check fields a_type a_args ')
-
+        # print('check fields  ')
         unit_begin = 0
         if unit is not None:
             if unit not in data.keys():
@@ -1027,7 +1032,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         cont_begin = cont.begin if cont else 0
 
-
+        annotation: Annotation
         for annotation in self.get(a_type, cont, components):
             # we provide span, text (and also tid) by default
             a_dict["span"].append((annotation.begin, annotation.end))
