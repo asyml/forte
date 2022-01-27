@@ -835,8 +835,9 @@ class DataPack(BasePack[Entry, Link, Group]):
         else:
             context_type_ = context_type
 
-        annotation_types: Dict[Union[Type[Annotation], Type[AudioAnnotation]],
-            Union[Dict, List]] = {}
+        annotation_types: Dict[
+            Union[Type[Annotation], Type[AudioAnnotation]], Union[Dict, List]
+        ] = {}
         link_types: Dict[Type[Link], Union[Dict, List]] = {}
         group_types: Dict[Type[Group], Union[Dict, List]] = {}
         generics_types: Dict[Type[Generics], Union[Dict, List]] = {}
@@ -1043,7 +1044,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         for annotation in self.get(a_type, cont, components):
             # we provide span, text (and also tid) by default
             a_dict["span"].append(
-                (annotation.begin, annotation.end) # type: ignore
+                (annotation.begin, annotation.end)  # type: ignore
             )
             if isinstance(annotation, Annotation):
                 a_dict["text"].append(annotation.text)
@@ -1062,8 +1063,8 @@ class DataPack(BasePack[Entry, Link, Group]):
                 if field == "context_span":
                     a_dict[field].append(
                         (
-                            annotation.begin - cont_begin, # type: ignore
-                            annotation.end - cont_begin, # type: ignore
+                            annotation.begin - cont_begin,  # type: ignore
+                            annotation.end - cont_begin,  # type: ignore
                         )
                     )
                     continue
@@ -1073,7 +1074,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             if unit is not None:
                 while not self._index.in_span(
                     data[unit]["tid"][unit_begin],
-                    annotation.span # type: ignore
+                    annotation.span,  # type: ignore
                 ):
                     unit_begin += 1
 
@@ -1082,7 +1083,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
                 while self._index.in_span(
                     data[unit]["tid"][unit_span_end],
-                    annotation.span # type: ignore
+                    annotation.span,  # type: ignore
                 ):
                     unit_span_end += 1
 
