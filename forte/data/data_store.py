@@ -3,12 +3,13 @@ from typing import Union, Type, List, Iterator, Tuple
 import uuid
 from forte.data.ontology.core import EntryType
 from forte.data.base_store import BaseStore
+from forte.data.entry_type_generator import EntryTypeGenerator
 
 
 class DataStore(BaseStore):
     # pylint: disable=pointless-string-statement
 
-    def __init__(self):
+    def __init__(self, onto_file_path=None):
         r"""An implementation from the dataframe-like data store object.
 
         A DataStore object is used to store a collection of NLP entries in a piece of text.
@@ -41,6 +42,7 @@ class DataStore(BaseStore):
             pack_name (Optional[str], optional): A name for this data store.
         """
         super().__init__()
+        self.onto_file_path = onto_file_path
 
         """
         The `_type_attributes` is a private dictionary that provides entry types
@@ -86,7 +88,7 @@ class DataStore(BaseStore):
         # self._type_attributes = get_type_attributes()
         # Issue #570 implements get_type_attributes()
         # see https://github.com/asyml/forte/issues/570
-        self._type_attributes: dict = {}
+        self._type_attributes: dict = EntryTypeGenerator.get_type_attributes()
 
         """
         Element is an underlying storage structure for all the entry data added by
@@ -153,7 +155,7 @@ class DataStore(BaseStore):
         self, type_id: int, begin: int, end: int
     ) -> Tuple[int, int]:
         r"""This function adds an annotation entry with `begin` and `end` index
-        to the sortedlist at index `type_id` of the array which records all
+        to the asortedlist at index `type_id` of the array which records all
         sortedlists, return tid and index for the entry.
 
         Args:
@@ -182,8 +184,8 @@ class DataStore(BaseStore):
             attr_value: value of the attribute.
 
         """
-        # We retrieve the entry data from entry_dict using tid. We get its
-        # entry type. We then locate the attribute using attribute if, and update the attribute.
+        # We retrieve the entry data from entry_dict using tid. 
+        # We then locate the attribute using attribute id, and update the attribute.
 
         raise NotImplementedError
 
@@ -198,8 +200,8 @@ class DataStore(BaseStore):
         Returns:
             The value of `attr_id` for the entry with `tid`.
         """
-        # We retrieve the entry data from entry_dict using tid. We get its
-        # entry type. We then locate the attribute using attr_id, and get the attribute.
+        # We retrieve the entry data from entry_dict using tid.
+        # We then locate the attribute using attr_id, and get the attribute.
 
         raise NotImplementedError
 
