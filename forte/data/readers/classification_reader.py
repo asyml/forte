@@ -46,11 +46,11 @@ class ClassificationDatasetReader(PackReader):
     `text_fields` is a list of Forte entry types that indicate texts in the
     forte data fields will be kept and concatenated as input text.
     Apparently, it's a subset of `forte_data_fields`.
-    For example, if we only want titles and bodys in our input text, we
+    For example, if we only want titles and bodies in our input text, we
     specify "text_fields":
     ['ft.onto.base_ontology.Title', 'ft.onto.base_ontology.Body']" in the
     configuration. If titles are not needed, we can also only include
-    bodys by specifying
+    bodies by specifying
     "text_fields":['ft.onto.base_ontology.Body']" which is very
     flexible in customizing input text.
 
@@ -198,11 +198,11 @@ class ClassificationDatasetReader(PackReader):
         Here:
           - forte_data_fields: these fields provides one-to-one
               correspondence between given original dataset column names and
-              labels or forte ontologies. For column names without usage,
+              labels or forte ontology. For column names without usage,
               user can specify None for them.
           - index2class: a dictionary that maps from zero-based indices to
               classes
-          - text_fields: a list of ordered input ontologies that
+          - text_fields: a list of ordered input ontology that
               user want to concatenate into an input text.
           - digit_label:  boolean value that specifies whether label in dataset
               is digit.
