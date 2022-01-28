@@ -48,6 +48,7 @@ __all__ = [
     "CrossDocEventRelation",
     "ConstituentNode",
     "Title",
+    "Test",
     "Body",
     "MCOption",
     "MCQuestion",
@@ -479,6 +480,15 @@ class Title(Annotation):
 
 @dataclass
 class Body(Annotation):
+    """
+    A span based annotation `Body`, normally used to represent a document body.
+    """
+
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
+
+@dataclass
+class Test(Annotation):
     """
     A span based annotation `Body`, normally used to represent a document body.
     """
