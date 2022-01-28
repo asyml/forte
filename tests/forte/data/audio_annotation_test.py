@@ -16,7 +16,7 @@ Unit tests for AudioAnnotation.
 """
 import os
 import unittest
-from typing import Dict
+from typing import Dict, List
 from numpy import array_equal
 
 from forte.pipeline import Pipeline
@@ -196,6 +196,71 @@ class AudioAnnotationTest(unittest.TestCase):
             for audio_annotation in list(pack.get(AudioAnnotation)):
                 pack.delete_entry(audio_annotation)
             self.assertEqual(len(list(pack.all_audio_annotations)), 0)
+
+    def test_build_coverage_for(self):
+        """
+        A Unit test for DataPack.build_coverage_for() on AudioAnnotation
+        """
+
+        for pack in self._pipeline.process_dataset(self._test_audio_path):
+
+            utter: Utterance = pack.get_single(Utterance)
+            recording: Recording = pack.get_single(Recording)
+            audio_utters: List[AudioUtterance] = list(pack.get(AudioUtterance))
+
+            # Add coverage index for (Recording, AudioUtterance)
+            pack.build_coverage_for(
+                context_type=Recording,
+                covered_type=AudioUtterance
+            )
+            self.assertTrue(pack._index.coverage_index_is_valid)
+            self.assertEqual(
+                len(list(recording.get(AudioUtterance))), len(audio_utters)
+            )
+
+            # Check DataIndex.get_covered()
+            self.assertTrue(pack.covers(
+                context_entry=recording, covered_entry=audio_utters[0]
+            ))
+            self.assertFalse(pack.covers(
+                context_entry=audio_utters[0], covered_entry=recording
+            ))
+
+            # Check DataIndex.coverage_index_is_valid flag
+            pack._index.deactivate_coverage_index()
+            self.assertTrue(pack._index.coverage_index(
+                outer_type=Recording,
+                inner_type=AudioUtterance
+            ) is None)
+            pack._index.activate_coverage_index()
+            self.assertFalse(pack._index.coverage_index(
+                outer_type=Recording,
+                inner_type=AudioUtterance
+            ) is None)
+
+            # Check DataIndex.have_overlap()
+            with self.assertRaises(TypeError):
+                pack._index.have_overlap(pack.get_single(Link), recording)
+            with self.assertRaises(TypeError):
+                pack._index.have_overlap(utter, pack.get_single(Group))
+            with self.assertRaises(TypeError):
+                pack._index.have_overlap(utter, recording)
+            self.assertTrue(
+                pack._index.have_overlap(recording, audio_utters[0])
+            )
+            self.assertFalse(
+                pack._index.have_overlap(audio_utters[0], audio_utters[1])
+            )
+
+            # Check coverage index when inner and outer entries are the same
+            pack._index.deactivate_coverage_index()
+            pack.build_coverage_for(
+                context_type=Utterance,
+                covered_type=Utterance
+            )
+            self.assertEqual(len(pack._index._coverage_index), 1)
+            utter = pack.get_single(Utterance)
+            self.assertEqual(len(list(utter.get(Utterance))), 1)
 
 
 if __name__ == "__main__":
