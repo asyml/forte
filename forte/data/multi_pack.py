@@ -676,8 +676,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         mp = cls._deserialize(data_path, serialize_method, zip_pack)
 
         # fix 595 : change the dictionary's key after deserialization from str back to int
-        mp._inverse_pack_ref = {
-            int(k): v for k, v in mp._inverse_pack_ref.items()
+        mp._inverse_pack_ref = {  # pylint: disable=W0212
+            int(k): v for k, v in mp._inverse_pack_ref.items()  # pylint: disable=W0212
         }
 
         return mp
@@ -686,8 +686,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     def from_string(cls, data_content: str) -> "MultiPack":
         mp = super().from_string(data_content)
         # fix 595 : change the dictionary's key after deserialization from str back to int
-        mp._inverse_pack_ref = {
-            int(k): v for k, v in mp._inverse_pack_ref.items()
+        mp._inverse_pack_ref = {  # pylint: disable=W0212
+            int(k): v for k, v in mp._inverse_pack_ref.items()  # pylint: disable=W0212
         }
 
         return mp
