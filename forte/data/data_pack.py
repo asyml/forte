@@ -875,9 +875,23 @@ class DataPack(BasePack[Entry, Link, Group]):
                 valid_component_id |= self.get_ids_by_creator(component)
             valid_context_ids &= valid_component_id
 
-        def get_annotation_list(c_type):
-            """
-            Get an annotation list of a given context type.
+        def get_annotation_list(c_type: Union[Type[Annotation], Type[AudioAnnotation]]):
+            r"""Get an annotation list of a given context type.
+
+            Args:
+                c_type (Union[Type[Annotation], Type[AudioAnnotation]]):
+                    The granularity of the data context, which
+                    could be any ``Annotation`` type.
+
+            Raises:
+                NotImplementedError: raised when the given context type is
+                    not implemented.
+
+            Returns:
+                List(Union[Annotation, AudioAnnotation]):
+                    a list of annotations which is a copy of `self.annotations`
+                    and it enables modifications of `self.annotations` while
+                    iterating through its copy.
             """
             if issubclass(c_type, Annotation):
                 return list(self.annotations)
@@ -887,12 +901,26 @@ class DataPack(BasePack[Entry, Link, Group]):
                 raise NotImplementedError(
                     f"Context type is set to {c_type}"
                     "but currently we only support"
-                    " Annotation, AudioAnnotation."
+                    "[Annotation, AudioAnnotation]."
                 )
 
         def get_context_data(c_type, context):
-            """
-            Get context data of a given context type and context.
+            r"""Get context-specific primitive data of a given context type and
+                context.
+
+            Args:
+                c_type (Union[Type[Annotation], Type[AudioAnnotation]]):
+                    The granularity of the data context, which
+                    could be any ``Annotation`` type.
+                context (Union[Annotation, AudioAnnotation]): context that
+                    contains data to be extracted.
+
+            Raises:
+                NotImplementedError: raised when the given context type is
+                    not implemented.
+
+            Returns:
+                str: primitive context data.
             """
             if issubclass(c_type, Annotation):
                 return self.text[context.begin : context.end]
