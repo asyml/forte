@@ -18,7 +18,6 @@ import os
 import unittest
 import csv
 from typing import Dict
-from ft.onto.base_ontology import Test
 from forte.pipeline import Pipeline
 from ftx.onto.ag_news import Description
 from ft.onto.base_ontology import Body, Title, Document
