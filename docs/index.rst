@@ -12,6 +12,7 @@ Welcome to Forte's documentation!
    examples.md
    ontology_generation.md
    audio_processing.md
+   data_pack.md
 
 API
 ====
