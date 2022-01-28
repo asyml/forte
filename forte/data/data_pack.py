@@ -1040,10 +1040,11 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         cont_begin = cont.begin if cont else 0
 
-        for annotation in self.get(a_type, cont, components):
+        annotation: Union[Type[Annotation], Type[AudioAnnotation]]
+        for annotation in self.get(a_type, cont, components):# type: ignore
             # we provide span, text (and also tid) by default
             a_dict["span"].append(
-                (annotation.begin, annotation.end)  # type: ignore
+                (annotation.begin, annotation.end)
             )
             if isinstance(annotation, Annotation):
                 a_dict["text"].append(annotation.text)
@@ -1062,8 +1063,8 @@ class DataPack(BasePack[Entry, Link, Group]):
                 if field == "context_span":
                     a_dict[field].append(
                         (
-                            annotation.begin - cont_begin,  # type: ignore
-                            annotation.end - cont_begin,  # type: ignore
+                            annotation.begin - cont_begin,
+                            annotation.end - cont_begin,
                         )
                     )
                     continue
@@ -1073,7 +1074,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             if unit is not None:
                 while not self._index.in_span(
                     data[unit]["tid"][unit_begin],
-                    annotation.span,  # type: ignore
+                    annotation.span,
                 ):
                     unit_begin += 1
 
@@ -1082,7 +1083,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
                 while self._index.in_span(
                     data[unit]["tid"][unit_span_end],
-                    annotation.span,  # type: ignore
+                    annotation.span,
                 ):
                     unit_span_end += 1
 
