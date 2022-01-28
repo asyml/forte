@@ -887,7 +887,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                 raise NotImplementedError(
                     f"Context type is set to {c_type}"
                     "but currently we only support"
-                    "{Annotation, AudioAnnotation}"
+                    " Annotation, AudioAnnotation."
                 )
 
         def get_context_data(c_type, context):
@@ -905,9 +905,8 @@ class DataPack(BasePack[Entry, Link, Group]):
                     "{Annotation, AudioAnnotation}"
                 )
 
-        anns = get_annotation_list(context_type_)
         skipped = 0
-        for context in anns:
+        for context in get_annotation_list(context_type_):
             if context.tid not in valid_context_ids or not isinstance(
                 context, context_type_
             ):
