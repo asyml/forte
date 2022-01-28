@@ -1041,11 +1041,9 @@ class DataPack(BasePack[Entry, Link, Group]):
         cont_begin = cont.begin if cont else 0
 
         annotation: Union[Type[Annotation], Type[AudioAnnotation]]
-        for annotation in self.get(a_type, cont, components):# type: ignore
+        for annotation in self.get(a_type, cont, components):  # type: ignore
             # we provide span, text (and also tid) by default
-            a_dict["span"].append(
-                (annotation.begin, annotation.end)
-            )
+            a_dict["span"].append((annotation.begin, annotation.end))
             if isinstance(annotation, Annotation):
                 a_dict["text"].append(annotation.text)
             elif isinstance(annotation, AudioAnnotation):
