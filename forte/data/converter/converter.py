@@ -335,7 +335,6 @@ class Converter:
                         queue.append(sub_feature)
 
                 size -= 1
-
             curr_max_len = next_max_len
 
         return dtype
