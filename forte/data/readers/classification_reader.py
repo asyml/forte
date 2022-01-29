@@ -98,7 +98,7 @@ class ClassificationDatasetReader(PackReader):
                 "There must be a forte data field named 'label'"
                 " in the reader config."
             )
-        
+
         if "ft.onto.base_ontology.Document" in self.configs.forte_data_fields:
             raise ProcessorConfigError(
                 "Found `ft.onto.base_ontology.Document` in forte_data_fields "
