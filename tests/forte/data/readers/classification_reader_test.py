@@ -88,7 +88,7 @@ class ClassificationDatasetReaderTest(unittest.TestCase):
 
             self.assertEqual(title.text, expected_title)
             # Test Description
-            content: Body =  list(data_pack.get(Body))[0]
+            content: Body = list(data_pack.get(Body))[0]
             self.assertEqual(content.text, expected_content)
 
 

@@ -4,12 +4,12 @@ from termcolor import colored
 
 from forte import Pipeline
 from forte.data.readers import ClassificationDatasetReader
+from fortex.nltk import NLTKSentenceSegmenter
 from fortex.huggingface import ZeroShotClassifier
 from ft.onto.base_ontology import Sentence
 
 
-csv_path = "dataset_path/banking77/test.csv"
-
+csv_path = "data_samples/banking77/sample.csv"
 pl = Pipeline()
 # initialize labels
 class_names = [
@@ -96,18 +96,19 @@ index2class = dict(enumerate(class_names))
 # initialize reader config
 this_reader_config = {
     "forte_data_fields": [
-        "ft.onto.base.Document",
+        "ft.onto.base_ontology.Body",
         "label",
     ],
     "index2class": index2class,
     "text_fields": [
-        "ft.onto.base.Document"
+        "ft.onto.base_ontology.Body"
     ],
-    "digit_label": True,
+    "digit_label": False,
     "one_based_index_label": False,
 }
 
 pl.set_reader(ClassificationDatasetReader(), config=this_reader_config)
+pl.add(NLTKSentenceSegmenter())
 pl.add(ZeroShotClassifier(), config={"candidate_labels": class_names})
 pl.initialize()
 

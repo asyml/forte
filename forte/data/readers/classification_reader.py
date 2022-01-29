@@ -38,7 +38,7 @@ class ClassificationDatasetReader(PackReader):
     For example, for amazon polarity dataset,
     (https://huggingface.co/datasets/amazon_polarity), the column names
     are [label, title, content]. We can configure `forte_data_fields`to be
-    ['label', 'ft.onto.base_ontology.Title', 'ft.onto.base.Body'].
+    ['label', 'ft.onto.base_ontology.Title', 'ft.onto.base_ontology.Body'].
     `label` is a special keyword to specify the label/body class column,
     while the latter two ontology types will be used by the reader to store the
     text from the `title` and `content` column respectively.
@@ -97,6 +97,13 @@ class ClassificationDatasetReader(PackReader):
             raise ProcessorConfigError(
                 "There must be a forte data field named 'label'"
                 " in the reader config."
+            )
+        if "ft.onto.base_ontology.Document" in self.configs.forte_data_fields:
+            raise ProcessorConfigError(
+                "Found `ft.onto.base_ontology.Document` in forte_data_fields "
+                "of the reader config. Try use a different ontology to "
+                "represent the data field as this ontology is reserved to "
+                "store the concatenated text from input."
             )
 
         if self.configs.text_fields is None:
@@ -161,7 +168,7 @@ class ClassificationDatasetReader(PackReader):
             raise ProcessorConfigError(
                 "Label format from dataset "
                 "is not consistent with the label format from configs. \n"
-                f"dataset digit label: {dataset_digit_label}"
+                f"dataset digit label: {dataset_digit_label} \n"
                 f"config digit label: {self.configs.digit_label}",
             )
 
