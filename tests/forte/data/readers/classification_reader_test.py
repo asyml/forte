@@ -27,7 +27,6 @@ from forte.data.data_pack import DataPack
 
 class ClassificationDatasetReaderTest(unittest.TestCase):
     def setUp(self):
-        self.pipeline = Pipeline()
         self.sample_file1: str = os.path.abspath(
             os.path.join(
                 os.path.dirname(os.path.realpath(__file__)),
@@ -52,8 +51,45 @@ class ClassificationDatasetReaderTest(unittest.TestCase):
         }
 
     def test_classification_dataset_reader(self):
-        self.pipeline.set_reader(ClassificationDatasetReader(),
+        # test incompatible forte data field `ft.onto.base_ontology.Document`
+        
+        with self.assertRaises(ProcessorConfigError):
+            self.pipeline = Pipeline()
+            self.pipeline.set_reader(ClassificationDatasetReader(),
                                  config={"index2class": self.index2class1,
+                                         "skip_k_starting_lines": 0,
+                                         "forte_data_fields":
+                                            [
+                                                "label",
+                                                "ft.onto.base_ontology.Title",
+                                                "ft.onto.base_ontology.Document",
+                                            ]})
+            self.pipeline.initialize()
+        # test wrong length of forte_data_fields
+        with self.assertRaises(ProcessorConfigError):
+            self.pipeline = Pipeline()
+            self.pipeline.set_reader(ClassificationDatasetReader(),
+                                 config={"index2class": self.index2class1,
+                                         "skip_k_starting_lines": 0,
+                                         "forte_data_fields":
+                                            [
+                                                "label",
+                                                "ft.onto.base_ontology.Body",
+                                            ]})
+            self.pipeline.initialize()
+            # length check happens while processing data
+            for data_pack in self.pipeline.process_dataset(self.sample_file1):
+                continue
+        self.pipeline = Pipeline()
+        self.pipeline.set_reader(ClassificationDatasetReader(),
+                                 config={
+                                    "forte_data_fields":
+                                        [
+                                        "label",
+                                        "ft.onto.base_ontology.Title",
+                                        "ft.onto.base_ontology.Body",
+                                        ],
+                                     "index2class": self.index2class1,
                                          "skip_k_starting_lines": 0})
         self.pipeline.initialize()
         for data_pack in self.pipeline.process_dataset(self.sample_file1):
