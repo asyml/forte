@@ -10,8 +10,18 @@ Banking77 is a multi-class datasets. It has 77 classes which are fine-grained in
 The train data can be downloaded from [link](https://raw.githubusercontent.com/PolyAI-LDN/task-specific-datasets/master/banking_data/train.csv) and test data can be downloaded from [link](https://raw.githubusercontent.com/PolyAI-LDN/task-specific-datasets/master/banking_data/test.csv).
 
 ## Run classifier
-After User downloads the dataset and set the dataset path correctly in the script below,
-User can run the following command to run the classifier.
+To simply test the script, one can use run cmd below directly to use sample data under the project root folder.
+```
+python examples/classification/amazon_review_sentiment.py
+```
+
+```
+python examples/classification/bank_customer_intent.py
+```
+
+
+If User wants to run the script on the full dataset, User can download the dataset and set the dataset path correctly in the script.
+Under the `forte/examples/classification/` folder, User can run the following command to run the classifier.
 ```bash
 python amazon_review_sentiment.py
 ```

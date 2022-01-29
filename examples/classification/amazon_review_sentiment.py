@@ -7,7 +7,7 @@ from fortex.nltk import NLTKSentenceSegmenter
 from ft.onto.base_ontology import Sentence
 
 
-csv_path = "forte/data_samples/amazon_review_polarity_csv/sample.csv"
+csv_path = "data_samples/amazon_review_polarity_csv/sample.csv"
 pl = Pipeline()
 
 # initialize labels
