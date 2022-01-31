@@ -875,7 +875,9 @@ class DataPack(BasePack[Entry, Link, Group]):
                 valid_component_id |= self.get_ids_by_creator(component)
             valid_context_ids &= valid_component_id
 
-        def get_annotation_list(c_type: Union[Type[Annotation], Type[AudioAnnotation]]):
+        def get_annotation_list(
+            c_type: Union[Type[Annotation], Type[AudioAnnotation]]
+        ):
             r"""Get an annotation list of a given context type.
 
             Args:
@@ -930,7 +932,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                 raise NotImplementedError(
                     f"Context type is set to {context_type}"
                     "but currently we only support"
-                    "{Annotation, AudioAnnotation}"
+                    "[Annotation, AudioAnnotation]"
                 )
 
         skipped = 0
@@ -1080,8 +1082,8 @@ class DataPack(BasePack[Entry, Link, Group]):
                 raise NotImplementedError(
                     f"Annotation is set to {annotation}"
                     "but currently we only support"
-                    "instances of {Annotation, "
-                    "AudioAnnotation} and their subclass."
+                    "instances of [Annotation, "
+                    "AudioAnnotation] and their subclass."
                 )
             for field in fields:
                 if field in ("span", "text", "audio"):
