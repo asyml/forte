@@ -78,10 +78,10 @@ class Converter:
                 it will raise an exception if the target data cannot be
                 converted to `numpy.ndarray` or `torch.tensor`.
 
-        .. note::
-            If `need_pad` in :class:`forte.data.converter.Feature`
-            is True and `to_torch` is True, `to_torch` will overwrite the
-            effect of `to_numpy`.
+            .. note::
+                If `need_pad` in :class:`forte.data.converter.Feature`
+                is True and `to_torch` is True, `to_torch` will overwrite the
+                effect of `to_numpy`.
         """
         return {"to_numpy": True, "to_torch": True}
 

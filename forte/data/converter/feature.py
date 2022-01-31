@@ -32,6 +32,7 @@ class Feature:
             another list of features. Typically this should be the output from
             :meth:`extract` in
             :class:`~forte.data.extractor.base_extractor.BaseExtractor`.
+
         metadata (dict): A dictionary storing meta-data for this feature.
             Mandatory fields includes: `dim`, `dtype`.
 
