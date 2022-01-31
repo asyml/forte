@@ -59,10 +59,12 @@ class SubwordExtractor(BaseExtractor):
     def default_configs(cls):
         r"""Returns a dictionary of default hyper-parameters.
 
-        "`pretrained_model_name`": str
+        Here:
+
+        - "`pretrained_model_name`": str
             The name of the pretrained bert model. Must be the same
             as used in subword tokenizer.
-        "`subword_class`" (str): the fully qualified name of the class of the
+        - "`subword_class`" (str): the fully qualified name of the class of the
             subword, default is `ft.onto.base_ontology.Subword`.
         """
         config = super().default_configs()
