@@ -94,12 +94,6 @@ class LinkExtractor(BaseExtractor):
         - "`index_annotation`": The annotation object used to index the
             head and child node of the relations.
         """
-            #         - "attribute": The attribute of the relation to extract.
-
-            # - "index_annotation": The annotation object used to index the
-            # head and child node of the relations.
-        
-        
         config = super().default_configs()
         config.update(
             {
