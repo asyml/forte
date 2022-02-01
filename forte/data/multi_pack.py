@@ -686,7 +686,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     @classmethod
     def from_string(cls, data_content: str):
         # pylint: disable=protected-access
-        # can not use explict type hint for mp as pylint does not allow type change from base_pack to multi_pack
+        # can not use explict type hint for mp as pylint does not allow type change
+        # from base_pack to multi_pack
         mp = super().from_string(data_content)
 
         # (fix 595) change the dictionary's key after deserialization from str back to int
