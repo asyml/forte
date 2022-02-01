@@ -93,7 +93,7 @@ class DataStore(BaseStore):
         self._type_attributes: dict = {}
 
         """
-        The `elements` is an underlying storage structure for all the entry 
+        The `elements` is an underlying storage structure for all the entry
         data added by users in this DataStore class.
         It is a list that stores sorted `entry lists` by the order of `type id`.
 
@@ -108,7 +108,7 @@ class DataStore(BaseStore):
         self.elements: List = []
 
         """
-        The `_type_dict` is a private dictionary that stores type id, which 
+        The `_type_dict` is a private dictionary that stores type id, which
         is the index of sortedlists in `self.elements`.
         The keys are all valid ontology types as strings.
         It should be created only once no matter how many data store objects
