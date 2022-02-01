@@ -673,23 +673,27 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         Returns:
             An data pack object deserialized from the string.
         """
+        # pylint: disable=protected-access
         mp: MultiPack = cls._deserialize(data_path, serialize_method, zip_pack)
 
-        # fix 595 : change the dictionary's key after deserialization from str back to int
-        mp._inverse_pack_ref = {  # pylint: disable=W0212
+        # (fix 595) change the dictionary's key after deserialization from str back to int
+        mp._inverse_pack_ref = {
             int(k): v
-            for k, v in mp._inverse_pack_ref.items()  # pylint: disable=W0212
+            for k, v in mp._inverse_pack_ref.items()
         }
 
         return mp
 
     @classmethod
     def from_string(cls, data_content: str) -> "MultiPack":
-        mp: MultiPack = super().from_string(data_content)
-        # fix 595 : change the dictionary's key after deserialization from str back to int
-        mp._inverse_pack_ref = {  # pylint: disable=W0212
+        # pylint: disable=protected-access
+        bp = super().from_string(data_content)
+        assert isinstance(bp, BasePack), "Wrong type"
+        mp: MultiPack = bp
+        # (fix 595) change the dictionary's key after deserialization from str back to int
+        mp._inverse_pack_ref = {
             int(k): v
-            for k, v in mp._inverse_pack_ref.items()  # pylint: disable=W0212
+            for k, v in mp._inverse_pack_ref.items()
         }
 
         return mp
