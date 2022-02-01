@@ -955,7 +955,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                 for a_type, a_args in annotation_types.items():
                     if issubclass(a_type, context_type_):
                         continue
-                    if a_type.__name__ in data.keys():
+                    if a_type.__name__ in data:
                         raise KeyError(
                             f"Requesting two types of entries with the "
                             f"same class name {a_type.__name__} at the "
@@ -969,7 +969,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
             if audio_annotation_types:
                 for a_type, a_args in audio_annotation_types.items():
-                    if a_type.__name__ in data.keys():
+                    if a_type.__name__ in data:
                         raise KeyError(
                             f"Requesting two types of entries with the "
                             f"same class name {a_type.__name__} at the "
@@ -983,7 +983,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
             if link_types:
                 for l_type, l_args in link_types.items():
-                    if l_type.__name__ in data.keys():
+                    if l_type.__name__ in data:
                         raise KeyError(
                             f"Requesting two types of entries with the "
                             f"same class name {l_type.__name__} at the "
@@ -1061,7 +1061,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             a_dict[field] = []
         unit_begin = 0
         if unit is not None:
-            if unit not in data.keys():
+            if unit not in data:
                 raise KeyError(
                     f"{unit} is missing in data. You need to "
                     f"request {unit} before {a_type}."
@@ -1146,13 +1146,13 @@ class DataPack(BasePack[Entry, Link, Group]):
             parent_type = link.ParentType.__name__
             child_type = link.ChildType.__name__
 
-            if parent_type not in data.keys():
+            if parent_type not in data:
                 raise KeyError(
                     f"The Parent entry of {a_type} is not requested."
                     f" You should also request {parent_type} with "
                     f"{a_type}"
                 )
-            if child_type not in data.keys():
+            if child_type not in data:
                 raise KeyError(
                     f"The child entry of {a_type} is not requested."
                     f" You should also request {child_type} with "

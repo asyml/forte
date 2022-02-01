@@ -1,5 +1,25 @@
 # DataPack Tutorial
 
+## Get primitive data
+`DataPack.get_data()` is commonly used to retrieve primitive data from a datapack. User can request data of a certain `Annotation` type (currently supporting `Annotation` and `AudioAnnotation`) by setting parameter `context_type`. User can also request data for certain data fields.
+
+For example, if User wants to get `AudioAnnotation` from a `DataPack` instance `pack`. User can call the function like the code blow. It returns a generator that User can iterate over.
+```python
+pack.get_data(AudioAnnotation)
+```
+
+For example, if User wants to get `AudioAnnotation` from a `DataPack` instance `pack` and specific data fields such as `recording_class` for `Recording` entry and `speaker` for `AudioUtterance` entry. User can call the function like the code blow.
+Since those two data fields are specific to subclass of `AudioAnnotation`, User needs to let dictionary keys be those subclass and values be requested data fields under the corresponding subclass.
+```python
+pack.get_data(AudioAnnotation,
+                {Recording:
+                    {"fields": ["recording_class"]},
+                AudioUtterance:
+                    {"fields": ["speaker"]}}
+            )
+```
+
+
 ## Build Coverage Index
 `DataPack.get()` is commonly used to retrieve entries from a datapack. In some cases, we are only interested in getting entries from a specific range. `DataPack.get()` allows users to set `range_annotation` which controls the search area of the sub-types. If `DataPack.get()` is called frequently with queries related to the `range_annotation`, you may consider building the coverage index regarding the related entry types. Users can call `DataPack.build_coverage_for(context_type, covered_type)` in order to create a mapping between a pair of entry types and target entries that are covered in ranges specified by outer entries.
 
