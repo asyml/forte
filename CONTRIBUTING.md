@@ -103,6 +103,12 @@ for review. Use the following simple PR templates to structure the PR:
 
 * [PR Template](https://github.com/asyml/forte/blob/master/.github/PULL_REQUEST_TEMPLATE.md)
 
+Here is a detailed explanation of each section in the template:
+* The first line should always start with `This PR fixes [issue link]` where `[issue link]` can be replaced with a `#ISSUE_ID` associated to a specific [issue](https://github.com/asyml/forte/issues). This allows Github to automatically link your pull request to the corresponding issue.
+* **Description of changes**: You should include a description of the changes that you make. If the pull request is aimed to fix an issue, you can explain the approaches to address the problem.
+* **Possible influences of this PR**: List all the potential side-effects of your update. Examples include influences on compatibility, performance, API signature, etc.
+* **Test Conducted**: Describe the test cases to verify the changes in pull request. You should create unit tests for any newly added features. We will use [Covergage](https://coverage.readthedocs.io/en/6.3/) to gauge the effectiveness of tests.
+
 ### Using Labels
 
 We use standard issue labels such as priority, bug, enhancement, etc. We have a few
@@ -120,6 +126,15 @@ The programming language for Forte is Python. We follow
 the [Google Python Style guide](http://google.github.io/styleguide/pyguide.html). The
 project code is examined using `pylint`, `flake8`, `mypy` and `black`, which will be run
 automatically in CI.
+
+### Docstring
+
+The docstrings should follow the [`Comments and Docstrings` section](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings) of Google Python Style guide. We will include a pylint plugin called [docparams](https://github.com/PyCQA/pylint/blob/main/pylint/extensions/docparams.rst) to validate the parameters of docstrings:
+* parameters and their types
+* return value and its type
+* exceptions raised
+
+Another aspect that should be noted is the format of links or cross-references of python objects. Make sure to follow the [sphinx cross-referencing syntax](https://www.sphinx-doc.org/en/master/usage/restructuredtext/roles.html#xref-syntax). The references will be checked by [sphinx-build nit-picky mode](https://www.sphinx-doc.org/en/master/man/sphinx-build.html#cmdoption-sphinx-build-n) which raises warnings for all the missing and unresolvable links. 
 
 ### Git Commit Style
 
