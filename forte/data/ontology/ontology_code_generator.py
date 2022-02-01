@@ -446,7 +446,7 @@ class OntologyCodeGenerator:
         include_init: bool = True,
         merged_path: Optional[str] = None,
         lenient_prefix=False,
-        use_name_space_packaging: bool = True,
+        use_name_space_packaging: bool = False,
     ) -> Optional[str]:
         r"""Function to generate and save the python ontology code after reading
         ontology from the input json file. This is the main entry point to
@@ -468,10 +468,8 @@ class OntologyCodeGenerator:
                 be written at this path.
             lenient_prefix: if `True`, will not enforce the entry name to
                 match a known prefix.
-            use_name_space_packaging: True if namespace packaging is to be used,
-                and `__init__.py` is to be generated at the top level;
-                False, namespace packaging is to be used,
-                and the `__init__.py` is not to be generated at the top level
+            use_name_space_packaging: True if `__init__.py` is not to be generated at the top level;
+                False, the `__init__.py` is to be generated at the top level
 
         Returns:
             Directory path in which the modules are created: either one of

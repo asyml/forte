@@ -86,7 +86,6 @@ class GenerateOntologyTest(unittest.TestCase):
         ),
         ("race_qa_onto", ["ft/onto/race_qa_ontology"]),
         ("test_top_attribute", ["ft/onto/test_top_attribute"]),
-        ("test_ndarray_attribute", ["ft/onto/test_ndarray"])
     )
     def test_generated_code(self, value):
         input_file_name, file_paths = value
@@ -303,8 +302,6 @@ class GenerateOntologyTest(unittest.TestCase):
     @data(
         (True, "test_duplicate_entry.json", DuplicateEntriesWarning),
         (True, "test_duplicate_attr_name.json", DuplicatedAttributesWarning),
-        (True, "test_ndarray_dtype_only.json", UserWarning),
-        (True, "test_ndarray_shape_only.json", UserWarning),
         (False, "example_ontology.json", OntologySourceNotFoundException),
         (False, "test_invalid_parent.json", ParentEntryNotSupportedException),
         (False, "test_invalid_attribute.json", TypeNotDeclaredException),
