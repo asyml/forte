@@ -167,7 +167,7 @@ class DataStoreTest(unittest.TestCase):
 
         # Entry with such tid does not exist
         with self.assertRaisesRegex(
-            ValueError, "Entry with tid 1111 not found."
+            KeyError, "Entry with tid 1111 not found."
         ):
             self.data_store.get_attribute(1111, "speaker")
 
@@ -190,7 +190,7 @@ class DataStoreTest(unittest.TestCase):
 
         # Entry with such tid does not exist
         with self.assertRaisesRegex(
-            ValueError, "Entry with tid 1111 not found."
+            KeyError, "Entry with tid 1111 not found."
         ):
             self.data_store.set_attribute(1111, "speaker", "human")
 
