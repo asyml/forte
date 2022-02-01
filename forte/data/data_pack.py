@@ -792,7 +792,8 @@ class DataPack(BasePack[Entry, Link, Group]):
                 pack.get_data(base_ontology.Sentence, requests)
 
         Args:
-            context_type (str): The granularity of the data context, which
+            context_type (Union[str, Type[Annotation], Type[AudioAnnotation]]):
+                The granularity of the data context, which
                 could be any ``Annotation`` type.
             request (dict): The entry types and fields required.
                 The keys of the requests dict are the required entry types
