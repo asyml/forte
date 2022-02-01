@@ -1052,10 +1052,10 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         a_dict: Dict[str, Any] = {}
         a_dict["span"] = []
+        # For AudioAnnotation, since the data is single numpy array
+        # we don't initialize an empty list for a_dict["audio"]
         if issubclass(a_type, Annotation):
             a_dict["text"] = []
-        # elif issubclass(a_type, AudioAnnotation):
-        #     a_dict["audio"] = []
 
         for field in fields:
             a_dict[field] = []

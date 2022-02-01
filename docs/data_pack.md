@@ -3,13 +3,14 @@
 ## Get primitive data
 `DataPack.get_data()` is commonly used to retrieve primitive data from a datapack. User can request data of a certain `Annotation` type (currently supporting `Annotation` and `AudioAnnotation`) by setting parameter `context_type`. User can also request data for certain data fields.
 
-For example, if User wants to get `AudioAnnotation` from a `DataPack` instance `pack`. User can call the function like the code blow. It returns a generator that User can iterate over.
+For example, if User wants to get primitive data of `AudioAnnotation` from a `DataPack` instance `pack`. User can call the function like the code blow. It returns a generator that User can iterate over.
+`AudioAnnotation` is passed into the method as parameter `context_type`.
 ```python
 pack.get_data(AudioAnnotation)
 ```
 
-For example, if User wants to get `AudioAnnotation` from a `DataPack` instance `pack` and specific data fields such as `recording_class` for `Recording` entry and `speaker` for `AudioUtterance` entry. User can call the function like the code blow.
-Since those two data fields are specific to subclass of `AudioAnnotation`, User needs to let dictionary keys be those subclass and values be requested data fields under the corresponding subclass.
+For example, if User wants to get primitive data of `AudioAnnotation` from a `DataPack` instance `pack` and specific data fields such as `recording_class` for `Recording` entry and `speaker` for `AudioUtterance` entry. User can call the function like the code blow.
+`Recording` and `AudioUtterance` are subclass of `AudioAnnotation`. Therefore, their data fields can be requested when `context_type` is `AudioAnnotation`. Since they have data fields that are different. User needs to let dictionary keys be those subclass of requested `context_type` and values be requested data fields in the corresponding subclass.
 ```python
 pack.get_data(AudioAnnotation,
                 {Recording:
