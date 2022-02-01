@@ -28,6 +28,8 @@ class SchemaKeywords:
     element_type = "item_type"
     dict_key_type = "key_type"
     dict_value_type = "value_type"
+    ndarray_dtype = "ndarray_dtype"
+    ndarray_shape = "ndarray_shape"
 
 
 # Some names are used as properties by the core types, they should not be
@@ -83,7 +85,7 @@ DEFAULT_PREFIX = "ft.onto"
 
 SUPPORTED_PRIMITIVES = {"int", "float", "str", "bool"}
 NON_COMPOSITES = {key: key for key in SUPPORTED_PRIMITIVES}
-COMPOSITES = {"List", "Dict"}
+COMPOSITES = {"List", "Dict", "NdArray"}
 
 ALL_INBUILT_TYPES = set(list(NON_COMPOSITES.keys()) + list(COMPOSITES))
 
