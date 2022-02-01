@@ -48,7 +48,6 @@ __all__ = [
     "CrossDocEventRelation",
     "ConstituentNode",
     "Title",
-    "Body",
     "MCOption",
     "MCQuestion",
     "MRCQuestion",
