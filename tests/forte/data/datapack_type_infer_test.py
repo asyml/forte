@@ -1,7 +1,7 @@
 import unittest
 from ddt import data, ddt
 
-from forte.data.caster import MultiPackBoxer
+from forte.data.caster import MultiPackBoxer, MultiPackUnboxer
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.readers.misc_readers import RawPackReader, RawMultiPackReader
@@ -12,7 +12,6 @@ from forte.data.readers.plaintext_reader import PlainTextReader
 
 @ddt
 class DataPackTypeInferTest(unittest.TestCase):
-
     @data(
         PlainTextReader,
         RawPackReader,
@@ -37,3 +36,11 @@ class DataPackTypeInferTest(unittest.TestCase):
         caster = component()
         self.assertTrue(caster.input_pack_type() is DataPack)
         self.assertTrue(caster.output_pack_type() is MultiPack)
+
+    @data(
+        MultiPackUnboxer,
+    )
+    def test_multipack_unboxer(self, component):
+        caster = component()
+        self.assertTrue(caster.input_pack_type() is MultiPack)
+        self.assertTrue(caster.output_pack_type() is DataPack)
