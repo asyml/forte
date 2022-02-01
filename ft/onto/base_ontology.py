@@ -478,16 +478,6 @@ class Title(Annotation):
 
 
 @dataclass
-class Body(Annotation):
-    """
-    A span based annotation `Body`, normally used to represent a document body.
-    """
-
-    def __init__(self, pack: DataPack, begin: int, end: int):
-        super().__init__(pack, begin, end)
-
-
-@dataclass
 class MCOption(Annotation):
 
     def __init__(self, pack: DataPack, begin: int, end: int):
