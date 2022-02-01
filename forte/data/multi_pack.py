@@ -678,8 +678,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
         # (fix 595) change the dictionary's key after deserialization from str back to int
         mp._inverse_pack_ref = {
-            int(k): v
-            for k, v in mp._inverse_pack_ref.items()
+            int(k): v for k, v in mp._inverse_pack_ref.items()
         }
 
         return mp
@@ -692,8 +691,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         mp: MultiPack = bp
         # (fix 595) change the dictionary's key after deserialization from str back to int
         mp._inverse_pack_ref = {
-            int(k): v
-            for k, v in mp._inverse_pack_ref.items()
+            int(k): v for k, v in mp._inverse_pack_ref.items()
         }
 
         return mp
