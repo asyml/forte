@@ -238,7 +238,7 @@ class ClassificationDatasetReader(PackReader):
 
 def generate_text_n_input_ontology_indices(
     text_fields: List[str], forte_data_fields_dict: Dict[str, str]
-    ) -> Tuple[str, Dict[str, Tuple[int, int]]]:
+) -> Tuple[str, Dict[str, Tuple[int, int]]]:
     """
     Retrieve ontologies from data fields and concatenate them into text.
     Also, we generate the indices for these ontologies accordingly.
