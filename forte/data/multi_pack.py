@@ -34,7 +34,7 @@ from forte.data.ontology.top import (
 )
 from forte.data.types import DataRequest
 from forte.utils import get_class
-from forte.version import BACKWARD_COMPATIBLE_VER, DEFAULT_PACK_VERSION
+from forte.version import BACKWARD_COMPATIBLE_VER
 
 logger = logging.getLogger(__name__)
 
