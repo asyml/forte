@@ -689,10 +689,11 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         # can not use explict type hint for mp as pylint does not allow type change
         # from base_pack to multi_pack
         mp = super().from_string(data_content)
-        # pylint: disable=no-member
         # (fix 595) change the dictionary's key after deserialization from str back to int
-        mp._inverse_pack_ref = {
-            int(k): v for k, v in mp._inverse_pack_ref.items()
+        assert isinstance(mp._inverse_pack_ref, Dict)
+        mp._inverse_pack_ref = {  # pylint: disable=no-member
+            int(k): v
+            for k, v in mp._inverse_pack_ref.items()  # pylint: disable=no-member
         }
 
         return mp
