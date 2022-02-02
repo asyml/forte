@@ -141,7 +141,7 @@ class TestWordSplittingProcessor(unittest.TestCase):
     ):
         entity_config = {
             "other_entry_policy": {
-                "kwargs": {"ft.onto.base_ontology.EntityMention": "auto_align"}
+                "ft.onto.base_ontology.EntityMention": "auto_align"
             }
         }
         self.nlp.add(

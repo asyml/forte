@@ -48,6 +48,16 @@ cd forte-wrappers
 pip install src/spacy
 ```
 
+Some components or modules in forte may require some [extra requirements](https://github.com/asyml/forte/blob/master/setup.py#L45):
+
+* `pip install forte[ner]`: Install packages required for [ner_trainer](https://github.com/asyml/forte/blob/master/forte/trainer/ner_trainer.py)
+* `pip install forte[test]`: Install packages required for running [unit tests](https://github.com/asyml/forte/tree/master/tests).
+* `pip install forte[example]`: Install packages required for running [forte examples](https://github.com/asyml/forte/tree/master/examples).
+* `pip install forte[wikipedia]`: Install packages required for reading [wikipedia datasets](https://github.com/asyml/forte/tree/master/forte/datasets/wikipedia).
+* `pip install forte[augment]`: Install packages required for [data augmentation module](https://github.com/asyml/forte/tree/master/forte/processors/data_augment).
+* `pip install forte[stave]`: Install packages required for [StaveProcessor](https://github.com/asyml/forte/blob/master/forte/processors/stave/stave_processor.py).
+* `pip install forte[audio_ext]`: Install packages required for [AudioReader](https://github.com/asyml/forte/blob/master/forte/data/readers/audio_reader.py).
+
 ## Getting Started
 
 * [Examples](./examples)
