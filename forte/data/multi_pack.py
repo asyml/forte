@@ -689,6 +689,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         # can not use explict type hint for mp as pylint does not allow type change
         # from base_pack to multi_pack which is problematic so use jsonpickle instead
         import jsonpickle
+
         mp = jsonpickle.decode(data_content)
         if not hasattr(mp, "pack_version"):
             mp.pack_version = DEFAULT_PACK_VERSION
