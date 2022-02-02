@@ -14,6 +14,8 @@
 
 import copy
 import logging
+import jsonpickle
+
 from pathlib import Path
 from typing import Dict, List, Set, Union, Iterator, Optional, Type, Any, Tuple
 
@@ -35,8 +37,6 @@ from forte.data.ontology.top import (
 from forte.data.types import DataRequest
 from forte.utils import get_class
 from forte.version import BACKWARD_COMPATIBLE_VER, DEFAULT_PACK_VERSION
-
-import jsonpickle
 
 logger = logging.getLogger(__name__)
 
