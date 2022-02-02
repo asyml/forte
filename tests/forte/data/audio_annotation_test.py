@@ -165,10 +165,13 @@ class AudioAnnotationTest(unittest.TestCase):
                     self.assertTrue(array_equal(np.array([data_instance.audio]), raw_data['AudioUtterance']['audio']))
                     self.assertTrue(data_instance.speaker
                                 ==raw_data['AudioUtterance']['speaker'][0])
+                import pdb; pdb.set_trace()
+                print('raw_data')
+                
 
             # check non-existence of non-requested data fields
             raw_data_generator = pack.get_data(AudioAnnotation)
-            for raw_data  in raw_data_generator:
+            for raw_data in raw_data_generator:
                 self.assertFalse("Recording" in raw_data)
                 self.assertFalse("AudioUtterance" in raw_data)
             

@@ -794,12 +794,15 @@ class DataPack(BasePack[Entry, Link, Group]):
         Args:
             context_type (Union[str, Type[Annotation], Type[AudioAnnotation]]):
                 The granularity of the data context, which
-                could be any ``Annotation`` type.
+                could be any ``Annotation`` type. Behaviors under different
+                context_type varies:
+                - str type will be converted into Union[Type[Annotation], Type[AudioAnnotation]]
+                - Type[Annotation]: the default data field is `"text"`.
+                - Type[AudioAnnotation]: the default data field is `"audio"` which stores audio data in numpy arrays.
             request (dict): The entry types and fields required.
                 The keys of the requests dict are the required entry types
                 and the value should be either:
 
-                - a list of field names or
                 - a dict which accepts three keys: `"fields"`, `"component"`,
                   and `"unit"`.
 
@@ -814,8 +817,9 @@ class DataPack(BasePack[Entry, Link, Group]):
                     - By setting `"unit"` (string), users can
                       specify a unit by which the annotations are indexed.
 
-                Note that for all annotation types, `"text"` and `"span"`
-                fields are returned by default; for all link types, `"child"`
+                Note that for all annotation types, `"span"`
+                fields and annotation-specific data fields are returned by
+                default; for all link types, `"child"`
                 and `"parent"` fields are returned by default.
             skip_k (int): Will skip the first `skip_k` instances and generate
                 data from the (`offset` + 1)th instance.
