@@ -85,7 +85,7 @@ class SkeletonOp(ABC):
         # It is used when copying the Link/Group/MultiPackLink/MultiPackGroup.
         self._entry_maps: Dict[int, Dict[int, int]] = {}
 
-        self.configs: Config = Config(configs, None, allow_new_hparam=True)
+        self.configs = configs
 
     def _overlap_with_existing(self, pid: int, begin: int, end: int) -> bool:
         r"""

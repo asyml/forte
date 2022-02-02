@@ -44,13 +44,16 @@ class DummyAugmenter(SkeletonOp):
                 annotation_list[-1], replaced_text
             )
             return True
-        except:
+        except Exception as e:
+            print(e)
             return False
 
 
 class TestSkeletonOp(unittest.TestCase):
     def setUp(self) -> None:
-        self.skeleton_op = DummyAugmenter({})
+        self.skeleton_op = DummyAugmenter(
+            {"augment_entry": "ft.onto.base_ontology.Token"}
+        )
 
     def test_operations(self) -> None:
 
