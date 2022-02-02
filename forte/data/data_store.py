@@ -59,8 +59,8 @@ class DataStore(BaseStore):
             onto_file_path (str, optional): the path to the ontology file.
         """
         super().__init__()
-        self.__onto_file_path = onto_file_path
-        self.__tid_idx = 2
+        # Will change to private variable after it has been used.
+        self.onto_file_path = onto_file_path
         self.__entry_type_idx = 3
 
         """
