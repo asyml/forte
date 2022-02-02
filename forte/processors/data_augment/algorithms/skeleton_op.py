@@ -25,7 +25,6 @@ from sortedcontainers.sorteddict import SortedDict
 from sortedcontainers.sortedlist import SortedList
 
 
-
 from forte.data.data_pack import DataPack
 from forte.data.ontology.top import (
     Annotation,
