@@ -140,7 +140,7 @@ class DataStore(BaseStore):
         self.entry_dict: dict = {}
 
     def _new_annotation(
-        self, entry_type: Union[str, Type[EntryType]], begin: int, end: int
+        self, entry_type: str, begin: int, end: int
     ):
         r"""This function generates a new annotation with default fields.
         Called by add_annotation_raw() to create a new annotation
@@ -161,16 +161,15 @@ class DataStore(BaseStore):
         return entry
 
     def add_annotation_raw(
-        self, entry_type: Union[str, Type[EntryType]], begin: int, end: int
+        self, type_id: int, begin: int, end: int
     ) -> Tuple[int, int]:
         r"""This function adds an annotation entry with `begin` and `end` indices
-        to the `entry_type` sortedlist, returns the tid and the index for the entry.
-
+        to the sortedlist at index `type_id` of the array which records all
+        sortedlists, return the `tid` and the index for the entry.
         Args:
-            entry_type (str): Fully qualified name of this annotation.
+            type_id (int): Index of Annotation sortedlist in `self.elements`.
             begin (int): Begin index of the entry.
             end (int): End index of the entry.
-
         Returns:
             `Tid` of the entry and its index in the entry list.
         """
