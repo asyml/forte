@@ -25,6 +25,7 @@ import numpy as np
 from ddt import ddt, data, unpack
 
 from forte.common import ProcessExecutionException, ProcessorConfigError
+from forte.common.exception import ValidationError
 from forte.common.configuration import Config
 from forte.data.base_pack import PackType
 from forte.data.base_reader import PackReader, MultiPackReader
@@ -1457,6 +1458,18 @@ class RecordCheckPipelineTest(unittest.TestCase):
             "Reference name of DummyEvaluatorFour is ref_dummy",
         )
 
+    def test_pipeline_processor_invalid_ref_name(self):
+        """Tests to get the processor result by it's reference name"""
+
+        nlp = Pipeline[DataPack](enforce_consistency=True)
+        reader = DummySentenceReaderOne()
+        nlp.set_reader(reader)
+        dummy = DummyEvaluatorFour()
+        nlp.add(dummy, ref_name="ref_dummy")
+        dummy1 = DummyEvaluatorOne()
+        with self.assertRaises(ValidationError):
+            nlp.add(dummy1, ref_name="ref_dummy")
+        nlp.initialize()
 
 if __name__ == "__main__":
     unittest.main()

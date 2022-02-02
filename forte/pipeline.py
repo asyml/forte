@@ -814,8 +814,7 @@ class Pipeline(Generic[PackType]):
 
         if ref_name is None:
             self._ref_names[ref_name] = []
-            self._ref_names[ref_name].append(len(self.components))
-        elif ref_name in self._ref_names.keys():
+        elif ref_name in self._ref_names:
             raise ValidationError(
                 f"This reference name {ref_name} already exists, please specify a new one"
             )
