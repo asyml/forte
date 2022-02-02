@@ -217,18 +217,20 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
                 f"type: {type_name}"
             )
 
-        return self.remove_pack_(pack, index_of_pack, clean_invalid_entries)
+        return self._remove_pack(pack, index_of_pack, clean_invalid_entries)
 
-    def remove_pack_(
+    def _remove_pack(
         self,
         pack: DataPack,
         index_of_pack: int,
         clean_invalid_entries: bool = False,
     ) -> bool:
         """
-        Remove a existing data pack in the multi pack. To prevent index of the
+        Remove an existing data pack in the multi pack. To prevent index of the
         packs following it being changed, set this empty position to None
-        in order to keep the index for the packs intact
+        in order to keep the index for the packs intact. in _pack_ref[] and
+        _packs[] the position will be set to None while in _pack_names[] the
+        position will be set as empty string.
 
         Args:
             pack (DataPack): The existing data pack.
@@ -296,15 +298,13 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         # Remove the reverse mapping from pack id to the pack index.
         self._inverse_pack_ref.pop(pack.pack_id)
 
-        # Remove the pack names. To keep the remaining element's index
-        # unchanged, set to None instead of direct removal
-        tmp_pack_name = self.pack_names[index_of_pack]
+        # Remove the reverse mapping from name to the pack index.
+        self._name_index.pop(self.pack_names[index_of_pack])
 
+        # Remove the pack names. To keep the remaining element's index
+        # unchanged, set to empty instead of direct removal
         self._pack_names[index_of_pack] = ""
         # remove(tmp_pack_name) in case don't care index change
-
-        # Remove the reverse mapping from name to the pack index.
-        self._name_index.pop(tmp_pack_name)
 
         # Remove Reference to the data pack.
         self._packs[index_of_pack] = None  # type: ignore
