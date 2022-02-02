@@ -34,7 +34,7 @@ from forte.data.ontology.top import (
 )
 from forte.data.types import DataRequest
 from forte.utils import get_class
-from forte.version import BACKWARD_COMPATIBLE_VER
+from forte.version import BACKWARD_COMPATIBLE_VER, DEFAULT_PACK_VERSION
 
 logger = logging.getLogger(__name__)
 
@@ -687,10 +687,12 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     def from_string(cls, data_content: str):
         # pylint: disable=protected-access
         # can not use explict type hint for mp as pylint does not allow type change
-        # from base_pack to multi_pack
-        mp = super().from_string(data_content)
+        # from base_pack to multi_pack which is problematic so use jsonpickle instead
+        import jsonpickle
+        mp = jsonpickle.decode(data_content)
+        if not hasattr(mp, "pack_version"):
+            mp.pack_version = DEFAULT_PACK_VERSION
         # (fix 595) change the dictionary's key after deserialization from str back to int
-        assert isinstance(mp._inverse_pack_ref, Dict)
         mp._inverse_pack_ref = {  # pylint: disable=no-member
             int(k): v
             for k, v in mp._inverse_pack_ref.items()  # pylint: disable=no-member
