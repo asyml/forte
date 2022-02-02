@@ -240,7 +240,7 @@ class Pipeline(Generic[PackType]):
         for subclass in entry.__subclasses__():
             if str(entry).startswith(TOP_MOST_MODULE_NAME):
                 continue
-            if not "ft.onto" in str(subclass):
+            if "ft.onto" not in str(subclass):
                 subclass_split = str(subclass).split(".")
                 additional_prefixes.append(
                     subclass_split[0] + "." + subclass_split[1]
