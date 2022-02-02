@@ -196,7 +196,7 @@ class Pipeline(Generic[PackType]):
         if ontology_file is None:
             # Recursive Method to Find Subclasses
             spec_dict = self.parse_entry(Entry)
-            self.resource.update(onto_specs_path='')
+            self.resource.update(onto_specs_path="")
             self.resource.update(onto_specs_dict=spec_dict)
 
         if ontology_file is not None:
@@ -225,26 +225,32 @@ class Pipeline(Generic[PackType]):
         self._do_init_type_check: bool = do_init_type_check
 
     def parse_entry(self, entry):
-        spec_dict = {'name': '', 'additional_prefixes': [], 'definitions': []}
+        spec_dict = {"name": "", "additional_prefixes": [], "definitions": []}
         for subclass in entry.__subclasses__():
             all_subclasses, additional_prefixes = self.find_spec_dict(subclass)
-            spec_dict['definitions'].extend(all_subclasses)
-            spec_dict['additional_prefixes'].extend(additional_prefixes)
+            spec_dict["definitions"].extend(all_subclasses)
+            spec_dict["additional_prefixes"].extend(additional_prefixes)
         return spec_dict
 
     def find_spec_dict(self, entry):
-        #Recursive Method to Find Subclasses
-        #Recursive Function
+        # Recursive Method to Find Subclasses
+        # Recursive Function
         all_subclasses = []
         additional_prefixes = []
         for subclass in entry.__subclasses__():
             if str(entry).startswith(TOP_MOST_MODULE_NAME):
                 continue
-            if not 'ft.onto' in str(subclass):
-                subclass_split = str(subclass).split('.')
-                additional_prefixes.append(subclass_split[0] + '.' + subclass_split[1])
-            all_subclasses.append({'entry_name': str(subclass), 'parent_entry': str(entry)})
-            all_subclasses_tmp, additional_prefixes_tmp = self.find_spec_dict(subclass)
+            if not "ft.onto" in str(subclass):
+                subclass_split = str(subclass).split(".")
+                additional_prefixes.append(
+                    subclass_split[0] + "." + subclass_split[1]
+                )
+            all_subclasses.append(
+                {"entry_name": str(subclass), "parent_entry": str(entry)}
+            )
+            all_subclasses_tmp, additional_prefixes_tmp = self.find_spec_dict(
+                subclass
+            )
             all_subclasses.extend(all_subclasses_tmp)
             additional_prefixes.extend(additional_prefixes_tmp)
         return all_subclasses, additional_prefixes
