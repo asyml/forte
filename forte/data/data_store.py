@@ -139,9 +139,7 @@ class DataStore(BaseStore):
         """
         self.entry_dict: dict = {}
 
-    def _new_annotation(
-        self, entry_type: str, begin: int, end: int
-    ):
+    def _new_annotation(self, entry_type: str, begin: int, end: int):
         r"""This function generates a new annotation with default fields.
         Called by add_annotation_raw() to create a new annotation
         with `type`, `begin`, and `end`.
