@@ -720,7 +720,9 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         """
         replacement_op = create_class_with_kwargs(
             self.configs["data_aug_op"],
-            class_args={"configs": self.configs["data_aug_op_config"]},
+            class_args={
+                "configs": self.configs["data_aug_op_config"]
+            },
         )
         augment_entry = get_class(self.configs["augment_entry"])
 
