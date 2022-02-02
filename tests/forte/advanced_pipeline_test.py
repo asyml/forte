@@ -309,7 +309,6 @@ class InferringOntologyTreeAutomaticallyTst(unittest.TestCase):
 
         class E(C):
             pass
-
         realOutput = []
         results = self.pipleline.parse_entry(entry)['definitions']
         # resultFormat[{'entry_name': "<class '__main__.InferringOntologyTreeAutomaticallyTst.test1.<locals>.C'>",
