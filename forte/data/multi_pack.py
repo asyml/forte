@@ -36,6 +36,8 @@ from forte.data.types import DataRequest
 from forte.utils import get_class
 from forte.version import BACKWARD_COMPATIBLE_VER, DEFAULT_PACK_VERSION
 
+import jsonpickle
+
 logger = logging.getLogger(__name__)
 
 __all__ = [
@@ -688,7 +690,6 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         # pylint: disable=protected-access
         # can not use explict type hint for mp as pylint does not allow type change
         # from base_pack to multi_pack which is problematic so use jsonpickle instead
-        import jsonpickle
 
         mp = jsonpickle.decode(data_content)
         if not hasattr(mp, "pack_version"):
