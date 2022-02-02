@@ -3,6 +3,7 @@ from typing import Union, Type, List, Iterator, Tuple
 import uuid
 from forte.data.ontology.core import EntryType
 from forte.data.base_store import BaseStore
+from forte.data.entry_type_generator import EntryTypeGenerator
 
 __all__ = ["DataStore"]
 
@@ -88,7 +89,7 @@ class DataStore(BaseStore):
         # self._type_attributes = get_type_attributes()
         # Issue #570 implements get_type_attributes()
         # see https://github.com/asyml/forte/issues/570
-        self._type_attributes: dict = {}
+        self._type_attributes: dict = EntryTypeGenerator.get_type_attributes()
 
         """
         Element is an underlying storage structure for all the entry data added by
