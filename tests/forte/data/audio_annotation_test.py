@@ -150,21 +150,21 @@ class AudioAnnotationTest(unittest.TestCase):
                                     AudioUtterance:
                                         {"fields": ["speaker"]}}
                                     )
-            for data_instance, raw_data  in zip(pack.get(AudioAnnotation),
-                                                raw_data_generator):
-                # check existence of requested data fields
+            for data_instance in pack.get(AudioAnnotation):
+                raw_data = next(raw_data_generator)
+                
                 self.assertTrue('Recording' in raw_data.keys() and
                                 "recording_class" in raw_data['Recording'])
                 self.assertTrue('AudioUtterance' in raw_data.keys() and
-                                "speaker" in raw_data['AudioUtterance'])
-                # check if primitive data are same as data from data instance
+                                    "speaker" in raw_data['AudioUtterance'])
+                # test grouped data
                 if isinstance(data_instance, Recording):
-                    # check recording's data
-                    self.assertTrue(array_equal(data_instance.audio, raw_data['Recording']['audio']))
+                    self.assertTrue(array_equal(np.array([data_instance.audio]), raw_data['Recording']['audio']))
                     self.assertTrue(data_instance.recording_class ==np.squeeze(raw_data['Recording']['recording_class']).tolist())
                 elif isinstance(data_instance, AudioUtterance):
-                    self.assertTrue(array_equal(data_instance.audio, raw_data['AudioUtterance']['audio']))
-                    self.assertTrue(data_instance.speaker ==raw_data['AudioUtterance']['speaker'][0])
+                    self.assertTrue(array_equal(np.array([data_instance.audio]), raw_data['AudioUtterance']['audio']))
+                    self.assertTrue(data_instance.speaker
+                                ==raw_data['AudioUtterance']['speaker'][0])
 
             # check non-existence of non-requested data fields
             raw_data_generator = pack.get_data(AudioAnnotation)

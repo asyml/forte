@@ -1057,6 +1057,8 @@ class DataPack(BasePack[Entry, Link, Group]):
         # we don't initialize an empty list for a_dict["audio"]
         if issubclass(a_type, Annotation):
             a_dict["text"] = []
+        elif issubclass(a_type, AudioAnnotation):
+            a_dict["audio"] = []
 
         for field in fields:
             a_dict[field] = []
@@ -1075,10 +1077,11 @@ class DataPack(BasePack[Entry, Link, Group]):
         for annotation in self.get(a_type, cont, components):  # type: ignore
             # we provide span, text (and also tid) by default
             a_dict["span"].append((annotation.begin, annotation.end))
+
             if isinstance(annotation, Annotation):
                 a_dict["text"].append(annotation.text)
             elif isinstance(annotation, AudioAnnotation):
-                a_dict["audio"] = annotation.audio
+                a_dict["audio"].append(annotation.audio)
             else:
                 raise NotImplementedError(
                     f"Annotation is set to {annotation}"
@@ -1117,7 +1120,6 @@ class DataPack(BasePack[Entry, Link, Group]):
                     unit_span_end += 1
 
                 a_dict["unit_span"].append((unit_span_begin, unit_span_end))
-
         for key, value in a_dict.items():
             a_dict[key] = np.array(value)
 
