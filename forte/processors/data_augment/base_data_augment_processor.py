@@ -58,20 +58,17 @@ def modify_index(
     r"""
     A helper function to map an index before replacement
     to the index after replacement.
-
     An index is the character offset in the data pack.
     The `old_spans` are the inputs of replacement, and the new_spans
     are the outputs. Each of the span has start and end index.
     The `old_spans` and `new_spans` are anchors for the mapping,
     because we depend on them to determine the position change of the
     index.
-
     Given an index, the function will find its the nearest
     among the old spans before the index, and calculate the difference
     between the position of the old span and its corresponding new span.
     The position change is then applied to the input index. An updated
     index is then calculated and returned.
-
     An inserted span might be included as a part of another span.
     For example, given a sentence "I love NLP.", if we insert a
     token "Yeah" at the beginning of the sentence(index=0), the Sentence
@@ -80,7 +77,6 @@ def modify_index(
     should be True. However, for another Token "I", it should not include
     the new token, so its start index will be larger than 0.
     The parameter in_inclusive should be False.
-
     The input index could be the start or end index of a span, i.e., the
     left or right boundary of the span. If there is an insertion in the span,
     we should treat the two boundaries in different ways. For example,
@@ -91,7 +87,6 @@ def modify_index(
     we prepend an "And" to the second sentence, when modifying the start index
     of the second Sentence, it should be pushed left to include the new Token.
     In this case, the `is_begin` is True.
-
     Args:
         index (int): The index to map.
         old_spans (SortedList): The spans before replacement. It should be
@@ -103,7 +98,6 @@ def modify_index(
             index should include inserted spans.
     Returns:
         The aligned index.
-
     If the old spans are [0, 1], [2, 3], [4, 6],
     the new spans are [0, 4], [5, 7], [8, 11],
     the input index is 3, and there are no insertions,
@@ -112,7 +106,6 @@ def modify_index(
     ([2,3]), and find the corresponding span in new spans([5,7]).
     Then we calculate the delta index(7-3=4) and update our
     input index(3+4=7). The output then is 7.
-
     Note that when the input index locates inside the old spans,
     instead of on the boundary of the spans, we compute the return
     index so that it maintains the same offset to the begin of the
@@ -120,7 +113,6 @@ def modify_index(
     index from 3 to 5, the output will become 9, because we locates
     the input index in the third span [4, 6] and use the same offset
     5-4=1 to calculate the output 8+1=9.
-
     When insertion is considered, there will be spans
     with the same begin index, for example,
     [0, 1], [1, 1], [1, 2]. The span [1, 1] indicates an insertion
@@ -129,7 +121,6 @@ def modify_index(
     The output will be affected by whether to include the inserted
     span(is_inclusive), and whether the input index is a begin or
     end index of its span(is_begin).
-
     If the old spans are [0, 1], [1, 1], [1, 2],
     the new spans are [0, 2], [2, 4], [4, 5],
     the input index is 1, the output will be 2 if both
@@ -319,10 +310,8 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         This is a wrapper function to call the replacement op. After
         getting the augmented text, it will register the input & output
         for later batch process of building the new data pack.
-
         It will ignore the input if it has an overlap with the already
         augmented spans.
-
         Args:
             replacement_op: The class for data augmentation algorithm.
             input_anno: The entry to be replaced.
@@ -348,7 +337,6 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         This is a wrapper function to insert a new annotation. After
         getting the inserted text, it will register the input & output
         for later batch process of building the new data pack.
-
         The insertion at each position can only occur once. If there
         is already an insertion at current position, it will abort the
         insertion and return False.
@@ -372,7 +360,6 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
     def _delete(self, input_anno: Annotation) -> bool:
         r"""
         This is a wrapper function to delete an annotation.
-
         Args:
             input_anno: The annotation to remove.
         Returns:
@@ -392,19 +379,15 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         Function to replace some annotations with new strings.
         It will copy and update the text of datapack and
         auto-align the annotation spans.
-
         The links are also copied if its parent & child are
         both present in the new pack.
-
         The groups are copied if all its members are present
         in the new pack.
-
         Args:
             data_pack: The Datapack holding the replaced annotations.
             replaced_annotations: A SortedList of tuples(span, new string).
                 The text and span of the annotations will be updated
                 with the new string.
-
         Returns:
             A new data_pack holds the text after replacement. The annotations
             in the original data pack will be copied and auto-aligned as
@@ -471,7 +454,6 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         ):
             """
             An internal helper function for insertion.
-
             Args:
                 entry_class: The new annotation type to be created.
                 insert_ind: The index to be insert.
@@ -481,9 +463,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
                   a sorted ascending list.
                 new_spans: The original spans before replacement, should be
                   a sorted ascending list.
-
             Returns:
-
             """
             pos: int
             length: int
@@ -614,7 +594,6 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         If the children Link/Group does not exist, it will recursively
         create the children Link/Group. If the children Annotation
         does not exist, it will abort and return False.
-
         Args:
             entry: The Link/Group in the original data pack to copy.
             entry_map: The dictionary mapping original entry to copied entry.
@@ -676,7 +655,6 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         This function copies a MultiPackLink/MultiPackGroup in the multipack.
         It could be used in tasks such as text generation, where
         MultiPackLink is used to align the source and target.
-
         Args:
             entry: The MultiPackLink/MultiPackGroup to copy.
             multi_pack: The multi_pack contains the input entry.
@@ -736,7 +714,6 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         replacement-based methods. The subclasses should override
         this function to implement other data augmentation methods, such
         as Easy Data Augmentation.
-
         Args:
             input_pack: The input MultiPack.
             aug_pack_names: The packs names for DataPacks to be augmented.
@@ -807,63 +784,51 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
                 The key should be a full qualified class name.
                 The policy(value of the dict) specifies how to process
                 the corresponding entries after replacement.
-
                 If the policy is "auto_align", the span of the entry
                 will be automatically modified according to its original
                 location. However, some spans might become invalid after
                 the augmentation, for example, the tokens within a
                 replaced sentence may disappear.
-
                 Annotations not in the "other_entry_policy" will not
                 be copied to the new data pack. The Links and Groups
                 will be copied as well if the annotations they are
                 attached to are copied.
-
                 Example:
                     .. code-block:: python
-
                         'other_entry_policy': {
                             "kwargs": {
                                 "ft.onto.base_ontology.Document": "auto_align",
                                 "ft.onto.base_ontology.Sentence": "auto_align",
                             }
                         }
-
             - type:
                 Should not modify this field, in order to use the kwargs.
             - data_aug_op:
                 The data augmentation Op for the processor.
                 It should be a full qualified class name.
-
                 Example:
                     "forte.processors.data_augment.algorithms.
                     text_replacement_op.TextReplacementOp"
             - data_aug_op_config:
                 The configuration for data augmentation Op.
-
                 Example:
                     .. code-block:: python
-
                         'data_aug_op_config': {
                             'kwargs': {
                                 'lang': 'en',
                                 'use_gpu': False
                             }
                         }
-
             - augment_pack_names:
                 A dict specifies the DataPacks to augment and their output
                 names. It should be key-value pairs where the key is the
                 input DataPack name, and the value is the output DataPack
                 name after augmentation.
-
                 If empty, all the DataPacks will be augmented, and the output
                 names will be automatically generated by prepending
                 an `'augmented_'` prefix.
-
                 Example:
                     .. code-block:: python
-
                         'data_aug_op_config': {
                             'kwargs': {
                                 'src': 'aug_src',
