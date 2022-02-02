@@ -17,20 +17,22 @@ SkeletonOp is the most low level Op used for Data Augmentation.
 Through this Op, users can use in-built utility functions to implement
 their own augmentation logic.
 """
-
 from collections import defaultdict
 from typing import DefaultDict, Tuple, Union, Dict, Any, Set
 from abc import abstractmethod, ABC
+from bisect import bisect_left
+from sortedcontainers.sorteddict import SortedDict
+from sortedcontainers.sortedlist import SortedList
+
+
+
 from forte.data.data_pack import DataPack
 from forte.data.ontology.top import (
     Annotation,
 )
 from forte.common.configuration import Config
 from forte.data.span import Span
-from bisect import bisect_left
 
-from sortedcontainers.sorteddict import SortedDict
-from sortedcontainers.sortedlist import SortedList
 
 __all__ = ["SkeletonOp"]
 

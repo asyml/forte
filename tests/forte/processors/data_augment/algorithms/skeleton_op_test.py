@@ -1,9 +1,9 @@
 import unittest
 
-from forte.data.span import Span
-from ft.onto.base_ontology import Token
-from forte.data.data_pack import DataPack
 from typing import Union, Dict, Any
+from ft.onto.base_ontology import Token
+from forte.data.span import Span
+from forte.data.data_pack import DataPack
 from forte.common.configuration import Config
 from forte.utils.utils import get_class
 from forte.processors.data_augment.algorithms.skeleton_op import SkeletonOp
@@ -44,8 +44,7 @@ class DummyAugmenter(SkeletonOp):
                 annotation_list[-1], replaced_text
             )
             return True
-        except Exception as e:
-            print(e)
+        except:
             return False
 
 
