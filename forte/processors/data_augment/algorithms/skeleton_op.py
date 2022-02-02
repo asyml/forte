@@ -23,8 +23,6 @@ from abc import abstractmethod, ABC
 from bisect import bisect_left
 from sortedcontainers.sorteddict import SortedDict
 from sortedcontainers.sortedlist import SortedList
-
-
 from forte.data.data_pack import DataPack
 from forte.data.ontology.top import (
     Annotation,
