@@ -14,10 +14,11 @@
 
 import copy
 import logging
-import jsonpickle
 
 from pathlib import Path
 from typing import Dict, List, Set, Union, Iterator, Optional, Type, Any, Tuple
+
+import jsonpickle
 
 from sortedcontainers import SortedList
 
