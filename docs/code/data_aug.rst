@@ -90,6 +90,11 @@ Data Augmentation Ops
 .. autoclass:: forte.processors.data_augment.algorithms.character_flip_op.CharacterFlipOp
     :members:
 
+:hidden:`SkeletonOp`
+----------------------------
+.. autoclass:: forte.processors.data_augment.algorithms.skeleton_op.SkeletonOp
+    :members:
+
 Data Augmentation Models
 ========================================
 
