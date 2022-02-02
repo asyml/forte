@@ -1471,5 +1471,6 @@ class RecordCheckPipelineTest(unittest.TestCase):
             nlp.add(dummy1, ref_name="ref_dummy")
         nlp.initialize()
 
+
 if __name__ == "__main__":
     unittest.main()
