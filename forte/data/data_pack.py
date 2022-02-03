@@ -785,7 +785,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                             "component": ["dummy"],
                             "fields": ["speaker"],
                         },
-                    base_ontology.Token: ["pos", "sense""],
+                    base_ontology.Token: ["pos", "sense"],
                     base_ontology.EntityMention: {
                     },
                 }
@@ -794,15 +794,23 @@ class DataPack(BasePack[Entry, Link, Group]):
         Args:
             context_type (Union[str, Type[Annotation], Type[AudioAnnotation]]):
                 The granularity of the data context, which
-                could be any ``Annotation`` type. Behaviors under different
+                could be any ``Annotation`` or ``AudioAnnotation`` type. Behaviors under different
                 context_type varies:
-                - str type will be converted into Union[Type[Annotation], Type[AudioAnnotation]]
-                - Type[Annotation]: the default data field is `"text"`.
-                - Type[AudioAnnotation]: the default data field is `"audio"` which stores audio data in numpy arrays.
-            request (dict): The entry types and fields required.
+
+                - str type will be converted into either ``Annotation`` type
+                    or ``AudioAnnotation`` type.
+                - ``Type[Annotation]``: the default data field for getting
+                    context data is :attr:`text`. This function iterates
+                    annotations to get target entry data.
+                - ``Type[AudioAnnotation]``: the default data field for getting
+                    context data is :attr:`audio` which stores audio data in numpy
+                    arrays. This function iterates audio annotations to get
+                    target entry data.
+            request (dict): The entry types and fields User wants to request.
                 The keys of the requests dict are the required entry types
                 and the value should be either:
 
+                - a list of field names or
                 - a dict which accepts three keys: `"fields"`, `"component"`,
                   and `"unit"`.
 
@@ -819,8 +827,11 @@ class DataPack(BasePack[Entry, Link, Group]):
 
                 Note that for all annotation types, `"span"`
                 fields and annotation-specific data fields are returned by
-                default; for all link types, `"child"`
-                and `"parent"` fields are returned by default.
+                default. Annotation-specific data fields means:
+                    - `"text"` for ``Annotation``
+                    - `"audio"` for ``AudioAnnotation``
+                For all link types, `"child"` and `"parent"` fields are
+                returned by default.
             skip_k (int): Will skip the first `skip_k` instances and generate
                 data from the (`offset` + 1)th instance.
 
@@ -1076,7 +1087,6 @@ class DataPack(BasePack[Entry, Link, Group]):
             a_dict["unit_span"] = []
 
         cont_begin = cont.begin if cont else 0
-
         annotation: Union[Type[Annotation], Type[AudioAnnotation]]
         for annotation in self.get(a_type, cont, components):  # type: ignore
             # we provide span, text (and also tid) by default
