@@ -47,12 +47,12 @@ class DataStoreTest(unittest.TestCase):
         # Sentence entries have tid 9999, 1234567.
         # The type id for Document is 0, Sentence is 1.
 
-        self.data_store._type_dict = {
+        self.data_store._DataStore__type_dict = {
             "ft.onto.base_ontology.Document": 0,
             "ft.onto.base_ontology.Sentence": 1,
         }
 
-        self.data_store.elements = [
+        self.data_store._DataStore__elements = [
             SortedList(
                 [
                     [
@@ -102,7 +102,7 @@ class DataStoreTest(unittest.TestCase):
                 ],
             ),
         ]
-        self.data_store.entry_dict = {
+        self.data_store._DataStore__entry_dict = {
             1234: [
                 0,
                 5,
