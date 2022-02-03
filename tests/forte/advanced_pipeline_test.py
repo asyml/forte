@@ -165,14 +165,6 @@ class AdvancedPipelineTest(unittest.TestCase):
                 (eliza_pl, test_pl),
             )
         )
-        self.assertDictEqual(
-            eliza_pl.resource.get("onto_specs_dict"),
-            test_pl.resource.get("onto_specs_dict"),
-        )
-        self._assertEntryTreeEqual(
-            eliza_pl.resource.get("merged_entry_tree").root,
-            test_pl.resource.get("merged_entry_tree").root,
-        )
 
         # Verify output
         test_pl.initialize()

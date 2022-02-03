@@ -460,18 +460,6 @@ class Pipeline(Generic[PackType]):
                 "resource": {},
             }
         )
-        if self.resource.contains("onto_specs_dict"):
-            configs["states"]["resource"].update(
-                {"onto_specs_dict": self.resource.get("onto_specs_dict")}
-            )
-        if self.resource.contains("merged_entry_tree"):
-            configs["states"]["resource"].update(
-                {
-                    "merged_entry_tree": self.resource.get(
-                        "merged_entry_tree"
-                    ).todict()
-                }
-            )
 
         return configs
 
