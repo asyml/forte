@@ -279,20 +279,19 @@ class AdvancedPipelineTest(unittest.TestCase):
         if os.path.exists(self._pl_config_path):
             os.remove(self._pl_config_path)
 
+
 class InferringOntologyTreeAutomaticallyTst(unittest.TestCase):
     def setUp(self) -> None:
         # self.expected = [{'entry_name':'C', 'parent_entry': 'A'},
         #                         {'entry_name':'E', 'parent_entry':'C'},
         #                         {'entry_name':'D', 'parent_entry':'B'}]
 
-        self.expected = [['C', 'A'],
-                         ['E', 'C'],
-                         ['D', 'B']]
+        self.expected = [["C", "A"], ["E", "C"], ["D", "B"]]
 
         self.pipleline = Pipeline()
 
     def test1(self):
-        class entry():
+        class entry:
             pass
 
         class A(entry):
@@ -309,16 +308,22 @@ class InferringOntologyTreeAutomaticallyTst(unittest.TestCase):
 
         class E(C):
             pass
+
         realOutput = []
-        results = self.pipleline.parse_entry(entry)['definitions']
+        results = self.pipleline.parse_entry(entry)["definitions"]
         # resultFormat[{'entry_name': "<class '__main__.InferringOntologyTreeAutomaticallyTst.test1.<locals>.C'>",
         # 'parent_entry': "<class '__main__.InferringOntologyTreeAutomaticallyTst.test1.<locals>.A'>"},...]
         for result in results:
-            result['entry_name'] = result['entry_name'].split('>.')[-1].split('\'')[0]
-            result['parent_entry'] = result['parent_entry'].split('>.')[-1].split('\'')[0]
-            realOutput.append([result['entry_name'], result['parent_entry']])
+            result["entry_name"] = (
+                result["entry_name"].split(">.")[-1].split("'")[0]
+            )
+            result["parent_entry"] = (
+                result["parent_entry"].split(">.")[-1].split("'")[0]
+            )
+            realOutput.append([result["entry_name"], result["parent_entry"]])
 
         self.assertCountEqual(self.expected, realOutput)
+
 
 if __name__ == "__main__":
     unittest.main()

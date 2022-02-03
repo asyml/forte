@@ -18,7 +18,6 @@ Base class for Pipeline module.
 import itertools
 import json
 import logging
-import sys
 from time import time
 from typing import (
     Any,
@@ -62,11 +61,6 @@ from forte.processors.base.batch_processor import BaseBatchProcessor
 from forte.utils import create_class_with_kwargs, get_full_module_name
 from forte.utils.utils_processor import record_types_and_attributes_check
 from forte.version import FORTE_IR_VERSION
-
-if sys.version_info < (3, 7):
-    import importlib_resources as resources
-else:
-    from importlib import resources
 
 logger = logging.getLogger(__name__)
 
