@@ -72,6 +72,13 @@ Let us consider a simple ontology for documents of a pet shop.
                 {
                     "name": "pet_type",
                     "type": "str"
+                },
+                {
+                    "name": "price",
+                    "description": "Price for pet. A 2x2 matrix, whose columns are female/male and rows are juvenile/adult.",
+                    "type": "NdArray",
+                    "ndarray_dtype": "float",
+                    "ndarray_shape": [2, 2]
                 }
             ]
         },
@@ -133,7 +140,7 @@ Each entry definition will define a couple (can be empty) attributes, mimicking 
 * The `description` keyword is optionally used as the comment to describe the attribute.
 * The `type` keyword is used to define the type of the attribute. Currently supported types are:
     * Primitive types - `int`, `float`, `str`, `bool`
-    * Composite types - `List`, `Dict`
+    * Composite types - `List`, `Dict`, `NdArray`
     * Entries defined in the `top` module - The attributes can be of the type base
     entries (defined in the `forte.data.ontology.top` module) and can be directly 
     referred by the class name.
@@ -146,6 +153,8 @@ Each entry definition will define a couple (can be empty) attributes, mimicking 
 * `key_type` and `value_type`: If the `type` of the property is a `Dict`,
    then these two represent the types of the key and value of the dictionary,
    currently, only primitive types are supported as the `key_type`.
+* `ndarray_dtype: str` and `ndarray_shape: array`: If the `type` of the property is a `NdArray`, then 
+   these two represent the data type and the shape of the array. `NdArray` allows storing a N-dimensional (N-d) array in an entry. For instance, through the simple ontology of pet shop above, we are able to instantiate `Pet` and name it `dog`. Then, we can assign a matrix to the attribute `price` by `dog.price.data = [[2.99, 1.99], [4.99, 3.99]]`. Internally, this $2 \times 2$ matrix is stored as a NumPy array. When `ndarray_shape`/`ndarray_dtype` is specified, the shape/data type of the upcoming array will be verified whether they match. If both `ndarray_dtype` and `ndarray_shape` are provided, a placeholder will be created by `numpy.ndarray(ndarray_shape, dtype=ndarray_dtype)`.
 
 ## Major ontology types, Annotations, Links, Groups and Generics
 There are some very frequently used types in NLP: 

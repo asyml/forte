@@ -1,0 +1,17 @@
+{ 
+    "name": "NdArrayEntry", 
+    "definitions": [ 
+      { 
+        "entry_name": "ft.onto.test_ndarray.ShapeOnlyNdEntry", 
+        "parent_entry": "forte.data.ontology.top.Generics", 
+        "description": "A N-dimensional entity. Only shape is specified", 
+        "attributes": [ 
+          { 
+              "name": "value", 
+              "type": "NdArray",
+              "ndarray_shape": [2, 2]
+          }
+        ] 
+      }
+    ] 
+  }

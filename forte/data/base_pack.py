@@ -32,6 +32,7 @@ from typing import (
     Iterable,
 )
 
+
 import jsonpickle
 
 from forte.common import ProcessExecutionException, EntryNotFoundError

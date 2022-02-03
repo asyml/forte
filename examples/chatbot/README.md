@@ -155,4 +155,5 @@ following environment variable to use the processor
 
 ```
 export MICROSOFT_API_KEY=<YOUR_MICROSOFT_KEY>
+export LOCATION=<YOUR_API_RESOURCE_LOCATION>
 ```
