@@ -111,9 +111,8 @@ class DataStore(BaseStore):
         self.__entry_type_idx = 3
 
         """
-        The `_type_attributes` is a private dictionary that provides 
-        `entry_type`
-        and the order of corresponding attributes.
+        The `_type_attributes` is a private dictionary that provides
+        `entry_type` and the order of corresponding attributes.
         The outer keys are fully qualified names of valid ontology types as
         strings, including all types that inherit the `Entry` class.
         The inner keys are all the valid attributes for this type.
