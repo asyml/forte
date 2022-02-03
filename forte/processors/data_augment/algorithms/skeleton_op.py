@@ -40,7 +40,7 @@ class SkeletonOp(ABC):
     gives users the most amount of freedom to implement their
     logic of augmentation. The users are expected to use the
     provided utility functions to implement their own augmentation
-    logic which will then ne substantiated into new data packs. This
+    logic which will then be substantiated into new data packs. This
     Op requires the users to have a relatively stronger understanding of
     Forte's internal setup.
     """
@@ -90,6 +90,7 @@ class SkeletonOp(ABC):
         r"""
         This function will check whether the new span
         has an overlap with any existing spans.
+
         Args:
             pid: Datapack Id.
             begin: The span begin index.
@@ -156,6 +157,7 @@ class SkeletonOp(ABC):
         The insertion at each position can only occur once. If there
         is already an insertion at current position, it will abort the
         insertion and return False.
+
         Args:
             inserted_text: The text string to insert.
             data_pack: The datapack for insertion.
@@ -179,6 +181,7 @@ class SkeletonOp(ABC):
         This is a utility function to delete an annotation. If the same
         annotation is tried to be deleted twice, the function will terminate
         and return False.
+
         Args:
             input_anno: The annotation to remove.
         Returns:
@@ -200,6 +203,7 @@ class SkeletonOp(ABC):
         With this function, an annotation can be replaced with another annotation.
         If the same annotation is tried to be replaced twice, the function will terminate
         and return False.
+
         Args:
             input_anno: The annotation to replace.
         Returns:
@@ -224,7 +228,7 @@ class SkeletonOp(ABC):
         augmentation.
 
         Args:
-            input_anno: the input annotation to be replaced.
+            `input_anno`: the input annotation to be replaced.
 
         Returns:
             A boolean value indicating if the augmentation
@@ -238,7 +242,7 @@ class SkeletonOp(ABC):
         Returns:
             A dictionary with the default config for this processor.
         Following are the keys for this dictionary:
-            - augment_entry:
+            - `augment_entry`:
                 Defines the entry the processor will augment.
                 It should be a full qualified name of the entry class.
                 For example, "ft.onto.base_ontology.Sentence".

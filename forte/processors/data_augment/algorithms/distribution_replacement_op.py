@@ -38,7 +38,7 @@ class DistributionReplacementOp(TextReplacementOp, Configurable):
             The probability of whether to replace the
             input, it should fall in `[0, 1]`.
 
-        - sampler_data:
+        - `sampler_data`:
             A dictionary representing the configurations
             required to create the required sampler.
 
@@ -80,12 +80,13 @@ class DistributionReplacementOp(TextReplacementOp, Configurable):
     def replace(self, input_anno: Annotation) -> Tuple[bool, str]:
         r"""
         This function replaces a word by sampling from a distribution.
+
         Args:
-                input_anno (Annotation): The input annotation.
+            input_anno (Annotation): The input annotation.
         Returns:
-                A tuple of two values, where the first element is a boolean value
-                indicating whether the replacement happens, and the second
-                element is the replaced word.
+            A tuple of two values, where the first element is a boolean value
+            indicating whether the replacement happens, and the second
+            element is the replaced word.
         """
         if random.random() > self.configs.prob:
             return False, input_anno.text
