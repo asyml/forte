@@ -13,13 +13,7 @@
 # limitations under the License.
 
 from abc import abstractmethod
-from typing import (
-    List,
-    Type,
-    Union,
-    Iterator,
-    Tuple,
-)
+from typing import List, Type, Union, Iterator, Tuple, Any
 
 from forte.data.ontology.core import EntryType
 
@@ -42,35 +36,81 @@ class BaseStore:
 
     @abstractmethod
     def add_annotation_raw(
-        self, type_id: int, begin: int, end: int
+        self, entry_type: str, begin: int, end: int
     ) -> Tuple[int, int]:
-        r"""This function adds an annotation entry with `begin` and `end` index
-        to the sortedlist at index `type_id` of the array which records all
-        sortedlists, return tid for the entry.
+        r"""This function adds an annotation entry with `begin` and `end`
+        indices to the `entry_type` sortedlist, returns the `tid` and the
+        2-D index for the inserted entry.
 
         Args:
-            type_id (int): The index of Annotation sortedlist in the array.
-            begin (int): begin index of the entry.
-            end (int): end index of the entry.
+            entry_type (str): Fully qualified name of this annotation.
+            begin (int): Begin index of the entry.
+            end (int): End index of the entry.
 
         Returns:
-            The `tid` of the entry.
+            `tid` of the entry and its index in the entry list.
 
         """
         raise NotImplementedError
 
     @abstractmethod
-    def set_attribute(self, tid: int, attr_name: str, attr_value):
+    def add_link_raw(
+        self, entry_type: str, parent_tid: int, child_tid: int
+    ) -> Tuple[int, int]:
+        r"""This function adds a link entry with `parent_tid` and `child_tid`
+        to the `entry_type` list, returns the `tid` and the 2-D index for the
+        inserted entry.
+
+        Args:
+            entry_type (str): Fully qualified name of this link.
+            parent_tid (int): `tid` of the parent entry.
+            child_tid (int): `tid` of the child entry.
+
+        Returns:
+            `tid` of the entry and its index in the entry list.
+
+        """
         raise NotImplementedError
 
     @abstractmethod
-    def set_attr(self, tid: int, attr_id: int, attr_value):
+    def add_group_raw(
+        self, entry_type: str, member_type: str
+    ) -> Tuple[int, int]:
+        r"""This function adds a group entry with `member_type` to the
+        `entry_type` list, returns the `tid` and the 2-D index for the
+        inserted entry.
+
+        Args:
+            entry_type (str): Fully qualified name of this group.
+            member_type (str): Fully qualified name of its members.
+
+        Returns:
+            `tid` of the entry and its index in the entry list.
+
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def set_attribute(self, tid: int, attr_name: str, attr_value: Any):
+        r"""This function locates the entry data with `tid` and sets its
+        `attr_name` with `attr_value`.
+
+        Args:
+            tid (int): Unique Id of the entry.
+            attr_name (str): Name of the attribute.
+            attr_value (any): Value of the attribute.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def set_attr(self, tid: int, attr_id: int, attr_value: Any):
         r"""This function locates the entry data with `tid` and sets its
         attribute `attr_id` with value `attr_value`.
+        Called by `set_attribute()`.
 
         Args:
             tid (int): Unique id of the entry.
-            attr_id (int): id of the attribute.
+            attr_id (int): Id of the attribute.
             attr_value: value of the attribute.
 
         """
@@ -79,16 +119,26 @@ class BaseStore:
 
     @abstractmethod
     def get_attribute(self, tid: int, attr_name: str):
+        r"""This function finds the value of `attr_name` in entry with
+        `tid`.
+
+        Args:
+            tid (int): Unique id of the entry.
+            attr_name (str): Name of the attribute.
+
+        Returns:
+            The value of `attr_name` for the entry with `tid`.
+        """
         raise NotImplementedError
 
     @abstractmethod
     def get_attr(self, tid: int, attr_id: int):
         r"""This function locates the entry data with `tid` and gets the value
-        of `attr_id` of this entry.
+        of `attr_id` of this entry. Called by `get_attribute()`.
 
         Args:
             tid (int): Unique id of the entry.
-            attr_id (int): id of the attribute.
+            attr_id (int): Id of the attribute.
 
         Returns:
             The value of `attr_id` for the entry with `tid`.
@@ -98,8 +148,7 @@ class BaseStore:
 
     @abstractmethod
     def delete_entry(self, tid: int):
-        r"""This function locates the entry list with `tid` and removes it
-        from the data store.
+        r"""This function removes the entry with `tid` from the data store.
 
         Args:
             tid (int): Unique id of the entry.
@@ -111,7 +160,7 @@ class BaseStore:
     @abstractmethod
     def get_entry(self, tid: int) -> Tuple[List, int, int]:
         r"""Look up the entry_dict with key `tid`. Find its type_id and its
-        index in the `entry_type` sortedlist.
+        index in the `entry_type` list.
 
         Args:
             tid (int): Unique id of the entry.
@@ -131,7 +180,7 @@ class BaseStore:
         type `entry_type`.
 
         Args:
-            entry_type: The type of the entry to obtain.
+            entry_type: Fully qualified name of this annotation.
 
         Returns:
             An iterator of the entries matching the provided arguments.
