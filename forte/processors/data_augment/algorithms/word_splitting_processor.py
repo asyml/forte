@@ -130,9 +130,10 @@ class RandomWordSplitDataAugmentProcessor(ReplacementDataAugmentProcessor):
                             "ft.onto.base_ontology.Sentence": "auto_align",
 
                         }
-                    }
 
                     }
+
+                }
 
             - `augment_pack_names` (dict): The name of the data pack that will
                 contain the augmented text `(Default: augmented_input_src)`.
