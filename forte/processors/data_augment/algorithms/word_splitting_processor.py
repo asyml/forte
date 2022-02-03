@@ -147,7 +147,7 @@ class RandomWordSplitDataAugmentProcessor(ReplacementDataAugmentProcessor):
                             "input_src" : "augmented_input_src",
 
                         }
-                        
+
                     }
 
             - `alpha` (float):
