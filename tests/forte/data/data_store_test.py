@@ -150,12 +150,12 @@ class DataStoreTest(unittest.TestCase):
         # self.data_store.add_annotation_raw(0, 1, 5)
         # # test add Sentence entry
         # self.data_store.add_annotation_raw(1, 5, 8)
-        # num_doc = len(self.data_store.elements[0])
-        # num_sent = len(self.data_store.elements[1])
+        # num_doc = len(self.data_store._DataStore__elements[0])
+        # num_sent = len(self.data_store._DataStore__elements[1])
 
         # self.assertEqual(num_doc, 3)
         # self.assertEqual(num_sent, 3)
-        # self.assertEqual(len(self.data_store.entry_dict), 6)
+        # self.assertEqual(len(self.data_store._DataStore__entry_dict), 6)
         pass
 
     def test_get_attr(self):
@@ -166,9 +166,7 @@ class DataStoreTest(unittest.TestCase):
         self.assertEqual(classifications, "Class B")
 
         # Entry with such tid does not exist
-        with self.assertRaisesRegex(
-            KeyError, "Entry with tid 1111 not found."
-        ):
+        with self.assertRaisesRegex(KeyError, "Entry with tid 1111 not found."):
             self.data_store.get_attribute(1111, "speaker")
 
         # Get attribute field that does not exist
@@ -189,9 +187,7 @@ class DataStoreTest(unittest.TestCase):
         self.assertEqual(doc_class, "Class D")
 
         # Entry with such tid does not exist
-        with self.assertRaisesRegex(
-            KeyError, "Entry with tid 1111 not found."
-        ):
+        with self.assertRaisesRegex(KeyError, "Entry with tid 1111 not found."):
             self.data_store.set_attribute(1111, "speaker", "human")
 
         # Set attribute field that does not exist
@@ -203,7 +199,7 @@ class DataStoreTest(unittest.TestCase):
     def test_get_entry(self):
         # sent = self.data_store.get_entry(1234567)
         # self.assertEqual(
-        #     sent,
+        #     sent[0],
         #     [
         #         55,
         #         70,
@@ -229,10 +225,10 @@ class DataStoreTest(unittest.TestCase):
         # self.data_store.delete_entry(1234)
         # self.data_store.delete_entry(9999)
         # # After 3 deletion. 3 left. (2 documents and 1 sentence)
-        # num_doc = len(self.data_store.elements[0])
-        # num_sent = len(self.data_store.elements[1])
+        # num_doc = len(self.data_store._DataStore__elements[0])
+        # num_sent = len(self.data_store._DataStore__elements[1])
 
-        # self.assertEqual(len(self.data_store.entry_dict), 3)
+        # self.assertEqual(len(self.data_store._DataStore__entry_dict), 3)
         # self.assertEqual(num_doc, 2)
         # self.assertEqual(num_sent, 1)
 
@@ -240,6 +236,35 @@ class DataStoreTest(unittest.TestCase):
         # with self.assertRaises(ValueError):
         #     for doc in self.data_store.delete_entry(1111):
         #         print(doc)
+        pass
+
+    def test_next_entry(self):
+        # next_ent = self.next_entry(1234)
+        # self.assertEqual(
+        #     next_ent,
+        #     [
+        #         10,
+        #         25,
+        #         3456,
+        #         "ft.onto.base_ontology.Document",
+        #         "Doc class A",
+        #         "Negative",
+        #         "Class B",
+        #     ],
+        # )
+        # prev_ent = self.prev_entry(3456)
+        # self.assertEqual(
+        #     prev_ent,
+        #     [
+        #         0,
+        #         5,
+        #         1234,
+        #         "ft.onto.base_ontology.Document",
+        #         None,
+        #         "Postive",
+        #         None,
+        #     ],
+        # )
         pass
 
 
