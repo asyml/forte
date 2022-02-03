@@ -95,6 +95,34 @@
                 "value_type": {
                   "description": "Item type for the case of Dice attributes",
                   "type": "string"
+                },
+                "ndarray_dtype": {
+                  "description": "Data type for the case of NdArray attributes. Allow a subset of NumPy supported data types",
+                  "type": "string",
+                  "enum": [
+                    "bool",
+                    "bool8",
+                    "int",
+                    "int8",
+                    "int32",
+                    "int64",
+                    "uint8",
+                    "uint32",
+                    "uint64",
+                    "float",
+                    "float32",
+                    "float64",
+                    "float96",
+                    "float128",
+                    "complex",
+                    "complex128",
+                    "complex192",
+                    "complex256"
+                  ]
+                },
+                "ndarray_shape": {
+                  "description": "Shape of N-dimensional array for the case of NdArray attributes",
+                  "type": "array"
                 }
               },
               "anyOf": [
@@ -131,6 +159,23 @@
                         "type",
                         "key_type",
                         "value_type"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "allOf": [
+                    {
+                      "properties": {
+                        "name": {
+                          "enum": [
+                            "NdArray"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "type"
                       ]
                     }
                   ]

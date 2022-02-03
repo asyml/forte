@@ -17,6 +17,7 @@ import os
 from abc import ABC
 from pathlib import Path
 from typing import Optional, Any, List, Dict, Set, Tuple
+from numpy import ndarray
 
 from forte.data.ontology.code_generation_exceptions import (
     CodeGenerationException,
@@ -377,6 +378,51 @@ class NonCompositeProperty(Property):
 
     def default_value(self) -> str:
         return repr(self.default_val)
+
+    def to_field_value(self):
+        return self.name
+
+
+class NdArrayProperty(Property):
+    """
+    NdArrayProperty accepts parsed properties of NdArray and
+    instructs import manager to import and instanciate FNdArray
+    as default value in the generated code.
+    """
+
+    def __init__(
+        self,
+        import_manager: ImportManager,
+        name: str,
+        ndarray_dtype: Optional[str] = None,
+        ndarray_shape: Optional[List[int]] = None,
+        description: Optional[str] = None,
+        default_val: Optional[ndarray] = None,
+    ):
+        self.type_str = "forte.data.ontology.core.FNdArray"
+        super().__init__(
+            import_manager,
+            name,
+            self.type_str,
+            description=description,
+            default_val=default_val,
+        )
+        self.ndarray_dtype: Optional[str] = ndarray_dtype
+        self.ndarray_shape: Optional[List[int]] = ndarray_shape
+
+    def internal_type_str(self) -> str:
+        type_str = self.import_manager.get_name_to_use(self.type_str)
+        return f"{type_str}"
+
+    def default_value(self) -> str:
+        if self.ndarray_dtype is None:
+            return f"FNdArray(shape={self.ndarray_shape}, dtype={self.ndarray_dtype})"
+        else:
+            return f"FNdArray(shape={self.ndarray_shape}, dtype='{self.ndarray_dtype}')"
+
+    def _full_class(self):
+        item_type = self.import_manager.get_name_to_use(self.type_str)
+        return item_type
 
     def to_field_value(self):
         return self.name
