@@ -51,15 +51,14 @@ class DataStore(BaseStore):
         of the entry.
         The order of other entry types that's not Annotation-like, is arbitrary.
 
-        `__onto_file_path` is an optional argument, which could pass in an user
-        defined ontology file. The user defined ontology class should be able
-        to be saved in the data store.
+        `onto_file_path` is an optional argument, which could pass in an user
+        defined ontology file. The `entry_type` defined in the provided file
+        should be able to be saved in the data store.
 
         Args:
             onto_file_path (str, optional): the path to the ontology file.
         """
         super().__init__()
-        # Will change to private variable after it has been used.
         self.onto_file_path = onto_file_path
         self.__entry_type_idx = 3
 
