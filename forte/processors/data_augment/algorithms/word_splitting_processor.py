@@ -130,6 +130,7 @@ class RandomWordSplitDataAugmentProcessor(ReplacementDataAugmentProcessor):
                             "ft.onto.base_ontology.Sentence": "auto_align",
 
                         }
+                    }
 
                     }
 
