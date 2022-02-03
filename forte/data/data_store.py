@@ -17,11 +17,12 @@ class DataStore(BaseStore):
         primitive types provides a speed-up to the previous class-based solution.
 
         A DataStore object uses primitive types and simple python data structures to store a 
-        collection of Forte entries for certain types unstructured data. Currently, DataStore 
-        supports storing data structure with linear span (e.g. Annotatoin), and also Link and
-        Group. Future extension of the class may support 2-d range (e.g. bounding boxes).
+        collection of Forte entries for certain types of unstructured data. Currently,  
+        DataStore supports storing data structures with linear span (e.g. Annotation), and
+        relational data structures (e.g Link and Group). Future extension of the class 
+        may support data strcutures with 2-d range (e.g. bounding boxes).
         
-        Internally, we store every entry in a data structure `__elements`, which is a nested
+        Internally, we store every entry in a variable `__elements`, which is a nested
         list: a list of `entry lists`.
         
         Every inner list, the `entry list`, is a list storing entries for a single 
@@ -60,12 +61,12 @@ class DataStore(BaseStore):
         E.g. an annotation-type `entry data` with type `ft.onto.base_ontology.Document`
         has the following structure:
         [<begin>, <end>, <tid>, <entry_type>, <document_class>, <sentiment>, <classifications>].
-        Here, <document_class>, <sentiment>, <classifications> are the 3 attribute names of this
+        Here, <document_class>, <sentiment>, <classifications> are the 3 attributes of this
         type. This allows the `entry list` behaves like a table, we can find the value of an
         attribute through the correct entry id (e.g. index of the outer list) and attribute 
         id (e.g index of the inner list).
 
-        Note that, if the type of a `entry list` is Annotatoin-Like (e.g. subclasses of 
+        Note that, if the type of a `entry list` is Annotation-Like (e.g. subclasses of 
         Annotation and AudioAnnotation), these entries will be sorted by the first two 
         attributes (`begin`, `end`). However, the order of a list with types that are not 
         Annotation-like, is arbitrary.
