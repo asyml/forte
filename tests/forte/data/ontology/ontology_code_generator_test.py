@@ -191,29 +191,11 @@ class GenerateOntologyTest(unittest.TestCase):
             )
             gen_files = sorted(utils.get_generated_files_in_dir(folder_path))
 
-            # Assert the generated python files
-            exp_file_path = [
-                "ft/__init__",
-                "ft/onto/__init__",
-                "ft/onto/example_import_ontology",
-            ]
+            exp_file_path = "ft/onto/example_import_ontology"
             exp_files = sorted(
-                [
-                    f"{os.path.join(folder_path, file)}.py"
-                    for file in exp_file_path
-                ]
+                [f"{os.path.join(folder_path, exp_file_path)}.py"]
             )
 
-            # Now, corrupt two of the init files
-            corrupted_path = os.path.join(folder_path, "ft/__init__.py")
-            corrupted_path_onto = os.path.join(
-                folder_path, "ft/onto/__init__.py"
-            )
-            exp_files = [
-                file
-                for file in exp_files
-                if file != corrupted_path and file != corrupted_path_onto
-            ]
             self.assertEqual(gen_files, exp_files)
 
             # Re-generate using include_init = False, use_name_space_packaging=True
@@ -227,25 +209,6 @@ class GenerateOntologyTest(unittest.TestCase):
             )
             gen_files = sorted(utils.get_generated_files_in_dir(folder_path))
 
-            # Assert the generated python files after removing the corrupted
-            # file which should not have been regenerated
-
-            exp_file_path = [
-                "ft/__init__",
-                "ft/onto/__init__",
-                "ft/onto/example_import_ontology",
-            ]
-            exp_files = sorted(
-                [
-                    f"{os.path.join(folder_path, file)}.py"
-                    for file in exp_file_path
-                ]
-            )
-            exp_files = [
-                file
-                for file in exp_files
-                if file != corrupted_path and file != corrupted_path_onto
-            ]
             self.assertEqual(gen_files, exp_files)
 
     def test_not_use_name_space_packaging(self):
@@ -276,12 +239,8 @@ class GenerateOntologyTest(unittest.TestCase):
                     for file in exp_file_path
                 ]
             )
-            self.assertEqual(gen_files, exp_files)
 
-            # Now, corrupt one of the init files
-            corrupted_path = os.path.join(folder_path, "ft/__init__.py")
-            with open(corrupted_path, "w") as f:
-                f.write("# ***corrupted file***\n")
+            self.assertEqual(gen_files, exp_files)
 
             # Re-generate using include_init = False, use_name_space_packaging=False
             self.generator = OntologyCodeGenerator()
@@ -294,9 +253,6 @@ class GenerateOntologyTest(unittest.TestCase):
             )
             gen_files = sorted(utils.get_generated_files_in_dir(folder_path))
 
-            # Assert the generated python files after removing the corrupted
-            # file which should not have been regenerated
-            exp_files = [file for file in exp_files if file != corrupted_path]
             self.assertEqual(gen_files, exp_files)
 
     @data(
