@@ -4,9 +4,9 @@ import time
 import yaml
 from mimic3_note_reader import Mimic3DischargeNoteReader
 
-from forte.elastic import ElasticSearchPackIndexProcessor
-from forte.hugginface.bio_ner_predictor import BioBERTNERPredictor
-from forte.hugginface.transformers_processor import BERTTokenizer
+from fortex.elastic import ElasticSearchPackIndexProcessor
+from fortex.huggingface.bio_ner_predictor import BioBERTNERPredictor
+from fortex.huggingface.transformers_processor import BERTTokenizer
 
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
@@ -41,7 +41,6 @@ def main(input_path: str, output_path: str, max_packs: int = -1):
     )
 
     pl.initialize()
-
     for idx, _ in enumerate(pl.process_dataset(input_path)):
         if (idx + 1) % 50 == 0:
             print(f"{time.strftime('%m-%d %H:%M')}: Processed {idx + 1} packs")
