@@ -85,12 +85,12 @@ installing forte spacy wrapper)
 ```python
 from forte import Pipeline
 from forte.data.readers import TerminalReader
-from forte.spacy import SpacyProcessor
+from fortex.spacy import SpacyProcessor
 
 for pack in Pipeline().set_reader(
         TerminalReader()
 ).add(
-    SpacyProcessor(), {"processors": "sentence, ner"}
+    SpacyProcessor(), {"processors": "[sentence, ner]"}
 ).initialize().process_dataset():
     for sentence in pack.get("ft.onto.base_ontology.Sentence"):
         print("The sentence is: ", sentence.text)
