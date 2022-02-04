@@ -3,8 +3,32 @@
 ## Get primitive data
 `DataPack.get_data()` is commonly used to retrieve primitive data from a `DataPack`. User can request particular data fields within the range of a particular `Annotation` or `AudioAnnotation` type. User request particular data fields by setting `request` and the search range by setting `context_type`.
 
-In forte, each annotation has a range which includes begin and end of annotation-specific data of that particular annotation. For `Annotation` type, range means the begin index and end index of characters under `Annotation` type in the `text` payload of the `DataPack`. For `AudioAnnotation` type, range means the begin index and end index of sound sample under `AudioAnnotation` type in the `audio` payload of the `DataPack`. For an `Token` instance which is a subtype of `Annotation`, its annotation-specific data is `text` and therefore range means the begin and end of characters of that `Token` instance. For an `Recording` instance which is a subtype of `AudioAnnotation`, its annotation-specific data is `audio` and there range means the begin and end index of that `Recording` instance.
+### Annotation
+In forte, each annotation has a range which includes begin and end of annotation-specific data of that particular annotation. For `Annotation` type, range means the begin index and end index of characters under `Annotation` type in the `text` payload of the `DataPack`.
+```python
+requests = {
+    Sentence: ["speaker"],
+    Token: ["pos", "sense"],
+    PredicateMention: [],
+    PredicateArgument: {"fields": [], "unit": "Token"},
+    PredicateLink: {
+        "component": utils.get_full_module_name(OntonotesReader),
+        "fields": ["parent", "child", "arg_type"],
+    },
+}
+pack.get_data(Annotation, requests)
+```
 
+ For an `Token` instance which is a subtype of `Annotation`, its annotation-specific data is `text` and therefore range means the begin and end of characters of that `Token` instance. For an `Recording` instance which is a subtype of `AudioAnnotation`, its annotation-specific data is `audio` and there range means the begin and end index of that `Recording` instance.
+
+
+
+
+
+### AudioAnnotation
+Based on the idea of "range", in the example code, entry `AudioUtterance` will be searched in `DataPack.audio_annotations` and the requested data field `speaker` will be included in the generator's data.
+
+For `AudioAnnotation` type, range means the begin index and end index of sound sample under `AudioAnnotation` type in the `audio` payload of the `DataPack`. 
 
 For example, if User wants to get primitive data of `AudioAnnotation` from a `DataPack` instance `pack`. User can call the function like the code blow. It returns a generator that User can iterate over.
 `AudioAnnotation` is passed into the method as parameter `context_type`.
@@ -22,8 +46,6 @@ pack.get_data(AudioAnnotation,
                 }
             )
 ```
-
-Based on the idea of "range", in the example code, entry `AudioUtterance` will be searched in `DataPack.audio_annotations` and the requested data field `speaker` will be included in the generator's data.
 
 
 ## Build Coverage Index
