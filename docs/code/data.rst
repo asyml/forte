@@ -191,6 +191,12 @@ Readers
 .. autoclass:: forte.datasets.mrc.squad_reader.SquadReader
     :members:
 
+:hidden:`ClassificationDatasetReader`
+--------------------------------------
+.. autoclass:: forte.data.readers.classification_reader.ClassificationDatasetReader
+    :members:
+
+
 DataPack Dataset
 =================
 
