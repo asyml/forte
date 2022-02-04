@@ -1,7 +1,7 @@
 # DataPack Tutorial
 
-## Get primitive data
-`DataPack.get_data()` is commonly used to retrieve primitive data from a `DataPack`. User can request particular data fields within the range of a particular `Annotation` or `AudioAnnotation` type. User request particular data fields by setting `request` and the search range by setting `context_type`.
+## Get data
+`DataPack.get_data()` is commonly used to retrieve data from a `DataPack`. User can request particular data fields within the range of a particular `Annotation` or `AudioAnnotation` type. User request particular data fields by setting `request` and the search range by setting `context_type`.
 
 ### Annotation
 In forte, each annotation has a range which includes begin and end of annotation-specific data of that particular annotation. For `Annotation` type, range means the begin index and end index of characters under `Annotation` type in the `text` payload of the `DataPack`.
@@ -30,13 +30,13 @@ Based on the idea of "range", in the example code, entry `AudioUtterance` will b
 
 For `AudioAnnotation` type, range means the begin index and end index of sound sample under `AudioAnnotation` type in the `audio` payload of the `DataPack`. 
 
-For example, if User wants to get primitive data of `AudioAnnotation` from a `DataPack` instance `pack`. User can call the function like the code blow. It returns a generator that User can iterate over.
+For example, if User wants to get data of `AudioAnnotation` from a `DataPack` instance `pack`. User can call the function like the code blow. It returns a generator that User can iterate over.
 `AudioAnnotation` is passed into the method as parameter `context_type`.
 ```python
 pack.get_data(AudioAnnotation)
 ```
 
-For example, if User wants to get primitive data of `AudioUtterance` from a `DataPack` instance `pack` and specific data fields such as `speaker` for `AudioUtterance` entry. User can call the function like the code blow.
+For example, if User wants to get data of `AudioUtterance` from a `DataPack` instance `pack` and specific data fields such as `speaker` for `AudioUtterance` entry. User can call the function like the code blow.
 
 ```python
 pack.get_data(AudioAnnotation,

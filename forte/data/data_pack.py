@@ -771,9 +771,13 @@ class DataPack(BasePack[Entry, Link, Group]):
         request: Optional[DataRequest] = None,
         skip_k: int = 0,
     ) -> Iterator[Dict[str, Any]]:
-        r"""Fetch primitive data from entries in the data_pack of type
-        `context_type`. Primitive data includes `"span"`, annotation-specifc
+        r"""Fetch data from entries in the data_pack of type
+        `context_type`. Data includes `"span"`, annotation-specifc
         default data fields and specific data fields by `"request"`.
+
+        Annotation-specific data fields means:
+        - `"text"` for ``Type[Annotation]``
+        - `"audio"` for ``Type[AudioAnnotation]``
 
         Currently, we do not support Groups and Generics in the request.
 
@@ -831,10 +835,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
                 Note that for all annotation types, `"span"`
                 fields and annotation-specific data fields are returned by
-                default. Annotation-specific data fields means:
-
-                    - `"text"` for ``Type[Annotation]``
-                    - `"audio"` for ``Type[AudioAnnotation]``
+                default.
 
                 For all link types, `"child"` and `"parent"` fields are
                 returned by default.
@@ -929,7 +930,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                 )
 
         def get_context_data(c_type, context):
-            r"""Get context-specific primitive data of a given context type and
+            r"""Get context-specific data of a given context type and
                 context.
 
             Args:
@@ -944,7 +945,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                     not implemented.
 
             Returns:
-                str: primitive context data.
+                str: context data.
             """
             if issubclass(c_type, Annotation):
                 return self.text[context.begin : context.end]
