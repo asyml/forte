@@ -13,8 +13,9 @@
 # limitations under the License.
 
 from typing import Union, Type, List, Iterator, Tuple, Optional, Any
-
 import uuid
+
+from forte.utils import get_full_module_name
 from forte.data.ontology.core import EntryType
 from forte.data.base_store import BaseStore
 from forte.data.entry_type_generator import EntryTypeGenerator
@@ -204,14 +205,6 @@ class DataStore(BaseStore):
     def _new_tid(self) -> int:
         r"""This function generates a new `tid` for an entry."""
         return uuid.uuid4().int
-
-    def _get_entry_type_str(
-        self, entry_type: Union[str, Type[EntryType]]
-    ) -> str:
-        if isinstance(entry_type, str):
-            return entry_type
-        else:
-            return entry_type.__module__ + "." + entry_type.__qualname__
 
     def _new_annotation(self, entry_type: str, begin: int, end: int):
         r"""This function generates a new annotation with default fields.
@@ -455,9 +448,10 @@ class DataStore(BaseStore):
         """
         # We find the `type_id` according to `entry_type` and locate the list.
         # We create an iterator to generate entries from the list.
-        yield from self.__elements[
-            self.__type_dict[self._get_entry_type_str(entry_type)]
-        ]
+        if not isinstance(entry_type, str):
+            # convert `entry_type` to fully qualified name
+            entry_type = get_full_module_name(entry_type)
+        yield from self.__elements[self.__type_dict[entry_type]]
 
     def next_entry(self, tid: int) -> List:
         r"""Get the next entry of the same type as the `tid` entry.
