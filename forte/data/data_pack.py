@@ -771,7 +771,9 @@ class DataPack(BasePack[Entry, Link, Group]):
         request: Optional[DataRequest] = None,
         skip_k: int = 0,
     ) -> Iterator[Dict[str, Any]]:
-        r"""Fetch entries from the data_pack of type `context_type`.
+        r"""Fetch primitive data from entries in the data_pack of type
+        `context_type`. Primitive data includes `"span"`, annotation-specifc
+        default data fields and specific data fields by `"request"`.
 
         Currently, we do not support Groups and Generics in the request.
 
@@ -794,19 +796,21 @@ class DataPack(BasePack[Entry, Link, Group]):
         Args:
             context_type (Union[str, Type[Annotation], Type[AudioAnnotation]]):
                 The granularity of the data context, which
-                could be any ``Annotation`` or ``AudioAnnotation`` type. Behaviors under different
-                context_type varies:
+                could be any ``Annotation`` or ``AudioAnnotation`` type.
+                Behaviors under different context_type varies:
 
-                - str type will be converted into either ``Annotation`` type
-                    or ``AudioAnnotation`` type.
+                - str type will be converted into either ``Annotation`` type or
+                  ``AudioAnnotation`` type
                 - ``Type[Annotation]``: the default data field for getting
-                    context data is :attr:`text`. This function iterates
-                    annotations to get target entry data.
+                  context data is :attr:`text`. This function iterates
+                  :attr:`all_annotations` to search target entry data.
                 - ``Type[AudioAnnotation]``: the default data field for getting
-                    context data is :attr:`audio` which stores audio data in numpy
-                    arrays. This function iterates audio annotations to get
-                    target entry data.
-            request (dict): The entry types and fields User wants to request.
+                  context data is :attr:`audio` which stores audio data in
+                  numpy arrays. This function iterates
+                  :attr:`all_audio_annotations` to search target entry data.
+
+            request (Dict[Entry, Union(List[str], Dict[str, Union(List[str] , str)])]): The
+                entry types and fields User wants to request.
                 The keys of the requests dict are the required entry types
                 and the value should be either:
 
@@ -828,8 +832,10 @@ class DataPack(BasePack[Entry, Link, Group]):
                 Note that for all annotation types, `"span"`
                 fields and annotation-specific data fields are returned by
                 default. Annotation-specific data fields means:
-                    - `"text"` for ``Annotation``
-                    - `"audio"` for ``AudioAnnotation``
+
+                    - `"text"` for ``Type[Annotation]``
+                    - `"audio"` for ``Type[AudioAnnotation]``
+
                 For all link types, `"child"` and `"parent"` fields are
                 returned by default.
             skip_k (int): Will skip the first `skip_k` instances and generate
