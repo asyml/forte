@@ -800,7 +800,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                 Behaviors under different context_type varies:
 
                 - str type will be converted into either ``Annotation`` type or
-                  ``AudioAnnotation`` type
+                  ``AudioAnnotation`` type.
                 - ``Type[Annotation]``: the default data field for getting
                   context data is :attr:`text`. This function iterates
                   :attr:`all_annotations` to search target entry data.
