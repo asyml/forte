@@ -36,10 +36,10 @@ class Feature:
         metadata (dict): A dictionary storing meta-data for this feature.
             Mandatory fields includes: `dim`, `dtype`.
 
-            `dim` indicates the total number of dimension for this
-            feature.
+            - `dim` indicates the total number of dimension for this
+              feature.
+            - `dtype` is the value type. For example, it can be `torch.long`.
 
-            `dtype` is the value type. For example, it can be `torch.long`.
         vocab (Vocabulary): An optional fields about the
             :class:`~forte.data.vocabulary.Vocabulary` used to build this
             feature.
