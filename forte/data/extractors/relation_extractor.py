@@ -88,10 +88,10 @@ class LinkExtractor(BaseExtractor):
         r"""Returns a dictionary of default hyper-parameters.
 
         Here:
-            - "entry_type": The target relation entry type, should be a Link
-            entry.
-            - "attribute": The attribute of the relation to extract.
-            - "index_annotation": The annotation object used to index the
+
+        - "`entry_type`": The target relation entry type, should be a Link entry.
+        - "`attribute`": The attribute of the relation to extract.
+        - "`index_annotation`": The annotation object used to index the
             head and child node of the relations.
         """
         config = super().default_configs()
