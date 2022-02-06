@@ -103,6 +103,12 @@ for review. Use the following simple PR templates to structure the PR:
 
 * [PR Template](https://github.com/asyml/forte/blob/master/.github/PULL_REQUEST_TEMPLATE.md)
 
+Here is a detailed explanation of each section in the template:
+* The first line should always start with `This PR fixes [issue link]` or `This PR partially addresses [issue link]` where `[issue link]` can be replaced with a `#ISSUE_ID` associated to a specific [issue](https://github.com/asyml/forte/issues). This allows Github to automatically link your pull request to the corresponding issue. If this pull request will close the issue we use `fixes` otherwise we can say `partially addresses`.
+* **Description of changes**: You should include a description of the changes that you make. If the pull request is aimed to fix an issue, you can explain the approaches to address the problem.
+* **Possible influences of this PR**: List all the potential side-effects of your update. Examples include influences on compatibility, performance, API signature, etc.
+* **Test Conducted**: Describe the test cases to verify the changes in pull request. You should always create unit tests for your updates in the pull request and make sure they can cover all of the conditional branches, especially the ones related to corner cases where bugs usually stem from. We will use [Covergage](https://coverage.readthedocs.io/en/6.3/) to gauge the effectiveness of tests and you can refer to [Codecov report](https://about.codecov.io/language/python/) to see which lines are not visited by your test cases.
+
 ### Using Labels
 
 We use standard issue labels such as priority, bug, enhancement, etc. We have a few
@@ -118,8 +124,19 @@ topic labels in the future.
 
 The programming language for Forte is Python. We follow
 the [Google Python Style guide](http://google.github.io/styleguide/pyguide.html). The
-project code is examined using `pylint`, `flake8`, `mypy` and `black`, which will be run
-automatically in CI.
+project code is examined using `pylint`, `flake8`, `mypy`, `black` and `sphinx-build` which will be run
+automatically in CI. It's recommended that you should run these tests locally before submitting your pull request to save time. Refer to the github workflow [here](https://github.com/asyml/forte/blob/master/.github/workflows/main.yml) for detailed steps to carry out the tests. Basically what you need to do is to install the requirements (check out the `Install dependencies` sections) and run the commands (refer to the steps in `Format check with Black`, `Lint with flake8`, `Lint with pylint`, `Lint main code with mypy when torch version is not 1.5.0`, `Build Docs`, etc.).
+
+### Docstring
+
+ All public methods require docstring and type annotation. It is recommended to add docstring for all functions. The docstrings should follow the [`Comments and Docstrings` section](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings) of Google Python Style guide. We will include a pylint plugin called [docparams](https://github.com/PyCQA/pylint/blob/main/pylint/extensions/docparams.rst) to validate the parameters of docstrings:
+* parameters and their types
+* return value and its type
+* exceptions raised
+
+You should take special care of the indentations in your documentation. Make sure the indents are consistent and follow the Google Style guide. All sections other than the heading should maintain a hanging indent of two or four spaces. Refer to the examples [here](https://google.github.io/styleguide/pyguide.html#383-functions-and-methods) for what is expected and what are the requirements for different sections like `args`, `lists`, `returns`, etc. Invalid indentations might trigger errors in `sphinx-build` and will cause confusing rendering of the documentation. You can run `sphinx-build` locally to see whether the generated docs look reasonable.
+
+Another aspect that should be noted is the format of links or cross-references of python objects. Make sure to follow the [sphinx cross-referencing syntax](https://www.sphinx-doc.org/en/master/usage/restructuredtext/roles.html#xref-syntax). The references will be checked by [sphinx-build nit-picky mode](https://www.sphinx-doc.org/en/master/man/sphinx-build.html#cmdoption-sphinx-build-n) which raises warnings for all the missing and unresolvable links. 
 
 ### Git Commit Style
 

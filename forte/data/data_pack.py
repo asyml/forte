@@ -1414,7 +1414,6 @@ class DataPack(BasePack[Entry, Link, Group]):
         Yields:
             Each `Entry` found using this method.
         """
-
         entry_type_: Type[EntryType] = as_entry_type(entry_type)
 
         def require_annotations(entry_class=Annotation) -> bool:

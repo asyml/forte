@@ -47,12 +47,12 @@ class DataStoreTest(unittest.TestCase):
         # Sentence entries have tid 9999, 1234567.
         # The type id for Document is 0, Sentence is 1.
 
-        self.data_store._type_dict = {
+        self.data_store._DataStore__type_dict = {
             "ft.onto.base_ontology.Document": 0,
             "ft.onto.base_ontology.Sentence": 1,
         }
 
-        self.data_store.elements = [
+        self.data_store._DataStore__elements = [
             SortedList(
                 [
                     [
@@ -102,7 +102,7 @@ class DataStoreTest(unittest.TestCase):
                 ],
             ),
         ]
-        self.data_store.entry_dict = {
+        self.data_store._DataStore__entry_dict = {
             1234: [
                 0,
                 5,
@@ -159,44 +159,46 @@ class DataStoreTest(unittest.TestCase):
         pass
 
     def test_get_attr(self):
-        # speaker = self.data_store.get_attr(9999, "speaker")
-        # classifications = self.data_store.get_attr(3456, "classifications")
+        speaker = self.data_store.get_attribute(9999, "speaker")
+        classifications = self.data_store.get_attribute(3456, "classifications")
 
-        # self.assertEqual(speaker, "teacher")
-        # self.assertEqual(classifications, "Class B")
+        self.assertEqual(speaker, "teacher")
+        self.assertEqual(classifications, "Class B")
 
-        # # Entry with such tid does not exist
-        # with self.assertRaises(ValueError):
-        #     for doc in self.data_store.get_attr(1111, "speaker"):
-        #         print(doc)
+        # Entry with such tid does not exist
+        with self.assertRaisesRegex(
+            KeyError, "Entry with tid 1111 not found."
+        ):
+            self.data_store.get_attribute(1111, "speaker")
 
-        # # Get attribute field that does not exist
-        # with self.assertRaises(ValueError):
-        #     for doc in self.data_store.get_attr(9999, "class"):
-        #         print(doc)
-        pass
+        # Get attribute field that does not exist
+        with self.assertRaisesRegex(
+            ValueError, "ft.onto.base_ontology.Sentence has no class attribute."
+        ):
+            self.data_store.get_attribute(9999, "class")
 
     def test_set_attr(self):
-        # # change attribute
-        # self.data_store.set_attr(9999, "speaker", "student")
-        # # set attribute with originally none value
-        # self.data_store.set_attr(1234, "document_class", "Class D")
-        # speaker = self.data_store.get_attr(9999, "speaker")
-        # doc_class = self.data_store.get_attr(1234, "document_class")
+        # change attribute
+        self.data_store.set_attribute(9999, "speaker", "student")
+        # set attribute with originally none value
+        self.data_store.set_attribute(1234, "document_class", "Class D")
+        speaker = self.data_store.get_attribute(9999, "speaker")
+        doc_class = self.data_store.get_attribute(1234, "document_class")
 
-        # self.assertEqual(speaker, "student")
-        # self.assertEqual(doc_class, "Class D")
+        self.assertEqual(speaker, "student")
+        self.assertEqual(doc_class, "Class D")
 
-        # # Entry with such tid does not exist
-        # with self.assertRaises(ValueError):
-        #     for doc in self.data_store.set_attr(1111, "speaker", "human"):
-        #         print(doc)
+        # Entry with such tid does not exist
+        with self.assertRaisesRegex(
+            KeyError, "Entry with tid 1111 not found."
+        ):
+            self.data_store.set_attribute(1111, "speaker", "human")
 
-        # # Set attribute field that does not exist
-        # with self.assertRaises(ValueError):
-        #     for doc in self.data_store.set_attr(9999, "speak", "human"):
-        #         print(doc)
-        pass
+        # Set attribute field that does not exist
+        with self.assertRaisesRegex(
+            ValueError, "ft.onto.base_ontology.Sentence has no speak attribute."
+        ):
+            self.data_store.set_attribute(9999, "speak", "human")
 
     def test_get_entry(self):
         # sent = self.data_store.get_entry(1234567)
