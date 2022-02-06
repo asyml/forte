@@ -54,15 +54,18 @@ class MultiPackBoxer(Caster[DataPack, MultiPack]):
 
     def cast(self, pack: DataPack) -> MultiPack:
         """
-        Auto-box the data-pack into a multi-pack by simple wrapping.
+        Auto-box the DataPack into a MultiPack by simple wrapping.
 
         Args:
-            pack: The data pack to be boxed
+            pack: The DataPack to be boxed
 
-        Returns: An iterator that produces the boxed multi pack.
+        Returns: An iterator that produces the boxed MultiPack.
 
         """
+        # p = MultiPack()
         pack_name = pack.pack_name + "_multi" if pack.pack_name else None
+        # if pack_name in p._name_index:
+        #     raise ValueError(f"The name {pack_name} has already been taken.")
         p = MultiPack(pack_name=pack_name)
         p.add_pack_(pack, self.configs.pack_name)
         return p
@@ -78,3 +81,40 @@ class MultiPackBoxer(Caster[DataPack, MultiPack]):
     @staticmethod
     def output_pack_type():
         return MultiPack
+
+
+class MultiPackUnboxer(Caster[MultiPack, DataPack]):
+    """
+    This passes on a single DataPack within the MultiPack.
+    """
+
+    def cast(self, pack: MultiPack) -> DataPack:
+        """
+        Auto-box the MultiPack into a DataPack by using pack_index to take the unique pack.
+
+        Args:
+            pack: The MultiPack to be boxed.
+
+        Returns: A DataPack boxed from the MultiPack.
+
+        """
+
+        if self.configs.pack_index < pack.num_pack:
+            p = pack.get_pack_at(self.configs.pack_index)
+            return p
+        else:
+            raise IndexError(
+                f"pack_index: {self.configs.pack_index} is not in this multi-pack."
+            )
+
+    @classmethod
+    def default_configs(cls):
+        return {"pack_index": 0}
+
+    @staticmethod
+    def input_pack_type():
+        return MultiPack
+
+    @staticmethod
+    def output_pack_type():
+        return DataPack

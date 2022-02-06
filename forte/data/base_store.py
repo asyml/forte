@@ -60,6 +60,10 @@ class BaseStore:
         raise NotImplementedError
 
     @abstractmethod
+    def set_attribute(self, tid: int, attr_name: str, attr_value):
+        raise NotImplementedError
+
+    @abstractmethod
     def set_attr(self, tid: int, attr_id: int, attr_value):
         r"""This function locates the entry data with `tid` and sets its
         attribute `attr_id` with value `attr_value`.
@@ -71,6 +75,10 @@ class BaseStore:
 
         """
 
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_attribute(self, tid: int, attr_name: str):
         raise NotImplementedError
 
     @abstractmethod

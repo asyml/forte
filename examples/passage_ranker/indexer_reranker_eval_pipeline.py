@@ -16,7 +16,7 @@ import argparse
 
 import yaml
 
-from forte.elastic import ElasticSearchQueryCreator, ElasticSearchProcessor
+from fortex.elastic import ElasticSearchQueryCreator, ElasticSearchProcessor
 
 from ms_marco_evaluator import MSMarcoEvaluator
 from reader import EvalReader
