@@ -772,7 +772,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         skip_k: int = 0,
     ) -> Iterator[Dict[str, Any]]:
         r"""Fetch data from entries in the data_pack of type
-        `context_type`. Data includes `"span"`, annotation-specifc
+        `context_type`. Data includes `"span"`, annotation-specific
         default data fields and specific data fields by `"request"`.
 
         Annotation-specific data fields means:
