@@ -337,7 +337,10 @@ class InferringOntologyTreeAutomaticallyTst(unittest.TestCase):
             "definitions"
         ]
         retDifference = [i for i in definitions_2 if i not in definitions_1]
-        self.assertCountEqual(self.expected, retDifference)
+        retDifference_expected_union = [
+            i for i in self.expected if i in retDifference
+        ]
+        self.assertEqual(len(self.expected), len(retDifference_expected_union))
 
 
 if __name__ == "__main__":
