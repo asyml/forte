@@ -273,48 +273,71 @@ class AdvancedPipelineTest(unittest.TestCase):
 
 
 class InferringOntologyTreeAutomaticallyTst(unittest.TestCase):
+    """
+    Test the Inferring Ontology Tree Automatically by using Recursive Method
+    """
+
     def setUp(self) -> None:
-        # self.expected = [{'entry_name':'C', 'parent_entry': 'A'},
-        #                         {'entry_name':'E', 'parent_entry':'C'},
-        #                         {'entry_name':'D', 'parent_entry':'B'}]
+        self.expected = [
+            {
+                "entry_name": "ft.onto.wikipedia.WikiInfoBoxProperty",
+                "parent_entry": "forte.data.ontology.top.Generics",
+            },
+            {
+                "entry_name": "ft.onto.wikipedia.WikiInfoBoxMapped",
+                "parent_entry": "forte.data.ontology.top.Generics",
+            },
+            {
+                "entry_name": "ft.onto.wikipedia.WikiCategory",
+                "parent_entry": "forte.data.ontology.top.Generics",
+            },
+            {
+                "entry_name": "ft.onto.wikipedia.WikiPage",
+                "parent_entry": "forte.data.ontology.top.Annotation",
+            },
+            {
+                "entry_name": "ft.onto.wikipedia.WikiBody",
+                "parent_entry": "forte.data.ontology.top.Annotation",
+            },
+            {
+                "entry_name": "ft.onto.wikipedia.WikiSection",
+                "parent_entry": "forte.data.ontology.top.Annotation",
+            },
+            {
+                "entry_name": "ft.onto.wikipedia.WikiParagraph",
+                "parent_entry": "forte.data.ontology.top.Annotation",
+            },
+            {
+                "entry_name": "ft.onto.wikipedia.WikiTitle",
+                "parent_entry": "forte.data.ontology.top.Annotation",
+            },
+            {
+                "entry_name": "ft.onto.wikipedia.WikiArticleTitle",
+                "parent_entry": "forte.data.ontology.top.Annotation",
+            },
+            {
+                "entry_name": "ft.onto.wikipedia.WikiAnchor",
+                "parent_entry": "forte.data.ontology.top.Annotation",
+            },
+        ]
 
-        self.expected = [["C", "A"], ["E", "C"], ["D", "B"]]
+        self.pipeline_1 = Pipeline()
+        from ft.onto.wikipedia import WikiPage
 
-        self.pipleline = Pipeline()
+        self.pipeline_2 = Pipeline()
 
-    def test1(self):
-        class entry:
-            pass
-
-        class A(entry):
-            pass
-
-        class B(entry):
-            pass
-
-        class C(A):
-            pass
-
-        class D(B):
-            pass
-
-        class E(C):
-            pass
-
-        realOutput = []
-        results = self.pipleline.parse_entry(entry)["definitions"]
-        # resultFormat[{'entry_name': "<class '__main__.InferringOntologyTreeAutomaticallyTst.test1.<locals>.C'>",
-        # 'parent_entry': "<class '__main__.InferringOntologyTreeAutomaticallyTst.test1.<locals>.A'>"},...]
-        for result in results:
-            result["entry_name"] = (
-                result["entry_name"].split(">.")[-1].split("'")[0]
-            )
-            result["parent_entry"] = (
-                result["parent_entry"].split(">.")[-1].split("'")[0]
-            )
-            realOutput.append([result["entry_name"], result["parent_entry"]])
-
-        self.assertCountEqual(self.expected, realOutput)
+    def test_inferring_ontology_tree(self):
+        """
+        Check the correct of the results.
+        """
+        definitions_1 = self.pipeline_1.resource.get("onto_specs_dict")[
+            "definitions"
+        ]
+        definitions_2 = self.pipeline_2.resource.get("onto_specs_dict")[
+            "definitions"
+        ]
+        retDifference = [i for i in definitions_2 if i not in definitions_1]
+        self.assertCountEqual(self.expected, retDifference)
 
 
 if __name__ == "__main__":
