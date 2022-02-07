@@ -49,7 +49,6 @@ from forte.data.base_reader import BaseReader
 from forte.data.caster import Caster
 from forte.data.ontology.code_generation_objects import EntryTree
 from forte.data.ontology.core import Entry
-from forte.data.ontology.ontology_code_const import TOP_MOST_MODULE_NAME
 from forte.data.ontology.ontology_code_generator import OntologyCodeGenerator
 from forte.data.selector import Selector, DummySelector
 from forte.evaluation.base.base_evaluator import Evaluator
