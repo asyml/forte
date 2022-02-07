@@ -48,6 +48,7 @@ from forte.data.base_pack import PackType
 from forte.data.base_reader import BaseReader
 from forte.data.caster import Caster
 from forte.data.ontology.code_generation_objects import EntryTree
+from forte.data.ontology.ontology_code_const import TOP_MOST_MODULE_NAME
 from forte.data.ontology.core import Entry
 from forte.data.ontology.ontology_code_generator import OntologyCodeGenerator
 from forte.data.selector import Selector, DummySelector
@@ -190,7 +191,7 @@ class Pipeline(Generic[PackType]):
             # Recursive Method to Find Subclasses
             spec_dict = self.parse_entry(Entry)
 
-            self.resource.update(onto_specs_path="")
+            self.resource.update(onto_specs_path=" ")
             self.resource.update(onto_specs_dict=spec_dict)
 
         if ontology_file is not None:
@@ -223,6 +224,7 @@ class Pipeline(Generic[PackType]):
 
         Args:
             entry: A Class which should get by "from forte.data.ontology.core import Entry"
+
         """
         spec_dict = {"additional_prefixes": [], "definitions": []}
         for subclass in entry.__subclasses__():
@@ -243,15 +245,21 @@ class Pipeline(Generic[PackType]):
         all_subclasses = []
         additional_prefixes = []
         for subclass in entry_subclass.__subclasses__():
-            if "ft.onto" not in str(subclass):
-                subclass_split = str(subclass).split(".")
+            if str(
+                entry_subclass.__module__ + "." + entry_subclass.__name__
+            ).startswith(TOP_MOST_MODULE_NAME):
+                continue
+            if "ft.onto" not in subclass.__module__:
+                subclass_split = subclass.__module__.split(".")
                 additional_prefixes.append(
                     subclass_split[0] + "." + subclass_split[1]
                 )
             all_subclasses.append(
                 {
-                    "entry_name": str(subclass),
-                    "parent_entry": str(entry_subclass),
+                    "entry_name": subclass.__module__ + "." + subclass.__name__,
+                    "parent_entry": entry_subclass.__module__
+                    + "."
+                    + entry_subclass.__name__,
                 }
             )
             all_subclasses_tmp, additional_prefixes_tmp = self.find_spec_dict(
