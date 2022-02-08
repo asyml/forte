@@ -226,14 +226,10 @@ class Pipeline(Generic[PackType]):
             entry: A Class which should get by "from forte.data.ontology.core import Entry"
 
         """
-        spec_dict = {"additional_prefixes": [], "definitions": []}
+        spec_dict = {"definitions": []}
         for subclass in entry.__subclasses__():
-            all_subclasses, additional_prefixes = self.find_spec_dict(subclass)
+            all_subclasses = self.find_spec_dict(subclass)
             spec_dict["definitions"].extend(all_subclasses)
-            spec_dict["additional_prefixes"].extend(additional_prefixes)
-        spec_dict["additional_prefixes"] = list(
-            set(spec_dict["additional_prefixes"])
-        )
         return spec_dict
 
     def find_spec_dict(self, entry_subclass):
@@ -243,26 +239,22 @@ class Pipeline(Generic[PackType]):
             entry_subclass: A Class
         """
         all_subclasses = []
-        additional_prefixes = []
+        parent_entry = entry_subclass.__module__ + "." + entry_subclass.__name__
         for subclass in entry_subclass.__subclasses__():
-            if str(
-                entry_subclass.__module__ + "." + entry_subclass.__name__
-            ).startswith(TOP_MOST_MODULE_NAME):
-                continue
-            all_subclasses.append(
-                {
-                    "entry_name": subclass.__module__ + "." + subclass.__name__,
-                    "parent_entry": entry_subclass.__module__
-                    + "."
-                    + entry_subclass.__name__,
-                }
-            )
-            all_subclasses_tmp, additional_prefixes_tmp = self.find_spec_dict(
-                subclass
-            )
-            all_subclasses.extend(all_subclasses_tmp)
-            additional_prefixes.extend(additional_prefixes_tmp)
-        return all_subclasses, additional_prefixes
+            if (
+                not parent_entry.startswith(TOP_MOST_MODULE_NAME)
+                and not len(parent_entry.split(".")) < 3
+            ):
+                all_subclasses.append(
+                    {
+                        "entry_name": subclass.__module__
+                        + "."
+                        + subclass.__name__,
+                        "parent_entry": parent_entry,
+                    }
+                )
+            all_subclasses.extend(self.find_spec_dict(subclass))
+        return all_subclasses
 
     def enforce_consistency(self, enforce: bool = True):
         r"""This function determines whether the pipeline will check
