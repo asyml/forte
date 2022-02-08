@@ -229,7 +229,7 @@ class DataStore(BaseStore):
         r"""This function generates a new `tid` for an entry."""
         return uuid.uuid4().int
 
-    def _new_annotation(self, type_id: int, begin: int, end: int) -> List:
+    def _new_annotation(self, type_id: int, begin: int, end: int):
         r"""This function generates a new annotation with default fields. All
         default fields are filled with None.
         Called by add_annotation_raw() to create a new annotation with
@@ -250,7 +250,7 @@ class DataStore(BaseStore):
         entry += len(self._type_attributes[type_id]) * [None]
         return entry
 
-    def _new_link(self, type_id: int, parent_tid: int, child_tid: int) -> List:
+    def _new_link(self, type_id: int, parent_tid: int, child_tid: int):
         r"""This function generates a new link with default fields. All
         default fields are filled with None.
         Called by add_link_raw() to create a new link with `type_id`,
@@ -270,7 +270,7 @@ class DataStore(BaseStore):
         entry += len(self._type_attributes[type_id]) * [None]
         return entry
 
-    def _new_group(self, type_id: int, member_type: str) -> List:
+    def _new_group(self, type_id: int, member_type: str):
         r"""This function generates a new group with default fields. All
         default fields are filled with None.
         Called by add_group_raw() to create a new group with
