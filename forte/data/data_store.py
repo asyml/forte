@@ -14,8 +14,13 @@
 
 from typing import List, Iterator, Tuple, Optional, Any
 import uuid
+<<<<<<< HEAD
 
 from forte.utils import get_class
+=======
+from bisect import bisect_left
+from forte.data.ontology.core import EntryType
+>>>>>>> db8c132 (implement delete and delete by loc;)
 from forte.data.base_store import BaseStore
 from forte.data.entry_type_generator import EntryTypeGenerator
 
@@ -225,22 +230,13 @@ class DataStore(BaseStore):
         """
         self.__entry_dict: dict = {}
 
-    def _new_tid(self) -> int:
-        r"""This function generates a new `tid` for an entry."""
-        return uuid.uuid4().int
-
-    def _new_annotation(self, type_id: int, begin: int, end: int) -> List:
-        r"""This function generates a new annotation with default fields. All
-        default fields are filled with None.
-        Called by add_annotation_raw() to create a new annotation with
-        `type_id`, `begin`, and `end`.
+    def _new_annotation(self, type_id: int, begin: int, end: int):
+        """
+        generate a new annotation with default fields. Called by add_entry_raw()
+        to create a new annotation with `type_id`, `begin`, and `end`.
 
         Args:
-            type_id (str): The index of Annotation sortedlist in
-                `self.__elements`.
-            begin (int): Begin index of the entry.
-            end (int): End index of the entry.
-
+            type_id (int): type id of this annotation
         Returns:
             A list representing a new annotation type entry data.
         """
@@ -423,27 +419,72 @@ class DataStore(BaseStore):
 
     def delete_entry(self, tid: int):
         r"""This function locates the entry data with `tid` and removes it
-        from the data store. This function first removes it from `__entry_dict`.
+        from the data store. This function should remove entry from both
+        `entry_dict` and `elements`.
+        If the given tid is not found, this function will raise a KeyError.
 
         Args:
             tid (int): Unique id of the entry.
         """
-        # We call `get_entry()` to obtain the entry, its `type_id`, and the
-        # index in the `entry_type` list (`index_id`). We remove the entry from
-        # `__entry_dict` when its information is retrieved. Then, the `type_id`
-        # and the `index_id` are passed to `_delete_entry_by_loc`.
-        raise NotImplementedError
+        # We retrieve the entry data from entry_dict using tid. We get its
+        # tid, `type_id`, begin and end indexes. Remove the entry from
+        # `entry_dict` when its information is retrieved. We find the
+        # `entry_type` sortedlist using `type_id`. We bisect the target_list to
+        # find the index of entry data. Then, `type_id` and index are passed to
+        # _delete_entry_by_loc.
+
+        try:
+            # get `entry data` and remove it from entry_dict
+            entry_data = self.entry_dict[tid]
+            self.entry_dict.pop(tid)
+        except KeyError:
+            raise KeyError(
+                f"The specified tid [{tid}] "
+                f"does not correspond to an existing entry data "
+            )
+
+        begin, end, tid, type_id = entry_data[:4]
+        if type_id >= len(self.elements):
+            raise IndexError(
+                f"The specified type_id [{type_id}] "
+                f"is out of boundry for list of length [{len(self.elements)}]"
+            )
+
+        target_list = self.elements[type_id]
+        # complexity: O(lgn)
+        entry_index = bisect_left(target_list, entry_data)
+        if (
+            entry_index >= len(target_list)
+            or target_list[entry_index] != entry_data
+        ):
+            raise ValueError(
+                f"Entry [{entry_data[:4]}] is not found" f"in the targetlist"
+            )
+
+        self._delete_entry_by_loc(type_id, entry_index)
 
     def _delete_entry_by_loc(self, type_id: int, index_id: int):
-        r"""It removes an entry of `index_id` by taking both the `type_id`
-        and `index_id`. Called by `delete_entry()`.
+        r"""It removes the index_id'th entry data from the sortedlist of
+        `type_id`.
+        This function will raise an IndexError if the `type_id` or `index_id`
+        is invalid.
 
         Args:
             type_id (int): The index of the list in `self.__elements`.
             index_id (int): The index of the entry in the list.
         """
-        # We then remove the entry data from the `type_id`th list.
-        raise NotImplementedError
+        if type_id >= len(self.elements):
+            raise IndexError(
+                f"The specified type_id [{type_id}] "
+                f"is out of boundry for list of length [{len(self.elements)}]"
+            )
+        target_list = self.elements[type_id]
+        if index_id < 0 or index_id >= len(target_list):
+            raise IndexError(
+                f"The specified index_id [{index_id}] "
+                f"is out of boundry for list of length [{len(target_list)}]"
+            )
+        target_list.pop(index_id)
 
     def get_entry(self, tid: int) -> Tuple[List, int, int]:
         r"""This function finds the entry with `tid`. It returns the entry,
