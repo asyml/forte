@@ -812,14 +812,13 @@ class Pipeline(Generic[PackType]):
             # This will ask the job to keep a copy of the gold standard.
             self.evaluator_indices.append(len(self.components))
 
-        if ref_name is None:
-            self._ref_names[ref_name] = []
-        elif ref_name in self._ref_names:
-            raise ValidationError(
-                f"This reference name {ref_name} already exists, please specify a new one"
-            )
-        else:
-            self._ref_names[ref_name] = len(self.components)
+        if ref_name is not None:
+            if ref_name in self._ref_names:
+                raise ValidationError(
+                    f"This reference name {ref_name} already exists, please specify a new one"
+                )
+            else:
+                self._ref_names[ref_name] = len(self.components)
 
         if component not in self.__component_set:
             # The case where the component is not found.
