@@ -15,7 +15,7 @@
 from typing import List, Iterator, Tuple, Optional, Any
 import uuid
 from bisect import bisect_left
-from forte.data.ontology.core import EntryType
+from forte.utils import get_class
 from forte.data.base_store import BaseStore
 from forte.data.entry_type_generator import EntryTypeGenerator
 
@@ -118,7 +118,7 @@ class DataStore(BaseStore):
         """
         super().__init__()
         self.onto_file_path = onto_file_path
-        self.__entry_type_idx = 3
+        self.ENTRY_TYPE_IDX = 3
 
         """
         The `_type_attributes` is a private dictionary that provides
@@ -225,13 +225,19 @@ class DataStore(BaseStore):
         """
         self.__entry_dict: dict = {}
 
-    def _new_annotation(self, entry_type: str, begin: int, end: int):
+    def _new_tid(self) -> int:
+        r"""This function generates a new `tid` for an entry."""
+        return uuid.uuid4().int
+
+    def _new_annotation(self, type_id: int, begin: int, end: int):
         r"""This function generates a new annotation with default fields.
-        Called by add_annotation_raw() to create a new annotation
-        with `entry_type`, `begin`, and `end`.
+        All default fields are filled with None.
+        Called by add_annotation_raw() to create a new annotation with
+        `type_id`, `begin`, and `end`.
 
         Args:
-            entry_type (str): Fully qualified name of this annotation.
+            type_id (int): The index of Annotation sortedlist in
+                `self.__elements`.
             begin (int): Begin index of the entry.
             end (int): End index of the entry.
 
@@ -242,7 +248,8 @@ class DataStore(BaseStore):
         tid: int = self._new_tid()
         entry: List[Any]
         entry = [begin, end, tid, type_id]
-        entry += len(self._type_attributes[type_id]) * [None]
+        entry += len(self._type_attributes[type_id]) * [-1]
+
         return entry
 
     def _new_link(self, type_id: int, parent_tid: int, child_tid: int) -> List:
@@ -353,12 +360,14 @@ class DataStore(BaseStore):
         """
         if tid not in self.__entry_dict:
             raise KeyError(f"Entry with tid {tid} not found.")
-        entry_type = self.__entry_dict[tid][self.__entry_type_idx]
-        if attr_name not in self._type_attributes[entry_type]:
+
+        type_id = self.__entry_dict[tid][self.ENTRY_TYPE_IDX]
+        if attr_name not in self._type_attributes[type_id]:
             raise ValueError(
-                f"{self.__type_dict[entry_type]} has no {attr_name} attribute."
+                f"{self.__type_dict[type_id]} has no {attr_name} attribute."
             )
-        attr_id = self._type_attributes[entry_type][attr_name]
+
+        attr_id = self._type_attributes[type_id][attr_name]
         self.set_attr(tid, attr_id, attr_value)
 
     def set_attr(self, tid: int, attr_id: int, attr_value: Any):
@@ -391,12 +400,14 @@ class DataStore(BaseStore):
         """
         if tid not in self.__entry_dict:
             raise KeyError(f"Entry with tid {tid} not found.")
-        entry_type = self.__entry_dict[tid][self.__entry_type_idx]
-        if attr_name not in self._type_attributes[entry_type]:
+
+        type_id = self.__entry_dict[tid][self.ENTRY_TYPE_IDX]
+        if attr_name not in self._type_attributes[type_id]:
             raise ValueError(
-                f"{self.__type_dict[entry_type]} has no {attr_name} attribute."
+                f"{self.__type_dict[type_id]} has no {attr_name} attribute."
             )
-        attr_id = self._type_attributes[entry_type][attr_name]
+
+        attr_id = self._type_attributes[type_id][attr_name]
         return self.get_attr(tid, attr_id)
 
     def get_attr(self, tid: int, attr_id: int) -> Any:
@@ -433,8 +444,8 @@ class DataStore(BaseStore):
 
         try:
             # get `entry data` and remove it from entry_dict
-            entry_data = self.entry_dict[tid]
-            self.entry_dict.pop(tid)
+            entry_data = self.__entry_dict[tid]
+            self.__entry_dict.pop(tid)
         except Exception as e:
             raise KeyError(
                 f"The specified tid [{tid}] "
@@ -442,13 +453,13 @@ class DataStore(BaseStore):
             ) from e
 
         _, _, tid, type_id = entry_data[:4]
-        if type_id >= len(self.elements):
+        if type_id >= len(self.__elements):
             raise IndexError(
                 f"The specified type_id [{type_id}] "
-                f"is out of boundry for list of length [{len(self.elements)}]"
+                f"is out of boundry for list of length [{len(self.__elements)}]"
             )
 
-        target_list = self.elements[type_id]
+        target_list = self.__elements[type_id]
         # complexity: O(lgn)
         entry_index = bisect_left(target_list, entry_data)
         if (
@@ -471,12 +482,12 @@ class DataStore(BaseStore):
             type_id (int): The index of the list in `self.__elements`.
             index_id (int): The index of the entry in the list.
         """
-        if type_id >= len(self.elements):
+        if type_id >= len(self.__elements):
             raise IndexError(
                 f"The specified type_id [{type_id}] "
-                f"is out of boundry for list of length [{len(self.elements)}]"
+                f"is out of boundry for list of length [{len(self.__elements)}]"
             )
-        target_list = self.elements[type_id]
+        target_list = self.__elements[type_id]
         if index_id < 0 or index_id >= len(target_list):
             raise IndexError(
                 f"The specified index_id [{index_id}] "
@@ -493,11 +504,7 @@ class DataStore(BaseStore):
 
         Returns:
             The entry which `tid` corresponds to, its `type_id` and its index
-<<<<<<< HEAD
             in the `type_id`th list.
-=======
-            in the `entry_type` sortedlist.
->>>>>>> 1149c1e (fix pylint bugs in data_Store)
         """
         # If the entry is an annotation, bisect the annotation sortedlist
         # to find the entry. May use LRU cache to optimize speed.
