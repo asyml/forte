@@ -29,12 +29,12 @@ class DataStoreTest(unittest.TestCase):
         self.data_store = DataStore()
         # attribute fields for Document and Sentence entries
         self.data_store._type_attributes = {
-            "ft.onto.base_ontology.Document": {
+            0: {
                 "document_class": 4,
                 "sentiment": 5,
                 "classifications": 6,
             },
-            "ft.onto.base_ontology.Sentence": {
+            1: {
                 "speaker": 4,
                 "part_id": 5,
                 "sentiment": 6,
@@ -48,8 +48,15 @@ class DataStoreTest(unittest.TestCase):
         # The type id for Document is 0, Sentence is 1.
 
         self.data_store._DataStore__type_dict = {
+            0: "ft.onto.base_ontology.Document",
+            1: "ft.onto.base_ontology.Sentence",
+            2: "forte.data.ontology.core.Entry",
+        }
+
+        self.data_store._DataStore__type_rev = {
             "ft.onto.base_ontology.Document": 0,
             "ft.onto.base_ontology.Sentence": 1,
+            "forte.data.ontology.core.Entry": 2,
         }
 
         self.data_store._DataStore__elements = [
@@ -59,7 +66,7 @@ class DataStoreTest(unittest.TestCase):
                         0,
                         5,
                         1234,
-                        "ft.onto.base_ontology.Document",
+                        0,
                         None,
                         "Postive",
                         None,
@@ -68,7 +75,7 @@ class DataStoreTest(unittest.TestCase):
                         10,
                         25,
                         3456,
-                        "ft.onto.base_ontology.Document",
+                        0,
                         "Doc class A",
                         "Negative",
                         "Class B",
@@ -81,7 +88,7 @@ class DataStoreTest(unittest.TestCase):
                         6,
                         9,
                         9999,
-                        "ft.onto.base_ontology.Sentence",
+                        1,
                         "teacher",
                         1,
                         "Postive",
@@ -92,7 +99,7 @@ class DataStoreTest(unittest.TestCase):
                         55,
                         70,
                         1234567,
-                        "ft.onto.base_ontology.Sentence",
+                        1,
                         None,
                         None,
                         "Negative",
@@ -101,13 +108,15 @@ class DataStoreTest(unittest.TestCase):
                     ],
                 ],
             ),
+            # empty list corresponds to Entry, test only
+            [],
         ]
         self.data_store._DataStore__entry_dict = {
             1234: [
                 0,
                 5,
                 1234,
-                "ft.onto.base_ontology.Document",
+                0,
                 None,
                 "Postive",
                 None,
@@ -116,7 +125,7 @@ class DataStoreTest(unittest.TestCase):
                 10,
                 25,
                 3456,
-                "ft.onto.base_ontology.Document",
+                0,
                 "Doc class A",
                 "Negative",
                 "Class B",
@@ -125,7 +134,7 @@ class DataStoreTest(unittest.TestCase):
                 6,
                 9,
                 9999,
-                "ft.onto.base_ontology.Sentence",
+                1,
                 "teacher",
                 1,
                 "Postive",
@@ -136,7 +145,7 @@ class DataStoreTest(unittest.TestCase):
                 55,
                 70,
                 1234567,
-                "ft.onto.base_ontology.Sentence",
+                1,
                 None,
                 None,
                 "Negative",
@@ -150,12 +159,12 @@ class DataStoreTest(unittest.TestCase):
         # self.data_store.add_annotation_raw(0, 1, 5)
         # # test add Sentence entry
         # self.data_store.add_annotation_raw(1, 5, 8)
-        # num_doc = len(self.data_store.elements[0])
-        # num_sent = len(self.data_store.elements[1])
+        # num_doc = len(self.data_store._DataStore__elements[0])
+        # num_sent = len(self.data_store._DataStore__elements[1])
 
         # self.assertEqual(num_doc, 3)
         # self.assertEqual(num_sent, 3)
-        # self.assertEqual(len(self.data_store.entry_dict), 6)
+        # self.assertEqual(len(self.data_store._DataStore__entry_dict), 6)
         pass
 
     def test_get_attr(self):
@@ -166,9 +175,7 @@ class DataStoreTest(unittest.TestCase):
         self.assertEqual(classifications, "Class B")
 
         # Entry with such tid does not exist
-        with self.assertRaisesRegex(
-            KeyError, "Entry with tid 1111 not found."
-        ):
+        with self.assertRaisesRegex(KeyError, "Entry with tid 1111 not found."):
             self.data_store.get_attribute(1111, "speaker")
 
         # Get attribute field that does not exist
@@ -189,9 +196,7 @@ class DataStoreTest(unittest.TestCase):
         self.assertEqual(doc_class, "Class D")
 
         # Entry with such tid does not exist
-        with self.assertRaisesRegex(
-            KeyError, "Entry with tid 1111 not found."
-        ):
+        with self.assertRaisesRegex(KeyError, "Entry with tid 1111 not found."):
             self.data_store.set_attribute(1111, "speaker", "human")
 
         # Set attribute field that does not exist
@@ -203,12 +208,12 @@ class DataStoreTest(unittest.TestCase):
     def test_get_entry(self):
         # sent = self.data_store.get_entry(1234567)
         # self.assertEqual(
-        #     sent,
+        #     sent[0],
         #     [
         #         55,
         #         70,
         #         1234567,
-        #         "Sentence",
+        #         1,
         #         None,
         #         None,
         #         "Negative",
@@ -223,16 +228,32 @@ class DataStoreTest(unittest.TestCase):
         #         print(doc)
         pass
 
+    def test_get(self):
+        # get document entries
+        instances = list(self.data_store.get(0))
+        self.assertEqual(len(instances), 2)
+        # check tid
+        self.assertEqual(instances[0][2], 1234)
+        self.assertEqual(instances[1][2], 3456)
+
+        # get all entries
+        instances = list(self.data_store.get(2))
+        self.assertEqual(len(instances), 4)
+
+        # get entries without subclasses
+        instances = list(self.data_store.get(2, include_sub_type=False))
+        self.assertEqual(len(instances), 0)
+
     def test_delete_entry(self):
         # # In test_add_annotation_raw(), we add 2 entries. So 6 in total.
         # self.data_store.delete_entry(1234567)
         # self.data_store.delete_entry(1234)
         # self.data_store.delete_entry(9999)
         # # After 3 deletion. 3 left. (2 documents and 1 sentence)
-        # num_doc = len(self.data_store.elements[0])
-        # num_sent = len(self.data_store.elements[1])
+        # num_doc = len(self.data_store._DataStore__elements[0])
+        # num_sent = len(self.data_store._DataStore__elements[1])
 
-        # self.assertEqual(len(self.data_store.entry_dict), 3)
+        # self.assertEqual(len(self.data_store._DataStore__entry_dict), 3)
         # self.assertEqual(num_doc, 2)
         # self.assertEqual(num_sent, 1)
 
@@ -240,6 +261,35 @@ class DataStoreTest(unittest.TestCase):
         # with self.assertRaises(ValueError):
         #     for doc in self.data_store.delete_entry(1111):
         #         print(doc)
+        pass
+
+    def test_next_entry(self):
+        # next_ent = self.next_entry(1234)
+        # self.assertEqual(
+        #     next_ent,
+        #     [
+        #         10,
+        #         25,
+        #         3456,
+        #         "ft.onto.base_ontology.Document",
+        #         "Doc class A",
+        #         "Negative",
+        #         "Class B",
+        #     ],
+        # )
+        # prev_ent = self.prev_entry(3456)
+        # self.assertEqual(
+        #     prev_ent,
+        #     [
+        #         0,
+        #         5,
+        #         1234,
+        #         "ft.onto.base_ontology.Document",
+        #         None,
+        #         "Postive",
+        #         None,
+        #     ],
+        # )
         pass
 
 
