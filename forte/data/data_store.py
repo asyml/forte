@@ -230,13 +230,16 @@ class DataStore(BaseStore):
         """
         self.__entry_dict: dict = {}
 
-    def _new_annotation(self, type_id: int, begin: int, end: int):
-        """
-        generate a new annotation with default fields. Called by add_entry_raw()
-        to create a new annotation with `type_id`, `begin`, and `end`.
+    def _new_annotation(self, entry_type: str, begin: int, end: int):
+        r"""This function generates a new annotation with default fields.
+        Called by add_annotation_raw() to create a new annotation
+        with `entry_type`, `begin`, and `end`.
 
         Args:
-            type_id (int): type id of this annotation
+            entry_type (str): Fully qualified name of this annotation.
+            begin (int): Begin index of the entry.
+            end (int): End index of the entry.
+
         Returns:
             A list representing a new annotation type entry data.
         """
@@ -464,8 +467,8 @@ class DataStore(BaseStore):
         self._delete_entry_by_loc(type_id, entry_index)
 
     def _delete_entry_by_loc(self, type_id: int, index_id: int):
-        r"""It removes the index_id'th entry data from the sortedlist of
-        `type_id`.
+        r"""It removes an entry of `index_id` by taking both the `type_id`
+        and `index_id`. Called by `delete_entry()`.
         This function will raise an IndexError if the `type_id` or `index_id`
         is invalid.
 
