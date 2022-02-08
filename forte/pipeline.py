@@ -249,11 +249,6 @@ class Pipeline(Generic[PackType]):
                 entry_subclass.__module__ + "." + entry_subclass.__name__
             ).startswith(TOP_MOST_MODULE_NAME):
                 continue
-            if "ft.onto" not in subclass.__module__:
-                subclass_split = subclass.__module__.split(".")
-                additional_prefixes.append(
-                    subclass_split[0] + "." + subclass_split[1]
-                )
             all_subclasses.append(
                 {
                     "entry_name": subclass.__module__ + "." + subclass.__name__,
@@ -625,6 +620,7 @@ class Pipeline(Generic[PackType]):
             OntologyCodeGenerator().parse_schema_for_no_import_onto_specs_file(
                 ontology_path=self.resource.get("onto_specs_path"),
                 ontology_dict=self.resource.get("onto_specs_dict"),
+                lenient_prefix=True,
                 merged_entry_tree=merged_entry_tree,
             )
             self.resource.update(merged_entry_tree=merged_entry_tree)
