@@ -47,6 +47,7 @@ class DataStoreTest(unittest.TestCase):
         # Sentence entries have tid 9999, 1234567.
         # The type id for Document is 0, Sentence is 1.
 
+<<<<<<< HEAD
         self.data_store._DataStore__type_dict = {
             0: "ft.onto.base_ontology.Document",
             1: "ft.onto.base_ontology.Sentence",
@@ -57,6 +58,11 @@ class DataStoreTest(unittest.TestCase):
             "ft.onto.base_ontology.Document": 0,
             "ft.onto.base_ontology.Sentence": 1,
             "forte.data.ontology.core.Entry": 2,
+=======
+        self.data_store._type_dict = {
+            0: "ft.onto.base_ontology.Document",
+            1: "ft.onto.base_ontology.Sentence",
+>>>>>>> db8c132 (implement delete and delete by loc;)
         }
 
         self.data_store._DataStore__elements = [
@@ -245,6 +251,7 @@ class DataStoreTest(unittest.TestCase):
         self.assertEqual(len(instances), 0)
 
     def test_delete_entry(self):
+<<<<<<< HEAD
         # # In test_add_annotation_raw(), we add 2 entries. So 6 in total.
         # self.data_store.delete_entry(1234567)
         # self.data_store.delete_entry(1234)
@@ -256,12 +263,38 @@ class DataStoreTest(unittest.TestCase):
         # self.assertEqual(len(self.data_store._DataStore__entry_dict), 3)
         # self.assertEqual(num_doc, 2)
         # self.assertEqual(num_sent, 1)
+=======
+        # has a total of 4 entries
+        self.data_store.delete_entry(1234567)
+        self.data_store.delete_entry(1234)
+        self.data_store.delete_entry(9999)
+        # After 3 deletion. 1 left. (2 documents and 1 sentence)
+        num_doc = len(self.data_store.elements[0])
+        num_sent = len(self.data_store.elements[1])
 
-        # # Entry with such tid does not exist
-        # with self.assertRaises(ValueError):
-        #     for doc in self.data_store.delete_entry(1111):
-        #         print(doc)
-        pass
+        self.assertEqual(len(self.data_store.entry_dict), 1)
+        self.assertEqual(num_doc, 1)
+        self.assertEqual(num_sent, 0)
+>>>>>>> db8c132 (implement delete and delete by loc;)
+
+    def test_delete_entry_nonexist(self):
+        # Entry tid does not exist; should raise a KeyError
+        with self.assertRaises(KeyError):
+            self.data_store.delete_entry(1000)
+    
+    def test_delete_entry_by_loc(self):
+        self.data_store._delete_entry_by_loc(0, 1)
+        # dict entry is not deleted; only delete entry in element list
+        self.assertEqual(len(self.data_store.entry_dict), 4)
+        self.assertEqual(len(self.data_store.elements[0]), 1)
+
+        # index_id out of range
+        with self.assertRaises(IndexError):
+            self.data_store._delete_entry_by_loc(0, 1)
+        
+        # type_id out of range
+        with self.assertRaises(IndexError):
+            self.data_store._delete_entry_by_loc(2, 1)
 
     def test_next_entry(self):
         # next_ent = self.next_entry(1234)
