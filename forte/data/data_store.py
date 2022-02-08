@@ -14,13 +14,8 @@
 
 from typing import List, Iterator, Tuple, Optional, Any
 import uuid
-<<<<<<< HEAD
-
-from forte.utils import get_class
-=======
 from bisect import bisect_left
 from forte.data.ontology.core import EntryType
->>>>>>> db8c132 (implement delete and delete by loc;)
 from forte.data.base_store import BaseStore
 from forte.data.entry_type_generator import EntryTypeGenerator
 
@@ -440,13 +435,13 @@ class DataStore(BaseStore):
             # get `entry data` and remove it from entry_dict
             entry_data = self.entry_dict[tid]
             self.entry_dict.pop(tid)
-        except KeyError:
+        except Exception as e:
             raise KeyError(
                 f"The specified tid [{tid}] "
                 f"does not correspond to an existing entry data "
-            )
+            ) from e
 
-        begin, end, tid, type_id = entry_data[:4]
+        _, _, tid, type_id = entry_data[:4]
         if type_id >= len(self.elements):
             raise IndexError(
                 f"The specified type_id [{type_id}] "
@@ -498,7 +493,11 @@ class DataStore(BaseStore):
 
         Returns:
             The entry which `tid` corresponds to, its `type_id` and its index
+<<<<<<< HEAD
             in the `type_id`th list.
+=======
+            in the `entry_type` sortedlist.
+>>>>>>> 1149c1e (fix pylint bugs in data_Store)
         """
         # If the entry is an annotation, bisect the annotation sortedlist
         # to find the entry. May use LRU cache to optimize speed.
