@@ -219,7 +219,7 @@ class Pipeline(Generic[PackType]):
         # Indicate whether do type checking during pipeline initialization
         self._do_init_type_check: bool = do_init_type_check
 
-    def parse_entry(self, entry, filter_list: List = None):
+    def parse_entry(self, entry, filter_list: List[str]):
         r"""Find all sub-classes of Entry Class.
 
         Args:
@@ -228,7 +228,7 @@ class Pipeline(Generic[PackType]):
             parent_entry not start with one of them.
 
         """
-        spec_dict = {"definitions": []}
+        spec_dict: Dict = {"definitions": []}
         for subclass in entry.__subclasses__():
             all_subclasses = self.find_spec_dict(subclass)
             spec_dict["definitions"].extend(all_subclasses)
