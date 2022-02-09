@@ -42,6 +42,16 @@ Extractor
 .. autoclass:: forte.data.extractors.attribute_extractor.AttributeExtractor
     :members:
 
+:hidden:`LinkExtractor`
+---------------------------------------
+.. autoclass:: forte.data.extractors.relation_extractor.LinkExtractor
+    :members:
+
+:hidden:`SubwordExtractor`
+---------------------------------------
+.. autoclass:: forte.data.extractors.subword_extractor.SubwordExtractor
+    :members:
+
 :hidden:`CharExtractor`
 ---------------------------------------
 .. autoclass:: forte.data.extractors.char_extractor.CharExtractor
