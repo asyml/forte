@@ -24,7 +24,7 @@ python ./download_models.py
 **Note**: The above script will save the model in `resources/NCBI-disease`. Use `--path` option to save the 
 model into a different directory.
 
-## Run indexer`
+## Run indexer
 First, you should start an Elastic Indexer backend.
 
 Second, you can run the following command to parse some files and index them.
