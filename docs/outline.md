@@ -33,8 +33,7 @@
 ### Tokenizer
 ### Ontology
 ### Dataset
-* [wikipedia dataset](../datasets/wikipedia/dbpedia/)
-
+* [wikipedia dataset](../forte/datasets/wikipedia/dbpedia/README.md)
 ## 3. Building a NLP Pipeline
 ### Text Classification
 * [examples](../examples/classification)
