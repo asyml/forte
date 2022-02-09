@@ -321,10 +321,10 @@ class InferringOntologyTreeAutomaticallyTst(unittest.TestCase):
             },
         ]
 
-        self.pipeline_1 = Pipeline()
+        self.pipeline_1: Pipeline = Pipeline()
         from ft.onto.wikipedia import WikiPage
 
-        self.pipeline_2 = Pipeline()
+        self.pipeline_2: Pipeline = Pipeline()
 
     def test_inferring_ontology_tree(self):
         """
@@ -337,7 +337,6 @@ class InferringOntologyTreeAutomaticallyTst(unittest.TestCase):
             "definitions"
         ]
         retDifference = [i for i in definitions_2 if i not in definitions_1]
-        print(retDifference)
         retDifference_expected_union = [
             i for i in self.expected if i in retDifference
         ]
