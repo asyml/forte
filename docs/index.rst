@@ -4,7 +4,7 @@ Welcome to Forte's documentation!
 .. toctree::
    :maxdepth: 1
 
-   tutorial/get_started.md
+   get_started.md
 
 .. toctree::
    :maxdepth: 2
