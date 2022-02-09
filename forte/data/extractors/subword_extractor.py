@@ -36,8 +36,7 @@ class SubwordExtractor(BaseExtractor):
     they will be called by the framework.
 
     Args:
-        config: An instance of `Dict` or
-            :class:`forte.common.configuration.Config`
+        config: An instance of `Dict`  :class:`~forte.common.configuration.Config`
     """
 
     def initialize(self, config: Union[Dict, Config]):
@@ -59,10 +58,12 @@ class SubwordExtractor(BaseExtractor):
     def default_configs(cls):
         r"""Returns a dictionary of default hyper-parameters.
 
-        "`pretrained_model_name`": str
+        Here:
+
+        - "`pretrained_model_name`":
             The name of the pretrained bert model. Must be the same
             as used in subword tokenizer.
-        "`subword_class`" (str): the fully qualified name of the class of the
+        - "`subword_class`": the fully qualified name of the class of the
             subword, default is `ft.onto.base_ontology.Subword`.
         """
         config = super().default_configs()

@@ -4,16 +4,15 @@ import time
 import yaml
 from mimic3_note_reader import Mimic3DischargeNoteReader
 
-from fortex.elastic import ElasticSearchPackIndexProcessor
-from fortex.huggingface.bio_ner_predictor import BioBERTNERPredictor
-from fortex.huggingface.transformers_processor import BERTTokenizer
-
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
 from forte.processors.writers import PackIdJsonPackWriter
-from fortex.nltk import NLTKSentenceSegmenter
 
+from fortex.elastic import ElasticSearchPackIndexProcessor
+from fortex.huggingface.bio_ner_predictor import BioBERTNERPredictor
+from fortex.huggingface.transformers_processor import BERTTokenizer
+from fortex.nltk import NLTKSentenceSegmenter
 
 def main(input_path: str, output_path: str, max_packs: int = -1):
     pl = Pipeline[DataPack]()

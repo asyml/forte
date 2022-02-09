@@ -31,14 +31,15 @@ class Feature:
         data (list): A list of features, where each feature can be the value or
             another list of features. Typically this should be the output from
             :meth:`extract` in
-            :class:`~forte.data.extractor.base_extractor.BaseExtractor`.
+            :class:`~forte.data.base_extractor.BaseExtractor`.
+
         metadata (dict): A dictionary storing meta-data for this feature.
             Mandatory fields includes: `dim`, `dtype`.
 
-            `dim` indicates the total number of dimension for this
-            feature.
+            - `dim` indicates the total number of dimension for this
+              feature.
+            - `dtype` is the value type. For example, it can be `torch.long`.
 
-            `dtype` is the value type. For example, it can be `torch.long`.
         vocab (Vocabulary): An optional fields about the
             :class:`~forte.data.vocabulary.Vocabulary` used to build this
             feature.
