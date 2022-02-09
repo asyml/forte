@@ -119,6 +119,7 @@ class DataStore(BaseStore):
         super().__init__()
         self.onto_file_path = onto_file_path
         self.__entry_type_idx = 3
+        self.TID_INDEX = 2
 
         """
         The `_type_attributes` is a private dictionary that provides
@@ -309,7 +310,10 @@ class DataStore(BaseStore):
         # annotation type entry data with default fields.
         # A reference to the entry should be store in both self.__elements and
         # self.__entry_dict.
-        raise NotImplementedError
+        entry = self._new_annotation(type_id, begin, end)
+        self.__elements[type_id].add(entry)
+        self.__entry_dict[entry[self.TID_INDEX]] = entry
+        return entry[self.TID_INDEX]
 
     def add_link_raw(
         self, type_id: int, parent_tid: int, child_tid: int

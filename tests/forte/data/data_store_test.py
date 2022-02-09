@@ -155,17 +155,16 @@ class DataStoreTest(unittest.TestCase):
         }
 
     def test_add_annotation_raw(self):
-        # # test add Document entry
-        # self.data_store.add_annotation_raw(0, 1, 5)
-        # # test add Sentence entry
-        # self.data_store.add_annotation_raw(1, 5, 8)
-        # num_doc = len(self.data_store._DataStore__elements[0])
-        # num_sent = len(self.data_store._DataStore__elements[1])
+        # test add Document entry
+        self.data_store.add_annotation_raw(0, 1, 5)
+        # test add Sentence entry
+        self.data_store.add_annotation_raw(1, 5, 8)
+        num_doc = len(self.data_store._DataStore__elements[0])
+        num_sent = len(self.data_store._DataStore__elements[1])
 
-        # self.assertEqual(num_doc, 3)
-        # self.assertEqual(num_sent, 3)
-        # self.assertEqual(len(self.data_store._DataStore__entry_dict), 6)
-        pass
+        self.assertEqual(num_doc, 3)
+        self.assertEqual(num_sent, 3)
+        self.assertEqual(len(self.data_store._DataStore__entry_dict), 6)
 
     def test_get_attr(self):
         speaker = self.data_store.get_attribute(9999, "speaker")
