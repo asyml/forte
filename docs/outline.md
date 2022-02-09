@@ -14,6 +14,8 @@
   - [1. Information Extraction](#1-information-extraction)
     - [Named Entity Recognition](#named-entity-recognition)
     - [Relation Extraction](#relation-extraction)
+    - [Indexing](#indexing)
+    - [Ranking](#ranking)
   - [2. Machine Translation](#2-machine-translation)
   - [3. Text Generation](#3-text-generation)
   - [4. Question Answering System](#4-question-answering-system)
@@ -39,15 +41,16 @@
 * use text classification as a example to introduce pipeline components 
 ## 4. Linguistic Analysis
 * Analyze linguistic structure within a sentence.
-* more concrete examples of `context` and `get_data()` on top of [1. Handling Structured Text Data](#1-handling-structured-text-data)
+* more concrete examples of `context` and `get_data()` on top of [Handling Structured Text Data](#1-handling-structured-text-data)
 ### Part-of-Speech Tagging
 ## 5. Language Modeling with External Library
 * predictor
-* 
 ## 6. Application
 ### 1. Information Extraction
 #### Named Entity Recognition
 #### Relation Extraction
+#### Indexing
+#### Ranking
 ### 2. Machine Translation
 ### 3. Text Generation
 ### 4. Question Answering System
