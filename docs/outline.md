@@ -13,9 +13,11 @@
 - [6. Application](#6-application)
   - [1. Information Extraction](#1-information-extraction)
     - [Named Entity Recognition](#named-entity-recognition)
+    - [Relation Extraction](#relation-extraction)
   - [2. Machine Translation](#2-machine-translation)
   - [3. Text Generation](#3-text-generation)
   - [4. Question Answering System](#4-question-answering-system)
+  - [5. Chatbot](#5-chatbot)
 - [7. More data format](#7-more-data-format)
   - [Audio Data](#audio-data)
   - [Image Data](#image-data)
@@ -45,10 +47,11 @@
 ## 6. Application
 ### 1. Information Extraction
 #### Named Entity Recognition
+#### Relation Extraction
 ### 2. Machine Translation
 ### 3. Text Generation
 ### 4. Question Answering System
-
+### 5. Chatbot
 ## 7. More data format
 ### Audio Data
 ### Image Data
