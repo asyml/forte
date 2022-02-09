@@ -219,12 +219,13 @@ class Pipeline(Generic[PackType]):
         # Indicate whether do type checking during pipeline initialization
         self._do_init_type_check: bool = do_init_type_check
 
-    def parse_entry(self, entry, filter_list: List = []):
+    def parse_entry(self, entry, filter_list: List[str] = None):
         r"""Find all sub-classes of Entry Class.
 
         Args:
             entry: A Class which should get by "from forte.data.ontology.core import Entry"
-            filter_list: A filter list should make sure the return spec_dict["definitions"] parent_entry not start with one of them.
+            filter_list: A filter list should make sure the return spec_dict["definitions"]
+            parent_entry not start with one of them.
 
         """
         spec_dict = {"definitions": []}
