@@ -189,7 +189,7 @@ class Pipeline(Generic[PackType]):
 
         if ontology_file is None:
             # Recursive Method to Find Subclasses
-            spec_dict = self.parse_entry(Entry)
+            spec_dict = self.parse_entry(Entry, [TOP_MOST_MODULE_NAME])
 
             self.resource.update(onto_specs_path=" ")
             self.resource.update(onto_specs_dict=spec_dict)
@@ -219,17 +219,28 @@ class Pipeline(Generic[PackType]):
         # Indicate whether do type checking during pipeline initialization
         self._do_init_type_check: bool = do_init_type_check
 
-    def parse_entry(self, entry):
+    def parse_entry(self, entry, filter_list: List = []):
         r"""Find all sub-classes of Entry Class.
 
         Args:
             entry: A Class which should get by "from forte.data.ontology.core import Entry"
+            filter_list: A filter list should make sure the return spec_dict["definitions"] parent_entry not start with one of them.
 
         """
         spec_dict = {"definitions": []}
         for subclass in entry.__subclasses__():
             all_subclasses = self.find_spec_dict(subclass)
             spec_dict["definitions"].extend(all_subclasses)
+
+        if len(filter_list) > 0:
+            for filter_name in filter_list:
+                spec_dict["definitions"] = [
+                    i
+                    for i in spec_dict["definitions"]
+                    if not i["parent_entry"].startswith(filter_name)
+                ]
+            pass
+
         return spec_dict
 
     def find_spec_dict(self, entry_subclass):
@@ -241,15 +252,14 @@ class Pipeline(Generic[PackType]):
         all_subclasses = []
         parent_entry = entry_subclass.__module__ + "." + entry_subclass.__name__
         for subclass in entry_subclass.__subclasses__():
+            entry_name = subclass.__module__ + "." + subclass.__name__
             if (
-                not parent_entry.startswith(TOP_MOST_MODULE_NAME)
+                not len(entry_name.split(".")) < 3
                 and not len(parent_entry.split(".")) < 3
             ):
                 all_subclasses.append(
                     {
-                        "entry_name": subclass.__module__
-                        + "."
-                        + subclass.__name__,
+                        "entry_name": entry_name,
                         "parent_entry": parent_entry,
                     }
                 )
