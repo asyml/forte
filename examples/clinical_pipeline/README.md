@@ -24,6 +24,12 @@ python ./download_models.py
 **Note**: The above script will save the model in `resources/NCBI-disease`. Use `--path` option to save the 
 model into a different directory.
 
+## Prepare elastic searcher
+You also need to set up elastic searcher by following guide below to run the pipeline.
+
+https://www.elastic.co/guide/en/elasticsearch/reference/current/starting-elasticsearch.html
+
+
 ## Run indexer
 First, you should start an Elastic Indexer backend.
 
