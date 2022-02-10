@@ -22,6 +22,7 @@ from forte.utils import get_full_module_name
 
 __all__ = ["Configurable"]
 
+
 class Configurable(ABC):
     """
     Classes that implement the Configurable interface enables the classes to
