@@ -9,11 +9,10 @@ This outline is currently **in progress** so many sections are empty.
 ### Reader
 ### Ontology
 ### Dataset
-* [wikipedia dataset](../forte/datasets/wikipedia/dbpedia/RE4ADME.md)
+* wikipedia dataset
 ### Serialization
 ## 3. Building a NLP Pipeline
 ### Text Classification
-* [examples](../examples/classification)
 * use text classification as a example to introduce pipeline components 
 ## 4. Linguistic Analysis
 * Analyze linguistic structure within a sentence.
