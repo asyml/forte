@@ -84,11 +84,38 @@ Packs
     :members:
 
 
-
 :hidden:`DataIndex`
 ------------------------
 .. autoclass:: forte.data.data_pack.DataIndex
     :members:
+
+
+
+MultiPack
+==========
+
+:hidden:`MultiPackMeta`
+------------------------
+.. autoclass:: forte.data.data_pack.MultiPackMeta
+    :members:
+
+:hidden:`MultiPack`
+------------------------
+.. autoclass:: forte.data.data_pack.MultiPack
+    :members:
+
+:hidden:`MultiPackLink`
+------------------------
+.. autoclass:: forte.data.data_pack.MultiPackLink
+    :members:
+
+:hidden:`MultiPackGroup`
+------------------------
+.. autoclass:: forte.data.data_pack.MultiPackGroup
+    :members:
+
+
+
 
 Readers
 ==========
@@ -198,6 +225,56 @@ Readers
 .. autoclass:: forte.data.readers.classification_reader.ClassificationDatasetReader
     :members:
 
+Extractors
+=================
+:hidden:`BaseExtractor`
+--------------------------------------
+.. autoclass:: forte.data.readers.base_extractor.BaseExtractor
+    :members:
+
+
+Selector
+=================
+:hidden:`Selector`
+--------------------------------------
+.. autoclass:: forte.data.readers.selector.Selector
+    :members:
+
+:hidden:`DummySelector`
+--------------------------------------
+.. autoclass:: forte.data.readers.selector.DummySelector
+    :members:
+
+:hidden:`SinglePackSelector`
+--------------------------------------
+.. autoclass:: forte.data.readers.selector.SinglePackSelector
+    :members:
+
+:hidden:`NameMatchSelector`
+--------------------------------------
+.. autoclass:: forte.data.readers.selector.NameMatchSelector
+    :members:
+
+:hidden:`RegexNameMatchSelector`
+--------------------------------------
+.. autoclass:: forte.data.readers.selector.RegexNameMatchSelector
+    :members:
+
+:hidden:`FirstPackSelector`
+--------------------------------------
+.. autoclass:: forte.data.readers.selector.FirstPackSelector
+    :members:
+
+:hidden:`AllPackSelector`
+--------------------------------------
+.. autoclass:: forte.data.readers.selector.AllPackSelector
+    :members:
+
+
+
+
+
+
 
 Index
 =================
@@ -207,12 +284,7 @@ Index
     :members:
 
 
-Extractors
-=================
-:hidden:`BaseExtractor`
---------------------------------------
-.. autoclass:: forte.data.readers.base_extractor.BaseExtractor
-    :members:
+
 
 Store
 =================
@@ -368,4 +440,3 @@ Entry Utilities
 :hidden:`get_last_utterance`
 ----------------------------------
 .. autofunction:: forte.data.common_entry_utils.get_last_utterance
-

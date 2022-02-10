@@ -57,6 +57,7 @@ logger = logging.getLogger(__name__)
 __all__ = [
     "Meta",
     "DataPack",
+    "DataIndex"
 ]
 
 
