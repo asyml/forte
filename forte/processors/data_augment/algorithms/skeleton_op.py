@@ -1,4 +1,4 @@
-# Copyright 2020 The Forte Authors. All Rights Reserved.
+# Copyright 202 The Forte Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,9 +18,10 @@ Through this Op, users can use in-built utility functions to implement
 their own augmentation logic.
 """
 from collections import defaultdict
-from typing import DefaultDict, Tuple, Union, Dict, Any, Set
+from copy import deepcopy
+from typing import DefaultDict, Iterable, List, Tuple, Union, Dict, Any, Set
 from abc import abstractmethod, ABC
-from bisect import bisect_left
+from bisect import bisect_left, bisect_right
 from sortedcontainers.sorteddict import SortedDict
 from sortedcontainers.sortedlist import SortedList
 from forte.data.data_pack import DataPack
@@ -29,6 +30,9 @@ from forte.data.ontology.top import (
 )
 from forte.common.configuration import Config
 from forte.data.span import Span
+from forte.data.ontology.top import Link
+from forte.data.ontology.top import Group
+from forte.utils.utils import create_class_with_kwargs, get_class
 
 
 __all__ = ["SkeletonOp"]
@@ -86,6 +90,405 @@ class SkeletonOp(ABC):
 
         self.configs = configs
 
+    def perform_augmentation(self, input_pack: DataPack) -> DataPack:
+        r"""
+        Function to apply the defined augmentation function and
+        instantiating it into a data pack. This data pack is then
+        returned.
+
+        Args:
+            data_pack: The Datapack holding the replaced annotations.
+            replaced_annotations: A SortedList of tuples(span, new string).
+            The text and span of the annotations will be updated
+            with the new string.
+
+        Returns:
+            A new data_pack holds the text after replacement.
+        """
+        self.augment(input_pack)
+        augmented_data_pack = self._apply_augmentations(input_pack)
+        return augmented_data_pack
+
+    def _apply_augmentations(
+        self,
+        data_pack: DataPack,
+    ) -> DataPack:
+
+        r"""
+        Function to replace some annotations with new strings.
+        It will copy and update the text of datapack and
+        auto-align the annotation spans.
+        The links are also copied if its parent & child are
+        both present in the new pack.
+        The groups are copied if all its members are present
+        in the new pack.
+
+        Args:
+            data_pack: The Datapack holding the replaced annotations.
+            replaced_annotations: A SortedList of tuples(span, new string).
+                The text and span of the annotations will be updated
+                with the new string.
+
+        Returns:
+            A new data_pack holds the text after replacement. The annotations
+            in the original data pack will be copied and auto-aligned as
+            instructed by the "other_entry_policy" in the configuration.
+            The links and groups will be copied if there members are copied.
+        """
+
+        replaced_annotations = self._replaced_annos[data_pack.pack_id]
+
+        if len(replaced_annotations) == 0:
+            return deepcopy(data_pack)
+
+        spans: List[Span] = [span for span, _ in replaced_annotations]
+        replacement_strs: List[str] = [
+            replacement_str for _, replacement_str in replaced_annotations
+        ]
+
+        # Get the new text for the new data pack.
+        new_text: str = ""
+        for i, span in enumerate(spans):
+            new_span_str = replacement_strs[i]
+            # First, get the gap text between last and this span.
+            last_span_end: int = spans[i - 1].end if i > 0 else 0
+            gap_text: str = data_pack.text[last_span_end : span.begin]
+            new_text += gap_text
+            # Then, append the replaced new text.
+            new_text += new_span_str
+        # Finally, append to new_text the text after the last span.
+        new_text += data_pack.text[spans[-1].end :]
+
+        # Get the span (begin, end) before and after replacement.
+        new_spans: List[Span] = []
+
+        # Bias is the delta between the beginning
+        # indices before & after replacement.
+        bias: int = 0
+        for i, span in enumerate(spans):
+            old_begin: int = spans[i].begin
+            old_end: int = spans[i].end
+            new_begin: int = old_begin + bias
+            new_end = new_begin + len(replacement_strs[i])
+            new_spans.append(Span(new_begin, new_end))
+            bias = new_end - old_end
+
+        new_pack: DataPack = DataPack()
+        new_pack.set_text(new_text)
+
+        entries_to_copy: List[str] = list(
+            self.configs["other_entry_policy"].keys()
+        ) + [self.configs["augment_entry"]]
+
+        entry_map: Dict[int, int] = {}
+        insert_ind: int = 0
+        pid: int = data_pack.pack_id
+
+        inserted_annos: List[Tuple[int, int]] = list(
+            self._inserted_annos_pos_len[pid].items()
+        )
+
+        def _insert_new_span(
+            entry_class: str,
+            insert_ind: int,
+            inserted_annos: List[Tuple[int, int]],
+            new_pack: DataPack,
+            spans: List[Span],
+            new_spans: List[Span],
+        ):
+            """
+            An internal helper function for insertion.
+
+            Args:
+                entry_class: The new annotation type to be created.
+                insert_ind: The index to be insert.
+                inserted_annos: The annotation span information to be inserted.
+                new_pack: The new data pack to insert the annotation.
+                spans: The original spans before replacement, should be
+                  a sorted ascending list.
+                new_spans: The original spans before replacement, should be
+                  a sorted ascending list.
+            """
+            pos: int
+            length: int
+            pos, length = inserted_annos[insert_ind]
+            insert_end: int = self.modify_index(
+                pos,
+                spans,
+                new_spans,
+                is_begin=False,
+                # Include the inserted span itself.
+                is_inclusive=True,
+            )
+            insert_begin: int = insert_end - length
+            new_anno = create_class_with_kwargs(
+                entry_class,
+                {"pack": new_pack, "begin": insert_begin, "end": insert_end},
+            )
+            new_pack.add_entry(new_anno)
+
+        # Iterate over all the original entries and modify their spans.
+        for entry_to_copy in entries_to_copy:
+            class_to_copy = get_class(entry_to_copy)
+            if not issubclass(class_to_copy, Annotation):
+                raise AttributeError(
+                    f"The entry type to copy from [{entry_to_copy}] is not "
+                    f"a sub-class of 'forte.data.ontology.top.Annotation'."
+                )
+
+            orig_annos: Iterable[Annotation] = data_pack.get(class_to_copy)
+            for orig_anno in orig_annos:
+                # Dealing with insertion/deletion only for augment_entry.
+                if entry_to_copy == self.configs["augment_entry"]:
+                    while (
+                        insert_ind < len(inserted_annos)
+                        and inserted_annos[insert_ind][0] <= orig_anno.begin
+                    ):
+                        # Preserve the order of the spans with merging sort.
+                        # It is a 2-way merging from the inserted spans
+                        # and original spans based on the begin index.
+                        _insert_new_span(
+                            entry_to_copy,
+                            insert_ind,
+                            inserted_annos,
+                            new_pack,
+                            spans,
+                            new_spans,
+                        )
+                        insert_ind += 1
+
+                    # Deletion
+                    if orig_anno.tid in self._deleted_annos_id[pid]:
+                        continue
+
+                # Auto align the spans.
+                span_new_begin: int = orig_anno.begin
+                span_new_end: int = orig_anno.end
+
+                if (
+                    entry_to_copy == self.configs["augment_entry"]
+                    or self.configs["other_entry_policy"][entry_to_copy]
+                    == "auto_align"
+                ):
+                    # Only inclusive when the entry is not augmented.
+                    # E.g.: A Sentence include the inserted Token on the edge.
+                    # E.g.: A Token shouldn't include a nearby inserted Token.
+                    is_inclusive = (
+                        entry_to_copy != self.configs["augment_entry"]
+                    )
+                    span_new_begin = self.modify_index(
+                        orig_anno.begin, spans, new_spans, True, is_inclusive
+                    )
+                    span_new_end = self.modify_index(
+                        orig_anno.end, spans, new_spans, False, is_inclusive
+                    )
+
+                new_anno = create_class_with_kwargs(
+                    entry_to_copy,
+                    {
+                        "pack": new_pack,
+                        "begin": span_new_begin,
+                        "end": span_new_end,
+                    },
+                )
+                new_pack.add_entry(new_anno)
+                entry_map[orig_anno.tid] = new_anno.tid
+
+            # Deal with spans after the last annotation in the original pack.
+            if entry_to_copy == self.configs["augment_entry"]:
+                while insert_ind < len(inserted_annos):
+                    _insert_new_span(
+                        entry_to_copy,
+                        insert_ind,
+                        inserted_annos,
+                        new_pack,
+                        spans,
+                        new_spans,
+                    )
+                    insert_ind += 1
+
+        # Iterate over and copy the links/groups in the datapack.
+        for link in data_pack.get(Link):
+            self._copy_link_or_group(link, entry_map, new_pack)
+        for group in data_pack.get(Group):
+            self._copy_link_or_group(group, entry_map, new_pack)
+
+        self._data_pack_map[pid] = new_pack.pack_id
+        self._entry_maps[pid] = entry_map
+        return new_pack
+
+    def modify_index(
+        self,
+        index: int,
+        # Both of the following spans should be SortedList.
+        # Use List to avoid typing errors.
+        old_spans: List[Span],
+        new_spans: List[Span],
+        is_begin: bool,
+        is_inclusive: bool,
+    ) -> int:
+
+        r"""
+        A helper function to map an index before replacement
+        to the index after replacement.
+        An index is the character offset in the data pack.
+        The `old_spans` are the inputs of replacement, and the new_spans
+        are the outputs. Each of the span has start and end index.
+        The `old_spans` and `new_spans` are anchors for the mapping,
+        because we depend on them to determine the position change of the
+        index.
+        Given an index, the function will find its the nearest
+        among the old spans before the index, and calculate the difference
+        between the position of the old span and its corresponding new span.
+        The position change is then applied to the input index. An updated
+        index is then calculated and returned.
+        An inserted span might be included as a part of another span.
+        For example, given a sentence "I love NLP.", if we insert a
+        token "Yeah" at the beginning of the sentence(index=0), the Sentence
+        should include the new Token, i.e., the Sentence will have a
+        start index equals to 0. In this case, the parameter is_inclusive
+        should be True. However, for another Token "I", it should not include
+        the new token, so its start index will be larger than 0.
+        The parameter in_inclusive should be False.
+        The input index could be the start or end index of a span, i.e., the
+        left or right boundary of the span. If there is an insertion in the span,
+        we should treat the two boundaries in different ways. For example,
+        we have a paragraph with two sentences "I love NLP! You love NLP too."
+        If we append another "!" to the end of the first sentence, when modifying
+        the end index of the first Sentence, it should be pushed right to include
+        the extra exclamation. In this case, the is_begin is False. However, if
+        we prepend an "And" to the second sentence, when modifying the start index
+        of the second Sentence, it should be pushed left to include the new Token.
+        In this case, the `is_begin` is True.
+
+        Args:
+            index (int): The index to map.
+            old_spans (SortedList): The spans before replacement. It should be
+                a sorted list in ascending order.
+            new_spans (SortedList): The spans after replacement. It should be
+                a sorted list in ascending order.
+            is_begin (bool): True if the input index is the start index of a span.
+            is_inclusive (bool): True if the span constructed by the aligned index should include inserted spans.
+
+        Returns:
+            The aligned index.
+
+        If the old spans are [0, 1], [2, 3], [4, 6],
+        the new spans are [0, 4], [5, 7], [8, 11],
+        the input index is 3, and there are no insertions,
+        the algorithm will first locate the last span with
+        a begin index less or equal than the target index,
+        ([2,3]), and find the corresponding span in new spans([5,7]).
+        Then we calculate the delta index(7-3=4) and update our
+        input index(3+4=7). The output then is 7.
+
+        Note that when the input index locates inside the old spans,
+        instead of on the boundary of the spans, we compute the return
+        index so that it maintains the same offset to the begin of the
+        span it belongs to. In the above example, if we change the input
+        index from 3 to 5, the output will become 9, because we locates
+        the input index in the third span [4, 6] and use the same offset
+        5-4=1 to calculate the output 8+1=9.
+
+        When insertion is considered, there will be spans
+        with the same begin index, for example,
+        [0, 1], [1, 1], [1, 2]. The span [1, 1] indicates an insertion
+        at index 1, because the insertion can be considered as a
+        replacement of an empty input span, with a length of 0.
+        The output will be affected by whether to include the inserted
+        span(is_inclusive), and whether the input index is a begin or
+        end index of its span(is_begin).
+
+        If the old spans are [0, 1], [1, 1], [1, 2],
+        the new spans are [0, 2], [2, 4], [4, 5],
+        the input index is 1, the output will be 2 if both
+        is_inclusive and is_begin are True,
+        because the inserted [1, 1] should be included in the span.
+        If the `is_inclusive=True` but `is_begin=False`, the output will be
+        4 because the index is an end index of the span.
+        """
+
+        # Get the max index for binary search.
+        max_index: int = old_spans[-1].end + 1
+        max_index = max(max_index, index)
+
+        # This is the last span that has a start index less than
+        # the input index. The position change of this span determines
+        # the modification we will apply to the input index.
+        last_span_ind: int = bisect_right(old_spans, Span(index, max_index)) - 1
+
+        # If there is an inserted span, it will always be the first of
+        # those spans with the same begin index. For example, given spans
+        # [1, 1], [1, 2], The inserted span [1, 1] will be in the front of
+        # replaced span [1, 2], because it has the smallest end index.
+        if last_span_ind >= 0:
+            if is_inclusive:
+                if is_begin:
+                    # When inclusive, move the begin index
+                    # to the left to include the inserted span.
+                    if (
+                        last_span_ind > 0
+                        and old_spans[last_span_ind - 1].begin == index
+                    ):
+                        # Old spans: [0, 1], [1, 1], [1, 3]
+                        # Target index: 1
+                        # Change last_span_index from 2 to 1
+                        # to include the [1, 1] span.
+                        last_span_ind -= 1
+                    else:
+                        # Old spans: [0, 1], [1, 1], [2, 3]
+                        # Target index: 1
+                        # last_span_index: 1
+                        # No need to change.
+                        pass
+
+            else:
+                if not is_begin:
+                    # When exclusive, move the end index
+                    # to the left to exclude the inserted span.
+                    if (
+                        last_span_ind > 0
+                        and old_spans[last_span_ind - 1].begin == index
+                    ):
+                        # Old spans: [0, 1], [1, 1], [1, 3]
+                        # Target index: 1
+                        # Change last_span_index from 2 to 0
+                        # to exclude the [1, 1] span.
+                        last_span_ind -= 2
+                    elif (
+                        old_spans[last_span_ind].begin == index
+                        and old_spans[last_span_ind].end == index
+                    ):
+                        # Old spans: [0, 1], [1, 1], [2, 3]
+                        # Target index: 1
+                        # Change last_span_index from 1 to 0
+                        # to exclude the [1, 1] span.
+                        last_span_ind -= 1
+
+        if last_span_ind < 0:
+            # There is no replacement before this index.
+            return index
+        # Find the nearest anchor point on the left of current index.
+        # Start from the span's begin index.
+        delta_index: int = (
+            new_spans[last_span_ind].begin - old_spans[last_span_ind].begin
+        )
+
+        if (
+            old_spans[last_span_ind].begin == old_spans[last_span_ind].end
+            and old_spans[last_span_ind].begin == index
+            and is_begin
+            and is_inclusive
+        ):
+            return index + delta_index
+
+        if old_spans[last_span_ind].end <= index:
+            # Use the span's end index as anchor, if possible.
+            delta_index = (
+                new_spans[last_span_ind].end - old_spans[last_span_ind].end
+            )
+        return index + delta_index
+
     def _overlap_with_existing(self, pid: int, begin: int, end: int) -> bool:
         r"""
         This function will check whether the new span
@@ -117,36 +520,6 @@ class SkeletonOp(ABC):
 
         return False
 
-    def inserted_annotation_status(self):
-        r"""
-        This function is used to return the current
-        status of the sorted dict that holds information
-        regarding the inserted annotations.
-        Returns:
-            DefaultDict[int, SortedDict[int, int]]
-        """
-        return self._inserted_annos_pos_len
-
-    def replaced_annotation_status(self):
-        r"""
-        This function is used to return the current
-        status of the sorted dict that holds information
-        regarding the replaced annotations.
-        Returns:
-            DefaultDict[int, SortedList[Tuple[Span, str]]]
-        """
-        return self._replaced_annos
-
-    def deleted_annotation_status(self):
-        r"""
-        This function is used to return the current
-        status of the sorted dict that holds information
-        regarding the deleted annotations.
-        Returns:
-            DefaultDict[DefaultDict[int, Set[int]]]
-        """
-        return self._deleted_annos_id
-
     def insert_annotations(
         self, inserted_text: str, data_pack: DataPack, pos: int
     ) -> bool:
@@ -160,7 +533,7 @@ class SkeletonOp(ABC):
 
         Args:
             inserted_text: The text string to insert.
-            data_pack: The datapack for insertion.
+            `data_pack`: The datapack for insertion.
             pos: The position(index) of insertion.
         Returns:
             A bool value. True if the insertion happened, False otherwise.
@@ -247,4 +620,7 @@ class SkeletonOp(ABC):
                 It should be a full qualified name of the entry class.
                 For example, "ft.onto.base_ontology.Sentence".
         """
-        return {"augment_entry": "ft.onto.base_ontology.Token"}
+        return {
+            "augment_entry": "ft.onto.base_ontology.Token",
+            "other_entry_policy": {},
+        }

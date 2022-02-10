@@ -1,12 +1,12 @@
 import unittest
 
 from typing import Union, Dict, Any
-from ft.onto.base_ontology import Token
 from forte.data.span import Span
 from forte.data.data_pack import DataPack
 from forte.common.configuration import Config
 from forte.utils.utils import get_class
 from forte.processors.data_augment.algorithms.skeleton_op import SkeletonOp
+from ft.onto.base_ontology import Token
 
 
 class DummyAugmenter(SkeletonOp):
@@ -51,16 +51,19 @@ class DummyAugmenter(SkeletonOp):
 class TestSkeletonOp(unittest.TestCase):
     def setUp(self) -> None:
         self.skeleton_op = DummyAugmenter(
-            {"augment_entry": "ft.onto.base_ontology.Token"}
+            {
+                "augment_entry": "ft.onto.base_ontology.Token",
+                "other_entry_policy": {}
+            }
         )
 
     def test_operations(self) -> None:
 
         # Check if when initialized, is are the variables that hold
         # the inserted, deleted and replaced annotations are empty.
-        insert_list = self.skeleton_op.inserted_annotation_status()
-        delete_list = self.skeleton_op.deleted_annotation_status()
-        replace_list = self.skeleton_op.replaced_annotation_status()
+        insert_list = self.skeleton_op._inserted_annos_pos_len
+        delete_list = self.skeleton_op._deleted_annos_id
+        replace_list = self.skeleton_op._replaced_annos
         self.assertFalse(insert_list)
         self.assertFalse(delete_list)
         self.assertFalse(replace_list)
@@ -77,12 +80,12 @@ class TestSkeletonOp(unittest.TestCase):
 
         # Perform predefined augmentation and check if
         # it worked correctly
-        success = self.skeleton_op.augment(data_pack)
-        self.assertTrue(success)
+        augmented_data_pack = self.skeleton_op.perform_augmentation(data_pack)
+        self.assertEqual(augmented_data_pack.text, "There World Last")
 
-        insert_list = self.skeleton_op.inserted_annotation_status()
-        delete_list = self.skeleton_op.deleted_annotation_status()
-        replace_list = self.skeleton_op.replaced_annotation_status()
+        insert_list = self.skeleton_op._inserted_annos_pos_len
+        delete_list = self.skeleton_op._deleted_annos_id
+        replace_list = self.skeleton_op._replaced_annos
 
         self.assertEqual(list(insert_list[data_pack.pack_id].items()), [(5, 5)])
 
