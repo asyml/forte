@@ -83,10 +83,7 @@ Packs
 .. autoclass:: forte.data.data_pack.Meta
     :members:
 
-:hidden:`BaseIndex`
-------------------------
-.. autoclass:: forte.data.base_pack.BaseIndex
-    :members:
+
 
 :hidden:`DataIndex`
 ------------------------
@@ -202,6 +199,14 @@ Readers
     :members:
 
 
+Index
+=================
+:hidden:`BaseIndex`
+------------------------
+.. autoclass:: forte.data.index.BaseIndex
+    :members:
+
+
 Extractors
 =================
 :hidden:`BaseExtractor`
@@ -214,6 +219,14 @@ Store
 :hidden:`BaseStore`
 --------------------------------------
 .. autoclass:: forte.data.base_store.BaseStore
+    :members:
+
+
+Data Store
+=================
+:hidden:`DataStore`
+--------------------------------------
+.. autoclass:: forte.data.data_store.DataStore
     :members:
 
 
@@ -230,6 +243,19 @@ DataPack Dataset
 ------------------------------
 .. autoclass:: forte.data.data_pack_dataset.DataPackDataset
     :members:
+
+:hidden:`RawExample`
+------------------------------
+.. autoclass:: forte.data.data_pack_dataset.RawExample
+    :members:
+
+:hidden:`FeatureCollection`
+------------------------------
+.. autoclass:: forte.data.data_pack_dataset.FeatureCollection
+    :members:
+
+
+
 
 Batchers
 ==========
@@ -281,6 +307,31 @@ Caster
     :members:
 
 
+Container
+==========
+
+:hidden:`EntryContainer`
+------------------------------
+.. autoclass:: forte.data.container.EntryContainer
+    :members:
+
+:hidden:`ContainerType`
+------------------------------
+.. autoclass:: forte.data.container.ContainerType
+    :members:
+
+:hidden:`BasePointer`
+------------------------------
+.. autoclass:: forte.data.container.BasePointer
+    :members:
+
+
+Entry Type Generator
+===============
+:hidden:`EntryTypeGenerator`
+------------------------------
+.. autoclass:: forte.data.entry_type_generator.EntryTypeGenerator
+    :members:
 
 
 Data Utilities
@@ -305,3 +356,16 @@ Data Utilities
 :hidden:`dataset_path_iterator`
 ----------------------------------
 .. autofunction:: forte.data.data_utils_io.dataset_path_iterator
+
+
+Entry Utilities
+===============
+
+:hidden:`create_utterance`
+----------------------------------
+.. autofunction:: forte.data.common_entry_utils.create_utterance
+
+:hidden:`get_last_utterance`
+----------------------------------
+.. autofunction:: forte.data.common_entry_utils.get_last_utterance
+
