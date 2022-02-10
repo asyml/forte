@@ -73,6 +73,11 @@ Packs
 .. autoclass:: forte.data.base_pack.BaseMeta
     :members:
 
+:hidden:`PackType`
+------------------------
+.. autoclass:: forte.data.base_pack.PackType
+    :members:
+
 :hidden:`Meta`
 ------------------------
 .. autoclass:: forte.data.data_pack.Meta
@@ -197,6 +202,22 @@ Readers
     :members:
 
 
+Extractors
+=================
+:hidden:`BaseExtractor`
+--------------------------------------
+.. autoclass:: forte.data.readers.base_extractor.BaseExtractor
+    :members:
+
+Store
+=================
+:hidden:`BaseStore`
+--------------------------------------
+.. autoclass:: forte.data.base_store.BaseStore
+    :members:
+
+
+
 DataPack Dataset
 =================
 
@@ -217,6 +238,50 @@ Batchers
 ------------------------------
 .. autoclass:: forte.data.batchers.ProcessingBatcher
     :members:
+
+:hidden:`FixedSizeDataPackBatcherWithExtractor`
+------------------------------
+.. autoclass:: forte.data.batchers.FixedSizeDataPackBatcherWithExtractor
+    :members:
+
+:hidden:`FixedSizeRequestDataPackBatcher`
+------------------------------
+.. autoclass:: forte.data.batchers.FixedSizeRequestDataPackBatcher
+    :members:
+
+:hidden:`FixedSizeMultiPackProcessingBatcher`
+------------------------------
+.. autoclass:: forte.data.batchers.FixedSizeMultiPackProcessingBatcher
+    :members:
+
+:hidden:`FixedSizeDataPackBatcher`
+------------------------------
+.. autoclass:: forte.data.batchers.FixedSizeDataPackBatcher
+    :members:
+
+
+
+
+Caster
+==========
+
+:hidden:`Caster`
+------------------------------
+.. autoclass:: forte.data.caster.Caster
+    :members:
+
+:hidden:`MultiPackBoxer`
+------------------------------
+.. autoclass:: forte.data.caster.MultiPackBoxer
+    :members:
+
+:hidden:`MultiPackUnboxer`
+------------------------------
+.. autoclass:: forte.data.caster.MultiPackUnboxer
+    :members:
+
+
+
 
 Data Utilities
 ===============
@@ -240,4 +305,3 @@ Data Utilities
 :hidden:`dataset_path_iterator`
 ----------------------------------
 .. autofunction:: forte.data.data_utils_io.dataset_path_iterator
-
