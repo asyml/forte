@@ -406,6 +406,25 @@ Entry Type Generator
     :members:
 
 
+Types
+===============
+:hidden:`ReplaceOperationsType`
+------------------------------
+.. autoclass:: forte.data.types.ReplaceOperationsType
+    :members:
+
+:hidden:`DataRequest`
+------------------------------
+.. autoclass:: forte.data.types.DataRequest
+    :members:
+
+:hidden:`MatrixLike`
+------------------------------
+.. autoclass:: forte.data.types.MatrixLike
+    :members:
+
+
+
 Data Utilities
 ===============
 
