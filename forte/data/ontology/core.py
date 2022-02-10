@@ -751,7 +751,7 @@ class BaseLink(Entry, ABC):
 
         Returns:
              An instance of :class:`Entry` that is the child of the link
-             from the given :class:`DataPack`.
+             from the given :class:`~forte.data.data_pack.DataPack`.
         """
         raise NotImplementedError
 
@@ -761,7 +761,7 @@ class BaseLink(Entry, ABC):
 
         Returns:
              An instance of :class:`Entry` that is the child of the link
-             from the given :class:`DataPack`.
+             from the given :class:`~forte.data.data_pack.DataPack`.
         """
         raise NotImplementedError
 
