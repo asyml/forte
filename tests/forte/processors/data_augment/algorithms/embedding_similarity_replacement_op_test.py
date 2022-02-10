@@ -95,17 +95,17 @@ class TestEmbeddingSimilarityReplacementOp(unittest.TestCase):
         processor_config = {
             "augment_entry": "ft.onto.base_ontology.Token",
             "other_entry_policy": {
-                    "ft.onto.base_ontology.Document": "auto_align",
-                    "ft.onto.base_ontology.Sentence": "auto_align"
+                "ft.onto.base_ontology.Document": "auto_align",
+                "ft.onto.base_ontology.Sentence": "auto_align",
             },
             "type": "data_augmentation_op",
             "data_aug_op": "forte.processors.data_augment.algorithms"
             ".embedding_similarity_replacement_op."
             "EmbeddingSimilarityReplacementOp",
             "data_aug_op_config": {
-                    "vocab_path": self.abs_vocab_path,
-                    "embed_hparams": self.embed_hparams,
-                    "top_k": 1,
+                "vocab_path": self.abs_vocab_path,
+                "embed_hparams": self.embed_hparams,
+                "top_k": 1,
             },
             "augment_pack_names": {"input": "augmented_input"},
         }

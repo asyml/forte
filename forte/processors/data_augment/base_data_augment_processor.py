@@ -743,9 +743,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         """
         replacement_op = create_class_with_kwargs(
             self.configs["data_aug_op"],
-            class_args={
-                "configs": self.configs["data_aug_op_config"]
-            },
+            class_args={"configs": self.configs["data_aug_op_config"]},
         )
         augment_entry = get_class(self.configs["augment_entry"])
 
@@ -771,7 +769,9 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         self._augment(input_pack, aug_pack_names)
         new_packs: List[Tuple[str, DataPack]] = []
         for aug_pack_name in aug_pack_names:
-            new_pack_name: str = self.configs["augment_pack_names"].get(aug_pack_name, "augmented_" + aug_pack_name)
+            new_pack_name: str = self.configs["augment_pack_names"].get(
+                aug_pack_name, "augmented_" + aug_pack_name
+            )
             data_pack = input_pack.get_pack(aug_pack_name)
             new_pack = self._auto_align_annotations(
                 data_pack=data_pack,
@@ -878,6 +878,9 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             "data_aug_op": "",
             "data_aug_op_config": {},
             "augment_pack_names": {},
-            "@no_typecheck": ["other_entry_policy", "data_aug_op_config", "augment_pack_names"],
-
+            "@no_typecheck": [
+                "other_entry_policy",
+                "data_aug_op_config",
+                "augment_pack_names",
+            ],
         }

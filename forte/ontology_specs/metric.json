@@ -1,0 +1,39 @@
+{ 
+    "name": "metric", 
+    "definitions": [ 
+      {
+        "entry_name": "ft.onto.metric.Metric", 
+        "parent_entry": "forte.data.ontology.top.Generics", 
+        "description": "A base metric entity, all metric entities should inherit from it.", 
+        "attributes": [ 
+          { 
+              "name": "metric_name", 
+              "type": "str" 
+          }
+        ]
+      },
+      { 
+        "entry_name": "ft.onto.metric.SingleMetric", 
+        "parent_entry": "ft.onto.metric.Metric", 
+        "description": "A single metric entity, used to present a metric of one float (e.g. accuracy).", 
+        "attributes": [ 
+          { 
+              "name": "value", 
+              "type": "float" 
+          }
+        ] 
+      }, 
+      { 
+        "entry_name": "ft.onto.metric.NdMetric", 
+        "parent_entry": "ft.onto.metric.Metric", 
+        "description": "A N-dimensional metric entity, used to present a metric of N-d array (e.g. confusion matrix).", 
+        "attributes": [ 
+          {
+              "name": "value",
+              "type": "NdArray",
+              "ndarray_dtype": "float"
+          }
+        ] 
+      }
+    ] 
+  }
