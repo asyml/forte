@@ -368,7 +368,8 @@ class SkeletonOp(ABC):
             new_spans (SortedList): The spans after replacement. It should be
                 a sorted list in ascending order.
             is_begin (bool): True if the input index is the start index of a span.
-            is_inclusive (bool): True if the span constructed by the aligned index should include inserted spans.
+            is_inclusive (bool): True if the span constructed by the aligned
+                index should include inserted spans.
 
         Returns:
             The aligned index.
