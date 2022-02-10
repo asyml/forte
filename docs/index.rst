@@ -2,17 +2,17 @@ Welcome to Forte's documentation!
 ******************************************
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    tutorial/get_started.md
 
 .. toctree::
    :maxdepth: 2
 
-   examples.md
-   ontology_generation.md
-   audio_processing.md
-   data_pack.md
+   tutorial/examples.md
+   tutorial/ontology_generation.md
+   tutorial/audio_processing.md
+   tutorial/data_pack.md
 
 API
 ====
