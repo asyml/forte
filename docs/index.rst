@@ -3,6 +3,12 @@ Welcome to Forte's documentation!
 
 .. toctree::
    :maxdepth: 2
+   
+   outline.md
+
+
+.. toctree::
+   :maxdepth: 2
 
    tutorial/get_started.md
 
