@@ -140,3 +140,4 @@ numpy
 jsonpickle
 crowdworkers
 subword
+wikipedia
