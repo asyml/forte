@@ -9,7 +9,7 @@ This outline is currently **in progress** so many sections are empty.
 ### Reader
 ### Ontology
 ### Dataset
-* [wikipedia dataset](../forte/datasets/wikipedia/dbpedia/README.md)
+* [wikipedia dataset](../forte/datasets/wikipedia/dbpedia/RE4ADME.md)
 ### Serialization
 ## 3. Building a NLP Pipeline
 ### Text Classification
