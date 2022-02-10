@@ -17,3 +17,5 @@ Forte commonly used modules.
 
 from forte.common.exception import *
 from forte.common.resources import *
+from forte.common.configuration import *
+from forte.common.configurable import *

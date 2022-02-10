@@ -20,6 +20,7 @@ from forte.common import ProcessorConfigError
 from forte.common.configuration import Config
 from forte.utils import get_full_module_name
 
+__all__ = ["Configurable"]
 
 class Configurable(ABC):
     """
