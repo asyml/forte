@@ -189,7 +189,7 @@ class Pipeline(Generic[PackType]):
 
         if ontology_file is None:
             # Recursive Method to Find Subclasses
-            spec_dict = self.parse_entry(Entry)
+            spec_dict = self.parse_entry(Entry, [TOP_MOST_MODULE_NAME])
             self.resource.update(onto_specs_path="")
             self.resource.update(onto_specs_dict=spec_dict)
 
@@ -218,36 +218,50 @@ class Pipeline(Generic[PackType]):
         # Indicate whether do type checking during pipeline initialization
         self._do_init_type_check: bool = do_init_type_check
 
-    def parse_entry(self, entry):
-        spec_dict = {"name": "", "additional_prefixes": [], "definitions": []}
+    def parse_entry(self, entry, filter_list: List[str]):
+        r"""Find all sub-classes of Entry Class.
+        Args:
+            entry: A Class which should get by "from forte.data.ontology.core import Entry"
+            filter_list: A filter list should make sure the return spec_dict["definitions"]
+            parent_entry not start with one of them.
+        """
+        spec_dict: Dict = {"definitions": []}
         for subclass in entry.__subclasses__():
-            all_subclasses, additional_prefixes = self.find_spec_dict(subclass)
+            all_subclasses = self.find_spec_dict(subclass)
             spec_dict["definitions"].extend(all_subclasses)
-            spec_dict["additional_prefixes"].extend(additional_prefixes)
+
+        if len(filter_list) > 0:
+            for filter_name in filter_list:
+                spec_dict["definitions"] = [
+                    i
+                    for i in spec_dict["definitions"]
+                    if not i["parent_entry"].startswith(filter_name)
+                ]
+
         return spec_dict
 
-    def find_spec_dict(self, entry):
-        # Recursive Method to Find Subclasses
-        # Recursive Function
+    def find_spec_dict(self, entry_subclass):
+        r"""
+        Recursive Method to Find all the Subclasses of a Class Given its Name
+         Args:
+            entry_subclass: A Class
+        """
         all_subclasses = []
-        additional_prefixes = []
-        for subclass in entry.__subclasses__():
-            if str(entry).startswith(TOP_MOST_MODULE_NAME):
-                continue
-            if "ft.onto" not in str(subclass):
-                subclass_split = str(subclass).split(".")
-                additional_prefixes.append(
-                    subclass_split[0] + "." + subclass_split[1]
+        parent_entry = entry_subclass.__module__ + "." + entry_subclass.__name__
+        for subclass in entry_subclass.__subclasses__():
+            entry_name = subclass.__module__ + "." + subclass.__name__
+            if (
+                    not len(entry_name.split(".")) < 3
+                    and not len(parent_entry.split(".")) < 3
+            ):
+                all_subclasses.append(
+                    {
+                        "entry_name": entry_name,
+                        "parent_entry": parent_entry,
+                    }
                 )
-            all_subclasses.append(
-                {"entry_name": str(subclass), "parent_entry": str(entry)}
-            )
-            all_subclasses_tmp, additional_prefixes_tmp = self.find_spec_dict(
-                subclass
-            )
-            all_subclasses.extend(all_subclasses_tmp)
-            additional_prefixes.extend(additional_prefixes_tmp)
-        return all_subclasses, additional_prefixes
+            all_subclasses.extend(self.find_spec_dict(subclass))
+        return all_subclasses
 
     def enforce_consistency(self, enforce: bool = True):
         r"""This function determines whether the pipeline will check
