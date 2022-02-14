@@ -190,7 +190,7 @@ class Pipeline(Generic[PackType]):
         if ontology_file is None:
             # Recursive Method to Find Subclasses
             spec_dict = self.parse_entry(Entry, [TOP_MOST_MODULE_NAME])
-            self.resource.update(onto_specs_path="")
+            self.resource.update(onto_specs_path=" ")
             self.resource.update(onto_specs_dict=spec_dict)
 
         if ontology_file is not None:
@@ -631,6 +631,7 @@ class Pipeline(Generic[PackType]):
             OntologyCodeGenerator().parse_schema_for_no_import_onto_specs_file(
                 ontology_path=self.resource.get("onto_specs_path"),
                 ontology_dict=self.resource.get("onto_specs_dict"),
+                lenient_prefix=True,
                 merged_entry_tree=merged_entry_tree,
             )
             self.resource.update(merged_entry_tree=merged_entry_tree)
