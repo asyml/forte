@@ -251,8 +251,8 @@ class Pipeline(Generic[PackType]):
         for subclass in entry_subclass.__subclasses__():
             entry_name = subclass.__module__ + "." + subclass.__name__
             if (
-                    not len(entry_name.split(".")) < 3
-                    and not len(parent_entry.split(".")) < 3
+                not len(entry_name.split(".")) < 3
+                and not len(parent_entry.split(".")) < 3
             ):
                 all_subclasses.append(
                     {

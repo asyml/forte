@@ -279,6 +279,7 @@ class AdvancedPipelineTest(unittest.TestCase):
         if os.path.exists(self._pl_config_path):
             os.remove(self._pl_config_path)
 
+
 class InferringOntologyTreeAutomaticallyTst(unittest.TestCase):
     """
     Test the Inferring Ontology Tree Automatically by using Recursive Method
