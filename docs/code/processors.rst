@@ -18,19 +18,47 @@ Base Processors
 .. autoclass:: forte.processors.base.batch_processor.BaseBatchProcessor
     :members:
 
-:hidden:`BasePackProcessor`
+:hidden:`PackingBatchProcessor`
 ----------------------------
-.. autoclass:: forte.processors.base.pack_processor.BasePackProcessor
+.. autoclass:: forte.processors.base.pack_processor.PackingBatchProcessor
     :members:
     :private-members: _process
 
-:hidden:`PackProcessor`
+:hidden:`MultiPackBatchProcessor`
 ----------------------------
-.. autoclass:: forte.processors.base.pack_processor.PackProcessor
+.. autoclass:: forte.processors.base.pack_processor.MultiPackBatchProcessor
     :members:
+
+:hidden:`RequestPackingProcessor`
+----------------------------
+.. autoclass:: forte.processors.base.pack_processor.RequestPackingProcessor
+    :members:
+
+:hidden:`FixedSizeBatchProcessor`
+----------------------------
+.. autoclass:: forte.processors.base.pack_processor.FixedSizeBatchProcessor
+    :members:
+
+
+:hidden:`Predictor`
+----------------------------
+.. autoclass:: forte.processors.base.pack_processor.Predictor
+    :members:
+
 
 Task Processors
 ===================
+
+:hidden:`ElizaProcessor`
+----------------------------------
+.. autoclass:: forte.processors.nlp.eliza_processor.ElizaProcessor
+    :members:
+
+:hidden:`SubwordTokenizer`
+----------------------------------
+.. autoclass:: forte.processors.nlp.subword_tokenizer.SubwordTokenizer
+    :members:
+
 
 :hidden:`CoNLLNERPredictor`
 ----------------------------------
@@ -50,4 +78,40 @@ Task Processors
 :hidden:`Alphabet`
 ----------------------------------
 .. autoclass:: forte.processors.misc.vocabulary_processor.Alphabet
+    :members:
+
+:hidden:`PeriodSentenceSplitter`
+----------------------------------
+.. autoclass:: forte.processors.misc.simple_processors.PeriodSentenceSplitter
+    :members:
+
+:hidden:`WhiteSpaceTokenizer`
+----------------------------------
+.. autoclass:: forte.processors.misc.simple_processors.WhiteSpaceTokenizer
+    :members:
+
+:hidden:`RemoteProcessor`
+----------------------------------
+.. autoclass:: forte.processors.misc.remote_processor.RemoteProcessor
+    :members:
+
+:hidden:`LowerCaserProcessor`
+----------------------------------
+.. autoclass:: forte.processors.misc.lowercaser_processor.LowerCaserProcessor
+    :members:
+
+:hidden:`DeleteOverlapEntry`
+----------------------------------
+.. autoclass:: forte.processors.misc.delete_overlap_entries.DeleteOverlapEntry
+    :members:
+
+:hidden:`AttributeMasker`
+----------------------------------
+.. autoclass:: forte.processors.misc.attribute_masking_processor.AttributeMasker
+    :members:
+
+
+:hidden:`AnnotationRemover`
+----------------------------------
+.. autoclass:: forte.processors.misc.annotation_remover.AnnotationRemover
     :members:
