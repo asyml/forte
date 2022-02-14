@@ -139,3 +139,5 @@ docstrings
 numpy
 jsonpickle
 crowdworkers
+subword
+wikipedia
