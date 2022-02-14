@@ -23,7 +23,7 @@ We can run the following code to get the full document.
 for doc_idx, d in enumerate(data_pack.get_data(context_type=Document)):
     print(doc_idx, ":  ", d['context'])
 ```
-Then the printed output is 
+Then the printed output is
 ```
 0 :   The Indonesian billionaire James Riady has agreed to pay $ 8.5 million and plead guilty to illegally donating money for Bill Clinton 's 1992 presidential campaign . He admits he was trying to influence American policy on China .
 ```
@@ -37,7 +37,7 @@ data_generator = data_pack.get_data(context_type=Sentence)
 for sent_idx, d in enumerate(data_generator):
     print(sent_idx, d['context'])
 ```
-The printed output is 
+The printed output is
 ```
 0 :   The Indonesian billionaire James Riady has agreed to pay $ 8.5 million and plead guilty to illegally donating money for Bill Clinton 's 1992 presidential campaign .
 1 :   He admits he was trying to influence American policy on China .
@@ -83,7 +83,7 @@ pack.get_data(Annotation, requests)
 ### AudioAnnotation
 Based on the idea of "range", in the example code, entry `AudioUtterance` will be searched in `DataPack.audio_annotations` and the requested data field `speaker` will be included in the generator's data.
 
-For `AudioAnnotation` type, range means the begin index and end index of sound sample under `AudioAnnotation` type in the `audio` payload of the `DataPack`. 
+For `AudioAnnotation` type, range means the begin index and end index of sound sample under `AudioAnnotation` type in the `audio` payload of the `DataPack`.
 
 For example, if User wants to get data of `AudioAnnotation` from a `DataPack` instance `pack`. User can call the function like the code blow. It returns a generator that User can iterate over.
 `AudioAnnotation` is passed into the method as parameter `context_type`.
