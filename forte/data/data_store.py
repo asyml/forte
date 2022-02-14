@@ -16,6 +16,7 @@ from typing import List, Iterator, Tuple, Optional, Any
 import uuid
 from bisect import bisect_left
 from forte.utils import get_class
+from forte.data.ontology.core import EntryType
 from forte.data.base_store import BaseStore
 from forte.data.entry_type_generator import EntryTypeGenerator
 

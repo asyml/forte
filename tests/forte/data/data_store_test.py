@@ -245,6 +245,7 @@ class DataStoreTest(unittest.TestCase):
         self.assertEqual(len(instances), 0)
 
     def test_delete_entry(self):
+<<<<<<< HEAD
         # has a total of 4 entries
         self.data_store.delete_entry(1234567)
         self.data_store.delete_entry(1234)
@@ -257,6 +258,34 @@ class DataStoreTest(unittest.TestCase):
         self.assertEqual(num_doc, 1)
         self.assertEqual(num_sent, 0)
 
+=======
+<<<<<<< HEAD
+        # # In test_add_annotation_raw(), we add 2 entries. So 6 in total.
+        # self.data_store.delete_entry(1234567)
+        # self.data_store.delete_entry(1234)
+        # self.data_store.delete_entry(9999)
+        # # After 3 deletion. 3 left. (2 documents and 1 sentence)
+        # num_doc = len(self.data_store._DataStore__elements[0])
+        # num_sent = len(self.data_store._DataStore__elements[1])
+
+        # self.assertEqual(len(self.data_store._DataStore__entry_dict), 3)
+        # self.assertEqual(num_doc, 2)
+        # self.assertEqual(num_sent, 1)
+=======
+        # has a total of 4 entries
+        self.data_store.delete_entry(1234567)
+        self.data_store.delete_entry(1234)
+        self.data_store.delete_entry(9999)
+        # After 3 deletion. 1 left. (2 documents and 1 sentence)
+        num_doc = len(self.data_store.elements[0])
+        num_sent = len(self.data_store.elements[1])
+
+        self.assertEqual(len(self.data_store.entry_dict), 1)
+        self.assertEqual(num_doc, 1)
+        self.assertEqual(num_sent, 0)
+>>>>>>> db8c132 (implement delete and delete by loc;)
+
+>>>>>>> 36d0252 (implement delete and delete by loc;)
     def test_delete_entry_nonexist(self):
         # Entry tid does not exist; should raise a KeyError
         with self.assertRaises(KeyError):
@@ -265,8 +294,13 @@ class DataStoreTest(unittest.TestCase):
     def test_delete_entry_by_loc(self):
         self.data_store._delete_entry_by_loc(0, 1)
         # dict entry is not deleted; only delete entry in element list
+<<<<<<< HEAD
         self.assertEqual(len(self.data_store._DataStore__entry_dict), 4)
         self.assertEqual(len(self.data_store._DataStore__elements[0]), 1)
+=======
+        self.assertEqual(len(self.data_store.entry_dict), 4)
+        self.assertEqual(len(self.data_store.elements[0]), 1)
+>>>>>>> 36d0252 (implement delete and delete by loc;)
 
         # index_id out of range
         with self.assertRaises(IndexError):
