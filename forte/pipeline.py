@@ -189,7 +189,9 @@ class Pipeline(Generic[PackType]):
 
         if ontology_file is None:
             # Recursive Method to Find Subclasses
-            spec_dict, _ = self.find_entry_inherit(Entry, [TOP_MOST_MODULE_NAME])
+            spec_dict, _ = self.find_entry_inherit(
+                Entry, [TOP_MOST_MODULE_NAME]
+            )
             self.resource.update(onto_specs_path=" ")
             self.resource.update(onto_specs_dict=spec_dict)
 
@@ -261,20 +263,18 @@ class Pipeline(Generic[PackType]):
             ):
                 try:
                     if subclass.__annotations__:
-                        all_attributes[entry_subclass.__name__][subclass.__name__] = list(subclass.__annotations__.keys())
+                        all_attributes[entry_subclass.__name__][
+                            subclass.__name__
+                        ] = list(subclass.__annotations__.keys())
                     all_subclasses.append(
-                        {
-                            "entry_name": entry_name,
-                            "parent_entry": parent_entry
-                        })
+                        {"entry_name": entry_name, "parent_entry": parent_entry}
+                    )
 
-                except:
+                except TypeError:
 
                     all_subclasses.append(
-                        {
-                            "entry_name": entry_name,
-                            "parent_entry": parent_entry
-                        })
+                        {"entry_name": entry_name, "parent_entry": parent_entry}
+                    )
             all_sub, all_att = self.find_spec_dict(subclass)
             all_attributes.update(all_att)
             all_subclasses.extend(all_sub)
