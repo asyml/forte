@@ -1,10 +1,11 @@
 import functools
-
+from forte.pipeline import Pipeline
+from forte.data.ontology.core import Entry
 
 def _get_type_attributes():
     # TODO: implement get type_attributes using entry class hierachy
-    type_attributes = {}
-
+    pipeline = Pipeline()
+    _, type_attributes = pipeline.find_entry_inherit(Entry,filter_list=[])
     return type_attributes
 
 
