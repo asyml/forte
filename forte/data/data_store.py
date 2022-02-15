@@ -15,10 +15,9 @@ from typing import List, Iterator, Tuple, Optional, Any
 import uuid
 from bisect import bisect_left
 from forte.utils import get_class
-from forte.data.ontology.core import EntryType
 from forte.data.base_store import BaseStore
 from forte.data.entry_type_generator import EntryTypeGenerator
-from forte.data.ontology.top import Annotation, Group, Link
+from forte.data.ontology.top import Annotation
 
 __all__ = ["DataStore"]
 
@@ -294,7 +293,7 @@ class DataStore(BaseStore):
         return entry
 
     def _is_annotation(self, type_id: int) -> bool:
-        r""" This function takes a type_id and returns whether a type
+        r"""This function takes a type_id and returns whether a type
         is an annotation type or not.
         Args:
             type_id (int): The index of type in `self.__elements`.
@@ -305,16 +304,13 @@ class DataStore(BaseStore):
         """
         try:
             type_name = self.__type_dict[type_id]
-        except KeyError:
+        except KeyError as e:
             raise KeyError(
                 f"The specified type_id [{type_id}] "
                 f"is out of boundry for list of length [{len(self.__elements)}]"
-            )
+            ) from e
         entry_class = get_class(type_name)
-        if issubclass(entry_class, Annotation):
-            return True
-        else:
-            return False
+        return issubclass(entry_class, Annotation)
 
     def add_annotation_raw(self, type_id: int, begin: int, end: int) -> int:
         r"""This function adds an annotation entry with `begin` and `end`
@@ -384,16 +380,16 @@ class DataStore(BaseStore):
         """
         try:
             type_id = self.__entry_dict[tid][self.ENTRY_TYPE_IDX]
-        except KeyError:
-            raise KeyError(f"Entry with tid {tid} not found.")
-            
+        except KeyError as e:
+            raise KeyError(f"Entry with tid {tid} not found.") from e
+
         type_attr_dict = self._type_attributes[type_id]
         try:
             self.set_attr(tid, type_attr_dict[attr_name], attr_value)
-        except KeyError:
+        except KeyError as e:
             raise KeyError(
                 f"{self.__type_dict[type_id]} has no {attr_name} attribute."
-            )
+            ) from e
 
     def set_attr(self, tid: int, attr_id: int, attr_value: Any):
         r"""This function locates the entry data with `tid` and sets its
@@ -425,15 +421,15 @@ class DataStore(BaseStore):
         """
         try:
             type_id = self.__entry_dict[tid][self.ENTRY_TYPE_IDX]
-        except KeyError:
-            raise KeyError(f"Entry with tid {tid} not found.")
-        
+        except KeyError as e:
+            raise KeyError(f"Entry with tid {tid} not found.") from e
+
         try:
             attr_id = self._type_attributes[type_id][attr_name]
-        except KeyError:
+        except KeyError as e:
             raise KeyError(
                 f"{self.__type_dict[type_id]} has no {attr_name} attribute."
-            )
+            ) from e
 
         return self.get_attr(tid, attr_id)
 
@@ -472,11 +468,11 @@ class DataStore(BaseStore):
         try:
             # get `entry data` and remove it from entry_dict
             entry_data = self.__entry_dict.pop(tid)
-        except:
+        except KeyError as e:
             raise KeyError(
                 f"The specified tid [{tid}] "
                 f"does not correspond to an existing entry data "
-            )
+            ) from e
 
         _, _, tid, type_id = entry_data[:4]
         if type_id >= len(self.__elements):
@@ -490,9 +486,9 @@ class DataStore(BaseStore):
         # if it's annotation type, use bisect to find the index
         if self._is_annotation(type_id):
             entry_index = bisect_left(target_list, entry_data)
-        else: # if it's group or link, use the index in entry_list
+        else:  # if it's group or link, use the index in entry_list
             entry_index = entry_data[-1]
-        
+
         if (
             entry_index >= len(target_list)
             or target_list[entry_index] != entry_data
