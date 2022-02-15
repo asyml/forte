@@ -17,6 +17,7 @@ This outline is currently **in progress** so many sections are empty.
 ## 4. Linguistic Analysis
 * Analyze linguistic structure within a sentence.
 * more concrete examples of `context` and `get_data()` on top of [Handling Structured Text Data](tutorial/handling_structued_data.ipynb)
+
 ### Part-of-Speech Tagging
 ## 5. Language Modeling with External Library
 * predictor
