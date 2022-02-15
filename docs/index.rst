@@ -18,7 +18,7 @@ Welcome to Forte's documentation!
    tutorial/examples.md
    tutorial/ontology_generation.md
    tutorial/audio_processing.md
-   tutorial/handling_structued_data.ipynb
+
 
 API
 ====
