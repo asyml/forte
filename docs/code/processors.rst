@@ -44,6 +44,7 @@ Base Processors
 ----------------------------
 .. autoclass:: forte.processors.base.batch_processor.Predictor
     :members:
+    :noindex:
 
 
 Task Processors

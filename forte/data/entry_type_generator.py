@@ -30,10 +30,11 @@ class EntryTypeGenerator:
         .. code-block:: python
 
             type_attributes = {
-                "Token": ["pos", "ud_xpos", "lemma", "chunk", "ner", "sense", "is_root", "ud_features",
-                        "ud_misc"],
+                "Token": ["pos", "ud_xpos", "lemma", "chunk", "ner", "sense",
+                        "is_root", "ud_features", "ud_misc"],
                 "Document": ["document_class", "sentiment", "classifications"],
-                "Sentence": ["speaker", "part_id", "sentiment", "classification", "classifications"],
+                "Sentence": ["speaker", "part_id", "sentiment",
+                            "classification", "classifications"],
             }
 
         """
