@@ -76,7 +76,6 @@ Packs
 :hidden:`PackType`
 ------------------------
 .. autoclass:: forte.data.base_pack.PackType
-    :members:
 
 :hidden:`Meta`
 ------------------------
