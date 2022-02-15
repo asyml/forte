@@ -27,5 +27,7 @@ class EntryTypeGeneratorTest(unittest.TestCase):
         # EntryTypeGenerator.get_type_attributes()
         # self.assertLessEqual(mock_get_type_attributes.call_count, 1)
 
+    def test_get_type_attributes_all
+
 if __name__ == "__main__":
     unittest.main()
