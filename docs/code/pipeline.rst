@@ -31,9 +31,11 @@ Process
     :members:
 
 :hidden:`ProcessJobStatus`
+---------------------------
 .. autoclass:: forte.process_job.ProcessJobStatus
     :members:
 
 :hidden:`ProcessManager`
-.. autoclass:: forte.process_job.ProcessManager
+---------------------------
+.. autoclass:: forte.process_manager.ProcessManager
     :members:
