@@ -252,7 +252,7 @@ class Pipeline(Generic[PackType]):
         """
         all_subclasses = []
         all_attributes: Dict = {}
-        if len(entry_subclass.__subclasses__()) > 1:
+        if len(entry_subclass.__subclasses__()) > 0:
             all_attributes[entry_subclass.__name__] = {}
         parent_entry = entry_subclass.__module__ + "." + entry_subclass.__name__
         for subclass in entry_subclass.__subclasses__():
@@ -261,20 +261,13 @@ class Pipeline(Generic[PackType]):
                 not len(entry_name.split(".")) < 3
                 and not len(parent_entry.split(".")) < 3
             ):
-                try:
-                    if subclass.__annotations__:
-                        all_attributes[entry_subclass.__name__][
-                            subclass.__name__
-                        ] = list(subclass.__annotations__.keys())
-                    all_subclasses.append(
-                        {"entry_name": entry_name, "parent_entry": parent_entry}
-                    )
-
-                except TypeError:
-
-                    all_subclasses.append(
-                        {"entry_name": entry_name, "parent_entry": parent_entry}
-                    )
+                if "__annotations__" in subclass.__dict__.keys():
+                    all_attributes[entry_subclass.__name__][
+                        subclass.__name__
+                    ] = list(subclass.__annotations__.keys())
+                all_subclasses.append(
+                    {"entry_name": entry_name, "parent_entry": parent_entry}
+                )
             all_sub, all_att = self.find_spec_dict(subclass)
             all_attributes.update(all_att)
             all_subclasses.extend(all_sub)
