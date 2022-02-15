@@ -229,14 +229,6 @@ Readers
 .. autoclass:: forte.data.readers.classification_reader.ClassificationDatasetReader
     :members:
 
-Extractors
-=================
-:hidden:`BaseExtractor`
---------------------------------------
-.. autoclass:: forte.data.base_extractor.BaseExtractor
-    :members:
-
-
 Selector
 =================
 :hidden:`Selector`
