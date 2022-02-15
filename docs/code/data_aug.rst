@@ -144,12 +144,6 @@ Data Augmentation Ops
 .. autoclass:: forte.processors.data_augment.algorithms.typo_replacement_op.UniformTypoGenerator
     :members:
 
-:hidden:`TypoReplacementOp`
-----------------------------
-.. autoclass:: forte.processors.data_augment.algorithms.typo_replacement_op.TypoReplacementOp
-    :members:
-
-
 Data Augmentation Models
 ========================================
 
