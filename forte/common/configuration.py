@@ -20,6 +20,8 @@ from typing import Dict
 
 from texar.torch import HParams
 
+__all__ = ["Config"]
+
 Config = HParams
 
 
