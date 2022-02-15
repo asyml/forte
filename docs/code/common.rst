@@ -47,15 +47,15 @@ Exceptions
 
 
 Configuration
-==========
-.. autoclass:: forte.common.UnknownOntologyClassException
+==============
+.. autoclass:: forte.common.Config
     :members:
 
 
 
 Configurable
-==========
-.. autoclass:: forte.common.Configurable
+=============
+.. autoclass:: forte.common.configurable.Configurable
 
 
 Resources

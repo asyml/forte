@@ -88,7 +88,7 @@ Data Augmentation Ops
 ------------------------------------
 .. autoclass:: forte.processors.data_augment.algorithms.sampler.UnigramSampler
     :members:
-    
+
 :hidden:`MachineTranslator`
 ---------------------------------
 .. autoclass:: forte.processors.data_augment.algorithms.machine_translator.MachineTranslator
@@ -135,12 +135,12 @@ Data Augmentation Ops
     :members:
 
 :hidden:`EmbeddingSimilarityReplacementOp`
-----------------------------
+------------------------------------------
 .. autoclass:: forte.processors.data_augment.algorithms.embedding_similarity_replacement_op.EmbeddingSimilarityReplacementOp
     :members:
 
 :hidden:`UniformTypoGenerator`
-----------------------------
+--------------------------------
 .. autoclass:: forte.processors.data_augment.algorithms.typo_replacement_op.UniformTypoGenerator
     :members:
 
@@ -163,4 +163,3 @@ Data Augmentation Models
 
 .. autoclass:: forte.models.da_rl.TexarBertMetaModule
     :members:
-

@@ -96,23 +96,27 @@ MultiPack
 
 :hidden:`MultiPackMeta`
 ------------------------
-.. autoclass:: forte.data.data_pack.MultiPackMeta
+.. autoclass:: forte.data.multi_pack.MultiPackMeta
     :members:
+
 
 :hidden:`MultiPack`
 ------------------------
-.. autoclass:: forte.data.data_pack.MultiPack
+.. autoclass:: forte.data.multi_pack.MultiPack
     :members:
+    :noindex:
 
 :hidden:`MultiPackLink`
 ------------------------
-.. autoclass:: forte.data.data_pack.MultiPackLink
+.. autoclass:: forte.data.multi_pack.MultiPackLink
     :members:
+    :noindex:
 
 :hidden:`MultiPackGroup`
 ------------------------
-.. autoclass:: forte.data.data_pack.MultiPackGroup
+.. autoclass:: forte.data.multi_pack.MultiPackGroup
     :members:
+    :noindex:
 
 
 
@@ -229,7 +233,7 @@ Extractors
 =================
 :hidden:`BaseExtractor`
 --------------------------------------
-.. autoclass:: forte.data.readers.base_extractor.BaseExtractor
+.. autoclass:: forte.data.base_extractor.BaseExtractor
     :members:
 
 
@@ -237,37 +241,37 @@ Selector
 =================
 :hidden:`Selector`
 --------------------------------------
-.. autoclass:: forte.data.readers.selector.Selector
+.. autoclass:: forte.data.selector.Selector
     :members:
 
 :hidden:`DummySelector`
 --------------------------------------
-.. autoclass:: forte.data.readers.selector.DummySelector
+.. autoclass:: forte.data.selector.DummySelector
     :members:
 
 :hidden:`SinglePackSelector`
 --------------------------------------
-.. autoclass:: forte.data.readers.selector.SinglePackSelector
+.. autoclass:: forte.data.selector.SinglePackSelector
     :members:
 
 :hidden:`NameMatchSelector`
 --------------------------------------
-.. autoclass:: forte.data.readers.selector.NameMatchSelector
+.. autoclass:: forte.data.selector.NameMatchSelector
     :members:
 
 :hidden:`RegexNameMatchSelector`
 --------------------------------------
-.. autoclass:: forte.data.readers.selector.RegexNameMatchSelector
+.. autoclass:: forte.data.selector.RegexNameMatchSelector
     :members:
 
 :hidden:`FirstPackSelector`
 --------------------------------------
-.. autoclass:: forte.data.readers.selector.FirstPackSelector
+.. autoclass:: forte.data.selector.FirstPackSelector
     :members:
 
 :hidden:`AllPackSelector`
 --------------------------------------
-.. autoclass:: forte.data.readers.selector.AllPackSelector
+.. autoclass:: forte.data.selector.AllPackSelector
     :members:
 
 
@@ -338,22 +342,22 @@ Batchers
     :members:
 
 :hidden:`FixedSizeDataPackBatcherWithExtractor`
-------------------------------
+---------------------------------------------------
 .. autoclass:: forte.data.batchers.FixedSizeDataPackBatcherWithExtractor
     :members:
 
 :hidden:`FixedSizeRequestDataPackBatcher`
-------------------------------
+---------------------------------------------------
 .. autoclass:: forte.data.batchers.FixedSizeRequestDataPackBatcher
     :members:
 
 :hidden:`FixedSizeMultiPackProcessingBatcher`
-------------------------------
+---------------------------------------------------
 .. autoclass:: forte.data.batchers.FixedSizeMultiPackProcessingBatcher
     :members:
 
 :hidden:`FixedSizeDataPackBatcher`
-------------------------------
+------------------------------------
 .. autoclass:: forte.data.batchers.FixedSizeDataPackBatcher
     :members:
 
@@ -399,7 +403,7 @@ Container
 
 
 Entry Type Generator
-===============
+==============================
 :hidden:`EntryTypeGenerator`
 ------------------------------
 .. autoclass:: forte.data.entry_type_generator.EntryTypeGenerator
@@ -409,7 +413,7 @@ Entry Type Generator
 Types
 ===============
 :hidden:`ReplaceOperationsType`
-------------------------------
+--------------------------------
 .. autoclass:: forte.data.types.ReplaceOperationsType
     :members:
 

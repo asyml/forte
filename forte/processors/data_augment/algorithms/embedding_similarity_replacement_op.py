@@ -40,11 +40,14 @@ class EmbeddingSimilarityReplacementOp(TextReplacementOp):
     Args:
         configs:
             The config should contain the following key-value pairs:
-            vocab_path (str): The absolute path to the vocabulary file for the
-                pretrained embeddings
-            embed_hparams (dict): The hparams to initialize the
+
+            - vocab_path (str): The absolute path to the vocabulary file for
+              the pretrained embeddings
+
+            - embed_hparams (dict): The hparams to initialize the
                 texar.torch.data.Embedding object.
-            top_k (int): the number of k most similar words to choose from
+
+            - top_k (int): the number of k most similar words to choose from
     """
 
     def __init__(self, configs: Config):
@@ -54,7 +57,7 @@ class EmbeddingSimilarityReplacementOp(TextReplacementOp):
         embedding = Embedding(self.vocab.token_to_id_map_py, embed_hparams)
         self.normalized_vectors = (
             embedding.word_vecs
-            / np.sqrt((embedding.word_vecs ** 2).sum(axis=1))[:, np.newaxis]
+            / np.sqrt((embedding.word_vecs**2).sum(axis=1))[:, np.newaxis]
         )
 
     def replace(self, input_anno: Annotation) -> Tuple[bool, str]:
