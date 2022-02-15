@@ -20,6 +20,7 @@ import unittest
 from sortedcontainers import SortedList
 
 from forte.data.data_store import DataStore
+from ft.onto.base_ontology import Sentence
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -51,12 +52,14 @@ class DataStoreTest(unittest.TestCase):
             0: "ft.onto.base_ontology.Document",
             1: "ft.onto.base_ontology.Sentence",
             2: "forte.data.ontology.core.Entry",
+            3: "ft.onto.base_ontology.CoreferenceGroup"
         }
 
         self.data_store._DataStore__type_rev = {
             "ft.onto.base_ontology.Document": 0,
             "ft.onto.base_ontology.Sentence": 1,
             "forte.data.ontology.core.Entry": 2,
+            "ft.onto.base_ontology.CoreferenceGroup": 3,
         }
 
         self.data_store._DataStore__elements = [
@@ -110,6 +113,17 @@ class DataStoreTest(unittest.TestCase):
             ),
             # empty list corresponds to Entry, test only
             [],
+            # list corresponds to CoreferenceGroup
+            SortedList([
+                [
+                    1,
+                    [9999, 1234567],
+                    10123,
+                    3,
+                    Sentence,
+                    0,
+                ],
+            ]),
         ]
         self.data_store._DataStore__entry_dict = {
             1234: [
@@ -152,6 +166,14 @@ class DataStoreTest(unittest.TestCase):
                 "Class C",
                 "Class D",
             ],
+            10123: [
+                1,
+                [9999, 1234567],
+                10123,
+                3,
+                Sentence,
+                0,
+            ]
         }
 
     def test_add_annotation_raw(self):
@@ -180,7 +202,7 @@ class DataStoreTest(unittest.TestCase):
 
         # Get attribute field that does not exist
         with self.assertRaisesRegex(
-            ValueError, "ft.onto.base_ontology.Sentence has no class attribute."
+            KeyError, "ft.onto.base_ontology.Sentence has no class attribute."
         ):
             self.data_store.get_attribute(9999, "class")
 
@@ -201,7 +223,7 @@ class DataStoreTest(unittest.TestCase):
 
         # Set attribute field that does not exist
         with self.assertRaisesRegex(
-            ValueError, "ft.onto.base_ontology.Sentence has no speak attribute."
+            KeyError, "ft.onto.base_ontology.Sentence has no speak attribute."
         ):
             self.data_store.set_attribute(9999, "speak", "human")
 
@@ -238,47 +260,30 @@ class DataStoreTest(unittest.TestCase):
 
         # get all entries
         instances = list(self.data_store.get(2))
-        self.assertEqual(len(instances), 4)
+        self.assertEqual(len(instances), 5)
 
         # get entries without subclasses
         instances = list(self.data_store.get(2, include_sub_type=False))
         self.assertEqual(len(instances), 0)
 
     def test_delete_entry(self):
-        # has a total of 4 entries
+        # delete annotation
+        # has a total of 5 entries
         self.data_store.delete_entry(1234567)
         self.data_store.delete_entry(1234)
         self.data_store.delete_entry(9999)
-        # After 3 deletion. 1 left. (2 documents and 1 sentence)
+        # After 3 deletion. 2 left. (2 documents, 1 sentence, 1 group)
         num_doc = len(self.data_store._DataStore__elements[0])
         num_sent = len(self.data_store._DataStore__elements[1])
 
-        self.assertEqual(len(self.data_store._DataStore__entry_dict), 1)
+        self.assertEqual(len(self.data_store._DataStore__entry_dict), 2)
         self.assertEqual(num_doc, 1)
         self.assertEqual(num_sent, 0)
 
-        # # In test_add_annotation_raw(), we add 2 entries. So 6 in total.
-        # self.data_store.delete_entry(1234567)
-        # self.data_store.delete_entry(1234)
-        # self.data_store.delete_entry(9999)
-        # # After 3 deletion. 3 left. (2 documents and 1 sentence)
-        # num_doc = len(self.data_store._DataStore__elements[0])
-        # num_sent = len(self.data_store._DataStore__elements[1])
-
-        # self.assertEqual(len(self.data_store._DataStore__entry_dict), 3)
-        # self.assertEqual(num_doc, 2)
-        # self.assertEqual(num_sent, 1)
-        # has a total of 4 entries
-        self.data_store.delete_entry(1234567)
-        self.data_store.delete_entry(1234)
-        self.data_store.delete_entry(9999)
-        # After 3 deletion. 1 left. (2 documents and 1 sentence)
-        num_doc = len(self.data_store._DataStore__elements[0])
-        num_sent = len(self.data_store._DataStore__elements[1])
-
+        # delete group
+        self.data_store.delete_entry(10123)
         self.assertEqual(len(self.data_store._DataStore__entry_dict), 1)
-        self.assertEqual(num_doc, 1)
-        self.assertEqual(num_sent, 0)
+        self.assertEqual(len(self.data_store._DataStore__elements[3]), 0)
 
     def test_delete_entry_nonexist(self):
         # Entry tid does not exist; should raise a KeyError
@@ -288,7 +293,7 @@ class DataStoreTest(unittest.TestCase):
     def test_delete_entry_by_loc(self):
         self.data_store._delete_entry_by_loc(0, 1)
         # dict entry is not deleted; only delete entry in element list
-        self.assertEqual(len(self.data_store._DataStore__entry_dict), 4)
+        self.assertEqual(len(self.data_store._DataStore__entry_dict), 5)
         self.assertEqual(len(self.data_store._DataStore__elements[0]), 1)
 
         # index_id out of range
@@ -298,6 +303,15 @@ class DataStoreTest(unittest.TestCase):
         # type_id out of range
         with self.assertRaises(IndexError):
             self.data_store._delete_entry_by_loc(2, 1)
+    
+    def test_is_annotation(self):
+        test_type_id = 1
+        is_annot = self.data_store._is_annotation(test_type_id)
+        self.assertEqual(is_annot, True)
+
+        test_type_id = 3
+        is_annot = self.data_store._is_annotation(test_type_id)
+        self.assertEqual(is_annot, False)
 
     def test_next_entry(self):
         # next_ent = self.next_entry(1234)

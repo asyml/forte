@@ -18,6 +18,7 @@ from forte.utils import get_class
 from forte.data.ontology.core import EntryType
 from forte.data.base_store import BaseStore
 from forte.data.entry_type_generator import EntryTypeGenerator
+from forte.data.ontology.top import Annotation, Group, Link
 
 __all__ = ["DataStore"]
 
@@ -229,7 +230,7 @@ class DataStore(BaseStore):
         r"""This function generates a new `tid` for an entry."""
         return uuid.uuid4().int
 
-    def _new_annotation(self, type_id: int, begin: int, end: int):
+    def _new_annotation(self, type_id: int, begin: int, end: int) -> List:
         r"""This function generates a new annotation with default fields.
         All default fields are filled with None.
         Called by add_annotation_raw() to create a new annotation with
@@ -248,7 +249,7 @@ class DataStore(BaseStore):
         tid: int = self._new_tid()
         entry: List[Any]
         entry = [begin, end, tid, type_id]
-        entry += len(self._type_attributes[type_id]) * [-1]
+        entry += len(self._type_attributes[type_id]) * [None]
 
         return entry
 
@@ -291,6 +292,29 @@ class DataStore(BaseStore):
         entry = [member_type, [], tid, type_id]
         entry += len(self._type_attributes[type_id]) * [None]
         return entry
+
+    def _is_annotation(self, type_id: int) -> bool:
+        r""" This function takes a type_id and returns whether a type
+        is an annotation type or not.
+        Args:
+            type_id (int): The index of type in `self.__elements`.
+
+        Returns:
+            A boolean value whether this type_id belongs to an annotation
+            type or not.
+        """
+        try:
+            type_name = self.__type_dict[type_id]
+        except KeyError:
+            raise KeyError(
+                f"The specified type_id [{type_id}] "
+                f"is out of boundry for list of length [{len(self.__elements)}]"
+            )
+        entry_class = get_class(type_name)
+        if issubclass(entry_class, Annotation):
+            return True
+        else:
+            return False
 
     def add_annotation_raw(self, type_id: int, begin: int, end: int) -> int:
         r"""This function adds an annotation entry with `begin` and `end`
@@ -358,17 +382,18 @@ class DataStore(BaseStore):
             attr_name (str): Name of the attribute.
             attr_value (any): Value of the attribute.
         """
-        if tid not in self.__entry_dict:
+        try:
+            type_id = self.__entry_dict[tid][self.ENTRY_TYPE_IDX]
+        except KeyError:
             raise KeyError(f"Entry with tid {tid} not found.")
-
-        type_id = self.__entry_dict[tid][self.ENTRY_TYPE_IDX]
-        if attr_name not in self._type_attributes[type_id]:
-            raise ValueError(
+            
+        type_attr_dict = self._type_attributes[type_id]
+        try:
+            self.set_attr(tid, type_attr_dict[attr_name], attr_value)
+        except KeyError:
+            raise KeyError(
                 f"{self.__type_dict[type_id]} has no {attr_name} attribute."
             )
-
-        attr_id = self._type_attributes[type_id][attr_name]
-        self.set_attr(tid, attr_id, attr_value)
 
     def set_attr(self, tid: int, attr_id: int, attr_value: Any):
         r"""This function locates the entry data with `tid` and sets its
@@ -398,16 +423,18 @@ class DataStore(BaseStore):
         Returns:
             The value of `attr_name` for the entry with `tid`.
         """
-        if tid not in self.__entry_dict:
+        try:
+            type_id = self.__entry_dict[tid][self.ENTRY_TYPE_IDX]
+        except KeyError:
             raise KeyError(f"Entry with tid {tid} not found.")
-
-        type_id = self.__entry_dict[tid][self.ENTRY_TYPE_IDX]
-        if attr_name not in self._type_attributes[type_id]:
-            raise ValueError(
+        
+        try:
+            attr_id = self._type_attributes[type_id][attr_name]
+        except KeyError:
+            raise KeyError(
                 f"{self.__type_dict[type_id]} has no {attr_name} attribute."
             )
 
-        attr_id = self._type_attributes[type_id][attr_name]
         return self.get_attr(tid, attr_id)
 
     def get_attr(self, tid: int, attr_id: int) -> Any:
@@ -444,13 +471,12 @@ class DataStore(BaseStore):
 
         try:
             # get `entry data` and remove it from entry_dict
-            entry_data = self.__entry_dict[tid]
-            self.__entry_dict.pop(tid)
-        except Exception as e:
+            entry_data = self.__entry_dict.pop(tid)
+        except:
             raise KeyError(
                 f"The specified tid [{tid}] "
                 f"does not correspond to an existing entry data "
-            ) from e
+            )
 
         _, _, tid, type_id = entry_data[:4]
         if type_id >= len(self.__elements):
@@ -461,7 +487,12 @@ class DataStore(BaseStore):
 
         target_list = self.__elements[type_id]
         # complexity: O(lgn)
-        entry_index = bisect_left(target_list, entry_data)
+        # if it's annotation type, use bisect to find the index
+        if self._is_annotation(type_id):
+            entry_index = bisect_left(target_list, entry_data)
+        else: # if it's group or link, use the index in entry_list
+            entry_index = entry_data[-1]
+        
         if (
             entry_index >= len(target_list)
             or target_list[entry_index] != entry_data
