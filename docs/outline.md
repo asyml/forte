@@ -13,10 +13,10 @@ This outline is currently **in progress** so many sections are empty.
 ### Serialization
 ## 3. Building a NLP Pipeline
 ### Text Classification
-* use text classification as a example to introduce pipeline components 
+* use text classification as a example to introduce pipeline components
 ## 4. Linguistic Analysis
 * Analyze linguistic structure within a sentence.
-* more concrete examples of `context` and `get_data()` on top of [Handling Structured Text Data](#1-handling-structured-text-data)
+* more concrete examples of `context` and `get_data()` on top of [Handling Structured Text Data]
 ### Part-of-Speech Tagging
 ## 5. Language Modeling with External Library
 * predictor

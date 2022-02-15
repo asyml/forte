@@ -275,7 +275,7 @@ class FixedSizeDataPackBatcherWithExtractor(ProcessingBatcher):
             features_collection (List[Dict[str, Feature]]): A list of features.
 
         Returns:
-            A instance of Dict[str, Union[Tensor, Dict]], which
+            A instance of `Dict[str, Union[Tensor, Dict]]`, which
             is a batch of features.
         """
         collections: Dict[str, List[Feature]] = {}
@@ -405,12 +405,14 @@ class FixedSizeDataPackBatcherWithExtractor(ProcessingBatcher):
         """
         Defines the configuration of this batcher, here:
 
-          - context_type: The context scope to extract data from. It could be a
-        annotation class or a string that is the fully qualified name of
-        the annotation class.
-          - feature_scheme: A dictionary of (extractor name, extractor) that
-        can be used to extract features.
-          - batch_size: The batch size, default is 10.
+            - context_type: The context scope to extract data from. It could be
+              a annotation class or a string that is the fully qualified name
+              of the annotation class.
+
+            - feature_scheme: A dictionary of (extractor name, extractor) that
+              can be used to extract features.
+
+            - batch_size: The batch size, default is 10.
 
         Returns:
             The default configuration structure.
@@ -563,8 +565,10 @@ class FixedSizeMultiPackProcessingBatcher(ProcessingBatcher[MultiPack]):
 
     It's flexible to query MultiPack so we delegate the task to the subclasses
     such as:
+
         - query all packs with the same ``context`` and ``input_info``.
-        - query different packs with different ``context``s and ``input_info``s.
+        - query different packs with different ``context`` and
+          ``input_info``.
 
     Since the batcher will save the data_pack_pool on the fly, it's not trivial
     to do batching and slicing multiple data packs in the same time
