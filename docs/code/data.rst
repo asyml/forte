@@ -379,10 +379,6 @@ Container
 .. autoclass:: forte.data.container.EntryContainer
     :members:
 
-:hidden:`ContainerType`
-------------------------------
-.. autoclass:: forte.data.container.ContainerType
-    :members:
 
 :hidden:`BasePointer`
 ------------------------------
