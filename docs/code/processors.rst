@@ -20,23 +20,23 @@ Base Processors
 
 :hidden:`PackingBatchProcessor`
 -----------------------------------
-.. autoclass:: forte.processors.base.pack_processor.PackingBatchProcessor
+.. autoclass:: forte.processors.base.batch_processor.PackingBatchProcessor
     :members:
     :private-members: _process
 
 :hidden:`MultiPackBatchProcessor`
 -----------------------------------
-.. autoclass:: forte.processors.base.pack_processor.MultiPackBatchProcessor
+.. autoclass:: forte.processors.base.batch_processor.MultiPackBatchProcessor
     :members:
 
 :hidden:`RequestPackingProcessor`
 -----------------------------------
-.. autoclass:: forte.processors.base.pack_processor.RequestPackingProcessor
+.. autoclass:: forte.processors.base.batch_processor.RequestPackingProcessor
     :members:
 
 :hidden:`FixedSizeBatchProcessor`
 -----------------------------------
-.. autoclass:: forte.processors.base.pack_processor.FixedSizeBatchProcessor
+.. autoclass:: forte.processors.base.batch_processor.FixedSizeBatchProcessor
     :members:
 
 
