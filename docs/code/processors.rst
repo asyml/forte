@@ -42,7 +42,7 @@ Base Processors
 
 :hidden:`Predictor`
 ----------------------------
-.. autoclass:: forte.processors.base.pack_processor.Predictor
+.. autoclass:: forte.processors.base.batch_processor.Predictor
     :members:
 
 

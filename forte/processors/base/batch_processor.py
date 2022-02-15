@@ -470,7 +470,7 @@ class Predictor(PackingBatchProcessor[PackType]):
 
 
 class MultiPackBatchProcessor(BaseBatchProcessor[MultiPack], ABC):
-    r"""This class defines the base batch processor for `MultiPack`s."""
+    r"""This class defines the base batch processor for `MultiPack`."""
 
     def __init__(self):
         super().__init__()
