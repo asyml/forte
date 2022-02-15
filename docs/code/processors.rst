@@ -14,28 +14,28 @@ Base Processors
     :members:
 
 :hidden:`BaseBatchProcessor`
-----------------------------
+-----------------------------------
 .. autoclass:: forte.processors.base.batch_processor.BaseBatchProcessor
     :members:
 
 :hidden:`PackingBatchProcessor`
-----------------------------
+-----------------------------------
 .. autoclass:: forte.processors.base.pack_processor.PackingBatchProcessor
     :members:
     :private-members: _process
 
 :hidden:`MultiPackBatchProcessor`
-----------------------------
+-----------------------------------
 .. autoclass:: forte.processors.base.pack_processor.MultiPackBatchProcessor
     :members:
 
 :hidden:`RequestPackingProcessor`
-----------------------------
+-----------------------------------
 .. autoclass:: forte.processors.base.pack_processor.RequestPackingProcessor
     :members:
 
 :hidden:`FixedSizeBatchProcessor`
-----------------------------
+-----------------------------------
 .. autoclass:: forte.processors.base.pack_processor.FixedSizeBatchProcessor
     :members:
 
