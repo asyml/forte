@@ -107,6 +107,10 @@ jobs:
     env:
       python-version: 3.7
     steps:
+      # - name: Setup Miniconda
+      # - uses: conda-incubator/setup-miniconda@v2.1.1
+      # - name: Install pandoc in the conda environment
+      #   run: conda install -c conda-forge pandoc
       - uses: actions/checkout@v2
       - name: Set up Python ${{ env.python-version }}
         uses: actions/setup-python@v2

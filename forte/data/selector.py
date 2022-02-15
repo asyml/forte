@@ -103,7 +103,7 @@ class SinglePackSelector(Selector[MultiPack, DataPack]):
 class NameMatchSelector(SinglePackSelector):
     r"""
     Select a :class:`DataPack` from a :class:`MultiPack` with specified
-    name. This implementation takes special care for backward compatability.
+    name. This implementation takes special care for backward compatibility.
 
     Deprecated:
         .. code-block:: python
@@ -166,7 +166,7 @@ class NameMatchSelector(SinglePackSelector):
 class RegexNameMatchSelector(SinglePackSelector):
     r"""Select a :class:`DataPack` from a :class:`MultiPack` using a regex.
 
-    This implementation takes special care for backward compatability.
+    This implementation takes special care for backward compatibility.
 
     Deprecated:
         .. code-block:: python

@@ -32,7 +32,7 @@ __all__ = [
 class EmbeddingSimilarityReplacementOp(TextReplacementOp):
     r"""
     This class is a replacement op leveraging pre-trained word
-    embeddings, such as word2vec and glove, to replace the input
+    embeddings, such as `word2vec` and `glove`, to replace the input
     word with another word with similar word embedding.
     By default, the replacement word is randomly chosen from the
     top k words with the most similar embeddings.
@@ -57,7 +57,7 @@ class EmbeddingSimilarityReplacementOp(TextReplacementOp):
         embedding = Embedding(self.vocab.token_to_id_map_py, embed_hparams)
         self.normalized_vectors = (
             embedding.word_vecs
-            / np.sqrt((embedding.word_vecs ** 2).sum(axis=1))[:, np.newaxis]
+            / np.sqrt((embedding.word_vecs**2).sum(axis=1))[:, np.newaxis]
         )
 
     def replace(self, input_anno: Annotation) -> Tuple[bool, str]:

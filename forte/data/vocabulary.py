@@ -576,7 +576,7 @@ class FrequencyVocabFilter(VocabFilter):
         vocab: The vocabulary object.
         min_frequency (int): The min frequency threshold, default -1 (i.e. no
           frequency check for min).
-        max_frequency (int): The max frequency threhold, default -1 (i.e. no
+        max_frequency (int): The max frequency threshold, default -1 (i.e. no
           frequency check for max).
 
     """
