@@ -1,16 +1,21 @@
 Welcome to Forte's documentation!
 ******************************************
-
-.. toctree::
-   :maxdepth: 2
-   
-   outline.md
-
+This outline is currently **in progress** so many sections are empty.
 
 .. toctree::
    :maxdepth: 2
 
-   tutorial/get_started.md
+   tutorial/ch0.md
+   tutorial/ch1.md
+   tutorial/ch2.md
+   tutorial/ch3.md
+   tutorial/ch4.md
+   tutorial/ch5.md
+   tutorial/ch6.md
+   tutorial/ch7.md
+   tutorial/ch8.md
+   tutorial/ch9.md
+   tutorial/ch10.md
 
 .. toctree::
    :maxdepth: 2
