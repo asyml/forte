@@ -21,6 +21,7 @@ from typing import Dict, List, Set, Union, Iterator, Optional, Type, Any, Tuple
 import jsonpickle
 
 from sortedcontainers import SortedList
+from packaging.version import Version
 
 from forte.common import ProcessExecutionException
 from forte.data.base_pack import BaseMeta, BasePack
@@ -37,7 +38,6 @@ from forte.data.ontology.top import (
 )
 from forte.data.types import DataRequest
 from forte.utils import get_class
-from packaging.version import Version, parse
 from forte.version import BACKWARD_COMPATIBLE_VER, DEFAULT_PACK_VERSION
 
 

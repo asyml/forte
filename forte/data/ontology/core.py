@@ -36,6 +36,8 @@ from typing import (
 
 import numpy as np
 
+from packaging.version import Version
+
 from forte.data.container import ContainerType, BasePointer
 
 __all__ = [
@@ -54,7 +56,6 @@ __all__ = [
 ]
 
 from forte.utils import get_full_module_name
-from packaging.version import Version, parse
 from forte.version import BACKWARD_COMPATIBLE_VER, DEFAULT_PACK_VERSION
 
 default_entry_fields = [
