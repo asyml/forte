@@ -125,7 +125,7 @@ class DataStore(BaseStore):
         The `_type_attributes` is a private dictionary that provides
         `type_id` and the order of corresponding attributes except `index_id`.
         The outer keys are indices of `entry lists` in `self.__elements` as
-        ints, representing all types that inherit the `Entry` class.
+        `int`, representing all types that inherit the `Entry` class.
         The inner keys are all the valid attributes for this type.
         The values are the indices of attributes among these lists.
 
@@ -251,8 +251,10 @@ class DataStore(BaseStore):
         entry = [begin, end, tid, type_id]
         try:
             entry += len(self._type_attributes[type_id]) * [None]
-        except KeyError:
-            raise KeyError(f"Annotation type with id {type_id} does not exist.")
+        except KeyError as e:
+            raise KeyError(
+                f"Annotation type with id {type_id} does not exist."
+            ) from e
         return entry
 
     def _new_link(self, type_id: int, parent_tid: int, child_tid: int) -> List:
@@ -275,8 +277,10 @@ class DataStore(BaseStore):
         entry = [parent_tid, child_tid, tid, type_id]
         try:
             entry += len(self._type_attributes[type_id]) * [None]
-        except KeyError:
-            raise KeyError(f"Link type with id {type_id} does not exist.")
+        except KeyError as e:
+            raise KeyError(
+                f"Link type with id {type_id} does not exist."
+            ) from e
         return entry
 
     def _new_group(self, type_id: int, member_type: str) -> List:
@@ -297,14 +301,16 @@ class DataStore(BaseStore):
         entry = [member_type, [], tid, type_id]
         try:
             entry += len(self._type_attributes[type_id]) * [None]
-        except KeyError:
-            raise KeyError(f"Group type with id {type_id} does not exist.")
+        except KeyError as e:
+            raise KeyError(
+                f"Group type with id {type_id} does not exist."
+            ) from e
 
         return entry
 
     def add_annotation_raw(self, type_id: int, begin: int, end: int) -> int:
         r"""This function adds an annotation entry with `begin` and `end`
-        indices to the `type_id`th sortedlist in `self.__elements`,
+        indices to the (`type_id`)th sortedlist in `self.__elements`,
         returns the `tid` for the inserted entry.
 
         Args:
@@ -329,9 +335,9 @@ class DataStore(BaseStore):
         self, type_id: int, parent_tid: int, child_tid: int
     ) -> Tuple[int, int]:
         r"""This function adds a link entry with `parent_tid` and `child_tid`
-        to the `type_id`th list in `self.__elements`, returns the `tid` and the
+        to the (`type_id`)th list in `self.__elements`, returns the `tid` and the
         `index_id` for the inserted entry in the list. This `index_id` is the
-        index of the entry in the `type_id`th list.
+        index of the entry in the (`type_id`)th list.
 
         Args:
             type_id (int): The index of Link list in `self.__elements`.
@@ -339,23 +345,23 @@ class DataStore(BaseStore):
             child_tid (int): `tid` of the child entry.
 
         Returns:
-            `tid` of the entry and its index in the `type_id`th list.
+            `tid` of the entry and its index in the (`type_id`)th list.
 
         """
         raise NotImplementedError
 
     def add_group_raw(self, type_id: int, member_type: str) -> Tuple[int, int]:
         r"""This function adds a group entry with `member_type` to the
-        `type_id`th list in `self.__elements`, returns the `tid` and the
+        (`type_id`)th list in `self.__elements`, returns the `tid` and the
         `index_id` for the inserted entry in the list. This `index_id` is the
-        index of the entry in the `type_id`th list.
+        index of the entry in the (`type_id`)th list.
 
         Args:
             type_id (int): The index of Group list in `self.__elements`.
             member_type (str): Fully qualified name of its members.
 
         Returns:
-            `tid` of the entry and its index in the `type_id`th list.
+            `tid` of the entry and its index in the (`type_id`)th list.
 
         """
         raise NotImplementedError
@@ -461,14 +467,14 @@ class DataStore(BaseStore):
 
     def get_entry(self, tid: int) -> Tuple[List, int, int]:
         r"""This function finds the entry with `tid`. It returns the entry,
-        its `type_id`, and the index in the `type_id`th list.
+        its `type_id`, and the index in the (`type_id`)th list.
 
         Args:
             tid (int): Unique id of the entry.
 
         Returns:
             The entry which `tid` corresponds to, its `type_id` and its index
-            in the `type_id`th list.
+            in the (`type_id`)th list.
         """
         # If the entry is an annotation, bisect the annotation sortedlist
         # to find the entry. May use LRU cache to optimize speed.

@@ -28,6 +28,11 @@ Converter
 .. autoclass:: forte.data.converter.converter.Converter
     :members:
 
+:hidden:`Feature`
+--------------------
+.. autoclass:: forte.data.converter.feature.Feature
+    :members:
+
 
 Extractor
 ================================
