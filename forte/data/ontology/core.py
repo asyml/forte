@@ -16,6 +16,7 @@ Defines the basic data structures and interfaces for the Forte data
 representation system.
 """
 import uuid
+
 from abc import abstractmethod, ABC
 from collections.abc import MutableSequence, MutableMapping
 from dataclasses import dataclass
@@ -52,7 +53,8 @@ __all__ = [
 ]
 
 from forte.utils import get_full_module_name
-from forte.version import BACKWARD_COMPATIBLE_VER
+from forte.version import BACKWARD_COMPATIBLE_VER, DEFAULT_PACK_VERSION
+from packaging.version import Version, parse
 
 default_entry_fields = [
     "_Entry__pack",
@@ -433,13 +435,13 @@ class MultiEntry(Entry, ABC):
         elif isinstance(ptr, MpPointer):
             # bugfix/new feature 559: in new version pack_index will be using pack_id internally
             pack_array_index = ptr.pack_index  # old version
-            pack_version = [0, 0, 0]
+            pack_version = ""
             try:
                 pack_version = self.pack.pack_version
             except AttributeError as ae:
-                print(ae)  # the version is not set : print or log the exception
+                pack_version = DEFAULT_PACK_VERSION  # set to default if lacking version attribute
 
-            if pack_version >= BACKWARD_COMPATIBLE_VER:
+            if Version(pack_version) >= Version(BACKWARD_COMPATIBLE_VER):
                 pack_array_index = self.pack.get_pack_index(
                     ptr.pack_index
                 )  # default: new version

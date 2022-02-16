@@ -38,6 +38,7 @@ from forte.data.ontology.top import (
 from forte.data.types import DataRequest
 from forte.utils import get_class
 from forte.version import BACKWARD_COMPATIBLE_VER, DEFAULT_PACK_VERSION
+from packaging.version import Version, parse
 
 logger = logging.getLogger(__name__)
 
@@ -174,7 +175,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     def get_subentry(self, pack_idx: int, entry_id: int):
         # fix bug/enhancement #559: use pack_idx as pack_id in new version
         pack_array_index: int = pack_idx  # the old way
-        if self.pack_version >= BACKWARD_COMPATIBLE_VER:
+        if Version(self.pack_version) >= Version(BACKWARD_COMPATIBLE_VER):
             pack_array_index = self.get_pack_index(
                 pack_idx
             )  # the new way: using pack_id instead of array index
@@ -284,15 +285,10 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         """
         try:
             return self._inverse_pack_ref[pack_id]
-        except KeyError:  # sometimes after deserialization the dict have string as key
-            s_dict: dict = self._inverse_pack_ref
-            s_key = str(pack_id)
-            try:
-                return s_dict[s_key]
-            except KeyError as ke:  # really not found
-                raise ProcessExecutionException(
-                    f"Pack {pack_id} is not in this multi-pack."
-                ) from ke
+        except KeyError as ke:
+            raise ProcessExecutionException(
+                f"Pack {pack_id} is not in this multi-pack."
+            ) from ke
 
     def get_pack(self, name: str) -> DataPack:
         """
