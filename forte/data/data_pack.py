@@ -54,10 +54,7 @@ from forte.utils import get_class
 
 logger = logging.getLogger(__name__)
 
-__all__ = [
-    "Meta",
-    "DataPack",
-]
+__all__ = ["Meta", "DataPack", "DataIndex"]
 
 
 class Meta(BaseMeta):
