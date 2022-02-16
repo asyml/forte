@@ -18,6 +18,8 @@ import uuid
 from forte.utils import get_class
 from forte.data.base_store import BaseStore
 from forte.data.entry_type_generator import EntryTypeGenerator
+from forte.common import constants
+
 
 __all__ = ["DataStore"]
 
@@ -118,8 +120,6 @@ class DataStore(BaseStore):
         """
         super().__init__()
         self.onto_file_path = onto_file_path
-        self.__entry_type_idx = 3
-        self.TID_INDEX = 2
 
         """
         The `_type_attributes` is a private dictionary that provides
@@ -249,7 +249,10 @@ class DataStore(BaseStore):
         tid: int = self._new_tid()
         entry: List[Any]
         entry = [begin, end, tid, type_id]
-        entry += len(self._type_attributes[type_id]) * [None]
+        try:
+            entry += len(self._type_attributes[type_id]) * [None]
+        except KeyError:
+            raise KeyError(f"Annotation type with id {type_id} does not exist.")
         return entry
 
     def _new_link(self, type_id: int, parent_tid: int, child_tid: int) -> List:
@@ -270,7 +273,10 @@ class DataStore(BaseStore):
         tid: int = self._new_tid()
         entry: List[Any]
         entry = [parent_tid, child_tid, tid, type_id]
-        entry += len(self._type_attributes[type_id]) * [None]
+        try:
+            entry += len(self._type_attributes[type_id]) * [None]
+        except KeyError:
+            raise KeyError(f"Link type with id {type_id} does not exist.")
         return entry
 
     def _new_group(self, type_id: int, member_type: str) -> List:
@@ -289,7 +295,11 @@ class DataStore(BaseStore):
 
         tid: int = self._new_tid()
         entry = [member_type, [], tid, type_id]
-        entry += len(self._type_attributes[type_id]) * [None]
+        try:
+            entry += len(self._type_attributes[type_id]) * [None]
+        except KeyError:
+            raise KeyError(f"Group type with id {type_id} does not exist.")
+
         return entry
 
     def add_annotation_raw(self, type_id: int, begin: int, end: int) -> int:
@@ -312,8 +322,8 @@ class DataStore(BaseStore):
         # self.__entry_dict.
         entry = self._new_annotation(type_id, begin, end)
         self.__elements[type_id].add(entry)
-        self.__entry_dict[entry[self.TID_INDEX]] = entry
-        return entry[self.TID_INDEX]
+        self.__entry_dict[entry[constants.TID_IDX]] = entry
+        return entry[constants.TID_IDX]
 
     def add_link_raw(
         self, type_id: int, parent_tid: int, child_tid: int
@@ -363,7 +373,7 @@ class DataStore(BaseStore):
         """
         if tid not in self.__entry_dict:
             raise KeyError(f"Entry with tid {tid} not found.")
-        entry_type = self.__entry_dict[tid][self.__entry_type_idx]
+        entry_type = self.__entry_dict[tid][constants.ENTRY_TYPE_IDX]
         if attr_name not in self._type_attributes[entry_type]:
             raise ValueError(
                 f"{self.__type_dict[entry_type]} has no {attr_name} attribute."
@@ -401,7 +411,7 @@ class DataStore(BaseStore):
         """
         if tid not in self.__entry_dict:
             raise KeyError(f"Entry with tid {tid} not found.")
-        entry_type = self.__entry_dict[tid][self.__entry_type_idx]
+        entry_type = self.__entry_dict[tid][constants.ENTRY_TYPE_IDX]
         if attr_name not in self._type_attributes[entry_type]:
             raise ValueError(
                 f"{self.__type_dict[entry_type]} has no {attr_name} attribute."
