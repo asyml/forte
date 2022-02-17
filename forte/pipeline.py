@@ -742,7 +742,7 @@ class Pipeline(Generic[PackType]):
         return self._components
 
     @property
-    def ref_names(self) -> Dict[Optional[str], int]:
+    def ref_names(self) -> Dict[str, int]:
         """
         Return all the reference names in this pipeline, except the reader.
 
