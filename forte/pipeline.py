@@ -18,6 +18,7 @@ Base class for Pipeline module.
 import itertools
 import json
 import logging
+import sys
 from time import time
 from typing import (
     Any,
@@ -48,8 +49,6 @@ from forte.data.base_pack import PackType
 from forte.data.base_reader import BaseReader
 from forte.data.caster import Caster
 from forte.data.ontology.code_generation_objects import EntryTree
-from forte.data.ontology.core import Entry
-from forte.data.ontology.ontology_code_const import TOP_MOST_MODULE_NAME
 from forte.data.ontology.ontology_code_generator import OntologyCodeGenerator
 from forte.data.selector import Selector, DummySelector
 from forte.evaluation.base.base_evaluator import Evaluator
@@ -61,6 +60,11 @@ from forte.processors.base.batch_processor import BaseBatchProcessor
 from forte.utils import create_class_with_kwargs, get_full_module_name
 from forte.utils.utils_processor import record_types_and_attributes_check
 from forte.version import FORTE_IR_VERSION
+
+if sys.version_info < (3, 7):
+    import importlib_resources as resources
+else:
+    from importlib import resources
 
 logger = logging.getLogger(__name__)
 
@@ -188,12 +192,10 @@ class Pipeline(Generic[PackType]):
             self.resource = resource
 
         if ontology_file is None:
-            # Recursive Method to Find Subclasses
-            spec_dict, _ = self.find_entry_inherit(
-                Entry, [TOP_MOST_MODULE_NAME]
-            )
-            self.resource.update(onto_specs_path=" ")
-            self.resource.update(onto_specs_dict=spec_dict)
+            with resources.path(
+                "forte.ontology_specs", "base_ontology.json"
+            ) as data_path:
+                ontology_file = str(data_path)
 
         if ontology_file is not None:
             with open(ontology_file, "r", encoding="ascii") as f:
@@ -223,9 +225,9 @@ class Pipeline(Generic[PackType]):
     def find_entry_inherit(self, entry, filter_list: List[str]):
         r"""Find all sub-classes of Entry Class.
         Args:
-            entry: A Class which should get by "from forte.data.ontology.core import Entry"
-            filter_list: A filter list should make sure the return spec_dict["definitions"]
-            parent_entry not start with one of them.
+            entry: A Class should get by "from forte.data.ontology.core import Entry".
+            filter_list: A filter list should make sure the return
+                spec_dict["definitions"] parent entry does not start with one of them.
         """
         spec_dict: Dict = {"definitions": []}
         all_attributes_dict = {}
@@ -265,6 +267,10 @@ class Pipeline(Generic[PackType]):
                     all_attributes[entry_subclass.__name__][
                         subclass.__name__
                     ] = list(subclass.__annotations__.keys())
+                else:
+                    all_attributes[entry_subclass.__name__][
+                        subclass.__name__
+                    ] = []
                 all_subclasses.append(
                     {"entry_name": entry_name, "parent_entry": parent_entry}
                 )
@@ -641,7 +647,6 @@ class Pipeline(Generic[PackType]):
             OntologyCodeGenerator().parse_schema_for_no_import_onto_specs_file(
                 ontology_path=self.resource.get("onto_specs_path"),
                 ontology_dict=self.resource.get("onto_specs_dict"),
-                lenient_prefix=True,
                 merged_entry_tree=merged_entry_tree,
             )
             self.resource.update(merged_entry_tree=merged_entry_tree)
