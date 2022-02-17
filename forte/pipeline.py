@@ -224,9 +224,10 @@ class Pipeline(Generic[PackType]):
 
     def find_entry_inherit(self, entry, filter_list: List[str]):
         r"""Find all sub_classes of Entry Class.
+
         Args:
-            entry: Entry class
-            filter_list: Makes sure the returned parent entry not start with one of them.
+            entry: Entry class.
+            filter_list: Make sure the parent entry does not start with one of them.
         """
         spec_dict: Dict = {"definitions": []}
         all_attributes_dict = {}
@@ -247,9 +248,10 @@ class Pipeline(Generic[PackType]):
 
     def find_spec_dict(self, entry_subclass):
         r"""
-        Recursive Method to Find all the Subclasses of a Class Given its Name
-         Args:
-            entry_subclass: Entry Class
+        Recursive Method to Find all the Subclasses of a Class Given its Name.
+
+        Args:
+            entry_subclass: Entry Class.
         """
         all_subclasses = []
         all_attributes: Dict = {}
