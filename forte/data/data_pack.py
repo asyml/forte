@@ -54,10 +54,7 @@ from forte.utils import get_class
 
 logger = logging.getLogger(__name__)
 
-__all__ = [
-    "Meta",
-    "DataPack",
-]
+__all__ = ["Meta", "DataPack", "DataIndex"]
 
 
 class Meta(BaseMeta):
@@ -1312,7 +1309,6 @@ class DataPack(BasePack[Entry, Link, Group]):
         Yields:
             Each `Entry` found using this method.
         """
-
         entry_type_: Type[EntryType] = as_entry_type(entry_type)
 
         def require_annotations(entry_class=Annotation) -> bool:
