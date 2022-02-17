@@ -1,9 +1,11 @@
-# 0. Overview #
+# OVERVIEW #
 **Forte** is a toolkit for building Natural Language Processing pipelines, featuring cross-task
 interaction, adaptable data-model interfaces and many more. It provides a platform to assemble
 state-of-the-art NLP and ML technologies in a highly-composable fashion, including a wide
 spectrum of tasks ranging from Information Retrieval, Natural Language Understanding to Natural
 Language Generation.
+
+.. rst-class:: page-break
 
 With Forte, it is extremely simple to build an integrated system that can search documents,
 analyze and extract information and generate language all in one place. This allows the developer
