@@ -19,12 +19,12 @@ class EntryTypeGeneratorTest(unittest.TestCase):
 
     def test_get_type_attributes_all(self):
         # test the result
-        self.assertEqual(len(self.type_attributes['Annotation']), 16)
-        self.assertEqual(len(self.type_attributes['Link']), 5)
-        self.assertEqual(len(self.type_attributes['Group']), 1)
-        self.assertEqual(len(self.type_attributes['Annotation']['Token']), 9)
-        self.assertEqual(len(self.type_attributes['Annotation']['Sentence']), 5)
-        self.assertEqual(len(self.type_attributes['Link']['Dependency']), 2)
+        self.assertEqual(len(self.type_attributes["Annotation"]), 16)
+        self.assertEqual(len(self.type_attributes["Link"]), 5)
+        self.assertEqual(len(self.type_attributes["Group"]), 1)
+        self.assertEqual(len(self.type_attributes["Annotation"]["Token"]), 9)
+        self.assertEqual(len(self.type_attributes["Annotation"]["Sentence"]), 5)
+        self.assertEqual(len(self.type_attributes["Link"]["Dependency"]), 2)
 
 
 if __name__ == "__main__":
