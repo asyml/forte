@@ -226,7 +226,8 @@ class Pipeline(Generic[PackType]):
         r"""Find all sub_classes of Entry Class.
         Args:
             entry: A Class should get by "from forte.data.ontology.core import Entry".
-            filter_list: A filter list should make sure the returned parent entry does not start with one of them.
+            filter_list: A filter list should make sure the returned parent entry does
+            not start with one of them.
         """
         spec_dict: Dict = {"definitions": []}
         all_attributes_dict = {}
