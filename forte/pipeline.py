@@ -225,9 +225,8 @@ class Pipeline(Generic[PackType]):
     def find_entry_inherit(self, entry, filter_list: List[str]):
         r"""Find all sub_classes of Entry Class.
         Args:
-            entry: A Class should get by "from forte.data.ontology.core import Entry".
-            filter_list: A filter list should make sure the returned parent entry does
-            not start with one of them.
+            entry: Entry class
+            filter_list: Makes sure the returned parent entry not start with one of them.
         """
         spec_dict: Dict = {"definitions": []}
         all_attributes_dict = {}
@@ -250,7 +249,7 @@ class Pipeline(Generic[PackType]):
         r"""
         Recursive Method to Find all the Subclasses of a Class Given its Name
          Args:
-            entry_subclass: A Class
+            entry_subclass: Entry Class
         """
         all_subclasses = []
         all_attributes: Dict = {}
