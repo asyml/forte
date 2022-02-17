@@ -41,6 +41,7 @@ class UniformTypoGenerator:
             containing various typos of the corresponding key.
 
             .. code-block:: python
+
                 {
                     "apparent": ["aparent", "apparant"],
                     "bankruptcy": ["bankrupcy", "banruptcy"],

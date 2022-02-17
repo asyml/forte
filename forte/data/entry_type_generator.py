@@ -2,6 +2,8 @@ import functools
 from forte.pipeline import Pipeline
 from forte.data.ontology.core import Entry
 
+__all__ = ["EntryTypeGenerator"]
+
 
 def _get_type_attributes():
     # TODO: implement get type_attributes using entry class hierachy
@@ -27,11 +29,15 @@ class EntryTypeGenerator:
         get a list of ["speaker", "part_id", "sentiment", "classification", "classifications"]. We
         want to get the attributes for each type of entry as a dictionary. For example:
 
-        type_attributes = {
-            "Token": ["pos", "ud_xpos", "lemma", "chunk", "ner", "sense", "is_root", "ud_features",
-                      "ud_misc"],
-            "Document": ["document_class", "sentiment", "classifications"],
-            "Sentence": ["speaker", "part_id", "sentiment", "classification", "classifications"],
-        }
+        .. code-block:: python
+
+            type_attributes = {
+                "Token": ["pos", "ud_xpos", "lemma", "chunk", "ner", "sense",
+                        "is_root", "ud_features", "ud_misc"],
+                "Document": ["document_class", "sentiment", "classifications"],
+                "Sentence": ["speaker", "part_id", "sentiment",
+                            "classification", "classifications"],
+            }
+
         """
         return _get_type_attributes()

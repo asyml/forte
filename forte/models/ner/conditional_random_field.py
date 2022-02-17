@@ -15,6 +15,7 @@
 Conditional random field.
 Adapted from AllenNLP but removed the feature of external restriction
 """
+__all__ = ["ConditionalRandomField"]
 from typing import Optional, List, Tuple, Dict, Union
 import logging
 
