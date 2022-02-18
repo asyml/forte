@@ -60,6 +60,12 @@ from forte.processors.base.batch_processor import BaseBatchProcessor
 from forte.utils import create_class_with_kwargs, get_full_module_name
 from forte.utils.utils_processor import record_types_and_attributes_check
 from forte.version import FORTE_IR_VERSION
+from ft.onto.base_ontology import Token
+from ft.onto.wikipedia import WikiPage
+from ft.onto.metric import Metric
+from ftx.onto.race_qa import Passage
+from ftx.onto.ag_news import Description
+from ftx.medical import UMLSConceptLink
 
 if sys.version_info < (3, 7):
     import importlib_resources as resources
