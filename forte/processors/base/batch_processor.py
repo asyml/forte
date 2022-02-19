@@ -208,7 +208,7 @@ class PackingBatchProcessor(BaseBatchProcessor[PackType], ABC):
         pred = self.predict(batched_data)
         self.pack_all(packs, contexts, pred)
 
-    def predict(self, data_batch: Dict) -> Dict[str, List[Any]]:
+    def predict(self, data_batch: Dict) -> Dict[str, Dict[str, List[Any]]]:
         r"""The function that task processors should implement. Make
         predictions for the input ``data_batch``.
 

@@ -386,7 +386,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         """
         return self._text[begin:end]
 
-    def get_span_audio(self, begin: int, end: int) -> str:
+    def get_span_audio(self, begin: int, end: int) -> np.ndarray:
         r"""Get the audio in the data pack contained in the span.
         `begin` and `end` represent the starting and ending indices of the span
         in audio payload respectively. Each index corresponds to one sample in
