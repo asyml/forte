@@ -19,7 +19,7 @@ import unittest
 from typing import Dict
 
 from forte.pipeline import Pipeline
-from ftx.onto.ag_news import Description
+from ftx.news.ag_news import Description
 from ft.onto.base_ontology import Document, Title
 
 from forte.data.readers import AGNewsReader

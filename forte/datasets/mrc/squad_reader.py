@@ -18,7 +18,7 @@ from typing import Any, Iterator, Dict, Set, Tuple
 from forte.data.data_pack import DataPack
 from forte.data.base_reader import PackReader
 from ft.onto.base_ontology import Document, MRCQuestion, Phrase
-from ftx.onto.race_qa import Passage
+from ftx.mcqs.race_qa import Passage
 
 __all__ = [
     "SquadReader",
