@@ -4,11 +4,11 @@
     "base_ontology.json"
   ],
   "additional_prefixes": [
-    "ftx.medical"
+    "ftx.medical.clinical"
   ],
   "definitions": [
         {
-      "entry_name": "ftx.medical.UMLSConceptLink",
+      "entry_name": "ftx.medical.clinical.UMLSConceptLink",
       "parent_entry": "forte.data.ontology.top.Generics",
       "description": "A umls concept entity, used to represent basic information of a umls concept",
       "attributes": [
@@ -41,7 +41,7 @@
       ]
     },
     {
-      "entry_name": "ftx.medical.MedicalEntityMention",
+      "entry_name": "ftx.medical.clinical.MedicalEntityMention",
       "parent_entry": "ft.onto.base_ontology.EntityMention",
       "description": "A span based annotation class MedicalEntityMention, used to represent an Entity Mention in medical domain",
       "attributes": [
@@ -52,7 +52,7 @@
         {
             "name": "umls_entities",
             "type": "List",
-            "item_type": "ftx.medical.UMLSConceptLink"
+            "item_type": "ftx.medical.clinical.UMLSConceptLink"
         }
       ]
     }
