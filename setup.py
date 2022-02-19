@@ -18,7 +18,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     license="Apache License Version 2.0",
     packages=setuptools.find_namespace_packages(
-        include=['ftx.*'],
+        include=['ft.*', 'ftx.*'],
         exclude=["scripts*", "examples*", "tests*"]
     ),
     include_package_data=True,
