@@ -275,7 +275,7 @@ class Converter:
 
         # Convert to target type
         if not self.to_numpy and not self.to_torch:
-            return data_list, masks_list
+            return data_list, masks_list  # type: ignore
 
         # Note: to_torch == True overwrite to_numpy option
         if self.to_torch:
@@ -295,7 +295,7 @@ class Converter:
                 masks_np_list.append(
                     self._to_numpy_type(batch_masks_dim_i, np.bool_)
                 )
-            return data_np, masks_np_list
+            return data_np, masks_np_list  # type: ignore
 
         # Control should not reach here
         raise RuntimeError("Invalid converter internal state")
