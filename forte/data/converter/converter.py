@@ -284,9 +284,7 @@ class Converter:
             masks_tensor_list: List[torch.Tensor] = []
             for batch_masks_dim_i in masks_list:
                 masks_tensor_list.append(
-                    self._to_tensor_type(
-                        batch_masks_dim_i, np.bool
-                    )
+                    self._to_tensor_type(batch_masks_dim_i, np.bool)
                 )
 
             return data_tensor, masks_tensor_list
@@ -296,9 +294,7 @@ class Converter:
             masks_np_list: List[np.ndarray] = []
             for batch_masks_dim_i in masks_list:
                 masks_np_list.append(
-                    self._to_numpy_type(
-                        batch_masks_dim_i, np.bool
-                    )
+                    self._to_numpy_type(batch_masks_dim_i, np.bool)
                 )
             return data_np, masks_np_list
 
