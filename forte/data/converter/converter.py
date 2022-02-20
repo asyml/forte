@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-from typing import List, Tuple, Any, Optional, Union, Dict
+from typing import List, Tuple, Any, Optional, Union, Dict, Sequence
+
 import numpy as np
 import torch
 
@@ -103,7 +104,7 @@ class Converter:
 
     def convert(
         self, features: List[Feature]
-    ) -> Tuple[MatrixLike, List[MatrixLike]]:
+    ) -> Tuple[MatrixLike, Sequence[MatrixLike]]:
         """
         Convert a list of Features to matrix-like form, where
 
@@ -275,7 +276,7 @@ class Converter:
 
         # Convert to target type
         if not self.to_numpy and not self.to_torch:
-            return data_list, masks_list  # type: ignore
+            return data_list, masks_list
 
         # Note: to_torch == True overwrite to_numpy option
         if self.to_torch:
@@ -295,7 +296,7 @@ class Converter:
                 masks_np_list.append(
                     self._to_numpy_type(batch_masks_dim_i, np.bool_)
                 )
-            return data_np, masks_np_list  # type: ignore
+            return data_np, masks_np_list
 
         # Control should not reach here
         raise RuntimeError("Invalid converter internal state")
