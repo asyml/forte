@@ -4,12 +4,12 @@
     "base_ontology.json"
   ],
   "additional_prefixes": [
-    "ftx.mcqs"
+    "ftx.onto"
   ],
 
   "definitions": [
     {
-      "entry_name": "ftx.mcqs.race_qa.Passage",
+      "entry_name": "ftx.onto.race_qa.Passage",
       "parent_entry": "forte.data.ontology.top.Annotation",
       "attributes": [
         {

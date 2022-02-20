@@ -1,5 +1,5 @@
 # ***automatically_generated***
-# ***source json:forte/ontology_specs/race_qa.json***
+# ***source json:../../../../casl/forte/forte/ontology_specs/race_qa.json***
 # flake8: noqa
 # mypy: ignore-errors
 # pylint: skip-file
