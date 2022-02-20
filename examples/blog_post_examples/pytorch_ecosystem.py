@@ -22,7 +22,7 @@ from forte.processors.stave import StaveProcessor
 from fortex.spacy import SpacyProcessor
 
 from ft.onto.base_ontology import Dependency
-from ftx.medical.clinical import MedicalEntityMention
+from ftx.onto.clinical import MedicalEntityMention
 
 
 def main():

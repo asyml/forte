@@ -22,7 +22,7 @@ from forte.data.data_pack import DataPack
 from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.base_reader import PackReader
 from ft.onto.base_ontology import MCOption, MCQuestion, Document
-from ftx.mcqs.race_qa import Passage
+from ftx.onto.race_qa import Passage
 
 
 __all__ = [

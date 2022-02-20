@@ -23,7 +23,7 @@ from forte.data.data_pack import DataPack
 from forte.datasets.mrc.squad_reader import SquadReader
 from forte.pipeline import Pipeline
 from ft.onto.base_ontology import MRCQuestion
-from ftx.mcqs.race_qa import Passage
+from ftx.onto.race_qa import Passage
 
 
 class SquadReaderTest(unittest.TestCase):
