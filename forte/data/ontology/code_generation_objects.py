@@ -698,6 +698,14 @@ class ModuleWriter:
                     ) as init_file:
                         init_file.write(f"# {AUTO_GEN_SIGNATURE}\n")
 
+            elif temp_path == os.path.join(tempdir, self.pkg_dir):
+                if not dest_path_exists or include_init:
+                    init_file_path = os.path.join(temp_path, "__init__.py")
+                    with open(
+                        init_file_path, "w", encoding="utf-8"
+                    ) as init_file:
+                        init_file.write(f"# {AUTO_GEN_SIGNATURE}\n")
+
     def write(
         self,
         tempdir: str,
