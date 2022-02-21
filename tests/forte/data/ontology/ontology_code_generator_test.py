@@ -194,9 +194,15 @@ class GenerateOntologyTest(unittest.TestCase):
             )
             gen_files = sorted(utils.get_generated_files_in_dir(folder_path))
 
-            exp_file_path = "ft/onto/example_import_ontology.py"
+            exp_file_path = [
+                "ft/onto/__init__.py",
+                "ft/onto/example_import_ontology.py",
+            ]
             exp_files = sorted(
-                [f"{os.path.join(folder_path, exp_file_path)}"]
+                [
+                    f"{os.path.join(folder_path, file)}"
+                    for file in exp_file_path
+                ]
             )
 
             self.assertEqual(gen_files, exp_files)
