@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-from typing import List, Tuple, Any, Optional, Union, Dict
+from typing import List, Tuple, Any, Optional, Union, Dict, Sequence
+
 import numpy as np
 import torch
 
@@ -78,10 +79,10 @@ class Converter:
                 it will raise an exception if the target data cannot be
                 converted to `numpy.ndarray` or `torch.tensor`.
 
-        .. note::
-            If `need_pad` in :class:`forte.data.converter.Feature`
-            is True and `to_torch` is True, `to_torch` will overwrite the
-            effect of `to_numpy`.
+            .. note::
+                If `need_pad` in :class:`forte.data.converter.Feature`
+                is True and `to_torch` is True, `to_torch` will overwrite the
+                effect of `to_numpy`.
         """
         return {"to_numpy": True, "to_torch": True}
 
@@ -103,7 +104,7 @@ class Converter:
 
     def convert(
         self, features: List[Feature]
-    ) -> Tuple[MatrixLike, List[MatrixLike]]:
+    ) -> Tuple[MatrixLike, Sequence[MatrixLike]]:
         """
         Convert a list of Features to matrix-like form, where
 
@@ -335,7 +336,6 @@ class Converter:
                         queue.append(sub_feature)
 
                 size -= 1
-
             curr_max_len = next_max_len
 
         return dtype
