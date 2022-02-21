@@ -14,9 +14,12 @@
 """
 Unit tests for AudioAnnotation.
 """
+from array import array
 import os
 import unittest
+import numpy as np
 from typing import Dict, List
+
 from numpy import array_equal
 
 from forte.pipeline import Pipeline
@@ -129,6 +132,7 @@ class AudioAnnotationTest(unittest.TestCase):
         self._pipeline.add(TextUtteranceProcessor())
         self._pipeline.initialize()
 
+
     def test_audio_annotation(self):
 
         # Test `DataPack.get_span_audio()` with None audio payload
@@ -136,10 +140,38 @@ class AudioAnnotationTest(unittest.TestCase):
             pack: DataPack = DataPack()
             pack.set_text("test text")
             pack.get_span_audio(begin=0, end=1)
-
         # Verify the annotations of each datapack
         for pack in self._pipeline.process_dataset(self._test_audio_path):
+            # test get all audio annotation
+            # test get selective fields data from subclass of AudioAnnotation
+            raw_data_generator = pack.get_data(AudioAnnotation,
+                                     {Recording:
+                                         {"fields": ["recording_class"]},
+                                    AudioUtterance:
+                                        {"fields": ["speaker"]}}
+                                    )
+            for data_instance in pack.get(AudioAnnotation):
+                raw_data = next(raw_data_generator)
+                
+                self.assertTrue('Recording' in raw_data.keys() and
+                                "recording_class" in raw_data['Recording'])
+                self.assertTrue('AudioUtterance' in raw_data.keys() and
+                                    "speaker" in raw_data['AudioUtterance'])
+                # test grouped data
+                if isinstance(data_instance, Recording):
+                    self.assertTrue(array_equal(np.array([data_instance.audio]), raw_data['Recording']['audio']))
+                    self.assertTrue(data_instance.recording_class ==np.squeeze(raw_data['Recording']['recording_class']).tolist())
+                elif isinstance(data_instance, AudioUtterance):
+                    self.assertTrue(array_equal(np.array([data_instance.audio]), raw_data['AudioUtterance']['audio']))
+                    self.assertTrue(data_instance.speaker
+                                ==raw_data['AudioUtterance']['speaker'][0])
 
+            # check non-existence of non-requested data fields
+            raw_data_generator = pack.get_data(AudioAnnotation)
+            for raw_data in raw_data_generator:
+                self.assertFalse("Recording" in raw_data)
+                self.assertFalse("AudioUtterance" in raw_data)
+            
             # Check Recording
             recordings = list(pack.get(Recording))
             self.assertEqual(len(recordings), 1)

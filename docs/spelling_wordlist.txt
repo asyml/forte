@@ -139,6 +139,7 @@ docstrings
 numpy
 jsonpickle
 crowdworkers
+subtype
 subword
 wikipedia
 sortedlist
@@ -149,3 +150,4 @@ url
 nd
 Deque
 pytest
+
