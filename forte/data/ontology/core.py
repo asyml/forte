@@ -610,7 +610,7 @@ class FNdArray:
     """
 
     def __init__(
-        self, dtype: Optional[str] = None, shape: Optional[Iterable[int]] = None
+        self, dtype: Optional[str] = None, shape: Optional[List[int]] = None
     ):
         super().__init__()
         self._dtype: Optional[np.dtype] = (
