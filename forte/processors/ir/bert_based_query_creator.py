@@ -108,7 +108,7 @@ class BertBasedQueryCreator(QueryProcessor):
 
     def _process_query(
         self, input_pack: MultiPack
-    ) -> Tuple[DataPack, Dict[str, Any]]:
+    ) -> Tuple[DataPack, np.ndarray]:
         query_pack: DataPack = input_pack.get_pack(self.config.query_pack_name)
         context = [query_pack.text]
 

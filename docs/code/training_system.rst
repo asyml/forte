@@ -28,6 +28,11 @@ Converter
 .. autoclass:: forte.data.converter.converter.Converter
     :members:
 
+:hidden:`Feature`
+--------------------
+.. autoclass:: forte.data.converter.feature.Feature
+    :members:
+
 
 Extractor
 ================================
@@ -40,6 +45,16 @@ Extractor
 :hidden:`AttributeExtractor`
 ---------------------------------------
 .. autoclass:: forte.data.extractors.attribute_extractor.AttributeExtractor
+    :members:
+
+:hidden:`LinkExtractor`
+---------------------------------------
+.. autoclass:: forte.data.extractors.relation_extractor.LinkExtractor
+    :members:
+
+:hidden:`SubwordExtractor`
+---------------------------------------
+.. autoclass:: forte.data.extractors.subword_extractor.SubwordExtractor
     :members:
 
 :hidden:`CharExtractor`
