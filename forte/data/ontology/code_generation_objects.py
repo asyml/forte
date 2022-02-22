@@ -679,6 +679,7 @@ class ModuleWriter:
         entry_dir_split = split_file_path(self.pkg_dir)
 
         rel_dir_paths = it.accumulate(entry_dir_split, os.path.join)
+        count = 0
         for rel_dir_path in rel_dir_paths:
             temp_path = os.path.join(tempdir, rel_dir_path)
             if not os.path.exists(temp_path):
@@ -690,21 +691,18 @@ class ModuleWriter:
                 Path(os.path.join(temp_path, AUTO_GEN_FILENAME)).touch()
 
             # Create init file
-            if not use_name_space_packaging:
+            if (
+                use_name_space_packaging
+                and count != 0
+                or not use_name_space_packaging
+            ):
                 if not dest_path_exists or include_init:
                     init_file_path = os.path.join(temp_path, "__init__.py")
                     with open(
                         init_file_path, "w", encoding="utf-8"
                     ) as init_file:
                         init_file.write(f"# {AUTO_GEN_SIGNATURE}\n")
-
-            elif temp_path == os.path.join(tempdir, self.pkg_dir):
-                if not dest_path_exists or include_init:
-                    init_file_path = os.path.join(temp_path, "__init__.py")
-                    with open(
-                        init_file_path, "w", encoding="utf-8"
-                    ) as init_file:
-                        init_file.write(f"# {AUTO_GEN_SIGNATURE}\n")
+            count += 1
 
     def write(
         self,
