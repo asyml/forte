@@ -2,7 +2,7 @@
 
 NLP with Forte
 *********************
-
+This tutorial section is currently **in progress** so some sections may be incomplete.
 
 Chapter 1. Handling Structured Data
 ====================================
