@@ -33,13 +33,13 @@ class BaseStore:
         """
 
     @abstractmethod
-    def add_annotation_raw(self, type_id: int, begin: int, end: int) -> int:
+    def add_annotation_raw(self, type_name: str, begin: int, end: int) -> int:
         r"""This function adds an annotation entry with `begin` and `end`
-        indices to the (`type_id`)th sortedlist in `self.__elements`,
+        indices to the `type_name` sortedlist in `self.__elements`,
         returns the `tid` for the inserted entry.
 
         Args:
-            type_id (int): The index of Annotation sortedlist in `self.__elements`.
+            type_name (str): The index of Annotation sortedlist in `self.__elements`.
             begin (int): Begin index of the entry.
             end (int): End index of the entry.
         Returns:
@@ -49,37 +49,39 @@ class BaseStore:
 
     @abstractmethod
     def add_link_raw(
-        self, type_id: int, parent_tid: int, child_tid: int
+        self, type_name: str, parent_tid: int, child_tid: int
     ) -> Tuple[int, int]:
         r"""This function adds a link entry with `parent_tid` and `child_tid`
-        to the (`type_id`)th list in `self.__elements`, returns the `tid` and the
+        to the `type_name` list in `self.__elements`, returns the `tid` and the
         `index_id` for the inserted entry in the list. This `index_id` is the
-        index of the entry in the (`type_id`)th list.
+        index of the entry in the `type_name` list.
 
         Args:
-            type_id (int): The index of Link list in `self.__elements`.
+            type_name (str): The index of Link list in `self.__elements`.
             parent_tid (int): `tid` of the parent entry.
             child_tid (int): `tid` of the child entry.
 
         Returns:
-            `tid` of the entry and its index in the (`type_id`)th list.
+            `tid` of the entry and its index in the `type_name` list.
 
         """
         raise NotImplementedError
 
     @abstractmethod
-    def add_group_raw(self, type_id: int, member_type: str) -> Tuple[int, int]:
+    def add_group_raw(
+        self, type_name: str, member_type: str
+    ) -> Tuple[int, int]:
         r"""This function adds a group entry with `member_type` to the
-        (`type_id`)th list in `self.__elements`, returns the `tid` and the
+        `type_name` list in `self.__elements`, returns the `tid` and the
         `index_id` for the inserted entry in the list. This `index_id` is the
-        index of the entry in the (`type_id`)th list.
+        index of the entry in the `type_name` list.
 
         Args:
-            type_id (int): The index of Group list in `self.__elements`.
+            type_name (str): The index of Group list in `self.__elements`.
             member_type (str): Fully qualified name of its members.
 
         Returns:
-            `tid` of the entry and its index in the (`type_id`)th list.
+            `tid` of the entry and its index in the `type_name` list.
 
         """
         raise NotImplementedError
@@ -154,25 +156,25 @@ class BaseStore:
     @abstractmethod
     def get_entry(self, tid: int) -> Tuple[List, int, int]:
         r"""Look up the entry_dict with key `tid`. Return the entry,
-        its `type_id`, and its `index_id` in the `entry_type` list.
+        its `type_name`, and its `index_id` in the `entry_type` list.
 
         Args:
             tid (int): Unique id of the entry.
 
         Returns:
-            The entry which `tid` corresponds to, its `type_id` and its index
+            The entry which `tid` corresponds to, its `type_name` and its index
             in the `entry_type` list.
 
         """
         raise NotImplementedError
 
     @abstractmethod
-    def get(self, type_id: int, include_sub_type: bool) -> Iterator[List]:
+    def get(self, type_name: str, include_sub_type: bool) -> Iterator[List]:
         r"""This function fetches entries from the data store of
-        type self.__type_dict[`type_id`].
+        type `type_name`.
 
         Args:
-            type_id (int)): The index of the list in `self.__elements`.
+            type_name (str): The index of the list in `self.__elements`.
             include_sub_type: A boolean to indicate whether get its subclass.
 
         Returns:
