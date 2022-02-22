@@ -67,7 +67,7 @@ Chapter 6. Text Generation
 
 .. rst-class:: page-break
 
-Chapter 7. Question Answering System
+Chapter 7. Question Answering
 =====================================
 .. toctree::
    :maxdepth: 2
@@ -85,7 +85,7 @@ Chapter 8. Chatbot
 
 .. rst-class:: page-break
 
-Chapter 9. Task on Other modalities
+Chapter 9. Tasks on Other modalities
 ====================================
 .. toctree::
    :maxdepth: 2
