@@ -1,7 +1,5 @@
 Welcome to Forte's documentation!
 ******************************************
-This outline is currently **in progress** so many sections are empty.
-
 
 Overview
 ====================
