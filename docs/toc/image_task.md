@@ -1,2 +1,0 @@
-# Image Task #
-# Image Classification

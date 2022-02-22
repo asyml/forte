@@ -1,30 +1,32 @@
 
 
-TABLE OF CONTENT
+NLP with Forte
 *********************
 
 
-Chapter 2 Handling Structured Data
+Chapter 1. Handling Structured Data
 ====================================
 .. toctree::
    :maxdepth: 2
 
-   toc/ontology_generation.md
    toc/data_pack.md
+   toc/ontology_generation.md
+
 
 .. rst-class:: page-break
 
-Chapter 3. Building NLP Pipeline
+Chapter 2. Building NLP Pipeline
 ====================================
 .. toctree::
    :maxdepth: 2
 
    toc/text_classification.md
 
+
 .. rst-class:: page-break
 
 
-Chapter 4. Information Extraction
+Chapter 3. Information Extraction
 ====================================
 .. toctree::
    :maxdepth: 2
@@ -32,10 +34,11 @@ Chapter 4. Information Extraction
 
    toc/named_entity_recognition.md
    toc/relation_extraction.md
+   toc/medical_notes_analysis_system.md
 
 .. rst-class:: page-break
 
-Chapter 5. Information Retrieval
+Chapter 4. Information Retrieval
 ====================================
 .. toctree::
    :maxdepth: 2
@@ -47,7 +50,7 @@ Chapter 5. Information Retrieval
 
 .. rst-class:: page-break
 
-Chapter 6. Machine Translation
+Chapter 5. Machine Translation
 ====================================
 .. toctree::
    :maxdepth: 2
@@ -56,7 +59,7 @@ Chapter 6. Machine Translation
 
 .. rst-class:: page-break
 
-Chapter 7. Text Generation
+Chapter 6. Text Generation
 ====================================
 .. toctree::
    :maxdepth: 2
@@ -65,7 +68,7 @@ Chapter 7. Text Generation
 
 .. rst-class:: page-break
 
-Chapter 8. Question Answering System
+Chapter 7. Question Answering System
 =====================================
 .. toctree::
    :maxdepth: 2
@@ -74,7 +77,7 @@ Chapter 8. Question Answering System
 
 .. rst-class:: page-break
 
-Chapter 9. Chatbot
+Chapter 8. Chatbot
 ==================
 .. toctree::
    :maxdepth: 2
@@ -83,13 +86,11 @@ Chapter 9. Chatbot
 
 .. rst-class:: page-break
 
-Chapter 10. Task on Other modalities
+Chapter 9. Task on Other modalities
 ====================================
 .. toctree::
    :maxdepth: 2
 
    toc/audio_processing.md
 
-   toc/audio_task.md
-
-   toc/image_task.md
+   toc/image_processing.md

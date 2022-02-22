@@ -5,14 +5,12 @@ state-of-the-art NLP and ML technologies in a highly-composable fashion, includi
 spectrum of tasks ranging from Information Retrieval, Natural Language Understanding to Natural
 Language Generation.
 
-.. rst-class:: page-break
-
 With Forte, it is extremely simple to build an integrated system that can search documents,
 analyze and extract information and generate language all in one place. This allows the developer
 to fully utilize and combine the strength and results from each step, and allow the system to
 make fully informed decision at the end of the pipeline.
 
-While it is quite easy to combine arbitrary 3rd party tools (Check out these [examples](./examples)!),
+While it is quite easy to combine arbitrary 3rd party tools (Check out these [examples](../index_appendices.rst)!),
 Forte also brings technology to you by supporting deep learning via Texar, and by providing a convenient
 model data interface that allows user to cast tasks to models.
 
@@ -124,7 +122,7 @@ for pack in pl.process_dataset(config.config_data.test_path):
 
 ```
 
-Many more examples are available [here](examples.md). We are also working assembling some
+Many more examples are available [here](../index_appendices.rst). We are also working assembling some
 interesting [tutorials](https://github.com/asyml/forte/wiki)
 
 

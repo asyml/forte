@@ -3,12 +3,19 @@ Welcome to Forte's documentation!
 This outline is currently **in progress** so many sections are empty.
 
 
-TABLE OF CONTENT
+Overview
 ====================
 .. toctree::
    :maxdepth: 2
 
    toc/overview.md
+
+
+
+NLP with Forte
+====================
+.. toctree::
+   :maxdepth: 2
 
    index_toc.rst
 
