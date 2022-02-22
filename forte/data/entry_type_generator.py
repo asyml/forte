@@ -1,4 +1,5 @@
 import functools
+import importlib
 
 __all__ = ["EntryTypeGenerator"]
 
@@ -8,6 +9,16 @@ def _get_type_attributes():
     type_attributes = {}
 
     return type_attributes
+
+
+def _get_entry_attribute_by_class(input_entry_class: str):
+    modname, _, clsname = input_entry_class.rpartition('.')
+    mod = importlib.import_module(modname)
+    try:
+        return list(getattr(mod, clsname).__annotations__.keys())
+    except AttributeError:
+        return []
+
 
 
 class EntryTypeGenerator:
@@ -39,3 +50,8 @@ class EntryTypeGenerator:
 
         """
         return _get_type_attributes()
+
+    @staticmethod
+    def get_entry_attribute_by_class(input_entry_class: str):
+        return _get_entry_attribute_by_class(input_entry_class)
+
