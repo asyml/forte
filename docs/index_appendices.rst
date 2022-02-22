@@ -11,16 +11,16 @@ Glossary
    :maxdepth: 2
 
 * DataPack: a data class that stores structured data and supports efficient data retrieval.
-    -  `DataPack Example: <https://github.com/asyml/forte/blob/master/docs/tutorial/handling_structued_data.ipynb>`_
+    -  `DataPack Example <https://github.com/asyml/forte/blob/master/docs/tutorial/handling_structued_data.ipynb>`_
     - API: :class:`~forte.data.data_pack.DataPack`
 
 * Pipeline: an inference system that contains a set of processing components.
-    - `Pipeline Example: <https://github.com/feipenghe/forte/tree/master/examples/pipelines>`_
+    - `Pipeline Example <https://github.com/feipenghe/forte/tree/master/examples/pipelines>`_
     - API: :class:`~forte.pipeline.Pipeline`
 
 * Ontology: a system that defines the relations between NLP annotations, for example, the relation between words and documents, or between two words.
-    - `An ontology Example: <https://github.com/asyml/forte/tree/master/examples/ontology>`_
-    - `An ontology tutorial: <https://github.com/asyml/forte/blob/0c1dec1311f27eae150287a8aa405632b265e03e/docs/tutorial/ontology_generation.md>`_
+    - `An ontology Example <https://github.com/asyml/forte/tree/master/examples/ontology>`_
+    - `An ontology tutorial <https://github.com/asyml/forte/blob/0c1dec1311f27eae150287a8aa405632b265e03e/docs/tutorial/ontology_generation.md>`_
 
 
 
