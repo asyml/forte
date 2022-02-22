@@ -127,6 +127,8 @@ the [Google Python Style guide](http://google.github.io/styleguide/pyguide.html)
 project code is examined using `pylint`, `flake8`, `mypy`, `black` and `sphinx-build` which will be run
 automatically in CI. It's recommended that you should run these tests locally before submitting your pull request to save time. Refer to the github workflow [here](https://github.com/asyml/forte/blob/master/.github/workflows/main.yml) for detailed steps to carry out the tests. Basically what you need to do is to install the requirements (check out the `Install dependencies` sections) and run the commands (refer to the steps in `Format check with Black`, `Lint with flake8`, `Lint with pylint`, `Lint main code with mypy when torch version is not 1.5.0`, `Build Docs`, etc.).
 
+We also recommend using tools `pre-commit` that automates the checking process before each commit since checking format is a repetitive process. We have the configuration file `.pre-commit-config.yaml` that lists several plugins including `black` to check format in the project root folder. Developers only need to install the package by `pip install pre-commit`.
+
 ### Docstring
 
  All public methods require docstring and type annotation. It is recommended to add docstring for all functions. The docstrings should follow the [`Comments and Docstrings` section](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings) of Google Python Style guide. We will include a pylint plugin called [docparams](https://github.com/PyCQA/pylint/blob/main/pylint/extensions/docparams.rst) to validate the parameters of docstrings:
@@ -136,7 +138,7 @@ automatically in CI. It's recommended that you should run these tests locally be
 
 You should take special care of the indentations in your documentation. Make sure the indents are consistent and follow the Google Style guide. All sections other than the heading should maintain a hanging indent of two or four spaces. Refer to the examples [here](https://google.github.io/styleguide/pyguide.html#383-functions-and-methods) for what is expected and what are the requirements for different sections like `args`, `lists`, `returns`, etc. Invalid indentations might trigger errors in `sphinx-build` and will cause confusing rendering of the documentation. You can run `sphinx-build` locally to see whether the generated docs look reasonable.
 
-Another aspect that should be noted is the format of links or cross-references of python objects. Make sure to follow the [sphinx cross-referencing syntax](https://www.sphinx-doc.org/en/master/usage/restructuredtext/roles.html#xref-syntax). The references will be checked by [sphinx-build nit-picky mode](https://www.sphinx-doc.org/en/master/man/sphinx-build.html#cmdoption-sphinx-build-n) which raises warnings for all the missing and unresolvable links. 
+Another aspect that should be noted is the format of links or cross-references of python objects. Make sure to follow the [sphinx cross-referencing syntax](https://www.sphinx-doc.org/en/master/usage/restructuredtext/roles.html#xref-syntax). The references will be checked by [sphinx-build nit-picky mode](https://www.sphinx-doc.org/en/master/man/sphinx-build.html#cmdoption-sphinx-build-n) which raises warnings for all the missing and unresolvable links.
 
 ### Git Commit Style
 
