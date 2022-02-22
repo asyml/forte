@@ -1,36 +1,34 @@
 Welcome to Forte's documentation!
 ******************************************
-
-.. toctree::
-   :maxdepth: 2
-   
-   outline.md
+This outline is currently **in progress** so many sections are empty.
 
 
-.. toctree::
-   :maxdepth: 2
-
-   tutorial/get_started.md
-
+Overview
+====================
 .. toctree::
    :maxdepth: 2
 
-   tutorial/examples.md
-   tutorial/ontology_generation.md
-   tutorial/audio_processing.md
-   tutorial/data_pack.md
+   toc/overview.md
+
+
+
+NLP with Forte
+====================
+.. toctree::
+   :maxdepth: 2
+
+   index_toc.rst
+
+APPENDICES
+===========
+.. toctree::
+   :maxdepth: 2
+
+   index_appendices.rst
 
 API
 ====
-
 .. toctree::
    :maxdepth: 2
 
-   code/common.rst
-   code/data.rst
-   code/pipeline.rst
-   code/processors.rst
-   code/models.rst
-   code/training_system.rst
-   code/data_aug.rst
-   code/vocabulary.rst
+   index_api.rst

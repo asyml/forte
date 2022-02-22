@@ -142,3 +142,11 @@ crowdworkers
 subtype
 subword
 wikipedia
+sortedlist
+stopword
+stopwords
+hparams
+url
+nd
+Deque
+pytest
