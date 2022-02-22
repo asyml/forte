@@ -21,7 +21,7 @@ class EntryTypeGenerator:
         While initializing the new data structure, we need a list of all the valid annotations,
         links and groups. For example, for annotations, we want to have a list of types as strings,
         ["Token", "Subword", "Sentence", ...], including all the types defined in ft.onto and
-        ftx.*. Please notice that users could also create their own types of data which inherit
+        ftx.onto. Please notice that users could also create their own types of data which inherit
         "forte.data.ontology.core.Entry".
         For each type, we want to obtain all the attributes. For example, for sentence we want to
         get a list of ["speaker", "part_id", "sentiment", "classification", "classifications"]. We
