@@ -9,7 +9,6 @@ Chapter 1. Handling Structured Data
 .. toctree::
    :maxdepth: 2
 
-   toc/data_pack.md
    toc/ontology_generation.md
 
 
