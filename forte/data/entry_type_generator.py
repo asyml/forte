@@ -12,13 +12,12 @@ def _get_type_attributes():
 
 
 def _get_entry_attribute_by_class(input_entry_class: str):
-    modname, _, clsname = input_entry_class.rpartition('.')
+    modname, _, clsname = input_entry_class.rpartition(".")
     mod = importlib.import_module(modname)
     try:
         return list(getattr(mod, clsname).__annotations__.keys())
     except AttributeError:
         return []
-
 
 
 class EntryTypeGenerator:
@@ -53,5 +52,24 @@ class EntryTypeGenerator:
 
     @staticmethod
     def get_entry_attribute_by_class(input_entry_class: str):
-        return _get_entry_attribute_by_class(input_entry_class)
+        """
+        For each type, we want to obtain all the attributes. For example, for sentence we want to
+        get a list of ["speaker", "part_id", "sentiment", "classification", "classifications"].
+        We want to get the attributes for each type of entry as a dictionary. The solution
+        looks like the following:
 
+        .. code-block::python
+
+            # input can be a string
+            entry_name = "ft.onto.base_ontology.Sentence"
+            # or a class
+            entry_class = ft.onto.base_ontology.Sentence
+
+            # function signature
+            def get_entry_attribute_by_class(input_entry_class: Union[str, class]):
+
+            # output
+            ["speaker", "part_id", "sentiment", "classification", "classifications"]
+
+        """
+        return _get_entry_attribute_by_class(input_entry_class)

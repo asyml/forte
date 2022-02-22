@@ -17,9 +17,43 @@ class EntryTypeGeneratorTest(unittest.TestCase):
         self.assertLessEqual(mock_get_type_attributes.call_count, 1)
 
     def test_get_entry_attribute_by_class(self):
-        entry_name = "ft.onto.base_ontology.Sentence"
-        results = EntryTypeGenerator.get_entry_attribute_by_class(entry_name)
-        print(results)
+        entry_name_attributes_dict = {
+            "ft.onto.base_ontology.Sentence": [
+                "speaker",
+                "part_id",
+                "sentiment",
+                "classification",
+                "classifications",
+            ],
+            "ft.onto.base_ontology.Token": [
+                "pos",
+                "ud_xpos",
+                "lemma",
+                "chunk",
+                "ner",
+                "sense",
+                "is_root",
+                "ud_features",
+                "ud_misc",
+            ],
+            "ft.onto.base_ontology.Title": [],
+            "ft.onto.metric.SingleMetric": ["value"],
+            "ftx.medical.UMLSConceptLink": [
+                "cui",
+                "name",
+                "definition",
+                "tuis",
+                "aliases",
+                "score",
+            ],
+        }
+        for entry_name in entry_name_attributes_dict.keys():
+            attribute_result = EntryTypeGenerator.get_entry_attribute_by_class(
+                entry_name
+            )
+            self.assertEqual(
+                attribute_result, entry_name_attributes_dict[entry_name]
+            )
 
 
 if __name__ == "__main__":
