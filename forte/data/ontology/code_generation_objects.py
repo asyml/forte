@@ -694,9 +694,7 @@ class ModuleWriter:
                 Path(os.path.join(temp_path, AUTO_GEN_FILENAME)).touch()
 
             # Create init file
-            if (
-                count > namespace_depth
-            ):
+            if count > namespace_depth:
                 if not dest_path_exists or include_init:
                     init_file_path = os.path.join(temp_path, "__init__.py")
                     with open(
