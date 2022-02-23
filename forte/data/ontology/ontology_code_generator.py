@@ -448,7 +448,7 @@ class OntologyCodeGenerator:
         include_init: bool = True,
         merged_path: Optional[str] = None,
         lenient_prefix=False,
-        use_name_space_packaging: bool = False,
+        namespace_depth: int = -1,
     ) -> Optional[str]:
         r"""Function to generate and save the python ontology code after reading
         ontology from the input json file. This is the main entry point to
@@ -470,8 +470,11 @@ class OntologyCodeGenerator:
                 be written at this path.
             lenient_prefix: if `True`, will not enforce the entry name to
                 match a known prefix.
-            use_name_space_packaging: True if `__init__.py` is not to be generated at the top level;
-                False, the `__init__.py` is to be generated at the top level
+            namespace_depth: set an integer argument namespace_depth to allow customized number of levels of namespace packaging.
+              The generation of __init__.py for all the directory levels above namespace_depth will be disabled.
+              For example, if we have an ontology level1.levle2.level3.something and namespace_depth=2,
+              then we remove __init__.py under level1 and level1/level2 while keeping __init__.py under level1/level2/level3.
+              When namespace_depth<=0, we just disable namespace packaging and include __init__.py in all directory levels.
 
         Returns:
             Directory path in which the modules are created: either one of
@@ -509,7 +512,7 @@ class OntologyCodeGenerator:
         for writer in self.module_writers.writers():
             logging.info("Writing module: %s", writer.module_name)
             writer.write(
-                tempdir, destination_dir, include_init, use_name_space_packaging
+                tempdir, destination_dir, include_init, namespace_depth
             )
             logging.info("Done writing.")
 

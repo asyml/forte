@@ -658,7 +658,7 @@ class ModuleWriter:
         tempdir: str,
         destination: str,
         include_init: bool,
-        use_name_space_packaging: bool,
+        namespace_depth: int,
     ):
         """
         Create entry sub-directories with .generated file to indicate the
@@ -672,14 +672,17 @@ class ModuleWriter:
               placed
             include_init: True if `__init__.py` is to be generated in existing
               packages in which `__init__.py` does not already exists
-            use_name_space_packaging: True if `__init__.py` is not to be generated at the top level;
-                False, the `__init__.py` is to be generated at the top level
+            namespace_depth: set an integer argument namespace_depth to allow customized number of levels of namespace packaging.
+              The generation of __init__.py for all the directory levels above namespace_depth will be disabled.
+              For example, if we have an ontology level1.levle2.level3.something and namespace_depth=2,
+              then we remove __init__.py under level1 and level1/level2 while keeping __init__.py under level1/level2/level3.
+              When namespace_depth<=0, we just disable namespace packaging and include __init__.py in all directory levels.
         Returns:
         """
         entry_dir_split = split_file_path(self.pkg_dir)
 
         rel_dir_paths = it.accumulate(entry_dir_split, os.path.join)
-        count = 0
+        count = 1
         for rel_dir_path in rel_dir_paths:
             temp_path = os.path.join(tempdir, rel_dir_path)
             if not os.path.exists(temp_path):
@@ -692,9 +695,7 @@ class ModuleWriter:
 
             # Create init file
             if (
-                use_name_space_packaging
-                and count != 0
-                or not use_name_space_packaging
+                count > namespace_depth
             ):
                 if not dest_path_exists or include_init:
                     init_file_path = os.path.join(temp_path, "__init__.py")
@@ -709,7 +710,7 @@ class ModuleWriter:
         tempdir: str,
         destination: str,
         include_init: bool,
-        use_name_space_packaging: bool,
+        namespace_depth: int,
     ):
         """
         Write the entry information to file.
@@ -719,15 +720,18 @@ class ModuleWriter:
             destination: The actual folder to place the generated code.
             include_init: Whether to include `__init__.py` in the existing
             directories if it does not already exist.
-            use_name_space_packaging: True if `__init__.py` is not to be generated at the top level;
-                False, the `__init__.py` is to be generated at the top level
+            namespace_depth: set an integer argument namespace_depth to allow customized number of levels of namespace packaging.
+              The generation of __init__.py for all the directory levels above namespace_depth will be disabled.
+              For example, if we have an ontology level1.levle2.level3.something and namespace_depth=2,
+              then we remove __init__.py under level1 and level1/level2 while keeping __init__.py under level1/level2/level3.
+              When namespace_depth<=0, we just disable namespace packaging and include __init__.py in all directory levels.
 
         Returns:
 
         """
 
         self.make_module_dirs(
-            tempdir, destination, include_init, use_name_space_packaging
+            tempdir, destination, include_init, namespace_depth
         )
         full_path = os.path.join(tempdir, self.pkg_dir, self.file_name) + ".py"
 

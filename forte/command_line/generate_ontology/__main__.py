@@ -194,6 +194,18 @@ def main():
         help="If True, will not enforce prefix check.",
     )
 
+    create_parser.add_argument(
+        "-n",
+        "--namespace_depth",
+        type=int,
+        required=False,
+        default=-1,
+        help="set an integer argument namespace_depth" 
+             "to allow customized number of levels of namespace packaging."
+             "The generation of __init__.py for all the" 
+             "directory levels above namespace_depth will be disabled.",
+    )
+
     create_parser.set_defaults(func=create)
 
     # Parsing for cleaning.
