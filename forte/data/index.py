@@ -32,6 +32,8 @@ from forte.data.ontology.core import GroupType, LinkType, EntryType
 
 logger = logging.getLogger(__name__)
 
+__all__ = ["BaseIndex"]
+
 
 class BaseIndex(Generic[EntryType]):
     r"""A set of indexes used in :class:`BasePack`:

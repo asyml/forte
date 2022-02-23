@@ -16,12 +16,11 @@ Unit tests for distribution word replacement op.
 """
 import unittest
 
-from forte.data.data_pack import DataPack
 from ft.onto.base_ontology import Token
+from forte.data.data_pack import DataPack
 from forte.processors.data_augment.algorithms.distribution_replacement_op import (
     DistributionReplacementOp,
 )
-from forte.processors.data_augment.algorithms.sampler import UniformSampler
 
 
 class TestDistributionReplacementOp(unittest.TestCase):
@@ -33,17 +32,57 @@ class TestDistributionReplacementOp(unittest.TestCase):
         data_pack.add_all_remaining_entries()
 
         self.word_list = ["apple", "banana", "orange"]
-        self.sampler = UniformSampler(self.word_list)
+        self.word_dict = {
+            "apple": 1,
+            "banana": 2,
+            "mango": 3,
+        }
 
     def test_replace(self):
-        configs = {"prob": 1.0}
-        replacement = DistributionReplacementOp(self.sampler, configs)
+        configs = {
+            "prob": 1.0,
+            "sampler_config": {
+                "type": "forte.processors.data_augment.algorithms.sampler.UniformSampler",
+                "kwargs": {"sampler_data": self.word_list},
+            },
+        }
+        replacement = DistributionReplacementOp(configs)
         word = replacement.replace(self.token)
         self.assertIn(word[1], self.word_list)
-        configs = {"prob": 0}
-        replacement = DistributionReplacementOp(self.sampler, configs)
+
+        configs = {
+            "prob": 0,
+            "sampler_config": {
+                "type": "forte.processors.data_augment.algorithms.sampler.UniformSampler",
+                "kwargs": {"sampler_data": self.word_list},
+            },
+        }
+        replacement = DistributionReplacementOp(configs)
         word = replacement.replace(self.token)
         self.assertEqual(word[1], self.word)
+
+        configs = {
+            "prob": 1.0,
+            "sampler_config": {
+                "type": "forte.processors.data_augment.algorithms.sampler.UnigramSampler",
+                "kwargs": {"sampler_data": self.word_dict},
+            },
+        }
+        replacement = DistributionReplacementOp(configs)
+        word = replacement.replace(self.token)
+        self.assertIn(word[1], self.word_dict.keys())
+
+        configs = {
+            "prob": 0.5,
+            "sampler_config": {
+                "type": "forte.processors.data_augment.algorithms.sampler.UnigramSampler",
+                "kwargs": {"sampler_data": self.word_dict},
+            },
+        }
+        replacement = DistributionReplacementOp(configs)
+        word = replacement.replace(self.token)
+        possible_values = list(self.word_dict.keys()) + [self.word]
+        self.assertIn(word[1], possible_values)
 
 
 if __name__ == "__main__":

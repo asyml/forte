@@ -106,8 +106,8 @@ class BaseReader(PipelineComponent[PackType], ABC):
         """
         return {"zip_pack": False, "serialize_method": "jsonpickle"}
 
-    @property
-    def pack_type(self):
+    @staticmethod
+    def pack_type():
         raise NotImplementedError
 
     @abstractmethod
@@ -210,7 +210,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
                     if self._cache_directory is not None:
                         self.cache_data(collection, pack, not_first)
 
-                    if not isinstance(pack, self.pack_type):
+                    if not isinstance(pack, self.pack_type()):
                         raise ValueError(
                             f"No Pack object read from the given "
                             f"collection {collection}, returned {type(pack)}."
@@ -355,10 +355,10 @@ class BaseReader(PipelineComponent[PackType], ABC):
         with open(cache_filename, "r", encoding="utf-8") as cache_file:
             for line in cache_file:
                 pack = DataPack.from_string(line.strip())
-                if not isinstance(pack, self.pack_type):
+                if not isinstance(pack, self.pack_type()):
                     raise TypeError(
                         f"Pack deserialized from {cache_filename} "
-                        f"is {type(pack)}, but expect {self.pack_type}"
+                        f"is {type(pack)}, but expect {self.pack_type()}"
                     )
                 yield pack
 
@@ -380,8 +380,8 @@ class BaseReader(PipelineComponent[PackType], ABC):
 class PackReader(BaseReader[DataPack], ABC):
     r"""A Pack Reader reads data into :class:`DataPack`."""
 
-    @property
-    def pack_type(self):
+    @staticmethod
+    def pack_type():
         return DataPack
 
 
@@ -390,6 +390,6 @@ class MultiPackReader(BaseReader[MultiPack], ABC):
     data readers which return :class:`MultiPack`.
     """
 
-    @property
-    def pack_type(self):
+    @staticmethod
+    def pack_type():
         return MultiPack

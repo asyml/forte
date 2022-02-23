@@ -12,11 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import yaml
-
 from termcolor import colored
 import torch
-
-from forte.nltk import NLTKSentenceSegmenter, NLTKWordTokenizer, NLTKPOSTagger
+from fortex.nltk import NLTKSentenceSegmenter, NLTKWordTokenizer, NLTKPOSTagger
 from forte.common.configuration import Config
 from forte.data.multi_pack import MultiPack
 from forte.data.readers import MultiPackTerminalReader
@@ -45,7 +43,7 @@ def setup(config: Config) -> Pipeline:
     )
     query_pipeline.add(component=SearchProcessor(), config=config.searcher)
 
-    top_response_pack_name = config.indexer.response_pack_name + "_0"
+    top_response_pack_name = config.indexer.response_pack_name_prefix + "_0"
 
     query_pipeline.add(
         component=NLTKSentenceSegmenter(),
@@ -124,7 +122,6 @@ def main(config: Config):
             print()
 
             input(colored("Press ENTER to continue...\n", "green"))
-
 
 if __name__ == "__main__":
     all_config = Config(yaml.safe_load(open("config.yml", "r")), None)
