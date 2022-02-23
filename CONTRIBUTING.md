@@ -53,15 +53,22 @@ currently stored in two different repositories, as different projects.
 * forte.models: Contains our in-house development of some NLP models.
 * forte.common: configuration, exceptions and other sharable code.
 
-#### Core Packages in Forte Wrappers
+#### The `fortex` namespace and Forte Wrappers
 
-* `forte.xxx`: Forte Wrapper contains adapters of third party tools. Each tool is placed
-  in its own folder to avoid dependency conflicts. Each directory contains a standalone
+* `fortex.xxx`: Forte Wrapper contains adapters of third party tools. Each tool is installed
+  in its own namespace to avoid dependency conflicts. Each directory contains a standalone
   project and can be installed independently. *The project will be installed as
-  `forte.xxx` and under `forte/xxx` folder in the site-packages.* For
-  example, `forte.nltk` will be installed under `site_packages/forte/nltk` folder, and
-  the tool can be imported via `import fortex.nltk` and uninstalled
+  `fortex.xxx` and under `fortex/xxx` folder in the site-packages.* For
+  example, `fortex.nltk` will be installed under `site_packages/fortex/nltk` folder via
+  `pip isntall forte.nltk` and the tool can be imported via `import fortex.nltk` and uninstalled
   via `pip uninstall forte.nltk`.
+  
+### Ontology namespaces
+* The `ft.onto` namespace contains the core/basic ontology types defined by Forte, data types
+  in this namespace are mainly generic NLP concepts, such as "Sentence", "Token".
+* The `ftx` namespace supports namespace packaging:
+  * We use `ftx.onto` namespace to show extra types for demo/example purposes.
+  * We are also working one additional types in the `ftx.xxx` namespace types for certain domains.
 
 ### Report Bugs
 
@@ -99,15 +106,16 @@ Following the feature template, fill in the information in more details:
 ### Pull Requests
 
 When you have fixed a bug or implemented a new feature, you can create a pull request
-for review. Use the following simple PR templates to structure the PR:
+for review. 
 
-* [PR Template](https://github.com/asyml/forte/blob/master/.github/PULL_REQUEST_TEMPLATE.md)
+* Use a [PR Template](https://github.com/asyml/forte/blob/master/.github/PULL_REQUEST_TEMPLATE.md) to structure your PR, and here:
 
-Here is a detailed explanation of each section in the template:
-* The first line should always start with `This PR fixes [issue link]` or `This PR partially addresses [issue link]` where `[issue link]` can be replaced with a `#ISSUE_ID` associated to a specific [issue](https://github.com/asyml/forte/issues). This allows Github to automatically link your pull request to the corresponding issue. If this pull request will close the issue we use `fixes` otherwise we can say `partially addresses`.
-* **Description of changes**: You should include a description of the changes that you make. If the pull request is aimed to fix an issue, you can explain the approaches to address the problem.
-* **Possible influences of this PR**: List all the potential side-effects of your update. Examples include influences on compatibility, performance, API signature, etc.
-* **Test Conducted**: Describe the test cases to verify the changes in pull request. You should always create unit tests for your updates in the pull request and make sure they can cover all of the conditional branches, especially the ones related to corner cases where bugs usually stem from. We will use [Covergage](https://coverage.readthedocs.io/en/6.3/) to gauge the effectiveness of tests and you can refer to [Codecov report](https://about.codecov.io/language/python/) to see which lines are not visited by your test cases.
+  * The first line should always start with `This PR fixes [issue link]` or `This PR partially addresses [issue link]` where `[issue link]` can be replaced with a `#ISSUE_ID` associated to a specific [issue](https://github.com/asyml/forte/issues). This allows Github to automatically link your pull request to the corresponding issue. If this pull request will close the issue we use `fixes` otherwise we can say `partially addresses`.
+  * **Description of changes**: You should include a description of the changes that you make. If the pull request is aimed to fix an issue, you can explain the approaches to address the problem.
+  * **Possible influences of this PR**: List all the potential side-effects of your update. Examples include influences on compatibility, performance, API signature, etc.
+  * **Test Conducted**: Describe the test cases to verify the changes in pull request. You should always create unit tests for your updates in the pull request and make sure they can cover all of the conditional branches, especially the ones related to corner cases where bugs usually stem from. We will use [Covergage](https://coverage.readthedocs.io/en/6.3/) to gauge the effectiveness of tests and you can refer to [Codecov report](https://about.codecov.io/language/python/) to see which lines are not visited by your test cases.
+* Start your PR as draft and try to pass the Github Action CI check.
+* Mark the PR to be ready-for-review once you are satisfied with it.
 
 ### Using Labels
 
