@@ -15,9 +15,10 @@
 from typing import List, Iterator, Tuple, Optional, Any
 import uuid
 
+from sortedcontainers import SortedList
+
 from forte.utils import get_class
 from forte.data.base_store import BaseStore
-from forte.data.entry_type_generator import EntryTypeGenerator
 
 __all__ = ["DataStore"]
 
@@ -120,6 +121,8 @@ class DataStore(BaseStore):
         self.onto_file_path = onto_file_path
         self.__entry_type_idx = 3
 
+        # see https://github.com/asyml/forte/issues/570
+        self._type_attributes: dict = dict()
         """
         The `_type_attributes` is a private dictionary that provides
         `type_name` and the order of corresponding attributes except `index_id`.
@@ -150,10 +153,9 @@ class DataStore(BaseStore):
             #               "classification": 7, "classifications": 8},
             # }
         """
-        # Issue #570 implements get_type_attributes()
-        # see https://github.com/asyml/forte/issues/570
-        self._type_attributes: dict = EntryTypeGenerator.get_type_attributes()
 
+        # TODO: implement get_type_id_rev() (Issue #need creation)
+        self.__type_index_dict: dict = dict()
         """
         The `__type_index_dict` is a private dictionary that has reverse
         structure of `self.__type_dict`. It is only used for generators to map
@@ -174,9 +176,8 @@ class DataStore(BaseStore):
             #     "ft.onto.base_ontology.Sentence": 2,
             # }
         """
-        # TODO: implement get_type_id_rev() (Issue #need creation)
-        self.__type_index_dict: dict = {}
 
+        self.__elements: List = list()
         """
         The `__elements` is an underlying storage structure for all the entry
         data added by users in this DataStore class.
@@ -191,21 +192,38 @@ class DataStore(BaseStore):
                 ...
             ]
         """
-        self.__elements: List = []
 
+        self.__entry_dict: dict = dict()
         """
-        A dictionary that keeps record of all entrys with their tid.
-        It is a key-value map of {tid: entry data in list format}.
+        `__entry_dict` is a dictionary that keeps record of all entrys with
+        their tid. It is a key-value map of {tid: entry data in list format}.
 
         e.g., {1423543453: [begin, end, tid, type_name, attr_1, ..., attr_n],
         4345314235: [parent_tid, child_tid, tid, type_name, attr_1, ...,
                     attr_n, index_id]}
         """
-        self.__entry_dict: dict = {}
 
     def _new_tid(self) -> int:
         r"""This function generates a new `tid` for an entry."""
         return uuid.uuid4().int
+
+    def _add_new_type(self, type_name: str):
+        """
+        Add a new type input_entry_class into self._type_attributes.
+        This method will call get_entry_attribute_by_class(class)
+
+        Args:
+        input_entry_class: A string or class type representing a class
+        """
+        # check if type is in dictionary
+        if type_name in self._type_attributes:
+            return
+        # get attribute dictionary
+        self._type_attributes[type_name] = dict()
+        self.__type_index_dict[type_name] = len(self.__type_index_dict)
+        self.__elements.append(SortedList())
+        assert len(self.__elements) == len(self.__type_index_dict)
+        assert len(self.__type_index_dict) == len(self._type_attributes)
 
     def _new_annotation(self, type_name: str, begin: int, end: int) -> List:
         r"""This function generates a new annotation with default fields. All
@@ -225,6 +243,7 @@ class DataStore(BaseStore):
         tid: int = self._new_tid()
         entry: List[Any]
         entry = [begin, end, tid, type_name]
+        self._add_new_type(type_name)
         entry += len(self._type_attributes[type_name]) * [None]
         return entry
 
@@ -248,6 +267,7 @@ class DataStore(BaseStore):
         tid: int = self._new_tid()
         entry: List[Any]
         entry = [parent_tid, child_tid, tid, type_name]
+        self._add_new_type(type_name)
         entry += len(self._type_attributes[type_name]) * [None]
         return entry
 
@@ -267,6 +287,7 @@ class DataStore(BaseStore):
 
         tid: int = self._new_tid()
         entry = [member_type, [], tid, type_name]
+        self._add_new_type(type_name)
         entry += len(self._type_attributes[type_name]) * [None]
         return entry
 
