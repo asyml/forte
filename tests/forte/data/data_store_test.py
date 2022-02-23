@@ -148,6 +148,19 @@ class DataStoreTest(unittest.TestCase):
             ],
         }
 
+    def test_add_new_type(self):
+        # initialize
+        self.data_store._type_attributes = {}
+        self.data_store._DataStore__type_index_dict = {}
+        self.data_store._DataStore__elements = []
+
+        self.data_store._add_new_type("ft.onto.base_ontology.Document")
+        self.data_store._add_new_type("ft.onto.base_ontology.Sentence")
+        self.assertEqual(self.data_store._DataStore__type_index_dict["ft.onto.base_ontology.Document"], 0)
+        self.assertEqual(self.data_store._DataStore__type_index_dict["ft.onto.base_ontology.Sentence"], 1)
+        self.assertEqual(len(self.data_store._DataStore__elements), 2)
+        self.assertEqual(self.data_store._type_attributes["ft.onto.base_ontology.Sentence"], {})
+
     def test_add_annotation_raw(self):
         # # test add Document entry
         # self.data_store.add_annotation_raw(0, 1, 5)

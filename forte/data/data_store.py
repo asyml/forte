@@ -219,7 +219,7 @@ class DataStore(BaseStore):
         if type_name in self._type_attributes:
             return
         # get attribute dictionary
-        self._type_attributes[type_name] = dict()
+        self._type_attributes[type_name] = {}
         self.__type_index_dict[type_name] = len(self.__type_index_dict)
         self.__elements.append(SortedList())
         assert len(self.__elements) == len(self.__type_index_dict)
