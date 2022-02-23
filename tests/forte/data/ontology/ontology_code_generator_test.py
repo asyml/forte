@@ -184,13 +184,14 @@ class GenerateOntologyTest(unittest.TestCase):
         )
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_filename = _get_temp_filename(json_file_path, temp_dir)
+            set_namespace_depth = 1
             # Test with include_init = True, namespace_depth = int
             folder_path = self.generator.generate(
                 temp_filename,
                 temp_dir,
                 is_dry_run=False,
                 include_init=True,
-                namespace_depth=1,
+                namespace_depth=set_namespace_depth,
             )
             gen_files = sorted(utils.get_generated_files_in_dir(folder_path))
 
@@ -215,7 +216,7 @@ class GenerateOntologyTest(unittest.TestCase):
                 folder_path,
                 is_dry_run=False,
                 include_init=False,
-                namespace_depth=1,
+                namespace_depth=set_namespace_depth,
             )
             gen_files = sorted(utils.get_generated_files_in_dir(folder_path))
 
