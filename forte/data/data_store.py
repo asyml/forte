@@ -122,7 +122,7 @@ class DataStore(BaseStore):
         self.__entry_type_idx = 3
 
         # see https://github.com/asyml/forte/issues/570
-        self._type_attributes: dict = dict()
+        self._type_attributes: dict = {}
         """
         The `_type_attributes` is a private dictionary that provides
         `type_name` and the order of corresponding attributes except `index_id`.
@@ -155,7 +155,7 @@ class DataStore(BaseStore):
         """
 
         # TODO: implement get_type_id_rev() (Issue #need creation)
-        self.__type_index_dict: dict = dict()
+        self.__type_index_dict: dict = {}
         """
         The `__type_index_dict` is a private dictionary that has reverse
         structure of `self.__type_dict`. It is only used for generators to map
@@ -177,7 +177,7 @@ class DataStore(BaseStore):
             # }
         """
 
-        self.__elements: List = list()
+        self.__elements: List = []
         """
         The `__elements` is an underlying storage structure for all the entry
         data added by users in this DataStore class.
@@ -193,7 +193,7 @@ class DataStore(BaseStore):
             ]
         """
 
-        self.__entry_dict: dict = dict()
+        self.__entry_dict: dict = {}
         """
         `__entry_dict` is a dictionary that keeps record of all entrys with
         their tid. It is a key-value map of {tid: entry data in list format}.
