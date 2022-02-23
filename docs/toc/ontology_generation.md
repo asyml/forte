@@ -1,4 +1,4 @@
-# Building and Understanding Ontology
+# Building and Understanding Ontology #
 
 Forte is built on top of an _Ontology_ system, which defines the relations
 between NLP annotations, for example, the relation between words and documents,

@@ -43,6 +43,7 @@ from forte.common.configuration import Config
 from forte.common.exception import (
     ProcessExecutionException,
     ProcessFlowException,
+    ValidationError,
 )
 from forte.common.resources import Resources
 from forte.data.base_pack import PackType
@@ -172,7 +173,9 @@ class Pipeline(Generic[PackType]):
         self._selectors: List[Selector] = []
         self._configs: List[Optional[Config]] = []
         self._selectors_configs: List[Optional[Config]] = []
-
+        # corresponding to the new added parameter "ref_name", indicating a list of
+        # reference names that are used to identify different components
+        self._ref_names: Dict[str, Any] = {}
         # Maintain a set of the pipeline components to fast check whether
         # the component is already there.
         self.__component_set: Set[PipelineComponent] = set()
@@ -739,6 +742,16 @@ class Pipeline(Generic[PackType]):
         return self._components
 
     @property
+    def ref_names(self) -> Dict[str, int]:
+        """
+        Return all the reference names in this pipeline, except the reader.
+
+        Returns: A dictionary containing the reference names.
+
+        """
+        return self._ref_names
+
+    @property
     def component_configs(self) -> List[Optional[Config]]:
         """
         Return the configs related to the components, except the reader.
@@ -754,6 +767,7 @@ class Pipeline(Generic[PackType]):
         config: Optional[Union[Config, Dict[str, Any]]] = None,
         selector: Optional[Selector] = None,
         selector_config: Optional[Union[Config, Dict[str, Any]]] = None,
+        ref_name: Optional[str] = None,
     ) -> "Pipeline":
         """
         Adds a pipeline component to the pipeline. The pipeline components
@@ -797,6 +811,14 @@ class Pipeline(Generic[PackType]):
         if isinstance(component, Evaluator):
             # This will ask the job to keep a copy of the gold standard.
             self.evaluator_indices.append(len(self.components))
+
+        if ref_name is not None:
+            if ref_name in self._ref_names:
+                raise ValidationError(
+                    f"This reference name {ref_name} already exists, please specify a new one"
+                )
+            else:
+                self._ref_names[ref_name] = len(self.components)
 
         if component not in self.__component_set:
             # The case where the component is not found.
@@ -1333,6 +1355,16 @@ class Pipeline(Generic[PackType]):
             p = self.components[i]
             assert isinstance(p, Evaluator)
             yield p.name, p.get_result()
+
+    def get_component(self, ref_name: str) -> PipelineComponent[Any]:
+        """
+        Call the evaluator in the pipeline by the reference name to get a component.
+
+        Args:
+            ref_name(str): the reference name of a component
+        """
+        p = self.components[self.ref_names[ref_name]]
+        return p
 
 
 def serve(
