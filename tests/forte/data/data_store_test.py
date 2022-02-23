@@ -48,17 +48,11 @@ class DataStoreTest(unittest.TestCase):
         # Sentence entries have tid 9999, 1234567.
         # The type id for Document is 0, Sentence is 1.
 
-        self.data_store._DataStore__type_dict = {
-            0: "ft.onto.base_ontology.Document",
-            1: "ft.onto.base_ontology.Sentence",
-            2: "forte.data.ontology.core.Entry",
-            # 3: "ft.onto.base_ontology.Phrase"
-        }
-
-        self.data_store._DataStore__type_rev = {
+        self.data_store._DataStore__type_index_dict = {
             "ft.onto.base_ontology.Document": 0,
             "ft.onto.base_ontology.Sentence": 1,
             "forte.data.ontology.core.Entry": 2,
+            # "ft.onto.base_ontology.Phrase": 3
         }
 
         self.data_store._DataStore__elements = [
@@ -232,18 +226,18 @@ class DataStoreTest(unittest.TestCase):
 
     def test_get(self):
         # get document entries
-        instances = list(self.data_store.get(0))
+        instances = list(self.data_store.get("ft.onto.base_ontology.Document"))
         self.assertEqual(len(instances), 2)
         # check tid
         self.assertEqual(instances[0][2], 1234)
         self.assertEqual(instances[1][2], 3456)
 
         # get all entries
-        instances = list(self.data_store.get(2))
+        instances = list(self.data_store.get("forte.data.ontology.core.Entry"))
         self.assertEqual(len(instances), 4)
 
         # get entries without subclasses
-        instances = list(self.data_store.get(2, include_sub_type=False))
+        instances = list(self.data_store.get("forte.data.ontology.core.Entry", include_sub_type=False))
         self.assertEqual(len(instances), 0)
 
     def test_delete_entry(self):

@@ -28,6 +28,8 @@ from forte.pipeline_component import PipelineComponent
 InputPackType = TypeVar("InputPackType", bound=BasePack)
 OutputPackType = TypeVar("OutputPackType", bound=BasePack)
 
+__all__ = ["Caster", "MultiPackBoxer", "MultiPackUnboxer"]
+
 
 class Caster(
     PipelineComponent[InputPackType],
