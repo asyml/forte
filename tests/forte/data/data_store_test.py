@@ -40,6 +40,7 @@ class DataStoreTest(unittest.TestCase):
                 "sentiment": 6,
                 "classification": 7,
                 "classifications": 8,
+                # 'test_different_fields': 9
             },
         }
         # The order is [Document, Sentence]. Initialize 2 entries in each list.
@@ -51,6 +52,7 @@ class DataStoreTest(unittest.TestCase):
             0: "ft.onto.base_ontology.Document",
             1: "ft.onto.base_ontology.Sentence",
             2: "forte.data.ontology.core.Entry",
+            # 3: "ft.onto.base_ontology.Phrase"
         }
 
         self.data_store._DataStore__type_rev = {
@@ -85,17 +87,6 @@ class DataStoreTest(unittest.TestCase):
             SortedList(
                 [
                     [
-                        6,
-                        9,
-                        9999,
-                        1,
-                        "teacher",
-                        1,
-                        "Postive",
-                        None,
-                        None,
-                    ],
-                    [
                         55,
                         70,
                         1234567,
@@ -105,6 +96,17 @@ class DataStoreTest(unittest.TestCase):
                         "Negative",
                         "Class C",
                         "Class D",
+                    ],
+                    [
+                        6,
+                        9,
+                        9999,
+                        1,
+                        "teacher",
+                        1,
+                        "Postive",
+                        None,
+                        None,
                     ],
                 ],
             ),
@@ -292,6 +294,12 @@ class DataStoreTest(unittest.TestCase):
         # )
         pass
 
+    def test_pickle(self):
+        self.data_store.serialize('./serialization_temp/temp.txt')
+        a = DataStore.deserialize('./serialization_temp/temp.txt', True)
+        # print(a._type_attributes)
+        # print(a._DataStore__elements)
+        self.assertEqual(a.__dict__, self.data_store.__dict__)
 
 if __name__ == "__main__":
     unittest.main()

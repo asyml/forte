@@ -14,6 +14,7 @@
 
 from abc import abstractmethod
 from typing import List, Iterator, Tuple, Any
+import pickle
 
 __all__ = ["BaseStore"]
 
@@ -31,6 +32,41 @@ class BaseStore:
         Each entry type contains some subtypes, which could have
         various fields stored in entry lists.
         """
+    
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+
+    def serialize(
+        self,
+        output_path: str,
+        serialize_method: str = "pickle",
+    ):
+        if serialize_method == "pickle":
+            with open(output_path, mode="wb") as pickle_out:
+                pickle.dump(self, pickle_out)  # type:ignore
+        else:
+            raise NotImplementedError(
+                f"Unsupported serialization method {serialize_method}"
+            )
+
+    @classmethod
+    def _deserialize(
+        cls,
+        data_source: str,
+        serialize_method: str = "pickle",
+    ):
+        if serialize_method == "pickle":
+            with open(data_source, mode="rb") as f:  # type: ignore
+                store = pickle.load(f)
+            return store  # type: ignore
+        else:
+            raise NotImplementedError(
+                f"Unsupported deserialization method {serialize_method}"
+            )
 
     @abstractmethod
     def add_annotation_raw(self, type_id: int, begin: int, end: int) -> int:

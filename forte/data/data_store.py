@@ -14,6 +14,7 @@
 
 from typing import List, Iterator, Tuple, Optional, Any
 import uuid
+import logging
 
 from forte.utils import get_class
 from forte.data.base_store import BaseStore
@@ -225,6 +226,49 @@ class DataStore(BaseStore):
         """
         self.__entry_dict: dict = {}
 
+    def __getstate__(self):
+        r"""
+        In serialization,
+            1) will serialize the annotation sorted list as a normal list;
+        """
+        state = super().__getstate__()
+        return state
+
+    def __setstate__(self, state):
+        r"""
+        In deserialization, we
+            1) transform the annotation list back to a sorted list;
+            2) check whether attributes change
+        """
+        super().__setstate__(state)
+    
+    @classmethod
+    def deserialize(
+        cls,
+        data_source: str,
+        check_attribute: bool = False,
+        serialize_method: str = "pickle"
+    ) -> "DataStore":
+        store = cls._deserialize(data_source, serialize_method)
+        # print(store.__dict__)
+        if check_attribute:
+            if cls()._type_attributes != store._type_attributes:
+                logging.warning(
+                    "Saved datastore objects have different attribute fields "
+                    "to the current datastore. This may due to user's "
+                    "additions, deletions, or modifications of fields."
+                )
+                # store._type_attributes = cls()._type_attributes
+
+            if cls()._DataStore__type_dict != store._DataStore__type_dict:
+                logging.warning(
+                    "Saved datastore objects have different orders of "
+                    "`entry_type` lists. This may due to user's additions, "
+                    "deletions, or modifications of `entry_type`."
+                )
+                # store._DataStore__type_dict = cls()._DataStore__type_dict
+        return store
+    
     def _new_tid(self) -> int:
         r"""This function generates a new `tid` for an entry."""
         return uuid.uuid4().int
