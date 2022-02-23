@@ -177,7 +177,10 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         )
 
     def remove_pack(
-        self, index_of_pack: int, clean_invalid_entries: bool = False
+        self,
+        index_of_pack: int,
+        clean_invalid_entries: bool = False,
+        purge_lists: bool = False,
     ) -> bool:
         """
         Remove a data pack at index `index_of_pack` from this multi pack.
@@ -187,7 +190,13 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         with other packs. These entries will become dangling and invalid,
         thus need to be removed. One can consider removing these links before
         calling this function, or set the `clean_invalid_entries` to `True` so
-        that they will be automatically pruned.
+        that they will be automatically pruned. The purge of the lists in this
+        multi_pack can be called if `pruge_lists` is set to true which will
+        remove the empty spaces in the lists of this multi pack of the removed
+        pack and resulting in the index for the remaining packs after the
+        removed pack to be changed, so user will be responsible to manage such
+        changes if the index(es) of said remaining pack is used or stored
+        somewhere by user, after purging the lists.
 
         Args:
             index_of_pack (int): The index of pack for removal from the
@@ -196,6 +205,12 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
               the entries associated with the data pack being deleted which
               will become invalid after the removal of the pack. Default is
               False.
+            purge_lists (bool): Switch for automatically removing the empty
+              spaces in the lists of this multi pack of the removed pack and
+              resulting in the index for the remaining packs after the removed
+              pack to be changed, so user will be responsible to manage such
+              changes if the index(es) of said remaining pack is used or stored
+              somewhere by user, after purging the lists. Default is False.
 
         Returns:
             True if successful
@@ -217,20 +232,29 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
                 f"type: {type_name}"
             )
 
-        return self._remove_pack(pack, index_of_pack, clean_invalid_entries)
+        return self._remove_pack(
+            pack, index_of_pack, clean_invalid_entries, purge_lists
+        )
 
     def _remove_pack(
         self,
         pack: DataPack,
         index_of_pack: int,
         clean_invalid_entries: bool = False,
+        purge_lists: bool = False,
     ) -> bool:
         """
         Remove an existing data pack in the multi pack. To prevent index of the
         packs following it being changed, set this empty position to None
-        in order to keep the index for the packs intact. in _pack_ref[] and
-        _packs[] the position will be set to None while in _pack_names[] the
-        position will be set as empty string.
+        in order to keep the index for the packs intact. in `_pack_ref[]` and
+        `_packs[]` the position will be set to None while in `_pack_names[]`
+        the position will be set as empty string. The purge of the lists in this
+        multi_pack can be called if `pruge_lists` is set to true which will
+        remove the empty spaces in the lists of this multi pack of the removed
+        pack and resulting in the index for the remaining packs after the
+        removed pack to be changed, so user will be responsible to manage such
+        changes if the index(es) of said remaining pack is used or stored
+        somewhere by user, after purging the lists.
 
         Args:
             pack (DataPack): The existing data pack.
@@ -239,6 +263,12 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
               cleaning the entries associated with the data pack
               being deleted which will become invalid after the
               removal of the pack. Default is False.
+            purge_lists (bool): Switch for automatically removing the empty
+              spaces in the lists of this multi pack of the removed pack and
+              resulting in the index for the remaining packs after the removed
+              pack to be changed, so user will be responsible to manage such
+              changes if the index(es) of said remaining pack is used or stored
+              somewhere by user, after purging the lists. Default is False.
 
         Returns:
             True if successful
@@ -290,10 +320,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         # To keep the remaining element 's index unchanged, set to None in
         # place instead of direct removal
 
-        # vin = int(0)
-        # vin = None
         self._pack_ref[index_of_pack] = None  # type: ignore
-        # remove(pack.pack_id) in case don't care index change
 
         # Remove the reverse mapping from pack id to the pack index.
         self._inverse_pack_ref.pop(pack.pack_id)
@@ -304,18 +331,21 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         # Remove the pack names. To keep the remaining element's index
         # unchanged, set to empty instead of direct removal
         self._pack_names[index_of_pack] = ""
-        # remove(tmp_pack_name) in case don't care index change
-
         # Remove Reference to the data pack.
         self._packs[index_of_pack] = None  # type: ignore
-        # remove(pack) if don't care index change
+
+        if purge_lists:
+            self.purge_deleted_packs()  # keep the behavior consistent
 
         return True
 
     def purge_deleted_packs(self) -> bool:
         """
         Purge deleted packs from lists previous set to -1, empty or none to keep index unchanged
-        Caution: after the purge the index would change.
+        Caution: Purging the deleted_packs from lists in multi_pack will remove the empty spaces
+        from the lists of this multi_pack after a pack is removed and resulting the indexes of
+        the packs after the deleted pack(s) to chang, so user will be responsible to manage such
+        changes if such index of a pack is used or stored somewhere in user's code after purging.
 
         Args:
 
