@@ -184,7 +184,7 @@ class GenerateOntologyTest(unittest.TestCase):
         )
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_filename = _get_temp_filename(json_file_path, temp_dir)
-            # Test with include_init = True, namespace_depth=0
+            # Test with include_init = True, namespace_depth = int
             folder_path = self.generator.generate(
                 temp_filename,
                 temp_dir,
@@ -208,7 +208,7 @@ class GenerateOntologyTest(unittest.TestCase):
 
             self.assertEqual(gen_files, exp_files)
 
-            # Re-generate using include_init = False, namespace_depth=int
+            # Re-generate using include_init = False, namespace_depth = int
             self.generator = OntologyCodeGenerator()
             folder_path = self.generator.generate(
                 temp_filename,
