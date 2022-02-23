@@ -100,7 +100,7 @@ A simple code example that runs Named Entity Recognizer
 
 
 
-Many more examples are available [here](../index_appendices.rst). We are also working assembling some
+Many more examples are available `here  <index_appendices.html>`_. We are also working assembling some
 interesting `tutorials <https://github.com/asyml/forte/wiki>`_
 
 
