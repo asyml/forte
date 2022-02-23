@@ -327,7 +327,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
         if serialize_method == "pickle":
             with _open(output_path, mode="wb") as pickle_out:
-                pickle.dump(self, pickle_out)  # type:ignore
+                pickle.dump(self, pickle_out)
         elif serialize_method == "jsonpickle":
             with _open(output_path, mode="wt", encoding="utf-8") as json_out:
                 json_out.write(
