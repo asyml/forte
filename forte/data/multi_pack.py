@@ -344,7 +344,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         Purge deleted packs from lists previous set to -1, empty or none to keep index unchanged
         Caution: Purging the deleted_packs from lists in multi_pack will remove the empty spaces
         from the lists of this multi_pack after a pack is removed and resulting the indexes of
-        the packs after the deleted pack(s) to chang, so user will be responsible to manage such
+        the packs after the deleted pack(s) to change, so user will be responsible to manage such
         changes if such index of a pack is used or stored somewhere in user's code after purging.
 
         Args:
