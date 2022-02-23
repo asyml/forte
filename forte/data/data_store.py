@@ -19,6 +19,7 @@ from sortedcontainers import SortedList
 
 from forte.utils import get_class
 from forte.data.base_store import BaseStore
+from forte.common import constants
 
 __all__ = ["DataStore"]
 
@@ -119,7 +120,6 @@ class DataStore(BaseStore):
         """
         super().__init__()
         self.onto_file_path = onto_file_path
-        self.__entry_type_idx = 3
 
         # see https://github.com/asyml/forte/issues/570
         self._type_attributes: dict = dict()
@@ -361,7 +361,7 @@ class DataStore(BaseStore):
         """
         if tid not in self.__entry_dict:
             raise KeyError(f"Entry with tid {tid} not found.")
-        entry_type = self.__entry_dict[tid][self.__entry_type_idx]
+        entry_type = self.__entry_dict[tid][constants.ENTRY_TYPE_INDEX]
         if attr_name not in self._type_attributes[entry_type]:
             raise ValueError(f"{entry_type} has no {attr_name} attribute.")
         attr_id = self._type_attributes[entry_type][attr_name]
@@ -397,7 +397,7 @@ class DataStore(BaseStore):
         """
         if tid not in self.__entry_dict:
             raise KeyError(f"Entry with tid {tid} not found.")
-        entry_type = self.__entry_dict[tid][self.__entry_type_idx]
+        entry_type = self.__entry_dict[tid][constants.ENTRY_TYPE_INDEX]
         if attr_name not in self._type_attributes[entry_type]:
             raise ValueError(f"{entry_type} has no {attr_name} attribute.")
         attr_id = self._type_attributes[entry_type][attr_name]
