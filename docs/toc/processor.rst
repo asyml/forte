@@ -92,4 +92,6 @@ Users can refer to the full processor below.
             }
 
 
-We have plenty of written reader available to use. If you don't find one suitable in your case, you can refer to this documentation, API or tutorials to customize a new processor.
+We have an working MT translation pipeline example here https://github.com/asyml/forte/blob/master/docs/notebook_tutorial/wrap_MT_inference_pipeline.ipynb
+
+We also have plenty of written reader available to use. If you don't find one suitable in your case, you can refer to this documentation, API or tutorials to customize a new processor.

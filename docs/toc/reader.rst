@@ -10,20 +10,6 @@ Usage
 * read data into datapack
 
 
-.. code-block:: python
-
-    def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
-        pack = DataPack()
-
-        with open(file_path, "r", encoding="utf8", errors="ignore") as file:
-            text = file.read()
-
-        pack.set_text(text, replace_func=self.text_replace_operation)
-
-        Document(pack, 0, len(pack.text))
-
-        pack.pack_name = file_path
-        yield pack
 
 
 Functions
@@ -65,10 +51,12 @@ generic class method
                 self, csv_file: str
             ) -> Iterator[Tuple[int, List[str]]]:
                 with open(csv_file, encoding="utf-8") as f:
+                    # reading data
                     data = csv.reader(f, delimiter=",", quoting=csv.QUOTE_ALL)
                     if self.configs.skip_k_starting_lines > 0:
                         for _ in range(self.configs.skip_k_starting_lines):
                             next(data)
+                    # yield data as an interator
                     for line_id, line in enumerate(data):
                         yield line_id, line
 
@@ -138,5 +126,5 @@ Here we provide a simplified class hierarchy for `PlainTextReader` to show the r
         - `MultiPackReader`
         - ...
     * ...
-* explain the concept using a simple example and attach the full link
-* we have plenty of written reader available to use. If you don't find one suitable in your case, you can refer to this documentation and tutorials customize a new reader.
+
+* we have plenty of written reader available to use. If you don't find one suitable in your case, you can refer to this documentation and tutorials to create a new reader.
