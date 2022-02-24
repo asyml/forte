@@ -56,7 +56,7 @@ __all__ = [
 ]
 
 from forte.utils import get_full_module_name
-from forte.version import BACKWARD_COMPATIBLE_VER, DEFAULT_PACK_VERSION
+from forte.version import DEFAULT_PACK_VERSION, PACK_ID_COMPATIBLE_VERSION
 
 default_entry_fields = [
     "_Entry__pack",
@@ -443,7 +443,7 @@ class MultiEntry(Entry, ABC):
             except AttributeError:
                 pack_version = DEFAULT_PACK_VERSION  # set to default if lacking version attribute
 
-            if Version(pack_version) >= Version(BACKWARD_COMPATIBLE_VER):
+            if Version(pack_version) >= Version(PACK_ID_COMPATIBLE_VERSION):
                 pack_array_index = self.pack.get_pack_index(
                     ptr.pack_index
                 )  # default: new version

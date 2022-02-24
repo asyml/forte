@@ -38,7 +38,7 @@ from forte.data.ontology.top import (
 )
 from forte.data.types import DataRequest
 from forte.utils import get_class
-from forte.version import BACKWARD_COMPATIBLE_VER, DEFAULT_PACK_VERSION
+from forte.version import DEFAULT_PACK_VERSION, PACK_ID_COMPATIBLE_VERSION
 
 
 logger = logging.getLogger(__name__)
@@ -174,9 +174,19 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
     # TODO: get_subentry maybe useless
     def get_subentry(self, pack_idx: int, entry_id: int):
-        # fix bug/enhancement #559: use pack_idx as pack_id in new version
+        r"""
+        Fix enhancement issue #559: use pack_idx as pack_id : Changing the way
+        of accessing/referencing a pack within the lists of multi pack, from
+        by using list index number (in order to access/reference) to by using
+        pack_id. So that removing pack(s) from multi-pack will not affecting
+        the reference to other remaining packs like (the list index approach)
+
+        Returns:
+            sub-entry of the pack with id = `pack_idx`
+
+        """
         pack_array_index: int = pack_idx  # the old way
-        if Version(self.pack_version) >= Version(BACKWARD_COMPATIBLE_VER):
+        if Version(self.pack_version) >= Version(PACK_ID_COMPATIBLE_VERSION):
             pack_array_index = self.get_pack_index(
                 pack_idx
             )  # the new way: using pack_id instead of array index
