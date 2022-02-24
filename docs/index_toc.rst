@@ -1,7 +1,4 @@
 
-
-NLP with Forte
-*********************
 This tutorial section is currently **in progress** so some sections may be incomplete.
 
 Chapter 1. Handling Structured Data
@@ -19,7 +16,9 @@ Chapter 2. Building NLP Pipeline
 .. toctree::
    :maxdepth: 2
 
+   pipeline_component
    toc/text_classification.md
+   toc/machine_translation_pipeline
 
 
 .. rst-class:: page-break
