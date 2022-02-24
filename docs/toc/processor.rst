@@ -5,18 +5,26 @@ A pipeline component that wraps inference model and set up inference related wor
 
 
 
+Examples
+---------
+
+We have an working MT translation pipeline example here https://github.com/asyml/forte/blob/master/docs/notebook_tutorial/wrap_MT_inference_pipeline.ipynb
+
+There are several basic functions of processor and internal functions are defined here.
+* `initialize()`: initilize model and MT related components/attributes
+    - initialize a pre-trained model
+    - intialize tokenizer
+    - initialize model-specific attributes such as task prefix
+* `process()`: using the loaded model to make predictions and write the prediction results out.
+    - we first tokenize the input text
+    - then use model to generate output sequence ids
+    - then we decode output sequence ids into tokens and write the output into a file
+
+
+
 Usage
 ------
 
-* wrap model by setting `self.model`
-* set up inference related behaviors
-
-
-Functions
-------------------
-
-* `initialize()`: initilize model and inference related attributes.
-* `process()`: using loaded model to make predictions and write the prediction results out
 
 
 
@@ -24,7 +32,7 @@ Functions
 Processor Class Hierarchy
 ------------------------------
 
-Here we provide a simplified class hierarchy for :class:`PlainTextReader` to show the relations of processors which are subclasses of `PipelineComponent`.
+Here we provide a simplified class hierarchy for :class:`MachineTranslationProcessor` to show the relations of processors which are subclasses of `PipelineComponent`.
 
 * :class:`PipelineComponent`
     - :class:`BasePackProcessor`
@@ -48,13 +56,17 @@ Users can refer to the full processor below.
         def initialize(self, resources: Resources, configs: Config):
             super().initialize(resources, configs)
 
-            # Initialize the tokenizer and model
-            model_name: str = self.configs.pretrained_model
+            # Initialize the tokenizer
             self.tokenizer = T5Tokenizer.from_pretrained(model_name)
-            self.model = T5ForConditionalGeneration.from_pretrained(model_name)
-            self.task_prefix = "translate English to German: "
             self.tokenizer.padding_side = "left"
             self.tokenizer.pad_token = self.tokenizer.eos_token
+
+
+            # Initialize the model
+            model_name: str = self.configs.pretrained_model
+            self.model = T5ForConditionalGeneration.from_pretrained(model_name)
+            self.task_prefix = "translate English to German: "
+
 
             if not os.path.isdir(self.configs.output_folder):
                 os.mkdir(self.configs.output_folder)
@@ -92,6 +104,6 @@ Users can refer to the full processor below.
             }
 
 
-We have an working MT translation pipeline example here https://github.com/asyml/forte/blob/master/docs/notebook_tutorial/wrap_MT_inference_pipeline.ipynb
+
 
 We also have plenty of written reader available to use. If you don't find one suitable in your case, you can refer to this documentation, API or tutorials to customize a new processor.
