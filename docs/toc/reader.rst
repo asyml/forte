@@ -1,7 +1,7 @@
 Reader
 =======
 
-A pipeline component that reads data from a file path into a data iterator.
+A pipeline component that reads data from data source into a data iterator.
 
 
 
@@ -83,8 +83,9 @@ Functions
 
 Based on the usage listed above, we need to customize functions below.
 generic class method
+
 - `_cache_key_function`.
-    * key of a basic unit of the raw data.
+    * it returns cache key of a basic unit of the raw data such as a row id for a row
     * Example from from classification reader:
 
     .. code-block:: python
