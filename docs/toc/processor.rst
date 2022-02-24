@@ -10,7 +10,8 @@ Examples
 
 We have an working MT translation pipeline example here https://github.com/asyml/forte/blob/master/docs/notebook_tutorial/wrap_MT_inference_pipeline.ipynb
 
-There are several basic functions of processor and internal functions are defined here.
+There are several basic functions of processor and internal functions are defined in this example.
+
 * `initialize()`: initilize model and MT related components/attributes
     - initialize a pre-trained model
     - intialize tokenizer
@@ -35,9 +36,11 @@ Processor Class Hierarchy
 Here we provide a simplified class hierarchy for :class:`MachineTranslationProcessor` to show the relations of processors which are subclasses of `PipelineComponent`.
 
 * :class:`PipelineComponent`
-    - :class:`BasePackProcessor`
-        * :class:`PackProcessor`
+    - :class:`BasePackProcessor`: The base class of processors that process one pack in a streaming way
+        * :class:`PackProcessor`: The base class of processors that process one :class:`DataPack` each
+    time.
             - :class:`MachineTranslationProcessor`
+        * :class:`MultiPackProcessor`: The base class of processors that process :class:`MultiPack` each time.
         * ...
     - :class:`BaseProcessor`
     - :class:`BaseBatchProcessor`

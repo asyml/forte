@@ -95,7 +95,8 @@ generic class method
 
 - `_parse_pack`
     * load a basic unit of raw data into data pack. It's also a process of structuralizing the data --- wrap data into ontology classes and data pack data fields.
-    * Example from PlainTextReader:
+    * Example from PlainTextReader
+
     .. code-block:: python
 
         def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
