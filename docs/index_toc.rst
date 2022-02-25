@@ -7,7 +7,7 @@ Chapter 1. Handling Structured Data
    :maxdepth: 2
 
    toc/ontology_generation.md
-
+   notebook_tutorial/rst/handling_structued_data
 
 .. rst-class:: page-break
 
@@ -18,9 +18,8 @@ Chapter 2. Building NLP Pipeline
 
    toc/pipeline
    toc/pipeline_component
-   toc/text_classification
-   toc/machine_translation_pipeline
-
+   notebook_tutorial/rst/wrap_MT_inference_pipeline
+   notebook_tutorial/rst/text_classification_pipeline
 
 .. rst-class:: page-break
 
@@ -91,3 +90,6 @@ Chapter 9. Tasks on Other modalities
    toc/audio_processing.md
 
    toc/image_processing.md
+
+
+notebook_tutorial/README.md
