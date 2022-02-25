@@ -4,32 +4,21 @@ Reader
 A pipeline component that reads data from a data source into a data iterator.
 
 
-
-
-Usage
-------
-
-
-
-
-
 Functions
 ------------------
 
 Based on the usage listed above, we need to customize functions below.
 generic class method
 
-- ``set_up()``: check if configuration is correct and
-- ``initialize()``: Pipeline will call it at the start of processing. The reader will be initialized with
-        ``configs``, and register global resources into ``resource``. The
-        implementation should set up the states of the component.
+- ``set_up()``: check correctness of configuration and initialize reader variables.
+- ``initialize()``: Pipeline will call it at the start of processing. The reader will be initialized with ``configs``, and register global resources into ``resource``. The implementation should set up the states of the component.
 - ``_cache_key_function``.
     * it returns cache key of a unit of the data iterator returned by `_collect` such as a row id for a row in `csv` file reading.
-    * Example from from <ClassificationDatasetReader `https://github.com/asyml/forte/blob/4bb8fa5bd0be960426be223f0d295b9786c49b0a/forte/data/readers/classification_reader.py#L140`>_ which use line id as cache key (it is `line_info[0]` in the line of code).:
+    * Example from from `ClassificationDatasetReader <https://github.com/asyml/forte/blob/4bb8fa5bd0be960426be223f0d295b9786c49b0a/forte/data/readers/classification_reader.py#L140>`_ which use line id as cache key (it is `line_info[0]` in the line of code).:
 
 - ``_parse_pack``
-    * load a basic unit of raw data into data pack. It's also a process of structuralizing the data --- wrap data into ontology classes and assign to data pack data fields.
-    * Example from [PlainTextReader](https://github.com/asyml/forte/blob/0ca9602d3d287beb2521584f5fc50c2f5905cebc/forte/data/readers/plaintext_reader.py#L30) which reads ``txt`` file.
+    * load a basic unit of raw data into data pack. It's also a process of structuralizing the data: wrap data into ontology classes and assign data to data fields.
+    * Example from `PlainTextReader <https://github.com/asyml/forte/blob/0ca9602d3d287beb2521584f5fc50c2f5905cebc/forte/data/readers/plaintext_reader.py#L30>`_ which reads ``txt`` file.
 
     .. code-block:: python
 
@@ -48,7 +37,7 @@ generic class method
 
 - ``_collect``
     * read data from the data source and returns an iterator yields data (for example, a line of data while reading csv file).
-    * Example from <ClassificationDatasetReader `https://github.com/asyml/forte/blob/4bb8fa5bd0be960426be223f0d295b9786c49b0a/forte/data/readers/classification_reader.py#L26`>_:
+    * Example from `ClassificationDatasetReader class   <https://github.com/asyml/forte/blob/4bb8fa5bd0be960426be223f0d295b9786c49b0a/forte/data/readers/classification_reader.py#L26>`_:
         - it uses csv reader to read csv table-like data
         - it skips line if `configs.skip_k_starting_lines` is set to be positive integer
         - it returns a iterator that yields a line id and a table row for each iteration.
@@ -74,7 +63,7 @@ generic class method
 Examples
 ---------
 
-We have an working MT translation pipeline example here https://github.com/asyml/forte/blob/master/docs/notebook_tutorial/wrap_MT_inference_pipeline.ipynb
+We have an working MT translation pipeline example `here <https://github.com/asyml/forte/blob/master/docs/notebook_tutorial/wrap_MT_inference_pipeline.ipynb>`_
 
 This example uses :class:`PlainTextReader` to read txt file.
 
@@ -92,9 +81,7 @@ This example uses :class:`PlainTextReader` to read txt file.
 
             Returns: Iterator over paths to .txt files
             """
-            # dataset_path_iterator is a function that return all file paths
-            # with the given file extensions
-            # under the given directories
+            # dataset_path_iterator is a function that return all file paths with the given file extensions under the given directories
             return dataset_path_iterator(text_directory, self.configs.file_ext)
 
         def _cache_key_function(self, text_file: str) -> str:
