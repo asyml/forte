@@ -139,8 +139,8 @@ add it to pipeline after define it.
 Examples
 --------
 
-We have an working MT translation pipeline example here
-https://github.com/asyml/forte/blob/master/docs/notebook_tutorial/wrap_MT_inference_pipeline.ipynb
+We have an working `MT translation pipeline
+example <https://github.com/asyml/forte/blob/master/docs/notebook_tutorial/wrap_MT_inference_pipeline.ipynb>`__.
 
 There are several basic functions of processor and internal functions
 are defined in this example.
