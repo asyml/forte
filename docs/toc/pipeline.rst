@@ -1,8 +1,8 @@
 Pipeline
 ==========
-From a data source to an inference results, we want a uniform module that mangaes the workflow. For instance, given a data source in ``txt`` file for machine translation tasks, we want to read it from the file and use model to generate the translated text. Let's consider the modules doing these tasks as :class:`PipelineComponent`. Then, we focus on :class:`Pipeline` which contains :class:`PipelineComponent` and how it run through the task.
+From a data source to an inference results, we want a uniform module that mangages the workflow. For instance, given a data source in ``txt`` file for machine translation tasks, we want to read it from the file and use model to generate the translated text. Let's consider the modules doing these tasks as :class:`PipelineComponent`. Then, we focus on :class:`Pipeline` which contains :class:`PipelineComponent` and how it run through the task.
 
-Let's check out a psudocode for setting up and running a pipeline.
+Let's check out a pseudocode for setting up and running a pipeline.
 
 .. code-block:: python
 

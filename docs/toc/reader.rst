@@ -65,7 +65,7 @@ Examples
 
 We have an working MT translation pipeline example `here <https://github.com/asyml/forte/blob/master/docs/notebook_tutorial/wrap_MT_inference_pipeline.ipynb>`_
 
-This example uses :class:`PlainTextReader` to read txt file.
+This example uses :class:`PlainTextReader` to read ``txt`` file.
 
 .. code-block:: python
 
