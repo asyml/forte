@@ -174,17 +174,6 @@ input directory as below.
     pipeline.run(dir_path)
     print("Done successfully")
 
-
-.. parsed-literal::
-
-    WARNING:root:Re-declared a new class named [ConstituentNode], which is probably used in import.
-
-
-.. parsed-literal::
-
-    Done successfully
-
-
 One can investigate the machine translation output in folder
 ``mt_test_output`` located at the script location. Then we remove the
 output folder below.
