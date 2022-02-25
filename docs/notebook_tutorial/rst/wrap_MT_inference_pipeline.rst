@@ -22,7 +22,7 @@ Background
 
 After a DS is satisfied with the results of a training model, they will
 had their notebook over to an MLE who has to convert their model into an
-inferencing model.
+inference model.
 
 Inference Workflow
 ------------------
@@ -60,11 +60,10 @@ Processor
 ~~~~~~~~~
 
 We already have inference model which is the ``t5-small``, and we need a
-component to make it function inferencing. Therefore, besides model
-itself, there are several behaviors needed. 1. tokenization that
-transforms input text to sequences of tokens. 2. since T5 has a better
-performance given a task prompt, we also want to include the prompt in
-our data.
+component to make inference. Therefore, besides model itself, there are
+several behaviors needed. 1. tokenization that transforms input text to
+sequences of tokens. 2. since T5 has a better performance given a task
+prompt, we also want to include the prompt in our data.
 
 In forte, we have a generic class ``PackProcessor`` that wraps model and
 inference related components and behaviors to process ``DataPack``, and
@@ -151,7 +150,7 @@ are defined in this example.
    the states of the component.
 
    -  initialize a pre-trained model
-   -  intialize tokenizer
+   -  initialize tokenizer
    -  initialize model-specific attributes such as task prefix
 
 -  ``process()``: using the loaded model to make predictions and write
