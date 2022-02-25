@@ -46,8 +46,8 @@ Therefore, we initialize a ``pipeline`` below.
 Reader
 ~~~~~~
 
-After observing the dataset, it’s a plain txt file. Therefore, we can
-use ``PlainTextReader`` directly.
+After observing the dataset, it’s a plain ``txt`` file. Therefore, we
+can use ``PlainTextReader`` directly.
 
 .. code:: ipython3
 
