@@ -5,3 +5,4 @@ Pipeline Component
 
    reader
    processor
+   selector

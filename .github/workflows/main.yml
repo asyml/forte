@@ -132,9 +132,12 @@ jobs:
           rm -rf texar-pytorch
       - name: Build Docs
         run: |
-          cd docs
+          cd docs/notebook_tutorial
+          nbautoexport export . --export-format rst
+          cd ..
           sphinx-build -W -b html -d _build/doctrees . _build/html
           sphinx-build -W -b spelling -d _build/doctrees . _build/spelling
+          rm -r notebook_tutorial/rst
           cd ..
   dispatch:
     needs: build

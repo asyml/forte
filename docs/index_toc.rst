@@ -16,7 +16,7 @@ Chapter 2. Building NLP Pipeline
 .. toctree::
    :maxdepth: 2
 
-   toc/pipeline
+   notebook_tutorial/rst/pipeline
    toc/pipeline_component
    notebook_tutorial/rst/wrap_MT_inference_pipeline
    notebook_tutorial/rst/text_classification_pipeline
