@@ -16,8 +16,9 @@ Chapter 2. Building NLP Pipeline
 .. toctree::
    :maxdepth: 2
 
-   pipeline_component
-   toc/text_classification.md
+   toc/pipeline
+   toc/pipeline_component
+   toc/text_classification
    toc/machine_translation_pipeline
 
 
@@ -42,8 +43,6 @@ Chapter 4. Information Retrieval
    :maxdepth: 2
 
    toc/indexing.md
-
-
    toc/ranking.md
 
 .. rst-class:: page-break
