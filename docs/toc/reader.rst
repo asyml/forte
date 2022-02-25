@@ -1,7 +1,73 @@
 Reader
 =======
 
-A pipeline component that reads data from data source into a data iterator.
+A pipeline component that reads data from a data source into a data iterator.
+
+
+
+
+Usage
+------
+
+
+
+
+
+Functions
+------------------
+
+Based on the usage listed above, we need to customize functions below.
+generic class method
+
+- ``set_up()``: check if configuration is correct and
+- ``initialize()``: Pipeline will call it at the start of processing. The reader will be initialized with
+        ``configs``, and register global resources into ``resource``. The
+        implementation should set up the states of the component.
+- ``_cache_key_function``.
+    * it returns cache key of a unit of the data iterator returned by `_collect` such as a row id for a row in `csv` file reading.
+    * Example from from <ClassificationDatasetReader `https://github.com/asyml/forte/blob/4bb8fa5bd0be960426be223f0d295b9786c49b0a/forte/data/readers/classification_reader.py#L140`>_ which use line id as cache key (it is `line_info[0]` in the line of code).:
+
+- ``_parse_pack``
+    * load a basic unit of raw data into data pack. It's also a process of structuralizing the data --- wrap data into ontology classes and assign to data pack data fields.
+    * Example from [PlainTextReader](https://github.com/asyml/forte/blob/0ca9602d3d287beb2521584f5fc50c2f5905cebc/forte/data/readers/plaintext_reader.py#L30) which reads ``txt`` file.
+
+    .. code-block:: python
+
+        def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
+            pack = DataPack()
+            with open(file_path, "r", encoding="utf8", errors="ignore") as file:
+                text = file.read()
+            # writing into data pack data fields
+            pack.set_text(text, replace_func=self.text_replace_operation)
+            pack.pack_name = file_path
+            # Wrap data into ontology classes
+            # It also specifies the range of text for `Document`
+            Document(pack, 0, len(pack.text))
+
+            yield pack
+
+- ``_collect``
+    * read data from the data source and returns an iterator yields data (for example, a line of data while reading csv file).
+    * Example from <ClassificationDatasetReader `https://github.com/asyml/forte/blob/4bb8fa5bd0be960426be223f0d295b9786c49b0a/forte/data/readers/classification_reader.py#L26`>_:
+        - it uses csv reader to read csv table-like data
+        - it skips line if `configs.skip_k_starting_lines` is set to be positive integer
+        - it returns a iterator that yields a line id and a table row for each iteration.
+
+    .. code-block:: python
+
+        def _collect(  # type: ignore
+            self, csv_file: str
+        ) -> Iterator[Tuple[int, List[str]]]:
+            with open(csv_file, encoding="utf-8") as f:
+                # reading data
+                data = csv.reader(f, delimiter=",", quoting=csv.QUOTE_ALL)
+                if self.configs.skip_k_starting_lines > 0:
+                    for _ in range(self.configs.skip_k_starting_lines):
+                        next(data)
+                # yield data as an interator
+                for line_id, line in enumerate(data):
+                    yield line_id, line
+
 
 
 
@@ -69,85 +135,3 @@ This example uses :class:`PlainTextReader` to read txt file.
                     fill in for consistency checking.
             """
             record_meta["ft.onto.base_ontology.Document"] = set()
-
-
-Usage
-------
-
-
-
-
-
-Functions
-------------------
-
-Based on the usage listed above, we need to customize functions below.
-generic class method
-
-- `_cache_key_function`.
-    * it returns cache key of a basic unit of the raw data such as a row id for a row
-    * Example from from classification reader:
-
-    .. code-block:: python
-
-        def _cache_key_function(self, line_info: Tuple[int, List[str]]) -> str:
-            return str(line_info[0])
-
-- `_parse_pack`
-    * load a basic unit of raw data into data pack. It's also a process of structuralizing the data --- wrap data into ontology classes and data pack data fields.
-    * Example from PlainTextReader
-
-    .. code-block:: python
-
-        def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
-            pack = DataPack()
-            with open(file_path, "r", encoding="utf8", errors="ignore") as file:
-                text = file.read()
-            # writing into data pack data fields
-            pack.set_text(text, replace_func=self.text_replace_operation)
-            pack.pack_name = file_path
-            # Wrap data into ontology classes
-            Document(pack, 0, len(pack.text))
-
-            yield pack
-
-- `_collect`
-    * read data from the path and iterate the data in raw format and return the basic unit (for example, a line of text while reading table-like data).
-    * Example from ClassificationDatasetReader: https://github.com/asyml/forte/blob/4bb8fa5bd0be960426be223f0d295b9786c49b0a/forte/data/readers/classification_reader.py#L26
-        - it uses csv reader to read csv table-like data
-        - it skips line if `configs.skip_k_starting_lines` is set to be positive integer
-        - it returns a iterator that yields a line id and a table row for each iteration.
-
-    .. code-block:: python
-
-        def _collect(  # type: ignore
-            self, csv_file: str
-        ) -> Iterator[Tuple[int, List[str]]]:
-            with open(csv_file, encoding="utf-8") as f:
-                # reading data
-                data = csv.reader(f, delimiter=",", quoting=csv.QUOTE_ALL)
-                if self.configs.skip_k_starting_lines > 0:
-                    for _ in range(self.configs.skip_k_starting_lines):
-                        next(data)
-                # yield data as an interator
-                for line_id, line in enumerate(data):
-                    yield line_id, line
-
-
-
-
-
-Reader Class Hierarchy
-------------------------
-
-Here we provide a simplified class hierarchy for :class:`PlainTextReader` to show the relations of readers which are subclasses of :class:`PipelineComponent`.
-
-* `PipelineComponent`: As the hierarchy suggests, readers are subclasses of ~PipelineComponent
-    * `BaseReader`
-        - `PackReader`: a reader that reads data into :class:`DataPack`
-            * `PlainTextReader`
-        - `MultiPackReader`: a reader that reads data into :class:`MultiPack`.
-        - ...
-    * ...
-
-* we have plenty of written reader available to use. If you don't find one suitable in your case, you can refer to this documentation and tutorials to create a new reader.
