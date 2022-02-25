@@ -90,6 +90,9 @@ This example uses :class:`PlainTextReader` to read txt file.
 
         # pylint: disable=unused-argument
         def text_replace_operation(self, text: str):
+            # this function returns a list of replacing operations
+            # in this particular example, we don't have any replacing operation
+            # so we return an empty list
             return []
 
         def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
