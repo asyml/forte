@@ -20,8 +20,9 @@ class DummyAugmenter(BaseDataAugmentationOp):
 
     def augment(self, input_pack: DataPack) -> bool:
         try:
-            # Collecting existing annotations
-            augment_entry = get_class(self.configs["augment_entry"])
+            # Collecting existing annotations. For this
+            # example we use the Token class
+            augment_entry = get_class("ft.onto.base_ontology.Token")
             annotation_list = []
             for anno in input_pack.get(augment_entry):
                 annotation_list.append(anno)
