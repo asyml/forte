@@ -646,19 +646,21 @@ class BaseDataAugmentationOp(Configurable):
                         orig_anno.end, spans, new_spans, False, is_inclusive
                     )
 
+                # If an annotation is within a deleted span, there
+                # is no need to add that annotation to the new data pack
                 if span_new_begin == span_new_end:
                     continue
-                else:
-                    new_anno = create_class_with_kwargs(
-                        entry_to_copy,
-                        {
-                            "pack": new_pack,
-                            "begin": span_new_begin,
-                            "end": span_new_end,
-                        },
-                    )
-                    new_pack.add_entry(new_anno)
-                    entry_map[orig_anno.tid] = new_anno.tid
+
+                new_anno = create_class_with_kwargs(
+                    entry_to_copy,
+                    {
+                        "pack": new_pack,
+                        "begin": span_new_begin,
+                        "end": span_new_end,
+                    },
+                )
+                new_pack.add_entry(new_anno)
+                entry_map[orig_anno.tid] = new_anno.tid
 
             # Deal with spans after the last annotation in the original pack.
             while insert_ind < len(new_entries[entry_to_copy]):
@@ -795,10 +797,11 @@ class BaseDataAugmentationOp(Configurable):
         self, replacement_anno: Annotation, replaced_text
     ) -> bool:
         r"""
-        This is a utility function to record specifically a replacement of the text in an
-        annotation. With this function, the text inside annotation can be replaced with
-        another text. If the same annotation is tried to be replaced twice, the function will terminate
-        and return False.
+        This is a utility function to record specifically a replacement
+        of the text in an annotation. With this function, the text inside
+        annotation can be replaced with another text. If the same annotation
+        is tried to be replaced twice, the function will terminate and
+        return False.
 
         Args:
             input_anno: The annotation to replace.
