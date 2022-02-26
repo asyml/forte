@@ -97,16 +97,15 @@ class RandomWordSplitDataAugmentProcessor(ReplacementDataAugmentProcessor):
         """
         Returns:
             A dictionary with the default config for this processor.
-            Additional keys for determining how many words will be split:
-        The keys to this dictionary are:
-            - alpha:
+        Additional keys for determining how many words will be split:
+            - alpha (float):
                 0 <= alpha <= 1. indicates the percent of the words
                 in a sentence that are changed.
-            - augment_entry:
+            - augment_entry (str):
                 Defines the entry the processor will augment.
                 It should be a full qualified name of the entry class.
                 For example, "ft.onto.base_ontology.Sentence".
-            - other_entry_policy:
+            - other_entry_policy (dict):
                 A dict specifying the policies for other entries.
                 The key should be a full qualified class name.
                 The policy(value of the dict) specifies how to process

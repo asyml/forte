@@ -90,9 +90,9 @@ Data Augmentation Ops
 .. autoclass:: forte.processors.data_augment.algorithms.word_splitting_processor.RandomWordSplitDataAugmentProcessor
     :members:
 
-:hidden:`SkeletonOp`
-----------------------------
-.. autoclass:: forte.processors.data_augment.algorithms.skeleton_op.SkeletonOp
+:hidden:`BaseDataAugmentationOp`
+-----------------------------------
+.. autoclass:: forte.processors.data_augment.algorithms.base_data_augmentation_op.BaseDataAugmentationOp
     :members:
 
 Data Augmentation Models

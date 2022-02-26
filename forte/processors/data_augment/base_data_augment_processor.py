@@ -57,6 +57,7 @@ def modify_index(
 ) -> int:
     r"""
     A helper function to map an index before replacement
+
     to the index after replacement.
     An index is the character offset in the data pack.
     The `old_spans` are the inputs of replacement, and the new_spans
@@ -64,11 +65,13 @@ def modify_index(
     The `old_spans` and `new_spans` are anchors for the mapping,
     because we depend on them to determine the position change of the
     index.
+
     Given an index, the function will find its the nearest
     among the old spans before the index, and calculate the difference
     between the position of the old span and its corresponding new span.
     The position change is then applied to the input index. An updated
     index is then calculated and returned.
+
     An inserted span might be included as a part of another span.
     For example, given a sentence "I love NLP.", if we insert a
     token "Yeah" at the beginning of the sentence(index=0), the Sentence
@@ -77,6 +80,7 @@ def modify_index(
     should be True. However, for another Token "I", it should not include
     the new token, so its start index will be larger than 0.
     The parameter in_inclusive should be False.
+
     The input index could be the start or end index of a span, i.e., the
     left or right boundary of the span. If there is an insertion in the span,
     we should treat the two boundaries in different ways. For example,
@@ -106,6 +110,7 @@ def modify_index(
     ([2,3]), and find the corresponding span in new spans([5,7]).
     Then we calculate the delta index(7-3=4) and update our
     input index(3+4=7). The output then is 7.
+
     Note that when the input index locates inside the old spans,
     instead of on the boundary of the spans, we compute the return
     index so that it maintains the same offset to the begin of the
@@ -113,6 +118,7 @@ def modify_index(
     index from 3 to 5, the output will become 9, because we locates
     the input index in the third span [4, 6] and use the same offset
     5-4=1 to calculate the output 8+1=9.
+
     When insertion is considered, there will be spans
     with the same begin index, for example,
     [0, 1], [1, 1], [1, 2]. The span [1, 1] indicates an insertion
@@ -121,6 +127,7 @@ def modify_index(
     The output will be affected by whether to include the inserted
     span(is_inclusive), and whether the input index is a begin or
     end index of its span(is_begin).
+
     If the old spans are [0, 1], [1, 1], [1, 2],
     the new spans are [0, 2], [2, 4], [4, 5],
     the input index is 1, the output will be 2 if both
@@ -213,7 +220,8 @@ def modify_index(
 
 
 class BaseDataAugmentProcessor(MultiPackProcessor, ABC):
-    r"""The base class of processors that augment data.
+    r"""
+    The base class of processors that augment data.
     This processor instantiates replacement ops where specific
     data augmentation algorithms are implemented. The replacement ops
     will run the algorithms and the processor will create Forte
@@ -337,6 +345,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         This is a wrapper function to insert a new annotation. After
         getting the inserted text, it will register the input & output
         for later batch process of building the new data pack.
+
         The insertion at each position can only occur once. If there
         is already an insertion at current position, it will abort the
         insertion and return False.
