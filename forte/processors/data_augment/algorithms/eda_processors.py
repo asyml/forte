@@ -266,12 +266,14 @@ class RandomSwapDataAugmentProcessor(ReplacementDataAugmentProcessor):
     @classmethod
     def default_configs(cls):
         """
+        Additional keys for Random Swap:
+
+            - alpha: 0 <= alpha <= 1. indicates the percent of the words
+              in a sentence that are changed. The processor will perform
+              the Random Swap operation (input length * alpha) times.
+
         Returns:
             A dictionary with the default config for this processor.
-            Additional keys for Random Swap:
-            - alpha: 0 <= alpha <= 1. indicates the percent of the words
-                in a sentence that are changed. The processor will perform
-                the Random Swap operation (input length * alpha) times.
         """
         return {
             "augment_entry": "ft.onto.base_ontology.Token",
@@ -331,15 +333,19 @@ class RandomInsertionDataAugmentProcessor(ReplacementDataAugmentProcessor):
     @classmethod
     def default_configs(cls):
         """
+        Additional keys for Random Swap:
+
+        - alpha: 0 <= alpha <= 1. indicates the percent of the words
+          in a sentence that are changed. The processor will perform
+          the Random Insertion operation (input length * alpha) times.
+
+        - stopwords: a list of stopword for the language.
+
+
         Returns:
             A dictionary with the default config for this processor.
             By default, we use Dictionary Replacement with Wordnet to get
             synonyms to insert.
-            Additional keys for Random Swap:
-            - alpha: 0 <= alpha <= 1. indicates the percent of the words
-                in a sentence that are changed. The processor will perform
-                the Random Insertion operation (input length * alpha) times.
-            - stopwords: a list of stopword for the language.
         """
         config = super().default_configs()
         config.update(
