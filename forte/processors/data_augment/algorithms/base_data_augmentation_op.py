@@ -636,9 +636,8 @@ class BaseDataAugmentationOp(Configurable):
                     # Only inclusive when the entry is not augmented.
                     # E.g.: A Sentence include the inserted Token on the edge.
                     # E.g.: A Token shouldn't include a nearby inserted Token.
-                    is_inclusive = (
-                        (entry_to_copy in existing_entries) and \
-                        (entry_to_copy not in new_entries)
+                    is_inclusive = (entry_to_copy in existing_entries) and (
+                        entry_to_copy not in new_entries
                     )
                     span_new_begin = self.modify_index(
                         orig_anno.begin, spans, new_spans, True, is_inclusive
