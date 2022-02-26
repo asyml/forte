@@ -123,6 +123,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --progress-bar off --upgrade pip
+          sudo apt-get install pandoc
           pip install --progress-bar off -r requirements.txt
           pip install --progress-bar off -r docs/requirements.txt
           git clone https://github.com/asyml/texar-pytorch.git
