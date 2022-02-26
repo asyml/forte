@@ -124,7 +124,7 @@ class CoNLLNERPredictor(RequestPackingProcessor):
     @torch.no_grad()
     def predict(
         self, data_batch: Dict[str, Dict[str, List[str]]]
-    ) -> Dict[str, Dict[str, List[np.array]]]:
+    ) -> Dict[str, Dict[str, List[np.ndarray]]]:
         tokens = data_batch["Token"]
 
         instances = []

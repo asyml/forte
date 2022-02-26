@@ -73,20 +73,49 @@ Packs
 .. autoclass:: forte.data.base_pack.BaseMeta
     :members:
 
+
 :hidden:`Meta`
 ------------------------
 .. autoclass:: forte.data.data_pack.Meta
     :members:
 
-:hidden:`BaseIndex`
-------------------------
-.. autoclass:: forte.data.base_pack.BaseIndex
-    :members:
 
 :hidden:`DataIndex`
 ------------------------
 .. autoclass:: forte.data.data_pack.DataIndex
     :members:
+
+
+
+MultiPack
+==========
+
+:hidden:`MultiPackMeta`
+------------------------
+.. autoclass:: forte.data.multi_pack.MultiPackMeta
+    :members:
+
+
+:hidden:`MultiPack`
+------------------------
+.. autoclass:: forte.data.multi_pack.MultiPack
+    :members:
+    :noindex:
+
+:hidden:`MultiPackLink`
+------------------------
+.. autoclass:: forte.data.multi_pack.MultiPackLink
+    :members:
+    :noindex:
+
+:hidden:`MultiPackGroup`
+------------------------
+.. autoclass:: forte.data.multi_pack.MultiPackGroup
+    :members:
+    :noindex:
+
+
+
 
 Readers
 ==========
@@ -196,6 +225,75 @@ Readers
 .. autoclass:: forte.data.readers.classification_reader.ClassificationDatasetReader
     :members:
 
+Selector
+=================
+:hidden:`Selector`
+--------------------------------------
+.. autoclass:: forte.data.selector.Selector
+    :members:
+
+:hidden:`DummySelector`
+--------------------------------------
+.. autoclass:: forte.data.selector.DummySelector
+    :members:
+
+:hidden:`SinglePackSelector`
+--------------------------------------
+.. autoclass:: forte.data.selector.SinglePackSelector
+    :members:
+
+:hidden:`NameMatchSelector`
+--------------------------------------
+.. autoclass:: forte.data.selector.NameMatchSelector
+    :members:
+
+:hidden:`RegexNameMatchSelector`
+--------------------------------------
+.. autoclass:: forte.data.selector.RegexNameMatchSelector
+    :members:
+
+:hidden:`FirstPackSelector`
+--------------------------------------
+.. autoclass:: forte.data.selector.FirstPackSelector
+    :members:
+
+:hidden:`AllPackSelector`
+--------------------------------------
+.. autoclass:: forte.data.selector.AllPackSelector
+    :members:
+
+
+
+
+
+
+
+Index
+=================
+:hidden:`BaseIndex`
+------------------------
+.. autoclass:: forte.data.index.BaseIndex
+    :members:
+
+
+
+
+Store
+=================
+:hidden:`BaseStore`
+--------------------------------------
+.. autoclass:: forte.data.base_store.BaseStore
+    :members:
+
+
+Data Store
+=================
+:hidden:`DataStore`
+--------------------------------------
+.. autoclass:: forte.data.data_store.DataStore
+    :members:
+
+
 
 DataPack Dataset
 =================
@@ -210,6 +308,19 @@ DataPack Dataset
 .. autoclass:: forte.data.data_pack_dataset.DataPackDataset
     :members:
 
+:hidden:`RawExample`
+------------------------------
+.. autoclass:: forte.data.data_pack_dataset.RawExample
+    :members:
+
+:hidden:`FeatureCollection`
+------------------------------
+.. autoclass:: forte.data.data_pack_dataset.FeatureCollection
+    :members:
+
+
+
+
 Batchers
 ==========
 
@@ -217,6 +328,90 @@ Batchers
 ------------------------------
 .. autoclass:: forte.data.batchers.ProcessingBatcher
     :members:
+
+:hidden:`FixedSizeDataPackBatcherWithExtractor`
+---------------------------------------------------
+.. autoclass:: forte.data.batchers.FixedSizeDataPackBatcherWithExtractor
+    :members:
+
+:hidden:`FixedSizeRequestDataPackBatcher`
+---------------------------------------------------
+.. autoclass:: forte.data.batchers.FixedSizeRequestDataPackBatcher
+    :members:
+
+:hidden:`FixedSizeMultiPackProcessingBatcher`
+---------------------------------------------------
+.. autoclass:: forte.data.batchers.FixedSizeMultiPackProcessingBatcher
+    :members:
+
+:hidden:`FixedSizeDataPackBatcher`
+------------------------------------
+.. autoclass:: forte.data.batchers.FixedSizeDataPackBatcher
+    :members:
+
+
+
+
+Caster
+==========
+
+:hidden:`Caster`
+------------------------------
+.. autoclass:: forte.data.caster.Caster
+    :members:
+
+:hidden:`MultiPackBoxer`
+------------------------------
+.. autoclass:: forte.data.caster.MultiPackBoxer
+    :members:
+
+:hidden:`MultiPackUnboxer`
+------------------------------
+.. autoclass:: forte.data.caster.MultiPackUnboxer
+    :members:
+
+
+Container
+==========
+
+:hidden:`EntryContainer`
+------------------------------
+.. autoclass:: forte.data.container.EntryContainer
+    :members:
+
+
+:hidden:`BasePointer`
+------------------------------
+.. autoclass:: forte.data.container.BasePointer
+    :members:
+
+
+Entry Type Generator
+==============================
+:hidden:`EntryTypeGenerator`
+------------------------------
+.. autoclass:: forte.data.entry_type_generator.EntryTypeGenerator
+    :members:
+
+
+Types
+===============
+:hidden:`ReplaceOperationsType`
+--------------------------------
+.. autoclass:: forte.data.types.ReplaceOperationsType
+    :members:
+
+:hidden:`DataRequest`
+------------------------------
+.. autoclass:: forte.data.types.DataRequest
+    :members:
+
+:hidden:`MatrixLike`
+------------------------------
+.. autoclass:: forte.data.types.MatrixLike
+    :members:
+
+
 
 Data Utilities
 ===============
@@ -241,3 +436,14 @@ Data Utilities
 ----------------------------------
 .. autofunction:: forte.data.data_utils_io.dataset_path_iterator
 
+
+Entry Utilities
+===============
+
+:hidden:`create_utterance`
+----------------------------------
+.. autofunction:: forte.data.common_entry_utils.create_utterance
+
+:hidden:`get_last_utterance`
+----------------------------------
+.. autofunction:: forte.data.common_entry_utils.get_last_utterance
