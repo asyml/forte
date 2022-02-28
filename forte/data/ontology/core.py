@@ -610,7 +610,7 @@ class FNdArray:
     """
 
     def __init__(
-        self, dtype: Optional[str] = None, shape: Optional[Iterable[int]] = None
+        self, dtype: Optional[str] = None, shape: Optional[List[int]] = None
     ):
         super().__init__()
         self._dtype: Optional[np.dtype] = (
@@ -751,7 +751,7 @@ class BaseLink(Entry, ABC):
 
         Returns:
              An instance of :class:`Entry` that is the child of the link
-             from the given :class:`DataPack`.
+             from the given :class:`~forte.data.data_pack.DataPack`.
         """
         raise NotImplementedError
 
@@ -761,7 +761,7 @@ class BaseLink(Entry, ABC):
 
         Returns:
              An instance of :class:`Entry` that is the child of the link
-             from the given :class:`DataPack`.
+             from the given :class:`~forte.data.data_pack.DataPack`.
         """
         raise NotImplementedError
 
