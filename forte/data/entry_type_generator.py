@@ -62,11 +62,9 @@ class EntryTypeGenerator:
 
             # input can be a string
             entry_name = "ft.onto.base_ontology.Sentence"
-            # or a class
-            entry_class = ft.onto.base_ontology.Sentence
 
             # function signature
-            def get_entry_attribute_by_class(input_entry_class: Union[str, class]):
+            def get_entry_attribute_by_class(input_entry_class: str):
 
             # output
             ["speaker", "part_id", "sentiment", "classification", "classifications"]
