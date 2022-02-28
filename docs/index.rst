@@ -128,32 +128,32 @@ License
 ----------------
 
 
-
-
+Overview
+====================
 .. toctree::
    :maxdepth: 2
-   :caption: Overview
 
-   overview
-
+   toc/overview.md
 
 
+
+NLP with Forte
+====================
 .. toctree::
    :maxdepth: 2
-   :caption: NLP with Forte
 
-   index_toc
+   index_toc.rst
 
-
+APPENDICES
+===========
 .. toctree::
    :maxdepth: 2
-   :caption:  APPENDICES
 
-   index_appendices
+   index_appendices.rst
 
-
+API
+====
 .. toctree::
    :maxdepth: 2
-   :caption:  API
 
-   index_api
+   index_api.rst

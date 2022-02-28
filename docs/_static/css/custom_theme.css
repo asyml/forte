@@ -73,7 +73,3 @@ div.section h3 > span.hidden-section + a.headerlink {
 nav .hidden-section {
     display: inherit;
 }
-
-span.caption-text {
-  color: orange;
-}
