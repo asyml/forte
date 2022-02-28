@@ -672,11 +672,16 @@ class ModuleWriter:
               placed
             include_init: True if `__init__.py` is to be generated in existing
               packages in which `__init__.py` does not already exists
-            namespace_depth: set an integer argument namespace_depth to allow customized number of levels of namespace packaging.
-              The generation of __init__.py for all the directory levels above namespace_depth will be disabled.
-              For example, if we have an ontology level1.levle2.level3.something and namespace_depth=2,
-              then we remove __init__.py under level1 and level1/level2 while keeping __init__.py under level1/level2/level3.
-              When namespace_depth<=0, we just disable namespace packaging and include __init__.py in all directory levels.
+            namespace_depth: set an integer argument namespace_depth to allow
+              customized number of levels of namespace packaging.
+              The generation of __init__.py for all the directory
+              levels above namespace_depth will be disabled.
+              For example, if we have an ontology level1.levle2.level3.
+              something and namespace_depth=2, then we remove __init__.py
+              under level1 and level1/level2 while keeping __init__.py under
+              level1/level2/level3.
+              When namespace_depth<=0, we just disable namespace packaging
+              and include __init__.py in all directory levels.
         Returns:
         """
         entry_dir_split = split_file_path(self.pkg_dir)
@@ -718,12 +723,16 @@ class ModuleWriter:
             destination: The actual folder to place the generated code.
             include_init: Whether to include `__init__.py` in the existing
             directories if it does not already exist.
-            namespace_depth: set an integer argument namespace_depth to allow customized number of levels of namespace packaging.
-              The generation of __init__.py for all the directory levels above namespace_depth will be disabled.
-              For example, if we have an ontology level1.levle2.level3.something and namespace_depth=2,
-              then we remove __init__.py under level1 and level1/level2 while keeping __init__.py under level1/level2/level3.
-              When namespace_depth<=0, we just disable namespace packaging and include __init__.py in all directory levels.
-
+            namespace_depth: set an integer argument namespace_depth to allow
+              customized number of levels of namespace packaging.
+              The generation of __init__.py for all the directory
+              levels above namespace_depth will be disabled.
+              For example, if we have an ontology level1.levle2.level3.
+              something and namespace_depth=2, then we remove __init__.py
+              under level1 and level1/level2 while keeping __init__.py under
+              level1/level2/level3.
+              When namespace_depth<=0, we just disable namespace packaging
+              and include __init__.py in all directory levels.
         Returns:
 
         """

@@ -470,11 +470,16 @@ class OntologyCodeGenerator:
                 be written at this path.
             lenient_prefix: if `True`, will not enforce the entry name to
                 match a known prefix.
-            namespace_depth: set an integer argument namespace_depth to allow customized number of levels of namespace packaging.
-              The generation of __init__.py for all the directory levels above namespace_depth will be disabled.
-              For example, if we have an ontology level1.levle2.level3.something and namespace_depth=2,
-              then we remove __init__.py under level1 and level1/level2 while keeping __init__.py under level1/level2/level3.
-              When namespace_depth<=0, we just disable namespace packaging and include __init__.py in all directory levels.
+            namespace_depth: set an integer argument namespace_depth to allow
+              customized number of levels of namespace packaging.
+              The generation of __init__.py for all the directory
+              levels above namespace_depth will be disabled.
+              For example, if we have an ontology level1.levle2.level3.
+              something and namespace_depth=2, then we remove __init__.py
+              under level1 and level1/level2 while keeping __init__.py under
+              level1/level2/level3.
+              When namespace_depth<=0, we just disable namespace packaging
+              and include __init__.py in all directory levels.
 
         Returns:
             Directory path in which the modules are created: either one of
