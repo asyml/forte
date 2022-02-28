@@ -7,7 +7,7 @@ Chapter 1. Handling Structured Data
    :maxdepth: 2
 
    toc/ontology_generation.md
-   notebook_tutorial/rst/handling_structued_data
+   notebook_tutorial/handling_structued_data
 
 .. rst-class:: page-break
 
@@ -16,10 +16,10 @@ Chapter 2. Building NLP Pipeline
 .. toctree::
    :maxdepth: 2
 
-   notebook_tutorial/rst/pipeline
+   notebook_tutorial/pipeline
    toc/pipeline_component
-   notebook_tutorial/rst/wrap_MT_inference_pipeline
-   notebook_tutorial/rst/text_classification_pipeline
+   notebook_tutorial/wrap_MT_inference_pipeline
+   notebook_tutorial/text_classification_pipeline
 
 .. rst-class:: page-break
 
