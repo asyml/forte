@@ -196,8 +196,8 @@ class GenerateOntologyTest(unittest.TestCase):
             gen_files = sorted(utils.get_generated_files_in_dir(folder_path))
 
             exp_file_path = [
-                # "ft/__init__.py", # leave this line here for different namespace_depth tests
-                "ft/onto/__init__.py", # leave this line here for different namespace_depth tests
+                # "ft/__init__.py", # keep this line here for different namespace_depth tests
+                "ft/onto/__init__.py", # keep this line here for different namespace_depth tests
                 "ft/onto/example_import_ontology.py",
             ]
             exp_files = sorted(
