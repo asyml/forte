@@ -342,6 +342,11 @@ extlinks = {
     "gym": ("https://gym.openai.com/docs/%s", None),
 }
 
+
+# disable notebook execution
+nbsphinx_execute = "never"
+
+
 ##### Customize ######
 
 # Snippet to insert at beginning of each RST file.
