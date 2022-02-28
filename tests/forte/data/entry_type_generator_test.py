@@ -37,15 +37,7 @@ class EntryTypeGeneratorTest(unittest.TestCase):
                 "ud_misc",
             ],
             "ft.onto.base_ontology.Title": [],
-            "ft.onto.metric.SingleMetric": ["value"],
-            "ftx.medical.UMLSConceptLink": [
-                "cui",
-                "name",
-                "definition",
-                "tuis",
-                "aliases",
-                "score",
-            ],
+            "ft.onto.metric.SingleMetric": ["value"]
         }
         for entry_name in entry_name_attributes_dict.keys():
             attribute_result = EntryTypeGenerator.get_entry_attribute_by_class(
