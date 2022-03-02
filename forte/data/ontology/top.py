@@ -52,7 +52,7 @@ class Generics(Entry):
 @total_ordering
 class Annotation(Entry):
     r"""Annotation type entries, such as "token", "entity mention" and
-    "sentence". Each annotation has a :class:`Span` corresponding to its offset
+    "sentence". Each annotation has a :class:`~forte.data.span.Span` corresponding to its offset
     in the text.
 
     Args:
@@ -549,7 +549,7 @@ class Query(Generics):
 @total_ordering
 class AudioAnnotation(Entry):
     r"""AudioAnnotation type entries, such as "recording" and "audio utterance".
-    Each audio annotation has a :class:`Span` corresponding to its offset
+    Each audio annotation has a :class:`~forte.data.span.Span` corresponding to its offset
     in the audio. Most methods in this class are the same as the ones in
     :class:`Annotation`, except that it replaces property `text` with `audio`.
 

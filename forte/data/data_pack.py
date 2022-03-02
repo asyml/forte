@@ -1724,7 +1724,7 @@ class DataIndex(BaseIndex):
             inner_entry (int or Entry): The inner entry object to be checked
              whether it is within ``span``. The argument can be the entry id
              or the entry object itself.
-            span (Span): A :class:`Span` object to be checked. We will check
+            span (Span): A :class:`~forte.data.span.Span` object to be checked. We will check
                 whether the ``inner_entry`` is within this span.
 
         Returns:
@@ -1807,7 +1807,7 @@ class DataIndex(BaseIndex):
             inner_entry (int or Entry): The inner entry object to be checked
              whether it is within ``span``. The argument can be the entry id
              or the entry object itself.
-            span (Span): A :class:`Span` object to be checked. We will check
+            span (Span): A :class:`~forte.data.span.Span` object to be checked. We will check
                 whether the ``inner_entry`` is within this span.
 
         Returns:
