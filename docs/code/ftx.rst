@@ -1,8 +1,12 @@
 .. role:: hidden
     :class: hidden-section
 
-ag_news
+
+ftx
 *******
+
+ag_news
+=========
 .. toctree::
    :maxdepth: 2
 
@@ -11,7 +15,7 @@ ag_news
 
 
 clinical
-*********
+==========
 .. toctree::
    :maxdepth: 2
 
@@ -24,7 +28,7 @@ clinical
 
 
 race_qa
-********
+========
 .. toctree::
    :maxdepth: 2
 

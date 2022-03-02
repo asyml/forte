@@ -4,7 +4,7 @@
 ft
 *******
 
-base ontology
+Base Ontology
 ==============
 .. toctree::
    :maxdepth: 2
@@ -112,7 +112,7 @@ Metric
 
 
 Wikipedia
-=======
+==========
 .. toctree::
    :maxdepth: 2
 
