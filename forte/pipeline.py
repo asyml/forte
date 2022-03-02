@@ -130,8 +130,8 @@ class Pipeline(Generic[PackType]):
         r"""
 
         Args:
-            resource: The ``Resources`` object, which is a global registry used
-                in the pipeline. Objects defined as ``Resources`` will be
+            resource: The :class:`Resources` object, which is a global registry used
+                in the pipeline. Objects defined as :class:`Resources` will be
                 passed on to the processors in the
                 pipeline for initialization.
             ontology_file: The path to the input ontology specification file,
