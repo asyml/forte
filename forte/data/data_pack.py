@@ -631,7 +631,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         object to the :class:`~forte.data.DataPack` object.
 
         Args:
-            entry (Entry): An :class:`Entry` object to be added to the datapack.
+            entry (Entry): An :class:`~forte.data.ontology.core.Entry` object to be added to the datapack.
             allow_duplicate (bool): Whether we allow duplicate in the datapack.
 
         Returns:

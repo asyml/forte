@@ -386,8 +386,8 @@ class PackReader(BaseReader[DataPack], ABC):
 
 
 class MultiPackReader(BaseReader[MultiPack], ABC):
-    r"""The basic :class:`MultiPack` data reader class. To be inherited by all
-    data readers which return :class:`MultiPack`.
+    r"""The basic :class:`~forte.data.multi_pack.MultiPack` data reader class. To be inherited by all
+    data readers which return :class:`~forte.data.multi_pack.MultiPack`.
     """
 
     @staticmethod

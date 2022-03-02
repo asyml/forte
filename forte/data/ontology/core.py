@@ -368,7 +368,7 @@ class Entry(Generic[ContainerType]):
 
     def __eq__(self, other):
         r"""
-        The eq function for :class:`Entry` objects.
+        The eq function for :class:`~forte.data.ontology.core.Entry` objects.
         Can be further implemented in each subclass.
 
         Args:
@@ -387,7 +387,7 @@ class Entry(Generic[ContainerType]):
         return (str(type(self))) < (str(type(other)))
 
     def __hash__(self) -> int:
-        r"""The hash function for :class:`Entry` objects.
+        r"""The hash function for :class:`~forte.data.ontology.core.Entry` objects.
         To be implemented in each subclass.
         """
         return hash((type(self), self._tid))
@@ -751,7 +751,7 @@ class BaseLink(Entry, ABC):
         r"""Get the parent entry of the link.
 
         Returns:
-             An instance of :class:`Entry` that is the child of the link
+             An instance of :class:`~forte.data.ontology.core.Entry` that is the child of the link
              from the given :class:`~forte.data.data_pack.DataPack`.
         """
         raise NotImplementedError
@@ -761,7 +761,7 @@ class BaseLink(Entry, ABC):
         r"""Get the child entry of the link.
 
         Returns:
-             An instance of :class:`Entry` that is the child of the link
+             An instance of :class:`~forte.data.ontology.core.Entry` that is the child of the link
              from the given :class:`~forte.data.data_pack.DataPack`.
         """
         raise NotImplementedError
@@ -846,7 +846,7 @@ class BaseGroup(Entry, Generic[EntryType]):
         r"""Get the member entries in the group.
 
         Returns:
-             Instances of :class:`Entry` that are the members of the
+             Instances of :class:`~forte.data.ontology.core.Entry` that are the members of the
              group.
         """
         raise NotImplementedError

@@ -56,7 +56,7 @@ class MultiPackMeta(BaseMeta):
 
 
 class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
-    r"""A :class:`MultiPack` contains multiple `DataPacks` and a collection of
+    r"""A :class:`~forte.data.multi_pack.MultiPack` contains multiple `DataPacks` and a collection of
     cross-pack entries (such as links and groups)
     """
 
@@ -702,11 +702,11 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     def __add_entry_with_check(
         self, entry: EntryType, allow_duplicate: bool = True
     ) -> EntryType:
-        r"""Internal method to add an :class:`Entry` object to the
-        :class:`MultiPack` object.
+        r"""Internal method to add an :class:`~forte.data.ontology.core.Entry` object to the
+        :class:`~forte.data.multi_pack.MultiPack` object.
 
         Args:
-            entry (Entry): An :class:`Entry` object to be added to the datapack.
+            entry (Entry): An :class:`~forte.data.ontology.core.Entry` object to be added to the datapack.
             allow_duplicate (bool): Whether we allow duplicate in the datapack.
 
         Returns:
@@ -860,7 +860,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
     def _add_entry(self, entry: EntryType) -> EntryType:
         r"""Force add an :class:`forte.data.ontology.core.Entry` object to the
-        :class:`MultiPack` object.
+        :class:`~forte.data.multi_pack.MultiPack` object.
 
         Allow duplicate entries in a datapack.
 
@@ -875,7 +875,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
     def delete_entry(self, entry: EntryType):
         r"""Delete an :class:`~forte.data.ontology.core.Entry` object from the
-        :class:`MultiPack`.
+        :class:`~forte.data.multi_pack.MultiPack`.
 
         Args:
             entry (Entry): An :class:`~forte.data.ontology.core.Entry`

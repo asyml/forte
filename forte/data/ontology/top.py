@@ -262,7 +262,7 @@ class Link(BaseLink):
         r"""Get the parent entry of the link.
 
         Returns:
-             An instance of :class:`Entry` that is the parent of the link.
+             An instance of :class:`~forte.data.ontology.core.Entry` that is the parent of the link.
         """
         if self.pack is None:
             raise ValueError(
@@ -277,7 +277,7 @@ class Link(BaseLink):
         r"""Get the child entry of the link.
 
         Returns:
-             An instance of :class:`Entry` that is the child of the link.
+             An instance of :class:`~forte.data.ontology.core.Entry` that is the child of the link.
         """
         if self.pack is None:
             raise ValueError(
@@ -322,7 +322,7 @@ class Group(BaseGroup[Entry]):
         r"""Get the member entries in the group.
 
         Returns:
-             A set of instances of :class:`Entry` that are the members of the
+             A set of instances of :class:`~forte.data.ontology.core.Entry` that are the members of the
              group.
         """
         if self.pack is None:
@@ -342,7 +342,7 @@ class MultiPackGeneric(MultiEntry, Entry):
 
 
 class MultiPackLink(MultiEntry, BaseLink):
-    r"""This is used to link entries in a :class:`MultiPack`, which is
+    r"""This is used to link entries in a :class:`~forte.data.multi_pack.MultiPack`, which is
     designed to support cross pack linking, this can support applications such
     as sentence alignment and cross-document coreference. Each link should have
     a parent node and a child node. Note that the nodes are indexed by two
@@ -455,7 +455,7 @@ class MultiPackLink(MultiEntry, BaseLink):
         r"""Get the parent entry of the link.
 
         Returns:
-             An instance of :class:`Entry` that is the parent of the link.
+             An instance of :class:`~forte.data.ontology.core.Entry` that is the parent of the link.
         """
         if self._parent is None:
             raise ValueError("The parent of this link is not set.")
@@ -467,7 +467,7 @@ class MultiPackLink(MultiEntry, BaseLink):
         r"""Get the child entry of the link.
 
         Returns:
-             An instance of :class:`Entry` that is the child of the link.
+             An instance of :class:`~forte.data.ontology.core.Entry` that is the child of the link.
         """
         if self._child is None:
             raise ValueError("The parent of this link is not set.")
