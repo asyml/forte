@@ -175,17 +175,24 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     # TODO: get_subentry maybe useless
     def get_subentry(self, pack_idx: int, entry_id: int):
         r"""
-        Fix enhancement issue #559: use pack_idx as pack_id : Changing the way
-        of accessing/referencing a pack within the lists of multi pack, from
-        by using list index number (in order to access/reference) to by using
-        pack_id. So that removing pack(s) from multi-pack will not affecting
-        the reference to other remaining packs like (the list index approach)
+        This method now use pack_idx as pack_id to get a pack from multi pack,
+        and then return its sub_entry with entry_id. Noted this is changed from
+        the way of accessing such pack before the PACK_ID_COMPATIBLE_VERSION,
+        in which the pack_idex was used as list index number to access/reference
+        a pack within the muti pack (and in this case then get the sub_entry).
+
+        Args:
+            pack_idx (int): The pack_id for the data_pack in the
+              multi pack.
+            entry_id (int): the id for the entry from the pack with pack_id
 
         Returns:
             sub-entry of the pack with id = `pack_idx`
 
         """
         pack_array_index: int = pack_idx  # the old way
+        # the following check if the pack version is higher than the (backward)
+        # compatible version in which pack_idx is the pack_id not list index
         if Version(self.pack_version) >= Version(PACK_ID_COMPATIBLE_VERSION):
             pack_array_index = self.get_pack_index(
                 pack_idx
