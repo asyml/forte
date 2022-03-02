@@ -366,19 +366,19 @@ class BaseReader(PipelineComponent[PackType], ABC):
         pass
 
     def set_text(self, pack: DataPack, text: str):
-        r"""Assign the text value to the :class:`DataPack`. This function will
-        pass the ``text_replace_operation`` to the :class:`DataPack` to conduct
+        r"""Assign the text value to the :class:`~forte.data.data_pack.DataPack`. This function will
+        pass the ``text_replace_operation`` to the :class:`~forte.data.data_pack.DataPack` to conduct
         the pre-processing step.
 
         Args:
-            pack: The :class:`DataPack` to assign value for.
+            pack: The :class:`~forte.data.data_pack.DataPack` to assign value for.
             text: The original text to be recorded in this dataset.
         """
         pack.set_text(text, replace_func=self.text_replace_operation)
 
 
 class PackReader(BaseReader[DataPack], ABC):
-    r"""A Pack Reader reads data into :class:`DataPack`."""
+    r"""A Pack Reader reads data into :class:`~forte.data.data_pack.DataPack`."""
 
     @staticmethod
     def pack_type():

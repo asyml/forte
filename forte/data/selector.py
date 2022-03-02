@@ -55,7 +55,7 @@ class Selector(Generic[InputPackType, OutputPackType], Configurable):
 
 class DummySelector(Selector[InputPackType, InputPackType]):
     r"""Do nothing, return the data pack itself, which can be either
-    :class:`DataPack` or :class:`~forte.data.multi_pack.MultiPack`.
+    :class:`~forte.data.data_pack.DataPack` or :class:`~forte.data.multi_pack.MultiPack`.
     """
 
     def select(self, pack: InputPackType) -> Iterator[InputPackType]:
@@ -102,7 +102,7 @@ class SinglePackSelector(Selector[MultiPack, DataPack]):
 
 class NameMatchSelector(SinglePackSelector):
     r"""
-    Select a :class:`DataPack` from a :class:`~forte.data.multi_pack.MultiPack` with specified
+    Select a :class:`~forte.data.data_pack.DataPack` from a :class:`~forte.data.multi_pack.MultiPack` with specified
     name. This implementation takes special care for backward compatibility.
 
     Deprecated:
@@ -164,7 +164,7 @@ class NameMatchSelector(SinglePackSelector):
 
 
 class RegexNameMatchSelector(SinglePackSelector):
-    r"""Select a :class:`DataPack` from a :class:`~forte.data.multi_pack.MultiPack` using a regex.
+    r"""Select a :class:`~forte.data.data_pack.DataPack` from a :class:`~forte.data.multi_pack.MultiPack` using a regex.
 
     This implementation takes special care for backward compatibility.
 

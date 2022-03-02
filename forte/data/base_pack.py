@@ -462,7 +462,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
     def get_single(self, entry_type: Union[str, Type[EntryType]]) -> EntryType:
         r"""Take a single entry of type :attr:`entry_type` from this data
         pack. This is useful when the target entry type appears only one
-        time in the :class:`DataPack` for e.g., a Document entry. Or you just
+        time in the :class:`~forte.data.data_pack.DataPack` for e.g., a Document entry. Or you just
         intended to take the first one.
 
         Args:

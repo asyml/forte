@@ -147,7 +147,7 @@ def as_sorted_error_check(entries: List[EntryType]) -> SortedList:
 
 class DataPack(BasePack[Entry, Link, Group]):
     # pylint: disable=too-many-public-methods, unused-private-member
-    r"""A :class:`DataPack` contains a piece of natural language text and a
+    r"""A :class:`~forte.data.data_pack.DataPack` contains a piece of natural language text and a
     collection of NLP entries (annotations, links, and groups). The natural
     language text could be a document, paragraph or in any other granularity.
 
@@ -435,7 +435,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         ) = data_utils_io.modify_text_and_track_ops(text, span_ops)
 
     def set_audio(self, audio: np.ndarray, sample_rate: int):
-        r"""Set the audio payload and sample rate of the :class:`DataPack`
+        r"""Set the audio payload and sample rate of the :class:`~forte.data.data_pack.DataPack`
         object.
 
         Args:
@@ -446,11 +446,11 @@ class DataPack(BasePack[Entry, Link, Group]):
         self.set_meta(sample_rate=sample_rate)
 
     def get_original_text(self):
-        r"""Get original unmodified text from the :class:`DataPack` object.
+        r"""Get original unmodified text from the :class:`~forte.data.data_pack.DataPack` object.
 
         Returns:
             Original text after applying the `replace_back_operations` of
-            :class:`DataPack` object to the modified text
+            :class:`~forte.data.data_pack.DataPack` object to the modified text
         """
         original_text, _, _, _ = data_utils_io.modify_text_and_track_ops(
             self._text, self.__replace_back_operations
@@ -613,7 +613,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
     def _add_entry(self, entry: EntryType) -> EntryType:
         r"""Force add an :class:`~forte.data.ontology.core.Entry` object to the
-        :class:`DataPack` object. Allow duplicate entries in a pack.
+        :class:`~forte.data.data_pack.DataPack` object. Allow duplicate entries in a pack.
 
         Args:
             entry (Entry): An :class:`~forte.data.ontology.core.Entry`
@@ -700,7 +700,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
     def delete_entry(self, entry: EntryType):
         r"""Delete an :class:`~forte.data.ontology.core.Entry` object from the
-        :class:`DataPack`. This find out the entry in the index and remove it
+        :class:`~forte.data.data_pack.DataPack`. This find out the entry in the index and remove it
         from the index. Note that entries will only appear in the index if
         `add_entry` (or _add_entry_with_check) is called.
 
@@ -1511,7 +1511,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
 
 class DataIndex(BaseIndex):
-    r"""A set of indexes used in :class:`DataPack`, note that this class is
+    r"""A set of indexes used in :class:`~forte.data.data_pack.DataPack`, note that this class is
     used by the `DataPack` internally.
 
     #. :attr:`entry_index`, the index from each tid to the corresponding entry

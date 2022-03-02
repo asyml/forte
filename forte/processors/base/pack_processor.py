@@ -33,7 +33,7 @@ class BasePackProcessor(BaseProcessor[PackType], ABC):
 
 
 class PackProcessor(BasePackProcessor[DataPack], ABC):
-    r"""The base class of processors that process one :class:`DataPack` each
+    r"""The base class of processors that process one :class:`~forte.data.data_pack.DataPack` each
     time.
     """
 
