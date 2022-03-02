@@ -178,8 +178,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         This method now use pack_idx as pack_id to get a pack from multi pack,
         and then return its sub_entry with entry_id. Noted this is changed from
         the way of accessing such pack before the PACK_ID_COMPATIBLE_VERSION,
-        in which the pack_idex was used as list index number to access/reference
-        a pack within the muti pack (and in this case then get the sub_entry).
+        in which the pack_idx was used as list index number to access/reference
+        a pack within the multi pack (and in this case then get the sub_entry).
 
         Args:
             pack_idx (int): The pack_id for the data_pack in the
