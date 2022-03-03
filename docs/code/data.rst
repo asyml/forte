@@ -32,6 +32,9 @@ top
 .. autoclass:: forte.data.ontology.top.Annotation
     :members:
 
+.. autoclass:: forte.data.ontology.top.AudioAnnotation
+    :members:
+
 .. autoclass:: forte.data.ontology.top.Link
     :members:
 

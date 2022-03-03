@@ -573,7 +573,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         """
         Return all entries of this particular type without orders. If you
         need to get the annotations based on the entry ordering,
-        use :meth:`forte.data.base_pack.get`.
+        use :meth:`forte.data.base_pack.BasePack.get`.
 
         Args:
             entry_type: The type of the entry you are looking for.
