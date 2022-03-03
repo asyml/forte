@@ -147,7 +147,7 @@ class DataPackDataset(DatasetBase):
 
     Args:
         data_source: A data source of type
-            :class:`~forte.data.data_pack_dataset.DataPackDataSource`.
+            :class:`~forte.data.data_pack_dataset.DataPackIterator`.
         feature_schemes (dict): A `Dict` containing all the information to do
             data pre-processing. This is exactly the same as the `schemes` in
             `feature_resource`. Please refer to :meth:`feature_resource` in
