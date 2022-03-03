@@ -25,7 +25,11 @@ def _get_type_attributes():
     return type_attributes
 
 
-def _get_entry_attribute_by_class(input_entry_class_name):
+def _get_entry_attribute_by_class(input_entry_class_name: str):
+    """Get type attributes by class name. input_entry_class_name should be
+    an object class dotted name path. This method is actually relies on type annotation.
+    """
+
     class_ = get_class(input_entry_class_name)
     try:
         return list(class_.__annotations__.keys())
@@ -34,6 +38,10 @@ def _get_entry_attribute_by_class(input_entry_class_name):
 
 
 class EntryTypeGenerator:
+    """
+    The base class of entry type generator.
+    """
+
     @staticmethod
     @functools.lru_cache(1)
     def get_type_attributes():
@@ -62,15 +70,15 @@ class EntryTypeGenerator:
 
     @staticmethod
     def get_entry_attributes_by_class(input_entry_class_name: str):
-        """For each type, we want to obtain all the attributes.
+        """Get type attributes by class name.
 
         Args:
-            input_entry_class_name: An object class name.
+            input_entry_class_name: An object class dotted name path.
 
         Returns:
              A list of attributes corresponding to the input class.
 
-        For example, for sentence we want to get a list of
+        For example, for Sentence we want to get a list of
         ["speaker", "part_id", "sentiment", "classification", "classifications"].
         The solution looks like the following:
 
