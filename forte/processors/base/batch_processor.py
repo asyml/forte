@@ -178,7 +178,7 @@ class PackingBatchProcessor(BaseBatchProcessor[PackType], ABC):
 
     To implement this processor, one need to implement:
     1. The `predict` function that make predictions for each input data batch.
-    2. The `pack` function that add the prediction value back to the dat pack.
+    2. The `pack` function that add the prediction value back to the data pack.
 
     Users that implement the processor only have to concern about a single
     batch, the alignment between the data batch and the data pack will be
@@ -470,7 +470,7 @@ class Predictor(PackingBatchProcessor[PackType]):
 
 
 class MultiPackBatchProcessor(BaseBatchProcessor[MultiPack], ABC):
-    r"""This class defines the base batch processor for `MultiPack`s."""
+    r"""This class defines the base batch processor for `MultiPack`."""
 
     def __init__(self):
         super().__init__()

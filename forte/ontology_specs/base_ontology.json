@@ -381,6 +381,11 @@
       "description": "A span based annotation `Title`, normally used to represent a title."
     },
     {
+      "entry_name": "ft.onto.base_ontology.Body",
+      "parent_entry": "forte.data.ontology.top.Annotation",
+      "description": "A span based annotation `Body`, normally used to represent a document body."
+    },
+    {
       "entry_name": "ft.onto.base_ontology.MCOption",
       "parent_entry": "forte.data.ontology.top.Annotation"
     },
