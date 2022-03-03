@@ -199,11 +199,14 @@ def main():
         "--namespace_depth",
         type=int,
         required=False,
-        default=-1,
+        default=0,
         help="set an integer argument namespace_depth"
         "to allow customized number of levels of namespace packaging."
         "The generation of __init__.py for all the"
-        "directory levels above namespace_depth will be disabled.",
+        "directory levels above namespace_depth will be disabled."
+        "Default value is set to 0 to disable namespace packaging"
+        "When namespace_depth<=0, namespace packaging will be disabled"
+        "and __init__.py will be included in all directory levels",
     )
 
     create_parser.set_defaults(func=create)
