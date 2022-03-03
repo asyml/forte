@@ -67,8 +67,8 @@ class AttributeExtractor(BaseExtractor):
               The name of the attribute we want to extract from the entry. This
               attribute should present in the entry definition. There are some
               built-in attributes for some instance, such as `text` for
-              `Annotation` entries. `tid` should be also available for any
-              entries. The default value is `tid`.
+              `Annotation` entries. ``tid`` should be also available for any
+              entries. The default value is ``tid``.
         - "`entry_type`": str
               The fully qualified name of the entry to extract attributes from.
               The default value is None, but this value must present or an

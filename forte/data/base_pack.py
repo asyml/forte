@@ -221,7 +221,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         self, entry: Entry, component_name: Optional[str] = None
     ) -> EntryType:
         r"""Add an :class:`~forte.data.ontology.core.Entry` object to the
-        :class:`BasePack` object. Allow duplicate entries in a pack.
+        :class:`~forte.data.base_pack.BasePack` object. Allow duplicate entries in a pack.
 
         Args:
             entry (Entry): An :class:`~forte.data.ontology.core.Entry`
@@ -240,7 +240,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
     @abstractmethod
     def _add_entry(self, entry: Entry) -> EntryType:
         r"""Add an :class:`~forte.data.ontology.core.Entry` object to the
-        :class:`BasePack` object. Allow duplicate entries in a pack.
+        :class:`~forte.data.base_pack.BasePack` object. Allow duplicate entries in a pack.
 
         Args:
             entry (Entry): An :class:`~forte.data.ontology.core.Entry`

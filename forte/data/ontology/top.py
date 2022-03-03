@@ -382,17 +382,17 @@ class MultiPackLink(MultiEntry, BaseLink):
 
     def parent_id(self) -> int:
         """
-        Return the `tid` of the parent entry.
+        Return the ``tid`` of the parent entry.
 
-        Returns: The `tid` of the parent entry.
+        Returns: The ``tid`` of the parent entry.
         """
         return self.parent[1]
 
     def child_id(self) -> int:
         """
-        Return the `tid` of the child entry.
+        Return the ``tid`` of the child entry.
 
-        Returns: The `tid` of the child entry.
+        Returns: The ``tid`` of the child entry.
         """
         return self.child[1]
 

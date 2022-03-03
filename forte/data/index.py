@@ -36,7 +36,7 @@ __all__ = ["BaseIndex"]
 
 
 class BaseIndex(Generic[EntryType]):
-    r"""A set of indexes used in :class:`BasePack`:
+    r"""A set of indexes used in :class:`~forte.data.base_pack.BasePack`:
 
     #. :attr:`entry_index`, the index from each tid to the corresponding entry
     #. :attr:`type_index`, the index from each type to the entries of
@@ -77,7 +77,7 @@ class BaseIndex(Generic[EntryType]):
         r"""Build or update the basic indexes, including
 
         (1) :attr:`entry_index`,
-        the index from each `tid` to the corresponding entry;
+        the index from each ``tid`` to the corresponding entry;
 
         (2) :attr:`type_index`, the index from each type to the entries of that
         type;
@@ -183,15 +183,15 @@ class BaseIndex(Generic[EntryType]):
 
     def link_index(self, tid: int, as_parent: bool = True) -> Set[int]:
         r"""Look up the link_index with key ``tid``. If the link index is not
-        built, this will throw a ``PackIndexError``.
+        built, this will throw a :class:`~forte.common.PackIndexError`.
 
         Args:
             tid (int): the tid of the entry being looked up.
             as_parent (bool): If `as_patent` is True, will look up
                 :attr:`link_index["parent_index"] and return the tids of links
-                whose parent is `tid`. Otherwise,  will look up
+                whose parent is ``tid``. Otherwise,  will look up
                 :attr:`link_index["child_index"] and return the tids of links
-                whose child is `tid`.
+                whose child is ``tid``.
         """
         if not self._link_index_switch:
             raise PackIndexError("Link index for pack not build")
@@ -202,8 +202,8 @@ class BaseIndex(Generic[EntryType]):
             return self._link_index["child_index"][tid]
 
     def group_index(self, tid: int) -> Set[int]:
-        r"""Look up the group_index with key `tid`. If the index is not built,
-        this will raise a ``PackIndexError``.
+        r"""Look up the group_index with key ``tid``. If the index is not built,
+        this will raise a :class:`~forte.common.PackIndexError`.
         """
         if not self.group_index_on:
             raise PackIndexError("Group index for pack not build")
@@ -214,6 +214,7 @@ class BaseIndex(Generic[EntryType]):
         child and parent to links.
 
         :attr:`link_index` consists of two sub-indexes:
+
             - "child_index" is the index from child nodes to their corresponding
               links
             - "parent_index" is the index from parent nodes to their

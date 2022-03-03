@@ -106,12 +106,14 @@ class NameMatchSelector(SinglePackSelector):
     name. This implementation takes special care for backward compatibility.
 
     Deprecated:
+
         .. code-block:: python
 
             selector = NameMatchSelector(select_name="foo")
             selector = NameMatchSelector("foo")
 
     Now:
+
         .. code-block:: python
 
             selector = NameMatchSelector()

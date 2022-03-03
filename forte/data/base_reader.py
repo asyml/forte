@@ -53,8 +53,8 @@ class BaseReader(PipelineComponent[PackType], ABC):
         cache_directory (str, optional): The base directory to place the
             path of the caching files. Each collection is contained in one
             cached file, under this directory. The cached location for each
-            collection is computed by :meth:`_cache_key_function`. Note:
-            A collection is the data returned by :meth:`_collect`.
+            collection is computed by :meth:`~forte.data.base_reader.BaseReader._cache_key_function`. Note:
+            A collection is the data returned by :meth:`~forte.data.base_reader.BaseReader._collect`.
         append_to_cache (bool, optional): Decide whether to append write
             if cache file already exists.  By default (``False``), we
             will overwrite the existing caching file. If ``True``, we will
@@ -96,12 +96,13 @@ class BaseReader(PipelineComponent[PackType], ABC):
         during pipeline construction.
 
         Here:
+
           - zip_pack (bool): whether to zip the results. The default value is
-             False.
+            False.
 
           - serialize_method: The method used to serialize the data. Current
-              available options are "jsonpickle" and "pickle". Default is
-              "jsonpickle".
+            available options are "jsonpickle" and "pickle". Default is
+            "jsonpickle".
 
         """
         return {"zip_pack": False, "serialize_method": "jsonpickle"}
@@ -300,10 +301,10 @@ class BaseReader(PipelineComponent[PackType], ABC):
         r"""Specify the path to the cache directory.
 
         After you call this method, the dataset reader will use its
-        ``cache_directory`` to store a cache of :class:`BasePack` read
+        ``cache_directory`` to store a cache of :class:`~forte.data.base_pack.BasePack` read
         from every document passed to :func:`read`, serialized as one
-        string-formatted :class:`BasePack`. If the cache file for a given
-        ``file_path`` exists, we read the :class:`BasePack` from the cache.
+        string-formatted :class:`~forte.data.base_pack.BasePack`. If the cache file for a given
+        ``file_path`` exists, we read the :class:`~forte.data.base_pack.BasePack` from the cache.
         If the cache file does not exist, we will `create` it on our first
         pass through the data.
 
