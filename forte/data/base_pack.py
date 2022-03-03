@@ -559,7 +559,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
         Returns:
             A set of all the sub-types extending the provided type, including
-            the input `entry_type` itself.
+            the input ``entry_type`` itself.
         """
         all_types: Set[Type] = set()
         for data_type in self._index.indexed_types():

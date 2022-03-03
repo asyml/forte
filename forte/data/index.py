@@ -117,7 +117,7 @@ class BaseIndex(Generic[EntryType]):
             t: The type of the entry you are looking for.
 
         Returns:
-             A set of entry ids. The entries are instances of `entry_type` (
+             A set of entry ids. The entries are instances of ``entry_type`` (
              and also includes instances of the subclasses of `entry_type`).
         """
         if t in self._subtype_index:

@@ -406,7 +406,7 @@ class DataStore(BaseStore):
             tid (int): Unique id of the entry.
         """
         # We call ``get_entry()`` to obtain the entry, its `type_id`, and the
-        # index in the `entry_type` list (`index_id`). We remove the entry from
+        # index in the ``entry_type`` list (`index_id`). We remove the entry from
         # `__entry_dict` when its information is retrieved. Then, the `type_id`
         # and the ``index_id`` are passed to `_delete_entry_by_loc`.
         raise NotImplementedError
@@ -451,7 +451,7 @@ class DataStore(BaseStore):
         Returns:
             An iterator of the entries matching the provided arguments.
         """
-        # We use the ``type_id`` to find its `entry_type` and all subclasses.
+        # We use the ``type_id`` to find its ``entry_type`` and all subclasses.
         # We locate the lists.
         # We create an iterator to generate entries from the list.
         type_id = self.__type_index_dict[type_name]

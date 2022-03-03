@@ -47,7 +47,7 @@ class AttributeExtractor(BaseExtractor):
         super().initialize(config)
         if self.config.entry_type is None:
             raise ProcessorConfigError(
-                "The `entry_type` configuration must be "
+                "The ``entry_type`` configuration must be "
                 "provided and cannot be None."
             )
         if self.config.attribute is None:

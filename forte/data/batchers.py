@@ -263,7 +263,7 @@ class FixedSizeDataPackBatcherWithExtractor(ProcessingBatcher):
     def collate(
         self, features_collection: List[Dict[str, Feature]]
     ) -> Dict[str, Dict[str, Any]]:
-        r"""This function use the :class:`~forte.data.converter.Converter`
+        r"""This function use the :class:`~forte.data.converter.converter.Converter`
         interface to turn a list of features into batches, where each feature
         is converted to tensor/matrix format. The resulting features are
         organized as a dictionary, where the keys are the feature names/tags,
@@ -538,12 +538,13 @@ class FixedSizeRequestDataPackBatcher(FixedSizeDataPackBatcher):
         The configuration of a batcher.
 
         Here:
-            context_type (str): The fully qualified name of an `Annotation`
+
+            - context_type (str): The fully qualified name of an `Annotation`
               type, which will be used as the context to retrieve data from. For
               example, if a `ft.onto.Sentence` type is provided, then it will
               extract data within each sentence.
-            requests: The request detail. See
-              :meth:`~forte.data.DataPack.get_data` on what a request looks
+            - requests: The request detail. See
+              :meth:`~forte.data.data_pack.DataPack.get_data` on what a request looks
               like.
 
         Returns: The default configuration structure and default value.
@@ -556,7 +557,7 @@ class FixedSizeRequestDataPackBatcher(FixedSizeDataPackBatcher):
 
 
 class FixedSizeMultiPackProcessingBatcher(ProcessingBatcher[MultiPack]):
-    r"""A Batcher used in ``MultiPackBatchProcessors``.
+    r"""A Batcher used in :class:`~forte.processors.base.batch_processor.MultiPackBatchProcessor`.
 
     Note: this implementation is not finished.
 

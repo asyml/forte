@@ -151,7 +151,7 @@ def get_state_func(instance):
 @dataclass
 class Entry(Generic[ContainerType]):
     r"""The base class inherited by all NLP entries. This is the main data type
-    for all in-text NLP analysis results. The main sub-types are  ``Annotation``, ``Link``, ``Generics``, and ``Group``.
+    for all in-text NLP analysis results. The main sub-types are  :class:`~forte.data.ontology.top.Annotation`, ``Link``, ``Generics``, and ``Group``.
 
     An :class:`forte.data.ontology.top.Annotation` object represents a
     span in text.

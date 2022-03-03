@@ -52,7 +52,7 @@ class DataPackIterator(IterDataSource):
         pack_iterator (Iterator[DataPack]): An iterator of
             :class:`~forte.data.data_pack.DataPack`.
         context_type: The granularity of a single example which
-            could be any ``Annotation`` type. For example, it can be
+            could be any :class:`~forte.data.ontology.top.Annotation` type. For example, it can be
             :class:`~ft.onto.base_ontology.Sentence`, then each training example
             will represent the information of a sentence.
         request: The request of type `Dict` sent to
@@ -91,7 +91,7 @@ class DataPackIterator(IterDataSource):
 
     .. note::
         For parameters `context_type`, `request`, `skip_k`, please refer to
-        :meth:`get_data()` in :class:`~forte.data.data_pack.DataPack`.
+        :meth:`~forte.data.data_pack.DataPack.get_data` in :class:`~forte.data.data_pack.DataPack`.
     """
 
     def __init__(
@@ -152,9 +152,10 @@ class DataPackDataset(DatasetBase):
             data pre-processing. This is exactly the same as the `schemes` in
             `feature_resource`. Please refer to :meth:`feature_resource` in
             :class:`~forte.train_preprocessor.TrainPreprocessor` for details.
-        hparams: A `dict` or instance of :
-            class:`~texar.torch.HParams` containing
-            hyperparameters. See :meth:`default_hparams` in
+        hparams: A `dict` or instance of
+            :class:`~texar.torch.HParams` containing
+            hyperparameters. See
+            :meth:`~texar.torch.data.DatasetBase.default_hparams` in
             :class:`~texar.torch.data.DatasetBase` for the defaults.
         device: The device of the produced batches. For GPU training,
             set to current CUDA device.
@@ -179,7 +180,7 @@ class DataPackDataset(DatasetBase):
         Args:
             raw_example (tuple(dict, DataPack)): A `Tuple` where
 
-              - The first element is a `Dict` produced by :meth:`get_data()` in
+              - The first element is a `Dict` produced by :meth:`~forte.data.data_pack.DataPack.get_data` in
                 :class:`~forte.data.data_pack.DataPack`.
 
               - The second element is an instance of type
@@ -218,6 +219,27 @@ class DataPackDataset(DatasetBase):
             A Texar Pytorch :class:`~Texar.torch.data.Batch`
             It can be treated as a `Dict` with the following structure:
 
+
+
+            - `"data"`: List or `np.ndarray` or `torch.tensor`
+              The pre-processed data.
+
+              Please refer to :class:`~forte.data.converter.Converter` for
+              details.
+
+            - `"masks"`: `np.ndarray` or `torch.tensor`
+              All the masks for pre-processed data.
+
+              Please refer to :class:`~forte.data.converter.Converter` for
+              details.
+
+            - `"features"`: List[Feature]
+              A List of :class:`~forte.data.converter.feature.Feature`. This
+              is useful when users want to do customized pre-processing.
+
+              Please refer to :class:`~forte.data.converter.Feature` for
+              details.
+
             .. code-block:: python
 
                 {
@@ -233,24 +255,6 @@ class DataPackDataset(DatasetBase):
                     }
                 }
 
-            `"data"`: List or `np.ndarray` or `torch.tensor`
-                The pre-processed data.
-
-                Please refer to :class:`~forte.data.converter.Converter` for
-                details.
-
-            `"masks"`: `np.ndarray` or `torch.tensor`
-                All the masks for pre-processed data.
-
-                Please refer to :class:`~forte.data.converter.Converter` for
-                details.
-
-            `"features"`: List[Feature]
-                A List of :class:`~forte.data.converter.feature.Feature`. This
-                is useful when users want to do customized pre-processing.
-
-                Please refer to :class:`~forte.data.converter.Feature` for
-                details.
 
             .. note::
                 The first level key in returned `batch` is the user-specified

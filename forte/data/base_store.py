@@ -162,7 +162,7 @@ class BaseStore:
 
         Returns:
             The entry which ``tid`` corresponds to, its ``type_name`` and its index
-            in the `entry_type` list.
+            in the ``entry_type`` list.
 
         """
         raise NotImplementedError

@@ -750,7 +750,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         components: Optional[Union[str, List[str]]] = None,
         include_sub_type=True,
     ) -> Iterator[EntryType]:
-        """Get entries of `entry_type` from this multi pack.
+        """Get entries of ``entry_type`` from this multi pack.
 
         Example:
 

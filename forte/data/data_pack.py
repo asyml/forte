@@ -906,7 +906,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             Args:
                 c_type (Union[Type[Annotation], Type[AudioAnnotation]]):
                     The granularity of the data context, which
-                    could be any ``Annotation`` type.
+                    could be any :class:`~forte.data.ontology.top.Annotation` type.
 
             Raises:
                 NotImplementedError: raised when the given context type is
@@ -936,7 +936,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             Args:
                 c_type (Union[Type[Annotation], Type[AudioAnnotation]]):
                     The granularity of the data context, which
-                    could be any ``Annotation`` type.
+                    could be any :class:`~forte.data.ontology.top.Annotation` type.
                 context (Union[Annotation, AudioAnnotation]): context that
                     contains data to be extracted.
 
@@ -1352,7 +1352,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         Depending on the provided arguments, the function will perform several
         different filtering of the returned data.
 
-        The `entry_type` is mandatory, where all the entries matching this type
+        The ``entry_type`` is mandatory, where all the entries matching this type
         will be returned. The sub-types of the provided entry type will be
         also returned if `include_sub_type` is set to True (which is the
         default behavior).
@@ -1439,7 +1439,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             yield from []
             return
 
-        # If the `entry_type` and `range_annotation` are for different types of
+        # If the ``entry_type`` and `range_annotation` are for different types of
         # payload, then we yield from an empty list with a warning.
         if (
             require_annotations(Annotation)
@@ -1449,7 +1449,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             and isinstance(range_annotation, Annotation)
         ):
             logger.warning(
-                "Incompatible combination of `entry_type` and "
+                "Incompatible combination of ``entry_type`` and "
                 "`range_annotation` found in the input of `DataPack.get()`"
                 " method. An empty iterator will be returned when inputs "
                 "contain multi-media entries. Please double check the input "
