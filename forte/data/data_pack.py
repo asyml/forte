@@ -122,7 +122,7 @@ def as_sorted_error_check(entries: List[EntryType]) -> SortedList:
     """
     Given a list of entries, return a sorted list of it. If unknown entry
     classes are seen during this process,
-    a :class:`~forte.common.UnknownOntologyClassException` exception will be
+    a :class:`~forte.common.exception.UnknownOntologyClassException` exception will be
     thrown.
 
     Args:

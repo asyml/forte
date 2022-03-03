@@ -46,7 +46,7 @@ class TrainPreprocessor:
     that method for how the pre-processing is done.
 
     A main part of the `TrainPreprocessor ` is that it maintains a list of
-    extractors :class:`~forte.data.BaseExtractor` that extract features. This
+    extractors :class:`~forte.data.base_extractor.BaseExtractor` that extract features. This
     can be provided either via calling `add_extractor` function. Alternatively,
     a request can be passed in through `initialize`, where the configuration
     under the `request` key will be used to create the extractor instances.
@@ -61,7 +61,7 @@ class TrainPreprocessor:
     .. note::
         For parameters `request`, user does not necessarily need to provide
         `converter`. If no `converter` is specified, a default converter of
-        type :class:`~forte.data.converter.Converter` will be picked.
+        type :class:`~forte.data.converter.converter.Converter.Converter` will be picked.
     """
 
     DATA_INPUT = extractor_utils.DATA_INPUT
@@ -272,7 +272,7 @@ class TrainPreprocessor:
                 :class:`~forte.data.extractor.BaseExtractor`.
 
             `"schemes.tag.converter"`:
-                An instance of type :class:`~forte.data.converter.Converter`.
+                An instance of type :class:`~forte.data.converter.converter.Converter`.
 
             `"schemes.tag.type"`: TrainPreprocessor.DATA_INPUT/DATA_OUTPUT
                 Denoting whether this feature is the input or output feature.

@@ -263,7 +263,7 @@ class FixedSizeDataPackBatcherWithExtractor(ProcessingBatcher):
     def collate(
         self, features_collection: List[Dict[str, Feature]]
     ) -> Dict[str, Dict[str, Any]]:
-        r"""This function use the :class:`~forte.data.converter.converter.Converter`
+        r"""This function use the :class:`~forte.data.converter.converter.Converter.Converter`
         interface to turn a list of features into batches, where each feature
         is converted to tensor/matrix format. The resulting features are
         organized as a dictionary, where the keys are the feature names/tags,

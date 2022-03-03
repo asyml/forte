@@ -73,7 +73,7 @@ class BaseExtractor(ABC):
             the pack.
 
     Attributes:
-        config: An instance of `Dict` or :class:`~forte.common.Config` that
+        config: An instance of `Dict` or :class:`~forte.common.configuration.Config` that
             provides configurable options. See
             :meth:`~forte.data.base_extractor.BaseExtractor.default_configs`
             for available options and default values.

@@ -183,7 +183,7 @@ class BaseIndex(Generic[EntryType]):
 
     def link_index(self, tid: int, as_parent: bool = True) -> Set[int]:
         r"""Look up the link_index with key ``tid``. If the link index is not
-        built, this will throw a :class:`~forte.common.PackIndexError`.
+        built, this will throw a :class:`~forte.common.exception.PackIndexError`.
 
         Args:
             tid (int): the tid of the entry being looked up.
@@ -203,7 +203,7 @@ class BaseIndex(Generic[EntryType]):
 
     def group_index(self, tid: int) -> Set[int]:
         r"""Look up the group_index with key ``tid``. If the index is not built,
-        this will raise a :class:`~forte.common.PackIndexError`.
+        this will raise a :class:`~forte.common.exception.PackIndexError`.
         """
         if not self.group_index_on:
             raise PackIndexError("Group index for pack not build")

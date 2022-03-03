@@ -224,13 +224,13 @@ class DataPackDataset(DatasetBase):
             - `"data"`: List or `np.ndarray` or `torch.tensor`
               The pre-processed data.
 
-              Please refer to :class:`~forte.data.converter.Converter` for
+              Please refer to :class:`~forte.data.converter.converter.Converter` for
               details.
 
             - `"masks"`: `np.ndarray` or `torch.tensor`
               All the masks for pre-processed data.
 
-              Please refer to :class:`~forte.data.converter.Converter` for
+              Please refer to :class:`~forte.data.converter.converter.Converter` for
               details.
 
             - `"features"`: List[Feature]
