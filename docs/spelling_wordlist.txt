@@ -151,3 +151,8 @@ nd
 Deque
 pytest
 ontologies
+granularities
+doesn
+structuralizing
+pseudocode
+txt
