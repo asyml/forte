@@ -175,7 +175,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     # TODO: get_subentry maybe useless
     def get_subentry(self, pack_idx: int, entry_id: int):
         r"""
-        Get subentry from multi pack. This method uses `pack_id` (a unique
+        Get sub_entry from multi pack. This method uses `pack_id` (a unique
         identifier assigned to datapack) to get a pack from multi pack,
         and then return its sub_entry with entry_id. Noted this is changed from
         the way of accessing such pack before the PACK_ID_COMPATIBLE_VERSION,
