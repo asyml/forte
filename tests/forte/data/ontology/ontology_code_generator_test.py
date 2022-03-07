@@ -77,6 +77,64 @@ class GenerateOntologyTest(unittest.TestCase):
                 self.assertEqual(la, lb)
 
     @data(
+        (
+            "example_ontology",
+            ["ft/onto/example_import_ontology", "ft/onto/example_ontology"],
+        ),
+        ("example_complex_ontology", ["ft/onto/example_complex_ontology"]),
+        (
+            "example_multi_module_ontology",
+            ["ft/onto/ft_module", "custom/user/custom_module"],
+        ),
+        ("race_qa_onto", ["ft/onto/race_qa_ontology"]),
+        ("test_top_attribute", ["ft/onto/test_top_attribute"]),
+        ("test_ndarray_attribute", ["ft/onto/test_ndarray"])
+    )
+    def test_generated_code(self, value):
+        input_file_name, file_paths = value
+        file_paths = sorted(file_paths + _get_init_paths(file_paths))
+
+        # Read json and generate code in a file.
+        with tempfile.TemporaryDirectory() as tempdir:
+            json_file_path = os.path.join(
+                self.spec_dir, f"{input_file_name}.json"
+            )
+            folder_path = self.generator.generate(
+                json_file_path, tempdir, is_dry_run=True
+            )
+            self.dir_path = folder_path
+
+            # Reorder code.
+            generated_files = sorted(
+                utils.get_generated_files_in_dir(folder_path)
+            )
+
+            expected_files = [
+                f"{os.path.join(folder_path, file)}.py" for file in file_paths
+            ]
+
+            self.assertEqual(generated_files, expected_files)
+
+            for i, generated_file in enumerate(generated_files):
+                # assert if generated code matches with the expected code
+                expected_code_path = os.path.join(
+                    self.test_output, f"{file_paths[i]}.py"
+                )
+                self.assert_generation_equal(generated_file, expected_code_path)
+
+    def test_dry_run_false(self):
+        json_file_path = os.path.join(
+            self.spec_dir, "example_import_ontology.json"
+        )
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_filename = _get_temp_filename(json_file_path, temp_dir)
+            self.generator.generate(temp_filename, temp_dir, is_dry_run=False)
+            folder_path = temp_dir
+            for name in ["ft", "onto", "example_import_ontology.py"]:
+                self.assertTrue(name in os.listdir(folder_path))
+                folder_path = os.path.join(folder_path, name)
+
+    @data(
         (0),
         (1),
         (2),
@@ -87,12 +145,11 @@ class GenerateOntologyTest(unittest.TestCase):
         )
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_filename = _get_temp_filename(json_file_path, temp_dir)
-            # Test with include_init = True, namespace_depth = int
+            # Test with namespace_depth = int
             folder_path = self.generator.generate(
                 temp_filename,
                 temp_dir,
                 is_dry_run=False,
-                include_init=True,
                 namespace_depth=namespace_depth,
             )
             gen_files = sorted(utils.get_generated_files_in_dir(folder_path))
@@ -109,19 +166,6 @@ class GenerateOntologyTest(unittest.TestCase):
                     for file in exp_file_path
                 ]
             )
-
-            self.assertEqual(gen_files, exp_files)
-
-            # Re-generate using include_init = False, namespace_depth = int
-            self.generator = OntologyCodeGenerator()
-            folder_path = self.generator.generate(
-                temp_filename,
-                folder_path,
-                is_dry_run=False,
-                include_init=False,
-                namespace_depth=namespace_depth,
-            )
-            gen_files = sorted(utils.get_generated_files_in_dir(folder_path))
 
             self.assertEqual(gen_files, exp_files)
 

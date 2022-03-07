@@ -657,7 +657,6 @@ class ModuleWriter:
         self,
         tempdir: str,
         destination: str,
-        include_init: bool,
         namespace_depth: int,
     ):
         """
@@ -670,8 +669,6 @@ class ModuleWriter:
               first generated here.
             destination: The destination directory where the code should be
               placed
-            include_init: True if `__init__.py` is to be generated in existing
-              packages in which `__init__.py` does not already exists
             namespace_depth: set an integer argument namespace_depth to allow
               customized number of levels of namespace packaging.
               The generation of __init__.py for all the directory
@@ -700,7 +697,7 @@ class ModuleWriter:
 
             # Create init file
             if count > namespace_depth:
-                if not dest_path_exists or include_init:
+                if not dest_path_exists:
                     init_file_path = os.path.join(temp_path, "__init__.py")
                     with open(
                         init_file_path, "w", encoding="utf-8"
@@ -712,7 +709,6 @@ class ModuleWriter:
         self,
         tempdir: str,
         destination: str,
-        include_init: bool,
         namespace_depth: int,
     ):
         """
@@ -721,8 +717,6 @@ class ModuleWriter:
         Args:
             tempdir: A temporary directory for writing intermediate files.
             destination: The actual folder to place the generated code.
-            include_init: Whether to include `__init__.py` in the existing
-            directories if it does not already exist.
             namespace_depth: set an integer argument namespace_depth to allow
               customized number of levels of namespace packaging.
               The generation of __init__.py for all the directory
@@ -738,7 +732,7 @@ class ModuleWriter:
         """
 
         self.make_module_dirs(
-            tempdir, destination, include_init, namespace_depth
+            tempdir, destination, namespace_depth
         )
         full_path = os.path.join(tempdir, self.pkg_dir, self.file_name) + ".py"
 

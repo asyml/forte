@@ -445,7 +445,6 @@ class OntologyCodeGenerator:
         spec_path: str,
         destination_dir: str = os.getcwd(),
         is_dry_run: bool = False,
-        include_init: bool = True,
         merged_path: Optional[str] = None,
         lenient_prefix=False,
         namespace_depth: int = -1,
@@ -463,9 +462,6 @@ class OntologyCodeGenerator:
             is_dry_run: if `True`, creates the ontology in the temporary
                 directory, else, creates the ontology in the
                 `destination_dir`.
-            include_init: if `True`, generates `__init__.py` in the already
-                existing directories, otherwise only generates `__init__.py`
-                in the generated directories.
             merged_path: if a path is provided, a merged ontology file will
                 be written at this path.
             lenient_prefix: if `True`, will not enforce the entry name to
@@ -517,7 +513,7 @@ class OntologyCodeGenerator:
         for writer in self.module_writers.writers():
             logging.info("Writing module: %s", writer.module_name)
             writer.write(
-                tempdir, destination_dir, include_init, namespace_depth
+                tempdir, destination_dir, namespace_depth
             )
             logging.info("Done writing.")
 
