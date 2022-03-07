@@ -19,7 +19,7 @@ __all__ = ["EntryTypeGenerator"]
 
 
 def _get_type_attributes():
-    # TODO: implement get type_attributes using entry class hierachy
+    # TODO: implement get type_attributes using entry class hierachy.
     type_attributes = {}
 
     return type_attributes
@@ -55,14 +55,15 @@ class EntryTypeGenerator:
         For each type, we want to obtain all the attributes. For example, for sentence we want to
         get a list of ["speaker", "part_id", "sentiment", "classification", "classifications"]. We
         want to get the attributes for each type of entry as a dictionary. For example:
-        .. code-block:: python
+
+        ... code-block:: python
 
             type_attributes = {
                 "Token": ["pos", "ud_xpos", "lemma", "chunk", "ner", "sense",
                         "is_root", "ud_features", "ud_misc"],
                 "Document": ["document_class", "sentiment", "classifications"],
                 "Sentence": ["speaker", "part_id", "sentiment",
-                            "classification", "classifications"],
+                            "classification", "classifications"]
             }
 
         """
