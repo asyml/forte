@@ -47,15 +47,11 @@ class EntryTypeGenerator:
         ["Token", "Subword", "Sentence", ...], including all the types defined in ft.onto and
         ftx.onto. Please notice that users could also create their own types of data which inherit
         "forte.data.ontology.core.Entry".
-
-        Returns:
-            A dict contains all the types and their corresponding attributes list.
-
         For each type, we want to obtain all the attributes. For example, for sentence we want to
         get a list of ["speaker", "part_id", "sentiment", "classification", "classifications"]. We
         want to get the attributes for each type of entry as a dictionary. For example:
 
-        ... code-block:: python
+        .. code-block:: python
 
             type_attributes = {
                 "Token": ["pos", "ud_xpos", "lemma", "chunk", "ner", "sense",
