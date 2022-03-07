@@ -96,7 +96,6 @@ class EntryTypeGeneratorTest(unittest.TestCase):
 
     def test_get_entry_attribute_by_class(self):
         entry_name_attributes_dict = {
-            # "ft.onto.base_ontology.Token":[
             "entry_type_generator_test.TokenTest": [
                 "pos",
                 "ud_xpos",

@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import functools
 from forte.utils.utils import get_class
 
@@ -29,7 +28,6 @@ def _get_entry_attribute_by_class(input_entry_class_name: str):
     """Get type attributes by class name. input_entry_class_name should be
     an object class dotted name path. This method is actually relies on type annotation.
     """
-
     class_ = get_class(input_entry_class_name)
     try:
         return list(class_.__annotations__.keys())
@@ -38,9 +36,7 @@ def _get_entry_attribute_by_class(input_entry_class_name: str):
 
 
 class EntryTypeGenerator:
-    """
-    The base class of entry type generator.
-    """
+    """The base class of entry type generator."""
 
     @staticmethod
     @functools.lru_cache(1)
