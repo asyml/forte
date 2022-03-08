@@ -431,7 +431,9 @@ class MultiPackLink(MultiEntry, BaseLink):
                 f"The parent of {type(self)} should be an "
                 f"instance of {self.ParentType}, but get {type(parent)}"
             )
-        self._parent = self.pack.get_pack_index(parent.pack_id), parent.tid
+        # fix bug/enhancement #559: using pack_id instead of index
+        # self._parent = self.pack.get_pack_index(parent.pack_id), parent.tid
+        self._parent = parent.pack_id, parent.tid
 
     def set_child(self, child: Entry):
         r"""This will set the `child` of the current instance with given Entry.
@@ -449,7 +451,9 @@ class MultiPackLink(MultiEntry, BaseLink):
                 f"The child of {type(self)} should be an "
                 f"instance of {self.ChildType}, but get {type(child)}"
             )
-        self._child = self.pack.get_pack_index(child.pack_id), child.tid
+        # fix bug/enhancement #559: using pack_id instead of index
+        # self._child = self.pack.get_pack_index(child.pack_id), child.tid
+        self._child = child.pack_id, child.tid
 
     def get_parent(self) -> Entry:
         r"""Get the parent entry of the link.
@@ -499,7 +503,8 @@ class MultiPackGroup(MultiEntry, BaseGroup[Entry]):
             )
 
         self._members.append(
-            (self.pack.get_pack_index(member.pack_id), member.tid)
+            # fix bug/enhancement 559: use pack_id instead of index
+            (member.pack_id, member.tid)  # self.pack.get_pack_index(..)
         )
 
     def get_members(self) -> List[Entry]:
