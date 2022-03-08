@@ -252,7 +252,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
         r"""An iterator over the entire dataset, giving all Packs processed
         as list or Iterator depending on `lazy`, giving all the Packs read
         from the data source(s). If not reading from cache, should call
-        :meth:`collect`.
+        ``collect``.
 
         Args:
             args: One or more input data sources, for example, most
@@ -301,8 +301,9 @@ class BaseReader(PipelineComponent[PackType], ABC):
         r"""Specify the path to the cache directory.
 
         After you call this method, the dataset reader will use its
-        ``cache_directory`` to store a cache of :class:`~forte.data.base_pack.BasePack` read
-        from every document passed to :func:`read`, serialized as one
+        ``cache_directory`` to store a cache of
+        :class:`~forte.data.base_pack.BasePack` read
+        from every document passed to read, serialized as one
         string-formatted :class:`~forte.data.base_pack.BasePack`. If the cache file for a given
         ``file_path`` exists, we read the :class:`~forte.data.base_pack.BasePack` from the cache.
         If the cache file does not exist, we will `create` it on our first

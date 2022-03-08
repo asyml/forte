@@ -123,10 +123,10 @@ class ProcessingBatcher(Generic[PackType], Configurable):
             input_pack: The input data pack to get features from.
 
         Returns:
-             An iterator of A tuple contains datapack, context instance and
-             batch data.
-             Note: For backward compatibility issues, this function
-             return a list of `None` as contexts.
+            An iterator of A tuple contains datapack, context instance and
+            batch data.
+            Note: For backward compatibility issues, this function
+            return a list of `None` as contexts.
         """
         batch_count = 0
 
@@ -192,7 +192,8 @@ class ProcessingBatcher(Generic[PackType], Configurable):
             go across the boundary of data packs when there is no enough data
             to fill the batch.
 
-        Returns: The default configuration.
+        Returns:
+            The default configuration.
 
         """
         return {
@@ -263,7 +264,7 @@ class FixedSizeDataPackBatcherWithExtractor(ProcessingBatcher):
     def collate(
         self, features_collection: List[Dict[str, Feature]]
     ) -> Dict[str, Dict[str, Any]]:
-        r"""This function use the :class:`~forte.data.converter.converter.Converter.Converter`
+        r"""This function use the :class:`~forte.data.converter.converter.Converter`
         interface to turn a list of features into batches, where each feature
         is converted to tensor/matrix format. The resulting features are
         organized as a dictionary, where the keys are the feature names/tags,
@@ -334,8 +335,8 @@ class FixedSizeDataPackBatcherWithExtractor(ProcessingBatcher):
             input_pack: The input data pack to get features from.
 
         Returns:
-             An iterator of a tuple contains datapack, context instance and
-             batch data.
+            An iterator of a tuple contains datapack, context instance and
+            batch data.
         """
         # cache the new pack and generate batches
 
@@ -498,9 +499,10 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
         The configuration of a batcher.
 
         Here:
-            batch_size: the batch size, default is 10.
+            - batch_size: the batch size, default is 10.
 
-        Returns: The default configuration structure and default value.
+        Returns:
+            The default configuration structure and default value.
         """
         return {
             "batch_size": 10,
@@ -547,7 +549,8 @@ class FixedSizeRequestDataPackBatcher(FixedSizeDataPackBatcher):
               :meth:`~forte.data.data_pack.DataPack.get_data` on what a request looks
               like.
 
-        Returns: The default configuration structure and default value.
+        Returns:
+            The default configuration structure and default value.
         """
         return {
             "context_type": None,

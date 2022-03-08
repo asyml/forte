@@ -123,7 +123,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         the data packs in it, and the
 
         Args:
-            packs:
+            packs: a data pack iterator.
 
         Returns:
 
@@ -213,12 +213,12 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
               somewhere by user, after purging the lists. Default is False.
 
         Returns:
-            True if successful
+            True if successful.
 
         Exceptions:
             if clean_invalid_entries is set to False and the DataPack to be
             removed have entries (in links, groups) associated with it,
-            ValueError will be raised.
+            ``ValueError`` will be raised.
 
         """
         pack = self.get_pack_at(index_of_pack)
@@ -274,8 +274,9 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             True if successful
 
         Exceptions:
-            if clean_invalid_entries is set to False and the DataPack to be removed have
-            entries (in links, groups) associated with it, ValueError will be raised.
+            if clean_invalid_entries is set to False and the DataPack to be
+            removed have entries (in links, groups) associated with it,
+            ``ValueError`` will be raised.
         """
 
         # check if the pack to be removed has any cross pack links/groups
@@ -350,7 +351,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         Args:
 
         Returns:
-            True if successful
+            True if successful.
         """
 
         # Remove those None in place and shrink the _pack_ref list.

@@ -83,7 +83,7 @@ class CharExtractor(BaseExtractor):
                 features will be extracted within its range. If None, then the
                 whole data pack will be used as the context. Default is None.
 
-        Returns (Feature):
+        Returns:
             a iterator of feature that contains the characters of each
             specified annotation.
         """

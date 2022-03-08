@@ -161,11 +161,11 @@ class OntonotesReader(PackReader):
 
         Here:
 
-        `"column_format"`: list
-            A list of strings indicating which field each column in a
-            line corresponds to. The length of the list should be equal to the
-            number of columns in the files to be read. Available field types
-            include:
+        - `"column_format"`: list
+          A list of strings indicating which field each column in a
+          line corresponds to. The length of the list should be equal to the
+          number of columns in the files to be read. Available field types
+          include:
 
             - ``"document_id"``
             - ``"part_number"``

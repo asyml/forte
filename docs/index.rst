@@ -48,15 +48,15 @@ Package Overview
 
    * - Package Name
      - Package Description
-   * - :class:`~forte`
+   * - ``forte``
      - an open-source toolkit for NLP
-   * - :class:`~forte.data.readers`
+   * - ``forte.data.readers``
      - a data module for reading different formats of text data like CoNLL, Ontonotes etc
-   * - :class:`~forte.processors`
+   * - ``forte.processors``
      - a collection of processors for building NLP pipelines
-   * - :class:`~forte.trainer`
+   * - ``forte.trainer``
      - a collection of modules for training different NLP tasks
-   * - :class:`~ft.onto.base_ontology`
+   * - ``base_ontology``
      - a module containing basic ontologies like Token, Sentence, Document etc
 
 
@@ -112,7 +112,7 @@ Download the repository through
 git clone https://github.com/asyml/forte.git
 ```
 
-After `cd` into `forte`, you can install it through
+After ``cd`` into ``forte``, you can install it through
 
 ```bash
 pip install .

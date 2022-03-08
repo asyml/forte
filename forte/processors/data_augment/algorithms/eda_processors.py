@@ -273,6 +273,7 @@ class RandomSwapDataAugmentProcessor(ReplacementDataAugmentProcessor):
               the Random Swap operation (input length * alpha) times.
 
         Returns:
+
             A dictionary with the default config for this processor.
         """
         return {

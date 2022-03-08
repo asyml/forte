@@ -150,8 +150,7 @@ class DataPackDataset(DatasetBase):
             :class:`~forte.data.data_pack_dataset.DataPackIterator`.
         feature_schemes (dict): A `Dict` containing all the information to do
             data pre-processing. This is exactly the same as the `schemes` in
-            `feature_resource`. Please refer to :meth:`feature_resource` in
-            :class:`~forte.train_preprocessor.TrainPreprocessor` for details.
+            :meth:`~forte.train_preprocessor.TrainPreprocessor.request`.
         hparams: A `dict` or instance of
             :class:`~texar.torch.HParams` containing
             hyperparameters. See
@@ -191,9 +190,9 @@ class DataPackDataset(DatasetBase):
             :class:`~forte.data.converter.Feature` extracted.
 
             .. note::
-                Please refer to :meth:`feature_resource` in
-                :class:`~forte.train_preprocessor.TrainPreprocessor` for details
-                about user-specified tags.
+                Please refer to
+                :meth:`~forte.train_preprocessor.TrainPreprocessor.request` for
+                details about user-specified tags.
         """
         tid: int = raw_example[0]
         data_pack: DataPack = raw_example[1]
@@ -258,8 +257,8 @@ class DataPackDataset(DatasetBase):
 
             .. note::
                 The first level key in returned `batch` is the user-specified
-                tags. Please refer to :meth:`feature_resource`
-                in :class:`~forte.train_preprocessor.TrainPreprocessor` for
+                tags. Please refer to
+                :meth:`~forte.train_preprocessor.TrainPreprocessor.request` for
                 details about user-specified tags.
         """
         batch_size = len(examples)

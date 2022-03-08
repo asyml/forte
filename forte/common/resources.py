@@ -25,8 +25,8 @@ DeserializeDict = Dict[str, Callable[[Union[str, Path]], None]]
 
 
 class Resources:
-    r"""The :class:`Resources` object is a global registry used in the pipeline.
-    Objects defined as :class:`Resources` will be passed on to the processors in the
+    r"""The :class:`~forte.common.resources.Resources` object is a global registry used in the pipeline.
+    Objects defined as :class:`~forte.common.resources.Resources` will be passed on to the processors in the
     pipeline for initialization.
     """
 
@@ -42,16 +42,16 @@ class Resources:
         r"""Save the resources specified by :attr:`keys` in binary format.
 
         Args:
-            keys (optional): list or dict
+            keys (Optional) list or dict:
 
                 - If :attr:`keys` is a list, the objects corresponding to those keys
                   are saved
                 - If :attr:`keys` is a dict mapping from a key to a serialize
-                  function, then the serialize function will be used to save the
-                  object corresponding to that key
+                  function, then the serialize function will be used to save
+                  the object corresponding to that key
                 - If :attr:`keys` is None, all objects in this resource will be
                   saved.
-            output_dir (optional): str
+            output_dir (Optional): str
                 A directory specifying the location to save the resources.
         """
 
@@ -102,14 +102,14 @@ class Resources:
         r"""Load the resources specified by :attr:`keys`.
 
         Args:
-            keys: list or dict
+            keys (Union[List[str], DeserializeDict]) list or dict:
 
                 - If :attr:`keys` is a list, the objects corresponding to those keys
                   are loaded
                 - If :attr:`keys` is a dict mapping from a key to a deserialize
                   function, then the deserialize function will be used to load
                   the object corresponding to that key
-            path (optional): str
+            path (Optional): str
                 A directory specifying the location to load the resources from.
         """
 

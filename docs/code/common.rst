@@ -63,5 +63,5 @@ Configurable
 Resources
 ==========
 
-.. autoclass:: forte.common.Resources
+.. autoclass:: forte.common.resources.Resources
     :members:

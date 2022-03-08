@@ -464,20 +464,15 @@ class DataPack(BasePack[Entry, Link, Group]):
         given span of the processed text.
 
         Args:
-            input_processed_span: Span of the processed text for which the
-            corresponding span of the original text is desired
-            align_mode: The strictness criteria for alignment in the ambiguous
-            cases, that is, if a part of input_processed_span spans a part
-            of the inserted span, then align_mode controls whether to use the
-            span fully or ignore it completely according to the following
-            possible values
 
-            - "strict" - do not allow ambiguous input, give ValueError
-            - "relaxed" - consider spans on both sides
-            - "forward" - align looking forward, that is, ignore the span
-            towards the left, but consider the span towards the right
-            - "backward" - align looking backwards, that is, ignore the span
-            towards the right, but consider the span towards the left
+            input_processed_span (Span): Span of the processed text for which the corresponding span of the original text is desired.
+            align_mode (bool): The strictness criteria for alignment in the ambiguous cases, that is, if a part of input_processed_span spans a part of the inserted span, then align_mode controls whether to use the span fully or ignore it completely according to the following possible values:
+
+                    - "strict" - do not allow ambiguous input, give ValueError.
+                    - "relaxed" - consider spans on both sides.
+                    - "forward" - align looking forward, that is, ignore the span towards the left, but consider the span towards the right.
+                    - "backward" - align looking backwards, that is, ignore the span towards the right, but consider the span towards the left.
+
 
         Returns:
             Span of the original text that aligns with input_processed_span
@@ -1207,9 +1202,9 @@ class DataPack(BasePack[Entry, Link, Group]):
     ):
         """
         User can call this function to build coverage index for specific types.
-          The index provide a in-memory mapping from entries of `context_type`
-          to the entries "covered" by it.
-          See :class:`forte.data.data_pack.DataIndex` for more details.
+        The index provide a in-memory mapping from entries of `context_type`
+        to the entries "covered" by it.
+        See :class:`forte.data.data_pack.DataIndex` for more details.
 
         Args:
             context_type: The context/covering type.

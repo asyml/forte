@@ -86,7 +86,8 @@ class DistributionReplacementOp(TextReplacementOp, Configurable):
         This function replaces a word by sampling from a distribution.
 
         Args:
-            input_anno (Annotation): The input annotation.
+            input_anno (Annotation), the input annotation.
+
         Returns:
             A tuple of two values, where the first element is a boolean value
             indicating whether the replacement happens, and the second
