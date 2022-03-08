@@ -57,9 +57,8 @@ class EntryTypeGenerator:
     def get_entry_attributes_by_class(input_entry_class_name: str):
         """Get type attributes by class name. input_entry_class_name should be
         an object class dotted name path.
-
-        Please note must add "dataclass" decorator to all the class and their ancestors
-        if use this function.
+        Please note must add "data class" decorator to all the class and their
+        ancestors.
 
 
         Args:
