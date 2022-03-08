@@ -4,8 +4,10 @@ from forte.data.entry_type_generator import EntryTypeGenerator
 from forte.data.ontology.top import Annotation, Generics
 from typing import Optional, Dict
 from forte.data.data_pack import DataPack
+from dataclasses import dataclass
 
 
+@dataclass
 class TokenTest(Annotation):
     """
     A span based annotation :class:`Tokentest`, used to represent a token or a word.
@@ -44,6 +46,7 @@ class TokenTest(Annotation):
         self.ud_misc: Dict[str, str] = dict()
 
 
+@dataclass
 class TitleTest(Annotation):
     """
     A span based annotation `Title`, normally used to represent a title.
@@ -53,6 +56,7 @@ class TitleTest(Annotation):
         super().__init__(pack, begin, end)
 
 
+@dataclass
 class MetricTest(Generics):
     """
     A base metric entity, all metric entities should inherit from it.
@@ -67,6 +71,7 @@ class MetricTest(Generics):
         self.metric_name: Optional[str] = None
 
 
+@dataclass
 class SingleMetricTest(MetricTest):
     """
     A single metric entity, used to present a metric of one float (e.g. accuracy).
@@ -108,7 +113,10 @@ class EntryTypeGeneratorTest(unittest.TestCase):
                 "ud_misc",
             ],
             "entry_type_generator_test.TitleTest": [],
-            "entry_type_generator_test.SingleMetricTest": ["value"],
+            "entry_type_generator_test.SingleMetricTest": [
+                "metric_name",
+                "value",
+            ],
         }
         for entry_name in entry_name_attributes_dict.keys():
             attribute_result = EntryTypeGenerator.get_entry_attributes_by_class(
