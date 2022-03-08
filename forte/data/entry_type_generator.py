@@ -24,17 +24,6 @@ def _get_type_attributes():
     return type_attributes
 
 
-def _get_entry_attribute_by_class(input_entry_class_name: str):
-    """Get type attributes by class name. input_entry_class_name should be
-    an object class dotted name path. This method is actually relies on type annotation.
-    """
-    class_ = get_class(input_entry_class_name)
-    try:
-        return list(class_.__annotations__.keys())
-    except AttributeError:
-        return []
-
-
 class EntryTypeGenerator:
     """The base class of entry type generator."""
 
@@ -66,7 +55,11 @@ class EntryTypeGenerator:
 
     @staticmethod
     def get_entry_attributes_by_class(input_entry_class_name: str):
-        """Get type attributes by class name.
+        """Get type attributes by class name. input_entry_class_name should be
+        an object class dotted name path.
+
+        Please note must add dataclass decorator to all the class and their ancestors
+        if use this function.
 
         Args:
             input_entry_class_name: An object class dotted name path.
@@ -90,4 +83,8 @@ class EntryTypeGenerator:
             ["speaker", "part_id", "sentiment", "classification", "classifications"]
 
         """
-        return _get_entry_attribute_by_class(input_entry_class_name)
+        class_ = get_class(input_entry_class_name)
+        try:
+            return list(class_.__dataclass_fields__.keys())
+        except AttributeError:
+            return []
