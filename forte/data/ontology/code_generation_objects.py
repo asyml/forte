@@ -731,9 +731,7 @@ class ModuleWriter:
 
         """
 
-        self.make_module_dirs(
-            tempdir, destination, namespace_depth
-        )
+        self.make_module_dirs(tempdir, destination, namespace_depth)
         full_path = os.path.join(tempdir, self.pkg_dir, self.file_name) + ".py"
 
         with open(full_path, "w", encoding="utf-8") as f:

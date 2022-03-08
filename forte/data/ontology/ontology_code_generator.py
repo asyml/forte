@@ -512,9 +512,7 @@ class OntologyCodeGenerator:
         logging.info("Working on %s", spec_path)
         for writer in self.module_writers.writers():
             logging.info("Writing module: %s", writer.module_name)
-            writer.write(
-                tempdir, destination_dir, namespace_depth
-            )
+            writer.write(tempdir, destination_dir, namespace_depth)
             logging.info("Done writing.")
 
         if merged_path is not None:
