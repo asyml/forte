@@ -58,8 +58,9 @@ class EntryTypeGenerator:
         """Get type attributes by class name. input_entry_class_name should be
         an object class dotted name path.
 
-        Please note must add dataclass decorator to all the class and their ancestors
+        Please note must add "dataclass" decorator to all the class and their ancestors
         if use this function.
+
 
         Args:
             input_entry_class_name: An object class dotted name path.
