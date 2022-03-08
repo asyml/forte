@@ -156,3 +156,15 @@ doesn
 structuralizing
 pseudocode
 txt
+str
+bool
+FDict
+arg
+dep
+coreferent
+ConstituentNode
+ag
+umls
+cui
+FList
+qid
