@@ -62,7 +62,8 @@ class MultiPackMeta(BaseMeta):
 
 
 class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
-    r"""A :class:`~forte.data.multi_pack.MultiPack` contains multiple `DataPacks` and a collection of
+    r"""A :class:`~forte.data.multi_pack.MultiPack` contains multiple
+    `DataPacks` and a collection of
     cross-pack entries (such as links and groups)
     """
 
@@ -739,8 +740,10 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         :class:`~forte.data.multi_pack.MultiPack` object.
 
         Args:
-            entry (Entry): An :class:`~forte.data.ontology.core.Entry` object to be added to the datapack.
-            allow_duplicate (bool): Whether we allow duplicate in the datapack.
+            - entry (Entry): An :class:`~forte.data.ontology.core.Entry` object
+              to be added to the datapack.
+
+            - allow_duplicate (bool): Whether we allow duplicate in the datapack.
 
         Returns:
             The input entry itself

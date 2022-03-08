@@ -453,8 +453,10 @@ class Pipeline(Generic[PackType]):
 
     def save(self, path: str):
         r"""Store the pipeline as an IR(intermediate representation) in yaml.
-        The path can then be passed to :meth:`~forte.pipeline.Pipeline.init_from_config_path` to initialize
-        a pipeline. Note that calling :meth:`~forte.pipeline.Pipeline.init_from_config` from a different
+        The path can then be passed to
+        :meth:`~forte.pipeline.Pipeline.init_from_config_path` to initialize
+        a pipeline. Note that calling
+        :meth:`~forte.pipeline.Pipeline.init_from_config` from a different
         python environment may not work for some self defined component classes
         because their module name is `__main__`.
 
@@ -900,7 +902,9 @@ class Pipeline(Generic[PackType]):
 
         Args:
             kwargs: the information needed to load the data. For example, if
-                :attr:`_reader` is :class:`~forte.data.readers.string_reader.StringReader`, this should contain a
+                :attr:`_reader` is
+                :class:`~forte.data.readers.string_reader.StringReader`, this
+                should contain a
                 single piece of text in the form of a string variable. If
                 :attr:`_reader` is a file reader, this can point to the file
                 path.

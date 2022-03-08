@@ -53,8 +53,14 @@ class BaseReader(PipelineComponent[PackType], ABC):
         cache_directory (str, optional): The base directory to place the
             path of the caching files. Each collection is contained in one
             cached file, under this directory. The cached location for each
-            collection is computed by :meth:`~forte.data.base_reader.BaseReader._cache_key_function`. Note:
-            A collection is the data returned by :meth:`~forte.data.base_reader.BaseReader._collect`.
+            collection is computed by
+            :meth:`~forte.data.base_reader.BaseReader._cache_key_function`.
+
+            Note:
+
+                A collection is the data returned by
+                :meth:`~forte.data.base_reader.BaseReader._collect`.
+
         append_to_cache (bool, optional): Decide whether to append write
             if cache file already exists.  By default (``False``), we
             will overwrite the existing caching file. If ``True``, we will
@@ -368,8 +374,10 @@ class BaseReader(PipelineComponent[PackType], ABC):
         pass
 
     def set_text(self, pack: DataPack, text: str):
-        r"""Assign the text value to the :class:`~forte.data.data_pack.DataPack`. This function will
-        pass the ``text_replace_operation`` to the :class:`~forte.data.data_pack.DataPack` to conduct
+        r"""Assign the text value to the
+        :class:`~forte.data.data_pack.DataPack`. This function will
+        pass the ``text_replace_operation`` to the
+        :class:`~forte.data.data_pack.DataPack` to conduct
         the pre-processing step.
 
         Args:
@@ -388,7 +396,8 @@ class PackReader(BaseReader[DataPack], ABC):
 
 
 class MultiPackReader(BaseReader[MultiPack], ABC):
-    r"""The basic :class:`~forte.data.multi_pack.MultiPack` data reader class. To be inherited by all
+    r"""The basic :class:`~forte.data.multi_pack.MultiPack` data reader class.
+    To be inherited by all
     data readers which return :class:`~forte.data.multi_pack.MultiPack`.
     """
 

@@ -179,7 +179,8 @@ class DataPackDataset(DatasetBase):
         Args:
             raw_example (tuple(dict, DataPack)): A `Tuple` where
 
-              - The first element is a `Dict` produced by :meth:`~forte.data.data_pack.DataPack.get_data` in
+              - The first element is a `Dict` produced by
+                :meth:`~forte.data.data_pack.DataPack.get_data` in
                 :class:`~forte.data.data_pack.DataPack`.
 
               - The second element is an instance of type

@@ -25,8 +25,10 @@ DeserializeDict = Dict[str, Callable[[Union[str, Path]], None]]
 
 
 class Resources:
-    r"""The :class:`~forte.common.resources.Resources` object is a global registry used in the pipeline.
-    Objects defined as :class:`~forte.common.resources.Resources` will be passed on to the processors in the
+    r"""The :class:`~forte.common.resources.Resources` object is a global
+    registry used in the pipeline.
+    Objects defined as :class:`~forte.common.resources.Resources` will be
+    passed on to the processors in the
     pipeline for initialization.
     """
 
