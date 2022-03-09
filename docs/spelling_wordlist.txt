@@ -139,6 +139,7 @@ docstrings
 numpy
 jsonpickle
 crowdworkers
+subtype
 subword
 wikipedia
 sortedlist
@@ -149,3 +150,9 @@ url
 nd
 Deque
 pytest
+ontologies
+granularities
+doesn
+structuralizing
+pseudocode
+txt

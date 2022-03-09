@@ -19,7 +19,6 @@ import unittest
 import csv
 from typing import Dict
 from forte.pipeline import Pipeline
-from ftx.onto.ag_news import Description
 from ft.onto.base_ontology import Body, Title, Document
 from forte.common import Resources, ProcessorConfigError
 from forte.data.readers import ClassificationDatasetReader

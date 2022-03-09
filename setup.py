@@ -17,8 +17,8 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     license="Apache License Version 2.0",
-    packages=setuptools.find_packages(
-        exclude=["scripts*", "examples*", "tests*"]
+    packages=setuptools.find_namespace_packages(
+        include=['ft.*', 'ftx.*', 'forte']
     ),
     include_package_data=True,
     platforms="any",

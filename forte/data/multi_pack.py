@@ -14,10 +14,14 @@
 
 import copy
 import logging
+
 from pathlib import Path
 from typing import Dict, List, Set, Union, Iterator, Optional, Type, Any, Tuple
 
+import jsonpickle
+
 from sortedcontainers import SortedList
+from packaging.version import Version
 
 from forte.common import ProcessExecutionException
 from forte.data.base_pack import BaseMeta, BasePack
@@ -34,6 +38,8 @@ from forte.data.ontology.top import (
 )
 from forte.data.types import DataRequest
 from forte.utils import get_class
+from forte.version import DEFAULT_PACK_VERSION, PACK_ID_COMPATIBLE_VERSION
+
 
 logger = logging.getLogger(__name__)
 
@@ -168,13 +174,235 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
     # TODO: get_subentry maybe useless
     def get_subentry(self, pack_idx: int, entry_id: int):
-        return self.get_pack_at(pack_idx).get_entry(entry_id)
+        r"""
+        Get sub_entry from multi pack. This method uses `pack_id` (a unique
+        identifier assigned to datapack) to get a pack from multi pack,
+        and then return its sub_entry with entry_id. Noted this is changed from
+        the way of accessing such pack before the PACK_ID_COMPATIBLE_VERSION,
+        in which the `pack_idx` was used as list index number to access/reference
+        a pack within the multi pack (and in this case then get the sub_entry).
+
+        Args:
+            pack_idx (int): The pack_id for the data_pack in the
+              multi pack.
+            entry_id (int): the id for the entry from the pack with pack_id
+
+        Returns:
+            sub-entry of the pack with id = `pack_idx`
+
+        """
+        pack_array_index: int = pack_idx  # the old way
+        # the following check if the pack version is higher than the (backward)
+        # compatible version in which pack_idx is the pack_id not list index
+        if Version(self.pack_version) >= Version(PACK_ID_COMPATIBLE_VERSION):
+            pack_array_index = self.get_pack_index(
+                pack_idx
+            )  # the new way: using pack_id instead of array index
+
+        return self._packs[pack_array_index].get_entry(entry_id)
+        # return self.get_pack_at(pack_idx).get_entry(entry_id) #old version
 
     def get_span_text(self, begin: int, end: int):
         raise ValueError(
             "MultiPack objects do not contain text, please refer to a "
             "specific data pack to get text."
         )
+
+    def remove_pack(
+        self,
+        index_of_pack: int,
+        clean_invalid_entries: bool = False,
+        purge_lists: bool = False,
+    ) -> bool:
+        """
+        Remove a data pack at index `index_of_pack` from this multi pack.
+
+        In a multi pack, the data pack to be removed may be associated with
+        some multi pack entries, such as `MultiPackLinks` that are connected
+        with other packs. These entries will become dangling and invalid,
+        thus need to be removed. One can consider removing these links before
+        calling this function, or set the `clean_invalid_entries` to `True` so
+        that they will be automatically pruned. The purge of the lists in this
+        multi_pack can be called if `pruge_lists` is set to true which will
+        remove the empty spaces in the lists of this multi pack of the removed
+        pack and resulting in the index for the remaining packs after the
+        removed pack to be changed, so user will be responsible to manage such
+        changes if the index(es) of said remaining pack is used or stored
+        somewhere by user, after purging the lists.
+
+        Args:
+            index_of_pack (int): The index of pack for removal from the
+              multi pack. If invalid, no pack will be deleted.
+            clean_invalid_entries (bool): Switch for automatically cleaning
+              the entries associated with the data pack being deleted which
+              will become invalid after the removal of the pack. Default is
+              False.
+            purge_lists (bool): Switch for automatically removing the empty
+              spaces in the lists of this multi pack of the removed pack and
+              resulting in the index for the remaining packs after the removed
+              pack to be changed, so user will be responsible to manage such
+              changes if the index(es) of said remaining pack is used or stored
+              somewhere by user, after purging the lists. Default is False.
+
+        Returns:
+            True if successful
+
+        Exceptions:
+            if clean_invalid_entries is set to False and the DataPack to be
+            removed have entries (in links, groups) associated with it,
+            ValueError will be raised.
+
+        """
+        pack = self.get_pack_at(index_of_pack)
+
+        if pack is None or (not isinstance(pack, DataPack)):
+            type_name = "None"
+            if pack is not None:
+                type_name = type(pack)
+            raise ValueError(
+                f"Object for the index should be pack, but got "
+                f"type: {type_name}"
+            )
+
+        return self._remove_pack(
+            pack, index_of_pack, clean_invalid_entries, purge_lists
+        )
+
+    def _remove_pack(
+        self,
+        pack: DataPack,
+        index_of_pack: int,
+        clean_invalid_entries: bool = False,
+        purge_lists: bool = False,
+    ) -> bool:
+        """
+        Remove an existing data pack in the multi pack. To prevent index of the
+        packs following it being changed, set this empty position to None
+        in order to keep the index for the packs intact. in `_pack_ref[]` and
+        `_packs[]` the position will be set to None while in `_pack_names[]`
+        the position will be set as empty string. The purge of the lists in this
+        multi_pack can be called if `pruge_lists` is set to true which will
+        remove the empty spaces in the lists of this multi pack of the removed
+        pack and resulting in the index for the remaining packs after the
+        removed pack to be changed, so user will be responsible to manage such
+        changes if the index(es) of said remaining pack is used or stored
+        somewhere by user, after purging the lists.
+
+        Args:
+            pack (DataPack): The existing data pack.
+            index_of_pack: the index of the pack to be removed
+            clean_invalid_entries: Switch for automatically
+              cleaning the entries associated with the data pack
+              being deleted which will become invalid after the
+              removal of the pack. Default is False.
+            purge_lists (bool): Switch for automatically removing the empty
+              spaces in the lists of this multi pack of the removed pack and
+              resulting in the index for the remaining packs after the removed
+              pack to be changed, so user will be responsible to manage such
+              changes if the index(es) of said remaining pack is used or stored
+              somewhere by user, after purging the lists. Default is False.
+
+        Returns:
+            True if successful
+
+        Exceptions:
+            if clean_invalid_entries is set to False and the DataPack to be removed have
+            entries (in links, groups) associated with it, ValueError will be raised.
+        """
+
+        # check if the pack to be removed has any cross pack links/groups
+        links_with_pack_for_removal = []
+        link: MultiPackLink
+        for link in self.get(MultiPackLink):
+            parent_entry_pid = link.get_parent().pack_id
+            child_entry_pid = link.get_child().pack_id
+            if (
+                parent_entry_pid == pack.pack_id
+                or child_entry_pid == pack.pack_id
+            ):
+                links_with_pack_for_removal.append(link)
+
+        groups_with_pack_for_removal = []
+        g: MultiPackGroup
+        for g in self.get(MultiPackGroup):
+            # e: Annotation
+            for e in g.get_members():
+                if e.pack_id == pack.pack_id:
+                    groups_with_pack_for_removal.append(g)
+
+        if (
+            len(links_with_pack_for_removal) > 0
+            or len(groups_with_pack_for_removal) > 0
+        ):
+            if clean_invalid_entries:
+                # clean links and groups
+                for link in links_with_pack_for_removal:
+                    # delete_entry will take care of related indexes
+                    self.delete_entry(link)
+                for g in groups_with_pack_for_removal:
+                    # delete_entry will take care of related indexes
+                    self.delete_entry(g)
+            else:  # raise exception according to requirement
+                raise ValueError(
+                    "The pack to be removed has cross-pack references."
+                    " Please set clean_invalid_entries to be True to "
+                    " auto-remove all references to this pack"
+                )
+
+        # To keep the remaining element 's index unchanged, set to None in
+        # place instead of direct removal
+
+        self._pack_ref[index_of_pack] = None  # type: ignore
+
+        # Remove the reverse mapping from pack id to the pack index.
+        self._inverse_pack_ref.pop(pack.pack_id)
+
+        # Remove the reverse mapping from name to the pack index.
+        self._name_index.pop(self.pack_names[index_of_pack])
+
+        # Remove the pack names. To keep the remaining element's index
+        # unchanged, set to empty instead of direct removal
+        self._pack_names[index_of_pack] = ""
+        # Remove Reference to the data pack.
+        self._packs[index_of_pack] = None  # type: ignore
+
+        if purge_lists:
+            self.purge_deleted_packs()  # keep the behavior consistent
+
+        return True
+
+    def purge_deleted_packs(self) -> bool:
+        """
+        Purge deleted packs from lists previous set to -1, empty or none to keep index unchanged
+        Caution: Purging the deleted_packs from lists in multi_pack will remove the empty spaces
+        from the lists of this multi_pack after a pack is removed and resulting the indexes of
+        the packs after the deleted pack(s) to change, so user will be responsible to manage such
+        changes if such index of a pack is used or stored somewhere in user's code after purging.
+
+        Args:
+
+        Returns:
+            True if successful
+        """
+
+        # Remove those None in place and shrink the _pack_ref list.
+        # Caution: item index will change
+        for index in range(len(self._pack_ref) - 1, 0, -1):
+            if self._pack_ref.__getitem__(index) is None:
+                self._pack_ref.__delitem__(index)
+
+        # Remove those None in place and shrink the _pack_names list.
+        # Caution: item index will change
+        for index in range(len(self._pack_names) - 1, 0, -1):
+            if not self._pack_names.__getitem__(index):
+                self._pack_names.__delitem__(index)
+
+        # Remove those None in place and shrink the _packs list. Caution: item index will change
+        for index in range(len(self._packs) - 1, 0, -1):
+            if self._packs.__getitem__(index) is None:
+                self._packs.__delitem__(index)
+
+        return True
 
     def add_pack(
         self, ref_name: Optional[str] = None, pack_name: Optional[str] = None
@@ -197,10 +425,11 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         if ref_name in self._name_index:
             raise ValueError(f"The name {ref_name} has already been taken.")
         if ref_name is not None and not isinstance(ref_name, str):
+            type_name = "None"
+            if ref_name is not None:
+                type_name = type(ref_name)
             raise ValueError(
-                f"key of the pack should be str, but got "
-                f""
-                f"{type(ref_name)}"
+                f"key of the pack should be str, but got type: {type_name}"
             )
 
         pack: DataPack = DataPack(pack_name=pack_name)
@@ -272,10 +501,10 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         """
         try:
             return self._inverse_pack_ref[pack_id]
-        except KeyError as e:
+        except KeyError as ke:
             raise ProcessExecutionException(
                 f"Pack {pack_id} is not in this multi-pack."
-            ) from e
+            ) from ke
 
     def get_pack(self, name: str) -> DataPack:
         """
@@ -659,7 +888,32 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         Returns:
             An data pack object deserialized from the string.
         """
-        return cls._deserialize(data_path, serialize_method, zip_pack)
+        # pylint: disable=protected-access
+        mp: MultiPack = cls._deserialize(data_path, serialize_method, zip_pack)
+
+        # (fix 595) change the dictionary's key after deserialization from str back to int
+        mp._inverse_pack_ref = {
+            int(k): v for k, v in mp._inverse_pack_ref.items()
+        }
+
+        return mp
+
+    @classmethod
+    def from_string(cls, data_content: str):
+        # pylint: disable=protected-access
+        # can not use explict type hint for mp as pylint does not allow type change
+        # from base_pack to multi_pack which is problematic so use jsonpickle instead
+
+        mp = jsonpickle.decode(data_content)
+        if not hasattr(mp, "pack_version"):
+            mp.pack_version = DEFAULT_PACK_VERSION
+        # (fix 595) change the dictionary's key after deserialization from str back to int
+        mp._inverse_pack_ref = {  # pylint: disable=no-member
+            int(k): v
+            for k, v in mp._inverse_pack_ref.items()  # pylint: disable=no-member
+        }
+
+        return mp
 
     def _add_entry(self, entry: EntryType) -> EntryType:
         r"""Force add an :class:`forte.data.ontology.core.Entry` object to the

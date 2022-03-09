@@ -1,10 +1,3 @@
-Welcome to Forte's documentation!
-******************************************
-This outline is currently **in progress** so many sections are empty.
-
-
-Overview
-====================
 
 **Forte** is a toolkit for building Natural Language Processing pipelines, featuring cross-task
 interaction, adaptable data-model interfaces and many more. It provides a platform to assemble
@@ -123,37 +116,3 @@ License
 ~~~~~~~~~
 
 `Apache License 2.0 <https://github.com/asyml/forte/blob/master/LICENSE>`_
-
-
-----------------
-
-
-
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Overview
-
-   overview
-
-
-
-.. toctree::
-   :maxdepth: 2
-   :caption: NLP with Forte
-
-   index_toc
-
-
-.. toctree::
-   :maxdepth: 2
-   :caption:  APPENDICES
-
-   index_appendices
-
-
-.. toctree::
-   :maxdepth: 2
-   :caption:  API
-
-   index_api
