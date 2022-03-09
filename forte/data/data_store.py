@@ -157,8 +157,8 @@ class DataStore(BaseStore):
         """
         The `__elements` is an underlying storage structure for all the entry
         data added by users in this DataStore class.
-        It is a list of lists that stores sorted `entry lists` by the order of
-        `type_id`.
+        It is a dict of {str: list} pairs that stores sorted `entry lists` by
+        `type_name`s.
 
             Example:
             self.__elements = [
@@ -442,7 +442,11 @@ class DataStore(BaseStore):
                 for entry in self.__elements[type]:
                     yield entry
         else:
-            for entry in self.__elements[type_name]:
+            try:
+                entries = self.__elements[type_name]
+            except KeyError as e:
+                raise KeyError(f"type {type_name} does not exist") from e
+            for entry in entries:
                 yield entry
 
     def next_entry(self, tid: int) -> List:
