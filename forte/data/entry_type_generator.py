@@ -68,7 +68,7 @@ class EntryTypeGenerator:
 
 
         Args:
-            input_entry_class_name: An object class dotted name path.
+            input_entry_class_name: A fully qualified name of an entry class.
 
         Returns:
              A list of attributes corresponding to the input class.
