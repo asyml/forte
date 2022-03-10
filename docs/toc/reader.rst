@@ -4,6 +4,11 @@ Reader
 A pipeline component that reads data from a data source into a data iterator.
 
 
+Related Readings:
+
+#. `Reader API <../code/data.html#readers>`_
+
+
 Functions
 ------------------
 
@@ -12,6 +17,8 @@ generic class method
 
 - ``set_up()``: check correctness of configuration and initialize reader variables.
 - ``initialize()``: Pipeline will call it at the start of processing. The reader will be initialized with ``configs``, and register global resources into ``resource``. The implementation should set up the states of the component.
+    - User should check configurations from method `default_configs` of the particular reader used to find out what configurations can be customized. For example, suppose after checking `reader API <../code/data.html#readers>`_ we decide to use :class:`~forte.data.base_reader.BaseReader`. Then we need to check the source of :meth:`forte.data.base_reader.BaseReader.default_configs()` and found that ``"zippack"`` is a boolean configuration and we can set it to ``True`` in our customized configuration when we don't want the default configuration. The default configuration will be overwritten when we initialize the reader with our customized configuration.
+
 - ``_cache_key_function``.
     * it returns cache key of a unit of the data iterator returned by `_collect` such as a row id for a row in `csv` file reading.
     * Example from from `ClassificationDatasetReader <https://github.com/asyml/forte/blob/4bb8fa5bd0be960426be223f0d295b9786c49b0a/forte/data/readers/classification_reader.py#L140>`_ which use line id as cache key (it is `line_info[0]` in the line of code).:
