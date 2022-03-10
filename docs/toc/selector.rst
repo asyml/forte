@@ -3,6 +3,7 @@ Selector
 
 
 
-Related Readings:
+Related Readings
+------------------
 
 #. `Selector API <../code/data.html#selector>`_

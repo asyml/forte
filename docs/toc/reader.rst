@@ -4,7 +4,8 @@ Reader
 A pipeline component that reads data from a data source into a data iterator.
 
 
-Related Readings:
+Related Readings
+------------------
 
 #. `Reader API <../code/data.html#readers>`_
 
@@ -16,8 +17,63 @@ Based on the usage listed above, we need to customize functions below.
 generic class method
 
 - ``set_up()``: check correctness of configuration and initialize reader variables.
-- ``initialize()``: Pipeline will call it at the start of processing. The reader will be initialized with ``configs``, and register global resources into ``resource``. The implementation should set up the states of the component.
-    - User should check configurations from method `default_configs` of the particular reader used to find out what configurations can be customized. For example, suppose after checking `reader API <../code/data.html#readers>`_ we decide to use :class:`~forte.data.base_reader.BaseReader`. Then we need to check the source of :meth:`forte.data.base_reader.BaseReader.default_configs()` and found that ``"zippack"`` is a boolean configuration and we can set it to ``True`` in our customized configuration when we don't want the default configuration. The default configuration will be overwritten when we initialize the reader with our customized configuration.
+- ``initialize()``: Pipeline will call it at the start of processing. The reader
+  will be initialized with ``configs``, and register global resources into
+  ``resource``. The implementation should set up the states of the component.
+
+    * ``default_configs`` is a class method that returns default configuration
+      in a dictionary format. Parent reader class configuration will be merged
+      or overwritten by child class.  For example, in the
+      :class:`~forte.data.readers.plaintext_reader.PlainTextReader`,
+      the inheritance chain is :class:`~forte.data.base_reader.BaseReader` ->
+      :class:`~forte.data.base_reader.PackReader` ->
+      :class:`~forte.data.readers.plaintext_reader.PlainTextReader`.
+      :meth:`forte.data.base_reader.BaseReader.default_configs` contains
+      ``"zip_pack"`` and ``"serialize_method"``.
+      :meth:`forte.data.readers.plaintext_reader.PlainTextReader.default_configs`
+      contains
+      ``"file_ext"``. Therefore, the merged configuration contains ``zip_pack``,
+      ``"serialize_method"`` and ``"file_ext"`` fields. Suppose we include
+      ``"serialize_method"`` in
+      :class:`~forte.data.readers.plaintext_reader.PlainTextReader`, we can
+      overwrite the configuration in
+      :class:`~forte.data.base_reader.BaseReader`.
+
+        - ``default_configs`` usage example
+            - To use an existing reader, User should check configurations from
+              method ``default_configs()`` of the particular reader used to
+              find
+              out what configurations can be customized. For example, suppose
+              after checking `reader API <../code/data.html#readers>`_ we
+              decide to use :class:`~forte.data.base_reader.BaseReader`. Then
+              we need to check the source of
+              :meth:`forte.data.base_reader.BaseReader.default_configs()` and
+              found that ``"zippack"`` is a boolean configuration and we can
+              set it to ``True`` in our customized configuration when we don't
+              want the default configuration. The default configuration will be
+              overwritten when we initialize the reader with our customized
+              configuration.
+
+            - To implement a new reader, User should check the appropriate
+              reader to inherit from. For example, in the
+              :class:`~forte.data.readers.plaintext_reader.PlainTextReader·,
+              it inherits
+              from :class:`~forte.data.base_reader.PackReader` because it reads
+              plain
+              text into ``DataPack``.
+
+        - ``default_configs`` code example
+
+        .. code-block:: python
+
+            @classmethod
+            def default_configs(cls):
+                return {"file_ext": ".txt"}
+
+
+    - ``resource`` is needed only for advanced developer. It's an shared object that stores information used by all ``PipelineComponent`` in the pipeline.
+
+
 
 - ``_cache_key_function``.
     * it returns cache key of a unit of the data iterator returned by `_collect` such as a row id for a row in `csv` file reading.

@@ -3,7 +3,8 @@ Processor
 
 A pipeline component that wraps inference model and set up inference related work.
 
-Related Readings:
+Related Readings
+------------------
 
 #. `Processor API <../code/processors.html>`_
 
