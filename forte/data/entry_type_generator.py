@@ -54,11 +54,17 @@ class EntryTypeGenerator:
         return _get_type_attributes()
 
     @staticmethod
-    def get_entry_attributes_by_class(input_entry_class_name: str):
-        """Get type attributes by class name. input_entry_class_name should be
-        an object class dotted name path.
-        Please note must add "data class" decorator to all the class and their
-        ancestors.
+    def get_entry_attributes_by_class(input_entry_class_name: str) -> list:
+        """Get type attributes by class name. `input_entry_class_name` should be
+        a fully qualified name of an entry class.
+
+        The `dataclass` module<https://docs.python.org/3/library/dataclasses.html> can add
+        generated special methods to user-defined classes. There is an in-built function
+        called `__dataclass_fields__` that is called on the class object, and it returns
+        all the field the class contains.
+
+        Note: This function is only applicable to classes decorated as Python
+        `dataclass` since it relies on the `__dataclass_fields__` to find out the attributes.
 
 
         Args:
