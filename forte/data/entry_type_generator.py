@@ -61,7 +61,7 @@ class EntryTypeGenerator:
         The `dataclass` module<https://docs.python.org/3/library/dataclasses.html> can add
         generated special methods to user-defined classes. There is an in-built function
         called `__dataclass_fields__` that is called on the class object, and it returns
-        all the field the class contains.
+        all the fields the class contains.
 
         Note: This function is only applicable to classes decorated as Python
         `dataclass` since it relies on the `__dataclass_fields__` to find out the attributes.
