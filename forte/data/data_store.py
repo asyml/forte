@@ -499,7 +499,12 @@ class DataStore(BaseStore):
             tid (int): Unique id of the entry.
 
         Returns:
-            The next entry of the same type as the `tid` entry.
+            A list of attributes representing the next entry of the same type
+            as the `tid` entry.
+
+        Raises:
+            IndexError: An error occured accessing the next entry of the last
+                element in entry list.
         """
         _, type_id, index_id = self.get_entry(tid=tid)
         entry_list = self.__elements[type_id]
@@ -518,7 +523,12 @@ class DataStore(BaseStore):
             tid (int): Unique id of the entry.
 
         Returns:
-            The previous entry of the same type as the `tid` entry.
+            A list of attributes representing the previous entry of the same
+            type as the `tid` entry.
+
+        Raises:
+            IndexError: An error occured accessing the previous entry of the
+                first element in entry list.
         """
         _, type_id, index_id = self.get_entry(tid=tid)
         if index_id <= 0:
