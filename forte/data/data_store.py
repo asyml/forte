@@ -18,6 +18,7 @@ import uuid
 from forte.utils import get_class
 from forte.data.base_store import BaseStore
 from forte.data.entry_type_generator import EntryTypeGenerator
+from forte.data.ontology.top import Annotation, AudioAnnotation
 
 __all__ = ["DataStore"]
 
@@ -433,10 +434,30 @@ class DataStore(BaseStore):
             The entry which `tid` corresponds to, its `type_id` and its index
             in the `type_name` list.
         """
+        if tid not in self.__entry_dict:
+            raise ValueError(f"Entry with tid {tid} not found.")
+        entry = self.__entry_dict[tid]
+        entry_type = entry[self.__entry_type_idx]
+        if entry_type not in self.__type_index_dict:
+            raise KeyError(f"Entry of type {entry_type} is not found.")
+        type_id = self.__type_index_dict[entry_type]
+        index_id = -1
+
         # If the entry is an annotation, bisect the annotation sortedlist
         # to find the entry. May use LRU cache to optimize speed.
         # Otherwise, use `index_id` to find the index of the entry.
-        raise NotImplementedError
+        if issubclass(get_class(entry_type), (Annotation, AudioAnnotation)):
+            entry_list = self.__elements[type_id]
+            begin: int = entry_list.bisect_left(entry)
+            for i, e in enumerate(entry_list[begin:]):
+                if e[2] == entry[2]:
+                    index_id = begin + i
+                    break
+        else:
+            index_id = entry[-1]
+        if index_id == -1:
+            raise ValueError(f"Entry {entry} not found in entry list.")
+        return entry, type_id, index_id
 
     def get(
         self, type_name: str, include_sub_type: bool = True
@@ -480,7 +501,13 @@ class DataStore(BaseStore):
         Returns:
             The next entry of the same type as the `tid` entry.
         """
-        raise NotImplementedError
+        _, type_id, index_id = self.get_entry(tid=tid)
+        entry_list = self.__elements[type_id]
+        if index_id >= len(entry_list) - 1:
+            raise IndexError(
+                f"Entry with tid {tid} is the last entry in entry list."
+            )
+        return entry_list[index_id + 1]
 
     def prev_entry(self, tid: int) -> List:
         r"""Get the previous entry of the same type as the `tid` entry.
@@ -493,4 +520,9 @@ class DataStore(BaseStore):
         Returns:
             The previous entry of the same type as the `tid` entry.
         """
-        raise NotImplementedError
+        _, type_id, index_id = self.get_entry(tid=tid)
+        if index_id <= 0:
+            raise IndexError(
+                f"Entry with tid {tid} is the first entry in entry list."
+            )
+        return self.__elements[type_id][index_id - 1]
