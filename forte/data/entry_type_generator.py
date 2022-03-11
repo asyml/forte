@@ -83,10 +83,10 @@ class EntryTypeGenerator:
             entry_name = "ft.onto.base_ontology.Sentence"
 
             # function signature
-            def get_entry_attributes_by_class(input_entry_class: str):
+            get_entry_attributes_by_class(entry_name)
 
             # return
-            ["speaker", "part_id", "sentiment", "classification", "classifications"]
+            # ["speaker", "part_id", "sentiment", "classification", "classifications"]
 
         """
         class_ = get_class(input_entry_class_name)
