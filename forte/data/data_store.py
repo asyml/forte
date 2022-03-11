@@ -155,33 +155,10 @@ class DataStore(BaseStore):
         self._type_attributes: dict = EntryTypeGenerator.get_type_attributes()
 
         """
-        The `__type_index_dict` is a private dictionary that has reverse
-        structure of `self.__type_dict`. It is only used for generators to map
-        'type_name' to `type_id.
-        It should be created only once no matter how many data store objects
-        are initialized.
-
-        Example:
-
-        .. code-block:: python
-
-            self.__type_index_dict: dict = get_type_index_dict()
-
-            # self.__type_index_dict is:
-            # {
-            #     "ft.onto.base_ontology.Token": 0,
-            #     "ft.onto.base_ontology.Document": 1,
-            #     "ft.onto.base_ontology.Sentence": 2,
-            # }
-        """
-        # TODO: implement get_type_id_rev() (Issue #need creation)
-        self.__type_index_dict: dict = {}
-
-        """
         The `__elements` is an underlying storage structure for all the entry
         data added by users in this DataStore class.
-        It is a list of lists that stores sorted `entry lists` by the order of
-        `type_id`.
+        It is a dict of {str: list} pairs that stores sorted `entry lists` by
+        `type_name`s.
 
             Example:
             self.__elements = [
@@ -191,7 +168,7 @@ class DataStore(BaseStore):
                 ...
             ]
         """
-        self.__elements: List = []
+        self.__elements: dict = {}
 
         """
         A dictionary that keeps record of all entrys with their tid.
@@ -454,19 +431,22 @@ class DataStore(BaseStore):
         # We use the `type_id` to find its `entry_type` and all subclasses.
         # We locate the lists.
         # We create an iterator to generate entries from the list.
-        type_id = self.__type_index_dict[type_name]
         if include_sub_type:
             entry_class = get_class(type_name)
             all_types = []
             # iterate all classes to find subclasses
-            for types in self.__type_index_dict.items():
-                if issubclass(get_class(types[0]), entry_class):
-                    all_types.append(types[1])
-            for id in all_types:
-                for entry in self.__elements[id]:
+            for type in self.__elements:
+                if issubclass(get_class(type), entry_class):
+                    all_types.append(type)
+            for type in all_types:
+                for entry in self.__elements[type]:
                     yield entry
         else:
-            for entry in self.__elements[type_id]:
+            try:
+                entries = self.__elements[type_name]
+            except KeyError as e:
+                raise KeyError(f"type {type_name} does not exist") from e
+            for entry in entries:
                 yield entry
 
     def next_entry(self, tid: int) -> List:
