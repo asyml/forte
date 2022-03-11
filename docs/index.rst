@@ -157,11 +157,3 @@ License
    :caption:  API
 
    index_api
-
-
-
-.. toctree::
-   :maxdepth: 2
-   :caption:  Ontology
-
-   index_ontology
