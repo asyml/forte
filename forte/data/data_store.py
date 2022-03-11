@@ -20,6 +20,8 @@ from forte.utils import get_class
 from forte.data.base_store import BaseStore
 from forte.data.entry_type_generator import EntryTypeGenerator
 
+logger = logging.getLogger(__name__)
+
 __all__ = ["DataStore"]
 
 
@@ -214,7 +216,8 @@ class DataStore(BaseStore):
                 ...
             ]
         """
-        self.__elements: List = []
+        # self.__elements: List = []
+        self.__elements: dict = {}
 
         """
         A dictionary that keeps record of all entrys with their tid.
@@ -232,6 +235,9 @@ class DataStore(BaseStore):
             1) will serialize the annotation sorted list as a normal list;
         """
         state = super().__getstate__()
+        keys = state["_DataStore__elements"].keys()
+        for k in keys:
+            state["_DataStore__elements"][k] = list(state["_DataStore__elements"][k])
         return state
 
     def __setstate__(self, state):
@@ -241,34 +247,87 @@ class DataStore(BaseStore):
             2) check whether attributes change
         """
         super().__setstate__(state)
-    
+
     @classmethod
+    # add a boolean to suppress warning
+    # accept none type or not, throw exception
     def deserialize(
         cls,
         data_source: str,
+        serialize_method: str = "jsonpickle",
         check_attribute: bool = False,
-        serialize_method: str = "pickle"
+        allow_warning: bool = True,
+        accept_none: bool = True
     ) -> "DataStore":
         store = cls._deserialize(data_source, serialize_method)
-        # print(store.__dict__)
         if check_attribute:
-            if cls()._type_attributes != store._type_attributes:
-                logging.warning(
-                    "Saved datastore objects have different attribute fields "
-                    "to the current datastore. This may due to user's "
-                    "additions, deletions, or modifications of fields."
+            try:
+                # should contain the same `entry_type` class name
+                assert (
+                    cls._type_attributes.keys()
+                    == store._type_attributes.keys()
                 )
-                # store._type_attributes = cls()._type_attributes
+            except:
+                raise ValueError(
+                    "Saved objects have different `entry_type` to the current "
+                    "datastore class."
+                )
+            if cls._type_attributes != store._type_attributes:
+                # find the `entry_type` with different fields, count different
+                # fields. `diff` records fields in the current class but not
+                # in the serialized objects.
+                for t in cls._type_attributes:
+                    change_map = {}
+                    contradict_loc = []
+                    diff = set(cls._type_attributes[t].items()) - set(
+                        store._type_attributes[t].items()
+                    )
+                    for f in diff:
+                        # if only order different, switch order
+                        if f[0] in store._type_attributes[t]:
+                            change_map[f[1]] = store._type_attributes[t][f[0]]
+                        # if fields contradictions, fill them with None
+                        else:
+                            contradict_loc.append(f[1])
 
-            if cls()._DataStore__type_dict != store._DataStore__type_dict:
-                logging.warning(
-                    "Saved datastore objects have different orders of "
-                    "`entry_type` lists. This may due to user's additions, "
-                    "deletions, or modifications of `entry_type`."
-                )
-                # store._DataStore__type_dict = cls()._DataStore__type_dict
+                    if len(change_map) > 0:
+                        if allow_warning:
+                            logger.warning(
+                                f"Saved {t} objects have {len(change_map)} "
+                                "different orders of attribute fields to the "
+                                "current datastore. They are reordered to match the"
+                                " fields in the current datastore class."
+                            )
+                        # change the data in lists in the `elements` list
+                        for d in store._DataStore__elements[t]:
+                            d[:] = [
+                                d[change_map[i]] if i in change_map else d[i]
+                                # throw fields that are redundant
+                                for i in range(
+                                    max(cls._type_attributes[t].values()) + 1
+                                )
+                            ]
+                        
+                    if len(contradict_loc) > 0:
+                        if allow_warning:
+                            logger.warning(
+                                f"Saved {t} objects have {len(contradict_loc)} "
+                                "attribute fields that could not be identified. "
+                                "These fields are filled with `None`. "
+                                "This may due to user's modifications of fields."
+                            )
+                        if accept_none:
+                            for d in store._DataStore__elements[t]:
+                                for idx in contradict_loc:
+                                    d[idx] = None
+                        else:
+                            raise ValueError(
+                                "Saved objects have unidentified fields, which"
+                                " raise an error."
+                            )
+
         return store
-    
+
     def _new_tid(self) -> int:
         r"""This function generates a new `tid` for an entry."""
         return uuid.uuid4().int

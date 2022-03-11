@@ -15,6 +15,7 @@
 from abc import abstractmethod
 from typing import List, Iterator, Tuple, Any
 import pickle
+import jsonpickle
 
 __all__ = ["BaseStore"]
 
@@ -43,30 +44,55 @@ class BaseStore:
     def serialize(
         self,
         output_path: str,
-        serialize_method: str = "pickle",
+        serialize_method: str = "jsonpickle",
     ):
-        if serialize_method == "pickle":
-            with open(output_path, mode="wb") as pickle_out:
-                pickle.dump(self, pickle_out)  # type:ignore
+        if serialize_method == "jsonpickle":
+            with open(output_path, mode="wt", encoding="utf-8") as json_out:
+                json_out.write(
+                    self.to_string("jsonpickle")
+                )
         else:
             raise NotImplementedError(
                 f"Unsupported serialization method {serialize_method}"
             )
 
+    def to_string(
+        self,
+        json_method: str = "jsonpickle",
+    ) -> str:
+        """
+        Return the string representation (json encoded) of this method.
+
+        Args:
+            json_method: What method is used to convert data pack to json.
+              Only supports `json_pickle` for now. Default value is
+              `json_pickle`.
+
+        Returns: String representation of the data pack.
+        """
+        if json_method == "jsonpickle":
+            return jsonpickle.encode(self, unpicklable=True)
+        else:
+            raise ValueError(f"Unsupported JSON method {json_method}.")
+
     @classmethod
     def _deserialize(
         cls,
         data_source: str,
-        serialize_method: str = "pickle",
+        serialize_method: str = "jsonpickle",
     ):
-        if serialize_method == "pickle":
-            with open(data_source, mode="rb") as f:  # type: ignore
-                store = pickle.load(f)
-            return store  # type: ignore
+        if serialize_method == "jsonpickle":
+            with open(data_source, mode="rt") as f:  # type: ignore
+                pack = cls.from_string(f.read())
+            return pack
         else:
             raise NotImplementedError(
                 f"Unsupported deserialization method {serialize_method}"
             )
+        
+    @classmethod
+    def from_string(cls, data_content: str) -> "BaseStore":
+        return jsonpickle.decode(data_content)
 
     @abstractmethod
     def add_annotation_raw(self, type_name: str, begin: int, end: int) -> int:

@@ -288,12 +288,5 @@ class DataStoreTest(unittest.TestCase):
         # )
         pass
 
-    def test_pickle(self):
-        self.data_store.serialize('./serialization_temp/temp.txt')
-        a = DataStore.deserialize('./serialization_temp/temp.txt', True)
-        # print(a._type_attributes)
-        # print(a._DataStore__elements)
-        self.assertEqual(a.__dict__, self.data_store.__dict__)
-
 if __name__ == "__main__":
     unittest.main()
