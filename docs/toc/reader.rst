@@ -59,8 +59,7 @@ generic class method
               :class:`~forte.data.readers.plaintext_reader.PlainTextReader·,
               it inherits
               from :class:`~forte.data.base_reader.PackReader` because it reads
-              plain
-              text into ``DataPack``.
+              plain text into ``DataPack``.
 
         - ``default_configs`` code example
 
