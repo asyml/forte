@@ -344,8 +344,8 @@ extlinks = {
 
 ##### nbsphinx ######
 # disable notebook execution
-# nbsphinx_execute = "always"
-nbsphinx_execute = "never"
+nbsphinx_execute = "always"
+# nbsphinx_execute = "never"
 nbsphinx_timeout = 60
 
 
