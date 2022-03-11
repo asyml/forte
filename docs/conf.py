@@ -342,9 +342,10 @@ extlinks = {
     "gym": ("https://gym.openai.com/docs/%s", None),
 }
 
-
+##### nbsphinx ######
 # disable notebook execution
-nbsphinx_execute = "never"
+nbsphinx_execute = "always"
+nbsphinx_timeout = 60
 
 
 ##### Customize ######
