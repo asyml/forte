@@ -45,14 +45,14 @@ div.section h3 > span.hidden-section + a.headerlink {
     margin: 0.6em 1em;
 }
 
-.wy-nav-top > a { 
+.wy-nav-top > a {
     display: none;
 }
 
 @media screen and (max-width: 768px) {
     .wy-side-nav-search>a img.logo {
         height: 60px;
-    }   
+    }
 }
 
 /* This is needed to ensure that logo above search scales properly */
@@ -72,4 +72,8 @@ div.section h3 > span.hidden-section + a.headerlink {
 
 nav .hidden-section {
     display: inherit;
+}
+
+span.caption-text {
+  color: orange;
 }
