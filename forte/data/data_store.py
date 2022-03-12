@@ -18,6 +18,7 @@ from forte.utils import get_class
 from forte.data.base_store import BaseStore
 from forte.data.entry_type_generator import EntryTypeGenerator
 from forte.data.ontology.top import Annotation
+from forte.common import constants
 
 __all__ = ["DataStore"]
 
@@ -118,7 +119,6 @@ class DataStore(BaseStore):
         """
         super().__init__()
         self.onto_file_path = onto_file_path
-        self.ENTRY_TYPE_IDX = 3
 
         """
                 The `_type_attributes` is a private dictionary that provides
@@ -328,7 +328,7 @@ class DataStore(BaseStore):
             attr_value (any): Value of the attribute.
         """
         try:
-            entry_type = self.__entry_dict[tid][self.ENTRY_TYPE_IDX]
+            entry_type = self.__entry_dict[tid][constants.ENTRY_TYPE_INDEX]
         except KeyError as e:
             raise KeyError(f"Entry with tid {tid} not found.") from e
 
@@ -368,7 +368,7 @@ class DataStore(BaseStore):
             The value of `attr_name` for the entry with `tid`.
         """
         try:
-            entry_type = self.__entry_dict[tid][self.ENTRY_TYPE_IDX]
+            entry_type = self.__entry_dict[tid][constants.ENTRY_TYPE_INDEX]
         except KeyError as e:
             raise KeyError(f"Entry with tid {tid} not found.") from e
 
