@@ -14,7 +14,6 @@
 
 from abc import abstractmethod
 from typing import List, Iterator, Tuple, Any
-import pickle
 import jsonpickle
 
 __all__ = ["BaseStore"]
@@ -33,7 +32,7 @@ class BaseStore:
         Each entry type contains some subtypes, which could have
         various fields stored in entry lists.
         """
-    
+
     def __getstate__(self):
         state = self.__dict__.copy()
         return state
@@ -48,9 +47,7 @@ class BaseStore:
     ):
         if serialize_method == "jsonpickle":
             with open(output_path, mode="wt", encoding="utf-8") as json_out:
-                json_out.write(
-                    self.to_string("jsonpickle")
-                )
+                json_out.write(self.to_string("jsonpickle"))
         else:
             raise NotImplementedError(
                 f"Unsupported serialization method {serialize_method}"
@@ -81,15 +78,30 @@ class BaseStore:
         data_source: str,
         serialize_method: str = "jsonpickle",
     ):
+        """
+        This function should deserialize a data store from a string. The
+        implementation should decide the specific data store type.
+
+        Args:
+            data_source: The data path containing pack data. The content
+                of the data could be string or bytes depending on the method of
+                serialization.
+            serialize_method: The method used to serialize the data, this
+                should be the same as how serialization is done. The current
+                option is "jsonpickle"。
+
+        Returns:
+            An data store object deserialized from the data.
+        """
         if serialize_method == "jsonpickle":
-            with open(data_source, mode="rt") as f:  # type: ignore
+            with open(data_source, mode="rt", encoding="utf8") as f:  # type: ignore
                 pack = cls.from_string(f.read())
             return pack
         else:
             raise NotImplementedError(
                 f"Unsupported deserialization method {serialize_method}"
             )
-        
+
     @classmethod
     def from_string(cls, data_content: str) -> "BaseStore":
         return jsonpickle.decode(data_content)

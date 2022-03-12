@@ -18,6 +18,8 @@ Unit tests for data store related operations.
 import logging
 import unittest
 from sortedcontainers import SortedList
+import tempfile
+import os
 
 from forte.data.data_store import DataStore
 
@@ -105,65 +107,127 @@ class DataStoreTest(unittest.TestCase):
         }
 
     def test_pickle(self):
-        self.data_store.serialize("./serialization_temp/temp.txt")
-        temp = DataStore.deserialize(
-            "./serialization_temp/temp.txt",
-            check_attribute=True,
-        )
-        self.assertEqual(
-            temp._DataStore__elements,
-            {
-                "ft.onto.base_ontology.Document": SortedList(
-                    [
+        with tempfile.TemporaryDirectory() as tempdir:
+            tmpfilepath = os.path.join(tempdir, "temp.txt")
+            self.data_store.serialize(tmpfilepath)
+            temp = DataStore.deserialize(tmpfilepath)
+            self.assertEqual(
+                temp._DataStore__elements,
+                {
+                    "ft.onto.base_ontology.Document": SortedList(
                         [
-                            0,
-                            5,
-                            1234,
-                            0,
-                            None,
-                            "Postive",
-                            None,
+                            [
+                                10,
+                                25,
+                                3456,
+                                0,
+                                # "Doc class A",
+                                None,
+                                "Negative",
+                                "Class B",
+                            ],
+                            [
+                                0,
+                                5,
+                                1234,
+                                0,
+                                None,
+                                "Postive",
+                                None,
+                            ],
                         ],
+                    ),
+                    "ft.onto.base_ontology.Sentence": SortedList(
                         [
-                            10,
-                            25,
-                            3456,
-                            0,
-                            # "Doc class A",
-                            None,
-                            "Negative",
-                            "Class B",
+                            [
+                                55,
+                                70,
+                                1234567,
+                                1,
+                                None,
+                                None,
+                                "Negative",
+                                None,
+                                "Class D",
+                            ],
+                            [
+                                6,
+                                9,
+                                9999,
+                                1,
+                                "teacher",
+                                1,
+                                "Postive",
+                                None,
+                                None,
+                            ],
                         ],
-                    ],
-                ),
-                "ft.onto.base_ontology.Sentence": SortedList(
-                    [
+                    ),
+                },
+            )
+
+            temp = DataStore.deserialize(tmpfilepath, check_attribute=False)
+            self.assertEqual(
+                temp._DataStore__elements,
+                {
+                    "ft.onto.base_ontology.Document": SortedList(
                         [
-                            55,
-                            70,
-                            1234567,
-                            1,
-                            None,
-                            None,
-                            "Negative",
-                            None,
-                            "Class D",
+                            [
+                                0,
+                                5,
+                                1234,
+                                0,
+                                "Postive",
+                                None,
+                                # None,
+                            ],
+                            [
+                                10,
+                                25,
+                                3456,
+                                0,
+                                "Negative",
+                                "Class B",
+                                # "Doc class A",
+                            ],
                         ],
+                    ),
+                    "ft.onto.base_ontology.Sentence": SortedList(
                         [
-                            6,
-                            9,
-                            9999,
-                            1,
-                            "teacher",
-                            1,
-                            "Postive",
-                            None,
-                            None,
+                            [
+                                55,
+                                70,
+                                1234567,
+                                1,
+                                "Negative",
+                                None,
+                                None,
+                                "Class C",
+                                "Class D",
+                                "abc",
+                            ],
+                            [
+                                6,
+                                9,
+                                9999,
+                                1,
+                                "Postive",
+                                "teacher",
+                                1,
+                                None,
+                                None,
+                                "cba",
+                            ],
                         ],
-                    ],
-                ),
-            },
-        )
+                    ),
+                },
+            )
+
+            with self.assertRaisesRegex(
+                ValueError,
+                "Saved objects have unidentified fields, which raise an error.",
+            ):
+                DataStore.deserialize(tmpfilepath, accept_none=False)
 
 
 if __name__ == "__main__":

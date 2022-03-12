@@ -15,6 +15,7 @@
 from typing import List, Iterator, Tuple, Optional, Any
 import uuid
 import logging
+from sortedcontainers import SortedList
 
 from forte.utils import get_class
 from forte.data.base_store import BaseStore
@@ -27,7 +28,7 @@ __all__ = ["DataStore"]
 
 class DataStore(BaseStore):
     # TODO: temporarily disable this for development purposes.
-    # pylint: disable=pointless-string-statement
+    # pylint: disable=pointless-string-statement, protected-access
 
     def __init__(self, onto_file_path: Optional[str] = None):
         r"""An implementation of the data store object that mainly uses
@@ -196,17 +197,49 @@ class DataStore(BaseStore):
             )
         return state
 
+    def __setstate__(self, state):
+        r"""
+        In deserialization, we
+            1) transform the annotation list back to a sorted list;
+        """
+        super().__setstate__(state)
+        keys = self.__elements.keys()
+        for k in keys:
+            if issubclass(
+                get_class(k), get_class("forte.data.ontology.top.Annotation")
+            ):
+                self.__elements[k] = SortedList(self.__elements[k])
+
     @classmethod
-    # add a boolean to suppress warning
-    # accept none type or not, throw exception
     def deserialize(
         cls,
         data_source: str,
         serialize_method: str = "jsonpickle",
-        check_attribute: bool = False,
-        allow_warning: bool = True,
+        check_attribute: bool = True,
+        allow_warning: bool = False,
         accept_none: bool = True,
     ) -> "DataStore":
+        """
+        Deserialize a data_store from a string. This internally calls the
+        internal :meth:`~forte.data.base_store.BaseStore._deserialize` function
+        from :class:`~forte.data.base_store.BaseStore`.
+
+        Args:
+            data_source: The path storing data source.
+            serialize_method: The method used to serialize the data, this
+                should be the same as how serialization is done. The current
+                option is "jsonpickle"。
+            check_attribute: Boolean value indicating whether users want to
+                check compatibility of attributes
+            allow_warning: Boolean value indicating whether users want to
+                see warnings when it checks attributes.
+            accept_none: Boolean value indicating whether users want to
+                fill contradic fields with none. If False, it will raise
+                an ValueError.
+
+        Returns:
+            An data store object deserialized from the string.
+        """
         store = cls._deserialize(data_source, serialize_method)
         if check_attribute:
             try:
@@ -214,11 +247,11 @@ class DataStore(BaseStore):
                 assert (
                     cls._type_attributes.keys() == store._type_attributes.keys()
                 )
-            except:
+            except AssertionError as e:
                 raise ValueError(
                     "Saved objects have different `entry_type` to the current "
                     "datastore class."
-                )
+                ) from e
             if cls._type_attributes != store._type_attributes:
                 # find the `entry_type` with different fields, count different
                 # fields. `diff` records fields in the current class but not
@@ -240,10 +273,12 @@ class DataStore(BaseStore):
                     if len(change_map) > 0:
                         if allow_warning:
                             logger.warning(
-                                f"Saved {t} objects have {len(change_map)} "
-                                "different orders of attribute fields to the "
-                                "current datastore. They are reordered to match the"
-                                " fields in the current datastore class."
+                                "Saved %s objects have %s different orders of "
+                                "attribute fields to the current datastore. "
+                                "They are reordered to match the fields in "
+                                "the current datastore class.",
+                                t,
+                                len(change_map),
                             )
                         # change the data in lists in the `elements` list
                         for d in store._DataStore__elements[t]:
@@ -257,10 +292,12 @@ class DataStore(BaseStore):
                     if len(contradict_loc) > 0:
                         if allow_warning:
                             logger.warning(
-                                f"Saved {t} objects have {len(contradict_loc)} "
-                                "attribute fields that could not be identified. "
-                                "These fields are filled with `None`. "
-                                "This may due to user's modifications of fields."
+                                "Saved %s objects have %s attribute fields "
+                                "that could not be identified. "
+                                "These fields are filled with `None`. This may "
+                                "due to user's modifications of fields.",
+                                t,
+                                len(contradict_loc),
                             )
                         if accept_none:
                             for d in store._DataStore__elements[t]:
@@ -413,9 +450,7 @@ class DataStore(BaseStore):
             raise KeyError(f"Entry with tid {tid} not found.")
         entry_type = self.__entry_dict[tid][self.__entry_type_idx]
         if attr_name not in self._type_attributes[entry_type]:
-            raise ValueError(
-                f"{self.__type_dict[entry_type]} has no {attr_name} attribute."
-            )
+            raise ValueError(f"{entry_type} has no {attr_name} attribute.")
         attr_id = self._type_attributes[entry_type][attr_name]
         self.set_attr(tid, attr_id, attr_value)
 
@@ -451,9 +486,7 @@ class DataStore(BaseStore):
             raise KeyError(f"Entry with tid {tid} not found.")
         entry_type = self.__entry_dict[tid][self.__entry_type_idx]
         if attr_name not in self._type_attributes[entry_type]:
-            raise ValueError(
-                f"{self.__type_dict[entry_type]} has no {attr_name} attribute."
-            )
+            raise ValueError(f"{entry_type} has no {attr_name} attribute.")
         attr_id = self._type_attributes[entry_type][attr_name]
         return self.get_attr(tid, attr_id)
 
