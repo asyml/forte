@@ -14,6 +14,7 @@
 
 from typing import List, Iterator, Tuple, Optional, Any
 import uuid
+import json
 
 from forte.utils import get_class
 from forte.data.base_store import BaseStore
@@ -152,8 +153,12 @@ class DataStore(BaseStore):
                 """
         # Issue #570 implements get_type_attributes()
         # see https://github.com/asyml/forte/issues/570
-        self._type_attributes: dict = EntryTypeGenerator.get_type_attributes()
-
+        if self.onto_file_path is None:
+            self._type_attributes: dict = (
+                EntryTypeGenerator.get_type_attributes()
+            )
+        else:
+            self.parse_onto_file()
         """
         The `__elements` is an underlying storage structure for all the entry
         data added by users in this DataStore class.
@@ -474,3 +479,38 @@ class DataStore(BaseStore):
             The previous entry of the same type as the `tid` entry.
         """
         raise NotImplementedError
+
+    def parse_onto_file(self):
+        if self.onto_file_path is None:
+            return
+        self._type_attributes = {}
+        with open(self.onto_file_path, "r") as f:
+            onto_dicts = json.load(f)["definitions"]
+            for onto in onto_dicts:
+                try:
+                    parent_name = onto["parent_entry"]
+                    entry_name = onto["entry_name"]
+                except KeyError as e:
+                    raise KeyError(
+                        "Fail to parse onto file:"
+                        + "`parent_entry` or `entry_name` does not exist in the onto file."
+                    ) from e
+                try:
+                    _ = get_class(parent_name)
+                except ValueError as e:
+                    raise ValueError(
+                        f"onto file contains unknown parent classes."
+                    ) from e
+                attr_dic = {}
+                idx = 4
+                try:
+                    for attr_dict in onto["attributes"]:
+                        name = attr_dict["name"]
+                        attr_dic[name] = idx
+                        idx += 1
+                except KeyError as e:
+                    raise KeyError(
+                        f"Fail to parse filed `attributes` in onto file"
+                    ) from e
+
+                self._type_attributes[entry_name] = attr_dic

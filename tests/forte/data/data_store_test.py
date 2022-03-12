@@ -284,6 +284,23 @@ class DataStoreTest(unittest.TestCase):
         # )
         pass
 
+    def test_check_onto_file(self):
+        expected_type_attributes = {
+            "ftx.onto.clinical.UMLSConceptLink": {
+                "cui": 4,
+                "name": 5,
+                "definition": 6,
+                "tuis": 7,
+                "aliases": 8,
+                "score": 9,
+                },
+            "ftx.onto.clinical.MedicalEntityMention": {
+                "umls_link": 4,
+                "umls_entities": 5,
+            }
+        }
+        data_store_from_file = DataStore(onto_file_path="forte/ontology_specs/medical.json")
+        self.assertDictEqual(data_store_from_file._type_attributes, expected_type_attributes)
 
 if __name__ == "__main__":
     unittest.main()
