@@ -7,6 +7,10 @@ funcsigs~=1.0.2
 mypy_extensions~=0.4.1
 sphinxcontrib-spelling
 
+# jypyter notebook
+nbautoexport==0.4.0
+
+
 pyyaml==5.4
 jsonpickle==1.4
 sortedcontainers==2.1.0
@@ -37,3 +41,5 @@ nltk==3.6.6
 # FastAPI
 fastapi==0.65.2
 uvicorn==0.14.0
+
+nbsphinx==0.8.8

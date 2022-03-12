@@ -16,6 +16,7 @@ Defines the basic data structures and interfaces for the Forte data
 representation system.
 """
 import uuid
+
 from abc import abstractmethod, ABC
 from collections.abc import MutableSequence, MutableMapping
 from dataclasses import dataclass
@@ -35,6 +36,8 @@ from typing import (
 
 import numpy as np
 
+from packaging.version import Version
+
 from forte.data.container import ContainerType, BasePointer
 
 __all__ = [
@@ -53,6 +56,7 @@ __all__ = [
 ]
 
 from forte.utils import get_full_module_name
+from forte.version import DEFAULT_PACK_VERSION, PACK_ID_COMPATIBLE_VERSION
 
 default_entry_fields = [
     "_Entry__pack",
@@ -277,7 +281,9 @@ class Entry(Generic[ContainerType]):
         """
         if isinstance(from_entry, MultiEntry):
             return MpPointer(
-                from_entry.pack.get_pack_index(self.pack_id), self.tid
+                # bug fix/enhancement 559: change pack index to pack_id for multi-entry/multi-pack
+                self.pack_id,
+                self.tid,  # from_entry.pack.get_pack_index(self.pack_id)
             )
         elif isinstance(from_entry, Entry):
             return Pointer(self.tid)
@@ -429,7 +435,20 @@ class MultiEntry(Entry, ABC):
         if isinstance(ptr, Pointer):
             return self.pack.get_entry(ptr.tid)
         elif isinstance(ptr, MpPointer):
-            return self.pack.packs[ptr.pack_index].get_entry(ptr.tid)
+            # bugfix/new feature 559: in new version pack_index will be using pack_id internally
+            pack_array_index = ptr.pack_index  # old version
+            pack_version = ""
+            try:
+                pack_version = self.pack.pack_version
+            except AttributeError:
+                pack_version = DEFAULT_PACK_VERSION  # set to default if lacking version attribute
+
+            if Version(pack_version) >= Version(PACK_ID_COMPATIBLE_VERSION):
+                pack_array_index = self.pack.get_pack_index(
+                    ptr.pack_index
+                )  # default: new version
+
+            return self.pack.packs[pack_array_index].get_entry(ptr.tid)
         else:
             raise TypeError(f"Unknown pointer type {ptr.__class__}")
 
@@ -610,7 +629,7 @@ class FNdArray:
     """
 
     def __init__(
-        self, dtype: Optional[str] = None, shape: Optional[Iterable[int]] = None
+        self, dtype: Optional[str] = None, shape: Optional[List[int]] = None
     ):
         super().__init__()
         self._dtype: Optional[np.dtype] = (

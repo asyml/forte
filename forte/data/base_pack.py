@@ -39,6 +39,7 @@ from forte.common import ProcessExecutionException, EntryNotFoundError
 from forte.data.container import EntryContainer
 from forte.data.index import BaseIndex
 from forte.data.ontology.core import Entry, EntryType, GroupType, LinkType
+from forte.version import PACK_VERSION, DEFAULT_PACK_VERSION
 
 __all__ = ["BasePack", "BaseMeta", "PackType"]
 
@@ -98,6 +99,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         super().__init__()
         self.links: List[LinkType] = []
         self.groups: List[GroupType] = []
+        self.pack_version: str = PACK_VERSION
 
         self._meta: BaseMeta = self._init_meta(pack_name)
         self._index: BaseIndex = BaseIndex()
@@ -199,11 +201,18 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             with _open(data_source, mode="rb") as f:  # type: ignore
                 pack = pickle.load(f)
 
+            if not hasattr(pack, "pack_version"):
+                pack.pack_version = DEFAULT_PACK_VERSION
+
         return pack  # type: ignore
 
     @classmethod
     def from_string(cls, data_content: str) -> "BasePack":
-        return jsonpickle.decode(data_content)
+        pack = jsonpickle.decode(data_content)
+        if not hasattr(pack, "pack_version"):
+            pack.pack_version = DEFAULT_PACK_VERSION
+
+        return pack
 
     @abstractmethod
     def delete_entry(self, entry: EntryType):
@@ -327,7 +336,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
         if serialize_method == "pickle":
             with _open(output_path, mode="wb") as pickle_out:
-                pickle.dump(self, pickle_out)  # type:ignore
+                pickle.dump(self, pickle_out)
         elif serialize_method == "jsonpickle":
             with _open(output_path, mode="wt", encoding="utf-8") as json_out:
                 json_out.write(
