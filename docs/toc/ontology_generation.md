@@ -309,6 +309,9 @@ following -
                             levels of namespace packaging.
                             The generation of __init__.py for all the directory
                             levels above namespace_depth will be disabled.
+                            When namespace_depth<=0, namespace packaging will be disabled
+                            and __init__.py will be included in all directory levels.                            
+                            Default value is set to 0 to disable namespace packaging.
       -a, --gen_all         If True, will generate all the ontology,including the
                             existing ones shipped with Forte.
 
