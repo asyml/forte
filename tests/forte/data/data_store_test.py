@@ -29,18 +29,17 @@ class DataStoreTest(unittest.TestCase):
         self.data_store = DataStore()
         # attribute fields for Document and Sentence entries
         self.data_store._type_attributes = {
-            0: {
+            "ft.onto.base_ontology.Document": {
                 "document_class": 4,
                 "sentiment": 5,
                 "classifications": 6,
             },
-            1: {
+            "ft.onto.base_ontology.Sentence": {
                 "speaker": 4,
                 "part_id": 5,
                 "sentiment": 6,
                 "classification": 7,
                 "classifications": 8,
-                # 'test_different_fields': 9
             },
         }
         # The order is [Document, Sentence]. Initialize 2 entries in each list.
@@ -55,13 +54,13 @@ class DataStoreTest(unittest.TestCase):
         # }
 
         self.data_store._DataStore__elements = {
-            "ft.onto.base_ontology.Document":
-                SortedList([
+            "ft.onto.base_ontology.Document": SortedList(
+                [
                     [
                         0,
                         5,
                         1234,
-                        0,
+                        "ft.onto.base_ontology.Document",
                         None,
                         "Postive",
                         None,
@@ -70,26 +69,39 @@ class DataStoreTest(unittest.TestCase):
                         10,
                         25,
                         3456,
-                        0,
+                        "ft.onto.base_ontology.Document",
                         "Doc class A",
                         "Negative",
                         "Class B",
                     ],
-                ]),
-            "ft.onto.base_ontology.Sentence":
-                SortedList([
+                ]
+            ),
+            "ft.onto.base_ontology.Sentence": SortedList(
+                [
+                    [
+                        6,
+                        9,
+                        9999,
+                        "ft.onto.base_ontology.Sentence",
+                        "teacher",
+                        1,
+                        "Postive",
+                        None,
+                        None,
+                    ],
                     [
                         55,
                         70,
                         1234567,
-                        1,
+                        "ft.onto.base_ontology.Sentence",
                         None,
                         None,
                         "Negative",
                         "Class C",
                         "Class D",
                     ],
-                ]),
+                ]
+            ),
             # empty list corresponds to Entry, test only
             "forte.data.ontology.core.Entry": SortedList([]),
         }
@@ -98,7 +110,7 @@ class DataStoreTest(unittest.TestCase):
                 0,
                 5,
                 1234,
-                0,
+                "ft.onto.base_ontology.Document",
                 None,
                 "Postive",
                 None,
@@ -107,7 +119,7 @@ class DataStoreTest(unittest.TestCase):
                 10,
                 25,
                 3456,
-                0,
+                "ft.onto.base_ontology.Document",
                 "Doc class A",
                 "Negative",
                 "Class B",
@@ -116,7 +128,7 @@ class DataStoreTest(unittest.TestCase):
                 6,
                 9,
                 9999,
-                1,
+                "ft.onto.base_ontology.Sentence",
                 "teacher",
                 1,
                 "Postive",
@@ -127,7 +139,7 @@ class DataStoreTest(unittest.TestCase):
                 55,
                 70,
                 1234567,
-                1,
+                "ft.onto.base_ontology.Sentence",
                 None,
                 None,
                 "Negative",
@@ -223,7 +235,11 @@ class DataStoreTest(unittest.TestCase):
         self.assertEqual(len(instances), 4)
 
         # get entries without subclasses
-        instances = list(self.data_store.get("forte.data.ontology.core.Entry", include_sub_type=False))
+        instances = list(
+            self.data_store.get(
+                "forte.data.ontology.core.Entry", include_sub_type=False
+            )
+        )
         self.assertEqual(len(instances), 0)
 
     def test_delete_entry(self):
@@ -273,6 +289,7 @@ class DataStoreTest(unittest.TestCase):
         #     ],
         # )
         pass
+
 
 if __name__ == "__main__":
     unittest.main()
