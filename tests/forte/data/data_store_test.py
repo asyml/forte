@@ -48,16 +48,15 @@ class DataStoreTest(unittest.TestCase):
         # Sentence entries have tid 9999, 1234567.
         # The type id for Document is 0, Sentence is 1.
 
-        self.data_store._DataStore__type_index_dict = {
-            "ft.onto.base_ontology.Document": 0,
-            "ft.onto.base_ontology.Sentence": 1,
-            "forte.data.ontology.core.Entry": 2,
-            # "ft.onto.base_ontology.Phrase": 3
-        }
+        # self.data_store._DataStore__type_index_dict = {
+        #     "ft.onto.base_ontology.Document": 0,
+        #     "ft.onto.base_ontology.Sentence": 1,
+        #     "forte.data.ontology.core.Entry": 2,
+        # }
 
-        self.data_store._DataStore__elements = [
-            SortedList(
-                [
+        self.data_store._DataStore__elements = {
+            "ft.onto.base_ontology.Document":
+                SortedList([
                     [
                         0,
                         5,
@@ -76,10 +75,9 @@ class DataStoreTest(unittest.TestCase):
                         "Negative",
                         "Class B",
                     ],
-                ],
-            ),
-            SortedList(
-                [
+                ]),
+            "ft.onto.base_ontology.Sentence":
+                SortedList([
                     [
                         55,
                         70,
@@ -91,22 +89,10 @@ class DataStoreTest(unittest.TestCase):
                         "Class C",
                         "Class D",
                     ],
-                    [
-                        6,
-                        9,
-                        9999,
-                        1,
-                        "teacher",
-                        1,
-                        "Postive",
-                        None,
-                        None,
-                    ],
-                ],
-            ),
+                ]),
             # empty list corresponds to Entry, test only
-            [],
-        ]
+            "forte.data.ontology.core.Entry": SortedList([]),
+        }
         self.data_store._DataStore__entry_dict = {
             1234: [
                 0,

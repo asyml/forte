@@ -126,8 +126,8 @@ class DataStore(BaseStore):
         """
         The `_type_attributes` is a private dictionary that provides
         `type_name` and the order of corresponding attributes except `index_id`.
-        The outer keys are indices of `entry lists` in `self.__elements` as
-        ints, representing all types that inherit the `Entry` class.
+        The outer keys are `type_name` as strings, representing all types that
+        inherit the `Entry` class.
         The inner keys are all the valid attributes for this type.
         The values are the indices of attributes among these lists.
 
@@ -158,65 +158,19 @@ class DataStore(BaseStore):
         self._type_attributes: dict = EntryTypeGenerator.get_type_attributes()
 
         """
-        The `__type_index_dict` is a private dictionary that has reverse
-        structure of `self.__type_dict`. It is only used for generators to map
-        'type_name' to `type_id.
-        It should be created only once no matter how many data store objects
-        are initialized.
-
-        Example:
-
-        .. code-block:: python
-
-            self.__type_index_dict: dict = get_type_index_dict()
-
-            # self.__type_index_dict is:
-            # {
-            #     0: "ft.onto.base_ontology.Token",
-            #     1: "ft.onto.base_ontology.Document",
-            #     2: "ft.onto.base_ontology.Sentence",
-            # }
-        """
-        # TODO: implement get_type_id() (Issue #need creation)
-        self.__type_dict: dict = {}
-
-        """
-        The `__type_rev` is a private dictionary that has reverse structure of
-        `self.__type_dict`. It is only used for generators to search 'type_id'.
-        It should be created only once no matter how many data store objects
-        are initialized.
-
-        Example:
-
-        .. code-block:: python
-
-            self.__type_rev: dict = get_type_id_rev()
-
-            # self.__type_rev is:
-            # {
-            #     "ft.onto.base_ontology.Token": 0,
-            #     "ft.onto.base_ontology.Document": 1,
-            #     "ft.onto.base_ontology.Sentence": 2,
-            # }
-        """
-        # TODO: implement get_type_id_rev() (Issue #need creation)
-        self.__type_index_dict: dict = {}
-
-        """
         The `__elements` is an underlying storage structure for all the entry
         data added by users in this DataStore class.
-        It is a list of lists that stores sorted `entry lists` by the order of
-        `type_id`.
+        It is a dict of {str: list} pairs that stores sorted `entry lists` by
+        `type_name`s.
 
             Example:
-            self.__elements = [
-                Token SortedList(),
-                Document SortedList(),
-                Sentence SortedList(),
+            self.__elements = {
+                "ft.onto.base_ontology.Token": Token SortedList(),
+                "ft.onto.base_ontology.Document": Document SortedList(),
+                "ft.onto.base_ontology.Sentence": Sentence SortedList(),
                 ...
-            ]
+            }
         """
-        # self.__elements: List = []
         self.__elements: dict = {}
 
         """
@@ -237,16 +191,10 @@ class DataStore(BaseStore):
         state = super().__getstate__()
         keys = state["_DataStore__elements"].keys()
         for k in keys:
-            state["_DataStore__elements"][k] = list(state["_DataStore__elements"][k])
+            state["_DataStore__elements"][k] = list(
+                state["_DataStore__elements"][k]
+            )
         return state
-
-    def __setstate__(self, state):
-        r"""
-        In deserialization, we
-            1) transform the annotation list back to a sorted list;
-            2) check whether attributes change
-        """
-        super().__setstate__(state)
 
     @classmethod
     # add a boolean to suppress warning
@@ -257,15 +205,14 @@ class DataStore(BaseStore):
         serialize_method: str = "jsonpickle",
         check_attribute: bool = False,
         allow_warning: bool = True,
-        accept_none: bool = True
+        accept_none: bool = True,
     ) -> "DataStore":
         store = cls._deserialize(data_source, serialize_method)
         if check_attribute:
             try:
                 # should contain the same `entry_type` class name
                 assert (
-                    cls._type_attributes.keys()
-                    == store._type_attributes.keys()
+                    cls._type_attributes.keys() == store._type_attributes.keys()
                 )
             except:
                 raise ValueError(
@@ -307,7 +254,6 @@ class DataStore(BaseStore):
                                     max(cls._type_attributes[t].values()) + 1
                                 )
                             ]
-                        
                     if len(contradict_loc) > 0:
                         if allow_warning:
                             logger.warning(
@@ -583,19 +529,22 @@ class DataStore(BaseStore):
         # We use the `type_id` to find its `entry_type` and all subclasses.
         # We locate the lists.
         # We create an iterator to generate entries from the list.
-        type_id = self.__type_index_dict[type_name]
         if include_sub_type:
             entry_class = get_class(type_name)
             all_types = []
             # iterate all classes to find subclasses
-            for types in self.__type_index_dict.items():
-                if issubclass(get_class(types[0]), entry_class):
-                    all_types.append(types[1])
-            for id in all_types:
-                for entry in self.__elements[id]:
+            for type in self.__elements:
+                if issubclass(get_class(type), entry_class):
+                    all_types.append(type)
+            for type in all_types:
+                for entry in self.__elements[type]:
                     yield entry
         else:
-            for entry in self.__elements[type_id]:
+            try:
+                entries = self.__elements[type_name]
+            except KeyError as e:
+                raise KeyError(f"type {type_name} does not exist") from e
+            for entry in entries:
                 yield entry
 
     def next_entry(self, tid: int) -> List:
