@@ -14,10 +14,14 @@
 
 import copy
 import logging
+
 from pathlib import Path
 from typing import Dict, List, Set, Union, Iterator, Optional, Type, Any, Tuple
 
+import jsonpickle
+
 from sortedcontainers import SortedList
+from packaging.version import Version
 
 from forte.common import ProcessExecutionException
 from forte.data.base_pack import BaseMeta, BasePack
@@ -34,6 +38,8 @@ from forte.data.ontology.top import (
 )
 from forte.data.types import DataRequest
 from forte.utils import get_class
+from forte.version import DEFAULT_PACK_VERSION, PACK_ID_COMPATIBLE_VERSION
+
 
 logger = logging.getLogger(__name__)
 
@@ -168,7 +174,33 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
     # TODO: get_subentry maybe useless
     def get_subentry(self, pack_idx: int, entry_id: int):
-        return self.get_pack_at(pack_idx).get_entry(entry_id)
+        r"""
+        Get sub_entry from multi pack. This method uses `pack_id` (a unique
+        identifier assigned to datapack) to get a pack from multi pack,
+        and then return its sub_entry with entry_id. Noted this is changed from
+        the way of accessing such pack before the PACK_ID_COMPATIBLE_VERSION,
+        in which the `pack_idx` was used as list index number to access/reference
+        a pack within the multi pack (and in this case then get the sub_entry).
+
+        Args:
+            pack_idx (int): The pack_id for the data_pack in the
+              multi pack.
+            entry_id (int): the id for the entry from the pack with pack_id
+
+        Returns:
+            sub-entry of the pack with id = `pack_idx`
+
+        """
+        pack_array_index: int = pack_idx  # the old way
+        # the following check if the pack version is higher than the (backward)
+        # compatible version in which pack_idx is the pack_id not list index
+        if Version(self.pack_version) >= Version(PACK_ID_COMPATIBLE_VERSION):
+            pack_array_index = self.get_pack_index(
+                pack_idx
+            )  # the new way: using pack_id instead of array index
+
+        return self._packs[pack_array_index].get_entry(entry_id)
+        # return self.get_pack_at(pack_idx).get_entry(entry_id) #old version
 
     def get_span_text(self, begin: int, end: int):
         raise ValueError(
@@ -469,10 +501,10 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         """
         try:
             return self._inverse_pack_ref[pack_id]
-        except KeyError as e:
+        except KeyError as ke:
             raise ProcessExecutionException(
                 f"Pack {pack_id} is not in this multi-pack."
-            ) from e
+            ) from ke
 
     def get_pack(self, name: str) -> DataPack:
         """
@@ -856,7 +888,32 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         Returns:
             An data pack object deserialized from the string.
         """
-        return cls._deserialize(data_path, serialize_method, zip_pack)
+        # pylint: disable=protected-access
+        mp: MultiPack = cls._deserialize(data_path, serialize_method, zip_pack)
+
+        # (fix 595) change the dictionary's key after deserialization from str back to int
+        mp._inverse_pack_ref = {
+            int(k): v for k, v in mp._inverse_pack_ref.items()
+        }
+
+        return mp
+
+    @classmethod
+    def from_string(cls, data_content: str):
+        # pylint: disable=protected-access
+        # can not use explict type hint for mp as pylint does not allow type change
+        # from base_pack to multi_pack which is problematic so use jsonpickle instead
+
+        mp = jsonpickle.decode(data_content)
+        if not hasattr(mp, "pack_version"):
+            mp.pack_version = DEFAULT_PACK_VERSION
+        # (fix 595) change the dictionary's key after deserialization from str back to int
+        mp._inverse_pack_ref = {  # pylint: disable=no-member
+            int(k): v
+            for k, v in mp._inverse_pack_ref.items()  # pylint: disable=no-member
+        }
+
+        return mp
 
     def _add_entry(self, entry: EntryType) -> EntryType:
         r"""Force add an :class:`forte.data.ontology.core.Entry` object to the
