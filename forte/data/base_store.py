@@ -94,7 +94,7 @@ class BaseStore:
             An data store object deserialized from the data.
         """
         if serialize_method == "jsonpickle":
-            with open(data_source, mode="rt", encoding="utf8") as f:  # type: ignore
+            with open(data_source, mode="rt", encoding="utf8") as f:
                 pack = cls.from_string(f.read())
             return pack
         else:
