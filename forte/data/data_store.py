@@ -184,7 +184,7 @@ class DataStore(BaseStore):
         r"""This function generates a new `tid` for an entry."""
         return uuid.uuid4().int
 
-    def _new_annotation(self, type_name: int, begin: int, end: int) -> List:
+    def _new_annotation(self, type_name: str, begin: int, end: int) -> List:
         r"""This function generates a new annotation with default fields.
         All default fields are filled with None.
         Called by add_annotation_raw() to create a new annotation with
@@ -258,7 +258,7 @@ class DataStore(BaseStore):
             entry += len(self._type_attributes[type_name]) * [None]
         except KeyError as e:
             raise KeyError(
-                f"Group type with id {type_id} does not exist."
+                f"Group type with id {type_name} does not exist."
             ) from e
         return entry
 
@@ -292,10 +292,10 @@ class DataStore(BaseStore):
         # annotation type entry data with default fields.
         # A reference to the entry should be store in both self.__elements and
         # self.__entry_dict.
-        entry = self._new_annotation(type_id, begin, end)
-        self.__elements[type_id].add(entry)
-        self.__entry_dict[entry[constants.TID_IDX]] = entry
-        return entry[constants.TID_IDX]
+        entry = self._new_annotation(type_name, begin, end)
+        self.__elements[type_name].add(entry)
+        self.__entry_dict[entry[constants.TID_INDEX]] = entry
+        return entry[constants.TID_INDEX]
 
     def add_link_raw(
         self, type_name: str, parent_tid: int, child_tid: int
@@ -355,9 +355,9 @@ class DataStore(BaseStore):
         except KeyError as e:
             raise KeyError(f"{entry_type} has no {attr_name} attribute.") from e
 
-        self.set_attr(tid, attr_id, attr_value)
+        self._set_attr(tid, attr_id, attr_value)
 
-    def set_attr(self, tid: int, attr_id: int, attr_value: Any):
+    def _set_attr(self, tid: int, attr_id: int, attr_value: Any):
         r"""This function locates the entry data with `tid` and sets its
         attribute `attr_id` with value `attr_value`. Called by
         `set_attribute()`.
@@ -367,8 +367,6 @@ class DataStore(BaseStore):
             attr_id (int): The id of the attribute.
             attr_value (any): The value of the attribute.
         """
-        # We retrieve the entry data from `__entry_dict` using tid.
-        # We locate the attribute using `attr_id` and update the attribute.
         entry = self.__entry_dict[tid]
         entry[attr_id] = attr_value
 
@@ -395,9 +393,9 @@ class DataStore(BaseStore):
         except KeyError as e:
             raise KeyError(f"{entry_type} has no {attr_name} attribute.") from e
 
-        return self.get_attr(tid, attr_id)
+        return self._get_attr(tid, attr_id)
 
-    def get_attr(self, tid: int, attr_id: int) -> Any:
+    def _get_attr(self, tid: int, attr_id: int) -> Any:
         r"""This function locates the entry data with `tid` and gets the value
         of `attr_id` of this entry. Called by `get_attribute()`.
 
@@ -408,8 +406,6 @@ class DataStore(BaseStore):
         Returns:
             The value of `attr_id` for the entry with `tid`.
         """
-        # We retrieve the entry data from `__entry_dict` using tid.
-        # We locate the attribute using `attr_id` and get the attribute.
         entry = self.__entry_dict[tid]
         return entry[attr_id]
 

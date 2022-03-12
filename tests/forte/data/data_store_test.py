@@ -168,17 +168,17 @@ class DataStoreTest(unittest.TestCase):
 
     def test_add_annotation_raw(self):
         # test add Document entry
-        self.data_store.add_annotation_raw(0, 1, 5)
+        self.data_store.add_annotation_raw("ft.onto.base_ontology.Document", 1, 5)
         # test add Sentence entry
-        self.data_store.add_annotation_raw(1, 5, 8)
-        num_doc = len(self.data_store._DataStore__elements[0])
-        num_sent = len(self.data_store._DataStore__elements[1])
+        self.data_store.add_annotation_raw("ft.onto.base_ontology.Sentence", 5, 8)
+        num_doc = len(self.data_store._DataStore__elements["ft.onto.base_ontology.Document"])
+        num_sent = len(self.data_store._DataStore__elements["ft.onto.base_ontology.Sentence"])
 
         self.assertEqual(num_doc, 3)
         self.assertEqual(num_sent, 3)
-        self.assertEqual(len(self.data_store._DataStore__entry_dict), 6)
+        self.assertEqual(len(self.data_store._DataStore__entry_dict), 7)
 
-    def test_get_attr(self):
+    def test_get_attribute(self):
         speaker = self.data_store.get_attribute(9999, "speaker")
         classifications = self.data_store.get_attribute(3456, "classifications")
 
@@ -195,7 +195,7 @@ class DataStoreTest(unittest.TestCase):
         ):
             self.data_store.get_attribute(9999, "class")
 
-    def test_set_attr(self):
+    def test_set_attribute(self):
         # change attribute
         self.data_store.set_attribute(9999, "speaker", "student")
         # set attribute with originally none value
