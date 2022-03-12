@@ -246,19 +246,18 @@ class DataStore(BaseStore):
         entry = [member_type, [], tid, type_name]
         entry += len(self._type_attributes[type_name]) * [None]
         return entry
-    
-    def _is_annotation(self, type_name: int) -> bool:
+
+    def _is_annotation(self, type_name: str) -> bool:
         r"""This function takes a type_id and returns whether a type
         is an annotation type or not.
         Args:
-            type_id (int): The index of type in `self.__elements`.
+            type_name (str): The name of type in `self.__elements`.
         Returns:
             A boolean value whether this type_id belongs to an annotation
             type or not.
         """
         entry_class = get_class(type_name)
         return issubclass(entry_class, Annotation)
-
 
     def add_annotation_raw(self, type_name: str, begin: int, end: int) -> int:
         r"""This function adds an annotation entry with `begin` and `end`
@@ -328,12 +327,16 @@ class DataStore(BaseStore):
             attr_name (str): Name of the attribute.
             attr_value (any): Value of the attribute.
         """
-        if tid not in self.__entry_dict:
-            raise KeyError(f"Entry with tid {tid} not found.")
-        entry_type = self.__entry_dict[tid][self.__entry_type_idx]
-        if attr_name not in self._type_attributes[entry_type]:
-            raise ValueError(f"{entry_type} has no {attr_name} attribute.")
-        attr_id = self._type_attributes[entry_type][attr_name]
+        try:
+            entry_type = self.__entry_dict[tid][self.ENTRY_TYPE_IDX]
+        except KeyError as e:
+            raise KeyError(f"Entry with tid {tid} not found.") from e
+
+        try:
+            attr_id = self._type_attributes[entry_type][attr_name]
+        except KeyError as e:
+            raise KeyError(f"{entry_type} has no {attr_name} attribute.") from e
+
         self.set_attr(tid, attr_id, attr_value)
 
     def set_attr(self, tid: int, attr_id: int, attr_value: Any):
@@ -364,12 +367,16 @@ class DataStore(BaseStore):
         Returns:
             The value of `attr_name` for the entry with `tid`.
         """
-        if tid not in self.__entry_dict:
-            raise KeyError(f"Entry with tid {tid} not found.")
-        entry_type = self.__entry_dict[tid][self.__entry_type_idx]
-        if attr_name not in self._type_attributes[entry_type]:
-            raise ValueError(f"{entry_type} has no {attr_name} attribute.")
-        attr_id = self._type_attributes[entry_type][attr_name]
+        try:
+            entry_type = self.__entry_dict[tid][self.ENTRY_TYPE_IDX]
+        except KeyError as e:
+            raise KeyError(f"Entry with tid {tid} not found.") from e
+
+        try:
+            attr_id = self._type_attributes[entry_type][attr_name]
+        except KeyError as e:
+            raise KeyError(f"{entry_type} has no {attr_name} attribute.") from e
+
         return self.get_attr(tid, attr_id)
 
     def get_attr(self, tid: int, attr_id: int) -> Any:
@@ -420,7 +427,7 @@ class DataStore(BaseStore):
             raise KeyError(
                 f"The specified type [{type_name}] "
                 f"does not exist in self.__elements."
-            )
+            ) from e
         # complexity: O(lgn)
         # if it's annotation type, use bisect to find the index
         if self._is_annotation(type_name):
@@ -438,7 +445,7 @@ class DataStore(BaseStore):
 
         self._delete_entry_by_loc(type_name, entry_index)
 
-    def _delete_entry_by_loc(self, type_name: int, index_id: int):
+    def _delete_entry_by_loc(self, type_name: str, index_id: int):
         r"""It removes an entry of `index_id` by taking both the `type_id`
         and `index_id`. Called by `delete_entry()`.
         This function will raise an IndexError if the `type_id` or `index_id`
@@ -448,12 +455,13 @@ class DataStore(BaseStore):
             type_id (int): The index of the list in `self.__elements`.
             index_id (int): The index of the entry in the list.
         """
-        if type_name >= len(self.__elements):
-            raise IndexError(
+        try:
+            target_list = self.__elements[type_name]
+        except KeyError as e:
+            raise KeyError(
                 f"The specified type [{type_name}] "
                 f"does not exist in self.__elements."
-            )
-        target_list = self.__elements[type_name]
+            ) from e
         if index_id < 0 or index_id >= len(target_list):
             raise IndexError(
                 f"The specified index_id [{index_id}] "
