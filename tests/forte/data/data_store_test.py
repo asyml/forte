@@ -48,27 +48,16 @@ class DataStoreTest(unittest.TestCase):
         # Sentence entries have tid 9999, 1234567.
         # The type id for Document is 0, Sentence is 1.
 
-<<<<<<< HEAD
-        self.data_store._DataStore__type_dict = {
-            0: "ft.onto.base_ontology.Document",
-            1: "ft.onto.base_ontology.Sentence",
-            2: "forte.data.ontology.core.Entry",
-            3: "ft.onto.base_ontology.CoreferenceGroup"
-        }
-
-        self.data_store._DataStore__type_rev = {
-=======
         self.data_store._DataStore__type_index_dict = {
->>>>>>> master
             "ft.onto.base_ontology.Document": 0,
             "ft.onto.base_ontology.Sentence": 1,
             "forte.data.ontology.core.Entry": 2,
             "ft.onto.base_ontology.CoreferenceGroup": 3,
         }
 
-        self.data_store._DataStore__elements = [
-            SortedList(
-                [
+        self.data_store._DataStore__elements = {
+            "ft.onto.base_ontology.Document":
+                SortedList([
                     [
                         0,
                         5,
@@ -87,10 +76,9 @@ class DataStoreTest(unittest.TestCase):
                         "Negative",
                         "Class B",
                     ],
-                ],
-            ),
-            SortedList(
-                [
+                ]),
+            "ft.onto.base_ontology.Sentence":
+                SortedList([
                     [
                         6,
                         9,
@@ -113,22 +101,10 @@ class DataStoreTest(unittest.TestCase):
                         "Class C",
                         "Class D",
                     ],
-                ],
-            ),
+                ]),
             # empty list corresponds to Entry, test only
-            [],
-            # list corresponds to CoreferenceGroup
-            SortedList([
-                [
-                    1,
-                    [9999, 1234567],
-                    10123,
-                    3,
-                    Sentence,
-                    0,
-                ],
-            ]),
-        ]
+            "forte.data.ontology.core.Entry": SortedList([]),
+        }
         self.data_store._DataStore__entry_dict = {
             1234: [
                 0,
@@ -263,13 +239,8 @@ class DataStoreTest(unittest.TestCase):
         self.assertEqual(instances[1][2], 3456)
 
         # get all entries
-<<<<<<< HEAD
-        instances = list(self.data_store.get(2))
-        self.assertEqual(len(instances), 5)
-=======
         instances = list(self.data_store.get("forte.data.ontology.core.Entry"))
         self.assertEqual(len(instances), 4)
->>>>>>> master
 
         # get entries without subclasses
         instances = list(self.data_store.get("forte.data.ontology.core.Entry", include_sub_type=False))
