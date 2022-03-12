@@ -234,8 +234,8 @@ class DataStore(BaseStore):
             allow_warning: Boolean value indicating whether users want to
                 see warnings when it checks attributes.
             accept_none: Boolean value indicating whether users want to
-                fill contradic fields with none. If False, it will raise
-                an ValueError.
+                fill contradictory fields with none. If false, it will raise
+                an ValueError if there are any contradictions in fields.
 
         Returns:
             An data store object deserialized from the string.
