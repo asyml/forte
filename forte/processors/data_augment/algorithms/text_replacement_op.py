@@ -47,7 +47,7 @@ class TextReplacementOp(ABC):
         returns the augmented string.
 
         Args:
-            input_anno, the input annotation to be replaced.
+            input_anno: the input annotation to be replaced.
 
         Returns:
             A tuple, where the first element is a boolean value indicating
