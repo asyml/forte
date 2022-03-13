@@ -482,7 +482,7 @@ class DataStore(BaseStore):
             as the `tid` entry.
 
         Raises:
-            IndexError: An error occured accessing the next entry of the last
+            IndexError: An error occurred accessing the next entry of the last
                 element in entry list.
         """
         _, entry_type, index_id = self.get_entry(tid=tid)
@@ -506,7 +506,7 @@ class DataStore(BaseStore):
             type as the `tid` entry.
 
         Raises:
-            IndexError: An error occured accessing the previous entry of the
+            IndexError: An error occurred accessing the previous entry of the
                 first element in entry list.
         """
         _, entry_type, index_id = self.get_entry(tid=tid)
