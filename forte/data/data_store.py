@@ -191,7 +191,7 @@ class DataStore(BaseStore):
                 ...
             ]
         """
-        self.__elements: List = []
+        self.__elements: dict = {}
 
         """
         A dictionary that keeps record of all entrys with their tid.
@@ -454,19 +454,22 @@ class DataStore(BaseStore):
         # We use the ``type_id`` to find its ``entry_type`` and all subclasses.
         # We locate the lists.
         # We create an iterator to generate entries from the list.
-        type_id = self.__type_index_dict[type_name]
         if include_sub_type:
             entry_class = get_class(type_name)
             all_types = []
             # iterate all classes to find subclasses
-            for types in self.__type_index_dict.items():
-                if issubclass(get_class(types[0]), entry_class):
-                    all_types.append(types[1])
-            for id in all_types:
-                for entry in self.__elements[id]:
+            for type in self.__elements:
+                if issubclass(get_class(type), entry_class):
+                    all_types.append(type)
+            for type in all_types:
+                for entry in self.__elements[type]:
                     yield entry
         else:
-            for entry in self.__elements[type_id]:
+            try:
+                entries = self.__elements[type_name]
+            except KeyError as e:
+                raise KeyError(f"type {type_name} does not exist") from e
+            for entry in entries:
                 yield entry
 
     def next_entry(self, tid: int) -> List:
