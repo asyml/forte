@@ -155,33 +155,10 @@ class DataStore(BaseStore):
         self._type_attributes: dict = EntryTypeGenerator.get_type_attributes()
 
         """
-        The ``__type_index_dict`` is a private dictionary that has reverse
-        structure of ``self.__type_dict``. It is only used for generators to map
-        ``type_name`` to ``type_id``.
-        It should be created only once no matter how many data store objects
-        are initialized.
-
-        Example:
-
-        .. code-block:: python
-
-            self.__type_index_dict: dict = get_type_index_dict()
-
-            # self.__type_index_dict is:
-            # {
-            #     "ft.onto.base_ontology.Token": 0,
-            #     "ft.onto.base_ontology.Document": 1,
-            #     "ft.onto.base_ontology.Sentence": 2,
-            # }
-        """
-        # TODO: implement get_type_id_rev() (Issue #need creation)
-        self.__type_index_dict: dict = {}
-
-        """
-        The ``__elements`` is an underlying storage structure for all the entry
+        The `__elements` is an underlying storage structure for all the entry
         data added by users in this DataStore class.
-        It is a list of lists that stores sorted ``entry lists`` by the order of
-        ``type_id``.
+        It is a dict of {str: list} pairs that stores sorted ``entry lists`` by
+         ``type_name``s.
 
             Example:
             self.__elements = [
