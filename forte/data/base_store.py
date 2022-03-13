@@ -154,7 +154,7 @@ class BaseStore:
         raise NotImplementedError
 
     @abstractmethod
-    def get_entry(self, tid: int) -> Tuple[List, int, int]:
+    def get_entry(self, tid: int) -> Tuple[List, str, int]:
         r"""Look up the entry_dict with key `tid`. Return the entry,
         its `type_name`, and its `index_id` in the `entry_type` list.
 

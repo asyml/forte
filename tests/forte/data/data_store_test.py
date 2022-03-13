@@ -211,7 +211,7 @@ class DataStoreTest(unittest.TestCase):
                 "Negative",
                 "Class C",
                 "Class D",
-            ], 1, 1),
+            ], "ft.onto.base_ontology.Sentence", 1),
         )
 
         # Entry with such tid does not exist
