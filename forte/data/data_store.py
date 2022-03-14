@@ -124,7 +124,7 @@ class DataStore(BaseStore):
                 The `_type_attributes` is a private dictionary that provides
                 `type_name` and the order of corresponding attributes except `index_id`.
                 The outer keys are indices of `entry lists` in `self.__elements` as
-                ints, representing all types that inherit the `Entry` class.
+                integers, representing all types that inherit the `Entry` class.
                 The inner keys are all the valid attributes for this type.
                 The values are the indices of attributes among these lists.
 
