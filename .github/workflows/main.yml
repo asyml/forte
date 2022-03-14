@@ -79,14 +79,14 @@ jobs:
       - name: Install Forte
         run: |
           pip install --use-feature=in-tree-build --progress-bar off .[ner,test,example,wikipedia,augment,stave,audio_ext]
-      - name: Install Fortex
+      - name: Install Fortex and test notebook tutorials
         run: |
           git clone https://github.com/asyml/forte-wrappers.git
           cd forte-wrappers
           pip install src/huggingface
           pip install src/nltk
-          pip install transformers==4.11.3
           cd ..
+          coverage run -m pytest tests/forte/notebook_tutorial
       - name: Build ontology
         run: |
           ./scripts/build_ontology_specs.sh
@@ -104,7 +104,7 @@ jobs:
           if [[ ${{ matrix.torch-version }} != "1.5.0" && ${{ matrix.python-version }} == "3.9" ]]; then mypy forte; fi
       - name: Test with pytest and run coverage
         run: |
-          coverage run -m pytest tests
+          coverage run -m pytest tests --omit=tests/forte/notebook_tutorial
           coverage run --append -m pytest --doctest-modules forte
       - name: Upload coverage
         run: |
