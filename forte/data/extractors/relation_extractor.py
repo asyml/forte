@@ -92,7 +92,7 @@ class LinkExtractor(BaseExtractor):
         - "`entry_type`": The target relation entry type, should be a Link entry.
         - "`attribute`": The attribute of the relation to extract.
         - "`index_annotation`": The annotation object used to index the
-            head and child node of the relations.
+          head and child node of the relations.
         """
         config = super().default_configs()
         config.update(

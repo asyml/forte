@@ -34,33 +34,37 @@ class DistributionReplacementOp(TextReplacementOp, Configurable):
     with a new word that is sampled by a sampler from a distribution.
 
     Config Values:
+
         - `prob`:
-            The probability of whether to replace the
-            input, it should fall in `[0, 1]`.
+          The probability of whether to replace the
+          input, it should fall in `[0, 1]`.
 
         - sampler_data:
-            A dictionary representing the configurations
-            required to create the required sampler.
+          A dictionary representing the configurations
+          required to create the required sampler.
 
-            type:
-                The type of sampler to be used (pass the
-                path of the class which defines the required sampler)
-            kwargs:
-                This dictionary contains the data that is to be
-                fed to the required sampler. 2 possible values are
-                `sampler_data` and `data_path`.If both parameters are passed,
-                the data read from the file pointed to by `data_path` will be considered.
+            - type:
+              The type of sampler to be used (pass the
+              path of the class which defines the required sampler)
+
+            - kwargs:
+              This dictionary contains the data that is to be
+              fed to the required sampler. 2 possible values are
+              `sampler_data` and `data_path`.If both parameters are passed,
+              the data read from the file pointed to by `data_path` will be
+              considered.
 
                 - `sampler_data`:
-                    Raw input to the sampler, This will be passed as the `sampler_data`
-                    config to the required sampler.
+                  Raw input to the sampler, This will be passed as the
+                  `sampler_data`
+                  config to the required sampler.
 
                 - `data_path`:
-                    The path to the file that contains the
-                    the input that will be given to the sampler. For example,
-                    when using `UniformSampler`, `data_path` will point to a file
-                    (or `URl`) containing a list of values to be used as `sampler_data`
-                    in `UniformSampler`.
+                  The path to the file that contains the
+                  the input that will be given to the sampler. For example,
+                  when using `UniformSampler`, `data_path` will point to a file
+                  (or `URl`) containing a list of values to be used as
+                  `sampler_data` in `UniformSampler`.
 
             .. code-block:: python
 
@@ -82,7 +86,8 @@ class DistributionReplacementOp(TextReplacementOp, Configurable):
         This function replaces a word by sampling from a distribution.
 
         Args:
-            input_anno (Annotation): The input annotation.
+            input_anno (Annotation): the input annotation.
+
         Returns:
             A tuple of two values, where the first element is a boolean value
             indicating whether the replacement happens, and the second

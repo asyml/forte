@@ -74,26 +74,26 @@ class BioSeqTaggingExtractor(BaseExtractor):
         Here, additional parameters are added from the parent class:
 
         - entry_type (str): Required. The fully qualified name of an
-            Annotation entry to extract attribute from. For example,
-            for an NER task, it could be `ft.onto.base_ontology.EntityMention`.
+          Annotation entry to extract attribute from. For example,
+          for an NER task, it could be `ft.onto.base_ontology.EntityMention`.
 
         - attribute (str): Required. The attribute name of the
-            entry from which labels are extracted.
+          entry from which labels are extracted.
 
         - tagging_unit (str): Required. The fully qualified name of the
-            units for tagging, The tagging label will align to the units,
-            e.g: `ft.onto.base_ontology.Token`.
+          units for tagging, The tagging label will align to the units,
+          e.g: `ft.onto.base_ontology.Token`.
 
         - pad_value (int):
-            A customized value/representation to be used for
-            padding. This value is only needed when `use_pad` is True.
-            Default is -100 to follow PyTorch convention.
+          A customized value/representation to be used for
+          padding. This value is only needed when `use_pad` is True.
+          Default is -100 to follow PyTorch convention.
 
         - is_bert (bool):
-            It indicates whether Bert model is used. If true, padding
-            will be added to the beginning and end of a sentence
-            corresponding to the special tokens ([CLS], [SEP])
-            used in Bert. Default is False.
+          It indicates whether Bert model is used. If true, padding
+          will be added to the beginning and end of a sentence
+          corresponding to the special tokens ([CLS], [SEP])
+          used in Bert. Default is False.
 
         For example, the config can be:
 
