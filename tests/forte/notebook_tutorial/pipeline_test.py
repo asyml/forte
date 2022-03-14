@@ -2,17 +2,13 @@
 import os
 import unittest
 from notebook_classes import MachineTranslationProcessor
-from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
-from ft.onto.base_ontology import Token
 import os
 
 from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
 from ft.onto.base_ontology import (
     Token,
-    Sentence,
-    Document,
 )
 from forte.data.readers import OntonotesReader
 from forte.data.data_pack import DataPack
@@ -20,8 +16,6 @@ from forte.pipeline import Pipeline
 
 # set up
 from forte import Pipeline
-from forte.data import DataPack
-from forte.data.readers import PlainTextReader
 import os
 
 

@@ -79,6 +79,13 @@ jobs:
       - name: Install Forte
         run: |
           pip install --use-feature=in-tree-build --progress-bar off .[ner,test,example,wikipedia,augment,stave,audio_ext]
+      - name: Install Fortex
+        run: |
+          git clone https://github.com/asyml/forte-wrappers.git
+          cd forte-wrappers
+          pip install src/huggingface
+          pip install src/nltk
+          cd ..
       - name: Build ontology
         run: |
           ./scripts/build_ontology_specs.sh

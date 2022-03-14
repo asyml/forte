@@ -5,8 +5,6 @@ import unittest
 from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
 from ft.onto.base_ontology import Token
-import os
-
 from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
 from ft.onto.base_ontology import (
