@@ -146,7 +146,7 @@ We also recommend using tools `pre-commit` that automates the checking process b
 
 You should take special care of the indentations in your documentation. Make sure the indents are consistent and follow the Google Style guide. All sections other than the heading should maintain a hanging indent of two or four spaces. Refer to the examples [here](https://google.github.io/styleguide/pyguide.html#383-functions-and-methods) for what is expected and what are the requirements for different sections like `args`, `lists`, `returns`, etc. Invalid indentations might trigger errors in `sphinx-build` and will cause confusing rendering of the documentation. You can run `sphinx-build` locally to see whether the generated docs look reasonable.
 
-Another aspect that should be noted is the format of links or cross-references of python objects. Make sure to follow the [sphinx cross-referencing syntax](https://www.sphinx-doc.org/en/master/usage/restructuredtext/roles.html#xref-syntax). The references will be checked by [sphinx-build nit-picky mode](https://www.sphinx-doc.org/en/master/man/sphinx-build.html#cmdoption-sphinx-build-n) which raises warnings for all the missing and unresolvable links.
+Another aspect that should be noted is the format of links or cross-references of python objects. Make sure to follow the [sphinx cross-referencing syntax](https://www.sphinx-doc.org/en/master/usage/restructuredtext/roles.html#xref-syntax). ~~The references will be checked by [sphinx-build nit-picky mode](https://www.sphinx-doc.org/en/master/man/sphinx-build.html#cmdoption-sphinx-build-n) which raises warnings for all the missing and unresolvable links.~~
 
 ### Git Commit Style
 

@@ -163,10 +163,15 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
     @abstractmethod
     def define_batcher(cls) -> ProcessingBatcher:
         r"""Define a specific batcher for this processor.
-        Single pack :class:`BatchProcessor` initialize the batcher to be a
+        Single pack
+        :class:`~forte.processors.base.batch_processor.BaseBatchProcessor`
+        initialize the batcher to be a
         :class:`~forte.data.batchers.ProcessingBatcher`.
-        And :class:`MultiPackBatchProcessor` initialize the batcher to be a
-        :class:`~forte.data.batchers.MultiPackProcessingBatcher`.
+        And
+        :class:`~forte.processors.base.batch_processor.MultiPackBatchProcessor`
+        initialize the batcher to be a
+        :class:`~forte.processors.base.batch_processor.MultiPackBatchProcessor`
+        .
         """
         raise NotImplementedError
 

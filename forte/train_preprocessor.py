@@ -46,7 +46,7 @@ class TrainPreprocessor:
     that method for how the pre-processing is done.
 
     A main part of the `TrainPreprocessor ` is that it maintains a list of
-    extractors :class:`~forte.data.BaseExtractor` that extract features. This
+    extractors :class:`~forte.data.base_extractor.BaseExtractor` that extract features. This
     can be provided either via calling `add_extractor` function. Alternatively,
     a request can be passed in through `initialize`, where the configuration
     under the `request` key will be used to create the extractor instances.
@@ -61,7 +61,7 @@ class TrainPreprocessor:
     .. note::
         For parameters `request`, user does not necessarily need to provide
         `converter`. If no `converter` is specified, a default converter of
-        type :class:`~forte.data.converter.Converter` will be picked.
+        type :class:`~forte.data.converter.converter.Converter` will be picked.
     """
 
     DATA_INPUT = extractor_utils.DATA_INPUT
@@ -130,13 +130,13 @@ class TrainPreprocessor:
 
         Here:
 
-        `"preprocessor.device"`:
-            The device of the produced batches. For GPU training,
-            set to current CUDA device.
+            - `"preprocessor.device"`:
+              The device of the produced batches. For GPU training,
+              set to current CUDA device.
 
-        `"dataset"`:
-            This contains all the configurable options same as
-            :class:`~forte.data.data_pack_dataset.DataPackDataset`.
+            - `"dataset"`:
+              This contains all the configurable options same as
+              :class:`~forte.data.data_pack_dataset.DataPackDataset`.
         """
 
         # Configs should be serializable
@@ -220,8 +220,9 @@ class TrainPreprocessor:
     @property
     def request(self) -> Dict:
         # pylint: disable=line-too-long
-        r"""A `Dict` containing all the information needed for doing the
-            pre-processing. This is obtained via parsing the input `request`
+        r"""
+        A `Dict` containing all the information needed for doing the
+        pre-processing. This is obtained via parsing the input `request`
 
             An example `request` is:
 
@@ -251,31 +252,32 @@ class TrainPreprocessor:
 
         Here:
 
-            `"context_type"`: Annotation
-                A class of type :class:`~ft.onto.base_ontology.context_type`.
-                Defines the granularity to separate data into different
-                groups. All extractors will operate based on this. For example,
-                if `context_type` is :class:`~ft.onto.base_ontology.Sentence`,
-                then the features of each extractor will represent the
-                information of a sentence. If this value is `None`, then all
-                extractors will operate on the whole data pack.
+            - `"context_type"`: Annotation
+              A class of type :class:`~ft.onto.base_ontology.context_type`.
+              Defines the granularity to separate data into different
+              groups. All extractors will operate based on this. For example,
+              if `context_type` is :class:`~ft.onto.base_ontology.Sentence`,
+              then the features of each extractor will represent the
+              information of a sentence. If this value is `None`, then all
+              extractors will operate on the whole data pack.
 
-            `"schemes"`: Dict
-                A Dict containing the information about doing the
-                pre-processing.
-                The `key` is the tags provided by input `request`. The
-                `value` is a `Dict` containing the information for doing
-                pre-processing for that feature.
+            - `"schemes"`: Dict
+              A Dict containing the information about doing the
+              pre-processing.
+              The `key` is the tags provided by input `request`. The
+              `value` is a `Dict` containing the information for doing
+              pre-processing for that feature.
 
-            `"schemes.tag.extractor"`:
-                An instance of type
-                :class:`~forte.data.extractor.BaseExtractor`.
+            - `"schemes.tag.extractor"`:
+              An instance of type
+              :class:`~forte.data.extractor.BaseExtractor`.
 
-            `"schemes.tag.converter"`:
-                An instance of type :class:`~forte.data.converter.Converter`.
+            - `"schemes.tag.converter"`:
+              An instance of type
+              :class:`~forte.data.converter.converter.Converter`.
 
-            `"schemes.tag.type"`: TrainPreprocessor.DATA_INPUT/DATA_OUTPUT
-                Denoting whether this feature is the input or output feature.
+            - `"schemes.tag.type"`: TrainPreprocessor.DATA_INPUT/DATA_OUTPUT
+              Denoting whether this feature is the input or output feature.
         """
         if not self._request:
             self._parse_request(self._request)

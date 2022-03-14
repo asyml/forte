@@ -90,7 +90,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
     :class:`~forte.data.multi_pack.MultiPack`.
 
     Args:
-        pack_name (str, optional): a string name of the pack.
+        pack_name (str, Optional): a string name of the pack.
 
     """
 
@@ -230,7 +230,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         self, entry: Entry, component_name: Optional[str] = None
     ) -> EntryType:
         r"""Add an :class:`~forte.data.ontology.core.Entry` object to the
-        :class:`BasePack` object. Allow duplicate entries in a pack.
+        :class:`~forte.data.base_pack.BasePack` object. Allow duplicate entries in a pack.
 
         Args:
             entry (Entry): An :class:`~forte.data.ontology.core.Entry`
@@ -249,7 +249,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
     @abstractmethod
     def _add_entry(self, entry: Entry) -> EntryType:
         r"""Add an :class:`~forte.data.ontology.core.Entry` object to the
-        :class:`BasePack` object. Allow duplicate entries in a pack.
+        :class:`~forte.data.base_pack.BasePack` object. Allow duplicate entries in a pack.
 
         Args:
             entry (Entry): An :class:`~forte.data.ontology.core.Entry`
@@ -469,9 +469,10 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         raise NotImplementedError
 
     def get_single(self, entry_type: Union[str, Type[EntryType]]) -> EntryType:
-        r"""Take a single entry of type :attr:`entry_type` from this data
+        r"""Take a single entry of type
+        :attr:`~forte.data.data_pack.DataPack.entry_type` from this data
         pack. This is useful when the target entry type appears only one
-        time in the :class:`DataPack` for e.g., a Document entry. Or you just
+        time in the :class:`~forte.data.data_pack.DataPack` for e.g., a Document entry. Or you just
         intended to take the first one.
 
         Args:
@@ -511,7 +512,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             entry: The entry to check.
             components: The list of component names.
 
-        Returns (bool):
+        Returns:
             True if the entry is created by the component, False otherwise.
         """
         if isinstance(components, str):
@@ -531,9 +532,9 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         Look up all entries from the `component` as a unordered set
 
         Args:
-            component: The component (creator) to get the entries. It is
-            normally the full qualified name of the creator class, but it
-            may also be customized based on the implementation.
+            component (str): The component (creator) to get the entries. It is
+                normally the full qualified name of the creator class, but it
+                may also be customized based on the implementation.
 
         Returns:
             The set of entry ids that are created by the input component.
@@ -568,7 +569,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
         Returns:
             A set of all the sub-types extending the provided type, including
-            the input `entry_type` itself.
+            the input ``entry_type`` itself.
         """
         all_types: Set[Type] = set()
         for data_type in self._index.indexed_types():
@@ -582,12 +583,12 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         """
         Return all entries of this particular type without orders. If you
         need to get the annotations based on the entry ordering,
-        use :meth:`forte.data.base_pack.get`.
+        use :meth:`forte.data.base_pack.BasePack.get`.
 
         Args:
-            entry_type: The type of the entry you are looking for.
+            entry_type (Type[EntryType]): The type of the entry you are looking for.
             exclude_sub_types (bool): Whether to ignore the inherited sub type
-            of the provided `entry_type`. Default is True.
+                of the provided `entry_type`. Default is True.
 
         Returns:
             An iterator of the entries matching the type constraint.

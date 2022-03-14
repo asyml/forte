@@ -24,8 +24,9 @@ __all__ = [
 @total_ordering
 class Span:
     r"""A class recording the span of annotations. :class:`Span` objects can
-    be totally ordered according to their :attr:`begin` as the first sort key
-    and :attr:`end` as the second sort key.
+    be totally ordered according to their ``begin`` as
+    the first sort key and ``end`` as the second sort
+    key.
 
     Args:
         begin (int): The offset of the first character in the span.

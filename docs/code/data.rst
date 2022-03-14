@@ -14,6 +14,8 @@ base
 
 core
 ----------
+:hidden:`Entry`
+------------------------------
 .. autoclass:: forte.data.ontology.core.Entry
     :members:
 
@@ -30,6 +32,9 @@ top
     :members:
 
 .. autoclass:: forte.data.ontology.top.Annotation
+    :members:
+
+.. autoclass:: forte.data.ontology.top.AudioAnnotation
     :members:
 
 .. autoclass:: forte.data.ontology.top.Link
@@ -72,6 +77,8 @@ Packs
 ------------------------
 .. autoclass:: forte.data.base_pack.BaseMeta
     :members:
+
+
 
 
 :hidden:`Meta`
