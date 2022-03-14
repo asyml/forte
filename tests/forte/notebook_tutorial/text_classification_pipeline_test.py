@@ -9,15 +9,10 @@ from ft.onto.base_ontology import Sentence
 import os
 import unittest
 
-from forte.data.data_pack import DataPack
-from forte.data.readers import ConllUDReader
 from forte.pipeline import Pipeline
-from forte.processors.misc import AttributeMasker
-from ft.onto.base_ontology import Token
-import os
 
 
-class TestHandlingStructuedData(unittest.TestCase):
+class TestClassificationPipeline(unittest.TestCase):
     def setUp(self):
         self.root_path = os.path.abspath(
             os.path.join(
@@ -43,10 +38,21 @@ class TestHandlingStructuedData(unittest.TestCase):
         )
         self.pl.initialize()
 
-    def test_get(self):
+        self.sents = [
+            "One of the best game music soundtracks - for a game I didn't really play\nDespite the fact that I have only played a small portion of the game, the music I heard (plus the connection to Chrono Trigger which was great as well) led me to purchase the soundtrack, and it remains one of my favorite albums.",
+            "There is an incredible mix of fun, epic, and emotional songs.",
+            "Those sad and beautiful tracks I especially like, as there's not too many of those kinds of songs in my other video game soundtracks.",
+            "I must admit that one of the songs (Life-A Distant Promise) has brought tears to my eyes on many occasions.My one complaint about this soundtrack is that they use guitar fretting effects in many of the songs, which I find distracting.",
+            "But even if those weren't included I would still consider the collection worth it.",
+        ]
 
-        for pack in self.pl.process_dataset(self.addClassCleanupcsv_path):
+    def test_get(self):
+        i = 0
+        for pack in self.pl.process_dataset(self.csv_path):
             for sent in pack.get(Sentence):
                 sent_text = sent.text
-                print(colored("Sentence:", "red"), sent_text, "\n")
-                print(colored("Prediction:", "blue"), sent.classification)
+                self.assertEqual(self.sents[i], sent_text)
+                self.assertTrue(sent.classification["positive"] > 0)
+                self.assertTrue(sent.classification["negative"] > 0)
+                i += 1
+            break
