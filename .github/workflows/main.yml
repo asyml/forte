@@ -85,6 +85,7 @@ jobs:
           cd forte-wrappers
           pip install src/huggingface
           pip install src/nltk
+          pip install transformers==4.11.3
           cd ..
       - name: Build ontology
         run: |
