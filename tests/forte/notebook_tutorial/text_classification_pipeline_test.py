@@ -1,5 +1,3 @@
-import sys
-from termcolor import colored
 from forte.data.readers import ClassificationDatasetReader
 from fortex.huggingface import ZeroShotClassifier
 from forte.pipeline import Pipeline
