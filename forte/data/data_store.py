@@ -12,9 +12,9 @@
 # limitations under the License.
 
 from typing import List, Iterator, Tuple, Optional, Any
-from sortedcontainers import SortedList
 import uuid
 from bisect import bisect_left
+from sortedcontainers import SortedList
 from forte.utils import get_class
 from forte.data.base_store import BaseStore
 from forte.data.entry_type_generator import EntryTypeGenerator
