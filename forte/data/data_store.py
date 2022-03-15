@@ -12,6 +12,7 @@
 # limitations under the License.
 
 from typing import List, Iterator, Tuple, Optional, Any
+from sortedcontainers import SortedList
 import uuid
 from bisect import bisect_left
 from forte.utils import get_class
@@ -293,9 +294,15 @@ class DataStore(BaseStore):
         # A reference to the entry should be store in both self.__elements and
         # self.__entry_dict.
         entry = self._new_annotation(type_name, begin, end)
-        self.__elements[type_name].add(entry)
-        self.__entry_dict[entry[constants.TID_INDEX]] = entry
-        return entry[constants.TID_INDEX]
+        try:
+            self.__elements[type_name].add(entry)
+        except KeyError:
+            self.__elements[type_name] = SortedList(key=lambda s: (s[0], s[1]))
+            self.__elements[type_name].add(entry)
+        tid = entry[constants.TID_INDEX]
+        self.__entry_dict[tid] = entry
+        return tid
+        
 
     def add_link_raw(
         self, type_name: str, parent_tid: int, child_tid: int
@@ -454,7 +461,7 @@ class DataStore(BaseStore):
             or target_list[entry_index] != entry_data
         ):
             raise ValueError(
-                f"Entry [{entry_data[:4]}] is not found" f"in the targetlist"
+                f"Entry [{entry_data[:4]}] is not found in the targetlist."
             )
 
         self._delete_entry_by_loc(type_name, entry_index)
