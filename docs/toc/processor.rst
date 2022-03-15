@@ -55,6 +55,9 @@ Functions
               `Processors API <../code/processors.rst>`_ for more
               information.
 
+    - ``resource`` is for advanced developer. It's an shared object that stores data accessible by all ``PipelineComponent`` in the pipeline.
+
+
 * ``_process()``: The main function of the processor. The implementation should process the ``input_pack``, and conduct operations such as adding entries into the pack, or produce some side-effect such as writing data into the disk.
 
 

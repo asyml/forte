@@ -92,7 +92,7 @@ generic class method
                 return {"file_ext": ".txt"}
 
 
-    - ``resource`` is needed only for advanced developer. It's an shared object that stores information used by all ``PipelineComponent`` in the pipeline.
+    - ``resource`` is for advanced developer. It's an shared object that stores data accessible by all ``PipelineComponent`` in the pipeline.
 
 
 
