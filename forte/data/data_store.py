@@ -302,7 +302,6 @@ class DataStore(BaseStore):
         tid = entry[constants.TID_INDEX]
         self.__entry_dict[tid] = entry
         return tid
-        
 
     def add_link_raw(
         self, type_name: str, parent_tid: int, child_tid: int
