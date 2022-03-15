@@ -124,14 +124,19 @@ Data Augmentation Ops
 .. autoclass:: forte.processors.data_augment.algorithms.typo_replacement_op.TypoReplacementOp
     :members:
 
+:hidden:`CharacterFlipOp`
+----------------------------
+.. autoclass:: forte.processors.data_augment.algorithms.character_flip_op.CharacterFlipOp
+    :members:
+
 :hidden:`WordSplittingOp`
 ----------------------------
 .. autoclass:: forte.processors.data_augment.algorithms.word_splitting_processor.RandomWordSplitDataAugmentProcessor
     :members:
 
-:hidden:`CharacterFlipOp`
-----------------------------
-.. autoclass:: forte.processors.data_augment.algorithms.character_flip_op.CharacterFlipOp
+:hidden:`BaseDataAugmentationOp`
+-----------------------------------
+.. autoclass:: forte.processors.data_augment.algorithms.base_data_augmentation_op.BaseDataAugmentationOp
     :members:
 
 :hidden:`EmbeddingSimilarityReplacementOp`

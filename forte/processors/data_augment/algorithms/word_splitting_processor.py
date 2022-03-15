@@ -97,52 +97,47 @@ class RandomWordSplitDataAugmentProcessor(ReplacementDataAugmentProcessor):
         """
         Returns:
             A dictionary with the default config for this processor.
-            Additional keys for determining how many words will be split:
-            - alpha: 0 <= alpha <= 1. indicates the percent of the words
-            in a sentence that are changed.
-        Config Values:
-
-            - `other_entry_policy` (dict):
+        Additional keys for determining how many words will be split:
+            - alpha (float):
+                0 <= alpha <= 1. indicates the percent of the words
+                in a sentence that are changed.
+            - augment_entry (str):
+                Defines the entry the processor will augment.
+                It should be a full qualified name of the entry class.
+                For example, "ft.onto.base_ontology.Sentence".
+            - other_entry_policy (dict):
                 A dict specifying the policies for other entries.
                 The key should be a full qualified class name.
                 The policy(value of the dict) specifies how to process
                 the corresponding entries after replacement.
-
                 If the policy is "auto_align", the span of the entry
                 will be automatically modified according to its original
                 location. However, some spans might become invalid after
                 the augmentation, for example, the tokens within a
                 replaced sentence may disappear.
-
                 Annotations not in the "other_entry_policy" will not
                 be copied to the new data pack. The Links and Groups
                 will be copied as well if the annotations they are
                 attached to are copied.
-
                 Example:
+
                     .. code-block:: python
 
                         'other_entry_policy': {
-                            "kwargs": {
-                                "ft.onto.base_ontology.Document": "auto_align",
-                                "ft.onto.base_ontology.Sentence": "auto_align",
-                            }
+                            "ft.onto.base_ontology.Document": "auto_align",
+                            "ft.onto.base_ontology.Sentence": "auto_align",
                         }
-
-            - `augment_pack_names` (dict): The name of the data pack that will
+            - `augment_pack_names` (dict):
+                The name of the data pack that will
                 contain the augmented text `(Default: augmented_input_src)`.
                 To update it, pass a dict of form
-
                 Example:
+
                     .. code-block:: python
 
                         'augment_pack_names': {
-                            "kwargs": {
-                                "input_src" : "augmented_input_src",
-                            }
+                            "input_src" : "augmented_input_src",
                         }
-            - `alpha` (float):
-                The probability of splitting in `[0, 1](Default = 0.1)`.
         """
         config = super().default_configs()
         config.update(
