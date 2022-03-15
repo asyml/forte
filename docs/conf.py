@@ -42,6 +42,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "myst_parser",
     "sphinxcontrib.spelling",
+    "nbsphinx",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -340,6 +341,11 @@ extlinks = {
     ),
     "gym": ("https://gym.openai.com/docs/%s", None),
 }
+
+
+# disable notebook execution
+nbsphinx_execute = "never"
+
 
 ##### Customize ######
 

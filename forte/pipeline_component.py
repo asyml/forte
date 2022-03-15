@@ -52,7 +52,7 @@ class PipelineComponent(Generic[PackType], Configurable):
         the content expectations specified in each pipeline component. Each
         component will check whether the input pack contains the expected data
         via checking the meta-data, and throws a
-        :class:`~forte.common.exception.ExpectedEntryNotFound` if the check
+        :class:`~forte.common.exception.EntryNotFoundError` if the check
         fails. When this function is called with enforce is ``True``, all the
         pipeline components would check if the input datapack record matches
         with the expected types and attributes if function
