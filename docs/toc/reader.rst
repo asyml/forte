@@ -59,7 +59,9 @@ generic class method
               :class:`~forte.data.readers.plaintext_reader.PlainTextReader`,
               it inherits
               from :class:`~forte.data.base_reader.PackReader` because it reads
-              plain text into ``DataPack``.
+              plain text into ``DataPack``. Then User can
+              consider adding new configuration field based on the needs
+              or overwrite the configuration field from its parent class.
 
         - ``default_configs`` code example
 

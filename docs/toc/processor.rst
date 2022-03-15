@@ -19,7 +19,8 @@ Functions
         - ``default_configs`` usage example
 
             - To use an existing processor, User should check configurations
-              from method `default_configs` of the particular processor used to
+              from method ``default_configs`` of the particular processor
+              used to
               find out what configurations can be customized. For example,
               suppose after checking `processor API <../code/processors.html>`_
               we decide to use
@@ -36,7 +37,9 @@ Functions
               processor to inherit from. For example, in the implementation of
               :class:`~forte.processors.misc.vocabulary_processor.VocabularyProcessor`, it inherits
               from :class:`~forte.processors.base.pack_processor.PackProcessor`
-              because it builds vocabulary from data pack.
+              because it builds vocabulary from data pack. Then User can
+              consider adding new configuration field based on the needs
+              or overwrite the configuration field from its parent class.
 
 * ``_process()``: The main function of the processor. The implementation should process the ``input_pack``, and conduct operations such as adding entries into the pack, or produce some side-effect such as writing data into the disk.
 
