@@ -34,7 +34,9 @@ Functions
 
             - To implement a new processor, User should check the appropriate
               processor to inherit from. For example, in the implementation of
-              :class:`~forte.processors.misc.vocabulary_processor.VocabularyProcessor`,
+              :class:`~forte.processors.misc.vocabulary_processor.VocabularyProcessor`, it inherits
+              from :class:`~forte.processors.base.pack_processor.PackProcessor`
+              because it builds vocabulary from data pack.
 
 * ``_process()``: The main function of the processor. The implementation should process the ``input_pack``, and conduct operations such as adding entries into the pack, or produce some side-effect such as writing data into the disk.
 

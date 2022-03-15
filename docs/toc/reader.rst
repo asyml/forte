@@ -56,7 +56,7 @@ generic class method
 
             - To implement a new reader, User should check the appropriate
               reader to inherit from. For example, in the
-              :class:`~forte.data.readers.plaintext_reader.PlainTextReader·,
+              :class:`~forte.data.readers.plaintext_reader.PlainTextReader`,
               it inherits
               from :class:`~forte.data.base_reader.PackReader` because it reads
               plain text into ``DataPack``.
