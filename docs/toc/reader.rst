@@ -25,14 +25,17 @@ generic class method
       in a dictionary format. Parent reader class configuration will be merged
       or overwritten by child class.  For example, in the
       :class:`~forte.data.readers.plaintext_reader.PlainTextReader`,
-      the inheritance chain is :class:`~forte.data.base_reader.BaseReader` ->
-      :class:`~forte.data.base_reader.PackReader` ->
+      the inheritance chain is :class:`~forte.data.base_reader.BaseReader`
+      ->
+      :class:`~forte.data.base_reader.PackReader`
+      ->
       :class:`~forte.data.readers.plaintext_reader.PlainTextReader`.
       :meth:`forte.data.base_reader.BaseReader.default_configs` contains
       ``"zip_pack"`` and ``"serialize_method"``.
       :meth:`forte.data.readers.plaintext_reader.PlainTextReader.default_configs`
       contains
-      ``"file_ext"``. Therefore, the merged configuration contains ``zip_pack``,
+      ``"file_ext"``. Therefore, the merged configuration contains
+      ``zip_pack``,
       ``"serialize_method"`` and ``"file_ext"`` fields. Suppose we include
       ``"serialize_method"`` in
       :class:`~forte.data.readers.plaintext_reader.PlainTextReader`, we can
@@ -40,6 +43,7 @@ generic class method
       :class:`~forte.data.base_reader.BaseReader`.
 
         - ``default_configs`` usage example
+
             - To use an existing reader, User should check configurations from
               method ``default_configs()`` of the particular reader used to
               find
@@ -55,13 +59,29 @@ generic class method
               configuration.
 
             - To implement a new reader, User should check the appropriate
-              reader to inherit from. For example, in the
+              reader to inherit from. One consideration is whether User
+              wants to read a data pack or a data pack batch for
+              each reading iteration. If it's the
+              :class:`~forte.data.data_pack.DataPack`,
+              then User should inherit from
+              :class:`~forte.data.base_reader.PackReader`.
+              If it's :class:`~forte.data.multi_pack.MultiPack`,
+              then User should inherit from
+              :class:`~forte.data.base_reader.MultiPackReader`
+              For example, in the
               :class:`~forte.data.readers.plaintext_reader.PlainTextReader`,
               it inherits
               from :class:`~forte.data.base_reader.PackReader` because it reads
-              plain text into ``DataPack``. Then User can
-              consider adding new configuration field based on the needs
+              plain text into :class:`~forte.data.data_pack.DataPack`.
+              Then User can
+              consider adding new configuration field in ``default_configs()``
+              based on the needs
               or overwrite the configuration field from its parent class.
+              It's just a simple consideration to explain the process of
+              choosing the right reader, there are many other readers
+              with more features that User can inherit from. User can refer to
+              `Readers API <../code/data.rst#Readers>`_ for more information.
+
 
         - ``default_configs`` code example
 

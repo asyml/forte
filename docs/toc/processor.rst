@@ -12,6 +12,7 @@ Functions
 ----------
 
 * ``initialize()``: Pipeline will call it at the start of processing. The processor will be initialized with ``configs``, and register global resources into :class:`forte.common.Resources`. The implementation should set up the states of the component.
+
     - ``default_configs`` is a class method that returns default configuration
       in a dictionary format. Parent reader class configuration will be merged
       or overwritten by child class.
@@ -34,12 +35,25 @@ Functions
               customized configuration.
 
             - To implement a new processor, User should check the appropriate
-              processor to inherit from. For example, in the implementation of
+              processor to inherit from. One consideration is whether User
+              wants to process a data pack or a data pack batch for
+              each processing iteration. If it's the
+              data pack, then User should inherit from
+              :class:`~forte.processors.base.pack_processor.PackProcessor`.
+              If it's the data pack batch, then User should inherit from
+              :class:`~forte.processors.base.batch_processor.BaseBatchProcessor`
+              For example, in the implementation of
               :class:`~forte.processors.misc.vocabulary_processor.VocabularyProcessor`, it inherits
               from :class:`~forte.processors.base.pack_processor.PackProcessor`
               because it builds vocabulary from data pack. Then User can
-              consider adding new configuration field based on the needs
+              consider adding a new configuration field in
+              ``default_configs()`` based on the needs
               or overwrite the configuration field from its parent class.
+              It's just a simple consideration to explain the process of
+              choosing the right processor, there are many other processors
+              with more features that User can inherit from. User can refer to
+              `Processors API <../code/processors.rst>`_ for more
+              information.
 
 * ``_process()``: The main function of the processor. The implementation should process the ``input_pack``, and conduct operations such as adding entries into the pack, or produce some side-effect such as writing data into the disk.
 
