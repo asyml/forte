@@ -39,7 +39,7 @@ class DistributionReplacementOp(TextReplacementOp, Configurable):
           The probability of whether to replace the
           input, it should fall in `[0, 1]`.
 
-        - sampler_data:
+        - `sampler_data`:
           A dictionary representing the configurations
           required to create the required sampler.
 
