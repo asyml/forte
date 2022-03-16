@@ -30,7 +30,9 @@ from forte.data.ontology.top import (
 )
 from forte.processors.base import MultiPackProcessor
 from forte.utils.utils import create_class_with_kwargs
-
+from forte.processors.data_augment.algorithms.base_data_augmentation_op import (
+    BaseDataAugmentationOp
+)
 __all__ = ["ParentDataAugmentProcessor", "BaseDataAugmentOpProcessor"]
 
 
@@ -55,12 +57,32 @@ class BaseDataAugmentOpProcessor(ParentDataAugmentProcessor):
     def __init__(self):
         super().__init__()
 
+        # :attr:`new_data_packs`: {datapack id: datapack}
+        # It records the mapping from the original data pack
+        # to the augmented data pack
         self.new_data_packs: DefaultDict[int, DataPack] = defaultdict()
+
+        # :attr:`_data_pack_map`: {orig pack id: new pack id}
+        # It maintains a mapping from the pack id
+        # of the original pack to the pack id of augmented pack.
+        # It is used when copying the MultiPackLink and MultiPackGroup.
         self._data_pack_map: Dict[int, int] = {}
+
+        # :attr:`_entry_maps`: {datapack id: Dict{orig tid, new tid}}
+        # It is a map for tracking the annotation ids
+        # before and after the auto align. It maps the
+        # original annotation tid to the new annotation tid.
+        # It is used when copying the Link/Group/MultiPackLink/MultiPackGroup.
         self._entry_maps: Dict[int, Dict[int, int]] = {}
+
+        # :attr:`replacement_op`: BaseAugmentationOp
+        # It is the augmentation Op used by this processor
+        # instance.
+        self.replacement_op: BaseDataAugmentationOp = None
 
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
+        self.configs = self.make_configs(configs)
 
     def _copy_multi_pack_link_or_group(
         self, entry: Union[MultiPackLink, MultiPackGroup], multi_pack: MultiPack
@@ -168,7 +190,7 @@ class BaseDataAugmentOpProcessor(ParentDataAugmentProcessor):
                 self._entry_maps,
             ) = self.replacement_op.get_maps()
             return True
-        except:
+        except ValueError:
             return False
 
     def _process(self, input_pack: MultiPack):

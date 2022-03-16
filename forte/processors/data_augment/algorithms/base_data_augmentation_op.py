@@ -481,7 +481,7 @@ class BaseDataAugmentationOp(Configurable):
 
         entries_to_copy: Set[str] = set(
             list(existing_entries)
-            + list([val for val in new_entries if val is not None])
+            + [val for val in new_entries if val is not None]
         )
 
         def _insert_new_span(
