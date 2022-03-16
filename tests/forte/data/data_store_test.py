@@ -110,7 +110,7 @@ class DataStoreTest(unittest.TestCase):
                     [9999, 1234567],
                     10123,
                     "ft.onto.base_ontology.Phrase",
-                    Sentence,
+                    "Sentence",
                     0,
                 ]
             ]),

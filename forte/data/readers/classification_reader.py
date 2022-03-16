@@ -204,23 +204,24 @@ class ClassificationDatasetReader(PackReader):
         r"""This defines a basic configuration structure for classification dataset reader.
 
         Here:
+
           - forte_data_fields: these fields provides one-to-one
-              correspondence between given original dataset column names and
-              labels or forte ontology. For column names without usage,
-              user can specify None for them.
+            correspondence between given original dataset column names and
+            labels or forte ontology. For column names without usage,
+            user can specify None for them.
           - index2class: a dictionary that maps from zero-based indices to
-              classes
+            classes
           - text_fields: a list of ordered input ontology that
-              user want to concatenate into an input text.
+            user want to concatenate into an input text.
           - digit_label:  boolean value that specifies whether label in dataset
-              is digit.
+            is digit.
           - one_based_index_label: boolean value that specifies if dataset
-              provides one-based digit label.
-              True for one-based index, false otherwise.
+            provides one-based digit label.
+            True for one-based index, false otherwise.
           - skip_k_starting_lines: many datasets' first line are columns
-              names, set it to 1 if it's the case. Otherwise set to 0.
-              User can also set it to other positive integers to skip
-              multiple lines.
+            names, set it to 1 if it's the case. Otherwise set to 0.
+            User can also set it to other positive integers to skip
+            multiple lines.
         """
         return {
             "forte_data_fields": [

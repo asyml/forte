@@ -19,31 +19,30 @@ __all__ = ["BaseStore"]
 
 
 class BaseStore:
-    r"""The base class which will be used by :class:
-    `~forte.data.data_store.DataStore`."""
+    r"""The base class which will be used by :class:`~forte.data.data_store.DataStore`."""
 
     def __init__(self):
         r"""
         This is a base class for the efficient underlying data structure. A
-        current implementation of `BaseStore` is `DataStore`.
+        current implementation of ``BaseStore`` is ``DataStore``.
 
-        A `BaseStore` contains a collection of Forte entries.
+        A ``BaseStore`` contains a collection of Forte entries.
         Each entry type contains some subtypes, which could have
         various fields stored in entry lists.
         """
 
     @abstractmethod
     def add_annotation_raw(self, type_name: str, begin: int, end: int) -> int:
-        r"""This function adds an annotation entry with `begin` and `end`
-        indices to the `type_name` sortedlist in `self.__elements`,
-        returns the `tid` for the inserted entry.
+        r"""This function adds an annotation entry with ``begin`` and ``end``
+        indices to the ``type_name`` sortedlist in ``self.__elements``,
+        returns the ``tid`` for the inserted entry.
 
         Args:
-            type_name (str): The index of Annotation sortedlist in `self.__elements`.
+            type_name (str): The index of Annotation sortedlist in ``self.__elements``.
             begin (int): Begin index of the entry.
             end (int): End index of the entry.
         Returns:
-            `tid` of the entry.
+            ``tid`` of the entry.
         """
         raise NotImplementedError
 
@@ -51,18 +50,18 @@ class BaseStore:
     def add_link_raw(
         self, type_name: str, parent_tid: int, child_tid: int
     ) -> Tuple[int, int]:
-        r"""This function adds a link entry with `parent_tid` and `child_tid`
-        to the `type_name` list in `self.__elements`, returns the `tid` and the
-        `index_id` for the inserted entry in the list. This `index_id` is the
-        index of the entry in the `type_name` list.
+        r"""This function adds a link entry with ``parent_tid`` and ``child_tid``
+        to the ``type_name`` list in ``self.__elements``, returns the ``tid`` and the
+        ``index_id`` for the inserted entry in the list. This ``index_id`` is the
+        index of the entry in the ``type_name`` list.
 
         Args:
-            type_name (str): The index of Link list in `self.__elements`.
-            parent_tid (int): `tid` of the parent entry.
-            child_tid (int): `tid` of the child entry.
+            type_name (str): The index of Link list in ``self.__elements``.
+            parent_tid (int): ``tid`` of the parent entry.
+            child_tid (int): ``tid`` of the child entry.
 
         Returns:
-            `tid` of the entry and its index in the `type_name` list.
+            ``tid`` of the entry and its index in the ``type_name`` list.
 
         """
         raise NotImplementedError
@@ -71,25 +70,25 @@ class BaseStore:
     def add_group_raw(
         self, type_name: str, member_type: str
     ) -> Tuple[int, int]:
-        r"""This function adds a group entry with `member_type` to the
-        `type_name` list in `self.__elements`, returns the `tid` and the
-        `index_id` for the inserted entry in the list. This `index_id` is the
-        index of the entry in the `type_name` list.
+        r"""This function adds a group entry with ``member_type`` to the
+        ``type_name`` list in ``self.__elements``, returns the ``tid`` and the
+        ``index_id`` for the inserted entry in the list. This ``index_id`` is the
+        index of the entry in the ``type_name`` list.
 
         Args:
-            type_name (str): The index of Group list in `self.__elements`.
+            type_name (str): The index of Group list in ``self.__elements``.
             member_type (str): Fully qualified name of its members.
 
         Returns:
-            `tid` of the entry and its index in the `type_name` list.
+            ``tid`` of the entry and its index in the ``type_name`` list.
 
         """
         raise NotImplementedError
 
     @abstractmethod
     def set_attribute(self, tid: int, attr_name: str, attr_value: Any):
-        r"""This function locates the entry data with `tid` and sets its
-        `attr_name` with `attr_value`.
+        r"""This function locates the entry data with ``tid`` and sets its
+        ``attr_name`` with ``attr_value``.
 
         Args:
             tid (int): Unique Id of the entry.
@@ -100,8 +99,8 @@ class BaseStore:
 
     @abstractmethod
     def set_attr(self, tid: int, attr_id: int, attr_value: Any):
-        r"""This function locates the entry data with `tid` and sets its
-        attribute `attr_id` with value `attr_value`.
+        r"""This function locates the entry data with ``tid`` and sets its
+        attribute ``attr_id``  with value ``attr_value``.
         Called by `set_attribute()`.
 
         Args:
@@ -115,36 +114,36 @@ class BaseStore:
 
     @abstractmethod
     def get_attribute(self, tid: int, attr_name: str):
-        r"""This function finds the value of `attr_name` in entry with
-        `tid`.
+        r"""This function finds the value of ``attr_name`` in entry with
+        ``tid``.
 
         Args:
             tid (int): Unique id of the entry.
             attr_name (str): Name of the attribute.
 
         Returns:
-            The value of `attr_name` for the entry with `tid`.
+            The value of ``attr_name`` for the entry with ``tid``.
         """
         raise NotImplementedError
 
     @abstractmethod
     def get_attr(self, tid: int, attr_id: int):
-        r"""This function locates the entry data with `tid` and gets the value
-        of `attr_id` of this entry. Called by `get_attribute()`.
+        r"""This function locates the entry data with ``tid`` and gets the value
+        of ``attr_id``  of this entry. Called by `get_attribute()`.
 
         Args:
             tid (int): Unique id of the entry.
             attr_id (int): Id of the attribute.
 
         Returns:
-            The value of `attr_id` for the entry with `tid`.
+            The value of ``attr_id``  for the entry with ``tid``.
         """
 
         raise NotImplementedError
 
     @abstractmethod
     def delete_entry(self, tid: int):
-        r"""This function removes the entry with `tid` from the data store.
+        r"""This function removes the entry with ``tid`` from the data store.
 
         Args:
             tid (int): Unique id of the entry.
@@ -155,15 +154,15 @@ class BaseStore:
 
     @abstractmethod
     def get_entry(self, tid: int) -> Tuple[List, int, int]:
-        r"""Look up the entry_dict with key `tid`. Return the entry,
-        its `type_name`, and its `index_id` in the `entry_type` list.
+        r"""Look up the entry_dict with key ``tid``. Return the entry,
+        its ``type_name``, and its ``index_id`` in the ``entry_type`` list.
 
         Args:
             tid (int): Unique id of the entry.
 
         Returns:
-            The entry which `tid` corresponds to, its `type_name` and its index
-            in the `entry_type` list.
+            The entry which ``tid`` corresponds to, its ``type_name`` and its index
+            in the ``entry_type`` list.
 
         """
         raise NotImplementedError
@@ -171,10 +170,10 @@ class BaseStore:
     @abstractmethod
     def get(self, type_name: str, include_sub_type: bool) -> Iterator[List]:
         r"""This function fetches entries from the data store of
-        type `type_name`.
+        type ``type_name``.
 
         Args:
-            type_name (str): The index of the list in `self.__elements`.
+            type_name (str): The index of the list in ``self.__elements``.
             include_sub_type: A boolean to indicate whether get its subclass.
 
         Returns:
@@ -186,13 +185,13 @@ class BaseStore:
 
     @abstractmethod
     def next_entry(self, tid: int) -> List:
-        r"""Get the next entry of the same type as the `tid` entry.
+        r"""Get the next entry of the same type as the ``tid`` entry.
 
         Args:
             tid (int): Unique id of the entry.
 
         Returns:
-            The next entry of the same type as the `tid` entry.
+            The next entry of the same type as the ``tid`` entry.
 
         """
 
@@ -200,13 +199,13 @@ class BaseStore:
 
     @abstractmethod
     def prev_entry(self, tid: int) -> List:
-        r"""Get the previous entry of the same type as the `tid` entry.
+        r"""Get the previous entry of the same type as the ``tid`` entry.
 
         Args:
             tid (int): Unique id of the entry.
 
         Returns:
-            The previous entry of the same type as the `tid` entry.
+            The previous entry of the same type as the ``tid`` entry.
 
         """
 
