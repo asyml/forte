@@ -1,10 +1,3 @@
-Welcome to Forte's documentation!
-******************************************
-This outline is currently **in progress** so many sections are empty.
-
-
-Overview
-====================
 
 **Forte** is a toolkit for building Natural Language Processing pipelines, featuring cross-task
 interaction, adaptable data-model interfaces and many more. It provides a platform to assemble
@@ -48,15 +41,15 @@ Package Overview
 
    * - Package Name
      - Package Description
-   * - ``forte``
+   * - :class:`~forte`
      - an open-source toolkit for NLP
-   * - ``forte.data.readers``
+   * - :class:`~forte.data.readers`
      - a data module for reading different formats of text data like CoNLL, Ontonotes etc
-   * - ``forte.processors``
+   * - :class:`~forte.processors`
      - a collection of processors for building NLP pipelines
-   * - ``forte.trainer``
+   * - :class:`~forte.trainer`
      - a collection of modules for training different NLP tasks
-   * - ``base_ontology``
+   * - :class:`~ft.onto.base_ontology`
      - a module containing basic ontologies like Token, Sentence, Document etc
 
 
@@ -112,7 +105,7 @@ Download the repository through
 git clone https://github.com/asyml/forte.git
 ```
 
-After ``cd`` into ``forte``, you can install it through
+After `cd` into `forte`, you can install it through
 
 ```bash
 pip install .
@@ -123,37 +116,3 @@ License
 ~~~~~~~~~
 
 `Apache License 2.0 <https://github.com/asyml/forte/blob/master/LICENSE>`_
-
-
-----------------
-
-
-
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Overview
-
-   overview
-
-
-
-.. toctree::
-   :maxdepth: 2
-   :caption: NLP with Forte
-
-   index_toc
-
-
-.. toctree::
-   :maxdepth: 2
-   :caption:  APPENDICES
-
-   index_appendices
-
-
-.. toctree::
-   :maxdepth: 2
-   :caption:  API
-
-   index_api

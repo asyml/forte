@@ -61,10 +61,10 @@ class SubwordExtractor(BaseExtractor):
         Here:
 
         - "`pretrained_model_name`":
-            The name of the pretrained bert model. Must be the same
-            as used in subword tokenizer.
+          The name of the pretrained bert model. Must be the same
+          as used in subword tokenizer.
         - "`subword_class`": the fully qualified name of the class of the
-            subword, default is `ft.onto.base_ontology.Subword`.
+          subword, default is `ft.onto.base_ontology.Subword`.
         """
         config = super().default_configs()
         config.update(

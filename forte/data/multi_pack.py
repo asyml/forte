@@ -14,10 +14,14 @@
 
 import copy
 import logging
+
 from pathlib import Path
 from typing import Dict, List, Set, Union, Iterator, Optional, Type, Any, Tuple
 
+import jsonpickle
+
 from sortedcontainers import SortedList
+from packaging.version import Version
 
 from forte.common import ProcessExecutionException
 from forte.data.base_pack import BaseMeta, BasePack
@@ -34,6 +38,8 @@ from forte.data.ontology.top import (
 )
 from forte.data.types import DataRequest
 from forte.utils import get_class
+from forte.version import DEFAULT_PACK_VERSION, PACK_ID_COMPATIBLE_VERSION
+
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +62,8 @@ class MultiPackMeta(BaseMeta):
 
 
 class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
-    r"""A :class:`MultiPack` contains multiple `DataPacks` and a collection of
+    r"""A :class:`~forte.data.multi_pack.MultiPack` contains multiple
+    `DataPacks` and a collection of
     cross-pack entries (such as links and groups)
     """
 
@@ -123,7 +130,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         the data packs in it, and the
 
         Args:
-            packs:
+            packs: a data pack iterator.
 
         Returns:
 
@@ -168,7 +175,33 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
     # TODO: get_subentry maybe useless
     def get_subentry(self, pack_idx: int, entry_id: int):
-        return self.get_pack_at(pack_idx).get_entry(entry_id)
+        r"""
+        Get sub_entry from multi pack. This method uses `pack_id` (a unique
+        identifier assigned to datapack) to get a pack from multi pack,
+        and then return its sub_entry with entry_id. Noted this is changed from
+        the way of accessing such pack before the PACK_ID_COMPATIBLE_VERSION,
+        in which the `pack_idx` was used as list index number to access/reference
+        a pack within the multi pack (and in this case then get the sub_entry).
+
+        Args:
+            pack_idx (int): The pack_id for the data_pack in the
+              multi pack.
+            entry_id (int): the id for the entry from the pack with pack_id
+
+        Returns:
+            sub-entry of the pack with id = `pack_idx`
+
+        """
+        pack_array_index: int = pack_idx  # the old way
+        # the following check if the pack version is higher than the (backward)
+        # compatible version in which pack_idx is the pack_id not list index
+        if Version(self.pack_version) >= Version(PACK_ID_COMPATIBLE_VERSION):
+            pack_array_index = self.get_pack_index(
+                pack_idx
+            )  # the new way: using pack_id instead of array index
+
+        return self._packs[pack_array_index].get_entry(entry_id)
+        # return self.get_pack_at(pack_idx).get_entry(entry_id) #old version
 
     def get_span_text(self, begin: int, end: int):
         raise ValueError(
@@ -213,12 +246,12 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
               somewhere by user, after purging the lists. Default is False.
 
         Returns:
-            True if successful
+            True if successful.
 
         Exceptions:
             if clean_invalid_entries is set to False and the DataPack to be
             removed have entries (in links, groups) associated with it,
-            ValueError will be raised.
+            ``ValueError`` will be raised.
 
         """
         pack = self.get_pack_at(index_of_pack)
@@ -274,8 +307,9 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             True if successful
 
         Exceptions:
-            if clean_invalid_entries is set to False and the DataPack to be removed have
-            entries (in links, groups) associated with it, ValueError will be raised.
+            if clean_invalid_entries is set to False and the DataPack to be
+            removed have entries (in links, groups) associated with it,
+            ``ValueError`` will be raised.
         """
 
         # check if the pack to be removed has any cross pack links/groups
@@ -350,7 +384,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         Args:
 
         Returns:
-            True if successful
+            True if successful.
         """
 
         # Remove those None in place and shrink the _pack_ref list.
@@ -469,10 +503,10 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         """
         try:
             return self._inverse_pack_ref[pack_id]
-        except KeyError as e:
+        except KeyError as ke:
             raise ProcessExecutionException(
                 f"Pack {pack_id} is not in this multi-pack."
-            ) from e
+            ) from ke
 
     def get_pack(self, name: str) -> DataPack:
         """
@@ -702,12 +736,14 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     def __add_entry_with_check(
         self, entry: EntryType, allow_duplicate: bool = True
     ) -> EntryType:
-        r"""Internal method to add an :class:`Entry` object to the
-        :class:`MultiPack` object.
+        r"""Internal method to add an :class:`~forte.data.ontology.core.Entry` object to the
+        :class:`~forte.data.multi_pack.MultiPack` object.
 
         Args:
-            entry (Entry): An :class:`Entry` object to be added to the datapack.
-            allow_duplicate (bool): Whether we allow duplicate in the datapack.
+            - entry (Entry): An :class:`~forte.data.ontology.core.Entry` object
+              to be added to the datapack.
+
+            - allow_duplicate (bool): Whether we allow duplicate in the datapack.
 
         Returns:
             The input entry itself
@@ -750,7 +786,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         components: Optional[Union[str, List[str]]] = None,
         include_sub_type=True,
     ) -> Iterator[EntryType]:
-        """Get entries of `entry_type` from this multi pack.
+        """Get entries of ``entry_type`` from this multi pack.
 
         Example:
 
@@ -763,7 +799,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
                 print(relation.get_parent())
 
         In the above code snippet, we get entries of type
-        ``CrossDocEntityRelation`` which were
+        :class:`~ft.onto.base_ontology.CrossDocEntityRelation` which were
         generated by a component named ``relation_creator``
 
         Args:
@@ -856,11 +892,36 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         Returns:
             An data pack object deserialized from the string.
         """
-        return cls._deserialize(data_path, serialize_method, zip_pack)
+        # pylint: disable=protected-access
+        mp: MultiPack = cls._deserialize(data_path, serialize_method, zip_pack)
+
+        # (fix 595) change the dictionary's key after deserialization from str back to int
+        mp._inverse_pack_ref = {
+            int(k): v for k, v in mp._inverse_pack_ref.items()
+        }
+
+        return mp
+
+    @classmethod
+    def from_string(cls, data_content: str):
+        # pylint: disable=protected-access
+        # can not use explict type hint for mp as pylint does not allow type change
+        # from base_pack to multi_pack which is problematic so use jsonpickle instead
+
+        mp = jsonpickle.decode(data_content)
+        if not hasattr(mp, "pack_version"):
+            mp.pack_version = DEFAULT_PACK_VERSION
+        # (fix 595) change the dictionary's key after deserialization from str back to int
+        mp._inverse_pack_ref = {  # pylint: disable=no-member
+            int(k): v
+            for k, v in mp._inverse_pack_ref.items()  # pylint: disable=no-member
+        }
+
+        return mp
 
     def _add_entry(self, entry: EntryType) -> EntryType:
         r"""Force add an :class:`forte.data.ontology.core.Entry` object to the
-        :class:`MultiPack` object.
+        :class:`~forte.data.multi_pack.MultiPack` object.
 
         Allow duplicate entries in a datapack.
 
@@ -875,7 +936,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
     def delete_entry(self, entry: EntryType):
         r"""Delete an :class:`~forte.data.ontology.core.Entry` object from the
-        :class:`MultiPack`.
+        :class:`~forte.data.multi_pack.MultiPack`.
 
         Args:
             entry (Entry): An :class:`~forte.data.ontology.core.Entry`

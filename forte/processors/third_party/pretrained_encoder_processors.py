@@ -31,7 +31,7 @@ class PretrainedEncoder(PackProcessor):
     r"""A wrapper of Texar pre-trained encoders.
 
     This processor will compute the embedding vectors for entries of type
-    ``Annotation`` using pre-trained models. The user can specify the
+    :class:`~forte.data.ontology.top.Annotation` using pre-trained models. The user can specify the
     pre-trained model type and the annotation class name via configuration.
     For the full list of pre-trained models supported, see
     :meth:`default_config` for more details. The processor will add embedding

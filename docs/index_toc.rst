@@ -1,7 +1,4 @@
 
-
-NLP with Forte
-*********************
 This tutorial section is currently **in progress** so some sections may be incomplete.
 
 Chapter 1. Handling Structured Data
@@ -10,7 +7,7 @@ Chapter 1. Handling Structured Data
    :maxdepth: 2
 
    toc/ontology_generation.md
-
+   notebook_tutorial/handling_structued_data
 
 .. rst-class:: page-break
 
@@ -19,8 +16,10 @@ Chapter 2. Building NLP Pipeline
 .. toctree::
    :maxdepth: 2
 
-   toc/text_classification.md
-
+   notebook_tutorial/pipeline
+   toc/pipeline_component
+   notebook_tutorial/wrap_MT_inference_pipeline
+   notebook_tutorial/text_classification_pipeline
 
 .. rst-class:: page-break
 
@@ -43,8 +42,6 @@ Chapter 4. Information Retrieval
    :maxdepth: 2
 
    toc/indexing.md
-
-
    toc/ranking.md
 
 .. rst-class:: page-break

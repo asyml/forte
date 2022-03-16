@@ -65,16 +65,17 @@ class BaseDeserializeReader(PackReader, ABC):
         r"""This defines a basic configuration structure for reader.
 
         Here:
+
           - zip_pack (bool): whether to zip the data pack. The default value is
-             False.
+            False.
 
           - indent (int): None for not indented, if larger than 0, the JSON
-             files will be written in the with the provided indention. The
-             default value is None.
+            files will be written in the with the provided indention. The
+            default value is None.
 
           - serialize_method: The method used to serialize the data. Current
-              available options are "jsonpickle" and "pickle". Default is
-              "jsonpickle".
+            available options are "jsonpickle" and "pickle". Default is
+            "jsonpickle".
 
         Returns: The default configuration of this writer.
         """
