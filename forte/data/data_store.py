@@ -364,7 +364,6 @@ class DataStore(BaseStore):
 
         entry[attr_id] = attr_value
 
-
     def _set_attr(self, tid: int, attr_id: int, attr_value: Any):
         r"""This function locates the entry data with `tid` and sets its
         attribute `attr_id` with value `attr_value`. Called by
@@ -431,7 +430,7 @@ class DataStore(BaseStore):
         # index in the ``entry_type`` list (`index_id`). We remove the entry from
         # `__entry_dict` when its information is retrieved. Then, the `type_id`
         # and the ``index_id`` are passed to `_delete_entry_by_loc`.
-        
+
         try:
             # get `entry data` and remove it from entry_dict
             entry_data = self.__entry_dict.pop(tid)
