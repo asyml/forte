@@ -27,7 +27,7 @@ __all__ = ["BasePackProcessor", "PackProcessor", "MultiPackProcessor"]
 class BasePackProcessor(BaseProcessor[PackType], ABC):
     r"""The base class of processors that process one pack in a streaming way.
     If you are looking for batching (that might happen across packs, refer to
-    :class:`BaseBatchProcessor`.
+    :class:`~forte.processors.base.batch_processor.BaseBatchProcessor`.
     """
     pass
 

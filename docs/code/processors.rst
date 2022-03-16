@@ -13,6 +13,12 @@ Base Processors
 .. autoclass:: forte.processors.base.base_processor.BaseProcessor
     :members:
 
+:hidden:`BasePackProcessor`
+----------------------------------
+.. autoclass:: forte.processors.base.pack_processor.BasePackProcessor
+    :members:
+
+
 :hidden:`BaseBatchProcessor`
 -----------------------------------
 .. autoclass:: forte.processors.base.batch_processor.BaseBatchProcessor
@@ -45,6 +51,21 @@ Base Processors
 .. autoclass:: forte.processors.base.batch_processor.Predictor
     :members:
     :noindex:
+
+Pack Processors
+===================
+
+:hidden:`PackProcessor`
+----------------------------------
+.. autoclass:: forte.processors.base.pack_processor.PackProcessor
+    :members:
+
+
+
+:hidden:`MultiPackProcessor`
+----------------------------------
+.. autoclass:: forte.processors.base.pack_processor.MultiPackProcessor
+    :members:
 
 
 Task Processors
