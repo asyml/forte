@@ -14,6 +14,7 @@
 from typing import List, Iterator, Tuple, Optional, Any
 import uuid
 from bisect import bisect_left
+from sortedcontainers import SortedList
 from forte.utils import get_class
 from forte.data.base_store import BaseStore
 from forte.data.entry_type_generator import EntryTypeGenerator
@@ -293,9 +294,14 @@ class DataStore(BaseStore):
         # A reference to the entry should be store in both self.__elements and
         # self.__entry_dict.
         entry = self._new_annotation(type_name, begin, end)
-        self.__elements[type_name].add(entry)
-        self.__entry_dict[entry[constants.TID_INDEX]] = entry
-        return entry[constants.TID_INDEX]
+        try:
+            self.__elements[type_name].add(entry)
+        except KeyError:
+            self.__elements[type_name] = SortedList(key=lambda s: (s[0], s[1]))
+            self.__elements[type_name].add(entry)
+        tid = entry[constants.TID_INDEX]
+        self.__entry_dict[tid] = entry
+        return tid
 
     def add_link_raw(
         self, type_name: str, parent_tid: int, child_tid: int
