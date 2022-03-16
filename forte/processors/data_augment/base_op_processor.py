@@ -31,8 +31,9 @@ from forte.data.ontology.top import (
 from forte.processors.base import MultiPackProcessor
 from forte.utils.utils import create_class_with_kwargs
 from forte.processors.data_augment.algorithms.base_data_augmentation_op import (
-    BaseDataAugmentationOp
+    BaseDataAugmentationOp,
 )
+
 __all__ = ["ParentDataAugmentProcessor", "BaseDataAugmentOpProcessor"]
 
 
