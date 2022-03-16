@@ -175,7 +175,7 @@ class BaseIndex(Generic[EntryType]):
         r"""Build :attr:`group_index`, the index from group members to groups.
 
         Returns:
-
+            None
         """
         self.turn_group_index_switch(on=True)
         self._group_index = defaultdict(set)

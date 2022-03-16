@@ -133,7 +133,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             packs: a data pack iterator.
 
         Returns:
-
+            None
         """
         self._packs.extend(packs)
         for a in self.links:
@@ -248,10 +248,9 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         Returns:
             True if successful.
 
-        Exceptions:
-            if clean_invalid_entries is set to False and the DataPack to be
-            removed have entries (in links, groups) associated with it,
-            ``ValueError`` will be raised.
+        Raises:
+            ValueError: if ``clean_invalid_entries`` is set to False and the DataPack to be removed have entries (in links, groups)
+                associated with it.
 
         """
         pack = self.get_pack_at(index_of_pack)
@@ -306,10 +305,10 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         Returns:
             True if successful
 
-        Exceptions:
-            if clean_invalid_entries is set to False and the DataPack to be
-            removed have entries (in links, groups) associated with it,
-            ``ValueError`` will be raised.
+        Raises:
+            ValueError: if ``clean_invalid_entries`` is set to False and the
+                DataPack to be removed have entries (in links, groups)
+                associated with it.
         """
 
         # check if the pack to be removed has any cross pack links/groups
@@ -381,8 +380,6 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         the packs after the deleted pack(s) to change, so user will be responsible to manage such
         changes if such index of a pack is used or stored somewhere in user's code after purging.
 
-        Args:
-
         Returns:
             True if successful.
         """
@@ -447,7 +444,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             ref_name (str): The name to used in this multi pack.
 
         Returns:
-
+            None
         """
         if ref_name in self._name_index:
             raise ValueError(f"The name {ref_name} has already been taken.")
@@ -485,7 +482,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         Args:
             index: The index of the pack.
 
-        Returns: The pack at the index.
+        Returns:
+            The pack at the index.
 
         """
         # return self._pack_manager.get_from_pool(self._pack_ref[index])
@@ -499,7 +497,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             pack_id: The global pack id to find.
 
         Returns:
-
+            None
         """
         try:
             return self._inverse_pack_ref[pack_id]
@@ -515,8 +513,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         Args:
             name: The name of the pack.
 
-        Returns: The pack that has that name.
-
+        Returns:
+            The pack that has that name.
         """
         return self._packs[self._name_index[name]]
 
@@ -534,8 +532,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
         Please do not use this try
 
-        Returns: List of data packs contained in this multi-pack.
-
+        Returns:
+            List of data packs contained in this multi-pack.
         """
         return self._packs
 
@@ -561,7 +559,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             new_name: The new name to be assigned for the pack.
 
         Returns:
-
+            None
         """
         if new_name in self._name_index:
             raise ValueError("The new name is already taken.")
@@ -574,8 +572,9 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         """
         An iterator of all links in this multi pack.
 
-        Returns: Iterator of all links, of
-        type :class:`~forte.data.ontology.top.MultiPackLink`.
+        Returns:
+            Iterator of all links, of type
+            :class:`~forte.data.ontology.top.MultiPackLink`.
 
         """
         yield from self.links
@@ -585,7 +584,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         """
         Number of groups in this multi pack.
 
-        Returns: Number of links.
+        Returns:
+            Number of links.
 
         """
         return len(self.groups)
@@ -595,8 +595,9 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         """
         An iterator of all groups in this multi pack.
 
-        Returns: Iterator of all groups, of
-        type :class:`~forte.data.ontology.top.MultiPackGroup`.
+        Returns:
+            Iterator of all groups, of type
+            :class:`~forte.data.ontology.top.MultiPackGroup`.
 
         """
         yield from self.groups
@@ -606,7 +607,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         """
         Number of groups in this multi pack.
 
-        Returns: Number of groups.
+        Returns:
+            Number of groups.
 
         """
         return len(self.groups)
@@ -624,7 +626,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             component (str): Overwrite the component record with this.
 
         Returns:
-
+            None
         """
         super().add_all_remaining_entries(component)
         for pack in self.packs:
@@ -728,7 +730,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
               to be requested, and the fields are the detailed constraints.
 
         Returns:
-
+            None
         """
         # TODO: Not finished yet
         pass
@@ -810,9 +812,10 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             include_sub_type (bool): whether to return the sub types of the
                 queried `entry_type`. True by default.
 
-        Returns: An iterator of the entries matching the arguments, following
-        the order of entries (first sort by entry comparison, then by
-        insertion)
+        Returns:
+            An iterator of the entries matching the arguments, following
+            the order of entries (first sort by entry comparison, then by
+            insertion)
 
         """
         entry_type_: Type[EntryType]
@@ -883,11 +886,11 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         Args:
             data_path: The serialized string of a Multi pack to be deserialized.
             serialize_method: The method used to serialize the data, this
-              should be the same as how serialization is done. The current
-              options are "jsonpickle" and "pickle". The default method
-              is "jsonpickle".
+                should be the same as how serialization is done. The current
+                options are "jsonpickle" and "pickle". The default method
+                is "jsonpickle".
             zip_pack: Boolean value indicating whether the input source is
-              zipped.
+                zipped.
 
         Returns:
             An data pack object deserialized from the string.

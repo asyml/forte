@@ -71,7 +71,7 @@ class ProcessingBatcher(Generic[PackType], Configurable):
         pipeline initialize stage.
 
         Returns:
-
+            None
         """
         self.configs = self.make_configs(config)
         self._cross_pack = self.configs.cross_pack
@@ -87,7 +87,7 @@ class ProcessingBatcher(Generic[PackType], Configurable):
         the batch size.
 
         Returns:
-
+            None
         """
         raise NotImplementedError
 
@@ -191,6 +191,7 @@ class ProcessingBatcher(Generic[PackType], Configurable):
           - `cross_pack`: A boolean value indicates whether the batcher can
             go across the boundary of data packs when there is no enough data
             to fill the batch.
+
 
         Returns:
             The default configuration.
@@ -449,7 +450,7 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
             data_pack: The data pack to extract data from.
 
         Returns:
-
+            None
         """
         raise NotImplementedError
 
@@ -499,7 +500,9 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
         The configuration of a batcher.
 
         Here:
+
             - batch_size: the batch size, default is 10.
+
 
         Returns:
             The default configuration structure and default value.
@@ -528,7 +531,7 @@ class FixedSizeRequestDataPackBatcher(FixedSizeDataPackBatcher):
             data_pack: The data pack to extract data from.
 
         Returns:
-
+            None
         """
         yield from data_pack.get_data(
             self.configs.context_type, self.configs.requests.todict()
@@ -542,12 +545,14 @@ class FixedSizeRequestDataPackBatcher(FixedSizeDataPackBatcher):
         Here:
 
             - context_type (str): The fully qualified name of an `Annotation`
-              type, which will be used as the context to retrieve data from. For
+              type, which will be used as the context to retrieve data from.
+              For
               example, if a `ft.onto.Sentence` type is provided, then it will
               extract data within each sentence.
             - requests: The request detail. See
-              :meth:`~forte.data.data_pack.DataPack.get_data` on what a request looks
-              like.
+              :meth:`~forte.data.data_pack.DataPack.get_data` on what a request
+              looks like.
+
 
         Returns:
             The default configuration structure and default value.

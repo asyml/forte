@@ -77,7 +77,8 @@ class BaseDeserializeReader(PackReader, ABC):
             available options are "jsonpickle" and "pickle". Default is
             "jsonpickle".
 
-        Returns: The default configuration of this writer.
+        Returns:
+            The default configuration of this writer.
         """
         return {
             "zip_pack": False,
@@ -116,7 +117,8 @@ class RecursiveDirectoryDeserializeReader(BaseDeserializeReader):
         Args:
             data_dir: The root directory to search for the data packs.
 
-        Returns: Iterator of the data pack string from the directory.
+        Returns:
+            Iterator of the data pack string from the directory.
         """
         if not os.path.exists(data_dir):
             raise ValueError(
@@ -134,7 +136,7 @@ class RecursiveDirectoryDeserializeReader(BaseDeserializeReader):
         """
         Store the configs for this reader.
 
-         .. code-block:: python
+        .. code-block:: python
 
             {
                 "suffix": ".json",
@@ -144,7 +146,7 @@ class RecursiveDirectoryDeserializeReader(BaseDeserializeReader):
         value is `.json`. If None, then all files will be read.
 
         Returns:
-
+            None
         """
         return {
             "suffix": ".json",
