@@ -81,6 +81,8 @@ class BaseDataAugmentOpProcessor(ParentDataAugmentProcessor):
         # instance.
         self.replacement_op: BaseDataAugmentationOp = None
 
+        self.configs = None
+
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
         self.configs = self.make_configs(configs)
