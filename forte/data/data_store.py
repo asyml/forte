@@ -481,36 +481,35 @@ class DataStore(BaseStore):
         raise NotImplementedError
 
     def parse_onto_file(self):
+        r"""If user provides a customized ontology json file, we parse
+        this file and set self._type_attributes accordingly.
+        """
         if self.onto_file_path is None:
             return
         self._type_attributes = {}
         with open(self.onto_file_path, "r") as f:
-            onto_dicts = json.load(f)["definitions"]
-            for onto in onto_dicts:
-                try:
+            try:
+                onto_dicts = json.load(f)["definitions"]
+                for onto in onto_dicts:
                     parent_name = onto["parent_entry"]
                     entry_name = onto["entry_name"]
-                except KeyError as e:
-                    raise KeyError(
-                        "Fail to parse onto file:"
-                        + "`parent_entry` or `entry_name` does not exist in the onto file."
-                    ) from e
-                try:
-                    _ = get_class(parent_name)
-                except ValueError as e:
-                    raise ValueError(
-                        f"onto file contains unknown parent classes."
-                    ) from e
-                attr_dic = {}
-                idx = 4
-                try:
+                    try:
+                        _ = get_class(parent_name)
+                    except ValueError as e:
+                        raise ValueError(
+                            f"onto file contains unknown parent classes."
+                        ) from e
+                    attr_dic = {}
+                    idx = 4
                     for attr_dict in onto["attributes"]:
                         name = attr_dict["name"]
                         attr_dic[name] = idx
                         idx += 1
-                except KeyError as e:
-                    raise KeyError(
-                        f"Fail to parse filed `attributes` in onto file"
-                    ) from e
 
-                self._type_attributes[entry_name] = attr_dic
+                    self._type_attributes[entry_name] = attr_dic
+            except KeyError as e:
+                    raise KeyError(
+                        str(e) + "\n"
+                        + f"Failed to parse onto file. Onto file should"
+                        + "be a json file and contains all required fields."
+                    ) from e
