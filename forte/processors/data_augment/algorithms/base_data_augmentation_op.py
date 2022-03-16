@@ -40,12 +40,9 @@ from forte.data.span import Span
 from forte.data.ontology.top import (
     Link,
     Group,
-    MultiPackGroup,
-    MultiPackLink,
     Annotation,
 )
-from forte.data.multi_pack import MultiPack
-from forte.data.ontology.core import BaseLink, Entry
+from forte.data.ontology.core import Entry
 from forte.common.configurable import Configurable
 from forte.utils.utils import create_class_with_kwargs, get_class
 
