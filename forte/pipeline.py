@@ -485,7 +485,9 @@ class Pipeline(Generic[PackType]):
         if export_dir:
             if not os.path.exists(export_dir):
                 os.makedirs(export_dir, exist_ok=True)
-            export_path = os.path.join(export_dir, f"{name}-{self._export_count}.yml")
+            export_path = os.path.join(
+                export_dir, f"{name}-{self._export_count}.yml"
+            )
             self.save(export_path)
             self._export_count += 1
             return export_path
