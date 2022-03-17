@@ -15,6 +15,8 @@
 Base class for Pipeline module.
 """
 
+from genericpath import exists
+import os
 import itertools
 import json
 import logging
@@ -465,6 +467,19 @@ class Pipeline(Generic[PackType]):
         """
         with open(path, "w", encoding="utf-8") as f:
             yaml.safe_dump(self._dump_to_config(), f)
+
+    def export(self, name: str):
+        r"""Export pipeline to FORTE_EXPORT_PATH
+        FORTE_EXPORT_PATH is an environment variable
+        The pipeline is saved by :meth:`~forte.pipeline.Pipeline.save`
+        Args:
+            name: Export name of the pipeline
+        """
+        export_path = os.environ.get("FORTE_EXPORT_PATH")
+        if export_path:
+            if not os.path.exists(export_path):
+                raise FileNotFoundError()
+            self.save(os.path.join(export_path, f"{name}.yml"))
 
     def _remote_service_app(
         self, service_name: str = "", input_format: str = "string"

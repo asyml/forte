@@ -17,6 +17,7 @@ Unit tests for Pipeline.
 
 import os
 import unittest
+import tempfile
 import warnings
 from dataclasses import dataclass
 from typing import Any, Dict, Iterator, Optional, Set, List
@@ -1471,6 +1472,40 @@ class RecordCheckPipelineTest(unittest.TestCase):
             nlp.add(dummy1, ref_name="ref_dummy")
         nlp.initialize()
 
+class ExportPipelineTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.nlp = Pipeline()
+        self.nlp.set_reader(SentenceReader())
+        return super().setUp()
+
+    def test_do_nothing(self):
+        """Should do nothing if FORTE_EXPORT_PATH is not set"""
+        from unittest.mock import MagicMock
+        self.nlp.save = MagicMock()
+        self.nlp.export("test-commit")
+        self.nlp.save.assert_not_called()
+
+    def test_raise_error(self):
+        os.environ["FORTE_EXPORT_PATH"] = "DNE_PATH"
+        with self.assertRaises(FileNotFoundError):
+            self.nlp.export("test-commit")
+    
+    def test_save_config(self):
+        temp_export_dir = tempfile.TemporaryDirectory()
+        os.environ["FORTE_EXPORT_PATH"] = temp_export_dir.name
+        self.nlp.export("test-commit")
+        ppl_export_path = os.path.join(temp_export_dir.name, "test-commit.yml")
+        self.assertTrue(os.path.isfile(os.path.join(ppl_export_path)))
+    
+    def test_two_commits(self):    
+        temp_export_dir = tempfile.TemporaryDirectory()
+        os.environ["FORTE_EXPORT_PATH"] = temp_export_dir.name
+        self.nlp.export("test-commit-1")
+        self.nlp.export("test-commit-2")
+        export_path_1 = os.path.join(temp_export_dir.name, "test-commit-1.yml")
+        export_path_2 = os.path.join(temp_export_dir.name, "test-commit-1.yml")
+        self.assertTrue(os.path.isfile(os.path.join(export_path_1)))
+        self.assertTrue(os.path.isfile(os.path.join(export_path_2)))
 
 if __name__ == "__main__":
     unittest.main()
