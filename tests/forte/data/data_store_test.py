@@ -18,7 +18,7 @@ Unit tests for data store related operations.
 import logging
 import unittest
 from sortedcontainers import SortedList
-
+from forte.data.ontology.top import Annotation, Group, Link
 from forte.data.data_store import DataStore
 
 logging.basicConfig(level=logging.DEBUG)
@@ -54,8 +54,8 @@ class DataStoreTest(unittest.TestCase):
         # }
 
         self.data_store._DataStore__elements = {
-            "ft.onto.base_ontology.Document":
-                SortedList([
+            "ft.onto.base_ontology.Document": SortedList(
+                [
                     [
                         0,
                         5,
@@ -74,9 +74,10 @@ class DataStoreTest(unittest.TestCase):
                         "Negative",
                         "Class B",
                     ],
-                ]),
-            "ft.onto.base_ontology.Sentence":
-                SortedList([
+                ]
+            ),
+            "ft.onto.base_ontology.Sentence": SortedList(
+                [
                     [
                         6,
                         9,
@@ -99,7 +100,8 @@ class DataStoreTest(unittest.TestCase):
                         "Class C",
                         "Class D",
                     ],
-                ]),
+                ]
+            ),
             # empty list corresponds to Entry, test only
             "forte.data.ontology.core.Entry": SortedList([]),
         }
@@ -233,7 +235,11 @@ class DataStoreTest(unittest.TestCase):
         self.assertEqual(len(instances), 4)
 
         # get entries without subclasses
-        instances = list(self.data_store.get("forte.data.ontology.core.Entry", include_sub_type=False))
+        instances = list(
+            self.data_store.get(
+                "forte.data.ontology.core.Entry", include_sub_type=False
+            )
+        )
         self.assertEqual(len(instances), 0)
 
     def test_delete_entry(self):
@@ -283,6 +289,37 @@ class DataStoreTest(unittest.TestCase):
         #     ],
         # )
         pass
+
+    def test_is_subclass(self):
+
+        self.assertTrue(
+            self.data_store._is_subclass(
+                "ft.onto.base_ontology.Subword", Annotation
+            )
+        )
+        self.assertTrue(
+            self.data_store._is_subclass(
+                "ft.onto.base_ontology.PredicateLink", Link
+            )
+        )
+        self.assertTrue(
+            self.data_store._is_subclass(
+                "ft.onto.base_ontology.CoreferenceGroup", Group
+            )
+        )
+        self.assertFalse(
+            self.data_store._is_subclass(
+                "ft.onto.base_ontology.PredicateLink", Annotation
+            )
+        )
+        self.assertFalse(
+            self.data_store._is_subclass(
+                "ft.onto.base_ontology.CoreferenceGroup", Link
+            )
+        )
+        self.assertFalse(
+            self.data_store._is_subclass("ft.onto.base_ontology.Subword", Group)
+        )
 
 
 if __name__ == "__main__":

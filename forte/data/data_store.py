@@ -247,6 +247,23 @@ class DataStore(BaseStore):
         entry += len(self._type_attributes[type_name]) * [None]
         return entry
 
+    @staticmethod
+    def _is_subclass(type_name: str, cls) -> bool:
+        r"""This function determines if a string class_type is
+        the subclass of a class.
+
+        Args:
+            type_name: A fully qualified name of an entry class
+            cls: A class.
+
+        Returns:
+            A boolean value whether this type belongs to a clc class
+            type or not.
+
+        """
+        entry_class = get_class(type_name)
+        return cls == entry_class.__base__
+
     def add_annotation_raw(self, type_name: str, begin: int, end: int) -> int:
         r"""This function adds an annotation entry with `begin` and `end`
         indices to the sortedlist of `type_name` in `self.__elements`,

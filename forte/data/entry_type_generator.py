@@ -77,7 +77,7 @@ class EntryTypeGenerator:
         ["speaker", "part_id", "sentiment", "classification", "classifications"].
         The solution looks like the following:
 
-        ... code-block::python
+        .. code-block::python
 
             # input can be a string
             entry_name = "ft.onto.base_ontology.Sentence"
