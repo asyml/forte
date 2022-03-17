@@ -481,12 +481,12 @@ class Pipeline(Generic[PackType]):
         Returns:
             Optional[str]: Export path of pipeline config YAML.
         """
-        export_dir: Optional[str] = os.environ.get("FORTE_EXPORT_PATH")
-        if export_dir:
-            if not os.path.exists(export_dir):
-                os.makedirs(export_dir, exist_ok=True)
+        export_path: Optional[str] = os.environ.get("FORTE_EXPORT_PATH")
+        if export_path:
+            if not os.path.exists(export_path):
+                os.makedirs(export_path, exist_ok=True)
             export_path = os.path.join(
-                export_dir, f"{name}-{self._export_count}.yml"
+                export_path, f"{name}-{self._export_count}.yml"
             )
             self.save(export_path)
             self._export_count += 1
