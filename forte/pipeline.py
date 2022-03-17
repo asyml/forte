@@ -481,7 +481,7 @@ class Pipeline(Generic[PackType]):
         Returns:
             Optional[str]: Export path of pipeline config YAML.
         """
-        export_dir = os.environ.get("FORTE_EXPORT_PATH")
+        export_dir: Optional[str] = os.environ.get("FORTE_EXPORT_PATH")
         if export_dir:
             if not os.path.exists(export_dir):
                 os.makedirs(export_dir, exist_ok=True)
@@ -490,7 +490,7 @@ class Pipeline(Generic[PackType]):
             )
             self.save(export_path)
             self._export_count += 1
-            return export_path
+        return export_path
 
     def _remote_service_app(
         self, service_name: str = "", input_format: str = "string"
