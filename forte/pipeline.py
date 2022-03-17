@@ -15,7 +15,6 @@
 Base class for Pipeline module.
 """
 
-from genericpath import exists
 import os
 import itertools
 import json
