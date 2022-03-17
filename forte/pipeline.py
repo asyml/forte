@@ -226,6 +226,9 @@ class Pipeline(Generic[PackType]):
         # Indicate whether do type checking during pipeline initialization
         self._do_init_type_check: bool = do_init_type_check
 
+        # Counter of export times
+        self._export_count = 1
+
     def enforce_consistency(self, enforce: bool = True):
         r"""This function determines whether the pipeline will check
         the content expectations specified in each pipeline component. This
@@ -467,18 +470,25 @@ class Pipeline(Generic[PackType]):
         with open(path, "w", encoding="utf-8") as f:
             yaml.safe_dump(self._dump_to_config(), f)
 
-    def export(self, name: str):
+    def export(self, name: str = "pipeline") -> Optional[str]:
         r"""Export pipeline to FORTE_EXPORT_PATH
         FORTE_EXPORT_PATH is an environment variable
         The pipeline is saved by :meth:`~forte.pipeline.Pipeline.save`
+
         Args:
-            name: Export name of the pipeline
+            name: Export name of the pipeline. Default is `pipeline`.
+
+        Returns:
+            Optional[str]: Export path of pipeline config YAML.
         """
-        export_path = os.environ.get("FORTE_EXPORT_PATH")
-        if export_path:
-            if not os.path.exists(export_path):
-                raise FileNotFoundError()
-            self.save(os.path.join(export_path, f"{name}.yml"))
+        export_dir = os.environ.get("FORTE_EXPORT_PATH")
+        if export_dir:
+            if not os.path.exists(export_dir):
+                os.makedirs(export_dir, exist_ok=True)
+            export_path = os.path.join(export_dir, f"{name}-{self._export_count}.yml")
+            self.save(export_path)
+            self._export_count += 1
+            return export_path
 
     def _remote_service_app(
         self, service_name: str = "", input_format: str = "string"

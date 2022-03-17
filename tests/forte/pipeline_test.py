@@ -18,9 +18,10 @@ Unit tests for Pipeline.
 import os
 import unittest
 import tempfile
-import warnings
+import shutil
 from dataclasses import dataclass
 from typing import Any, Dict, Iterator, Optional, Set, List
+from unittest.mock import MagicMock
 
 import numpy as np
 from ddt import ddt, data, unpack
@@ -1476,36 +1477,67 @@ class ExportPipelineTest(unittest.TestCase):
     def setUp(self) -> None:
         self.nlp = Pipeline()
         self.nlp.set_reader(SentenceReader())
-        return super().setUp()
+        self.export_env_var = "FORTE_EXPORT_PATH"
 
     def test_do_nothing(self):
-        """Should do nothing if FORTE_EXPORT_PATH is not set"""
-        from unittest.mock import MagicMock
+        r"""Should do nothing if FORTE_EXPORT_PATH is not set"""
         self.nlp.save = MagicMock()
-        self.nlp.export("test-commit")
+        self.nlp.export()
         self.nlp.save.assert_not_called()
 
-    def test_raise_error(self):
-        os.environ["FORTE_EXPORT_PATH"] = "DNE_PATH"
-        with self.assertRaises(FileNotFoundError):
-            self.nlp.export("test-commit")
-    
-    def test_save_config(self):
+    def test_default_export(self):
+        r"""Should export pipeline if FORTE_EXPORT_PATH is set"""
         temp_export_dir = tempfile.TemporaryDirectory()
-        os.environ["FORTE_EXPORT_PATH"] = temp_export_dir.name
-        self.nlp.export("test-commit")
-        ppl_export_path = os.path.join(temp_export_dir.name, "test-commit.yml")
-        self.assertTrue(os.path.isfile(os.path.join(ppl_export_path)))
-    
-    def test_two_commits(self):    
+        os.environ[self.export_env_var] = temp_export_dir.name
+        ppl_export_path = self.nlp.export()
+        self.assertTrue(os.path.isfile(ppl_export_path))
+
+    def test_auto_create_export_dir(self):
+        r"""Test if auto-gen dir if it does not exist"""
         temp_export_dir = tempfile.TemporaryDirectory()
-        os.environ["FORTE_EXPORT_PATH"] = temp_export_dir.name
-        self.nlp.export("test-commit-1")
-        self.nlp.export("test-commit-2")
-        export_path_1 = os.path.join(temp_export_dir.name, "test-commit-1.yml")
-        export_path_2 = os.path.join(temp_export_dir.name, "test-commit-1.yml")
-        self.assertTrue(os.path.isfile(os.path.join(export_path_1)))
-        self.assertTrue(os.path.isfile(os.path.join(export_path_2)))
+        export_dir = os.path.join(temp_export_dir.name, "randome_dir")
+        os.environ[self.export_env_var] = export_dir
+        ppl_export_path = self.nlp.export()
+        self.assertTrue(os.path.isfile(ppl_export_path))
+
+    def test_named_export(self):
+        r"""Test the export name"""
+        temp_export_dir = tempfile.TemporaryDirectory()
+        os.environ[self.export_env_var] = temp_export_dir.name
+        export_name = "test-commit"
+        self.nlp.export(export_name)
+        ppl_export_path = os.path.join(temp_export_dir.name,
+                                       f"{export_name}-1.yml")
+        self.assertTrue(os.path.isfile(ppl_export_path))
+
+    def test_two_default_export(self):
+        r"""Test two exported pipeline with default name"""
+        temp_export_dir = tempfile.TemporaryDirectory()
+        os.environ[self.export_env_var] = temp_export_dir.name
+        export_path_1 = self.nlp.export()
+        export_path_2 = self.nlp.export()
+        self.assertTrue(os.path.isfile(export_path_1))
+        self.assertTrue(os.path.isfile(export_path_2))   
+        self.assertEqual(len(os.listdir(temp_export_dir.name)), 2)
+
+    def test_two_named_export(self):
+        r"""Test two named pipeline exporting"""
+        temp_export_dir = tempfile.TemporaryDirectory()
+        os.environ[self.export_env_var] = temp_export_dir.name
+        export_name = "test-commit"
+        self.nlp.export(export_name)
+        self.nlp.export(export_name)
+        export_path_1 = os.path.join(temp_export_dir.name,
+                                     f"{export_name}-1.yml")
+        export_path_2 = os.path.join(temp_export_dir.name,
+                                     f"{export_name}-2.yml")
+        self.assertTrue(os.path.isfile(export_path_1))
+        self.assertTrue(os.path.isfile(export_path_2))
+
+    def tearDown(self) -> None:
+        if self.export_env_var in os.environ:
+            del os.environ[self.export_env_var]
+
 
 if __name__ == "__main__":
     unittest.main()
