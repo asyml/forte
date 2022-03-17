@@ -67,8 +67,8 @@ def maybe_download(
         urls: A (list of) URLs to download files.
         path: The destination path to save the files.
         filenames: A (list of) strings of the file names. If given,
-            must have the same length with :attr:`urls`. If `None`,
-            filenames are extracted from :attr:`urls`.
+            must have the same length with ``urls``. If `None`,
+            filenames are extracted from ``urls``.
         extract: Whether to extract compressed files.
 
     Returns:
