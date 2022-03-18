@@ -127,7 +127,9 @@ class ProcessingBatcher(Generic[PackType], Configurable):
         Returns:
             An iterator of A tuple contains datapack, context instance and
             batch data.
+
             .. note::
+
                 For backward compatibility issues, this function
                 return a list of `None` as contexts.
         """
