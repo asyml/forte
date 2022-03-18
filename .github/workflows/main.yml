@@ -107,8 +107,9 @@ jobs:
           cd forte-wrappers
           pip install src/huggingface
           pip install src/nltk
+          pip install termcolor
           cd ..
-          coverage run -m pytest tests/forte/notebook_tutorial
+          coverage run -m pytest tests/forte/notebook_test.py
 
   docs:
     needs: build
