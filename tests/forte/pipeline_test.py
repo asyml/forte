@@ -64,7 +64,7 @@ data_samples_root = os.path.abspath(
     os.path.join(
         os.path.dirname(os.path.realpath(__file__)),
         *([os.path.pardir] * 2),
-        "data_samples"
+        "data_samples",
     )
 )
 
@@ -75,7 +75,7 @@ onto_specs_samples_root = os.path.abspath(
         "forte",
         "data",
         "ontology",
-        "test_specs"
+        "test_specs",
     )
 )
 
@@ -1473,6 +1473,7 @@ class RecordCheckPipelineTest(unittest.TestCase):
             nlp.add(dummy1, ref_name="ref_dummy")
         nlp.initialize()
 
+
 class ExportPipelineTest(unittest.TestCase):
     def setUp(self) -> None:
         self.nlp = Pipeline()
@@ -1506,8 +1507,9 @@ class ExportPipelineTest(unittest.TestCase):
         os.environ[self.export_env_var] = temp_export_dir.name
         export_name = "test-commit"
         self.nlp.export(export_name)
-        ppl_export_path = os.path.join(temp_export_dir.name,
-                                       f"{export_name}-1.yml")
+        ppl_export_path = os.path.join(
+            temp_export_dir.name, f"{export_name}.yml"
+        )
         self.assertTrue(os.path.isfile(ppl_export_path))
 
     def test_two_default_export(self):
@@ -1516,21 +1518,37 @@ class ExportPipelineTest(unittest.TestCase):
         os.environ[self.export_env_var] = temp_export_dir.name
         export_path_1 = self.nlp.export()
         export_path_2 = self.nlp.export()
+        expected_path_1 = os.path.join(temp_export_dir.name, "pipeline-1.yml")
+        expected_path_2 = os.path.join(temp_export_dir.name, "pipeline-2.yml")
+        self.assertEqual(export_path_1, expected_path_1)
+        self.assertEqual(export_path_2, expected_path_2)
         self.assertTrue(os.path.isfile(export_path_1))
-        self.assertTrue(os.path.isfile(export_path_2))   
+        self.assertTrue(os.path.isfile(export_path_2))
         self.assertEqual(len(os.listdir(temp_export_dir.name)), 2)
+
+    def test_conflict_export(self):
+        r"""Test conflicting pipeline exporting"""
+        temp_export_dir = tempfile.TemporaryDirectory()
+        os.environ[self.export_env_var] = temp_export_dir.name
+        export_name = "test-export"
+        self.nlp.export(export_name)
+        with self.assertRaises(ValueError):
+            self.nlp.export(export_name)
 
     def test_two_named_export(self):
         r"""Test two named pipeline exporting"""
         temp_export_dir = tempfile.TemporaryDirectory()
         os.environ[self.export_env_var] = temp_export_dir.name
-        export_name = "test-commit"
-        self.nlp.export(export_name)
-        self.nlp.export(export_name)
-        export_path_1 = os.path.join(temp_export_dir.name,
-                                     f"{export_name}-1.yml")
-        export_path_2 = os.path.join(temp_export_dir.name,
-                                     f"{export_name}-2.yml")
+        export_name_1 = "test-export-1"
+        export_name_2 = "test-export-2"
+        self.nlp.export(export_name_1)
+        self.nlp.export(export_name_2)
+        export_path_1 = os.path.join(
+            temp_export_dir.name, f"{export_name_1}.yml"
+        )
+        export_path_2 = os.path.join(
+            temp_export_dir.name, f"{export_name_2}.yml"
+        )
         self.assertTrue(os.path.isfile(export_path_1))
         self.assertTrue(os.path.isfile(export_path_2))
 

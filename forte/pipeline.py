@@ -19,6 +19,7 @@ import os
 import itertools
 import json
 import logging
+from pathlib import Path
 import sys
 from time import time
 from typing import (
@@ -470,26 +471,41 @@ class Pipeline(Generic[PackType]):
         with open(path, "w", encoding="utf-8") as f:
             yaml.safe_dump(self._dump_to_config(), f)
 
-    def export(self, name: str = "pipeline") -> Optional[str]:
+    def export(self, name: Optional[str] = None) -> Optional[str]:
         r"""Export pipeline to FORTE_EXPORT_PATH
         FORTE_EXPORT_PATH is an environment variable
         The pipeline is saved by :meth:`~forte.pipeline.Pipeline.save`
+        This method will have the following behaviors:
+        - FORTE_EXPORT_PATH will be created if assigned but not found.
+        - If name is not provided, a default one will be used.
+        - When the pipeline is exported multiple time with default name,
+          the export name will be pipeline-1.yml, pipeline-2.yml...
+        - Raise exception if provided name is taken.
 
         Args:
             name: Export name of the pipeline. Default is `pipeline`.
 
         Returns:
             Optional[str]: Export path of pipeline config YAML.
+
+        Raises:
+            ValueError: if export name is already taken.
         """
         export_path: Optional[str] = os.environ.get("FORTE_EXPORT_PATH")
         if export_path:
-            if not os.path.exists(export_path):
-                os.makedirs(export_path, exist_ok=True)
-            export_path = os.path.join(
-                export_path, f"{name}-{self._export_count}.yml"
-            )
+            os.makedirs(export_path, exist_ok=True)
+
+            if name:
+                export_name = f"{name}.yml"
+            else:
+                export_name = f"pipeline-{self._export_count}.yml"
+                self._export_count += 1
+
+            export_path = os.path.join(export_path, export_name)
+            if Path(export_path).exists():
+                raise ValueError(f"{export_path} already exists.")
+
             self.save(export_path)
-            self._export_count += 1
         return export_path
 
     def _remote_service_app(
