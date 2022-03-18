@@ -99,8 +99,10 @@ class ProcessingBatcher(Generic[PackType], Configurable):
         Returns:
             A triplet contains datapack, context instance and batched data.
 
-            Note: For backward compatibility issues, this function
-            return list of None contexts.
+            .. note::
+
+                For backward compatibility issues, this function
+                return list of None contexts.
         """
         if self.current_batch:
             yield (
@@ -125,8 +127,9 @@ class ProcessingBatcher(Generic[PackType], Configurable):
         Returns:
             An iterator of A tuple contains datapack, context instance and
             batch data.
-            Note: For backward compatibility issues, this function
-            return a list of `None` as contexts.
+            .. note::
+                For backward compatibility issues, this function
+                return a list of `None` as contexts.
         """
         batch_count = 0
 
@@ -567,7 +570,9 @@ class FixedSizeRequestDataPackBatcher(FixedSizeDataPackBatcher):
 class FixedSizeMultiPackProcessingBatcher(ProcessingBatcher[MultiPack]):
     r"""A Batcher used in :class:`~forte.processors.base.batch_processor.MultiPackBatchProcessor`.
 
-    Note: this implementation is not finished.
+    .. note::
+
+        this implementation is not finished.
 
     The Batcher calls the ProcessingBatcher inherently on each specified
     data pack in the MultiPack.

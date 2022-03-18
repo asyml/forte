@@ -127,7 +127,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     def relink(self, packs: Iterator[DataPack]):
         """
         Re-link the reference of the multi-pack to other entries, including
-        the data packs in it, and the
+        the data packs in it.
 
         Args:
             packs: a data pack iterator.
@@ -249,7 +249,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             True if successful.
 
         Raises:
-            ValueError: if ``clean_invalid_entries`` is set to False and the DataPack to be removed have entries (in links, groups)
+            ValueError: if ``clean_invalid_entries`` is set to False and the
+                DataPack to be removed have entries (in links, groups)
                 associated with it.
 
         """
@@ -687,7 +688,9 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         request: MdRequest,
     ):
         r"""
-        NOTE: This function is not finished.
+        .. note::
+
+            This function is not finished.
 
         Get data via the links and groups across data packs. The keys could be
         `MultiPack` entries (i.e. `MultiPackLink` and `MultiPackGroup`). The

@@ -56,7 +56,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
             collection is computed by
             :meth:`~forte.data.base_reader.BaseReader._cache_key_function`.
 
-            Note:
+            .. note::
 
                 A collection is the data returned by
                 :meth:`~forte.data.base_reader.BaseReader._collect`.
