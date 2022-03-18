@@ -479,7 +479,7 @@ class Pipeline(Generic[PackType]):
         - FORTE_EXPORT_PATH will be created if assigned but not found.
         - If name is not provided, a default one will be used.
         - When the pipeline is exported multiple time with default name,
-            the export name will be pipeline-1.yml, pipeline-2.yml...
+        the export name will be pipeline-1.yml, pipeline-2.yml...
         - Raise exception if provided name is taken.
 
         Args:
