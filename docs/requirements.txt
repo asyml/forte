@@ -9,7 +9,7 @@ sphinxcontrib-spelling
 
 # jypyter notebook
 nbautoexport==0.4.0
-
+testbook
 
 pyyaml==5.4
 jsonpickle==1.4
