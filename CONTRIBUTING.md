@@ -162,6 +162,10 @@ Therefore, we test notebook by using package [`testbook`](https://testbook.readt
 User can refer to [notebook_test_tutorial.py](tests/forte/notebooks/notebook_test_tutorial.py) for how to test notebook.
 
 
+#### Notebook Output
+Notebooks will not be running automatically after committing files to the repository.
+Developer needs to keep notebook cell outputs that are needed for the purpose of illustration.
+
 
 ### Git Commit Style
 
