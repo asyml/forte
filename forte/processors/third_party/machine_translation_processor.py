@@ -16,21 +16,18 @@ import uuid
 from os import getenv
 from typing import Dict, Any
 from urllib.parse import urlencode
-
+import os
 import requests
-
+from transformers import T5Tokenizer, T5ForConditionalGeneration
 from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
-from forte.processors.base import MultiPackProcessor
+from forte.processors.base import MultiPackProcessor, PackProcessor
 from ft.onto.base_ontology import Document, Utterance
-from forte.processors.base import PackProcessor
-from transformers import T5Tokenizer, T5ForConditionalGeneration
-import os
 
 
-__all__ = ["MicrosoftBingTranslator"]
+__all__ = ["MicrosoftBingTranslator", "MachineTranslationProcessor"]
 
 
 class MicrosoftBingTranslator(MultiPackProcessor):
@@ -165,7 +162,7 @@ class MachineTranslationProcessor(PackProcessor):
         )
 
         # Write output to the specified file
-        with open(file=file_name, mode="w") as f:
+        with open(file=file_name, mode="w", encoding="utf-8") as f:
             f.write("\n".join(outputs))
 
     @classmethod

@@ -4,6 +4,8 @@ from testbook import testbook
 @testbook("docs/notebook_tutorial/handling_structued_data.ipynb")
 def test_handling_structued_data_cells(tb):
     # test specific cells output
+    # note that Developer needs to assign tags to cells
+    # Please refer to https://jupyterbook.org/content/metadata.html for more infomation
     tb.execute_cell("imports")
     get_document_data_text = """0 :   The Indonesian billionaire James Riady has agreed to pay $ 8.5 million and plead guilty to illegally donating money for Bill Clinton 's 1992 presidential campaign . He admits he was trying to influence American policy on China ."""
     get_document_text = """0 document instance:   Document(document_class=[], sentiment={}, classifications=<forte.data.ontology.core.FDict object at 0x7f0654e37a50>)
