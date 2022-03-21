@@ -59,6 +59,7 @@ class TrainPreprocessor:
             :class:`~forte.data.data_pack.DataPack`.
 
     .. note::
+
         For parameters `request`, user does not necessarily need to provide
         `converter`. If no `converter` is specified, a default converter of
         type :class:`~forte.data.converter.converter.Converter` will be picked.

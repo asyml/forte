@@ -385,7 +385,8 @@ class MultiPackLink(MultiEntry, BaseLink):
         """
         Return the ``tid`` of the parent entry.
 
-        Returns: The ``tid`` of the parent entry.
+        Returns:
+            The ``tid`` of the parent entry.
         """
         return self.parent[1]
 
@@ -393,7 +394,8 @@ class MultiPackLink(MultiEntry, BaseLink):
         """
         Return the ``tid`` of the child entry.
 
-        Returns: The ``tid`` of the child entry.
+        Returns:
+            The ``tid`` of the child entry.
         """
         return self.child[1]
 
@@ -401,7 +403,8 @@ class MultiPackLink(MultiEntry, BaseLink):
         """
         Return the `pack_id` of the parent pack.
 
-        Returns: The `pack_id` of the parent pack..
+        Returns:
+            The `pack_id` of the parent pack..
         """
         if self._parent is None:
             raise ValueError("Parent is not set for this link.")
@@ -411,7 +414,8 @@ class MultiPackLink(MultiEntry, BaseLink):
         """
         Return the `pack_id` of the child pack.
 
-        Returns: The `pack_id` of the child pack.
+        Returns:
+            The `pack_id` of the child pack.
         """
         if self._child is None:
             raise ValueError("Child is not set for this link.")
@@ -460,7 +464,8 @@ class MultiPackLink(MultiEntry, BaseLink):
         r"""Get the parent entry of the link.
 
         Returns:
-             An instance of :class:`~forte.data.ontology.core.Entry` that is the parent of the link.
+            An instance of :class:`~forte.data.ontology.core.Entry` that
+            is the parent of the link.
         """
         if self._parent is None:
             raise ValueError("The parent of this link is not set.")
@@ -472,7 +477,8 @@ class MultiPackLink(MultiEntry, BaseLink):
         r"""Get the child entry of the link.
 
         Returns:
-             An instance of :class:`~forte.data.ontology.core.Entry` that is the child of the link.
+            An instance of :class:`~forte.data.ontology.core.Entry` that is
+            the child of the link.
         """
         if self._child is None:
             raise ValueError("The parent of this link is not set.")
@@ -539,7 +545,7 @@ class Query(Generics):
             score: the score for the pack
 
         Returns:
-
+            None
         """
         self.results[pid] = score
 

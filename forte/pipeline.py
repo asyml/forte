@@ -260,9 +260,9 @@ class Pipeline(Generic[PackType]):
 
         Args:
             configs: The configs used to initialize the pipeline. It should be
-                a dictionary that contains `forte_ir_version`, `components`
+                a dictionary that contains `forte_ir_version`, ``components``
                 and `states`. `forte_ir_version` is a string used to validate
-                input format. `components` is a list of dictionary that
+                input format. ``components`` is a list of dictionary that
                 contains `type` (the class of pipeline components),
                 `configs` (the corresponding component's configs) and
                 `selector`. `states` will be used to update the pipeline states
@@ -585,7 +585,7 @@ class Pipeline(Generic[PackType]):
         all the components inside this pipeline.
 
         Returns:
-
+            None
         """
         # create EntryTree type object merged_entry_tree to store the parsed
         # entry tree from ontology specification file passed in as part of
