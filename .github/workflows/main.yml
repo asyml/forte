@@ -109,7 +109,7 @@ jobs:
           codecov
       - name: Test notebook tutorials with installing Fortex
         run: |
-          if [ ${{ torch-version }} == "1.5.0" ]
+          if [ ${{ matrix.torch-version }} == "1.5.0" ]
           then
             git clone https://github.com/asyml/forte-wrappers.git
             cd forte-wrappers
