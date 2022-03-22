@@ -349,8 +349,6 @@ class DataStore(BaseStore):
             attr_id (int): The id of the attribute.
             attr_value (any): The value of the attribute.
         """
-        # We retrieve the entry data from `__entry_dict` using tid.
-        # We locate the attribute using ``attr_id``  and update the attribute.
         entry = self.__entry_dict[tid]
         entry[attr_id] = attr_value
 
@@ -390,8 +388,6 @@ class DataStore(BaseStore):
         Returns:
             The value of ``attr_id``  for the entry with ``tid``.
         """
-        # We retrieve the entry data from `__entry_dict` using tid.
-        # We locate the attribute using ``attr_id``  and get the attribute.
         entry = self.__entry_dict[tid]
         return entry[attr_id]
 
@@ -402,13 +398,6 @@ class DataStore(BaseStore):
         Args:
             tid (int): Unique id of the entry.
         """
-        # We retrieve the entry data from entry_dict using tid. We get its
-        # tid, `type_id`, begin and end indexes. Remove the entry from
-        # `entry_dict` when its information is retrieved. We find the
-        # `entry_type` sortedlist using `type_id`. We bisect the target_list to
-        # find the index of entry data. Then, `type_id` and index are passed to
-        # _delete_entry_by_loc.
-
         try:
             # get `entry data` and remove it from entry_dict
             entry_data = self.__entry_dict.pop(tid)
@@ -496,9 +485,6 @@ class DataStore(BaseStore):
         Returns:
             An iterator of the entries matching the provided arguments.
         """
-        # We use the ``type_id`` to find its ``entry_type`` and all subclasses.
-        # We locate the lists.
-        # We create an iterator to generate entries from the list.
         if include_sub_type:
             entry_class = get_class(type_name)
             all_types = []
