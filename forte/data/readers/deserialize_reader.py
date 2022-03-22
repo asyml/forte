@@ -65,18 +65,20 @@ class BaseDeserializeReader(PackReader, ABC):
         r"""This defines a basic configuration structure for reader.
 
         Here:
+
           - zip_pack (bool): whether to zip the data pack. The default value is
-             False.
+            False.
 
           - indent (int): None for not indented, if larger than 0, the JSON
-             files will be written in the with the provided indention. The
-             default value is None.
+            files will be written in the with the provided indention. The
+            default value is None.
 
           - serialize_method: The method used to serialize the data. Current
-              available options are "jsonpickle" and "pickle". Default is
-              "jsonpickle".
+            available options are "jsonpickle" and "pickle". Default is
+            "jsonpickle".
 
-        Returns: The default configuration of this writer.
+        Returns:
+            The default configuration of this writer.
         """
         return {
             "zip_pack": False,
@@ -115,7 +117,8 @@ class RecursiveDirectoryDeserializeReader(BaseDeserializeReader):
         Args:
             data_dir: The root directory to search for the data packs.
 
-        Returns: Iterator of the data pack string from the directory.
+        Returns:
+            Iterator of the data pack string from the directory.
         """
         if not os.path.exists(data_dir):
             raise ValueError(
@@ -133,7 +136,7 @@ class RecursiveDirectoryDeserializeReader(BaseDeserializeReader):
         """
         Store the configs for this reader.
 
-         .. code-block:: python
+        .. code-block:: python
 
             {
                 "suffix": ".json",
@@ -143,7 +146,7 @@ class RecursiveDirectoryDeserializeReader(BaseDeserializeReader):
         value is `.json`. If None, then all files will be read.
 
         Returns:
-
+            None
         """
         return {
             "suffix": ".json",

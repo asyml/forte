@@ -73,13 +73,13 @@ class DeleteOverlapEntry(PackProcessor):
     @classmethod
     def default_configs(cls):
         """
-        The `entry_type` config determines which type of annotation to be
+        The ``entry_type`` config determines which type of annotation to be
         checked for duplication. This value should be the name of a class that
         is sub-class for :class:`~forte.data.ontology.top.Annotation`.
         Otherwise a `ValueError` will be raised.
 
         Returns:
-
+            None.
         """
 
         return {

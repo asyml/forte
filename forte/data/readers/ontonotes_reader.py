@@ -52,7 +52,8 @@ Stack = List[Tuple[int, str]]
 
 
 class OntonotesReader(PackReader):
-    r""":class:`OntonotesReader` is designed to read in the English OntoNotes
+    r""":class:`~forte.data.readers.ontonotes_reader.OntonotesReader` is
+    designed to read in the English OntoNotes
     v5.0 data in the datasets used by the CoNLL 2011/2012 shared tasks. To use
     this Reader, you must follow the instructions provided `here (v12 release):
     <http://cemantix.org/data/ontonotes.html>`_:, which will allow you to
@@ -161,11 +162,11 @@ class OntonotesReader(PackReader):
 
         Here:
 
-        `"column_format"`: list
-            A list of strings indicating which field each column in a
-            line corresponds to. The length of the list should be equal to the
-            number of columns in the files to be read. Available field types
-            include:
+        - `"column_format"`: list
+          A list of strings indicating which field each column in a
+          line corresponds to. The length of the list should be equal to the
+          number of columns in the files to be read. Available field types
+          include:
 
             - ``"document_id"``
             - ``"part_number"``
