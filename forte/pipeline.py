@@ -19,8 +19,9 @@ import os
 import itertools
 import json
 import logging
-from pathlib import Path
 import sys
+import uuid
+from pathlib import Path
 from time import time
 from typing import (
     Any,
@@ -226,9 +227,6 @@ class Pipeline(Generic[PackType]):
 
         # Indicate whether do type checking during pipeline initialization
         self._do_init_type_check: bool = do_init_type_check
-
-        # Counter of export times
-        self._export_count = 1
 
     def enforce_consistency(self, enforce: bool = True):
         r"""This function determines whether the pipeline will check
@@ -472,18 +470,27 @@ class Pipeline(Generic[PackType]):
             yaml.safe_dump(self._dump_to_config(), f)
 
     def export(self, name: Optional[str] = None) -> Optional[str]:
-        r"""Export pipeline to FORTE_EXPORT_PATH
-        FORTE_EXPORT_PATH is an environment variable
-        The pipeline is saved by :meth:`~forte.pipeline.Pipeline.save`
+        r"""Exports pipeline to FORTE_EXPORT_PATH.
+
+        FORTE_EXPORT_PATH is a directory where all serialized pipeline will be stored.
+        Users can specify through environment variable FORTE_EXPORT_PATH.
+
         This method will have the following behaviors:
-        - FORTE_EXPORT_PATH will be created if assigned but not found.
-        - If name is not provided, a default one will be used.
-        - When the pipeline is exported multiple time with default name,
-        the export name will be `pipeline-1.yml`, `pipeline-2.yml`...
-        - Raise exception if provided name is taken.
+
+            - FORTE_EXPORT_PATH will be created if assigned but not found.
+
+            - If name is not provided, a default name `pipeline` will be used
+              and suffixed by UUID, to prevent overwriting
+              (e.g. `pipeline-4ba29336-aa05-11ec-abec-309c23414763.yml`).
+
+            - If name is provided, then no suffix will be appended.
+
+            - The pipeline is saved by :meth:`~forte.pipeline.Pipeline.save`,
+              which exports the pipeline by :meth:`~forte.pipeline.Pipeline._dump_to_config`
+              and saves it to a YAML file.
 
         Args:
-            name: Export name of the pipeline. Default is `pipeline`.
+            name: Export name of the pipeline. Default is None.
 
         Returns:
             Optional[str]: Export path of pipeline config YAML.
@@ -498,8 +505,8 @@ class Pipeline(Generic[PackType]):
             if name:
                 export_name = f"{name}.yml"
             else:
-                export_name = f"pipeline-{self._export_count}.yml"
-                self._export_count += 1
+                suffix = str(uuid.uuid1())
+                export_name = f"pipeline-{suffix}.yml"
 
             export_path = os.path.join(export_path, export_name)
             if Path(export_path).exists():

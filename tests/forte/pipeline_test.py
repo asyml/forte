@@ -1518,13 +1518,9 @@ class ExportPipelineTest(unittest.TestCase):
         os.environ[self.export_env_var] = temp_export_dir.name
         export_path_1 = self.nlp.export()
         export_path_2 = self.nlp.export()
-        expected_path_1 = os.path.join(temp_export_dir.name, "pipeline-1.yml")
-        expected_path_2 = os.path.join(temp_export_dir.name, "pipeline-2.yml")
-        self.assertEqual(export_path_1, expected_path_1)
-        self.assertEqual(export_path_2, expected_path_2)
+        self.assertEqual(len(os.listdir(temp_export_dir.name)), 2)
         self.assertTrue(os.path.isfile(export_path_1))
         self.assertTrue(os.path.isfile(export_path_2))
-        self.assertEqual(len(os.listdir(temp_export_dir.name)), 2)
 
     def test_conflict_export(self):
         r"""Test conflicting pipeline exporting"""
