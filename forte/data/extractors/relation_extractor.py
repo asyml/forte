@@ -116,7 +116,7 @@ class LinkExtractor(BaseExtractor):
                 features will be extracted within its range. If None, then the
                 whole data pack will be used as the context. Default is None.
         Returns:
-
+            None
         """
 
         entry: Entry
