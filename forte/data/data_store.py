@@ -479,10 +479,29 @@ class DataStore(BaseStore):
             The previous entry of the same type as the ``tid`` entry.
         """
         raise NotImplementedError
+    
+    def _is_subclass(self, cls_name: str, cls, include_onto_file = False):
+        r"""This function gets if a string ``cls_name`` is the subclass of
+        a class, e.g. Annotation, Link or Group. If one type_name is queried
+        for multiple times, we can cache the result of its superclass and return
+        immediately.
+        Note that we accpect two types of class: the class defined in forte,
+        or the classes in user provided ontology file. A flag "include_onto_file"
+        can be configured in the function parameter.
+
+        Args:
+            cls_name (str): The fully qualified name of a class.
+
+        Returns:
+            The previous entry of the same type as the ``tid`` entry.
+        """
+        raise NotImplementedError
+            
 
     def parse_onto_file(self):
         r"""If user provides a customized ontology json file, we parse
         this file and set self._type_attributes accordingly.
+        
         """
         if self.onto_file_path is None:
             return
