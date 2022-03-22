@@ -154,9 +154,7 @@ class DataStore(BaseStore):
         # Issue #570 implements get_type_attributes()
         # see https://github.com/asyml/forte/issues/570
         if self.onto_file_path is None:
-            self._type_attributes: dict = (
-                EntryTypeGenerator.get_type_attributes()
-            )
+            self._type_attributes: dict = {}
         else:
             self.parse_onto_file()
         """
@@ -479,29 +477,10 @@ class DataStore(BaseStore):
             The previous entry of the same type as the ``tid`` entry.
         """
         raise NotImplementedError
-    
-    def _is_subclass(self, cls_name: str, cls, include_onto_file = False):
-        r"""This function gets if a string ``cls_name`` is the subclass of
-        a class, e.g. Annotation, Link or Group. If one type_name is queried
-        for multiple times, we can cache the result of its superclass and return
-        immediately.
-        Note that we accpect two types of class: the class defined in forte,
-        or the classes in user provided ontology file. A flag "include_onto_file"
-        can be configured in the function parameter.
-
-        Args:
-            cls_name (str): The fully qualified name of a class.
-
-        Returns:
-            The previous entry of the same type as the ``tid`` entry.
-        """
-        raise NotImplementedError
-            
 
     def parse_onto_file(self):
         r"""If user provides a customized ontology json file, we parse
         this file and set self._type_attributes accordingly.
-        
         """
         if self.onto_file_path is None:
             return
@@ -524,11 +503,56 @@ class DataStore(BaseStore):
                         name = attr_dict["name"]
                         attr_dic[name] = idx
                         idx += 1
-
-                    self._type_attributes[entry_name] = attr_dic
+                    entry_dic = {}
+                    entry_dic["parent"] = parent_name
+                    entry_dic["attributes"] = attr_dic
+                    self._type_attributes[entry_name] = entry_dic
             except KeyError as e:
-                    raise KeyError(
-                        str(e) + "\n"
-                        + f"Failed to parse onto file. Onto file should"
-                        + "be a json file and contains all required fields."
-                    ) from e
+                raise KeyError(
+                    str(e) + "\n"
+                    + f"Failed to parse onto file. Onto file should"
+                    + "be a json file and contains all required fields."
+                ) from e
+
+    def _get_entry_attributes_by_class(self, input_entry_class_name: str) -> list:
+        """Get type attributes by class name. `input_entry_class_name` should be
+        a fully qualified name of an entry class.
+
+        The `dataclass` module<https://docs.python.org/3/library/dataclasses.html> can add
+        generated special methods to user-defined classes. There is an in-built function
+        called `__dataclass_fields__` that is called on the class object, and it returns
+        all the fields the class contains.
+
+        .. note::
+
+            This function is only applicable to classes decorated as Python
+            `dataclass` since it relies on the `__dataclass_fields__` to find out the attributes.
+
+
+        Args:
+            input_entry_class_name: A fully qualified name of an entry class.
+
+        Returns:
+            A list of attributes corresponding to the input class.
+
+        For example, for Sentence we want to get a list of
+        ["speaker", "part_id", "sentiment", "classification", "classifications"].
+        The solution looks like the following:
+
+        .. code-block:: python
+
+            # input can be a string
+            entry_name = "ft.onto.base_ontology.Sentence"
+
+            # function signature
+            get_entry_attributes_by_class(entry_name)
+
+            # return
+            # ["speaker", "part_id", "sentiment", "classification", "classifications"]
+
+        """
+        class_ = get_class(input_entry_class_name)
+        try:
+            return list(class_.__dataclass_fields__.keys())
+        except AttributeError:
+            return []
