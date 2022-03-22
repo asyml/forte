@@ -82,8 +82,10 @@ class StaveMultiDocSqlReader(MultiPackDeserializerBase):
     users of this project need to make sure the classes correspond to the
     ontology are in place.
 
-    Note: Stave is a annotation interface built on Forte's format:
-     - https://github.com/asyml/stave
+    .. note::
+
+        Stave is a annotation interface built on Forte's format:
+        - https://github.com/asyml/stave
     """
 
     def initialize(self, resources: Resources, configs: Config):
@@ -189,8 +191,10 @@ class StaveDataPackSqlReader(PackReader):
         })
 
 
-    Note: Stave is a annotation interface built on Forte's format:
-     - https://github.com/asyml/stave
+    .. note::
+
+        Stave is a annotation interface built on Forte's format:
+        - https://github.com/asyml/stave
     """
 
     def initialize(self, resources: Resources, configs: Config):

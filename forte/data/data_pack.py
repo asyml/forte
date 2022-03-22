@@ -122,7 +122,7 @@ def as_sorted_error_check(entries: List[EntryType]) -> SortedList:
     """
     Given a list of entries, return a sorted list of it. If unknown entry
     classes are seen during this process,
-    a :class:`~forte.common.UnknownOntologyClassException` exception will be
+    a :class:`~forte.common.exception.UnknownOntologyClassException` exception will be
     thrown.
 
     Args:
@@ -147,7 +147,7 @@ def as_sorted_error_check(entries: List[EntryType]) -> SortedList:
 
 class DataPack(BasePack[Entry, Link, Group]):
     # pylint: disable=too-many-public-methods, unused-private-member
-    r"""A :class:`DataPack` contains a piece of natural language text and a
+    r"""A :class:`~forte.data.data_pack.DataPack` contains a piece of natural language text and a
     collection of NLP entries (annotations, links, and groups). The natural
     language text could be a document, paragraph or in any other granularity.
 
@@ -435,7 +435,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         ) = data_utils_io.modify_text_and_track_ops(text, span_ops)
 
     def set_audio(self, audio: np.ndarray, sample_rate: int):
-        r"""Set the audio payload and sample rate of the :class:`DataPack`
+        r"""Set the audio payload and sample rate of the :class:`~forte.data.data_pack.DataPack`
         object.
 
         Args:
@@ -446,11 +446,11 @@ class DataPack(BasePack[Entry, Link, Group]):
         self.set_meta(sample_rate=sample_rate)
 
     def get_original_text(self):
-        r"""Get original unmodified text from the :class:`DataPack` object.
+        r"""Get original unmodified text from the :class:`~forte.data.data_pack.DataPack` object.
 
         Returns:
             Original text after applying the `replace_back_operations` of
-            :class:`DataPack` object to the modified text
+            :class:`~forte.data.data_pack.DataPack` object to the modified text
         """
         original_text, _, _, _ = data_utils_io.modify_text_and_track_ops(
             self._text, self.__replace_back_operations
@@ -464,20 +464,24 @@ class DataPack(BasePack[Entry, Link, Group]):
         given span of the processed text.
 
         Args:
-            input_processed_span: Span of the processed text for which the
-            corresponding span of the original text is desired
-            align_mode: The strictness criteria for alignment in the ambiguous
-            cases, that is, if a part of input_processed_span spans a part
-            of the inserted span, then align_mode controls whether to use the
-            span fully or ignore it completely according to the following
-            possible values
 
-            - "strict" - do not allow ambiguous input, give ValueError
-            - "relaxed" - consider spans on both sides
-            - "forward" - align looking forward, that is, ignore the span
-            towards the left, but consider the span towards the right
-            - "backward" - align looking backwards, that is, ignore the span
-            towards the right, but consider the span towards the left
+            input_processed_span (Span): Span of the processed text for which
+                the corresponding span of the original text is desired.
+            align_mode (bool): The strictness criteria for alignment in the
+                ambiguous cases, that is, if a part of input_processed_span
+                spans a part of the inserted span, then align_mode controls
+                whether to use the span fully or ignore it completely according
+                to the following possible values:
+
+                    - "strict" - do not allow ambiguous input, give ValueError.
+                    - "relaxed" - consider spans on both sides.
+                    - "forward" - align looking forward, that is, ignore the
+                      span towards the left, but consider the span towards
+                      the right.
+                    - "backward" - align looking backwards, that is, ignore the
+                      span towards the right, but consider the span towards the
+                      left.
+
 
         Returns:
             Span of the original text that aligns with input_processed_span
@@ -498,6 +502,8 @@ class DataPack(BasePack[Entry, Link, Group]):
               processed spans and their corresponding original spans, would look
               like - [(o-pr1, m-pr1), (o-pr2, m-pr2)]
 
+        .. code-block:: python
+
             >> data_pack = DataPack()
             >> original_text = "He plays in the park"
             >> data_pack.set_text(original_text,\
@@ -508,6 +514,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             >> orig_span = data_pack.get_original_span(input_processed_span)
             >> data_pack.get_original_text()[orig_span.begin: orig_span.end]
             "He plays"
+
         """
         assert align_mode in ["relaxed", "strict", "backward", "forward"]
 
@@ -594,7 +601,7 @@ class DataPack(BasePack[Entry, Link, Group]):
     ) -> "DataPack":
         """
         Deserialize a Data Pack from a string. This internally calls the
-        internal :meth:`~forte.data.base_pack.BasePack._deserialize` function
+        internal :meth:`~forte.data.base_pack.BasePack._deserialize()` function
         from :class:`~forte.data.base_pack.BasePack`.
 
         Args:
@@ -613,7 +620,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
     def _add_entry(self, entry: EntryType) -> EntryType:
         r"""Force add an :class:`~forte.data.ontology.core.Entry` object to the
-        :class:`DataPack` object. Allow duplicate entries in a pack.
+        :class:`~forte.data.data_pack.DataPack` object. Allow duplicate entries in a pack.
 
         Args:
             entry (Entry): An :class:`~forte.data.ontology.core.Entry`
@@ -631,7 +638,8 @@ class DataPack(BasePack[Entry, Link, Group]):
         object to the :class:`~forte.data.DataPack` object.
 
         Args:
-            entry (Entry): An :class:`Entry` object to be added to the datapack.
+            entry (Entry): An :class:`~forte.data.ontology.core.Entry` object
+                to be added to the datapack.
             allow_duplicate (bool): Whether we allow duplicate in the datapack.
 
         Returns:
@@ -700,7 +708,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
     def delete_entry(self, entry: EntryType):
         r"""Delete an :class:`~forte.data.ontology.core.Entry` object from the
-        :class:`DataPack`. This find out the entry in the index and remove it
+        :class:`~forte.data.data_pack.DataPack`. This find out the entry in the index and remove it
         from the index. Note that entries will only appear in the index if
         `add_entry` (or _add_entry_with_check) is called.
 
@@ -773,8 +781,9 @@ class DataPack(BasePack[Entry, Link, Group]):
         default data fields and specific data fields by `"request"`.
 
         Annotation-specific data fields means:
-        - `"text"` for ``Type[Annotation]``
-        - `"audio"` for ``Type[AudioAnnotation]``
+
+            - `"text"` for ``Type[Annotation]``
+            - `"audio"` for ``Type[AudioAnnotation]``
 
         Currently, we do not support Groups and Generics in the request.
 
@@ -797,11 +806,13 @@ class DataPack(BasePack[Entry, Link, Group]):
         Args:
             context_type (Union[str, Type[Annotation], Type[AudioAnnotation]]):
                 The granularity of the data context, which
-                could be any ``Annotation`` or ``AudioAnnotation`` type.
+                could be any :class:`~forte.data.ontology.top.Annotation` or
+                :class:`~forte.data.ontology.top.AudioAnnotation` type.
                 Behaviors under different context_type varies:
 
-                - str type will be converted into either ``Annotation`` type or
-                  ``AudioAnnotation`` type.
+                - str type will be converted into either
+                  :class:`~forte.data.ontology.top.Annotation` type or
+                  :class:`~forte.data.ontology.top.AudioAnnotation` type.
                 - ``Type[Annotation]``: the default data field for getting
                   context data is :attr:`text`. This function iterates
                   :attr:`all_annotations` to search target entry data.
@@ -903,7 +914,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             Args:
                 c_type (Union[Type[Annotation], Type[AudioAnnotation]]):
                     The granularity of the data context, which
-                    could be any ``Annotation`` type.
+                    could be any :class:`~forte.data.ontology.top.Annotation` type.
 
             Raises:
                 NotImplementedError: raised when the given context type is
@@ -933,7 +944,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             Args:
                 c_type (Union[Type[Annotation], Type[AudioAnnotation]]):
                     The granularity of the data context, which
-                    could be any ``Annotation`` type.
+                    could be any :class:`~forte.data.ontology.top.Annotation` type.
                 context (Union[Annotation, AudioAnnotation]): context that
                     contains data to be extracted.
 
@@ -1204,9 +1215,9 @@ class DataPack(BasePack[Entry, Link, Group]):
     ):
         """
         User can call this function to build coverage index for specific types.
-          The index provide a in-memory mapping from entries of `context_type`
-          to the entries "covered" by it.
-          See :class:`forte.data.data_pack.DataIndex` for more details.
+        The index provide a in-memory mapping from entries of `context_type`
+        to the entries "covered" by it.
+        See :class:`forte.data.data_pack.DataIndex` for more details.
 
         Args:
             context_type: The context/covering type.
@@ -1247,7 +1258,8 @@ class DataPack(BasePack[Entry, Link, Group]):
         """
         Iterate the entries of the provided type within or fulfill the
         constraints of the `range_annotation`. The constraint is True if
-        an entry is `in_span` or `in_audio_span` of the provided
+        an entry is :meth:`~forte.data.data_pack.DataIndex.in_span` or
+        :meth:`~forte.data.data_pack.DataIndex.in_audio_span` of the provided
         `range_annotation`.
 
         Internally, if the coverage index between the entry type and the
@@ -1349,24 +1361,29 @@ class DataPack(BasePack[Entry, Link, Group]):
         Depending on the provided arguments, the function will perform several
         different filtering of the returned data.
 
-        The `entry_type` is mandatory, where all the entries matching this type
+        The ``entry_type`` is mandatory, where all the entries matching this
+        type
         will be returned. The sub-types of the provided entry type will be
-        also returned if `include_sub_type` is set to True (which is the
+        also returned if ``include_sub_type`` is set to True (which is the
         default behavior).
 
-        The `range_annotation` controls the search area of the sub-types. An
-        entry `E` will be returned if :meth:`in_span(E, range_annotation:
-        Annotation)` or :meth:`in_audio_span(E, range_annotation:
-        AudioAnnotation)` returns True. If this function is called frequently
-        with queries related to the `range_annotation`, please consider to build
+        The ``range_annotation`` controls the search area of the sub-types. An
+        entry `E` will be returned if
+        :meth:`~forte.data.data_pack.DataIndex.in_span` or
+        :meth:`~forte.data.data_pack.DataIndex.in_audio_span` returns True.
+        If this function is called frequently
+        with queries related to the ``range_annotation``, please consider to
+        build
         the coverage index regarding the related entry types. User can call
-        :meth:`build_coverage_for(context_type, covered_type)` in order to build
+        :meth:`build_coverage_for(context_type, covered_type)` in order to
+        build
         a mapping between a pair of entry types and target entries that are
         covered in ranges specified by outer entries.
 
-        The `components` list will filter the results by the `component` (i.e
-        the creator of the entry). If `components` is provided, only the entries
-        created by one of the `components` will be returned.
+        The ``components`` list will filter the results by the `component` (i.e
+        the creator of the entry). If ``components`` is provided, only the
+        entries
+        created by one of the ``components`` will be returned.
 
         Example:
 
@@ -1383,7 +1400,8 @@ class DataPack(BasePack[Entry, Link, Group]):
 
             In the above code snippet, we get entries of type ``Token`` within
             each ``sentence`` which were generated by ``NLTKTokenizer``. You
-            can consider build coverage index between `Token` and `Sentence`
+            can consider build coverage index between ``Token`` and
+            ``Sentence``
             if this snippet is frequently used:
 
                 .. code-block:: python
@@ -1400,8 +1418,8 @@ class DataPack(BasePack[Entry, Link, Group]):
         Args:
             entry_type (type): The type of entries requested.
             range_annotation (Annotation, `AudioAnnotation`, optional): The
-                range of entries requested. If `None`, will return valid entries
-                in the range of whole data pack.
+                range of entries requested. If `None`, will return valid
+                entries in the range of whole data pack.
             components (str or list, optional): The component (creator)
                 generating the entries requested. If `None`, will return valid
                 entries generated by any component.
@@ -1438,7 +1456,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             yield from []
             return
 
-        # If the `entry_type` and `range_annotation` are for different types of
+        # If the ``entry_type`` and `range_annotation` are for different types of
         # payload, then we yield from an empty list with a warning.
         if (
             require_annotations(Annotation)
@@ -1448,7 +1466,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             and isinstance(range_annotation, Annotation)
         ):
             logger.warning(
-                "Incompatible combination of `entry_type` and "
+                "Incompatible combination of ``entry_type`` and "
                 "`range_annotation` found in the input of `DataPack.get()`"
                 " method. An empty iterator will be returned when inputs "
                 "contain multi-media entries. Please double check the input "
@@ -1511,7 +1529,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
 
 class DataIndex(BaseIndex):
-    r"""A set of indexes used in :class:`DataPack`, note that this class is
+    r"""A set of indexes used in :class:`~forte.data.data_pack.DataPack`, note that this class is
     used by the `DataPack` internally.
 
     #. :attr:`entry_index`, the index from each tid to the corresponding entry
@@ -1528,7 +1546,7 @@ class DataIndex(BaseIndex):
        the key is a tuple of the outer entry type and the inner entry type.
        The outer entry type should be an annotation type. The value is a dict,
        where the key is the tid of the outer entry, and the value is a set of
-       `tid` that are covered by the outer entry. We say an Annotation A covers
+       ``tid`` that are covered by the outer entry. We say an Annotation A covers
        an entry E if one of the following condition is met:
        1. E is of Annotation type, and that E.begin >= A.begin, E.end <= E.end
        2. E is of Link type, and both E's parent and child node are Annotation
@@ -1591,8 +1609,9 @@ class DataIndex(BaseIndex):
             context_annotation: The context annotation to search in.
             inner_type: The inner type to be searched for.
 
-        Returns: Entry ID of type `inner_type` that is covered by
-          `context_annotation`.
+        Returns:
+            Entry ID of type `inner_type` that is covered by
+            `context_annotation`.
         """
         context_type = context_annotation.__class__
         if self.coverage_index(context_type, inner_type) is None:
@@ -1707,24 +1726,27 @@ class DataIndex(BaseIndex):
 
         Link entries: if the parent and child of the links are both
         `Annotation` type, this link will be considered in span if both parent
-        and child are `in_span` of the provided `span`. If either the parent and
+        and child are :meth:`~forte.data.data_pack.DataIndex.in_span` of the
+        provided `span`. If either the parent and
         the child is not of type `Annotation`, this function will always return
         `False`.
 
         Group entries: if the child type of the group is `Annotation` type,
         then the group will be considered in span if all the elements are
-        `in_span` of the provided `span`. If the child type is not `Annotation`
+        :meth:`~forte.data.data_pack.DataIndex.in_span` of the provided `span`.
+        If the child type is not `Annotation`
         type, this function will always return `False`.
 
         Other entries (i.e Generics and `AudioAnnotation`): they will not be
-        considered `in_span` of any spans. The function will always return
+        considered :meth:`~forte.data.data_pack.DataIndex.in_span` of any
+        spans. The function will always return
         `False`.
 
         Args:
             inner_entry (int or Entry): The inner entry object to be checked
              whether it is within ``span``. The argument can be the entry id
              or the entry object itself.
-            span (Span): A :class:`Span` object to be checked. We will check
+            span (Span): A :class:`~forte.data.span.Span` object to be checked. We will check
                 whether the ``inner_entry`` is within this span.
 
         Returns:
@@ -1782,7 +1804,9 @@ class DataIndex(BaseIndex):
 
     def in_audio_span(self, inner_entry: Union[int, Entry], span: Span) -> bool:
         r"""Check whether the ``inner entry`` is within the given audio span.
-        This method is identical to :meth:`in_span` except that it operates on
+        This method is identical to
+        :meth::meth:`~forte.data.data_pack.DataIndex.in_span` except that it
+        operates on
         the audio payload of datapack. The criterion are as followed:
 
         `AudioAnnotation` entries: they are considered in a span if the
@@ -1791,24 +1815,29 @@ class DataIndex(BaseIndex):
 
         Link entries: if the parent and child of the links are both
         `AudioAnnotation` type, this link will be considered in span if both
-        parent and child are `in_span` of the provided `span`. If either the
+        parent and child are :meth:`~forte.data.data_pack.DataIndex.in_span` of
+        the provided `span`. If either the
         parent and the child is not of type `AudioAnnotation`, this function
         will always return `False`.
 
-        Group entries: if the child type of the group is `AudioAnnotation` type,
+        Group entries: if the child type of the group is `AudioAnnotation`
+        type,
         then the group will be considered in span if all the elements are
-        `in_span` of the provided `span`. If the child type is not
+        :meth:`~forte.data.data_pack.DataIndex.in_span` of the provided `span`.
+        If the child type is not
         `AudioAnnotation` type, this function will always return `False`.
 
-        Other entries (i.e Generics and Annotation): they will not be considered
-        `in_span` of any spans. The function will always return `False`.
+        Other entries (i.e Generics and Annotation): they will not be
+        considered
+        :meth:`~forte.data.data_pack.DataIndex.in_span` of any spans. The
+        function will always return `False`.
 
         Args:
             inner_entry (int or Entry): The inner entry object to be checked
-             whether it is within ``span``. The argument can be the entry id
-             or the entry object itself.
-            span (Span): A :class:`Span` object to be checked. We will check
-                whether the ``inner_entry`` is within this span.
+                whether it is within ``span``. The argument can be the entry id
+                or the entry object itself.
+            span (Span): A :class:`~forte.data.span.Span` object to be checked.
+                We will check whether the ``inner_entry`` is within this span.
 
         Returns:
             True if the `inner_entry` is considered to be in span of the
