@@ -43,19 +43,19 @@ Data Augmentation Processors
 
 
 
-:hidden:`RandomSwapDataAugmentProcessor`
+:hidden:`RandomSwapDataAugmentOp`
 ---------------------------------------------
-.. autoclass:: forte.processors.data_augment.algorithms.eda_processors.RandomSwapDataAugmentProcessor
+.. autoclass:: forte.processors.data_augment.algorithms.eda_ops.RandomSwapDataAugmentOp
     :members:
 
-:hidden:`RandomInsertionDataAugmentProcessor`
+:hidden:`RandomInsertionDataAugmentOp`
 ---------------------------------------------
-.. autoclass:: forte.processors.data_augment.algorithms.eda_processors.RandomInsertionDataAugmentProcessor
+.. autoclass:: forte.processors.data_augment.algorithms.eda_ops.RandomInsertionDataAugmentOp
     :members:
 
-:hidden:`RandomDeletionDataAugmentProcessor`
+:hidden:`RandomDeletionDataAugmentOp`
 ---------------------------------------------
-.. autoclass:: forte.processors.data_augment.algorithms.eda_processors.RandomDeletionDataAugmentProcessor
+.. autoclass:: forte.processors.data_augment.algorithms.eda_ops.RandomDeletionDataAugmentOp
     :members:
 
 

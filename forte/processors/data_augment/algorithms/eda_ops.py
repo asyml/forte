@@ -22,19 +22,17 @@ implemented based on the ReplacementDataAugmentProcessor.
 from math import ceil
 import random
 from typing import List, Dict, Iterable
-
-from forte.common.configuration import Config
-from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
-from forte.data.multi_pack import MultiPack
 from forte.data.ontology import Annotation
-from forte.processors.data_augment import ReplacementDataAugmentProcessor
+from forte.processors.data_augment.algorithms.base_data_augmentation_op import (
+    BaseDataAugmentationOp,
+)
 from forte.utils.utils import get_class, create_class_with_kwargs
 
 __all__ = [
-    "RandomSwapDataAugmentProcessor",
-    "RandomInsertionDataAugmentProcessor",
-    "RandomDeletionDataAugmentProcessor",
+    "RandomSwapDataAugmentOp",
+    "RandomInsertionDataAugmentOp",
+    "RandomDeletionDataAugmentOp",
 ]
 
 english_stopwords = [
@@ -220,14 +218,14 @@ english_stopwords = [
 ]
 
 
-class RandomSwapDataAugmentProcessor(ReplacementDataAugmentProcessor):
+class RandomSwapDataAugmentOp(BaseDataAugmentationOp):
     r"""
     Data augmentation processor for the Random Swap operation.
     Randomly choose two words in the sentence and swap their positions.
     Do this n times, where n = alpha * input length.
     """
 
-    def _augment(self, input_pack: MultiPack, aug_pack_names: List[str]):
+    def augment(self, data_pack: DataPack) -> bool:
         augment_entry = get_class(self.configs["augment_entry"])
         if not issubclass(augment_entry, Annotation):
             raise ValueError(
@@ -235,38 +233,43 @@ class RandomSwapDataAugmentProcessor(ReplacementDataAugmentProcessor):
                 f"'forte.data.ontology.top.Annotation' type, "
                 f"but {self.configs['augment_entry']} is not."
             )
-        for pack_name in aug_pack_names:
-            data_pack: DataPack = input_pack.get_pack(pack_name)
+
+        try:
             annotations: List[Annotation] = list(data_pack.get(augment_entry))
             if len(annotations) > 0:
                 replace_map: Dict = {}
-                for _ in range(ceil(self.configs["alpha"] * len(annotations))):
-                    swap_idx = random.sample(range(len(annotations)), 2)
-                    new_idx_0 = (
-                        swap_idx[1]
-                        if swap_idx[1] not in replace_map
-                        else replace_map[swap_idx[1]]
-                    )
-                    new_idx_1 = (
-                        swap_idx[0]
-                        if swap_idx[0] not in replace_map
-                        else replace_map[swap_idx[0]]
-                    )
-                    replace_map[swap_idx[0]] = new_idx_0
-                    replace_map[swap_idx[1]] = new_idx_1
-                pid: int = data_pack.pack_id
-                for idx, replace_target in replace_map.items():
-                    self._replaced_annos[pid].add(
-                        (
-                            annotations[idx].span,
-                            annotations[replace_target].text,
-                        )
-                    )
+            for _ in range(ceil(self.configs["alpha"] * len(annotations))):
+                swap_idx = random.sample(range(len(annotations)), 2)
+                new_idx_0 = (
+                    swap_idx[1]
+                    if swap_idx[1] not in replace_map
+                    else replace_map[swap_idx[1]]
+                )
+                new_idx_1 = (
+                    swap_idx[0]
+                    if swap_idx[0] not in replace_map
+                    else replace_map[swap_idx[0]]
+                )
+                replace_map[swap_idx[0]] = new_idx_0
+                replace_map[swap_idx[1]] = new_idx_1
+
+            for idx, replace_target in replace_map.items():
+                self.replace_annotations(
+                    annotations[idx], annotations[replace_target].text
+                )
+            return True
+        except ValueError:
+            return False
 
     @classmethod
     def default_configs(cls):
         """
         Additional keys for Random Swap:
+
+            - augment_entry (str):
+                Defines the entry the processor will augment.
+                It should be a full qualified name of the entry class.
+                For example, "ft.onto.base_ontology.Sentence".
 
             - alpha: 0 <= alpha <= 1. indicates the percent of the words
               in a sentence that are changed. The processor will perform
@@ -279,19 +282,14 @@ class RandomSwapDataAugmentProcessor(ReplacementDataAugmentProcessor):
         return {
             "augment_entry": "ft.onto.base_ontology.Token",
             "other_entry_policy": {
-                # to use Texar hyperparams 'kwargs' must
-                # accompany with 'type'
                 "ft.onto.base_ontology.Document": "auto_align",
                 "ft.onto.base_ontology.Sentence": "auto_align",
             },
             "alpha": 0.1,
-            "augment_pack_names": {
-                "input_src": "augmented_input_src",
-            },
         }
 
 
-class RandomInsertionDataAugmentProcessor(ReplacementDataAugmentProcessor):
+class RandomInsertionDataAugmentOp(BaseDataAugmentationOp):
     r"""
     Data augmentation processor for the Random Insertion operation.
     Find a random synonym of a random word in the sentence that is
@@ -299,42 +297,52 @@ class RandomInsertionDataAugmentProcessor(ReplacementDataAugmentProcessor):
     the sentence. Do this n times, where n = alpha * input length.
     """
 
-    def initialize(self, resources: Resources, configs: Config):
-        super().initialize(resources, configs)
-        # pylint: disable=attribute-defined-outside-init
-        self.stopwords = set(configs["stopwords"])
+    def augment(self, data_pack: DataPack) -> bool:
 
-    def _augment(self, input_pack: MultiPack, aug_pack_names: List[str]):
         replacement_op = create_class_with_kwargs(
-            self.configs["data_aug_op"],
-            class_args={"configs": self.configs["data_aug_op_config"]},
+            self.configs["insertion_op"],
+            class_args={"configs": self.configs["insertion_op_config"]},
         )
         augment_entry = get_class(self.configs["augment_entry"])
 
-        for pack_name in aug_pack_names:
-            data_pack: DataPack = input_pack.get_pack(pack_name)
-            annotations: List[Annotation] = []
-            pos = [0]
+        annotations: List[Annotation] = []
+        pos = [0]
+        try:
             annos: Iterable[Annotation] = data_pack.get(augment_entry)
             for anno in annos:
-                if anno.text not in self.stopwords:
+                if anno.text not in set(self.configs["stopwords"]):
                     annotations.append(anno)
                     pos.append(anno.end)
             if len(annotations) > 0:
                 for _ in range(ceil(self.configs["alpha"] * len(annotations))):
                     src_anno = random.choice(annotations)
-                    _, replaced_text = replacement_op.replace(src_anno)
+                    _, replaced_text = replacement_op.single_token_augment(
+                        src_anno
+                    )
                     insert_pos = random.choice(pos)
                     if insert_pos > 0:
                         replaced_text = " " + replaced_text
                     else:
                         replaced_text = replaced_text + " "
-                    self._insert(replaced_text, data_pack, insert_pos)
+                    self.insert_annotated_span(
+                        replaced_text,
+                        data_pack,
+                        insert_pos,
+                        self.configs["augment_entry"],
+                    )
+            return True
+        except ValueError:
+            return False
 
     @classmethod
     def default_configs(cls):
         """
         Additional keys for Random Swap:
+
+        - augment_entry (str):
+            Defines the entry the processor will augment.
+            It should be a full qualified name of the entry class.
+            For example, "ft.onto.base_ontology.Sentence".
 
         - alpha: 0 <= alpha <= 1. indicates the percent of the words
           in a sentence that are changed. The processor will perform
@@ -348,49 +356,44 @@ class RandomInsertionDataAugmentProcessor(ReplacementDataAugmentProcessor):
             By default, we use Dictionary Replacement with Wordnet to get
             synonyms to insert.
         """
-        config = super().default_configs()
-        config.update(
-            {
-                "augment_entry": "ft.onto.base_ontology.Token",
-                "other_entry_policy": {
-                    "ft.onto.base_ontology.Document": "auto_align",
-                    "ft.onto.base_ontology.Sentence": "auto_align",
-                },
-                "data_aug_op": "forte.processors.data_augment.algorithms."
-                "dictionary_replacement_op.DictionaryReplacementOp",
-                "data_aug_op_config": {
-                    "dictionary_class": (
-                        "forte.processors.data_augment."
-                        "algorithms.dictionary.WordnetDictionary"
-                    ),
-                    "prob": 1.0,
-                    "lang": "eng",
-                },
-                "alpha": 0.1,
-                "augment_pack_names": {
-                    "input_src": "augmented_input_src",
-                },
-                "stopwords": english_stopwords,
-            }
-        )
-        return config
+        return {
+            "augment_entry": "ft.onto.base_ontology.Token",
+            "other_entry_policy": {
+                "ft.onto.base_ontology.Document": "auto_align",
+                "ft.onto.base_ontology.Sentence": "auto_align",
+            },
+            "insertion_op": "forte.processors.data_augment.algorithms."
+            "dictionary_replacement_op.DictionaryReplacementOp",
+            "insertion_op_config": {
+                "dictionary_class": (
+                    "forte.processors.data_augment."
+                    "algorithms.dictionary.WordnetDictionary"
+                ),
+                "prob": 1.0,
+                "lang": "eng",
+            },
+            "alpha": 0.1,
+            "stopwords": english_stopwords,
+        }
 
 
-class RandomDeletionDataAugmentProcessor(ReplacementDataAugmentProcessor):
+class RandomDeletionDataAugmentOp(BaseDataAugmentationOp):
     r"""
     Data augmentation processor for the Random Insertion operation.
     Randomly remove each word in the sentence with probability alpha.
     """
 
-    def _augment(self, input_pack: MultiPack, aug_pack_names: List[str]):
+    def augment(self, data_pack: DataPack) -> bool:
         augment_entry = get_class(self.configs["augment_entry"])
 
-        for pack_name in aug_pack_names:
-            data_pack: DataPack = input_pack.get_pack(pack_name)
+        try:
             anno: Annotation
             for anno in data_pack.get(augment_entry):
                 if random.random() < self.configs["alpha"]:
-                    self._delete(anno)
+                    self.delete_annotation(anno)
+            return True
+        except ValueError:
+            return False
 
     @classmethod
     def default_configs(cls):
@@ -398,21 +401,19 @@ class RandomDeletionDataAugmentProcessor(ReplacementDataAugmentProcessor):
         Returns:
             A dictionary with the default config for this processor.
             Additional keys for Random Deletion:
+
+            - augment_entry (str):
+                Defines the entry the processor will augment.
+                It should be a full qualified name of the entry class.
+                For example, "ft.onto.base_ontology.Sentence".
+
             - alpha: 0 <= alpha <= 1. The probability to delete each word.
         """
-        config = super().default_configs()
-        config.update(
-            {
-                "augment_entry": "ft.onto.base_ontology.Token",
-                "other_entry_policy": {
-                    "ft.onto.base_ontology.Document": "auto_align",
-                    "ft.onto.base_ontology.Sentence": "auto_align",
-                },
-                "data_aug_op_config": {},
-                "alpha": 0.1,
-                "augment_pack_names": {
-                    "input_src": "augmented_input_src",
-                },
-            }
-        )
-        return config
+        return {
+            "augment_entry": "ft.onto.base_ontology.Token",
+            "other_entry_policy": {
+                "ft.onto.base_ontology.Document": "auto_align",
+                "ft.onto.base_ontology.Sentence": "auto_align",
+            },
+            "alpha": 0.1,
+        }
