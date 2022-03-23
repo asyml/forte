@@ -11,5 +11,6 @@ TID_INDEX = 2
 # The index storing entry type in the internal entry data of DataStore.
 ENTRY_TYPE_INDEX = 3
 
-# The index storing entry index (specific to Link and Group type) in the internal entry data of DataStore.
+# The index storing entry index (specific to Link and Group type) in the internal
+# entry data of DataStore.
 ENTRY_INDEX_INDEX = -1
