@@ -45,6 +45,7 @@ class ParentDataAugmentProcessor(MultiPackProcessor, ABC):
     will run the algorithms and the processor will create Forte
     data structures based on the augmented inputs.
     """
+    pass
 
 
 class BaseDataAugmentOpProcessor(ParentDataAugmentProcessor):
@@ -52,16 +53,18 @@ class BaseDataAugmentOpProcessor(ParentDataAugmentProcessor):
     This is a Base Data Augmentation Op Processor that instantiates
     data augmentation ops into Forte Data Structures to be used. It can
     handle augmentations of multiple ontologies simultaneously and copy
-    all existing tokens from source data pack to augmented data pack.
+    all existing ontologies (Forte data structures) that are a part of
+    the other entry policy configuration from source data pack
+    to augmented data pack.
     """
 
     def __init__(self):
         super().__init__()
 
-        # :attr:`new_data_packs`: {datapack id: datapack}
+        # :attr:`_new_data_packs`: {datapack id: datapack}
         # It records the mapping from the original data pack
         # to the augmented data pack
-        self.new_data_packs: DefaultDict[int, DataPack] = defaultdict()
+        self._new_data_packs: DefaultDict[int, DataPack] = defaultdict()
 
         # :attr:`_data_pack_map`: {orig pack id: new pack id}
         # It maintains a mapping from the pack id
@@ -186,12 +189,12 @@ class BaseDataAugmentOpProcessor(ParentDataAugmentProcessor):
                 augmented_data_pack = self.replacement_op.perform_augmentation(
                     data_pack
                 )
-                self.new_data_packs[data_pack.pack_id] = augmented_data_pack
+                self._new_data_packs[data_pack.pack_id] = augmented_data_pack
 
             (
                 self._data_pack_map,
                 self._entry_maps,
-            ) = self.replacement_op.get_maps()
+            ) = self.replacement_op._get_maps()
             return True
         except ValueError:
             return False
@@ -227,7 +230,7 @@ class BaseDataAugmentOpProcessor(ParentDataAugmentProcessor):
             data_pack = input_pack.get_pack(aug_pack_name)
 
             new_packs.append(
-                (new_pack_name, self.new_data_packs[data_pack.pack_id])
+                (new_pack_name, self._new_data_packs[data_pack.pack_id])
             )
 
         for new_pack_name, new_pack in new_packs:
