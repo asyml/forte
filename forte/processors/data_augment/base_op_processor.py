@@ -194,7 +194,7 @@ class BaseDataAugmentOpProcessor(ParentDataAugmentProcessor):
             (
                 self._data_pack_map,
                 self._entry_maps,
-            ) = self.replacement_op._get_maps()
+            ) = self.replacement_op.get_maps()
             return True
         except ValueError:
             return False

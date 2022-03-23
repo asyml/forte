@@ -770,7 +770,7 @@ class BaseDataAugmentationOp(Configurable):
         self._data_pack_map.clear()
         self._entry_maps.clear()
 
-    def _get_maps(self) -> Tuple[Dict[int, int], Dict[int, Dict[int, int]]]:
+    def get_maps(self) -> Tuple[Dict[int, int], Dict[int, Dict[int, int]]]:
         r"""
         This function simply returns the produced data pack
         and entry maps after augmentation.
