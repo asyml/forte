@@ -18,7 +18,6 @@ import json
 
 from forte.utils import get_class
 from forte.data.base_store import BaseStore
-from forte.data.entry_type_generator import EntryTypeGenerator
 
 __all__ = ["DataStore"]
 
@@ -509,12 +508,15 @@ class DataStore(BaseStore):
                     self._type_attributes[entry_name] = entry_dic
             except KeyError as e:
                 raise KeyError(
-                    str(e) + "\n"
+                    str(e)
+                    + "\n"
                     + f"Failed to parse onto file. Onto file should"
                     + "be a json file and contains all required fields."
                 ) from e
 
-    def _get_entry_attributes_by_class(self, input_entry_class_name: str) -> list:
+    def _get_entry_attributes_by_class(
+        self, input_entry_class_name: str
+    ) -> list:
         """Get type attributes by class name. `input_entry_class_name` should be
         a fully qualified name of an entry class.
 
