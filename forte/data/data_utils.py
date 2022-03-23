@@ -204,6 +204,15 @@ def _download_from_google_drive(
         response = requests.get(gurl, params=params, stream=True)
         num_retries -= 1
     if response.status_code != 200:
+        logging.error(
+            "Failed to download %s because of invalid response "
+            "from %s: status_code='%d' reason='%s' content=%s",
+            filename,
+            response.url,
+            response.status_code,
+            response.reason,
+            response.content,
+        )
         raise HTTPError(response=response)
 
     filepath = os.path.join(path, filename)

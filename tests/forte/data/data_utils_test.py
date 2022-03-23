@@ -49,10 +49,8 @@ class DataUtilsTest(unittest.TestCase):
         except HTTPError as e:
             if e.response.status_code != 403:
                 raise e
-            logger.error(
-                "Skipping HTTPError from %s: %d %s %s", e.response.url,
-                e.response.status_code, e.response.reason, e.response.content,
-                exc_info=True
+            logger.warning(
+                "Skipping HTTPError from %s", e.response.url, exc_info=True
             )
             return
         path = Path(self.test_path)
