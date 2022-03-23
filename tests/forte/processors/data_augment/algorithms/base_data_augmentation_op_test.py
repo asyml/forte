@@ -34,7 +34,7 @@ from forte.data.caster import MultiPackBoxer
 from forte.processors.misc import WhiteSpaceTokenizer
 from forte.data.selector import AllPackSelector
 from forte.processors.data_augment.base_op_processor import (
-    BaseDataAugmentOpProcessor,
+    BaseOpProcessor,
 )
 from forte.processors.data_augment.algorithms.base_data_augmentation_op import (
     BaseDataAugmentationOp,
@@ -107,7 +107,7 @@ class ReplacementAugmentTest(BaseDataAugmentationOp):
 class TestBaseOp(unittest.TestCase):
     def setUp(self) -> None:
         self.base_op = DummyAugmenter({})
-        self.base_processor = BaseDataAugmentOpProcessor()
+        self.base_processor = BaseOpProcessor()
         self.test_dir = tempfile.mkdtemp()
 
     def test_operations(self) -> None:
@@ -277,7 +277,7 @@ class TestBaseOp(unittest.TestCase):
         nlp.set_reader(reader=StringReader())
         nlp.add(component=MultiPackBoxer(), config=boxer_config)
         nlp.add(component=WhiteSpaceTokenizer(), selector=AllPackSelector())
-        nlp.add(component=BaseDataAugmentOpProcessor(), config=processor_config)
+        nlp.add(component=BaseOpProcessor(), config=processor_config)
         nlp.initialize()
 
         for idx, m_pack in enumerate(nlp.process_dataset(texts)):
@@ -369,7 +369,7 @@ class TestBaseOp(unittest.TestCase):
 
         nlp.initialize()
 
-        processor = BaseDataAugmentOpProcessor()
+        processor = BaseOpProcessor()
         # To test, initialize the processor itself.
         processor.initialize(resources=None, configs=processor_config)
 
