@@ -90,7 +90,7 @@ class NewType(Generics):
 
 
 class NothingSelector(SinglePackSelector):
-    """Select no pack from the :class:`MultiPack`"""
+    """Select no pack from the :class:`~forte.data.multi_pack.MultiPack`"""
 
     def select(self, m_pack: MultiPack) -> Iterator[DataPack]:
         yield from []

@@ -20,6 +20,7 @@ import sys
 import tarfile
 import urllib.request
 import zipfile
+import re
 from typing import List, Optional, overload, Union
 
 from forte.utils.types import PathLike
@@ -66,8 +67,8 @@ def maybe_download(
         urls: A (list of) URLs to download files.
         path: The destination path to save the files.
         filenames: A (list of) strings of the file names. If given,
-            must have the same length with :attr:`urls`. If `None`,
-            filenames are extracted from :attr:`urls`.
+            must have the same length with ``urls``. If `None`,
+            filenames are extracted from ``urls``.
         extract: Whether to extract compressed files.
 
     Returns:
@@ -178,6 +179,13 @@ def _download_from_google_drive(
         for key, value in response.cookies.items():
             if key.startswith("download_warning"):
                 return value
+        if "Google Drive - Virus scan warning" in response.text:
+            match = re.search("confirm=([0-9A-Za-z_]+)", response.text)
+            if match is None or len(match.groups()) < 1:
+                raise ValueError(
+                    "No token found in warning page from Google Drive."
+                )
+            return match.groups()[0]
         return None
 
     file_id = _extract_google_drive_file_id(url)
