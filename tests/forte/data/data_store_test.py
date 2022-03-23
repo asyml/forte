@@ -301,6 +301,17 @@ class DataStoreTest(unittest.TestCase):
         test_type_name = "ft.onto.base_ontology.Dependency"
         is_annot = self.data_store._is_annotation(test_type_name)
         self.assertEqual(is_annot, False)
+    
+    def test_add_new_type(self):
+        # initialize
+        self.data_store._type_attributes = {}
+        self.data_store._DataStore__elements = []
+
+        self.data_store._add_new_type("ft.onto.base_ontology.Document")
+        self.data_store._add_new_type("ft.onto.base_ontology.Sentence")
+        self.assertEqual(len(self.data_store._DataStore__elements), 2)
+        self.assertEqual(self.data_store._type_attributes["ft.onto.base_ontology.Sentence"], {})
+
 
     def test_next_entry(self):
         # next_ent = self.next_entry(1234)
