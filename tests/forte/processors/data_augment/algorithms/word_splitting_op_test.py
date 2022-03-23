@@ -26,10 +26,7 @@ from forte.data.multi_pack import MultiPack, DataPack
 from forte.data.readers import StringReader
 from forte.data.caster import MultiPackBoxer
 from forte.processors.misc import PeriodSentenceSplitter
-from forte.processors.data_augment.algorithms.word_splitting_processor import (
-    RandomWordSplitDataAugmentProcessor,
-)
-
+from forte.processors.data_augment.base_op_processor import BaseDataAugmentOpProcessor
 from forte.processors.base import PackProcessor
 from forte.processors.misc import WhiteSpaceTokenizer
 
@@ -140,12 +137,16 @@ class TestWordSplittingProcessor(unittest.TestCase):
         new_entities,
     ):
         entity_config = {
-            "other_entry_policy": {
-                "ft.onto.base_ontology.EntityMention": "auto_align"
+            "type": "data_augmentation_op",
+            "data_aug_op": "forte.processors.data_augment.algorithms.word_splitting_op.RandomWordSplitDataAugmentOp",
+            "data_aug_op_config": {
+                "other_entry_policy": {
+                    "ft.onto.base_ontology.EntityMention": "auto_align"
+                }
             }
         }
         self.nlp.add(
-            component=RandomWordSplitDataAugmentProcessor(),
+            component=BaseDataAugmentOpProcessor(),
             config=entity_config,
         )
         self.nlp.initialize()

@@ -25,15 +25,16 @@ import random
 from typing import List, Iterable
 
 from forte.data.data_pack import DataPack
-from forte.data.multi_pack import MultiPack
 from forte.data.ontology import Annotation
-from forte.processors.data_augment import ReplacementDataAugmentProcessor
+from forte.processors.data_augment.algorithms.base_data_augmentation_op import (
+    BaseDataAugmentationOp,
+)
 from forte.utils.utils import get_class
 
-__all__ = ["RandomWordSplitDataAugmentProcessor"]
+__all__ = ["RandomWordSplitDataAugmentOp"]
 
 
-class RandomWordSplitDataAugmentProcessor(ReplacementDataAugmentProcessor):
+class RandomWordSplitDataAugmentOp(BaseDataAugmentationOp):
     r"""
     This class creates a processor to perform Random Word Splitting.
     It randomly chooses n words in a sentence and splits each word at
@@ -41,19 +42,18 @@ class RandomWordSplitDataAugmentProcessor(ReplacementDataAugmentProcessor):
     alpha indicates the percent of the words in a sentence that are changed.
     """
 
-    def _augment(self, input_pack: MultiPack, aug_pack_names: List[str]):
+    def augment(self, data_pack: DataPack) -> bool:
         r"""
         This function splits a given word at a random position and replaces
         the original word with 2 split parts of it.
         """
         augment_entry = get_class(self.configs["augment_entry"])
 
-        for pack_name in aug_pack_names:
-            data_pack: DataPack = input_pack.get_pack(pack_name)
-            annotations: List[Annotation] = []
-            indexes: List[int] = []
-            endings = []
-            annos: Iterable[Annotation] = data_pack.get(augment_entry)
+        annotations: List[Annotation] = []
+        indexes: List[int] = []
+        endings = []
+        annos: Iterable[Annotation] = data_pack.get(augment_entry)
+        try:
             for idx, anno in enumerate(annos):
                 annotations.append(anno)
                 indexes.append(idx)
@@ -88,9 +88,23 @@ class RandomWordSplitDataAugmentProcessor(ReplacementDataAugmentProcessor):
                         second_position = endings[0]
                         word_split[1] = " " + word_split[1]
 
-                    self._insert(word_split[1], data_pack, second_position)
-                    self._delete(src_anno)
-                    self._insert(word_split[0], data_pack, first_position)
+                    self.insert_annotated_span(
+                        word_split[1],
+                        data_pack,
+                        second_position,
+                        self.configs["augment_entry"],
+                    )
+
+                    self.delete_annotation(src_anno)
+
+                    self.insert_annotated_span(
+                        word_split[0],
+                        data_pack,
+                        first_position,
+                        self.configs["augment_entry"],
+                    )
+        except ValueError:
+            return False
 
     @classmethod
     def default_configs(cls):
@@ -105,52 +119,8 @@ class RandomWordSplitDataAugmentProcessor(ReplacementDataAugmentProcessor):
                 Defines the entry the processor will augment.
                 It should be a full qualified name of the entry class.
                 For example, "ft.onto.base_ontology.Sentence".
-            - other_entry_policy (dict):
-                A dict specifying the policies for other entries.
-                The key should be a full qualified class name.
-                The policy(value of the dict) specifies how to process
-                the corresponding entries after replacement.
-                If the policy is "auto_align", the span of the entry
-                will be automatically modified according to its original
-                location. However, some spans might become invalid after
-                the augmentation, for example, the tokens within a
-                replaced sentence may disappear.
-                Annotations not in the "other_entry_policy" will not
-                be copied to the new data pack. The Links and Groups
-                will be copied as well if the annotations they are
-                attached to are copied.
-                Example:
-
-                    .. code-block:: python
-
-                        'other_entry_policy': {
-                            "ft.onto.base_ontology.Document": "auto_align",
-                            "ft.onto.base_ontology.Sentence": "auto_align",
-                        }
-            - `augment_pack_names` (dict):
-                The name of the data pack that will
-                contain the augmented text `(Default: augmented_input_src)`.
-                To update it, pass a dict of form
-                Example:
-
-                    .. code-block:: python
-
-                        'augment_pack_names': {
-                            "input_src" : "augmented_input_src",
-                        }
         """
-        config = super().default_configs()
-        config.update(
-            {
-                "augment_entry": "ft.onto.base_ontology.Token",
-                "other_entry_policy": {
-                    "ft.onto.base_ontology.Document": "auto_align",
-                    "ft.onto.base_ontology.Sentence": "auto_align",
-                },
-                "alpha": 0.1,
-                "augment_pack_names": {
-                    "input_src": "augmented_input_src",
-                },
-            }
-        )
-        return config
+        return {
+            "augment_entry": "ft.onto.base_ontology.Token",
+            "alpha": 0.1,
+        }

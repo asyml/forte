@@ -131,7 +131,7 @@ Data Augmentation Ops
 
 :hidden:`WordSplittingOp`
 ----------------------------
-.. autoclass:: forte.processors.data_augment.algorithms.word_splitting_processor.RandomWordSplitDataAugmentProcessor
+.. autoclass:: forte.processors.data_augment.algorithms.word_splitting_op.RandomWordSplitDataAugmentOp
     :members:
 
 :hidden:`BaseDataAugmentationOp`

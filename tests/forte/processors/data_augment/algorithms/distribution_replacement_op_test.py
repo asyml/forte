@@ -43,46 +43,46 @@ class TestDistributionReplacementOp(unittest.TestCase):
             "prob": 1.0,
             "sampler_config": {
                 "type": "forte.processors.data_augment.algorithms.sampler.UniformSampler",
-                "kwargs": {"sampler_data": self.word_list},
+                "sampler_data": self.word_list,
             },
         }
         replacement = DistributionReplacementOp(configs)
-        word = replacement.replace(self.token)
-        self.assertIn(word[1], self.word_list)
+        _, word = replacement.single_token_augment(self.token)
+        self.assertIn(word, self.word_list)
 
         configs = {
             "prob": 0,
             "sampler_config": {
                 "type": "forte.processors.data_augment.algorithms.sampler.UniformSampler",
-                "kwargs": {"sampler_data": self.word_list},
+                "sampler_data": self.word_list,
             },
         }
         replacement = DistributionReplacementOp(configs)
-        word = replacement.replace(self.token)
-        self.assertEqual(word[1], self.word)
+        _, word = replacement.single_token_augment(self.token)
+        self.assertEqual(word, self.word)
 
         configs = {
             "prob": 1.0,
             "sampler_config": {
                 "type": "forte.processors.data_augment.algorithms.sampler.UnigramSampler",
-                "kwargs": {"sampler_data": self.word_dict},
+                "sampler_data": self.word_dict,
             },
         }
         replacement = DistributionReplacementOp(configs)
-        word = replacement.replace(self.token)
-        self.assertIn(word[1], self.word_dict.keys())
+        _, word = replacement.single_token_augment(self.token)
+        self.assertIn(word, self.word_dict.keys())
 
         configs = {
             "prob": 0.5,
             "sampler_config": {
                 "type": "forte.processors.data_augment.algorithms.sampler.UnigramSampler",
-                "kwargs": {"sampler_data": self.word_dict},
+                "sampler_data": self.word_dict,
             },
         }
         replacement = DistributionReplacementOp(configs)
-        word = replacement.replace(self.token)
+        _, word = replacement.single_token_augment(self.token)
         possible_values = list(self.word_dict.keys()) + [self.word]
-        self.assertIn(word[1], possible_values)
+        self.assertIn(word, possible_values)
 
 
 if __name__ == "__main__":

@@ -18,8 +18,8 @@ import requests
 from forte.common.configurable import Configurable
 from forte.common.configuration import Config
 from forte.data.ontology import Annotation
-from forte.processors.data_augment.algorithms.text_replacement_op import (
-    TextReplacementOp,
+from forte.processors.data_augment.algorithms.single_token_op import (
+    SingleTokenAugmentationOp,
 )
 from forte.utils.utils import create_class_with_kwargs
 
@@ -28,7 +28,7 @@ __all__ = [
 ]
 
 
-class DistributionReplacementOp(TextReplacementOp, Configurable):
+class DistributionReplacementOp(SingleTokenAugmentationOp, Configurable):
     r"""
     This class is a replacement op to replace the input word
     with a new word that is sampled by a sampler from a distribution.
@@ -81,7 +81,7 @@ class DistributionReplacementOp(TextReplacementOp, Configurable):
         self.configs = self.make_configs(configs)
         self.cofigure_sampler()
 
-    def replace(self, input_anno: Annotation) -> Tuple[bool, str]:
+    def single_token_augment(self, input_anno: Annotation) -> Tuple[bool, str]:
         r"""
         This function replaces a word by sampling from a distribution.
 
@@ -105,10 +105,8 @@ class DistributionReplacementOp(TextReplacementOp, Configurable):
         according to the configuration values
         """
         try:
-            if "data_path" in self.configs["sampler_config"]["kwargs"].keys():
-                distribution_path = self.configs["sampler_config"]["kwargs"][
-                    "data_path"
-                ]
+            if "data_path" in self.configs["sampler_config"].keys():
+                distribution_path = self.configs["sampler_config"]["data_path"]
                 try:
                     r = requests.get(distribution_path)
                     data = r.json()
@@ -116,7 +114,7 @@ class DistributionReplacementOp(TextReplacementOp, Configurable):
                     with open(distribution_path, encoding="utf8") as json_file:
                         data = json.load(json_file)
             else:
-                data = self.configs["sampler_config"]["kwargs"]["sampler_data"]
+                data = self.configs["sampler_config"]["sampler_data"]
 
             self.sampler = create_class_with_kwargs(
                 self.configs["sampler_config"]["type"],
@@ -135,6 +133,7 @@ class DistributionReplacementOp(TextReplacementOp, Configurable):
             "prob": 0.1,
             "sampler_config": {
                 "type": "forte.processors.data_augment.algorithms.sampler.UniformSampler",
-                "kwargs": {"sampler_data": []},
+                "sampler_data": [],
             },
+            "@no_typecheck": ["sampler_config"],
         }
