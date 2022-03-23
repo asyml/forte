@@ -103,6 +103,7 @@ class RandomWordSplitDataAugmentOp(BaseDataAugmentationOp):
                         first_position,
                         self.configs["augment_entry"],
                     )
+            return True
         except ValueError:
             return False
 
