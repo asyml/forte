@@ -184,7 +184,7 @@ class DataStore(BaseStore):
         r"""This function generates a new ``tid`` for an entry."""
         return uuid.uuid4().int
 
-    def _new_annotation(self, type_name: int, begin: int, end: int) -> List:
+    def _new_annotation(self, type_name: str, begin: int, end: int) -> List:
         r"""This function generates a new annotation with default fields.
         All default fields are filled with None.
         Called by add_annotation_raw() to create a new annotation with
@@ -261,8 +261,8 @@ class DataStore(BaseStore):
 
     def add_annotation_raw(self, type_name: str, begin: int, end: int) -> int:
         r"""This function adds an annotation entry with ``begin`` and ``end``
-        indices to the sortedlist of ``type_name`` in ``self.__elements``,
-        returns the ``tid`` for the inserted entry.
+        indices to current data store object. Returns the ``tid`` for the inserted
+        entry.
 
         Args:
             type_name (str): The fully qualified type name of the new Annotation.
@@ -283,9 +283,9 @@ class DataStore(BaseStore):
         self, type_name: str, parent_tid: int, child_tid: int
     ) -> Tuple[int, int]:
         r"""This function adds a link entry with ``parent_tid`` and ``child_tid``
-        to the list of ``type_name`` in ``self.__elements``, returns the ``tid`` and
-        the ``index_id`` for the inserted entry in the list. This ``index_id`` is
-        the index of the entry in the ``type_name`` list.
+        to current data store object. Returns the ``tid`` and the ``index_id`` for
+        the inserted entry in the list. This ``index_id`` is the index of the entry
+        in the ``type_name`` list.
 
         Args:
             type_name (str):  The fully qualified type name of the new Link.
@@ -302,9 +302,9 @@ class DataStore(BaseStore):
         self, type_name: str, member_type: str
     ) -> Tuple[int, int]:
         r"""This function adds a group entry with ``member_type`` to the
-        ``type_name`` list in ``self.__elements``, returns the ``tid`` and the
-        ``index_id`` for the inserted entry in the list. This ``index_id`` is the
-        index of the entry in the ``type_name`` list.
+        current data store object. Returns the ``tid`` and the ``index_id``
+        for the inserted entry in the list. This ``index_id`` is the index
+        of the entry in the ``type_name`` list.
 
         Args:
             type_name (str): The fully qualified type name of the new Group.
@@ -319,8 +319,9 @@ class DataStore(BaseStore):
     def set_attribute(self, tid: int, attr_name: str, attr_value: Any):
         r"""This function locates the entry data with ``tid`` and sets its
         ``attr_name`` with `attr_value`. It first finds ``attr_id``  according
-        to ``attr_name``. `tid`, `attr_id`, and ``attr_value`` are
+        to ``attr_name``. ``tid``, ``attr_id``, and ``attr_value`` are
         passed to `set_attr()`.
+        Raises KeyError when ``tid`` or ``attr_name`` is not found.
 
         Args:
             tid (int): Unique Id of the entry.
@@ -337,9 +338,9 @@ class DataStore(BaseStore):
         except KeyError as e:
             raise KeyError(f"{entry_type} has no {attr_name} attribute.") from e
 
-        self.set_attr(tid, attr_id, attr_value)
+        self._set_attr(tid, attr_id, attr_value)
 
-    def set_attr(self, tid: int, attr_id: int, attr_value: Any):
+    def _set_attr(self, tid: int, attr_id: int, attr_value: Any):
         r"""This function locates the entry data with ``tid`` and sets its
         attribute ``attr_id``  with value `attr_value`. Called by
         `set_attribute()`.
@@ -357,6 +358,7 @@ class DataStore(BaseStore):
         ``tid``. It locates the entry data with ``tid`` and finds `attr_id`
         of its attribute ``attr_name``. ``tid`` and ``attr_id``  are passed
         to ``get_attr()``.
+        Raises KeyError when ``tid`` or ``attr_name`` is not found.
 
         Args:
             tid (int): Unique id of the entry.
@@ -375,9 +377,9 @@ class DataStore(BaseStore):
         except KeyError as e:
             raise KeyError(f"{entry_type} has no {attr_name} attribute.") from e
 
-        return self.get_attr(tid, attr_id)
+        return self._get_attr(tid, attr_id)
 
-    def get_attr(self, tid: int, attr_id: int) -> Any:
+    def _get_attr(self, tid: int, attr_id: int) -> Any:
         r"""This function locates the entry data with ``tid`` and gets the value
         of ``attr_id``  of this entry. Called by `get_attribute()`.
 
@@ -394,6 +396,8 @@ class DataStore(BaseStore):
     def delete_entry(self, tid: int):
         r"""This function locates the entry data with ``tid`` and removes it
         from the data store. This function first removes it from `__entry_dict`.
+        Raises KeyError when entry with ``tid`` is not found. Raise RuntimeError
+        when internal storage is inconsistent.
 
         Args:
             tid (int): Unique id of the entry.
@@ -411,9 +415,9 @@ class DataStore(BaseStore):
         try:
             target_list = self.__elements[type_name]
         except KeyError as e:
-            raise KeyError(
-                f"The specified type [{type_name}] "
-                f"does not exist in self.__elements."
+            raise RuntimeError(
+                f"When deleting entry [{tid}], its type [{type_name}]"
+                f"does not exist in current entry lists."
             ) from e
         # complexity: O(lgn)
         # if it's annotation type, use bisect to find the index
@@ -426,8 +430,9 @@ class DataStore(BaseStore):
             entry_index >= len(target_list)
             or target_list[entry_index] != entry_data
         ):
-            raise ValueError(
-                f"Entry [{entry_data[:4]}] is not found" f"in the targetlist"
+            raise RuntimeError(
+                f"When deleting entry [{tid}], entry data is not found in"
+                f"the target list of [{type_name}]."
             )
 
         self._delete_entry_by_loc(type_name, entry_index)
@@ -437,6 +442,8 @@ class DataStore(BaseStore):
         and `index_id`. Called by `delete_entry()`.
         This function will raise an IndexError if the `type_id` or `index_id`
         is invalid.
+        Raises KeyError when ``type_name`` is not found. Raises IndexError
+        when ``index_id`` is not found.
 
         Args:
             type_id (int): The index of the list in ``self.__elements``.
@@ -451,8 +458,8 @@ class DataStore(BaseStore):
             ) from e
         if index_id < 0 or index_id >= len(target_list):
             raise IndexError(
-                f"The specified index_id [{index_id}] "
-                f"is out of boundry for list of length [{len(target_list)}]"
+                f"The specified index_id [{index_id}] of type [{type_name}]"
+                f"is out of boundry for entry list of length {len(target_list)}."
             )
         target_list.pop(index_id)
 
