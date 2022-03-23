@@ -149,7 +149,7 @@ You should take special care of the indentations in your documentation. Make sur
 Another aspect that should be noted is the format of links or cross-references of python objects. Make sure to follow the [sphinx cross-referencing syntax](https://www.sphinx-doc.org/en/master/usage/restructuredtext/roles.html#xref-syntax). ~~The references will be checked by [sphinx-build nit-picky mode](https://www.sphinx-doc.org/en/master/man/sphinx-build.html#cmdoption-sphinx-build-n) which raises warnings for all the missing and unresolvable links.~~
 
 ### Jupyter Notebook
-Notebooks are written under `docs/notebook_tutorial` folder, and we keep notebooks there for several reasons. First, it's friendly for new users to learn forte with a runnable notebooks. Second, it can be rendered directly by sphinx documentation by include the relative path to notebook in `docs/index_toc.rst`. It straightforward for user to make references on how to use forte with the context of application. Third, we write notebook testing under `tests/forte/notebook` to ensure the notebook is runnable as API changes.
+Notebooks are written under `docs/notebook_tutorial` folder, and we keep notebooks there for several reasons. First, it's friendly for new users to learn forte with a runnable notebook. Second, it can be rendered directly by the sphinx documentation pacakge by including the relative path to notebook in `docs/index_toc.rst`. It is straightforward for users to make references on how to use forte with the context of application. Third, we write notebook testing under `tests/forte/notebook` to ensure the notebook is runnable as API changes.
 
 #### Notebook Rendering
 Jupyter notebook written under `docs/notebook_tutorial` will be rendered in the sphinx documentation using package `nbsphinx`. You need to make sure notebook can be rendered normally in sphinx documentation. After writing notebook under , run this [command](https://github.com/asyml/forte/blob/ae3d46884c26bac95893cbbecfaf86168a039bdc/.github/workflows/main.yml#L135) under docs folder. It might give you some sphinx warnings and you need to fix them.
@@ -164,7 +164,7 @@ User can refer to [notebook_test_tutorial.py](tests/forte/notebooks/notebook_tes
 
 ##### Notebook Dependency
 As notebook will be running in github CI, we need to consider its package dependencies and add required packages in `matrix.notebook-details.dep`.
-As current notebook needs to use fortex packages, so we limit torch version == 1.5.0 while testing notebooks.
+As current notebooks requires fortex packages, so we limit torch version == 1.5.0 while testing notebooks.
 
 
 #### Notebook Output
