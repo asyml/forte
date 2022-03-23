@@ -15,10 +15,13 @@
 Base class for Pipeline module.
 """
 
+import os
 import itertools
 import json
 import logging
 import sys
+import uuid
+from pathlib import Path
 from time import time
 from typing import (
     Any,
@@ -260,9 +263,9 @@ class Pipeline(Generic[PackType]):
 
         Args:
             configs: The configs used to initialize the pipeline. It should be
-                a dictionary that contains `forte_ir_version`, `components`
+                a dictionary that contains `forte_ir_version`, ``components``
                 and `states`. `forte_ir_version` is a string used to validate
-                input format. `components` is a list of dictionary that
+                input format. ``components`` is a list of dictionary that
                 contains `type` (the class of pipeline components),
                 `configs` (the corresponding component's configs) and
                 `selector`. `states` will be used to update the pipeline states
@@ -466,6 +469,52 @@ class Pipeline(Generic[PackType]):
         with open(path, "w", encoding="utf-8") as f:
             yaml.safe_dump(self._dump_to_config(), f)
 
+    def export(self, name: Optional[str] = None) -> Optional[str]:
+        r"""Exports pipeline to FORTE_EXPORT_PATH.
+
+        FORTE_EXPORT_PATH is a directory where all serialized pipeline will be stored.
+        Users can specify through environment variable FORTE_EXPORT_PATH.
+
+        This method will have the following behaviors:
+
+            - FORTE_EXPORT_PATH will be created if assigned but not found.
+
+            - If name is not provided, a default name `pipeline` will be used
+              and suffixed by UUID, to prevent overwriting
+              (e.g. `pipeline-4ba29336-aa05-11ec-abec-309c23414763.yml`).
+
+            - If name is provided, then no suffix will be appended.
+
+            - The pipeline is saved by :meth:`~forte.pipeline.Pipeline.save`,
+              which exports the pipeline by :meth:`~forte.pipeline.Pipeline._dump_to_config`
+              and saves it to a YAML file.
+
+        Args:
+            name: Export name of the pipeline. Default is None.
+
+        Returns:
+            Optional[str]: Export path of pipeline config YAML.
+
+        Raises:
+            ValueError: if export name is already taken.
+        """
+        export_path: Optional[str] = os.environ.get("FORTE_EXPORT_PATH")
+        if export_path:
+            os.makedirs(export_path, exist_ok=True)
+
+            if name:
+                export_name = f"{name}.yml"
+            else:
+                suffix = str(uuid.uuid1())
+                export_name = f"pipeline-{suffix}.yml"
+
+            export_path = os.path.join(export_path, export_name)
+            if Path(export_path).exists():
+                raise ValueError(f"{export_path} already exists.")
+
+            self.save(export_path)
+        return export_path
+
     def _remote_service_app(
         self, service_name: str = "", input_format: str = "string"
     ):
@@ -585,7 +634,7 @@ class Pipeline(Generic[PackType]):
         all the components inside this pipeline.
 
         Returns:
-
+            None
         """
         # create EntryTree type object merged_entry_tree to store the parsed
         # entry tree from ontology specification file passed in as part of
