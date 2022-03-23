@@ -484,7 +484,7 @@ class DataStore(BaseStore):
         if self.onto_file_path is None:
             return
         self._type_attributes = {}
-        with open(self.onto_file_path, "r") as f:
+        with open(self.onto_file_path, "r", encoding="utf8") as f:
             try:
                 onto_dicts = json.load(f)["definitions"]
                 for onto in onto_dicts:
@@ -494,7 +494,7 @@ class DataStore(BaseStore):
                         _ = get_class(parent_name)
                     except ValueError as e:
                         raise ValueError(
-                            f"onto file contains unknown parent classes."
+                            "onto file contains unknown parent classes."
                         ) from e
                     attr_dic = {}
                     idx = 4
@@ -510,7 +510,7 @@ class DataStore(BaseStore):
                 raise KeyError(
                     str(e)
                     + "\n"
-                    + f"Failed to parse onto file. Onto file should"
+                    + "Failed to parse onto file. Onto file should"
                     + "be a json file and contains all required fields."
                 ) from e
 
