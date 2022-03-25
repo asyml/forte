@@ -43,3 +43,4 @@ fastapi==0.65.2
 uvicorn==0.14.0
 
 nbsphinx==0.8.8
+jinja2<=3.0.3
