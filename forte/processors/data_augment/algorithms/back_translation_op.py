@@ -45,6 +45,7 @@ class BackTranslationOp(TextReplacementOp):
     The configuration should have the following fields:
 
     Config Values:
+
         - `prob` (float): The probability of replacement, should fall in [0, 1].
 
         - `src_lang` (str): The source language of back translation.
@@ -52,10 +53,10 @@ class BackTranslationOp(TextReplacementOp):
         - `tgt_lang` (str): The target language of back translation.
 
         - `model_to` (str): The full qualified name of the model from
-            source language to target language.
+          source language to target language.
 
         - `model_back` (str): The full qualified name of the model from
-            target language to source language.
+          target language to source language.
 
         - `device` (str): "cpu" for the CPU or "cuda" for GPU.
     """

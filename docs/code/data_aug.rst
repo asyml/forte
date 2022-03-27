@@ -89,15 +89,19 @@ Data Augmentation Ops
 .. autoclass:: forte.processors.data_augment.algorithms.sampler.UnigramSampler
     :members:
 
+
 :hidden:`MachineTranslator`
 ---------------------------------
 .. autoclass:: forte.processors.data_augment.algorithms.machine_translator.MachineTranslator
     :members:
 
+
 :hidden:`MarianMachineTranslator`
 -----------------------------------
 .. autoclass:: forte.processors.data_augment.algorithms.machine_translator.MarianMachineTranslator
     :members:
+
+
 
 :hidden:`BackTranslationOp`
 ------------------------------
@@ -124,14 +128,19 @@ Data Augmentation Ops
 .. autoclass:: forte.processors.data_augment.algorithms.typo_replacement_op.TypoReplacementOp
     :members:
 
+:hidden:`CharacterFlipOp`
+----------------------------
+.. autoclass:: forte.processors.data_augment.algorithms.character_flip_op.CharacterFlipOp
+    :members:
+
 :hidden:`WordSplittingOp`
 ----------------------------
 .. autoclass:: forte.processors.data_augment.algorithms.word_splitting_processor.RandomWordSplitDataAugmentProcessor
     :members:
 
-:hidden:`CharacterFlipOp`
-----------------------------
-.. autoclass:: forte.processors.data_augment.algorithms.character_flip_op.CharacterFlipOp
+:hidden:`BaseDataAugmentationOp`
+-----------------------------------
+.. autoclass:: forte.processors.data_augment.algorithms.base_data_augmentation_op.BaseDataAugmentationOp
     :members:
 
 :hidden:`EmbeddingSimilarityReplacementOp`

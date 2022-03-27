@@ -654,7 +654,10 @@ class ModuleWriter:
         self.entries.append((entry_name, entry_item))
 
     def make_module_dirs(
-        self, tempdir: str, destination: str, include_init: bool
+        self,
+        tempdir: str,
+        destination: str,
+        namespace_depth: int,
     ):
         """
         Create entry sub-directories with .generated file to indicate the
@@ -666,13 +669,22 @@ class ModuleWriter:
               first generated here.
             destination: The destination directory where the code should be
               placed
-            include_init: True if `__init__.py` is to be generated in existing
-              packages in which `__init__.py` does not already exists
+            namespace_depth: set an integer argument namespace_depth to allow
+              customized number of levels of namespace packaging.
+              The generation of __init__.py for all the directory
+              levels above namespace_depth will be disabled.
+              For example, if we have an ontology level1.levle2.level3.
+              something and namespace_depth=2, then we remove __init__.py
+              under level1 and level1/level2 while keeping __init__.py under
+              level1/level2/level3.
+              When namespace_depth<=0, we just disable namespace packaging
+              and include __init__.py in all directory levels.
         Returns:
         """
         entry_dir_split = split_file_path(self.pkg_dir)
 
         rel_dir_paths = it.accumulate(entry_dir_split, os.path.join)
+        count = 1
         for rel_dir_path in rel_dir_paths:
             temp_path = os.path.join(tempdir, rel_dir_path)
             if not os.path.exists(temp_path):
@@ -684,26 +696,42 @@ class ModuleWriter:
                 Path(os.path.join(temp_path, AUTO_GEN_FILENAME)).touch()
 
             # Create init file
-            if not dest_path_exists or include_init:
-                init_file_path = os.path.join(temp_path, "__init__.py")
-                with open(init_file_path, "w", encoding="utf-8") as init_file:
-                    init_file.write(f"# {AUTO_GEN_SIGNATURE}\n")
+            if count > namespace_depth:
+                if not dest_path_exists:
+                    init_file_path = os.path.join(temp_path, "__init__.py")
+                    with open(
+                        init_file_path, "w", encoding="utf-8"
+                    ) as init_file:
+                        init_file.write(f"# {AUTO_GEN_SIGNATURE}\n")
+            count += 1
 
-    def write(self, tempdir: str, destination: str, include_init: bool):
+    def write(
+        self,
+        tempdir: str,
+        destination: str,
+        namespace_depth: int,
+    ):
         """
         Write the entry information to file.
 
         Args:
             tempdir: A temporary directory for writing intermediate files.
             destination: The actual folder to place the generated code.
-            include_init: Whether to include `__init__.py` in the existing
-            directories if it does not already exist.
-
+            namespace_depth: set an integer argument namespace_depth to allow
+              customized number of levels of namespace packaging.
+              The generation of __init__.py for all the directory
+              levels above namespace_depth will be disabled.
+              For example, if we have an ontology level1.levle2.level3.
+              something and namespace_depth=2, then we remove __init__.py
+              under level1 and level1/level2 while keeping __init__.py under
+              level1/level2/level3.
+              When namespace_depth<=0, we just disable namespace packaging
+              and include __init__.py in all directory levels.
         Returns:
 
         """
 
-        self.make_module_dirs(tempdir, destination, include_init)
+        self.make_module_dirs(tempdir, destination, namespace_depth)
         full_path = os.path.join(tempdir, self.pkg_dir, self.file_name) + ".py"
 
         with open(full_path, "w", encoding="utf-8") as f:
