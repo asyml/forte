@@ -195,6 +195,8 @@ class DataStore(BaseStore):
             state["_DataStore__elements"][k] = list(
                 state["_DataStore__elements"][k]
             )
+        state.pop('onto_file_path')
+        print(state)
         return state
 
     def __setstate__(self, state):
@@ -204,10 +206,9 @@ class DataStore(BaseStore):
         """
         super().__setstate__(state)
         keys = self.__elements.keys()
+        cls = get_class("forte.data.ontology.top.Annotation")
         for k in keys:
-            if issubclass(
-                get_class(k), get_class("forte.data.ontology.top.Annotation")
-            ):
+            if issubclass(get_class(k), cls):
                 self.__elements[k] = SortedList(self.__elements[k])
 
     @classmethod
