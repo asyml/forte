@@ -182,7 +182,7 @@ class DataStore(BaseStore):
     def _new_tid(self) -> int:
         r"""This function generates a new ``tid`` for an entry."""
         return uuid.uuid4().int
-    
+
     def _add_new_type(self, type_name: str):
         """
         Add a new type input_entry_class into self._type_attributes.
@@ -193,8 +193,24 @@ class DataStore(BaseStore):
         # check if type is in dictionary
         if type_name in self._type_attributes:
             return
+        if self.onto_file_path is not None:
+            raise RuntimeError(
+                f"{type_name} is not a valid type in Forte base class or"
+                f"provided by your ontology file"
+            )
         # get attribute dictionary
-        self._type_attributes[type_name] = {"attributes":{}, "parent": None}
+        attributes = EntryTypeGenerator.get_entry_attributes_by_class(type_name)
+
+        attr_dict = {}
+        idx = 4
+        for attr in attributes:
+            attr_dict[attr] = idx
+            idx += 1
+
+        self._type_attributes[type_name] = {
+            "attributes": attr_dict,
+            "parent_entry": None,
+        }
         self.__elements[type_name] = SortedList()
         assert len(self.__elements) == len(self._type_attributes)
 
