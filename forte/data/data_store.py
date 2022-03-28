@@ -15,6 +15,7 @@
 from typing import List, Iterator, Tuple, Optional, Any
 import uuid
 import json
+from forte.data.ontology.ontology_code_generator import OntologyCodeGenerator
 
 from forte.utils import get_class
 from forte.data.base_store import BaseStore
@@ -479,44 +480,38 @@ class DataStore(BaseStore):
 
     def parse_onto_file(self):
         r"""If user provides a customized ontology json file, we parse
-        this file and set self._type_attributes accordingly.
+        this file and set self._type_attributes accordingly. It not only
+        includes the classes in the provided ontology file, but also import
+        classes from parent entry files.
         """
         if self.onto_file_path is None:
             return
+
+        ontoGen = OntologyCodeGenerator()
+        merged_scheme, merged_dict = [], []
+        ontoGen.parse_ontology_spec(
+            self.onto_file_path, merged_scheme, merged_dict
+        )
+
         self._type_attributes = {}
-        with open(self.onto_file_path, "r", encoding="utf8") as f:
-            try:
-                onto_dicts = json.load(f)["definitions"]
-                for onto in onto_dicts:
-                    parent_name = onto["parent_entry"]
-                    entry_name = onto["entry_name"]
-                    try:
-                        _ = get_class(parent_name)
-                    except ValueError as e:
-                        raise ValueError(
-                            "onto file contains unknown parent classes."
-                        ) from e
-                    attr_dic = {}
-                    idx = 4
-                    for attr_dict in onto["attributes"]:
-                        name = attr_dict["name"]
-                        attr_dic[name] = idx
-                        idx += 1
-                    entry_dic = {}
-                    entry_dic["parent"] = parent_name
-                    entry_dic["attributes"] = attr_dic
-                    self._type_attributes[entry_name] = entry_dic
-            except KeyError as e:
-                raise KeyError(
-                    str(e)
-                    + "\n"
-                    + "Failed to parse onto file. Onto file should"
-                    + "be a json file and contains all required fields."
-                ) from e
+
+        for onto in merged_scheme:
+            entry_name = onto["entry_name"]
+            attr_dic = {}
+            idx = 4
+            if "attributes" in onto:
+                for attr_dict in onto["attributes"]:
+                    name = attr_dict["name"]
+                    attr_dic[name] = idx
+                    idx += 1
+            entry_dic = {}
+            entry_dic["parent_entry"] = onto["parent_entry"]
+            entry_dic["attributes"] = attr_dic
+            self._type_attributes[entry_name] = entry_dic
 
     def _get_entry_attributes_by_class(
         self, input_entry_class_name: str
-    ) -> list:
+    ) -> List:
         """Get type attributes by class name. `input_entry_class_name` should be
         a fully qualified name of an entry class.
 

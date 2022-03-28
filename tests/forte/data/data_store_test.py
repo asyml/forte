@@ -23,6 +23,7 @@ from dataclasses import dataclass
 from forte.data.data_store import DataStore
 from forte.data.ontology.top import Annotation, Generics
 from forte.data.data_pack import DataPack
+from forte.data.ontology.ontology_code_generator import OntologyCodeGenerator
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -377,18 +378,18 @@ class DataStoreTest(unittest.TestCase):
                     "aliases": 8,
                     "score": 9,
                 },
-                "parent": "forte.data.ontology.top.Generics",
+                "parent_entry": "forte.data.ontology.top.Generics",
             },
             "ftx.onto.clinical.MedicalEntityMention": {
                 "attributes": {
                     "umls_link": 4,
                     "umls_entities": 5,
                 },
-                "parent": "ft.onto.base_ontology.EntityMention",
+                "parent_entry": "ft.onto.base_ontology.EntityMention",
             }
         }
         data_store_from_file = DataStore(onto_file_path="forte/ontology_specs/medical.json")
-        self.assertDictEqual(data_store_from_file._type_attributes, expected_type_attributes)
+        self.assertDictContainsSubset(expected_type_attributes, data_store_from_file._type_attributes)
 
         data_store_non_file = DataStore()
         self.assertDictEqual(data_store_non_file._type_attributes, {})
