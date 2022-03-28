@@ -259,8 +259,7 @@ class DataStore(BaseStore):
             include_onto_file: A boolean value whether the class is in user provided ontology file
 
         Returns:
-            A boolean value whether this type belongs to a clc class
-            type or not.
+            A boolean value whether this `type_name` class is the subclass of `cls` or not.
 
         """
 
