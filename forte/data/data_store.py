@@ -14,7 +14,6 @@
 
 from typing import List, Iterator, Tuple, Optional, Any
 import uuid
-import json
 from forte.data.ontology.ontology_code_generator import OntologyCodeGenerator
 
 from forte.utils import get_class
