@@ -36,9 +36,7 @@ from typing import (
     Set,
 )
 
-import uvicorn
 import yaml
-from fastapi import FastAPI
 from pydantic import BaseModel
 
 from forte.common import ProcessorConfigError
@@ -533,7 +531,21 @@ class Pipeline(Generic[PackType]):
 
         Returns:
             FastAPI: A FastAPI app for remote service.
+
+        Raises:
+            ImportError: An error occurred importing `fastapi` module.
         """
+        if "fastapi" not in sys.modules:
+            try:
+                from fastapi import FastAPI
+            except ImportError as e:
+                raise ImportError(
+                    "'fastapi' must be installed to get a service app of "
+                    "pipeline. You can run 'pip install forte[remote]' to "
+                    "install all the requirements needed to start a pipeline "
+                    "service."
+                ) from e
+
         # TODO: Currently we only support the `process` function, but it can
         # be extended by adding new interfaces that wrap up any Pipeline
         # method. Refer to https://fastapi.tiangolo.com for more info.
@@ -607,7 +619,21 @@ class Pipeline(Generic[PackType]):
                 `input_format` field on default page and can be queried and
                 validated against the expected input format set by user.
                 Default to `"string"`.
+
+        Raises:
+            ImportError: An error occurred importing `uvicorn` module.
         """
+        if "uvicorn" not in sys.modules:
+            try:
+                import uvicorn
+            except ImportError as e:
+                raise ImportError(
+                    "'uvicorn' must be installed to start a service of "
+                    "pipeline. You can run 'pip install forte[remote]' to "
+                    "install all the requirements needed to start a pipeline "
+                    "service."
+                ) from e
+
         self.initialize()
         uvicorn.run(
             self._remote_service_app(

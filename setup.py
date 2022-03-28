@@ -37,8 +37,6 @@ setuptools.setup(
         "typing-inspect>=0.6.0",
         'dataclasses~=0.7;python_version<"3.7"',
         'importlib-resources>=5.1.4;python_version<"3.7"',
-        "fastapi>=0.65.2",
-        "uvicorn>=0.14.0",
     ],
     extras_require={
         "ner": ["torch>=1.1.0", "torchtext==0.4.0", "tqdm>=4.36.1"],
@@ -49,6 +47,7 @@ setuptools.setup(
         "augment": ["transformers>=3.1, <=4.9.2", "nltk"],
         "stave": ["stave>=0.0.1.dev12"],
         "audio_ext": ["soundfile>=0.10.3"],
+        "remote": ["fastapi>=0.65.2", "uvicorn>=0.14.0",],
     },
     entry_points={
         "console_scripts": [
