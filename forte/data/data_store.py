@@ -250,10 +250,10 @@ class DataStore(BaseStore):
     def _is_annotation(self, type_name: str) -> bool:
         r"""This function takes a type_id and returns whether a type
         is an annotation type or not.
-        
+
         Args:
             type_name (str): The name of type in `self.__elements`.
-        
+
         Returns:
             A boolean value whether this type_id belongs to an annotation
             type or not.
@@ -270,7 +270,7 @@ class DataStore(BaseStore):
             type_name (str): The fully qualified type name of the new Annotation.
             begin (int): Begin index of the entry.
             end (int): End index of the entry.
-        
+
         Returns:
             ``tid`` of the entry.
         """
