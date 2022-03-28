@@ -247,8 +247,7 @@ class DataStore(BaseStore):
         entry += len(self._type_attributes[type_name]) * [None]
         return entry
 
-    @staticmethod
-    def _is_subclass(type_name: str, cls) -> bool:
+    def _is_subclass(self, type_name: str, cls) -> bool:
         r"""This function determines if a string class_type is
         the subclass of a class.
 
@@ -261,8 +260,32 @@ class DataStore(BaseStore):
             type or not.
 
         """
-        entry_class = get_class(type_name)
-        return cls == entry_class.__base__
+        if "parent_class" not in self._type_attributes.keys():
+            self._type_attributes.update(parent_class={})
+
+        if type_name in self._type_attributes["parent_class"].keys():
+            if (
+                cls.__module__ + "." + cls.__name__
+                in self._type_attributes["parent_class"][type_name]
+            ):
+                return True
+        else:
+            entry_class = get_class(type_name)
+            self._type_attributes["parent_class"][type_name] = []
+            if cls == entry_class.__base__:
+                self._type_attributes["parent_class"][type_name].append(
+                    cls.__module__ + "." + cls.__name__
+                )
+                cls_base_class = cls.__base__
+                if cls_base_class is not None:
+                    self._type_attributes["parent_class"][type_name].append(
+                        cls_base_class.__module__
+                        + "."
+                        + cls_base_class.__name__
+                    )
+                return True
+            else:
+                return False
 
     def add_annotation_raw(self, type_name: str, begin: int, end: int) -> int:
         r"""This function adds an annotation entry with ``begin`` and ``end``
