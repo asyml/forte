@@ -535,20 +535,20 @@ class Pipeline(Generic[PackType]):
         Raises:
             ImportError: An error occurred importing `fastapi` module.
         """
-        if "fastapi" not in sys.modules:
-            try:
-                from fastapi import FastAPI
-            except ImportError as e:
-                raise ImportError(
-                    "'fastapi' must be installed to get a service app of "
-                    "pipeline. You can run 'pip install forte[remote]' to "
-                    "install all the requirements needed to start a pipeline "
-                    "service."
-                ) from e
-
         # TODO: Currently we only support the `process` function, but it can
         # be extended by adding new interfaces that wrap up any Pipeline
         # method. Refer to https://fastapi.tiangolo.com for more info.
+        try:
+            # pylint:disable=import-outside-toplevel
+            from fastapi import FastAPI
+        except ImportError as e:
+            raise ImportError(
+                "'fastapi' must be installed to get a service app of "
+                "pipeline. You can run 'pip install forte[remote]' to "
+                "install all the requirements needed to start a pipeline "
+                "service."
+            ) from e
+
         app = FastAPI()
         records: Optional[Dict[str, Set[str]]] = None
 
@@ -625,7 +625,7 @@ class Pipeline(Generic[PackType]):
         """
         if "uvicorn" not in sys.modules:
             try:
-                import uvicorn
+                import uvicorn  # pylint: disable=import-outside-toplevel
             except ImportError as e:
                 raise ImportError(
                     "'uvicorn' must be installed to start a service of "
