@@ -17,6 +17,7 @@ Unit tests for data store related operations.
 
 import logging
 import unittest
+import copy
 from sortedcontainers import SortedList
 
 from forte.data.data_store import DataStore
@@ -54,8 +55,8 @@ class DataStoreTest(unittest.TestCase):
         # }
 
         self.data_store._DataStore__elements = {
-            "ft.onto.base_ontology.Document":
-                SortedList([
+            "ft.onto.base_ontology.Document": SortedList(
+                [
                     [
                         0,
                         5,
@@ -74,9 +75,10 @@ class DataStoreTest(unittest.TestCase):
                         "Negative",
                         "Class B",
                     ],
-                ]),
-            "ft.onto.base_ontology.Sentence":
-                SortedList([
+                ]
+            ),
+            "ft.onto.base_ontology.Sentence": SortedList(
+                [
                     [
                         6,
                         9,
@@ -99,7 +101,8 @@ class DataStoreTest(unittest.TestCase):
                         "Class C",
                         "Class D",
                     ],
-                ]),
+                ]
+            ),
             # empty list corresponds to Entry, test only
             "forte.data.ontology.core.Entry": SortedList([]),
         }
@@ -145,6 +148,170 @@ class DataStoreTest(unittest.TestCase):
                 "Class D",
             ],
         }
+
+    def test_co_iterator(self):
+        type_names = [
+            "ft.onto.base_ontology.Sentence",
+            "ft.onto.base_ontology.Document",
+        ]
+
+        # test sort by begin index
+        ordered_elements = [
+            [
+                0,
+                5,
+                1234,
+                "ft.onto.base_ontology.Document",
+                None,
+                "Postive",
+                None,
+            ],
+            [
+                6,
+                9,
+                9999,
+                "ft.onto.base_ontology.Sentence",
+                "teacher",
+                1,
+                "Postive",
+                None,
+                None,
+            ],
+            [
+                10,
+                25,
+                3456,
+                "ft.onto.base_ontology.Document",
+                "Doc class A",
+                "Negative",
+                "Class B",
+            ],
+            [
+                55,
+                70,
+                1234567,
+                "ft.onto.base_ontology.Sentence",
+                None,
+                None,
+                "Negative",
+                "Class C",
+                "Class D",
+            ],
+        ]
+
+        elements = list(self.data_store.co_iterator(type_names))
+        self.assertEqual(elements, ordered_elements)
+
+        # test sort by end index
+        ordered_elements = [
+            [
+                0,
+                5,
+                1234,
+                "ft.onto.base_ontology.Document",
+                None,
+                "Postive",
+                None,
+            ],
+            [
+                0,
+                25,
+                3456,
+                "ft.onto.base_ontology.Document",
+                "Doc class A",
+                "Negative",
+                "Class B",
+            ],
+            [
+                6,
+                9,
+                9999,
+                "ft.onto.base_ontology.Sentence",
+                "teacher",
+                1,
+                "Postive",
+                None,
+                None,
+            ],
+            [
+                55,
+                70,
+                1234567,
+                "ft.onto.base_ontology.Sentence",
+                None,
+                None,
+                "Negative",
+                "Class C",
+                "Class D",
+            ],
+        ]
+        doc_tn = "ft.onto.base_ontology.Document"
+        sent_tn = "ft.onto.base_ontology.Sentence"
+        self.data_store._DataStore__elements[doc_tn][0][0] = 0
+        self.data_store._DataStore__elements[doc_tn][1][0] = 0
+        elements = list(self.data_store.co_iterator(type_names))
+        self.assertEqual(elements, ordered_elements)
+
+        # test sort by input type_names
+        ordered_elements1 = [
+            [
+                0,
+                5,
+                9999,
+                "ft.onto.base_ontology.Sentence",
+                "teacher",
+                1,
+                "Postive",
+                None,
+                None,
+            ],
+            [
+                0,
+                5,
+                1234,
+                "ft.onto.base_ontology.Document",
+                None,
+                "Postive",
+                None,
+            ],
+            [
+                0,
+                25,
+                3456,
+                "ft.onto.base_ontology.Document",
+                "Doc class A",
+                "Negative",
+                "Class B",
+            ],
+            [
+                55,
+                70,
+                1234567,
+                "ft.onto.base_ontology.Sentence",
+                None,
+                None,
+                "Negative",
+                "Class C",
+                "Class D",
+            ],
+        ]
+        ordered_elements2 = copy.deepcopy(ordered_elements1)
+        ordered_elements2[0] = ordered_elements1[1]
+        ordered_elements2[1] = ordered_elements1[0]
+        self.data_store._DataStore__elements[sent_tn][0][0] = 0
+        self.data_store._DataStore__elements[sent_tn][0][1] = 5
+        elements = list(self.data_store.co_iterator(type_names))
+        self.assertEqual(elements, ordered_elements1)
+        type_names.reverse()
+        elements = list(self.data_store.co_iterator(type_names))
+        self.assertEqual(elements, ordered_elements2)
+
+        # # include Token to test empty list
+        def fn():
+            type_names.append("ft.onto.base_ontology.Token")
+            list(self.data_store.co_iterator(type_names))
+
+        self.assertRaises(ValueError, fn)
 
     def test_add_annotation_raw(self):
         # # test add Document entry
@@ -233,7 +400,11 @@ class DataStoreTest(unittest.TestCase):
         self.assertEqual(len(instances), 4)
 
         # get entries without subclasses
-        instances = list(self.data_store.get("forte.data.ontology.core.Entry", include_sub_type=False))
+        instances = list(
+            self.data_store.get(
+                "forte.data.ontology.core.Entry", include_sub_type=False
+            )
+        )
         self.assertEqual(len(instances), 0)
 
     def test_delete_entry(self):
