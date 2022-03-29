@@ -37,7 +37,6 @@ from typing import (
 )
 
 import yaml
-from pydantic import BaseModel
 
 from forte.common import ProcessorConfigError
 from forte.common.configuration import Config
@@ -541,6 +540,9 @@ class Pipeline(Generic[PackType]):
         try:
             # pylint:disable=import-outside-toplevel
             from fastapi import FastAPI
+
+            # pydantic should be installed as dependency of fastapi
+            from pydantic import BaseModel
         except ImportError as e:
             raise ImportError(
                 "'fastapi' must be installed to get a service app of "
