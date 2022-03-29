@@ -14,10 +14,10 @@
 from typing import List, Iterator, Tuple, Optional, Any
 import uuid
 from bisect import bisect_left
+from heapq import *
 from forte.utils import get_class
 from forte.data.base_store import BaseStore
 from forte.data.entry_type_generator import EntryTypeGenerator
-from heapq import *
 from forte.data.ontology.top import Annotation
 from forte.common import constants
 
