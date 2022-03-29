@@ -62,7 +62,7 @@ currently stored in two different repositories, as different projects.
   example, `fortex.nltk` will be installed under `site_packages/fortex/nltk` folder via
   `pip isntall forte.nltk` and the tool can be imported via `import fortex.nltk` and uninstalled
   via `pip uninstall forte.nltk`.
-  
+
 ### Ontology namespaces
 * The `ft.onto` namespace contains the core/basic ontology types defined by Forte, data types
   in this namespace are mainly generic NLP concepts, such as "Sentence", "Token".
@@ -106,7 +106,7 @@ Following the feature template, fill in the information in more details:
 ### Pull Requests
 
 When you have fixed a bug or implemented a new feature, you can create a pull request
-for review. 
+for review.
 
 * Use a [PR Template](https://github.com/asyml/forte/blob/master/.github/PULL_REQUEST_TEMPLATE.md) to structure your PR, and here:
 
@@ -147,6 +147,30 @@ We also recommend using tools `pre-commit` that automates the checking process b
 You should take special care of the indentations in your documentation. Make sure the indents are consistent and follow the Google Style guide. All sections other than the heading should maintain a hanging indent of two or four spaces. Refer to the examples [here](https://google.github.io/styleguide/pyguide.html#383-functions-and-methods) for what is expected and what are the requirements for different sections like `args`, `lists`, `returns`, etc. Invalid indentations might trigger errors in `sphinx-build` and will cause confusing rendering of the documentation. You can run `sphinx-build` locally to see whether the generated docs look reasonable.
 
 Another aspect that should be noted is the format of links or cross-references of python objects. Make sure to follow the [sphinx cross-referencing syntax](https://www.sphinx-doc.org/en/master/usage/restructuredtext/roles.html#xref-syntax). ~~The references will be checked by [sphinx-build nit-picky mode](https://www.sphinx-doc.org/en/master/man/sphinx-build.html#cmdoption-sphinx-build-n) which raises warnings for all the missing and unresolvable links.~~
+
+### Jupyter Notebook
+Notebooks are written under `docs/notebook_tutorial` folder, and we keep notebooks there for several reasons. First, it's friendly for new users to learn forte with a runnable notebook. Second, it can be rendered directly by the sphinx documentation pacakge by including the relative path to notebook in `docs/index_toc.rst`. It is straightforward for users to make references on how to use forte with the context of application. Third, we write notebook testing under `tests/forte/notebook` to ensure the notebook is runnable as API changes.
+
+#### Notebook Rendering
+Jupyter notebook written under `docs/notebook_tutorial` will be rendered in the sphinx documentation using package `nbsphinx`. You need to make sure notebook can be rendered normally in sphinx documentation. After writing notebook under , run this [command](https://github.com/asyml/forte/blob/ae3d46884c26bac95893cbbecfaf86168a039bdc/.github/workflows/main.yml#L135) under docs folder. It might give you some sphinx warnings and you need to fix them.
+
+#### Notebook Hyperlinks
+As notebook is rendered in the sphinx documentation, we might want to include hyperlinks to other sphinx pages in the documentation. For example, if we want to mention another `rst` file, we can write the hyperlinks in the markdown way with the relative path to the `rst` file such as `[reader](../toc/reader.rst)`.
+
+#### Notebook Testing
+As notebook includes code that might break over time when API changes. Plus, we want to test code efficiently.
+Therefore, we test notebook by using package [`testbook`](https://testbook.readthedocs.io/en/latest/#).
+User can refer to [notebook_test_tutorial.py](tests/forte/notebooks/notebook_test_tutorial.py) for how to test notebook.
+
+##### Notebook Dependency
+As notebook will be running in github CI, we need to consider its package dependencies and add required packages in `matrix.notebook-details.dep`.
+As current notebooks requires fortex packages, so we limit torch version == 1.5.0 while testing notebooks.
+
+
+#### Notebook Output
+Notebooks will not be running automatically after committing files to the repository.
+Developer needs to keep notebook cell outputs that are needed for the purpose of illustration.
+
 
 ### Git Commit Style
 
