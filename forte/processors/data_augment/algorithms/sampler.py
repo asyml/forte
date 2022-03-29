@@ -45,8 +45,9 @@ class UniformSampler(Sampler):
     A sampler that samples a word from a uniform distribution.
 
     Config Values:
-        - sampler_data: (list)
-            A list of words that this sampler uniformly samples from.
+
+        - sampler_data:
+          a list of words that this sampler uniformly samples from.
     """
 
     def __init__(self, configs: Union[Config, Dict[str, Any]]):
@@ -67,18 +68,21 @@ class UnigramSampler(Sampler):
     A sampler that samples a word from a unigram distribution.
 
     Config Values:
+
         - sampler_data: (dict)
-            The key is a word, the value is the word count or a probability.
-            This sampler samples from this word distribution.
-            Example:
+          The key is a word, the value is the word count or a probability.
+          This sampler samples from this word distribution.
+          Example:
 
-                .. code-block:: python
+            .. code-block:: python
 
-                    'sampler_data': {
-                            "apple": 1,
-                            "banana": 2,
-                            "orange": 3
-                    }"""
+                'sampler_data': {
+                        "apple": 1,
+                        "banana": 2,
+                        "orange": 3
+                }
+
+    """
 
     def __init__(self, configs: Union[Config, Dict[str, Any]]):
         super().__init__(configs)

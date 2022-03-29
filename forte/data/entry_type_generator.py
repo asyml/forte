@@ -63,21 +63,23 @@ class EntryTypeGenerator:
         called `__dataclass_fields__` that is called on the class object, and it returns
         all the fields the class contains.
 
-        Note: This function is only applicable to classes decorated as Python
-        `dataclass` since it relies on the `__dataclass_fields__` to find out the attributes.
+        .. note::
+
+            This function is only applicable to classes decorated as Python
+            `dataclass` since it relies on the `__dataclass_fields__` to find out the attributes.
 
 
         Args:
             input_entry_class_name: A fully qualified name of an entry class.
 
         Returns:
-             A list of attributes corresponding to the input class.
+            A list of attributes corresponding to the input class.
 
         For example, for Sentence we want to get a list of
         ["speaker", "part_id", "sentiment", "classification", "classifications"].
         The solution looks like the following:
 
-        ... code-block::python
+        .. code-block:: python
 
             # input can be a string
             entry_name = "ft.onto.base_ontology.Sentence"

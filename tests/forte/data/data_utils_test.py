@@ -19,8 +19,13 @@ from pathlib import Path
 import os
 import shutil
 import unittest
+from requests import HTTPError
+import logging
 
 from forte.data import data_utils
+
+
+logger = logging.getLogger(__name__)
 
 
 class DataUtilsTest(unittest.TestCase):
@@ -37,9 +42,17 @@ class DataUtilsTest(unittest.TestCase):
             "https://drive.google.com/file/d/1YHXMiIne5MjSBePsPHPWO6hdRj4w"
             "EnSk/view?usp=sharing"
         ]
-        data_utils.maybe_download(
-            urls=urls, path=self.test_path, filenames=[self.file_name]
-        )
+        try:
+            data_utils.maybe_download(
+                urls=urls, path=self.test_path, filenames=[self.file_name]
+            )
+        except HTTPError as e:
+            if e.response.status_code != 403:
+                raise e
+            logger.warning(
+                "Skipping HTTPError from %s", e.response.url, exc_info=True
+            )
+            return
         path = Path(self.test_path)
         self.assertEqual(path.exists(), True)
 
