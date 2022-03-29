@@ -540,7 +540,7 @@ class Pipeline(Generic[PackType]):
         try:
             # pylint:disable=import-outside-toplevel
             from fastapi import FastAPI
-            # pydantic should be isntalled as dependency of fastapi
+            # pydantic should be installed as dependency of fastapi
             from pydantic import BaseModel
         except ImportError as e:
             raise ImportError(
