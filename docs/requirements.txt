@@ -11,9 +11,9 @@ sphinxcontrib-spelling
 nbautoexport==0.4.0
 testbook
 
-pyyaml==5.4
-jsonpickle==1.4
-sortedcontainers==2.1.0
+pyyaml>=5.4
+jsonpickle>=1.4
+sortedcontainers>=2.1.0
 texar-pytorch>=0.1.1
 typing>=3.7.4; python_version < '3.5'
 typing-inspect>=0.6.0
@@ -30,17 +30,13 @@ elasticsearch==7.5.1
 # code generation
 typed_astunparse~=2.1.4
 typed_ast~=1.4.0
-jsonschema==3.0.2
+jsonschema>=3.0.2
 
 # Transformers
 transformers>=3.1
 
 # NLTK
 nltk==3.6.6
-
-# FastAPI
-fastapi==0.65.2
-uvicorn==0.14.0
 
 nbsphinx==0.8.8
 jinja2<=3.0.3
