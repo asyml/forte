@@ -420,10 +420,20 @@ class DataStore(BaseStore):
     def co_iterator(self, type_names: List[str]) -> Iterator[List]:
         r"""Given two or more type names, iterate their entry lists from beginning to end together.
 
-        The function input will be a list of target type_name strings. For every single type, their entry lists are sorted by the begin and end fields. The co_iterator function will iterate those sorted lists together, and yield each entry in sorted order. This tasks is quite similar to merging several sorted list to one sorted list. If two entries have both the same begin and end field, then their order is decided by the order of user input type_name (the type that first appears in the target type list will return first).
+        For every single type, their entry lists are sorted by the begin and
+        end fields. The co_iterator function will iterate those sorted lists
+        together, and yield each entry in sorted order. This tasks is quite
+        similar to merging several sorted list to one sorted list. If two
+        entries have both the same begin and end field, then their order is
+        decided by the order of user input type_name (the type that first
+        appears in the target type list will return first).
 
         Args:
+            type_names (List[str]): a list of string type names
 
+        Returns:
+
+            An iterator of entry elements.
         """
 
         n = len(type_names)
