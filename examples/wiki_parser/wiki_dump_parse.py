@@ -106,6 +106,7 @@ def add_wiki_info(
                 "pack_index": input_index_file_path,
                 "pack_dir": input_pack_path,
                 "resume_index": out_index_path,
+                "zip_pack": True,
             },
         )
     else:
@@ -114,6 +115,7 @@ def add_wiki_info(
             config={
                 "pack_index": input_index_file_path,
                 "pack_dir": input_pack_path,
+                "zip_pack": True,
             },
         )
 

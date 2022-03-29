@@ -30,13 +30,19 @@ https://github.com/asyml/forte/tree/master/data_samples/dbpedia:
 python wiki_dump_parse.py ../../data_samples/dbpedia sample_output True
 ```
 
-We provide a simple script to download the full datasets, note that these datasets are sizable:
+You should be able to find the parsed results in the output (sample_output) folder. There are
+multiple steps in the process, and the intermediate results are written to corresponding sub-folders.
+
+When you are ready to try out the full example, we provide a simple script to download the full 
+datasets, note that these datasets are sizable:
 
 ```bash
+# Will download data to the a directory named "dbpedia".
 ./data_download.sh
 ```
 
 And you can now try parse the real DBpedia dataset
 ```bash
+# You should find the processed data packs in "output".
 python wiki_dump_parse.py dbpedia output
 ```
