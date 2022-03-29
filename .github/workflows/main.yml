@@ -29,6 +29,8 @@ jobs:
           - python-version: 3.9
             torch-version: 1.8.1
             tensorflow-version: 2.5.0
+        notebook-details:
+          - { dep: "huggingface nltk", extra: "'tensorflow>=2.5.0,<2.8.0,termcolor>=1.1.0'"}
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
@@ -51,6 +53,10 @@ jobs:
           pip install --progress-bar off pylint==2.10.2 flake8==3.9.2 mypy==0.931 pytest==5.1.3 black==22.3.0
           pip install --progress-bar off types-PyYAML==5.4.8 types-typed-ast==1.4.4 types-requests==2.25.6 types-dataclasses==0.1.7
           pip install --progress-bar off coverage codecov
+          python -m pip install ipykernel
+          python -m ipykernel install --user
+          pip install testbook
+          pip install termcolor
       - name: Format check with Black
         run: |
           black --line-length 80 --check forte/
@@ -96,11 +102,23 @@ jobs:
           if [[ ${{ matrix.torch-version }} != "1.5.0" && ${{ matrix.python-version }} == "3.9" ]]; then mypy forte; fi
       - name: Test with pytest and run coverage
         run: |
-          coverage run -m pytest tests
+          coverage run -m pytest tests  --ignore=tests/forte/notebooks
           coverage run --append -m pytest --doctest-modules forte
       - name: Upload coverage
         run: |
           codecov
+      - name: Test notebook tutorials with installing Fortex
+        run: |
+          if [ ${{ matrix.torch-version }} == "1.5.0" ]
+          then
+            git clone https://github.com/asyml/forte-wrappers.git
+            cd forte-wrappers
+            for d in ${{ matrix.notebook-details.dep }}; do pip install "src/"$d; done
+            cd ..
+            coverage run -m pytest tests/forte/notebooks
+          fi
+
+
   docs:
     needs: build
     runs-on: ubuntu-latest
