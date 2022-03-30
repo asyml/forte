@@ -129,7 +129,7 @@ class DataStore(BaseStore):
         for this type and the indices of attributes among these lists. Key ``parent_entry``
         is a string representing the direct parent of this type.
 
-        This structure is supposed to be built dynamically. When a user adds new entrys,
+        This structure is supposed to be built dynamically. When a user adds new entries,
         data_store will check unknown types and add them to ``_type_attributes``.
 
         Example:
@@ -157,7 +157,7 @@ class DataStore(BaseStore):
         self._type_attributes: dict = {}
         if self.onto_file_path:
             self._parse_onto_file()
-            
+
         """
         The `__elements` is an underlying storage structure for all the entry
         data added by users in this DataStore class.
@@ -175,7 +175,7 @@ class DataStore(BaseStore):
         self.__elements: dict = {}
 
         """
-        A dictionary that keeps record of all entrys with their tid.
+        A dictionary that keeps record of all entries with their tid.
         It is a key-value map of {tid: entry data in list format}.
 
         e.g., {1423543453: [begin, end, tid, type_name, attr_1, ..., attr_n],
@@ -562,7 +562,8 @@ class DataStore(BaseStore):
         merge all classes contained in the imported file into the dictionary. For example,
         if an ontology has a parent entry in ``ft.onto.base_ontology``, all classes in
         ``ft.onto.base_ontology`` will be imported and stored in the internal dictionary.
-        A user can use classes both in the ontology specification file and their parent entries's paths.
+        A user can use classes both in the ontology specification file and their parent
+        entries's paths.
         """
         if self.onto_file_path is None:
             return

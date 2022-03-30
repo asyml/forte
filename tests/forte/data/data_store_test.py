@@ -106,6 +106,7 @@ class SingleMetricTest(MetricTest):
         super().__init__(pack)
         self.value: Optional[float] = None
 
+
 class DataStoreTest(unittest.TestCase):
     def setUp(self) -> None:
         self.data_store = DataStore()
@@ -191,7 +192,7 @@ class DataStoreTest(unittest.TestCase):
                     [9999, 1234567],
                     10123,
                     "ft.onto.base_ontology.Phrase",
-                    Sentence,
+                    "Sentence",
                     0,
                 ]
             ]),
@@ -242,7 +243,7 @@ class DataStoreTest(unittest.TestCase):
                 [9999, 1234567],
                 10123,
                 "ft.onto.base_ontology.Phrase",
-                Sentence,
+                "Sentence",
                 0,
             ]
         }
@@ -439,7 +440,7 @@ class DataStoreTest(unittest.TestCase):
 
         data_store_non_file = DataStore()
         self.assertDictEqual(data_store_non_file._type_attributes, {})
-    
+
     def test_get_entry_attribute_by_class(self):
         entry_name_attributes_dict = {
             "data_store_test.TokenTest": [
@@ -466,6 +467,7 @@ class DataStoreTest(unittest.TestCase):
             self.assertEqual(
                 attribute_result, entry_name_attributes_dict[entry_name]
             )
+
 
 if __name__ == "__main__":
     unittest.main()
