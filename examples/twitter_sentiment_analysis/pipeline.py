@@ -20,8 +20,8 @@ from forte.data.readers import TerminalReader
 from forte.data.multi_pack import MultiPack
 
 from forte.pipeline import Pipeline
-from forte.vader import VaderSentimentProcessor
-from forte.tweepy import TweetSearchProcessor
+from fortex.vader import VaderSentimentProcessor
+from fortex.tweepy import TweetSearchProcessor
 from forte.data.selector import RegexNameMatchSelector
 
 
