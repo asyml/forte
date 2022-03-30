@@ -19,6 +19,7 @@ from forte.data.base_store import BaseStore
 from forte.data.entry_type_generator import EntryTypeGenerator
 from forte.data.ontology.top import Annotation
 from forte.common import constants
+from forte.utils.utils import get_qual_name
 
 __all__ = ["DataStore"]
 
@@ -247,58 +248,36 @@ class DataStore(BaseStore):
         entry += len(self._type_attributes[type_name]) * [None]
         return entry
 
-    def _is_subclass(
-        self, type_name: str, cls, include_onto_file: bool = False
-    ) -> bool:
-        r"""This function determines if a string class_type is
-        the subclass of a class.
+    def _is_subclass(self, type_name: str, cls) -> bool:
+        r"""This function determines if a string ``type_name`` is
+        the subclass of ``cls`` class.
 
         Args:
             type_name: A fully qualified name of an entry class
-            cls: An entry class.
-            include_onto_file: A boolean value whether the class is in user provided ontology file
+            cls: An entry class with fully qualified name.
 
         Returns:
-            A boolean value whether this `type_name` class is the subclass of `cls` or not.
+            A boolean value whether ``cls`` class is the father or grandfather of  ``type_name`` class or not.
 
         """
-
-        if include_onto_file:
-            if type_name in self._type_attributes["parent_class"].keys():
-                if (
-                    cls.__module__ + "." + cls.__name__
-                    in self._type_attributes["parent_class"][type_name]
-                ):
-                    return True
-                return False
-            return False
+        if type_name not in self._type_attributes:
+            self._type_attributes[type_name] = {}
+        if "parent_class" not in self._type_attributes[type_name]:
+            self._type_attributes[type_name].update(parent_class=[])
+        cls_qualified_name = cls.__module__ + '.' + get_qual_name(cls)
+        if cls_qualified_name in self._type_attributes[type_name]["parent_class"]:
+            return True
         else:
-            if "parent_class" not in self._type_attributes.keys():
-                self._type_attributes.update(parent_class={})
-
-            if type_name in self._type_attributes["parent_class"].keys():
-                if (
-                    cls.__module__ + "." + cls.__name__
-                    in self._type_attributes["parent_class"][type_name]
-                ):
-                    return True
+            entry_class = get_class(type_name)
+            if issubclass(entry_class, cls):
+                self._type_attributes[type_name]["parent_class"].append(cls_qualified_name)
+                cls_base_class = cls.__base__
+                if cls_base_class is not None:
+                    cls_base_qualified_name = cls_base_class.__module__ + '.' + get_qual_name(cls_base_class)
+                    self._type_attributes[type_name]["parent_class"].append(cls_base_qualified_name)
+                return True
             else:
-                entry_class = get_class(type_name)
-                self._type_attributes["parent_class"][type_name] = []
-                if issubclass(entry_class, cls):
-                    self._type_attributes["parent_class"][type_name].append(
-                        cls.__module__ + "." + cls.__name__
-                    )
-                    cls_base_class = cls.__base__
-                    if cls_base_class is not None:
-                        self._type_attributes["parent_class"][type_name].append(
-                            cls_base_class.__module__
-                            + "."
-                            + cls_base_class.__name__
-                        )
-                    return True
-                else:
-                    return False
+                return False
 
     def _is_annotation(self, type_name: str) -> bool:
         r"""This function takes a type_id and returns whether a type
