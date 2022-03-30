@@ -160,12 +160,12 @@ class DataStore(BaseStore):
          ``type_name``s.
 
             Example:
-            self.__elements = [
-                Token SortedList(),
-                Document SortedList(),
-                Sentence SortedList(),
+            self.__elements = {
+                "ft.onto.base_ontology.Token": Token SortedList(),
+                "ft.onto.base_ontology.Document": Document SortedList(),
+                "ft.onto.base_ontology.Sentence": Sentence SortedList(),
                 ...
-            ]
+            }
         """
         self.__elements: dict = {}
 
@@ -319,6 +319,7 @@ class DataStore(BaseStore):
             type_name (str): The fully qualified type name of the new Annotation.
             begin (int): Begin index of the entry.
             end (int): End index of the entry.
+
         Returns:
             ``tid`` of the entry.
         """
@@ -386,6 +387,9 @@ class DataStore(BaseStore):
             tid (int): Unique Id of the entry.
             attr_name (str): Name of the attribute.
             attr_value (any): Value of the attribute.
+
+        Raises:
+            KeyError: when ``tid`` or ``attr_name`` is not found.
         """
         try:
             entry = self.__entry_dict[tid]
@@ -426,6 +430,9 @@ class DataStore(BaseStore):
 
         Returns:
             The value of ``attr_name`` for the entry with ``tid``.
+
+        Raises:
+            KeyError: when ``tid`` or ``attr_name`` is not found.
         """
         try:
             entry = self.__entry_dict[tid]
@@ -462,6 +469,10 @@ class DataStore(BaseStore):
 
         Args:
             tid (int): Unique id of the entry.
+
+        Raises:
+            KeyError: when entry with ``tid`` is not found.
+            RuntimeError: when internal storage is inconsistent.
         """
         try:
             # get `entry data` and remove it from entry_dict
@@ -503,19 +514,21 @@ class DataStore(BaseStore):
         and `index_id`. Called by `delete_entry()`.
         This function will raise an IndexError if the `type_id` or `index_id`
         is invalid.
-        Raises KeyError when ``type_name`` is not found. Raises IndexError
-        when ``index_id`` is not found.
 
         Args:
             type_id (int): The index of the list in ``self.__elements``.
             index_id (int): The index of the entry in the list.
+
+        Raises:
+            KeyError: when ``type_name`` is not found.
+            IndexError: when ``index_id`` is not found.
         """
         try:
             target_list = self.__elements[type_name]
         except KeyError as e:
             raise KeyError(
                 f"The specified type [{type_name}] "
-                f"does not exist in self.__elements."
+                f"does not exist in current entry lists."
             ) from e
         if index_id < 0 or index_id >= len(target_list):
             raise IndexError(
