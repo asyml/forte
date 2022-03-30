@@ -272,8 +272,10 @@ class Vocabulary(Generic[ElementType]):
         filtered by any `VocabFilter`. Some special tokens has their
         unique behavior in the system.
 
-        Note: most of the time, you don't have to call this method yourself,
-        but should let the `init` function to handle that.
+        .. note::
+
+            most of the time, you don't have to call this method yourself,
+            but should let the `init` function to handle that.
 
         Args:
             element (str): The surface form of this special element.
@@ -562,7 +564,7 @@ class VocabFilter(ABC):
             element_id: The element id to be checked.
 
         Returns:
-
+            None
         """
         raise NotImplementedError
 

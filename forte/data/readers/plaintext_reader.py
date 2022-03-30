@@ -37,7 +37,8 @@ class PlainTextReader(PackReader):
         Args:
             text_directory: text directory containing the files.
 
-        Returns: Iterator over paths to .txt files
+        Returns:
+            Iterator over paths to .txt files
         """
         return dataset_path_iterator(text_directory, self.configs.file_ext)
 

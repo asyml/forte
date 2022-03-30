@@ -235,7 +235,8 @@ class HTMLReader(PackReader):
         Args:
             content: either a string, or list of string
 
-        Returns: Iterator over the content based on type of input
+        Returns:
+            Iterator over the content based on type of input
         """
         if isinstance(content, str):
             # Check if directory
@@ -305,7 +306,8 @@ class HTMLReader(PackReader):
         Args:
             text: The original html text to be cleaned.
 
-        Returns: List[Tuple[Span, str]]: the replacement operations
+        Returns:
+            List[Tuple[Span, str]]: the replacement operations
 
         """
         parser = ForteHTMLParser()
