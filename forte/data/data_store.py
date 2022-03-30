@@ -185,10 +185,13 @@ class DataStore(BaseStore):
 
     def _add_new_type(self, type_name: str):
         """
-        Add a new type input_entry_class into self._type_attributes.
-        This method will call get_entry_attribute_by_class(class)
+        Add a new type input_entry_class into ``_type_attributes``.
+        This method will call get_entry_attribute_by_class(class) to get all
+        attributes of a type.
         Args:
-        input_entry_class: A string or class type representing a class
+            input_entry_class: A string or class type representing a class
+        Raises:
+            RuntimeError: when the type is not provided by ontology file.
         """
         # check if type is in dictionary
         if type_name in self._type_attributes:
@@ -202,17 +205,16 @@ class DataStore(BaseStore):
         attributes = EntryTypeGenerator.get_entry_attributes_by_class(type_name)
 
         attr_dict = {}
-        idx = 4
+        idx = constants.ENTRY_TYPE_INDEX + 1
         for attr in attributes:
             attr_dict[attr] = idx
             idx += 1
 
         self._type_attributes[type_name] = {
             "attributes": attr_dict,
-            "parent_entry": None,
+            "parent_entry": [],
         }
         self.__elements[type_name] = SortedList()
-        assert len(self.__elements) == len(self._type_attributes)
 
     def _new_annotation(self, type_name: str, begin: int, end: int) -> List:
         r"""This function generates a new annotation with default fields.
@@ -496,7 +498,7 @@ class DataStore(BaseStore):
         if self._is_annotation(type_name):
             entry_index = bisect_left(target_list, entry_data)
         else:  # if it's group or link, use the index in entry_list
-            entry_index = entry_data[constants.ENTRY_LIST_INDEX]
+            entry_index = entry_data[constants.ENTRY_INDEX_INDEX]
 
         if (
             entry_index >= len(target_list)
