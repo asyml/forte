@@ -249,16 +249,17 @@ class DataStore(BaseStore):
         return entry
 
     def _is_subclass(self, type_name: str, cls) -> bool:
-        r"""This function determines if a string ``type_name`` is
-        the subclass of ``cls`` class.
+        r"""This function takes a fully qualified ``type_name`` class name,
+        ``cls`` class and returns whether ``type_name``  class is the``cls``
+        subclass or not.
 
         Args:
             type_name: A fully qualified name of an entry class
-            cls: An entry class with fully qualified name.
+            cls: An entry class.
 
         Returns:
-            A boolean value whether ``cls`` class is the father or
-            grandfather of  ``type_name`` class or not.
+            A boolean value whether ``type_name``  class is the``cls``
+            subclass or not.
 
         """
         if type_name not in self._type_attributes:
