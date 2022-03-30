@@ -35,6 +35,7 @@ from forte.processors.data_augment.algorithms.base_data_augmentation_op import (
 
 __all__ = ["BaseOpProcessor"]
 
+
 class BaseOpProcessor(MultiPackProcessor):
     r"""
     This is a Base Data Augmentation Op Processor that instantiates
@@ -173,10 +174,9 @@ class BaseOpProcessor(MultiPackProcessor):
 
             for pack_name in aug_pack_names:
                 data_pack: DataPack = input_pack.get_pack(pack_name)
-                self._new_data_packs[data_pack.pack_id] = \
-                    self.replacement_op.perform_augmentation(
-                        data_pack
-                    )
+                self._new_data_packs[
+                    data_pack.pack_id
+                ] = self.replacement_op.perform_augmentation(data_pack)
 
             (
                 self._data_pack_map,
