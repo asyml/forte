@@ -14,9 +14,7 @@
 import yaml
 from termcolor import colored
 import torch
-import sys
 
-sys.path.insert(0, "/home/murphy/Petuum/forte")
 from fortex.nltk import NLTKSentenceSegmenter, NLTKWordTokenizer, NLTKPOSTagger
 from forte.common.configuration import Config
 from forte.data.multi_pack import MultiPack
