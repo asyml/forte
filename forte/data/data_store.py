@@ -257,24 +257,36 @@ class DataStore(BaseStore):
             cls: An entry class with fully qualified name.
 
         Returns:
-            A boolean value whether ``cls`` class is the father or grandfather of  ``type_name`` class or not.
+            A boolean value whether ``cls`` class is the father or
+            grandfather of  ``type_name`` class or not.
 
         """
         if type_name not in self._type_attributes:
             self._type_attributes[type_name] = {}
         if "parent_class" not in self._type_attributes[type_name]:
             self._type_attributes[type_name].update(parent_class=[])
-        cls_qualified_name = cls.__module__ + '.' + get_qual_name(cls)
-        if cls_qualified_name in self._type_attributes[type_name]["parent_class"]:
+        cls_qualified_name = cls.__module__ + "." + get_qual_name(cls)
+        if (
+            cls_qualified_name
+            in self._type_attributes[type_name]["parent_class"]
+        ):
             return True
         else:
             entry_class = get_class(type_name)
             if issubclass(entry_class, cls):
-                self._type_attributes[type_name]["parent_class"].append(cls_qualified_name)
+                self._type_attributes[type_name]["parent_class"].append(
+                    cls_qualified_name
+                )
                 cls_base_class = cls.__base__
                 if cls_base_class is not None:
-                    cls_base_qualified_name = cls_base_class.__module__ + '.' + get_qual_name(cls_base_class)
-                    self._type_attributes[type_name]["parent_class"].append(cls_base_qualified_name)
+                    cls_base_qualified_name = (
+                        cls_base_class.__module__
+                        + "."
+                        + get_qual_name(cls_base_class)
+                    )
+                    self._type_attributes[type_name]["parent_class"].append(
+                        cls_base_qualified_name
+                    )
                 return True
             else:
                 return False
