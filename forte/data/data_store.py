@@ -15,7 +15,6 @@ from typing import List, Iterator, Tuple, Optional, Any
 import uuid
 from bisect import bisect_left
 
-from forte.data.ontology.ontology_code_generator import OntologyCodeGenerator
 from forte.utils import get_class
 from forte.data.base_store import BaseStore
 from forte.data.ontology.top import Annotation
@@ -567,28 +566,7 @@ class DataStore(BaseStore):
         """
         if self.onto_file_path is None:
             return
-
-        onto_gen = OntologyCodeGenerator()
-        merged_scheme, merged_dict = [], []
-        onto_gen.parse_ontology_spec(
-            self.onto_file_path, merged_scheme, merged_dict
-        )
-
-        self._type_attributes = {}
-
-        for onto in merged_scheme:
-            entry_name = onto["entry_name"]
-            attr_dict = {}
-            idx = constants.ATTR_BEGIN_INDEX
-            if "attributes" in onto:
-                for d in onto["attributes"]:
-                    name = d["name"]
-                    attr_dict[name] = idx
-                    idx += 1
-            entry_dict = {}
-            entry_dict["parent_entry"] = onto["parent_entry"]
-            entry_dict["attributes"] = attr_dict
-            self._type_attributes[entry_name] = entry_dict
+        raise NotImplementedError
 
     def _get_entry_attributes_by_class(
         self, input_entry_class_name: str
