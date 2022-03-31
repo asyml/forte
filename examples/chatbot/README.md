@@ -21,7 +21,7 @@ pip install tensorflow==2.4 # version compantible with numpy==1.19.5
 pip install faiss-gpu
 ```
 
-Then we need to install follow instructions in [forte-wrapper](https://github.com/asyml/forte-wrappers)
+Then we need to install follow instructions in [forte-wrappers](https://github.com/asyml/forte-wrappers)
 After cloning the repo, in the folder `forte-wrappers`, User needs to run the following command to install external packages.
 ```
 pip install src/faiss
