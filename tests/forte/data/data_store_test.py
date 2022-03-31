@@ -107,16 +107,18 @@ class DataStoreTest(unittest.TestCase):
             ),
             # empty list corresponds to Entry, test only
             "forte.data.ontology.core.Entry": SortedList([]),
-            "ft.onto.base_ontology.Phrase": SortedList([
+            "ft.onto.base_ontology.Phrase": SortedList(
                 [
-                    1,
-                    [9999, 1234567],
-                    10123,
-                    "ft.onto.base_ontology.Phrase",
-                    Sentence,
-                    0,
+                    [
+                        1,
+                        [9999, 1234567],
+                        10123,
+                        "ft.onto.base_ontology.Phrase",
+                        Sentence,
+                        0,
+                    ]
                 ]
-            ]),
+            ),
         }
         self.data_store._DataStore__entry_dict = {
             1234: [
@@ -166,7 +168,7 @@ class DataStoreTest(unittest.TestCase):
                 "ft.onto.base_ontology.Phrase",
                 Sentence,
                 0,
-            ]
+            ],
         }
 
     def test_co_iterator(self):
@@ -326,12 +328,22 @@ class DataStoreTest(unittest.TestCase):
         elements = list(self.data_store.co_iterator(type_names))
         self.assertEqual(elements, ordered_elements2)
 
-        # # include Token to test empty list
+        token_tn = "ft.onto.base_ontology.Token"
+        # include Token to test non-exist list
         def fn():
-            type_names.append("ft.onto.base_ontology.Token")
+            type_names.append(token_tn)
             list(self.data_store.co_iterator(type_names))
 
         self.assertRaises(ValueError, fn)
+
+        # test empty list
+        def fn():
+            type_names.append(token_tn)
+            self.data_store._DataStore__elements[token_tn] = SortedList()
+            list(self.data_store.co_iterator(type_names))
+
+        self.assertRaises(ValueError, fn)
+        # self.data_store._DataStore__elements[doc_tn]
 
     def test_add_annotation_raw(self):
         # # test add Document entry
@@ -434,8 +446,16 @@ class DataStoreTest(unittest.TestCase):
         self.data_store.delete_entry(1234)
         self.data_store.delete_entry(9999)
         # After 3 deletion. 2 left. (2 documents, 1 sentence, 1 group)
-        num_doc = len(self.data_store._DataStore__elements["ft.onto.base_ontology.Document"])
-        num_sent = len(self.data_store._DataStore__elements["ft.onto.base_ontology.Sentence"])
+        num_doc = len(
+            self.data_store._DataStore__elements[
+                "ft.onto.base_ontology.Document"
+            ]
+        )
+        num_sent = len(
+            self.data_store._DataStore__elements[
+                "ft.onto.base_ontology.Sentence"
+            ]
+        )
 
         self.assertEqual(len(self.data_store._DataStore__entry_dict), 2)
         self.assertEqual(num_doc, 1)
@@ -444,7 +464,14 @@ class DataStoreTest(unittest.TestCase):
         # delete group
         self.data_store.delete_entry(10123)
         self.assertEqual(len(self.data_store._DataStore__entry_dict), 1)
-        self.assertEqual(len(self.data_store._DataStore__elements["ft.onto.base_ontology.Phrase"]), 0)
+        self.assertEqual(
+            len(
+                self.data_store._DataStore__elements[
+                    "ft.onto.base_ontology.Phrase"
+                ]
+            ),
+            0,
+        )
 
     def test_delete_entry_nonexist(self):
         # Entry tid does not exist; should raise a KeyError
@@ -452,18 +479,31 @@ class DataStoreTest(unittest.TestCase):
             self.data_store.delete_entry(1000)
 
     def test_delete_entry_by_loc(self):
-        self.data_store._delete_entry_by_loc("ft.onto.base_ontology.Document", 1)
+        self.data_store._delete_entry_by_loc(
+            "ft.onto.base_ontology.Document", 1
+        )
         # dict entry is not deleted; only delete entry in element list
         self.assertEqual(len(self.data_store._DataStore__entry_dict), 5)
-        self.assertEqual(len(self.data_store._DataStore__elements["ft.onto.base_ontology.Document"]), 1)
+        self.assertEqual(
+            len(
+                self.data_store._DataStore__elements[
+                    "ft.onto.base_ontology.Document"
+                ]
+            ),
+            1,
+        )
 
         # index_id out of range
         with self.assertRaises(IndexError):
-            self.data_store._delete_entry_by_loc("ft.onto.base_ontology.Document", 1)
+            self.data_store._delete_entry_by_loc(
+                "ft.onto.base_ontology.Document", 1
+            )
 
         # type_name does not exist
         with self.assertRaises(KeyError):
-            self.data_store._delete_entry_by_loc("ft.onto.base_ontology.EntityMention", 1)
+            self.data_store._delete_entry_by_loc(
+                "ft.onto.base_ontology.EntityMention", 1
+            )
 
     def test_is_annotation(self):
         test_type_name = "ft.onto.base_ontology.Sentence"

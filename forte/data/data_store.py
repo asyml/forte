@@ -529,10 +529,20 @@ class DataStore(BaseStore):
         # then the time complexity of using min-heap to iterate
         # is O(M*log(N))
 
-        entries = []
+        # Initialize the first entry of all entry lists
+        # it avoid empty entry lists or non-existant entry list
+        first_entries = []
         for tn in type_names:
             if tn in self.__elements:
-                entries.append(self.__elements[tn][0])
+                if len(self.__elements[tn]) > 0:
+                    first_entries.append(self.__elements[tn][0])
+                else:
+                    raise ValueError(
+                        f"Entry list of type name ({tn}) is"
+                        " empty. Please check data in this DataStore "
+                        " to see if empty list is expected"
+                        f" or remove {tn} from input parameter type_names"
+                    )
             else:
                 raise ValueError(
                     f"Input parameter types name {tn} is not"
@@ -544,7 +554,8 @@ class DataStore(BaseStore):
         # pointers[i] is the index of entry at (i)th sorted entry lists
         pointers = [0] * n
 
-        # compare tuple (begin, end, order of type name in input argument type_names)
+        # compare tuple (begin, end, order of type name in input argument
+        # type_names)
         # we initialize a MinHeap with the first entry of all sorted entry lists
         # in self.__elements
         # the metric of comparing entry order is represented by the tuple
@@ -556,11 +567,11 @@ class DataStore(BaseStore):
                 h,
                 (
                     (
-                        entries[p_idx][constants.BEGIN_INDEX],
-                        entries[p_idx][constants.END_INDEX],
+                        first_entries[p_idx][constants.BEGIN_INDEX],
+                        first_entries[p_idx][constants.END_INDEX],
                         p_idx,
                     ),
-                    entries[p_idx][constants.ENTRY_TYPE_INDEX],
+                    first_entries[p_idx][constants.ENTRY_TYPE_INDEX],
                 ),
             )
 
