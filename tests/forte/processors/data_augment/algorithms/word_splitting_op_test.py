@@ -137,7 +137,6 @@ class TestWordSplittingProcessor(unittest.TestCase):
         new_entities,
     ):
         entity_config = {
-            "type": "data_augmentation_op",
             "data_aug_op": "forte.processors.data_augment.algorithms.word_splitting_op.RandomWordSplitDataAugmentOp",
             "data_aug_op_config": {
                 "other_entry_policy": {
