@@ -18,6 +18,8 @@ Unit tests for data store related operations.
 import logging
 import unittest
 from sortedcontainers import SortedList
+from typing import Optional, Dict
+from dataclasses import dataclass
 from forte.data.data_store import DataStore
 from ft.onto.base_ontology import Sentence
 
