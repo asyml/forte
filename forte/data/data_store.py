@@ -472,7 +472,7 @@ class DataStore(BaseStore):
         if index_id < 0 or index_id >= len(target_list):
             raise IndexError(
                 f"The specified index_id [{index_id}] of type [{type_name}]"
-                f"is out of boundry for entry list of length {len(target_list)}."
+                f"is out of boundary for entry list of length {len(target_list)}."
             )
         target_list.pop(index_id)
 
@@ -500,14 +500,14 @@ class DataStore(BaseStore):
         end fields. The co_iterator function will iterate those sorted lists
         together, and yield each entry in sorted order. This tasks is quite
         similar to merging several sorted list to one sorted list. We internally
-        use a `MinHeap` to order the order of yielded item, and the ordering
+        use a `MinHeap` to order the order of yielded items, and the ordering
         is determined by:
 
             - start index of the entry.
             - end index of the entry.
             - the index of the entry type name in input parameter ``type_names``.
 
-        The precedence of those values indicates their priority in min heap
+        The precedence of those values indicates their priority in the min heap
         ordering.
         For example, if two entries have both the same begin and end field,
         then their order is
@@ -520,6 +520,7 @@ class DataStore(BaseStore):
         Returns:
 
             An iterator of entry elements.
+
         """
 
         n = len(type_names)
@@ -535,7 +536,7 @@ class DataStore(BaseStore):
             else:
                 raise ValueError(
                     f"Input parameter types name {tn} is not"
-                    "available. Please input avaible ones in this DataStore"
+                    "available. Please input available ones in this DataStore"
                     f"object: {list(self.__elements.keys())}"
                 )
 
