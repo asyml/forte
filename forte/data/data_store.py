@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 from typing import List, Iterator, Tuple, Optional, Any
 import uuid
 from bisect import bisect_left
@@ -495,12 +496,14 @@ class DataStore(BaseStore):
         # Otherwise, use ``index_id`` to find the index of the entry.
         raise NotImplementedError
 
-    def co_iterator(self, type_names: List[str]) -> Iterator[List]:
+    def co_iterator_annotation_like(
+        self, type_names: List[str]
+    ) -> Iterator[List]:
         r"""
         Given two or more type names, iterate their entry lists from beginning to end together.
 
-        For every single type, their entry lists are sorted by the begin and
-        end fields. The co_iterator function will iterate those sorted lists
+        For every single type, their entry lists are sorted by the ``begin`` and
+        ``end`` fields. The ``co_iterator_annotation_like`` function will iterate those sorted lists
         together, and yield each entry in sorted order. This tasks is quite
         similar to merging several sorted list to one sorted list. We internally
         use a `MinHeap` to order the order of yielded items, and the ordering
@@ -516,6 +519,8 @@ class DataStore(BaseStore):
         then their order is
         decided by the order of user input type_name (the type that first
         appears in the target type list will return first).
+        For entries that have the exact same `begin`, `end` and `type_name`,
+        the order will be determined arbitrarily.
 
         Args:
             type_names (List[str]): a list of string type names
@@ -536,22 +541,24 @@ class DataStore(BaseStore):
         # it avoids empty entry lists or non-existant entry list
         first_entries = []
         for tn in type_names:
-            if tn in self.__elements:
-                if len(self.__elements[tn]) > 0:
-                    first_entries.append(self.__elements[tn][0])
-                else:
-                    raise ValueError(
-                        f"Entry list of type name ({tn}) is"
-                        " empty. Please check data in this DataStore "
-                        " to see if empty list is expected"
-                        f" or remove {tn} from input parameter type_names"
-                    )
-            else:
+            if tn not in self.__elements:
                 raise ValueError(
                     f"Input parameter types name {tn} is not"
                     "available. Please input available ones in this DataStore"
                     f"object: {list(self.__elements.keys())}"
                 )
+
+        for tn in type_names:
+            # raise error if it's empty list
+            if not self.__elements[tn]:
+                raise IndexError(
+                    f"Entry list of type name ({tn}) is"
+                    " empty. Please check data in this DataStore "
+                    " to see if empty list is expected"
+                    f" or remove {tn} from input parameter type_names"
+                )
+            else:
+                first_entries.append(self.__elements[tn][0])
 
         # record the current entry index for elements
         # pointers[i] is the index of entry at (i)th sorted entry lists
@@ -580,20 +587,22 @@ class DataStore(BaseStore):
             )
 
         while h:
-            # NOTE: we push the tuple to the heap
+            # NOTE: we push the ordering tuple to the heap
             # but not the actual entry. But we can retrieve
-            # the entry by the tuple's data.
+            # the entry by the tuple's data. Therefore,
+            # in some sense, the ordering tuple represents the entry.
+
             # In the following comments,
-            # the current entry means the entry that
-            # the popped tuples represents
-            # the current entry list means the entry list
-            # where the current entry locates at.
+            # `the current entry` means the entry that
+            #      popped entry_tuple represents.
+            # `the current entry list` means the entry
+            # list (values of self.__elements) where `the current entry`
+            # locates at.
 
             # retrieve the popped entry tuple (minimum item in the heap)
             # and get the p_idx (the index of the current entry list in self.__elements)
             entry_tuple = heappop(h)
-            type_name: str = entry_tuple[1]
-            _, _, p_idx = entry_tuple[0]
+            (_, _, p_idx), type_name = entry_tuple
             # get the index of current entry
             # and locate the entry represented by the tuple for yielding
             pointer = pointers[p_idx]
@@ -601,7 +610,7 @@ class DataStore(BaseStore):
             # check whether there is next entry in the current entry list
             # if there is, then we push the new entry's tuple into the heap
             if pointer + 1 < len(self.__elements[type_name]):
-                pointers[p_idx] = pointer + 1
+                pointers[p_idx] += 1
                 new_pointer = pointers[p_idx]
                 new_entry = self.__elements[type_name][new_pointer]
                 new_entry_tuple = (

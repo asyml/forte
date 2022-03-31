@@ -253,7 +253,7 @@ class DataStoreTest(unittest.TestCase):
             ],
         }
 
-    def test_co_iterator(self):
+    def test_co_iterator_annotation_like(self):
         type_names = [
             "ft.onto.base_ontology.Sentence",
             "ft.onto.base_ontology.Document",
@@ -303,7 +303,7 @@ class DataStoreTest(unittest.TestCase):
             ],
         ]
 
-        elements = list(self.data_store.co_iterator(type_names))
+        elements = list(self.data_store.co_iterator_annotation_like(type_names))
         self.assertEqual(elements, ordered_elements)
 
         # test sort by end index
@@ -353,7 +353,7 @@ class DataStoreTest(unittest.TestCase):
         sent_tn = "ft.onto.base_ontology.Sentence"
         self.data_store._DataStore__elements[doc_tn][0][0] = 0
         self.data_store._DataStore__elements[doc_tn][1][0] = 0
-        elements = list(self.data_store.co_iterator(type_names))
+        elements = list(self.data_store.co_iterator_annotation_like(type_names))
         self.assertEqual(elements, ordered_elements)
 
         # test sort by input type_names
@@ -404,27 +404,27 @@ class DataStoreTest(unittest.TestCase):
         ordered_elements2[1] = ordered_elements1[0]
         self.data_store._DataStore__elements[sent_tn][0][0] = 0
         self.data_store._DataStore__elements[sent_tn][0][1] = 5
-        elements = list(self.data_store.co_iterator(type_names))
+        elements = list(self.data_store.co_iterator_annotation_like(type_names))
         self.assertEqual(elements, ordered_elements1)
         type_names.reverse()
-        elements = list(self.data_store.co_iterator(type_names))
+        elements = list(self.data_store.co_iterator_annotation_like(type_names))
         self.assertEqual(elements, ordered_elements2)
 
         token_tn = "ft.onto.base_ontology.Token"
         # include Token to test non-exist list
-        def fn():
+        def value_err_fn():
             type_names.append(token_tn)
-            list(self.data_store.co_iterator(type_names))
+            list(self.data_store.co_iterator_annotation_like(type_names))
 
-        self.assertRaises(ValueError, fn)
+        self.assertRaises(ValueError, value_err_fn)
 
         # test empty list
-        def fn():
+        def index_err_fn():
             type_names.append(token_tn)
             self.data_store._DataStore__elements[token_tn] = SortedList()
-            list(self.data_store.co_iterator(type_names))
+            list(self.data_store.co_iterator_annotation_like(type_names))
 
-        self.assertRaises(ValueError, fn)
+        self.assertRaises(IndexError, index_err_fn)
         # self.data_store._DataStore__elements.pop(token_tn)
 
     def test_add_annotation_raw(self):
