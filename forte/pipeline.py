@@ -15,10 +15,13 @@
 Base class for Pipeline module.
 """
 
+import os
 import itertools
 import json
 import logging
 import sys
+import uuid
+from pathlib import Path
 from time import time
 from typing import (
     Any,
@@ -33,10 +36,7 @@ from typing import (
     Set,
 )
 
-import uvicorn
 import yaml
-from fastapi import FastAPI
-from pydantic import BaseModel
 
 from forte.common import ProcessorConfigError
 from forte.common.configuration import Config
@@ -130,8 +130,8 @@ class Pipeline(Generic[PackType]):
         r"""
 
         Args:
-            resource: The ``Resources`` object, which is a global registry used
-                in the pipeline. Objects defined as ``Resources`` will be
+            resource: The :class:`Resources` object, which is a global registry used
+                in the pipeline. Objects defined as :class:`Resources` will be
                 passed on to the processors in the
                 pipeline for initialization.
             ontology_file: The path to the input ontology specification file,
@@ -142,14 +142,14 @@ class Pipeline(Generic[PackType]):
                 pipeline component. Each component will check whether the input
                 pack contains the expected data
                 via checking the meta-data, and throws a
-                :class:`~forte.common.exception.ExpectedEntryNotFound` if it
+                :class:`~forte.common.exception.EntryNotFoundError` if it
                 fails. When this function is called with enforce is ``True``,
                 all the pipeline components would check if the input datapack
                 record matches
                 with the expected types and attributes if function
                 ``expected_types_and_attributes`` is implemented
                 for the processor. For example, processor A requires entry type
-                of ``ft.onto.base_ontology.Sentence``, and processor B would
+                of :class:`~ft.onto.base_ontology.Sentence`, and processor B would
                 produce this type in the output datapack, so ``record`` function
                 of processor B writes the record of this type in the datapack
                 and processor A implements ``expected_types_and_attributes`` to
@@ -231,7 +231,7 @@ class Pipeline(Generic[PackType]):
         function works with :meth:`~forte.pipeline.Pipeline.initialize` called
         after itself. Each component will check whether the input pack contains
         the expected data via checking the meta-data, and throws a
-        :class:`~forte.common.exception.ExpectedEntryNotFound` if the check
+        :class:`~forte.common.exception.EntryNotFoundError` if the check
         fails. The example of implementation is mentioned in the docstrings of
         :meth:`~forte.pipeline.Pipeline.__init__`.
 
@@ -260,9 +260,9 @@ class Pipeline(Generic[PackType]):
 
         Args:
             configs: The configs used to initialize the pipeline. It should be
-                a dictionary that contains `forte_ir_version`, `components`
+                a dictionary that contains `forte_ir_version`, ``components``
                 and `states`. `forte_ir_version` is a string used to validate
-                input format. `components` is a list of dictionary that
+                input format. ``components`` is a list of dictionary that
                 contains `type` (the class of pipeline components),
                 `configs` (the corresponding component's configs) and
                 `selector`. `states` will be used to update the pipeline states
@@ -453,8 +453,10 @@ class Pipeline(Generic[PackType]):
 
     def save(self, path: str):
         r"""Store the pipeline as an IR(intermediate representation) in yaml.
-        The path can then be passed to ``init_from_config_path`` to initialize
-        a pipeline. Note that calling ``init_from_config`` from a different
+        The path can then be passed to
+        :meth:`~forte.pipeline.Pipeline.init_from_config_path` to initialize
+        a pipeline. Note that calling
+        :meth:`~forte.pipeline.Pipeline.init_from_config` from a different
         python environment may not work for some self defined component classes
         because their module name is `__main__`.
 
@@ -463,6 +465,52 @@ class Pipeline(Generic[PackType]):
         """
         with open(path, "w", encoding="utf-8") as f:
             yaml.safe_dump(self._dump_to_config(), f)
+
+    def export(self, name: Optional[str] = None) -> Optional[str]:
+        r"""Exports pipeline to FORTE_EXPORT_PATH.
+
+        FORTE_EXPORT_PATH is a directory where all serialized pipeline will be stored.
+        Users can specify through environment variable FORTE_EXPORT_PATH.
+
+        This method will have the following behaviors:
+
+            - FORTE_EXPORT_PATH will be created if assigned but not found.
+
+            - If name is not provided, a default name `pipeline` will be used
+              and suffixed by UUID, to prevent overwriting
+              (e.g. `pipeline-4ba29336-aa05-11ec-abec-309c23414763.yml`).
+
+            - If name is provided, then no suffix will be appended.
+
+            - The pipeline is saved by :meth:`~forte.pipeline.Pipeline.save`,
+              which exports the pipeline by :meth:`~forte.pipeline.Pipeline._dump_to_config`
+              and saves it to a YAML file.
+
+        Args:
+            name: Export name of the pipeline. Default is None.
+
+        Returns:
+            Optional[str]: Export path of pipeline config YAML.
+
+        Raises:
+            ValueError: if export name is already taken.
+        """
+        export_path: Optional[str] = os.environ.get("FORTE_EXPORT_PATH")
+        if export_path:
+            os.makedirs(export_path, exist_ok=True)
+
+            if name:
+                export_name = f"{name}.yml"
+            else:
+                suffix = str(uuid.uuid1())
+                export_name = f"pipeline-{suffix}.yml"
+
+            export_path = os.path.join(export_path, export_name)
+            if Path(export_path).exists():
+                raise ValueError(f"{export_path} already exists.")
+
+            self.save(export_path)
+        return export_path
 
     def _remote_service_app(
         self, service_name: str = "", input_format: str = "string"
@@ -482,10 +530,27 @@ class Pipeline(Generic[PackType]):
 
         Returns:
             FastAPI: A FastAPI app for remote service.
+
+        Raises:
+            ImportError: An error occurred importing `fastapi` module.
         """
         # TODO: Currently we only support the `process` function, but it can
         # be extended by adding new interfaces that wrap up any Pipeline
         # method. Refer to https://fastapi.tiangolo.com for more info.
+        try:
+            # pylint:disable=import-outside-toplevel
+            from fastapi import FastAPI
+
+            # pydantic should be installed as dependency of fastapi
+            from pydantic import BaseModel
+        except ImportError as e:
+            raise ImportError(
+                "'fastapi' must be installed to get a service app of "
+                "pipeline. You can run 'pip install forte[remote]' to "
+                "install all the requirements needed to start a pipeline "
+                "service."
+            ) from e
+
         app = FastAPI()
         records: Optional[Dict[str, Set[str]]] = None
 
@@ -556,7 +621,21 @@ class Pipeline(Generic[PackType]):
                 `input_format` field on default page and can be queried and
                 validated against the expected input format set by user.
                 Default to `"string"`.
+
+        Raises:
+            ImportError: An error occurred importing `uvicorn` module.
         """
+        if "uvicorn" not in sys.modules:
+            try:
+                import uvicorn  # pylint: disable=import-outside-toplevel
+            except ImportError as e:
+                raise ImportError(
+                    "'uvicorn' must be installed to start a service of "
+                    "pipeline. You can run 'pip install forte[remote]' to "
+                    "install all the requirements needed to start a pipeline "
+                    "service."
+                ) from e
+
         self.initialize()
         uvicorn.run(
             self._remote_service_app(
@@ -583,7 +662,7 @@ class Pipeline(Generic[PackType]):
         all the components inside this pipeline.
 
         Returns:
-
+            None
         """
         # create EntryTree type object merged_entry_tree to store the parsed
         # entry tree from ontology specification file passed in as part of
@@ -900,7 +979,9 @@ class Pipeline(Generic[PackType]):
 
         Args:
             kwargs: the information needed to load the data. For example, if
-                :attr:`_reader` is :class:`StringReader`, this should contain a
+                :attr:`_reader` is
+                :class:`~forte.data.readers.string_reader.StringReader`, this
+                should contain a
                 single piece of text in the form of a string variable. If
                 :attr:`_reader` is a file reader, this can point to the file
                 path.
@@ -1349,7 +1430,7 @@ class Pipeline(Generic[PackType]):
             Iterator of the evaluator results. Each element is a tuple, where
             the first one is the name of the evaluator, and the second one
             is the output of the evaluator (see
-            :func:`~forte.evaluation.base.evaluator.get_result`).
+            :func:`~forte.evaluation.base.base_evaluator.Evaluator.get_result`).
         """
         for i in self.evaluator_indices:
             p = self.components[i]

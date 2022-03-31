@@ -40,12 +40,12 @@ class CharExtractor(BaseExtractor):
         Here:
 
         - "max_char_length": int
-            The maximum number of characters for one token in the text,
-            default is None, which means no limit will be set.
+          The maximum number of characters for one token in the text,
+          default is None, which means no limit will be set.
         - "entry_type": str
-            The fully qualified name of an annotation type entry. Characters
-            will be extracted based on these entries. Default is `Token`,
-            which means characters of tokens will be extracted.
+          The fully qualified name of an annotation type entry. Characters
+          will be extracted based on these entries. Default is `Token`,
+          which means characters of tokens will be extracted.
         """
         config = super().default_configs()
         config.update(
@@ -83,7 +83,7 @@ class CharExtractor(BaseExtractor):
                 features will be extracted within its range. If None, then the
                 whole data pack will be used as the context. Default is None.
 
-        Returns (Feature):
+        Returns:
             a iterator of feature that contains the characters of each
             specified annotation.
         """

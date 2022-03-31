@@ -37,6 +37,7 @@ class DictionaryReplacementOp(TextReplacementOp):
     with `prob` as the probability of replacement.
 
     The config should contain the following fields:
+
         - `dictionary`: The full qualified name of the dictionary class.
         - `prob`: The probability of replacement, should fall in [0, 1].
         - `lang`: The language of the text.

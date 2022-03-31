@@ -25,8 +25,10 @@ DeserializeDict = Dict[str, Callable[[Union[str, Path]], None]]
 
 
 class Resources:
-    r"""The ``Resources`` object is a global registry used in the pipeline.
-    Objects defined as ``Resources`` will be passed on to the processors in the
+    r"""The :class:`~forte.common.resources.Resources` object is a global
+    registry used in the pipeline.
+    Objects defined as :class:`~forte.common.resources.Resources` will be
+    passed on to the processors in the
     pipeline for initialization.
     """
 
@@ -39,19 +41,19 @@ class Resources:
         keys: Optional[Union[List[str], SerializeDict]] = None,
         output_dir: Optional[str] = None,
     ):
-        r"""Save the resources specified by ``keys`` in binary format.
+        r"""Save the resources specified by :attr:`keys` in binary format.
 
         Args:
-            keys (optional): list or dict
+            keys (Optional) list or dict:
 
-                - If ``keys`` is a list, the objects corresponding to those keys
+                - If :attr:`keys` is a list, the objects corresponding to those keys
                   are saved
-                - If ``keys`` is a dict mapping from a key to a serialize
-                  function, then the serialize function will be used to save the
-                  object corresponding to that key
-                - If ``keys`` is None, all objects in this resource will be
+                - If :attr:`keys` is a dict mapping from a key to a serialize
+                  function, then the serialize function will be used to save
+                  the object corresponding to that key
+                - If :attr:`keys` is None, all objects in this resource will be
                   saved.
-            output_dir (optional): str
+            output_dir (Optional): str
                 A directory specifying the location to save the resources.
         """
 
@@ -99,17 +101,17 @@ class Resources:
         keys: Union[List[str], DeserializeDict],
         path: Optional[str] = None,
     ):
-        r"""Load the resources specified by ``keys``.
+        r"""Load the resources specified by :attr:`keys`.
 
         Args:
-            keys: list or dict
+            keys (Union[List[str], DeserializeDict]) list or dict:
 
-                - If ``keys`` is a list, the objects corresponding to those keys
+                - If :attr:`keys` is a list, the objects corresponding to those keys
                   are loaded
-                - If ``keys`` is a dict mapping from a key to a deserialize
+                - If :attr:`keys` is a dict mapping from a key to a deserialize
                   function, then the deserialize function will be used to load
                   the object corresponding to that key
-            path (optional): str
+            path (Optional): str
                 A directory specifying the location to load the resources from.
         """
 

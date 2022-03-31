@@ -272,8 +272,10 @@ class Vocabulary(Generic[ElementType]):
         filtered by any `VocabFilter`. Some special tokens has their
         unique behavior in the system.
 
-        Note: most of the time, you don't have to call this method yourself,
-        but should let the `init` function to handle that.
+        .. note::
+
+            most of the time, you don't have to call this method yourself,
+            but should let the `init` function to handle that.
 
         Args:
             element (str): The surface form of this special element.
@@ -369,7 +371,7 @@ class Vocabulary(Generic[ElementType]):
 
         Returns:
             The corresponding element if exist. Check the behavior
-             of this function under different setting in the documentation.
+            of this function under different setting in the documentation.
 
         Raises:
             KeyError: If the id is not found.
@@ -387,8 +389,8 @@ class Vocabulary(Generic[ElementType]):
 
         Returns:
             Union[int, List[int]]: The corresponding representation
-             of the element. Check the behavior of this function
-             under different setting in the documentation.
+            of the element. Check the behavior of this function
+            under different setting in the documentation.
 
         Raises:
             KeyError: If element is not found and vocabulary does
@@ -419,9 +421,10 @@ class Vocabulary(Generic[ElementType]):
         """
         Create a dictionary from the vocabulary storing all the known elements.
 
-        Returns: The vocabulary as a Dict from ElementType to the
-          representation of the element (could be Integer or One-hot vector,
-          depending on the settings of this class).
+        Returns:
+            The vocabulary as a Dict from ElementType to the
+            representation of the element (could be Integer or One-hot vector,
+            depending on the settings of this class).
         """
         vocab_dict: Dict[ElementType, Any] = {}
         for element in self._element2id:
@@ -561,7 +564,7 @@ class VocabFilter(ABC):
             element_id: The element id to be checked.
 
         Returns:
-
+            None
         """
         raise NotImplementedError
 

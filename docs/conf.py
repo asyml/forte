@@ -42,6 +42,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "myst_parser",
     "sphinxcontrib.spelling",
+    "nbsphinx",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -91,7 +92,12 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+exclude_patterns = [
+    "_build",
+    "Thumbs.db",
+    ".DS_Store",
+    "notebook_tutorial/notebook_test_tutorial.ipynb",
+]
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
@@ -340,6 +346,11 @@ extlinks = {
     ),
     "gym": ("https://gym.openai.com/docs/%s", None),
 }
+
+
+# disable notebook execution
+nbsphinx_execute = "never"
+
 
 ##### Customize ######
 

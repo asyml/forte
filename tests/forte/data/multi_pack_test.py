@@ -176,6 +176,45 @@ class DataPackTest(unittest.TestCase):
             ],
         )
 
+        # fix bug 559: additional test for index to pack_id changes
+        serialized_mp = self.multi_pack.to_string(drop_record=False)
+        recovered_mp = MultiPack.from_string(serialized_mp)
+        s_packs = [p.to_string() for p in self.multi_pack.packs]
+        recovered_packs = [DataPack.from_string(s) for s in s_packs]
+
+        # 1st verify recovered_packs
+        left_tokens_recovered = [t.text for t in recovered_packs[0].get(Token)]
+        right_tokens_recovered = [t.text for t in recovered_packs[1].get(Token)]
+
+        self.assertListEqual(
+            left_tokens_recovered, ["This", "pack", "contains", "some", "sample", "data."]
+        )
+        self.assertListEqual(
+            right_tokens_recovered,
+            ["This", "pack", "contains", "some", "other", "sample", "data."],
+        )
+
+        recovered_mp.relink(recovered_packs)
+
+        # teh verfiy the links are ok (restored correctly)
+        linked_tokens_recovered = []
+        for link in recovered_mp.all_links:
+            parent_text = link.get_parent().text
+            child_text = link.get_child().text
+            linked_tokens_recovered.append((parent_text, child_text))
+
+        self.assertListEqual(
+            linked_tokens_recovered,
+            [
+                ("This", "This"),
+                ("pack", "pack"),
+                ("contains", "contains"),
+                ("some", "some"),
+                ("sample", "sample"),
+                ("data.", "data."),
+            ],
+        )
+
         # 3. Test deletion
 
         # Delete the second link.

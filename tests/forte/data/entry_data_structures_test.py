@@ -178,6 +178,54 @@ class MultiEntryStructure(unittest.TestCase):
         self.assertEqual(re_mpe.refer_entry.tid, mpe.refer_entry.tid)
         self.assertEqual(re_mpe.tid, mpe.tid)
 
+    def test_mp_pointer_with_version(self):
+        old_serialized_mp = """{"py/object": "forte.data.multi_pack.MultiPack", "py/state": {"_creation_records": {}, 
+        "_field_records": {}, "links": [], "groups": [], "_meta": {"py/object": "forte.data.multi_pack.MultiPackMeta",
+         "py/state": {"pack_name": "doc1", "_pack_id": 181242127422469546094667436428172965279, "record": {}}}, 
+         "_pack_ref": [339609801674405881625808524240847417793, 2921617025007791382061014912332775176], 
+         "_inverse_pack_ref": {"339609801674405881625808524240847417793": 0, "2921617025007791382061014912332775176": 1}, 
+         "_pack_names": ["pack1", "pack2"], "_name_index": {"pack1": 0, "pack2": 1}, "generics": [{"py/object": 
+         "entry_data_structures_test.ExampleMPEntry", "py/state": {"_tid": 47726154965183551280893968259456773646, 
+         "refer_entry": {"py/object": "forte.data.ontology.core.MpPointer", "py/state": 
+         {"_pack_index": 0, "_tid": 75914137358482571607300906707755792037}}}}], 
+         "_MultiPack__default_pack_prefix": "_pack"}}"""
+
+        recovered_mp = MultiPack.from_string(old_serialized_mp)
+        from forte.version import DEFAULT_PACK_VERSION
+        self.assertEqual(recovered_mp.pack_version, DEFAULT_PACK_VERSION)
+
+        s_packs: List[str] = ["""{"py/object": "forte.data.data_pack.DataPack", "py/state": {"_creation_records": {}, 
+        "_field_records": {}, "links": [], "groups": [], "_meta": {"py/object": "forte.data.data_pack.Meta", 
+        "py/state": {"pack_name": null, "_pack_id": 339609801674405881625808524240847417793, "record": {}, 
+        "language": "eng", "span_unit": "character", "info": {}}}, "_text": "", "annotations": [], "generics": 
+        [{"py/object": "entry_data_structures_test.ExampleEntry", "py/state": 
+        {"_tid": 75914137358482571607300906707755792037, "secret_number": 1}}], 
+        "_DataPack__replace_back_operations": [], "_DataPack__processed_original_spans": [], 
+        "_DataPack__orig_text_len": 0}}""", """{"py/object": "forte.data.data_pack.DataPack", "py/state": 
+        {"_creation_records": {}, "_field_records": {}, "links": [], "groups": [], "_meta": {"py/object": 
+        "forte.data.data_pack.Meta", "py/state": {"pack_name": null, "_pack_id": 2921617025007791382061014912332775176, 
+        "record": {}, "language": "eng", "span_unit": "character", "info": {}}}, "_text": "", "annotations": [], 
+        "generics": [{"py/object": "entry_data_structures_test.ExampleEntry", "py/state": 
+        {"_tid": 242133944929228462168174254535391188929}}], "_DataPack__replace_back_operations": [], 
+        "_DataPack__processed_original_spans": [], "_DataPack__orig_text_len": 0}}"""]
+
+        recovered_packs = [DataPack.from_string(s) for s in s_packs]
+
+        recovered_mp.relink(recovered_packs)
+
+        re_mpe: ExampleMPEntry = recovered_mp.get_single(ExampleMPEntry)
+        self.assertIsInstance(re_mpe.refer_entry, ExampleEntry)
+
+    def test_multipack_deserialized_dictionary_recover(self):
+        serialized_mp = self.pack.to_string(drop_record=True)
+        recovered_mp = MultiPack.from_string(serialized_mp)
+
+        s_packs = [p.to_string() for p in self.pack.packs]
+        recovered_packs = [DataPack.from_string(s) for s in s_packs]
+        pid = recovered_packs[0].pack_id
+        self.assertEqual(recovered_mp._inverse_pack_ref[pid], 0)
+        recovered_mp.relink(recovered_packs)
+
 
 class EntryDataStructure(unittest.TestCase):
     def setUp(self):
@@ -257,10 +305,10 @@ class EntryDataStructure(unittest.TestCase):
     def test_entry_key_memories(self):
         pack = (
             Pipeline[MultiPack]()
-            .set_reader(EmptyReader())
-            .add(ChildEntryAnnotator())
-            .initialize()
-            .process(["pack1", "pack2"])
+                .set_reader(EmptyReader())
+                .add(ChildEntryAnnotator())
+                .initialize()
+                .process(["pack1", "pack2"])
         )
 
         DataPack.from_string(pack.to_string(True))

@@ -43,8 +43,8 @@ class CoNLLNERPredictor(RequestPackingProcessor):
     <https://arxiv.org/abs/1603.01354>`_.
 
     Note that to use :class:`CoNLLNERPredictor`, the :attr:`ontology` of
-    :class:`Pipeline` must be an ontology that include
-    ``ft.onto.base_ontology.Token`` and ``ft.onto.base_ontology.Sentence``.
+    :class:`~forte.pipeline.Pipeline` must be an ontology that include
+    :class:`ft.onto.base_ontology.Token` and :class:`ft.onto.base_ontology.Sentence`.
     """
 
     def __init__(self):

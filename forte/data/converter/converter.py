@@ -66,12 +66,12 @@ class Converter:
 
         Here:
 
-            `"to_numpy"`: bool
-                Whether convert to `numpy.ndarray`.
-                Default is True.
+            - `"to_numpy"`: bool
+              Whether convert to `numpy.ndarray`.
+              Default is True.
 
-            `"to_torch"`: bool
-                 Whether convert to `torch.tensor`. Default is True.
+            - `"to_torch"`: bool
+              Whether convert to `torch.tensor`. Default is True.
 
             .. note::
                 If `need_pad` in :class:`forte.data.converter.Feature`

@@ -47,7 +47,7 @@ class AttributeExtractor(BaseExtractor):
         super().initialize(config)
         if self.config.entry_type is None:
             raise ProcessorConfigError(
-                "The `entry_type` configuration must be "
+                "The ``entry_type`` configuration must be "
                 "provided and cannot be None."
             )
         if self.config.attribute is None:
@@ -64,15 +64,15 @@ class AttributeExtractor(BaseExtractor):
         Here:
 
         - "`attribute`": str
-              The name of the attribute we want to extract from the entry. This
-              attribute should present in the entry definition. There are some
-              built-in attributes for some instance, such as `text` for
-              `Annotation` entries. `tid` should be also available for any
-              entries. The default value is `tid`.
+          The name of the attribute we want to extract from the entry. This
+          attribute should present in the entry definition. There are some
+          built-in attributes for some instance, such as `text` for
+          `Annotation` entries. ``tid`` should be also available for any
+          entries. The default value is ``tid``.
         - "`entry_type`": str
-              The fully qualified name of the entry to extract attributes from.
-              The default value is None, but this value must present or an
-              `ProcessorConfigError` will be thrown.
+          The fully qualified name of the entry to extract attributes from.
+          The default value is None, but this value must present or an
+          `ProcessorConfigError` will be thrown.
         """
         config = super().default_configs()
         config.update(
@@ -155,7 +155,8 @@ class AttributeExtractor(BaseExtractor):
                 features will be extracted within its range. If None, then the
                 whole data pack will be used as the context. Default is None.
 
-        Returns: Features (attributes) for instance with in the provided
+        Returns:
+            Features (attributes) for instance with in the provided
             context, they will be converted to the representation based on
             the vocabulary configuration.
         """

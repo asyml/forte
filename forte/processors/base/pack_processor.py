@@ -27,13 +27,13 @@ __all__ = ["BasePackProcessor", "PackProcessor", "MultiPackProcessor"]
 class BasePackProcessor(BaseProcessor[PackType], ABC):
     r"""The base class of processors that process one pack in a streaming way.
     If you are looking for batching (that might happen across packs, refer to
-    :class:`BaseBatchProcessor`.
+    :class:`~forte.processors.base.batch_processor.BaseBatchProcessor`.
     """
     pass
 
 
 class PackProcessor(BasePackProcessor[DataPack], ABC):
-    r"""The base class of processors that process one :class:`DataPack` each
+    r"""The base class of processors that process one :class:`~forte.data.data_pack.DataPack` each
     time.
     """
 
@@ -43,7 +43,7 @@ class PackProcessor(BasePackProcessor[DataPack], ABC):
 
 class MultiPackProcessor(BasePackProcessor[MultiPack], ABC):
     r"""
-    The base class of processors that process :class:`MultiPack` each time.
+    The base class of processors that process :class:`~forte.data.multi_pack.MultiPack` each time.
     """
 
     def _process(self, input_pack: MultiPack):

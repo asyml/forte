@@ -72,15 +72,14 @@ class TypoReplacementOp(TextReplacementOp):
 
     Args:
         configs:
-            The config should contain
-                prob (float): The probability of replacement,
-                    should fall in [0, 1].
-                dict_path (str): the `url` or the path to the pre-defined
-                    typo json file. The key is a word we want to replace.
-                    The value is a list containing various typos
-                    of the corresponding key.
-                typo_generator (str): A generator that takes in a word and
-                    outputs the replacement typo.
+            - prob (float): The probability of replacement,
+              should fall in [0, 1].
+            - dict_path (str): the `url` or the path to the pre-defined
+              typo json file. The key is a word we want to replace.
+              The value is a list containing various typos
+              of the corresponding key.
+            - typo_generator (str): A generator that takes in a word and
+              outputs the replacement typo.
     """
 
     def __init__(self, configs: Union[Config, Dict[str, Any]]):

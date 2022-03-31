@@ -23,9 +23,6 @@ import logging
 from typing import Dict, Set, Any, Optional
 import requests
 
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
-
 from forte.common import Resources, ProcessorConfigError
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
@@ -153,7 +150,7 @@ class RemoteProcessor(PackProcessor):
         result = response.json()["result"]
         input_pack.update(DataPack.from_string(result))  # type: ignore
 
-    def set_test_mode(self, app: FastAPI):
+    def set_test_mode(self, app):
         """
         Configure the processor into test mode. This should only be called
         from a pytest program.
@@ -161,6 +158,15 @@ class RemoteProcessor(PackProcessor):
         Args:
             app: A fastapi app from a Forte pipeline.
         """
+        try:
+            # pylint: disable=import-outside-toplevel
+            from fastapi.testclient import TestClient
+        except ImportError as err:
+            raise ImportError(
+                "'fastapi' must be installed to run the test client for "
+                "RemoteProcessor. You can run 'pip install forte[remote]' to "
+                "install all the requirements needed to use RemoteProcessor."
+            ) from err
         self._requests = TestClient(app)
 
     @classmethod

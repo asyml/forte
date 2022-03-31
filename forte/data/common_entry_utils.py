@@ -52,9 +52,10 @@ def get_last_utterance(
 def create_utterance(input_pack: DataPack, text: str, speaker: str):
     """
     Create an utterance in the datapack. This is composed of two steps:
-     1. Append the utterance text to the data pack.
-     2. Create :class:`~ft.onto.base_ontology.Utterance` entry on the text.
-     3. Set the speaker of the utterance to the provided `speaker`.
+
+        1. Append the utterance text to the data pack.
+        2. Create :class:`~ft.onto.base_ontology.Utterance` entry on the text.
+        3. Set the speaker of the utterance to the provided `speaker`.
 
     Args:
         input_pack: The data pack to add utterance into.

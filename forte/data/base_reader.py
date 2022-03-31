@@ -53,8 +53,14 @@ class BaseReader(PipelineComponent[PackType], ABC):
         cache_directory (str, optional): The base directory to place the
             path of the caching files. Each collection is contained in one
             cached file, under this directory. The cached location for each
-            collection is computed by :meth:`_cache_key_function`. Note:
-            A collection is the data returned by :meth:`_collect`.
+            collection is computed by
+            :meth:`~forte.data.base_reader.BaseReader._cache_key_function`.
+
+            .. note::
+
+                A collection is the data returned by
+                :meth:`~forte.data.base_reader.BaseReader._collect`.
+
         append_to_cache (bool, optional): Decide whether to append write
             if cache file already exists.  By default (``False``), we
             will overwrite the existing caching file. If ``True``, we will
@@ -96,12 +102,13 @@ class BaseReader(PipelineComponent[PackType], ABC):
         during pipeline construction.
 
         Here:
+
           - zip_pack (bool): whether to zip the results. The default value is
-             False.
+            False.
 
           - serialize_method: The method used to serialize the data. Current
-              available options are "jsonpickle" and "pickle". Default is
-              "jsonpickle".
+            available options are "jsonpickle" and "pickle". Default is
+            "jsonpickle".
 
         """
         return {"zip_pack": False, "serialize_method": "jsonpickle"}
@@ -173,7 +180,8 @@ class BaseReader(PipelineComponent[PackType], ABC):
         Args:
             text: The original data text to be cleaned.
 
-        Returns (List[Tuple[Tuple[int, int], str]]): the replacement operations.
+        Returns (List[Tuple[Tuple[int, int], str]]):
+            the replacement operations.
         """
         return []
 
@@ -251,7 +259,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
         r"""An iterator over the entire dataset, giving all Packs processed
         as list or Iterator depending on `lazy`, giving all the Packs read
         from the data source(s). If not reading from cache, should call
-        :meth:`collect`.
+        ``collect``.
 
         Args:
             args: One or more input data sources, for example, most
@@ -300,10 +308,11 @@ class BaseReader(PipelineComponent[PackType], ABC):
         r"""Specify the path to the cache directory.
 
         After you call this method, the dataset reader will use its
-        ``cache_directory`` to store a cache of :class:`BasePack` read
-        from every document passed to :func:`read`, serialized as one
-        string-formatted :class:`BasePack`. If the cache file for a given
-        ``file_path`` exists, we read the :class:`BasePack` from the cache.
+        ``cache_directory`` to store a cache of
+        :class:`~forte.data.base_pack.BasePack` read
+        from every document passed to read, serialized as one
+        string-formatted :class:`~forte.data.base_pack.BasePack`. If the cache file for a given
+        ``file_path`` exists, we read the :class:`~forte.data.base_pack.BasePack` from the cache.
         If the cache file does not exist, we will `create` it on our first
         pass through the data.
 
@@ -349,7 +358,8 @@ class BaseReader(PipelineComponent[PackType], ABC):
         Args:
             cache_filename: Path to the cache file.
 
-        Returns: List of cached data packs.
+        Returns:
+            List of cached data packs.
         """
         logger.info("reading from cache file %s", cache_filename)
         with open(cache_filename, "r", encoding="utf-8") as cache_file:
@@ -366,19 +376,21 @@ class BaseReader(PipelineComponent[PackType], ABC):
         pass
 
     def set_text(self, pack: DataPack, text: str):
-        r"""Assign the text value to the :class:`DataPack`. This function will
-        pass the ``text_replace_operation`` to the :class:`DataPack` to conduct
+        r"""Assign the text value to the
+        :class:`~forte.data.data_pack.DataPack`. This function will
+        pass the ``text_replace_operation`` to the
+        :class:`~forte.data.data_pack.DataPack` to conduct
         the pre-processing step.
 
         Args:
-            pack: The :class:`DataPack` to assign value for.
+            pack: The :class:`~forte.data.data_pack.DataPack` to assign value for.
             text: The original text to be recorded in this dataset.
         """
         pack.set_text(text, replace_func=self.text_replace_operation)
 
 
 class PackReader(BaseReader[DataPack], ABC):
-    r"""A Pack Reader reads data into :class:`DataPack`."""
+    r"""A Pack Reader reads data into :class:`~forte.data.data_pack.DataPack`."""
 
     @staticmethod
     def pack_type():
@@ -386,8 +398,9 @@ class PackReader(BaseReader[DataPack], ABC):
 
 
 class MultiPackReader(BaseReader[MultiPack], ABC):
-    r"""The basic :class:`MultiPack` data reader class. To be inherited by all
-    data readers which return :class:`MultiPack`.
+    r"""The basic :class:`~forte.data.multi_pack.MultiPack` data reader class.
+    To be inherited by all
+    data readers which return :class:`~forte.data.multi_pack.MultiPack`.
     """
 
     @staticmethod

@@ -52,12 +52,12 @@ class StringReader(PackReader):
             yield data
 
     def _parse_pack(self, data_source: str) -> Iterator[DataPack]:
-        r"""Takes a raw string and converts into a :class:`DataPack`.
+        r"""Takes a raw string and converts into a :class:`~forte.data.data_pack.DataPack`.
 
         Args:
             data_source: str that contains text of a document.
 
-        Returns: :class:`DataPack` containing Document.
+        Returns: :class:`~forte.data.data_pack.DataPack` containing Document.
         """
         pack = DataPack()
 

@@ -16,6 +16,7 @@ Defines the basic data structures and interfaces for the Forte data
 representation system.
 """
 import uuid
+
 from abc import abstractmethod, ABC
 from collections.abc import MutableSequence, MutableMapping
 from dataclasses import dataclass
@@ -35,6 +36,8 @@ from typing import (
 
 import numpy as np
 
+from packaging.version import Version
+
 from forte.data.container import ContainerType, BasePointer
 
 __all__ = [
@@ -53,6 +56,7 @@ __all__ = [
 ]
 
 from forte.utils import get_full_module_name
+from forte.version import DEFAULT_PACK_VERSION, PACK_ID_COMPATIBLE_VERSION
 
 default_entry_fields = [
     "_Entry__pack",
@@ -90,7 +94,7 @@ def set_state_func(instance, state):
         state:
 
     Returns:
-
+        None
     """
     # During de-serialization, convert the list back to numpy array.
     if "_embedding" in state:
@@ -152,7 +156,8 @@ def get_state_func(instance):
 class Entry(Generic[ContainerType]):
     r"""The base class inherited by all NLP entries. This is the main data type
     for all in-text NLP analysis results. The main sub-types are
-    ``Annotation``, ``Link``, ``Generics``, and ``Group``.
+    :class:`~forte.data.ontology.top.Annotation`, ``Link``, ``Generics``, and
+    ``Group``.
 
     An :class:`forte.data.ontology.top.Annotation` object represents a
     span in text.
@@ -160,10 +165,13 @@ class Entry(Generic[ContainerType]):
     A :class:`forte.data.ontology.top.Link` object represents a binary
     link relation between two entries.
 
+    A :class:`forte.data.ontology.top.Generics` object.
+
     A :class:`forte.data.ontology.top.Group` object represents a
     collection of multiple entries.
 
     Main Attributes:
+
         - embedding: The embedding vectors (numpy array of floats) of this
           entry.
 
@@ -224,7 +232,7 @@ class Entry(Generic[ContainerType]):
         Get the id of this entry.
 
         Returns:
-
+            id of the entry
         """
         return self._tid
 
@@ -238,7 +246,7 @@ class Entry(Generic[ContainerType]):
         Get the id of the pack that contains this entry.
 
         Returns:
-
+            id of the pack that contains this entry.
         """
         return self.__pack.pack_id  # type: ignore
 
@@ -270,14 +278,16 @@ class Entry(Generic[ContainerType]):
         ``from_entry``.
 
         Args:
-            from_entry: The entry to point from.
+            from_entry: the entry to point from.
 
         Returns:
-             A pointer to the this entry from the ``from_entry``.
+            A pointer to the this entry from the ``from_entry``.
         """
         if isinstance(from_entry, MultiEntry):
             return MpPointer(
-                from_entry.pack.get_pack_index(self.pack_id), self.tid
+                # bug fix/enhancement 559: change pack index to pack_id for multi-entry/multi-pack
+                self.pack_id,
+                self.tid,  # from_entry.pack.get_pack_index(self.pack_id)
             )
         elif isinstance(from_entry, Entry):
             return Pointer(self.tid)
@@ -290,7 +300,7 @@ class Entry(Generic[ContainerType]):
             ptr: A pointer that refer to an entity.
 
         Returns:
-
+            None
         """
         if isinstance(ptr, Pointer):
             return self.pack.get_entry(ptr.tid)
@@ -367,14 +377,14 @@ class Entry(Generic[ContainerType]):
 
     def __eq__(self, other):
         r"""
-        The eq function for :class:`Entry` objects.
+        The eq function for :class:`~forte.data.ontology.core.Entry` objects.
         Can be further implemented in each subclass.
 
         Args:
             other:
 
         Returns:
-
+            None
         """
         if other is None:
             return False
@@ -386,7 +396,7 @@ class Entry(Generic[ContainerType]):
         return (str(type(self))) < (str(type(other)))
 
     def __hash__(self) -> int:
-        r"""The hash function for :class:`Entry` objects.
+        r"""The hash function for :class:`~forte.data.ontology.core.Entry` objects.
         To be implemented in each subclass.
         """
         return hash((type(self), self._tid))
@@ -429,7 +439,20 @@ class MultiEntry(Entry, ABC):
         if isinstance(ptr, Pointer):
             return self.pack.get_entry(ptr.tid)
         elif isinstance(ptr, MpPointer):
-            return self.pack.packs[ptr.pack_index].get_entry(ptr.tid)
+            # bugfix/new feature 559: in new version pack_index will be using pack_id internally
+            pack_array_index = ptr.pack_index  # old version
+            pack_version = ""
+            try:
+                pack_version = self.pack.pack_version
+            except AttributeError:
+                pack_version = DEFAULT_PACK_VERSION  # set to default if lacking version attribute
+
+            if Version(pack_version) >= Version(PACK_ID_COMPATIBLE_VERSION):
+                pack_array_index = self.pack.get_pack_index(
+                    ptr.pack_index
+                )  # default: new version
+
+            return self.pack.packs[pack_array_index].get_entry(ptr.tid)
         else:
             raise TypeError(f"Unknown pointer type {ptr.__class__}")
 
@@ -750,7 +773,7 @@ class BaseLink(Entry, ABC):
         r"""Get the parent entry of the link.
 
         Returns:
-             An instance of :class:`Entry` that is the child of the link
+             An instance of :class:`~forte.data.ontology.core.Entry` that is the child of the link
              from the given :class:`~forte.data.data_pack.DataPack`.
         """
         raise NotImplementedError
@@ -760,7 +783,7 @@ class BaseLink(Entry, ABC):
         r"""Get the child entry of the link.
 
         Returns:
-             An instance of :class:`Entry` that is the child of the link
+             An instance of :class:`~forte.data.ontology.core.Entry` that is the child of the link
              from the given :class:`~forte.data.data_pack.DataPack`.
         """
         raise NotImplementedError
@@ -845,7 +868,7 @@ class BaseGroup(Entry, Generic[EntryType]):
         r"""Get the member entries in the group.
 
         Returns:
-             Instances of :class:`Entry` that are the members of the
+             Instances of :class:`~forte.data.ontology.core.Entry` that are the members of the
              group.
         """
         raise NotImplementedError

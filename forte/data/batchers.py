@@ -71,7 +71,7 @@ class ProcessingBatcher(Generic[PackType], Configurable):
         pipeline initialize stage.
 
         Returns:
-
+            None
         """
         self.configs = self.make_configs(config)
         self._cross_pack = self.configs.cross_pack
@@ -87,7 +87,7 @@ class ProcessingBatcher(Generic[PackType], Configurable):
         the batch size.
 
         Returns:
-
+            None
         """
         raise NotImplementedError
 
@@ -99,8 +99,10 @@ class ProcessingBatcher(Generic[PackType], Configurable):
         Returns:
             A triplet contains datapack, context instance and batched data.
 
-            Note: For backward compatibility issues, this function
-            return list of None contexts.
+            .. note::
+
+                For backward compatibility issues, this function
+                return list of None contexts.
         """
         if self.current_batch:
             yield (
@@ -123,10 +125,13 @@ class ProcessingBatcher(Generic[PackType], Configurable):
             input_pack: The input data pack to get features from.
 
         Returns:
-             An iterator of A tuple contains datapack, context instance and
-             batch data.
-             Note: For backward compatibility issues, this function
-             return a list of `None` as contexts.
+            An iterator of A tuple contains datapack, context instance and
+            batch data.
+
+            .. note::
+
+                For backward compatibility issues, this function
+                return a list of `None` as contexts.
         """
         batch_count = 0
 
@@ -192,7 +197,9 @@ class ProcessingBatcher(Generic[PackType], Configurable):
             go across the boundary of data packs when there is no enough data
             to fill the batch.
 
-        Returns: The default configuration.
+
+        Returns:
+            The default configuration.
 
         """
         return {
@@ -263,7 +270,7 @@ class FixedSizeDataPackBatcherWithExtractor(ProcessingBatcher):
     def collate(
         self, features_collection: List[Dict[str, Feature]]
     ) -> Dict[str, Dict[str, Any]]:
-        r"""This function use the :class:`~forte.data.converter.Converter`
+        r"""This function use the :class:`~forte.data.converter.converter.Converter`
         interface to turn a list of features into batches, where each feature
         is converted to tensor/matrix format. The resulting features are
         organized as a dictionary, where the keys are the feature names/tags,
@@ -334,8 +341,8 @@ class FixedSizeDataPackBatcherWithExtractor(ProcessingBatcher):
             input_pack: The input data pack to get features from.
 
         Returns:
-             An iterator of a tuple contains datapack, context instance and
-             batch data.
+            An iterator of a tuple contains datapack, context instance and
+            batch data.
         """
         # cache the new pack and generate batches
 
@@ -448,7 +455,7 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
             data_pack: The data pack to extract data from.
 
         Returns:
-
+            None
         """
         raise NotImplementedError
 
@@ -498,9 +505,12 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
         The configuration of a batcher.
 
         Here:
-            batch_size: the batch size, default is 10.
 
-        Returns: The default configuration structure and default value.
+            - batch_size: the batch size, default is 10.
+
+
+        Returns:
+            The default configuration structure and default value.
         """
         return {
             "batch_size": 10,
@@ -526,7 +536,7 @@ class FixedSizeRequestDataPackBatcher(FixedSizeDataPackBatcher):
             data_pack: The data pack to extract data from.
 
         Returns:
-
+            None
         """
         yield from data_pack.get_data(
             self.configs.context_type, self.configs.requests.todict()
@@ -538,15 +548,19 @@ class FixedSizeRequestDataPackBatcher(FixedSizeDataPackBatcher):
         The configuration of a batcher.
 
         Here:
-            context_type (str): The fully qualified name of an `Annotation`
-              type, which will be used as the context to retrieve data from. For
+
+            - context_type (str): The fully qualified name of an `Annotation`
+              type, which will be used as the context to retrieve data from.
+              For
               example, if a `ft.onto.Sentence` type is provided, then it will
               extract data within each sentence.
-            requests: The request detail. See
-              :meth:`~forte.data.DataPack.get_data` on what a request looks
-              like.
+            - requests: The request detail. See
+              :meth:`~forte.data.data_pack.DataPack.get_data` on what a request
+              looks like.
 
-        Returns: The default configuration structure and default value.
+
+        Returns:
+            The default configuration structure and default value.
         """
         return {
             "context_type": None,
@@ -556,9 +570,11 @@ class FixedSizeRequestDataPackBatcher(FixedSizeDataPackBatcher):
 
 
 class FixedSizeMultiPackProcessingBatcher(ProcessingBatcher[MultiPack]):
-    r"""A Batcher used in ``MultiPackBatchProcessors``.
+    r"""A Batcher used in :class:`~forte.processors.base.batch_processor.MultiPackBatchProcessor`.
 
-    Note: this implementation is not finished.
+    .. note::
+
+        this implementation is not finished.
 
     The Batcher calls the ProcessingBatcher inherently on each specified
     data pack in the MultiPack.

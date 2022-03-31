@@ -34,7 +34,8 @@ __all__ = ["ConllUDReader"]
 
 
 class ConllUDReader(PackReader):
-    r""":class:`conllUReader` is designed to read in the Universal Dependencies
+    r""":class:`~forte.data.readers.conllu_ud_reader.ConllUDReader` is designed
+    to read in the Universal Dependencies
     2.4 dataset.
     """
 

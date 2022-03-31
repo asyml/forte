@@ -20,6 +20,7 @@ import sys
 import tarfile
 import urllib.request
 import zipfile
+import re
 from typing import List, Optional, overload, Union
 
 from forte.utils.types import PathLike
@@ -40,6 +41,7 @@ def maybe_download(
     path: Union[str, PathLike],
     filenames: Optional[List[str]] = None,
     extract: bool = False,
+    num_gdrive_retries: int = 1,
 ) -> List[str]:
     ...
 
@@ -50,6 +52,7 @@ def maybe_download(
     path: Union[str, PathLike],
     filenames: Optional[str] = None,
     extract: bool = False,
+    num_gdrive_retries: int = 1,
 ) -> str:
     ...
 
@@ -59,6 +62,7 @@ def maybe_download(
     path: Union[str, PathLike],
     filenames: Union[List[str], str, None] = None,
     extract: bool = False,
+    num_gdrive_retries: int = 1,
 ):
     r"""Downloads a set of files.
 
@@ -66,9 +70,11 @@ def maybe_download(
         urls: A (list of) URLs to download files.
         path: The destination path to save the files.
         filenames: A (list of) strings of the file names. If given,
-            must have the same length with :attr:`urls`. If `None`,
-            filenames are extracted from :attr:`urls`.
+            must have the same length with ``urls``. If `None`,
+            filenames are extracted from ``urls``.
         extract: Whether to extract compressed files.
+        num_gdrive_retries: An integer specifying the number of attempts
+            to download file from Google Drive. Default value is 1.
 
     Returns:
         A list of paths to the downloaded files.
@@ -107,7 +113,9 @@ def maybe_download(
         # if not tf.gfile.Exists(filepath):
         if not os.path.exists(filepath):
             if "drive.google.com" in url:
-                filepath = _download_from_google_drive(url, filename, path)
+                filepath = _download_from_google_drive(
+                    url, filename, path, num_gdrive_retries
+                )
             else:
                 filepath = _download(url, filename, path)
 
@@ -160,13 +168,14 @@ def _extract_google_drive_file_id(url: str) -> str:
 
 
 def _download_from_google_drive(
-    url: str, filename: str, path: Union[str, PathLike]
+    url: str, filename: str, path: Union[str, PathLike], num_retries: int = 1
 ) -> str:
     r"""Adapted from `https://github.com/saurabhshri/gdrive-downloader`"""
 
     # pylint: disable=import-outside-toplevel
     try:
         import requests
+        from requests import HTTPError
     except ImportError:
         logging.info(
             "The requests library must be installed to download files from "
@@ -178,18 +187,40 @@ def _download_from_google_drive(
         for key, value in response.cookies.items():
             if key.startswith("download_warning"):
                 return value
+        if "Google Drive - Virus scan warning" in response.text:
+            match = re.search("confirm=([0-9A-Za-z_]+)", response.text)
+            if match is None or len(match.groups()) < 1:
+                raise ValueError(
+                    "No token found in warning page from Google Drive."
+                )
+            return match.groups()[0]
         return None
 
     file_id = _extract_google_drive_file_id(url)
 
     gurl = "https://docs.google.com/uc?export=download"
     sess = requests.Session()
-    response = sess.get(gurl, params={"id": file_id}, stream=True)
+    params = {"id": file_id}
+    response = sess.get(gurl, params=params, stream=True)
     token = _get_confirm_token(response)
 
     if token:
         params = {"id": file_id, "confirm": token}
         response = sess.get(gurl, params=params, stream=True)
+    while response.status_code != 200 and num_retries > 0:
+        response = requests.get(gurl, params=params, stream=True)
+        num_retries -= 1
+    if response.status_code != 200:
+        logging.error(
+            "Failed to download %s because of invalid response "
+            "from %s: status_code='%d' reason='%s' content=%s",
+            filename,
+            response.url,
+            response.status_code,
+            response.reason,
+            response.content,
+        )
+        raise HTTPError(response=response)
 
     filepath = os.path.join(path, filename)
     CHUNK_SIZE = 32768
