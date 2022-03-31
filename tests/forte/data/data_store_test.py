@@ -18,7 +18,6 @@ Unit tests for data store related operations.
 import logging
 import unittest
 from sortedcontainers import SortedList
-from forte.data.ontology.top import Annotation, Group, Link
 from forte.data.data_store import DataStore
 from ft.onto.base_ontology import Sentence
 
@@ -339,7 +338,7 @@ class DataStoreTest(unittest.TestCase):
         pass
 
     def test_is_subclass(self):
-
+        from forte.data.ontology.top import Annotation, Group, Link
         self.assertTrue(
             self.data_store._is_subclass(
                 "ft.onto.base_ontology.Subword", Annotation
