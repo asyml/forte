@@ -14,7 +14,7 @@
 import logging
 from typing import Iterator, Dict, List
 
-
+from texar.torch.data import Batch
 from torch import Tensor
 from torch.optim import SGD
 from torch.optim.optimizer import Optimizer
@@ -30,15 +30,6 @@ from forte.processors.base import Predictor
 from forte.trainer.base.trainer import BaseTrainer
 
 logger = logging.getLogger(__name__)
-
-try:
-    from texar.torch.data import Batch
-except ImportError as e:
-    raise ImportError(
-        "`texar-pytorch` is an extra required package."
-        "You can run the following command to install it"
-        "`pip install texar-pytorch`"
-    ) from e
 
 
 class SRLTrainer(BaseTrainer):

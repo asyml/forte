@@ -18,7 +18,7 @@ from the subwords of an entry.
 import logging
 from typing import Union, Dict, Optional
 
-
+from texar.torch.data.tokenizers.bert_tokenizer import BERTTokenizer
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.data.converter.feature import Feature
@@ -28,15 +28,6 @@ from forte.data.ontology import Annotation
 logger = logging.getLogger(__name__)
 
 __all__ = ["SubwordExtractor"]
-
-try:
-    from texar.torch.data.tokenizers.bert_tokenizer import BERTTokenizer
-except ImportError as e:
-    raise ImportError(
-        "`texar-pytorch` is an extra required package."
-        "You can run the following command to install it"
-        "`pip install texar-pytorch`"
-    ) from e
 
 
 class SubwordExtractor(BaseExtractor):

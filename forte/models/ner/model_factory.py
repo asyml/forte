@@ -17,20 +17,11 @@ import torch
 import torch.nn.functional as F
 import torch.nn.utils.rnn as rnn_utils
 from torch import nn
-
+import texar.torch as texar
+from texar.torch.modules.embedders import WordEmbedder
 
 from forte.common.configuration import Config
 from forte.models.ner.conditional_random_field import ConditionalRandomField
-
-try:
-    import texar.torch as texar
-    from texar.torch.modules.embedders import WordEmbedder
-except ImportError as e:
-    raise ImportError(
-        "`texar-pytorch` is an extra required package."
-        "You can run the following command to install it"
-        "`pip install texar-pytorch`"
-    ) from e
 
 
 class BiRecurrentConvCRF(nn.Module):

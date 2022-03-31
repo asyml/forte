@@ -21,7 +21,8 @@ an extracted feature corresponding to an input data point.
 from typing import Dict, Iterator, Type, Optional, List, Tuple, Union, Any
 
 import torch
-
+from texar.torch import HParams
+from texar.torch.data import IterDataSource, DatasetBase, Batch
 
 from forte.data.converter import Converter
 from forte.data.converter import Feature
@@ -37,16 +38,6 @@ __all__ = [
     "RawExample",
     "FeatureCollection",
 ]
-
-try:
-    from texar.torch import HParams
-    from texar.torch.data import IterDataSource, DatasetBase, Batch
-except ImportError as e:
-    raise ImportError(
-        "`texar-pytorch` is an extra required package."
-        "You can run the following command to install it"
-        "`pip install texar-pytorch`"
-    ) from e
 
 # An instance is a single data point from data pack
 RawExample = Tuple[int, DataPack]

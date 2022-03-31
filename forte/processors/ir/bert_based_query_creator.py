@@ -18,7 +18,8 @@ from typing import Any, Dict, Tuple
 
 import numpy as np
 import torch
-
+from texar.torch.data import BERTTokenizer
+from texar.torch.modules import BERTEncoder
 
 from forte.common.configuration import Config
 from forte.common.resources import Resources
@@ -27,16 +28,6 @@ from forte.data.multi_pack import MultiPack
 from forte.processors.base import QueryProcessor
 
 __all__ = ["BertBasedQueryCreator"]
-
-try:
-    from texar.torch.data import BERTTokenizer
-    from texar.torch.modules import BERTEncoder
-except ImportError as e:
-    raise ImportError(
-        "`texar-pytorch` is an extra required package."
-        "You can run the following command to install it"
-        "`pip install texar-pytorch`"
-    ) from e
 
 
 class BertBasedQueryCreator(QueryProcessor):

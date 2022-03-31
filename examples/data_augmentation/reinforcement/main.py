@@ -23,20 +23,12 @@ import os
 
 import torch
 import torch.nn.functional as F
+import texar.torch as tx
 from transformers import BertForMaskedLM
 
 from config import config_data, config_classifier
 from utils import model_utils
 from forte.models.da_rl import MetaAugmentationWrapper, TexarBertMetaModule
-
-try:
-    import texar.torch as tx
-except ImportError as e:
-    raise ImportError(
-        "`texar-pytorch` is an extra required package."
-        "You can run the following command to install it"
-        "`pip install texar-pytorch`"
-    ) from e
 
 parser = argparse.ArgumentParser()
 parser.add_argument(

@@ -20,22 +20,13 @@ Unsupervised Data Augmentation for Consistency Training
 """
 from typing import Optional, List, Tuple, Iterator
 from torch import Tensor
+from texar.torch.losses.info_loss import kl_divg_loss_with_logits
+from texar.torch.data import DataIterator
+from texar.torch.data.data.dataset_utils import Batch
 
 __all__ = [
     "UDAIterator",
 ]
-
-
-try:
-    from texar.torch.losses.info_loss import kl_divg_loss_with_logits
-    from texar.torch.data import DataIterator
-    from texar.torch.data.data.dataset_utils import Batch
-except ImportError as e:
-    raise ImportError(
-        "`texar-pytorch` is an extra required package."
-        "You can run the following command to install it"
-        "`pip install texar-pytorch`"
-    ) from e
 
 
 class UDAIterator:

@@ -19,17 +19,9 @@ import numpy as np
 import torch
 from torch import nn
 from torch.nn import functional as F
+import texar.torch as tx
 
 LSTMState = Tuple[torch.Tensor, torch.Tensor]
-
-try:
-    import texar.torch as tx
-except ImportError as e:
-    raise ImportError(
-        "`texar-pytorch` is an extra required package."
-        "You can run the following command to install it"
-        "`pip install texar-pytorch`"
-    ) from e
 
 
 class CustomLSTMCell(tx.core.RNNCellBase[LSTMState]):

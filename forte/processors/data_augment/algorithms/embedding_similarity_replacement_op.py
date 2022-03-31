@@ -16,7 +16,7 @@ import random
 
 from typing import Tuple
 import numpy as np
-
+from texar.torch.data import Vocab, Embedding
 
 from ft.onto.base_ontology import Annotation
 from forte.common.configuration import Config
@@ -27,15 +27,6 @@ from forte.processors.data_augment.algorithms.text_replacement_op import (
 __all__ = [
     "EmbeddingSimilarityReplacementOp",
 ]
-
-try:
-    from texar.torch.data import Vocab, Embedding
-except ImportError as e:
-    raise ImportError(
-        "`texar-pytorch` is an extra required package."
-        "You can run the following command to install it"
-        "`pip install texar-pytorch`"
-    ) from e
 
 
 class EmbeddingSimilarityReplacementOp(TextReplacementOp):

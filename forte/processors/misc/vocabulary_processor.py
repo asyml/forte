@@ -17,6 +17,7 @@ import os
 from abc import ABC
 from typing import Counter as CounterType, Dict, List, Optional
 
+import texar.torch as tx
 
 from forte.processors.base import PackProcessor
 
@@ -24,15 +25,6 @@ __all__ = [
     "Alphabet",
     "VocabularyProcessor",
 ]
-
-try:
-    import texar.torch as tx
-except ImportError as e:
-    raise ImportError(
-        "`texar-pytorch` is an extra required package."
-        "You can run the following command to install it"
-        "`pip install texar-pytorch`"
-    ) from e
 
 
 class Alphabet:

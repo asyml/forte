@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
+import texar.torch as tx
 import torch
 
 from forte.common.configuration import Config
@@ -25,15 +25,6 @@ from forte.utils.utils import get_class
 __all__ = [
     "PretrainedEncoder",
 ]
-
-try:
-    import texar.torch as tx
-except ImportError as e:
-    raise ImportError(
-        "`texar-pytorch` is an extra required package."
-        "You can run the following command to install it"
-        "`pip install texar-pytorch`"
-    ) from e
 
 
 class PretrainedEncoder(PackProcessor):

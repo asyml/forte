@@ -17,19 +17,11 @@ from collections import Counter
 from typing import List, Tuple, Dict, Union, Hashable, Iterable, Optional
 from typing import TypeVar, Generic, Any, Set
 
+import texar.torch as tx
 
 from forte.common import InvalidOperationException
 
 ElementType = TypeVar("ElementType", bound=Hashable)
-
-try:
-    import texar.torch as tx
-except ImportError as e:
-    raise ImportError(
-        "`texar-pytorch` is an extra required package."
-        "You can run the following command to install it"
-        "`pip install texar-pytorch`"
-    ) from e
 
 
 class Vocabulary(Generic[ElementType]):

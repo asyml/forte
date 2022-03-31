@@ -20,24 +20,15 @@ from typing import Optional, cast
 
 import torch
 from torch.nn import Parameter
-
+from texar.torch.modules.pretrained import PretrainedBERTMixin
+from texar.torch.modules.encoders import BERTEncoder as TxBERTEncoder
+from texar.torch.modules.classifiers import (
+    BERTClassifier as TxBERTClassifier,
+)
 
 from forte.common.configuration import Config
 
 __all__ = ["BERTEncoder", "BERTClassifier"]
-
-try:
-    from texar.torch.modules.pretrained import PretrainedBERTMixin
-    from texar.torch.modules.encoders import BERTEncoder as TxBERTEncoder
-    from texar.torch.modules.classifiers import (
-        BERTClassifier as TxBERTClassifier,
-    )
-except ImportError as e:
-    raise ImportError(
-        "`texar-pytorch` is an extra required package."
-        "You can run the following command to install it"
-        "`pip install texar-pytorch`"
-    ) from e
 
 
 class BERTClassifier(TxBERTClassifier, PretrainedBERTMixin):

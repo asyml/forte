@@ -17,17 +17,9 @@ import importlib
 import logging
 
 import torch
+import texar.torch as tx
 
 import data_utils
-
-try:
-    import texar.torch as tx
-except ImportError as e:
-    raise ImportError(
-        "`texar-pytorch` is an extra required package."
-        "You can run the following command to install it"
-        "`pip install texar-pytorch`"
-    ) from e
 
 logging.basicConfig(level=logging.INFO)
 

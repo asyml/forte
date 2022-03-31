@@ -18,7 +18,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     license="Apache License Version 2.0",
     packages=setuptools.find_namespace_packages(
-        include=['ft.*', 'ftx.*', 'forte']
+        include=["ft.*", "ftx.*", "forte"]
     ),
     include_package_data=True,
     platforms="any",
@@ -39,15 +39,37 @@ setuptools.setup(
         'importlib-resources>=5.1.4;python_version<"3.7"',
     ],
     extras_require={
-        "ner": ["torch>=1.1.0", "torchtext==0.4.0", "tqdm>=4.36.1"],
+        "forte-models-ner": [
+            "torch>=1.1.0",
+            "torchtext==0.4.0",
+            "tqdm>=4.36.1",
+            "texar-pytorch>=0.1.1",
+        ],
         "test": ["ddt", "testfixtures"],
-        "example": ["termcolor==1.1.0", "hypothesis==2.0.0"],
+        "example": [
+            "termcolor==1.1.0",
+            "hypothesis==2.0.0",
+            "texar-pytorch>=0.1.1",
+        ],
         "wikipedia": ["rdflib==4.2.2"],
         # transformers 4.10.0 will break the translation model we used here
-        "augment": ["transformers>=3.1, <=4.9.2", "nltk"],
         "stave": ["stave>=0.0.1.dev12"],
         "audio_ext": ["soundfile>=0.10.3"],
-        "remote": ["fastapi>=0.65.2", "uvicorn>=0.14.0",],
+        "remote": [
+            "fastapi>=0.65.2",
+            "uvicorn>=0.14.0",
+        ],
+        "forte-models-data_rl": ["texar-pytorch>=0.1.1"],
+        "forte-models-srl": ["texar-pytorch>=0.1.1"],  # srl and srl_new
+        "forte-processors-misc": ["texar-pytorch>=0.1.1"],
+        "forte-processors-nlp": ["texar-pytorch>=0.1.1"],
+        "forte-processors-third_party": ["texar-pytorch>=0.1.1"],
+        "forte-processors-data_aug": [
+            "transformers>=3.1, <=4.9.2",
+            "nltk",
+            "texar-pytorch>=0.1.1",
+        ],
+        "forte-data-extractor": ["texar-pytorch>=0.1.1"],
     },
     entry_points={
         "console_scripts": [

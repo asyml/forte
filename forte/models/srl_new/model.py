@@ -32,20 +32,11 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 from mypy_extensions import TypedDict
-
+import texar.torch as tx
 
 from forte.data.converter import Feature
 from forte.models.srl_new import model_utils as utils
 from forte.models.srl_new.data import Span
-
-try:
-    import texar.torch as tx
-except ImportError as e:
-    raise ImportError(
-        "`texar-pytorch` is an extra required package."
-        "You can run the following command to install it"
-        "`pip install texar-pytorch`"
-    ) from e
 
 
 class LabeledSpanGraphNetwork(tx.ModuleBase):

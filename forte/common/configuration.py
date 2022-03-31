@@ -17,8 +17,8 @@ name might be confusing in the context of processors, so we rename them to
 Config here.
 """
 from typing import Dict
-from asyml_utilities.hyperparams import HParams
 
+from texar.torch import HParams
 
 __all__ = ["Config"]
 

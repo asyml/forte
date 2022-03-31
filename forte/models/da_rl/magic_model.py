@@ -23,18 +23,9 @@ import copy
 from typing import Dict
 import torch
 from torch import nn
+import texar.torch as tx
 
 __all__ = ["MetaModule", "TexarBertMetaModule"]
-
-
-try:
-    import texar.torch as tx
-except ImportError as e:
-    raise ImportError(
-        "`texar-pytorch` is an extra required package."
-        "You can run the following command to install it"
-        "`pip install texar-pytorch`"
-    ) from e
 
 
 class MetaModule(nn.ModuleList):

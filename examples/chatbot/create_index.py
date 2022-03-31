@@ -22,19 +22,10 @@ import logging
 import yaml
 
 import torch
-
+import texar.torch as tx
 
 from forte.common.configuration import Config
 from forte.faiss import EmbeddingBasedIndexer
-
-try:
-    import texar.torch as tx
-except ImportError as e:
-    raise ImportError(
-        "`texar-pytorch` is an extra required package."
-        "You can run the following command to install it"
-        "`pip install texar-pytorch`"
-    ) from e
 
 logging.basicConfig(level=logging.INFO)
 

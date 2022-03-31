@@ -18,6 +18,7 @@ import logging
 from typing import Optional, Dict, Type, Any, Union, Iterator, List
 
 import torch
+from texar.torch.data import DataIterator, Batch
 from torch import device
 
 from forte.common.configuration import Config
@@ -33,16 +34,6 @@ from forte.utils.extractor_utils import parse_feature_extractors
 logger = logging.getLogger(__name__)
 
 __all__ = ["TrainPreprocessor"]
-
-
-try:
-    from texar.torch.data import DataIterator, Batch
-except ImportError as e:
-    raise ImportError(
-        "`texar-pytorch` is an extra required package."
-        "You can run the following command to install it"
-        "`pip install texar-pytorch`"
-    ) from e
 
 
 class TrainPreprocessor:

@@ -19,6 +19,7 @@ __all__ = [
 
 from typing import List, Tuple, Iterator, Dict, Set
 
+from texar.torch.data.tokenizers.bert_tokenizer import BERTTokenizer
 
 from forte.common import Resources
 from forte.common.configuration import Config
@@ -27,15 +28,6 @@ from forte.data.ontology import Annotation
 from forte.processors.base import PackProcessor
 from forte.utils.utils import DiffAligner
 from ft.onto.base_ontology import Subword
-
-try:
-    from texar.torch.data.tokenizers.bert_tokenizer import BERTTokenizer
-except ImportError as e:
-    raise ImportError(
-        "`texar-pytorch` is an extra required package."
-        "You can run the following command to install it"
-        "`pip install texar-pytorch`"
-    ) from e
 
 
 # This should probably be named as `BertTokenizer`.
