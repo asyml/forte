@@ -18,7 +18,7 @@ import os
 import unittest
 
 from ddt import ddt, data, unpack
-
+from texar.torch.data import Embedding, load_glove
 
 from forte.data.caster import MultiPackBoxer
 from forte.data.data_pack import DataPack
@@ -32,15 +32,6 @@ from forte.processors.data_augment.algorithms.embedding_similarity_replacement_o
 )
 from forte.processors.misc import WhiteSpaceTokenizer
 from ft.onto.base_ontology import Token
-
-try:
-    from texar.torch.data import Embedding, load_glove
-except ImportError as e:
-    raise ImportError(
-        "`texar-pytorch` is an extra required package."
-        "You can run the following command to install it"
-        "`pip install texar-pytorch`"
-    ) from e
 
 
 @ddt

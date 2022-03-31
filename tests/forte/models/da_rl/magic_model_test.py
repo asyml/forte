@@ -16,19 +16,10 @@ Unit tests for MetaModel.
 """
 import unittest
 import torch
-
+import texar.torch as tx
+from texar.torch.modules.networks.networks import FeedForwardNetwork
 
 from forte.models.da_rl import MetaModule, TexarBertMetaModule
-
-try:
-    import texar.torch as tx
-    from texar.torch.modules.networks.networks import FeedForwardNetwork
-except ImportError as e:
-    raise ImportError(
-        "`texar-pytorch` is an extra required package."
-        "You can run the following command to install it"
-        "`pip install texar-pytorch`"
-    ) from e
 
 
 class TestMetaModule(unittest.TestCase):

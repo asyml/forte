@@ -17,20 +17,11 @@ import unittest
 from itertools import product
 
 from ddt import ddt, data, unpack
-
+from texar.torch.data import SpecialTokens
 
 from forte.common import InvalidOperationException
 from forte.data import dataset_path_iterator
 from forte.data.vocabulary import Vocabulary, FrequencyVocabFilter
-
-try:
-    from texar.torch.data import SpecialTokens
-except ImportError as e:
-    raise ImportError(
-        "`texar-pytorch` is an extra required package."
-        "You can run the following command to install it"
-        "`pip install texar-pytorch`"
-    ) from e
 
 
 @ddt

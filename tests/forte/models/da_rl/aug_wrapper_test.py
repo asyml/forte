@@ -17,7 +17,7 @@ Unit tests for MetaAugmentationWrapper.
 """
 import unittest
 import torch
-
+import texar.torch as tx
 from torch import optim
 from transformers import BertForMaskedLM
 
@@ -26,15 +26,6 @@ from forte.models.da_rl.aug_wrapper import (
     _texar_bert_adam_delta,
     _torch_adam_delta,
 )
-
-try:
-    import texar.torch as tx
-except ImportError as e:
-    raise ImportError(
-        "`texar-pytorch` is an extra required package."
-        "You can run the following command to install it"
-        "`pip install texar-pytorch`"
-    ) from e
 
 
 class TestMetaAugmentationWrapper(unittest.TestCase):
