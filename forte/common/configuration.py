@@ -17,16 +17,8 @@ name might be confusing in the context of processors, so we rename them to
 Config here.
 """
 from typing import Dict
+from asyml_utilities.hyperparams import HParams
 
-
-try:
-    from texar.torch import HParams
-except ImportError as e:
-    raise ImportError(
-        "`texar-pytorch` is an extra required package."
-        "You can run the following command to install it"
-        "`pip install texar-pytorch`"
-    ) from e
 
 __all__ = ["Config"]
 
