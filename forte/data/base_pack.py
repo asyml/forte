@@ -222,7 +222,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             entry: The entry to be removed.
 
         Returns:
-
+            None
         """
         raise NotImplementedError
 
@@ -269,7 +269,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             component (str): Overwrite the component record with this.
 
         Returns:
-
+            None
         """
         for entry, c in list(self._pending_entries.values()):
             c_ = component if component else c

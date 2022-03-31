@@ -89,15 +89,19 @@ Data Augmentation Ops
 .. autoclass:: forte.processors.data_augment.algorithms.sampler.UnigramSampler
     :members:
 
+
 :hidden:`MachineTranslator`
 ---------------------------------
 .. autoclass:: forte.processors.data_augment.algorithms.machine_translator.MachineTranslator
     :members:
 
+
 :hidden:`MarianMachineTranslator`
 -----------------------------------
 .. autoclass:: forte.processors.data_augment.algorithms.machine_translator.MarianMachineTranslator
     :members:
+
+
 
 :hidden:`BackTranslationOp`
 ------------------------------

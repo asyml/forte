@@ -54,7 +54,8 @@ class MultiPackTerminalReader(MultiPackReader):
         Args:
             data_source: str that contains text of a document.
 
-        Returns: MultiPack containing a datapack for the current query.
+        Returns:
+            MultiPack containing a datapack for the current query.
         """
         multi_pack = MultiPack()
 

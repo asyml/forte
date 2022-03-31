@@ -97,8 +97,9 @@ class SubwordTokenizer(PackProcessor):
         Args:
             text: Input text to be tokenized.
 
-        Returns: A iterator of tokenization result in the form of triplets of
-        (word, (begin, end)).
+        Returns:
+            A iterator of tokenization result in the form of triplets of
+            (word, (begin, end)).
         """
         basic_tokens: List[str] = self.tokenizer.basic_tokenizer.tokenize(
             text, never_split=self.tokenizer.all_special_tokens
@@ -147,8 +148,9 @@ class SubwordTokenizer(PackProcessor):
         Args:
             record_meta: the field in the data pack storing type records needed
                 in for consistency checking.
-        Returns:
 
+        Returns:
+            None
         """
         record_meta["ft.onto.base_ontology.Subword"] = {
             "is_unk",

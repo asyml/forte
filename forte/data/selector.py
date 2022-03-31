@@ -91,7 +91,8 @@ class SinglePackSelector(Selector[MultiPack, DataPack]):
               selected.
             multi_pack: The original multi pack.
 
-        Returns: A boolean value to indicate whether `pack` will be returned.
+        Returns:
+            A boolean value to indicate whether `pack` will be returned.
         """
         raise NotImplementedError
 
@@ -173,12 +174,14 @@ class RegexNameMatchSelector(SinglePackSelector):
     This implementation takes special care for backward compatibility.
 
     Deprecated:
+
         .. code-block:: python
 
             selector = RegexNameMatchSelector(select_name="^.*\\d$")
             selector = RegexNameMatchSelector("^.*\\d$")
 
     Now:
+
         .. code-block:: python
 
             selector = RegexNameMatchSelector()

@@ -376,7 +376,7 @@ class Predictor(PackingBatchProcessor[PackType]):
               the extractor.
 
         Returns:
-
+            None
         """
         extractor_utils.add_extractor(
             self._request, name, extractor, is_input, converter

@@ -61,7 +61,8 @@ class MultiPackBoxer(Caster[DataPack, MultiPack]):
         Args:
             pack: The DataPack to be boxed
 
-        Returns: An iterator that produces the boxed MultiPack.
+        Returns:
+            An iterator that produces the boxed MultiPack.
 
         """
         # p = MultiPack()
@@ -97,7 +98,8 @@ class MultiPackUnboxer(Caster[MultiPack, DataPack]):
         Args:
             pack: The MultiPack to be boxed.
 
-        Returns: A DataPack boxed from the MultiPack.
+        Returns:
+            A DataPack boxed from the MultiPack.
 
         """
 

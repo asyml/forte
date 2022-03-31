@@ -79,7 +79,7 @@ class DeleteOverlapEntry(PackProcessor):
         Otherwise a `ValueError` will be raised.
 
         Returns:
-
+            None.
         """
 
         return {

@@ -56,7 +56,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
             collection is computed by
             :meth:`~forte.data.base_reader.BaseReader._cache_key_function`.
 
-            Note:
+            .. note::
 
                 A collection is the data returned by
                 :meth:`~forte.data.base_reader.BaseReader._collect`.
@@ -180,7 +180,8 @@ class BaseReader(PipelineComponent[PackType], ABC):
         Args:
             text: The original data text to be cleaned.
 
-        Returns (List[Tuple[Tuple[int, int], str]]): the replacement operations.
+        Returns (List[Tuple[Tuple[int, int], str]]):
+            the replacement operations.
         """
         return []
 
@@ -357,7 +358,8 @@ class BaseReader(PipelineComponent[PackType], ABC):
         Args:
             cache_filename: Path to the cache file.
 
-        Returns: List of cached data packs.
+        Returns:
+            List of cached data packs.
         """
         logger.info("reading from cache file %s", cache_filename)
         with open(cache_filename, "r", encoding="utf-8") as cache_file:

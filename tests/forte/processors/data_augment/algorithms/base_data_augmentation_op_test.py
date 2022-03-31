@@ -263,7 +263,6 @@ class TestBaseOp(unittest.TestCase):
         )
 
         processor_config = {
-            "type": "data_augmentation_op",
             "data_aug_op": replacer_op,
             "data_aug_op_config": {
                 "other_entry_policy": {
@@ -355,7 +354,6 @@ class TestBaseOp(unittest.TestCase):
         )
 
         processor_config = {
-            "type": "data_augmentation_op",
             "data_aug_op": replacer_op,
             "data_aug_op_config": {
                 "other_entry_policy": {

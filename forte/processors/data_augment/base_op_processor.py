@@ -16,7 +16,6 @@ This Processor focuses on calling data augmentation ops
 to generate texts similar to those in the input pack
 and create a new pack with them.
 """
-from abc import ABC
 from collections import defaultdict
 from typing import List, Tuple, Dict, DefaultDict, Union, cast
 from forte.common.configuration import Config
@@ -34,27 +33,17 @@ from forte.processors.data_augment.algorithms.base_data_augmentation_op import (
     BaseDataAugmentationOp,
 )
 
-__all__ = ["ParentDataAugmentProcessor", "BaseOpProcessor"]
+__all__ = ["BaseOpProcessor"]
 
 
-class ParentDataAugmentProcessor(MultiPackProcessor, ABC):
-    r"""
-    The base class of processors that augment data.
-    This processor instantiates replacement ops where specific
-    data augmentation algorithms are implemented. The data augmentation ops
-    will run the algorithms and the processor will create Forte
-    data structures based on the augmented inputs.
-    """
-
-
-class BaseOpProcessor(ParentDataAugmentProcessor):
+class BaseOpProcessor(MultiPackProcessor):
     r"""
     This is a Base Data Augmentation Op Processor that instantiates
     data augmentation ops into Forte Data Structures to be used. It can
-    handle augmentations of multiple ontologies simultaneously and copy
-    all existing ontologies (Forte data structures) that are a part of
-    the other entry policy configuration from source data pack
-    to augmented data pack.
+    handle augmentations of multiple ontology types simultaneously and
+    copy other existing Forte entries based on policies specified in
+    `other_entry_policy` configuration from source data pack to
+    augmented data pack.
     """
 
     def __init__(self):
@@ -185,10 +174,9 @@ class BaseOpProcessor(ParentDataAugmentProcessor):
 
             for pack_name in aug_pack_names:
                 data_pack: DataPack = input_pack.get_pack(pack_name)
-                augmented_data_pack = self.replacement_op.perform_augmentation(
-                    data_pack
-                )
-                self._new_data_packs[data_pack.pack_id] = augmented_data_pack
+                self._new_data_packs[
+                    data_pack.pack_id
+                ] = self.replacement_op.perform_augmentation(data_pack)
 
             (
                 self._data_pack_map,
@@ -251,8 +239,6 @@ class BaseOpProcessor(ParentDataAugmentProcessor):
         Returns:
             A dictionary with the default config for this processor.
         Following are the keys for this dictionary:
-            - type:
-                Should not modify this field, in order to use the kwargs.
             - data_aug_op:
                 The data augmentation Op for the processor.
                 It should be a full qualified class name.
@@ -287,7 +273,6 @@ class BaseOpProcessor(ParentDataAugmentProcessor):
                         }
         """
         return {
-            "type": "data_augmentation_op",
             "data_aug_op": "",
             "data_aug_op_config": {},
             "augment_pack_names": {},

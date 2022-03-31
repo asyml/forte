@@ -41,7 +41,7 @@ class ProcessJob:
             pack: The pack to be used to replace into this job.
 
         Returns:
-
+            None
         """
         self.__pack = pack
 

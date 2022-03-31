@@ -112,6 +112,7 @@ class RandomWordSplitDataAugmentOp(BaseDataAugmentationOp):
         """
         Returns:
             A dictionary with the default config for this processor.
+
         Additional keys for determining how many words will be split:
             - alpha (float):
                 0 <= alpha <= 1. indicates the percent of the words

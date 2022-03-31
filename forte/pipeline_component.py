@@ -110,7 +110,7 @@ class PipelineComponent(Generic[PackType], Configurable):
             entry (Entry):  The entry to be added.
 
         Returns:
-
+            None
         """
         pack.add_entry(entry, self.name)
 

@@ -94,7 +94,7 @@ def set_state_func(instance, state):
         state:
 
     Returns:
-
+        None
     """
     # During de-serialization, convert the list back to numpy array.
     if "_embedding" in state:
@@ -171,6 +171,7 @@ class Entry(Generic[ContainerType]):
     collection of multiple entries.
 
     Main Attributes:
+
         - embedding: The embedding vectors (numpy array of floats) of this
           entry.
 
@@ -231,7 +232,7 @@ class Entry(Generic[ContainerType]):
         Get the id of this entry.
 
         Returns:
-
+            id of the entry
         """
         return self._tid
 
@@ -245,7 +246,7 @@ class Entry(Generic[ContainerType]):
         Get the id of the pack that contains this entry.
 
         Returns:
-
+            id of the pack that contains this entry.
         """
         return self.__pack.pack_id  # type: ignore
 
@@ -277,10 +278,10 @@ class Entry(Generic[ContainerType]):
         ``from_entry``.
 
         Args:
-            from_entry: The entry to point from.
+            from_entry: the entry to point from.
 
         Returns:
-             A pointer to the this entry from the ``from_entry``.
+            A pointer to the this entry from the ``from_entry``.
         """
         if isinstance(from_entry, MultiEntry):
             return MpPointer(
@@ -299,7 +300,7 @@ class Entry(Generic[ContainerType]):
             ptr: A pointer that refer to an entity.
 
         Returns:
-
+            None
         """
         if isinstance(ptr, Pointer):
             return self.pack.get_entry(ptr.tid)
@@ -383,7 +384,7 @@ class Entry(Generic[ContainerType]):
             other:
 
         Returns:
-
+            None
         """
         if other is None:
             return False
