@@ -14,6 +14,7 @@
 import yaml
 from termcolor import colored
 import torch
+
 from fortex.nltk import NLTKSentenceSegmenter, NLTKWordTokenizer, NLTKPOSTagger
 from forte.common.configuration import Config
 from forte.data.multi_pack import MultiPack
@@ -122,6 +123,7 @@ def main(config: Config):
             print()
 
             input(colored("Press ENTER to continue...\n", "green"))
+
 
 if __name__ == "__main__":
     all_config = Config(yaml.safe_load(open("config.yml", "r")), None)
