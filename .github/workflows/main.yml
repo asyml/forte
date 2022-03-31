@@ -84,7 +84,7 @@ jobs:
           rm -rf texar-pytorch
       - name: Install Forte
         run: |
-          pip install --use-feature=in-tree-build --progress-bar off .[ner,test,example,wikipedia,augment,stave,audio_ext]
+          pip install --use-feature=in-tree-build --progress-bar off .[ner,test,example,wikipedia,augment,stave,audio_ext,remote]
       - name: Build ontology
         run: |
           ./scripts/build_ontology_specs.sh
