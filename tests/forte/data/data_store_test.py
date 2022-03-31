@@ -337,36 +337,7 @@ class DataStoreTest(unittest.TestCase):
         # )
         pass
 
-    # def test_is_subclass(self):
-    #     from forte.data.ontology.top import Annotation, Group, Link
-    #     self.assertTrue(
-    #         self.data_store._is_subclass(
-    #             "ft.onto.base_ontology.Subword", Annotation
-    #         )
-    #     )
-    #     self.assertTrue(
-    #         self.data_store._is_subclass(
-    #             "ft.onto.base_ontology.PredicateLink", Link
-    #         )
-    #     )
-    #     self.assertTrue(
-    #         self.data_store._is_subclass(
-    #             "ft.onto.base_ontology.CoreferenceGroup", Group
-    #         )
-    #     )
-    #     self.assertFalse(
-    #         self.data_store._is_subclass(
-    #             "ft.onto.base_ontology.PredicateLink", Annotation
-    #         )
-    #     )
-    #     self.assertFalse(
-    #         self.data_store._is_subclass(
-    #             "ft.onto.base_ontology.CoreferenceGroup", Link
-    #         )
-    #     )
-    #     self.assertFalse(
-    #         self.data_store._is_subclass("ft.onto.base_ontology.Subword", Group)
-    #     )
+
 
 
 if __name__ == "__main__":
