@@ -14,7 +14,7 @@
 from typing import List, Iterator, Tuple, Optional, Any
 import uuid
 from bisect import bisect_left
-from heapq import *
+from heapq import heappush, heappop
 from forte.utils import get_class
 from forte.data.base_store import BaseStore
 from forte.data.entry_type_generator import EntryTypeGenerator
@@ -561,18 +561,19 @@ class DataStore(BaseStore):
         # the metric of comparing entry order is represented by the tuple
         # (begin index of entry, end index of entry,
         # the index of the entry type name in input parameter ``type_names``)
-        h = []
+        h: List[Tuple[Tuple[int, int, int], str]] = []
         for p_idx in range(n):
+            entry_tuple = (
+                (
+                    first_entries[p_idx][constants.BEGIN_INDEX],
+                    first_entries[p_idx][constants.END_INDEX],
+                    p_idx,
+                ),
+                first_entries[p_idx][constants.ENTRY_TYPE_INDEX],
+            )
             heappush(
                 h,
-                (
-                    (
-                        first_entries[p_idx][constants.BEGIN_INDEX],
-                        first_entries[p_idx][constants.END_INDEX],
-                        p_idx,
-                    ),
-                    first_entries[p_idx][constants.ENTRY_TYPE_INDEX],
-                ),
+                entry_tuple,
             )
 
         while h:
@@ -587,8 +588,9 @@ class DataStore(BaseStore):
 
             # retrieve the popped entry tuple (minimum item in the heap)
             # and get the p_idx (the index of the current entry list in self.__elements)
-            t, type_name = heappop(h)
-            _, _, p_idx = t
+            entry_tuple = heappop(h)
+            type_name: str = entry_tuple[1]
+            _, _, p_idx = entry_tuple[0]
             # get the index of current entry
             # and locate the entry represented by the tuple for yielding
             pointer = pointers[p_idx]
@@ -599,16 +601,17 @@ class DataStore(BaseStore):
                 pointers[p_idx] = pointer + 1
                 new_pointer = pointers[p_idx]
                 new_entry = self.__elements[type_name][new_pointer]
+                new_entry_tuple = (
+                    (
+                        new_entry[constants.BEGIN_INDEX],
+                        new_entry[constants.END_INDEX],
+                        p_idx,
+                    ),
+                    new_entry[constants.ENTRY_TYPE_INDEX],
+                )
                 heappush(
                     h,
-                    (
-                        (
-                            new_entry[constants.BEGIN_INDEX],
-                            new_entry[constants.END_INDEX],
-                            p_idx,
-                        ),
-                        new_entry[constants.ENTRY_TYPE_INDEX],
-                    ),
+                    new_entry_tuple,
                 )
             yield entry
 
