@@ -40,12 +40,9 @@ from forte.data.span import Span
 from forte.data.ontology.top import (
     Link,
     Group,
-    MultiPackGroup,
-    MultiPackLink,
     Annotation,
 )
-from forte.data.multi_pack import MultiPack
-from forte.data.ontology.core import BaseLink, Entry
+from forte.data.ontology.core import Entry
 from forte.common.configurable import Configurable
 from forte.utils.utils import create_class_with_kwargs, get_class
 
@@ -146,7 +143,7 @@ class BaseDataAugmentationOp(Configurable):
             return True
 
         # The entry should be either Link or Group.
-        is_link: bool = isinstance(entry, (Link, Group))
+        is_link: bool = isinstance(entry, Link)
 
         # Get the children entries.
         children: List[Entry]
@@ -185,66 +182,6 @@ class BaseDataAugmentationOp(Configurable):
             new_entry = type(entry)(new_pack, new_children)  # type: ignore
         new_pack.add_entry(new_entry)
         entry_map[entry.tid] = new_entry.tid
-        return True
-
-    def _copy_multi_pack_link_or_group(
-        self, entry: Union[MultiPackLink, MultiPackGroup], multi_pack: MultiPack
-    ) -> bool:
-        r"""
-        This function copies a MultiPackLink/MultiPackGroup in the multipack.
-        It could be used in tasks such as text generation, where
-        MultiPackLink is used to align the source and target.
-        Args:
-            entry: The MultiPackLink/MultiPackGroup to copy.
-            multi_pack: The multi_pack contains the input entry.
-        Returns:
-            A bool value indicating whether the copy happens.
-        """
-        # The entry should be either MultiPackLink or MultiPackGroup.
-        is_link: bool = isinstance(entry, BaseLink)
-        children: List[Entry]
-        if is_link:
-            children = [entry.get_parent(), entry.get_child()]  # type: ignore
-        else:
-            children = entry.get_members()  # type: ignore
-
-        # Get the copied children entries.
-        new_children: List[Entry] = []
-        for child_entry in children:
-            child_pack: DataPack = child_entry.pack
-            child_pack_pid: int = child_pack.pack_id
-            # The new pack should be present.
-            if (
-                child_pack_pid not in self._data_pack_map
-                or child_pack_pid not in self._entry_maps
-            ):
-                return False
-            new_child_pack: DataPack = multi_pack.get_pack_at(
-                multi_pack.get_pack_index(self._data_pack_map[child_pack_pid])
-            )
-            # The new child entry should be present.
-            if child_entry.tid not in self._entry_maps[child_pack_pid]:
-                return False
-            new_child_tid: int = self._entry_maps[child_pack_pid][
-                child_entry.tid
-            ]
-            new_child_entry: Entry = new_child_pack.get_entry(new_child_tid)
-            new_children.append(new_child_entry)
-
-        # Create the new entry and add to the multi pack.
-        new_entry: Entry
-        if is_link:
-            entry = cast(MultiPackLink, entry)
-
-            new_link_parent, new_link_child = new_children
-
-            new_entry = type(entry)(
-                multi_pack, new_link_parent, new_link_child  # type: ignore
-            )
-        else:
-            entry = cast(MultiPackGroup, entry)
-            new_entry = type(entry)(multi_pack, new_children)  # type: ignore
-        multi_pack.add_entry(new_entry)
         return True
 
     def _overlap_with_existing(self, pid: int, begin: int, end: int) -> bool:
@@ -543,7 +480,8 @@ class BaseDataAugmentationOp(Configurable):
             ]
 
         entries_to_copy: Set[str] = set(
-            list(existing_entries) + list(new_entries.keys())
+            list(existing_entries)
+            + [val for val in new_entries if val is not None]
         )
 
         def _insert_new_span(
@@ -599,6 +537,9 @@ class BaseDataAugmentationOp(Configurable):
                     f"a sub-class of 'forte.data.ontology.top.Annotation'."
                 )
 
+            if entry_to_copy not in new_entries:
+                new_entries[entry_to_copy] = []
+
             orig_annos: Iterable[Annotation] = data_pack.get(class_to_copy)
 
             for orig_anno in orig_annos:
@@ -629,10 +570,9 @@ class BaseDataAugmentationOp(Configurable):
                 span_new_begin: int = orig_anno.begin
                 span_new_end: int = orig_anno.end
 
-                if (
-                    self.configs["other_entry_policy"][entry_to_copy]
-                    == "auto_align"
-                ):
+                if (entry_to_copy in new_entries) or self.configs[
+                    "other_entry_policy"
+                ][entry_to_copy] == "auto_align":
                     # Only inclusive when the entry is not augmented.
                     # E.g.: A Sentence include the inserted Token on the edge.
                     # E.g.: A Token shouldn't include a nearby inserted Token.
@@ -818,6 +758,28 @@ class BaseDataAugmentationOp(Configurable):
             (Span(replacement_anno.begin, replacement_anno.end), replaced_text)
         )
         return True
+
+    def clear_states(self):
+        r"""
+        This function clears the states. It should be
+        called after processing a multipack.
+        """
+        self._replaced_annos.clear()
+        self._inserted_text.clear()
+        self._deleted_annos_id.clear()
+        self._data_pack_map.clear()
+        self._entry_maps.clear()
+
+    def get_maps(self) -> Tuple[Dict[int, int], Dict[int, Dict[int, int]]]:
+        r"""
+        This function simply returns the produced data pack
+        and entry maps after augmentation.
+
+        Returns:
+            A tuple of two elements. The first element is the data pack
+            map (dict) and the second element is the entry maps (dict)
+        """
+        return self._data_pack_map, self._entry_maps
 
     @abstractmethod
     def augment(self, data_pack: DataPack) -> bool:
