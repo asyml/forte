@@ -493,13 +493,24 @@ class DataStore(BaseStore):
         raise NotImplementedError
 
     def co_iterator(self, type_names: List[str]) -> Iterator[List]:
-        r"""Given two or more type names, iterate their entry lists from beginning to end together.
+        r"""
+        Given two or more type names, iterate their entry lists from beginning to end together.
 
         For every single type, their entry lists are sorted by the begin and
         end fields. The co_iterator function will iterate those sorted lists
         together, and yield each entry in sorted order. This tasks is quite
-        similar to merging several sorted list to one sorted list. If two
-        entries have both the same begin and end field, then their order is
+        similar to merging several sorted list to one sorted list. We internally
+        use a `MinHeap` to order the order of yielded item, and the ordering
+        is determined by:
+
+            - start index of the entry.
+            - end index of the entry.
+            - the index of the entry type name in input parameter ``type_names``.
+
+        The precedence of those values indicates their priority in min heap
+        ordering.
+        For example, if two entries have both the same begin and end field,
+        then their order is
         decided by the order of user input type_name (the type that first
         appears in the target type list will return first).
 
@@ -527,24 +538,51 @@ class DataStore(BaseStore):
                     "available. Please input avaible ones in this DataStore"
                     f"object: {list(self.__elements.keys())}"
                 )
-        pointers = [0] * n  # record the current entry index for elements
-        # compare tuple (begin, end, order of type name in input argument type_names)
-        h = []
-        begin_idx, end_idx, type_name_idx = 0, 1, 3
-        for p_idx in range(n):
-            h.append(
-                (
-                    (entries[p_idx][begin_idx], entries[p_idx][end_idx], p_idx),
-                    entries[p_idx][type_name_idx],
-                )
-            )  # p_idx
 
-        heapify(h)
+        # record the current entry index for elements
+        # pointers[i] is the index of entry at (i)th sorted entry lists
+        pointers = [0] * n
+
+        # compare tuple (begin, end, order of type name in input argument type_names)
+        # we initialize a MinHeap with the first entry of all sorted entry lists
+        # in self.__elements
+        # the metric of comparing entry order is represented by the tuple
+        # (begin index of entry, end index of entry,
+        # the index of the entry type name in input parameter ``type_names``)
+        h = []
+        for p_idx in range(n):
+            heappush(
+                h,
+                (
+                    (
+                        entries[p_idx][constants.BEGIN_INDEX],
+                        entries[p_idx][constants.END_INDEX],
+                        p_idx,
+                    ),
+                    entries[p_idx][constants.ENTRY_TYPE_INDEX],
+                ),
+            )
+
         while h:
+            # NOTE: we push the tuple to the heap
+            # but not the actual entry. But we can retrieve
+            # the entry by the tuple's data.
+            # In the following comments,
+            # the current entry means the entry that
+            # the popped tuples represents
+            # the current entry list means the entry list
+            # where the current entry locates at.
+
+            # retrieve the popped entry tuple (minimum item in the heap)
+            # and get the p_idx (the index of the current entry list in self.__elements)
             t, type_name = heappop(h)
             _, _, p_idx = t
+            # get the index of current entry
+            # and locate the entry represented by the tuple for yielding
             pointer = pointers[p_idx]
             entry = self.__elements[type_name][pointer]
+            # check whether there is next entry in the current entry list
+            # if there is, then we push the new entry's tuple into the heap
             if pointer + 1 < len(self.__elements[type_name]):
                 pointers[p_idx] = pointer + 1
                 new_pointer = pointers[p_idx]
@@ -552,8 +590,12 @@ class DataStore(BaseStore):
                 heappush(
                     h,
                     (
-                        (new_entry[begin_idx], new_entry[end_idx], p_idx),
-                        new_entry[type_name_idx],
+                        (
+                            new_entry[constants.BEGIN_INDEX],
+                            new_entry[constants.END_INDEX],
+                            p_idx,
+                        ),
+                        new_entry[constants.ENTRY_TYPE_INDEX],
                     ),
                 )
             yield entry
