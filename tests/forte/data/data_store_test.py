@@ -110,12 +110,14 @@ class DataStoreTest(unittest.TestCase):
             "ft.onto.base_ontology.Phrase": SortedList(
                 [
                     [
-                        1,
-                        [9999, 1234567],
-                        10123,
-                        "ft.onto.base_ontology.Phrase",
-                        Sentence,
-                        0,
+                        [
+                            1,
+                            [9999, 1234567],
+                            10123,
+                            "ft.onto.base_ontology.Phrase",
+                            Sentence,
+                            0,
+                        ]
                     ]
                 ]
             ),
@@ -343,7 +345,7 @@ class DataStoreTest(unittest.TestCase):
             list(self.data_store.co_iterator(type_names))
 
         self.assertRaises(ValueError, fn)
-        # self.data_store._DataStore__elements[doc_tn]
+        # self.data_store._DataStore__elements.pop(token_tn)
 
     def test_add_annotation_raw(self):
         # # test add Document entry
