@@ -28,7 +28,9 @@ class DataStore(BaseStore):
     # TODO: temporarily disable this for development purposes.
     # pylint: disable=pointless-string-statement
 
-    def __init__(self, onto_file_path: Optional[str] = None):
+    def __init__(
+        self, onto_file_path: Optional[str] = None, dynamically_add_type=True
+    ):
         r"""An implementation of the data store object that mainly uses
         primitive types. This class will be used as the internal data
         representation behind data pack. The usage of primitive types provides
@@ -119,7 +121,15 @@ class DataStore(BaseStore):
             onto_file_path (str, optional): the path to the ontology file.
         """
         super().__init__()
+
+        if onto_file_path is None and not dynamically_add_type:
+            raise UserWarning(
+                "DataStore is initialized with no existing types. Setting"
+                "dynamically_add_type to False without providing onto_file_path"
+                "will lead to no usable type in DataStore."
+            )
         self.onto_file_path = onto_file_path
+        self.dynamically_add_type = dynamically_add_type
 
         """
         The ``_type_attributes`` is a private dictionary that provides
@@ -196,10 +206,10 @@ class DataStore(BaseStore):
         # check if type is in dictionary
         if type_name in self._type_attributes:
             return
-        if self.onto_file_path is not None:
+        if not self.dynamically_add_type:
             raise RuntimeError(
-                f"{type_name} is not a valid type in Forte base class or"
-                f"provided by your ontology file"
+                f"{type_name} is not an existing type in current data store."
+                f"Dynamically add type is disabled."
             )
         # get attribute dictionary
         attributes = EntryTypeGenerator.get_entry_attributes_by_class(type_name)
@@ -212,7 +222,7 @@ class DataStore(BaseStore):
 
         self._type_attributes[type_name] = {
             "attributes": attr_dict,
-            "parent_entry": [],
+            "parent_entry": None,
         }
         self.__elements[type_name] = SortedList()
 
