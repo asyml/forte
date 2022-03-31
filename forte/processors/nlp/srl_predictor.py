@@ -16,7 +16,6 @@ import logging
 import os
 from typing import Dict, List, Tuple, Optional
 
-import texar.torch as tx
 import torch
 
 from forte.common.configuration import Config
@@ -31,6 +30,16 @@ from ft.onto.base_ontology import (
     PredicateMention,
     PredicateArgument,
 )
+
+try:
+    import texar.torch as tx
+except ImportError as e:
+    raise ImportError(
+        "`texar-pytorch` is an extra required package."
+        "You can run the following command to install it"
+        "`pip install texar-pytorch`"
+    ) from e
+
 
 logger = logging.getLogger(__name__)
 

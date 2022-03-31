@@ -15,7 +15,6 @@ import logging
 from typing import Iterator, Dict
 
 import torch
-from texar.torch.data import Batch
 from torch.optim import SGD
 from torch.optim.optimizer import Optimizer
 from tqdm import tqdm
@@ -31,6 +30,15 @@ from forte.processors.base import Predictor
 from forte.trainer.base.trainer import BaseTrainer
 
 logger = logging.getLogger(__name__)
+
+try:
+    from texar.torch.data import Batch
+except ImportError as e:
+    raise ImportError(
+        "`texar-pytorch` is an extra required package."
+        "You can run the following command to install it"
+        "`pip install texar-pytorch`"
+    ) from e
 
 
 class TaggingTrainer(BaseTrainer):
@@ -112,11 +120,12 @@ class TaggingTrainer(BaseTrainer):
         val_pl: Pipeline = Pipeline()
         val_pl.set_reader(val_reader)
         val_pl.add(
-            predictor, config={
+            predictor,
+            config={
                 "batcher": {
                     "batch_size": 10,
                 }
-            }
+            },
         )
         val_pl.add(evaluator, config=evaluator_config)
         val_pl.initialize()

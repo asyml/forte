@@ -17,9 +17,6 @@ import os
 from typing import Dict, Any
 
 import torch
-
-from texar.torch.data.tokenizers.bert_tokenizer import BERTTokenizer
-
 from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.multi_pack import MultiPack
@@ -32,6 +29,15 @@ from forte.processors.ir.bert_ranker import (
 )
 
 __all__ = ["BertRerankingProcessor"]
+
+try:
+    from texar.torch.data.tokenizers.bert_tokenizer import BERTTokenizer
+except ImportError as e:
+    raise ImportError(
+        "`texar-pytorch` is an extra required package."
+        "You can run the following command to install it"
+        "`pip install texar-pytorch`"
+    ) from e
 
 
 class BertRerankingProcessor(MultiPackProcessor):

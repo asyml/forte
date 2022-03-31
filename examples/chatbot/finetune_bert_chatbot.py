@@ -22,9 +22,16 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 from sklearn.metrics.pairwise import paired_cosine_distances
-import texar.torch as tx
-
 import config_data
+
+try:
+    import texar.torch as tx
+except ImportError as e:
+    raise ImportError(
+        "`texar-pytorch` is an extra required package."
+        "You can run the following command to install it"
+        "`pip install texar-pytorch`"
+    ) from e
 
 parser = argparse.ArgumentParser()
 parser.add_argument(

@@ -18,7 +18,7 @@ A wrapper adding data augmentation to a Bert model with arbitrary tasks.
 import random
 import math
 from typing import Tuple, Dict, Generator
-import texar.torch as tx
+
 import torch
 from torch import nn
 from torch.nn import functional as F
@@ -27,6 +27,15 @@ from torch.optim import Optimizer
 from forte.models.da_rl.magic_model import MetaModule
 
 __all__ = ["MetaAugmentationWrapper"]
+
+try:
+    import texar.torch as tx
+except ImportError as e:
+    raise ImportError(
+        "`texar-pytorch` is an extra required package."
+        "You can run the following command to install it"
+        "`pip install texar-pytorch`"
+    ) from e
 
 
 class MetaAugmentationWrapper:
@@ -515,8 +524,8 @@ def _torch_adam_delta(
             exp_avg_sq = exp_avg_sq * beta2 + (1.0 - beta2) * grad * grad
             denom = exp_avg_sq.sqrt() + group["eps"]
 
-            bias_correction1 = 1.0 - beta1**step
-            bias_correction2 = 1.0 - beta2**step
+            bias_correction1 = 1.0 - beta1 ** step
+            bias_correction2 = 1.0 - beta2 ** step
             step_size = (
                 group["lr"] * math.sqrt(bias_correction2) / bias_correction1
             )

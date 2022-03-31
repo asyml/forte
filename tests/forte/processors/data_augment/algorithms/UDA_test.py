@@ -17,9 +17,19 @@ Unit tests for Unsupervised Data Augmentation.
 import tempfile
 import unittest
 import torch
-import texar.torch as tx
+
 from forte.processors.data_augment.algorithms.UDA import UDAIterator
-from texar.torch.utils.shapes import get_rank
+
+
+try:
+    import texar.torch as tx
+    from texar.torch.utils.shapes import get_rank
+except ImportError as e:
+    raise ImportError(
+        "`texar-pytorch` is an extra required package."
+        "You can run the following command to install it"
+        "`pip install texar-pytorch`"
+    ) from e
 
 
 class UDATest(unittest.TestCase):

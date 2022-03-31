@@ -18,7 +18,16 @@ from typing import List, NamedTuple, Tuple
 import numpy as np
 import torch
 from mypy_extensions import TypedDict
-import texar.torch as tx
+
+
+try:
+    import texar.torch as tx
+except ImportError as e:
+    raise ImportError(
+        "`texar-pytorch` is an extra required package."
+        "You can run the following command to install it"
+        "`pip install texar-pytorch`"
+    ) from e
 
 
 class SRLSpan(NamedTuple):
