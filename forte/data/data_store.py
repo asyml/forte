@@ -530,7 +530,7 @@ class DataStore(BaseStore):
         # is O(M*log(N))
 
         # Initialize the first entry of all entry lists
-        # it avoid empty entry lists or non-existant entry list
+        # it avoids empty entry lists or non-existant entry list
         first_entries = []
         for tn in type_names:
             if tn in self.__elements:
