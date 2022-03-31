@@ -393,14 +393,6 @@ Container
     :members:
 
 
-Entry Type Generator
-==============================
-:hidden:`EntryTypeGenerator`
-------------------------------
-.. autoclass:: forte.data.entry_type_generator.EntryTypeGenerator
-    :members:
-
-
 Types
 ===============
 :hidden:`ReplaceOperationsType`
