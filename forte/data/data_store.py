@@ -19,7 +19,7 @@ from forte.utils import get_class
 from forte.data.base_store import BaseStore
 from forte.data.ontology.top import Annotation
 from forte.common import constants
-from forte.utils.utils import get_qual_name
+from forte.utils.utils import get_full_module_name
 
 __all__ = ["DataStore"]
 
@@ -269,7 +269,7 @@ class DataStore(BaseStore):
             self._type_attributes[type_name] = {}
         if "parent_class" not in self._type_attributes[type_name]:
             self._type_attributes[type_name].update(parent_class=[])
-        cls_qualified_name = cls.__module__ + "." + get_qual_name(cls)
+        cls_qualified_name = get_full_module_name(cls)
         if (
             cls_qualified_name
             in self._type_attributes[type_name]["parent_class"]
@@ -283,10 +283,8 @@ class DataStore(BaseStore):
                 )
                 cls_base_class = cls.__base__
                 if cls_base_class is not None:
-                    cls_base_qualified_name = (
-                        cls_base_class.__module__
-                        + "."
-                        + get_qual_name(cls_base_class)
+                    cls_base_qualified_name = get_full_module_name(
+                        cls_base_class
                     )
                     self._type_attributes[type_name]["parent_class"].append(
                         cls_base_qualified_name
