@@ -113,29 +113,28 @@ class DataStoreTest(unittest.TestCase):
         # attribute fields for Document and Sentence entries
         self.data_store._type_attributes = {
             "ft.onto.base_ontology.Document": {
-                "document_class": 4,
-                "sentiment": 5,
-                "classifications": 6,
+                "attributes": {
+                    "document_class": 4,
+                    "sentiment": 5,
+                    "classifications": 6,
+                },
+                "parent_entry": None,
             },
             "ft.onto.base_ontology.Sentence": {
-                "speaker": 4,
-                "part_id": 5,
-                "sentiment": 6,
-                "classification": 7,
-                "classifications": 8,
+                "attributes": {
+                    "speaker": 4,
+                    "part_id": 5,
+                    "sentiment": 6,
+                    "classification": 7,
+                    "classifications": 8,
+                },
+                "parent_entry": None,
             },
         }
         # The order is [Document, Sentence]. Initialize 2 entries in each list.
         # Document entries have tid 1234, 3456.
         # Sentence entries have tid 9999, 1234567.
         # The type id for Document is 0, Sentence is 1.
-
-        self.data_store._DataStore__type_index_dict = {
-            "ft.onto.base_ontology.Document": 0,
-            "ft.onto.base_ontology.Sentence": 1,
-            "forte.data.ontology.core.Entry": 2,
-            "ft.onto.base_ontology.CoreferenceGroup": 3,
-        }
 
         self.data_store._DataStore__elements = {
             "ft.onto.base_ontology.Document":
@@ -248,6 +247,27 @@ class DataStoreTest(unittest.TestCase):
             ]
         }
 
+    def test_add_new_type(self):
+        # initialize
+        empty_data_store = DataStore()
+
+        # test add new type to _type_attributes
+        doc_attr_dict = empty_data_store._add_new_type("ft.onto.base_ontology.Document")
+        empty_data_store._add_new_type("ft.onto.base_ontology.Sentence")
+        self.assertEqual(len(empty_data_store._DataStore__elements), 2)
+        self.assertEqual(empty_data_store._type_attributes["ft.onto.base_ontology.Sentence"],
+                        self.data_store._type_attributes["ft.onto.base_ontology.Sentence"])
+        self.assertEqual(empty_data_store._type_attributes["ft.onto.base_ontology.Document"],
+                        self.data_store._type_attributes["ft.onto.base_ontology.Document"])
+        # test the return value
+        self.assertEqual(doc_attr_dict, empty_data_store._type_attributes["ft.onto.base_ontology.Document"]["attributes"])
+        # test add invalid type
+        with self.assertRaisesRegex(
+            ValueError, "Class not found in invalid.Type"
+        ):
+            self.data_store._add_new_type("invalid.Type")
+        self.assertTrue("invalid.Type" not in self.data_store._type_attributes)
+
     def test_add_annotation_raw(self):
         # test add Document entry
         self.data_store.add_annotation_raw("ft.onto.base_ontology.Document", 1, 5)
@@ -259,6 +279,13 @@ class DataStoreTest(unittest.TestCase):
         self.assertEqual(num_doc, 3)
         self.assertEqual(num_sent, 3)
         self.assertEqual(len(self.data_store._DataStore__entry_dict), 7)
+
+        # test add new annotation type
+        self.data_store.add_annotation_raw("ft.onto.base_ontology.Phrase", 10, 12)
+        num_phrase = len(self.data_store._DataStore__elements["ft.onto.base_ontology.Phrase"])
+        self.assertEqual(num_phrase, 1)
+        self.assertEqual(len(self.data_store._type_attributes), 3)
+        self.assertEqual(len(self.data_store._DataStore__entry_dict), 8)
 
     def test_get_attribute(self):
         speaker = self.data_store.get_attribute(9999, "speaker")

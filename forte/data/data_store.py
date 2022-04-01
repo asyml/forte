@@ -200,35 +200,72 @@ class DataStore(BaseStore):
     def _add_new_type(self, type_name: str):
         """
         Add a new type input_entry_class into ``_type_attributes``.
-        This method will call get_entry_attribute_by_class(class) to get all
-        attributes of a type.
+        This method will get all attributes of a type and assign index to them.
         Args:
-            input_entry_class: A string or class type representing a class
+            type_name (str): A string or class type representing a class.
+        Returns:
+            attr_dict (dict): The attribute dict of the given type.
         Raises:
             RuntimeError: when the type is not provided by ontology file.
         """
         # check if type is in dictionary
         if type_name in self._type_attributes:
-            return
+            return self._type_attributes[type_name]
         if not self.dynamically_add_type:
             raise RuntimeError(
                 f"{type_name} is not an existing type in current data store."
                 f"Dynamically add type is disabled."
             )
         # get attribute dictionary
-        attributes = EntryTypeGenerator.get_entry_attributes_by_class(type_name)
+        attributes = self._get_entry_attributes_by_class(type_name)
 
         attr_dict = {}
-        idx = constants.ENTRY_TYPE_INDEX + 1
-        for attr in attributes:
-            attr_dict[attr] = idx
-            idx += 1
+        attr_idx = constants.ENTRY_TYPE_INDEX + 1
+        for attr_name in attributes:
+            attr_dict[attr_name] = attr_idx
+            attr_idx += 1
 
         self._type_attributes[type_name] = {
             "attributes": attr_dict,
             "parent_entry": None,
         }
         self.__elements[type_name] = SortedList()
+
+        return attr_dict
+
+    def _get_type_attribute_entry(self, type_name: str):
+        """Get the dict of an entry in ``_type_attributes``.
+        Args:
+            type_name (str): The fully qualified type name of the new entry.
+        Returns:
+            type_attribute_entry (dict): The dict in ``_type_attributes``
+            storing attributes and parent information of an entry.
+        Raises:
+            KeyError: when ``type_name`` does not exist.
+        """
+        try:
+            type_attribute_entry = self._type_attributes[type_name]
+        except KeyError as e:
+            raise KeyError(f"Type {type_name} does not exist.") from e
+        return type_attribute_entry
+
+    def _get_entry_attribute_dict(self, type_name: str):
+        """Get the attribute dict of an entry.
+        Args:
+            type_name (str): The fully qualified type name of the new entry.
+        Returns:
+            attr_dict (dict): The attributes-to-index dict of an entry.
+        """
+        return self._get_type_attribute_entry(type_name)["attributes"]
+
+    def _get_entry_parent(self, type_name: str):
+        """Get the parent name of an entry.
+        Args:
+            type_name (str): The fully qualified type name of the new entry.
+        Returns:
+            parent_entry (str): The parent entry name of an entry.
+        """
+        return self._get_type_attribute_entry(type_name)["parent_entry"]
 
     def _new_annotation(self, type_name: str, begin: int, end: int) -> List:
         r"""This function generates a new annotation with default fields.
@@ -248,14 +285,10 @@ class DataStore(BaseStore):
         tid: int = self._new_tid()
         entry: List[Any]
 
-        self._add_new_type(type_name)
+        entry_attr_dict = self._add_new_type(type_name)
         entry = [begin, end, tid, type_name]
-        try:
-            entry += len(self._type_attributes[type_name]) * [None]
-        except KeyError as e:
-            raise KeyError(
-                f"Annotation type with id {type_name} does not exist."
-            ) from e
+        entry += len(entry_attr_dict) * [None]
+
         return entry
 
     def _new_link(
@@ -278,14 +311,10 @@ class DataStore(BaseStore):
         tid: int = self._new_tid()
         entry: List[Any]
 
-        self._add_new_type(type_name)
+        entry_attr_dict = self._add_new_type(type_name)
         entry = [parent_tid, child_tid, tid, type_name]
-        try:
-            entry += len(self._type_attributes[type_name]) * [None]
-        except KeyError as e:
-            raise KeyError(
-                f"Link type with id {type_name} does not exist."
-            ) from e
+        entry += len(entry_attr_dict) * [None]
+
         return entry
 
     def _new_group(self, type_name: str, member_type: str) -> List:
@@ -304,14 +333,10 @@ class DataStore(BaseStore):
 
         tid: int = self._new_tid()
 
-        self._add_new_type(type_name)
+        entry_attr_dict = self._add_new_type(type_name)
         entry = [member_type, [], tid, type_name]
-        try:
-            entry += len(self._type_attributes[type_name]) * [None]
-        except KeyError as e:
-            raise KeyError(
-                f"Group type with id {type_name} does not exist."
-            ) from e
+        entry += len(entry_attr_dict) * [None]
+
         return entry
 
     def _is_annotation(self, type_name: str) -> bool:
@@ -323,6 +348,7 @@ class DataStore(BaseStore):
             A boolean value whether this type_id belongs to an annotation
             type or not.
         """
+        # TODO: use is_subclass() in DataStore to replace this
         entry_class = get_class(type_name)
         return issubclass(entry_class, Annotation)
 
@@ -414,7 +440,7 @@ class DataStore(BaseStore):
             raise KeyError(f"Entry with tid {tid} not found.") from e
 
         try:
-            attr_id = self._type_attributes[entry_type][attr_name]
+            attr_id = self._get_entry_attribute_dict(entry_type)[attr_name]
         except KeyError as e:
             raise KeyError(f"{entry_type} has no {attr_name} attribute.") from e
 
@@ -457,7 +483,7 @@ class DataStore(BaseStore):
             raise KeyError(f"Entry with tid {tid} not found.") from e
 
         try:
-            attr_id = self._type_attributes[entry_type][attr_name]
+            attr_id = self._get_entry_attribute_dict(entry_type)[attr_name]
         except KeyError as e:
             raise KeyError(f"{entry_type} has no {attr_name} attribute.") from e
 
