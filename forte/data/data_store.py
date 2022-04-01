@@ -540,29 +540,23 @@ class DataStore(BaseStore):
         # Initialize the first entry of all entry lists
         # it avoids empty entry lists or non-existant entry list
         first_entries = []
-        for tn in type_names:
-            if tn not in self.__elements:
-                raise ValueError(
-                    f"Input parameter types name {tn} is not"
-                    "available. Please input available ones in this DataStore"
-                    f"object: {list(self.__elements.keys())}"
-                )
-
-        for tn in type_names:
-            # raise error if it's empty list
-            if not self.__elements[tn]:
-                raise IndexError(
-                    f"Entry list of type name ({tn}) is"
-                    " empty. Please check data in this DataStore "
-                    " to see if empty list is expected"
-                    f" or remove {tn} from input parameter type_names"
-                )
-            else:
-                first_entries.append(self.__elements[tn][0])
-
         # record the current entry index for elements
         # pointers[i] is the index of entry at (i)th sorted entry lists
-        pointers = [0] * n
+        # initialize with -1 which means no indexing in the empty list
+        pointers = [-1] * n
+
+        for i, tn in enumerate(type_names):
+            try:
+                if self.__elements[tn]:
+                    first_entries.append(self.__elements[tn][0])
+                    pointers[i] = 0
+            except KeyError as e:  # self.__elements[tn] will be catched here.
+                raise ValueError(
+                    f"Input argument `type_names` to the function contains"
+                    f" a type name [{tn}], which is not recognized."
+                    f" Please input available ones in this DataStore"
+                    f" object: {list(self.__elements.keys())}"
+                ) from e
 
         # compare tuple (begin, end, order of type name in input argument
         # type_names)
@@ -573,18 +567,21 @@ class DataStore(BaseStore):
         # the index of the entry type name in input parameter ``type_names``)
         h: List[Tuple[Tuple[int, int, int], str]] = []
         for p_idx in range(n):
-            entry_tuple = (
-                (
-                    first_entries[p_idx][constants.BEGIN_INDEX],
-                    first_entries[p_idx][constants.END_INDEX],
-                    p_idx,
-                ),
-                first_entries[p_idx][constants.ENTRY_TYPE_INDEX],
-            )
-            heappush(
-                h,
-                entry_tuple,
-            )
+            # skip empty list
+            # which is when pointers[p_idx] == 0
+            if pointers[p_idx] >= 0:
+                entry_tuple = (
+                    (
+                        first_entries[p_idx][constants.BEGIN_INDEX],
+                        first_entries[p_idx][constants.END_INDEX],
+                        p_idx,
+                    ),
+                    first_entries[p_idx][constants.ENTRY_TYPE_INDEX],
+                )
+                heappush(
+                    h,
+                    entry_tuple,
+                )
 
         while h:
             # NOTE: we push the ordering tuple to the heap

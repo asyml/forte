@@ -418,13 +418,12 @@ class DataStoreTest(unittest.TestCase):
 
         self.assertRaises(ValueError, value_err_fn)
 
-        # test empty list
-        def index_err_fn():
-            type_names.append(token_tn)
-            self.data_store._DataStore__elements[token_tn] = SortedList()
-            list(self.data_store.co_iterator_annotation_like(type_names))
+        # test iterate empty list
 
-        self.assertRaises(IndexError, index_err_fn)
+        type_names = [token_tn]
+        self.data_store._DataStore__elements[token_tn] = SortedList()
+        elements = list(self.data_store.co_iterator_annotation_like(type_names))
+        self.assertEqual(len(elements), 0)
         # self.data_store._DataStore__elements.pop(token_tn)
 
     def test_add_annotation_raw(self):
