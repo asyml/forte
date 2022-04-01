@@ -247,14 +247,14 @@ class DataStoreTest(unittest.TestCase):
             ]
         }
 
-    def test_add_new_type(self):
+    def test_get_type_info(self):
         # initialize
         empty_data_store = DataStore()
 
         # test add new type to _type_attributes
-        doc_attr_dict = empty_data_store._add_new_type("ft.onto.base_ontology.Document")
-        empty_data_store._add_new_type("ft.onto.base_ontology.Sentence")
-        self.assertEqual(len(empty_data_store._DataStore__elements), 2)
+        doc_attr_dict = empty_data_store._get_type_info("ft.onto.base_ontology.Document")
+        empty_data_store._get_type_info("ft.onto.base_ontology.Sentence")
+        self.assertEqual(len(empty_data_store._DataStore__elements), 0)
         self.assertEqual(empty_data_store._type_attributes["ft.onto.base_ontology.Sentence"],
                         self.data_store._type_attributes["ft.onto.base_ontology.Sentence"])
         self.assertEqual(empty_data_store._type_attributes["ft.onto.base_ontology.Document"],
@@ -265,7 +265,7 @@ class DataStoreTest(unittest.TestCase):
         with self.assertRaisesRegex(
             ValueError, "Class not found in invalid.Type"
         ):
-            self.data_store._add_new_type("invalid.Type")
+            self.data_store._get_type_info("invalid.Type")
         self.assertTrue("invalid.Type" not in self.data_store._type_attributes)
 
     def test_add_annotation_raw(self):
@@ -281,8 +281,8 @@ class DataStoreTest(unittest.TestCase):
         self.assertEqual(len(self.data_store._DataStore__entry_dict), 7)
 
         # test add new annotation type
-        self.data_store.add_annotation_raw("ft.onto.base_ontology.Phrase", 10, 12)
-        num_phrase = len(self.data_store._DataStore__elements["ft.onto.base_ontology.Phrase"])
+        self.data_store.add_annotation_raw("ft.onto.base_ontology.EntityMention", 10, 12)
+        num_phrase = len(self.data_store._DataStore__elements["ft.onto.base_ontology.EntityMention"])
         self.assertEqual(num_phrase, 1)
         self.assertEqual(len(self.data_store._type_attributes), 3)
         self.assertEqual(len(self.data_store._DataStore__entry_dict), 8)

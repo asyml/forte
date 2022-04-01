@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Iterator, Tuple, Optional, Any
+from typing import Dict, List, Iterator, Tuple, Optional, Any
 import uuid
 from bisect import bisect_left
 from sortedcontainers import SortedList
@@ -122,13 +122,13 @@ class DataStore(BaseStore):
         super().__init__()
 
         if onto_file_path is None and not dynamically_add_type:
-            raise UserWarning(
+            raise RuntimeError(
                 "DataStore is initialized with no existing types. Setting"
                 "dynamically_add_type to False without providing onto_file_path"
                 "will lead to no usable type in DataStore."
             )
-        self.onto_file_path = onto_file_path
-        self.dynamically_add_type = dynamically_add_type
+        self._onto_file_path = onto_file_path
+        self._dynamically_add_type = dynamically_add_type
 
         """
         The ``_type_attributes`` is a private dictionary that provides
@@ -164,7 +164,7 @@ class DataStore(BaseStore):
             # }
         """
         self._type_attributes: dict = {}
-        if self.onto_file_path:
+        if self._onto_file_path:
             self._parse_onto_file()
 
         """
@@ -197,7 +197,7 @@ class DataStore(BaseStore):
         r"""This function generates a new ``tid`` for an entry."""
         return uuid.uuid4().int
 
-    def _add_new_type(self, type_name: str):
+    def _get_type_info(self, type_name: str) -> Dict[str, int]:
         """
         Add a new type input_entry_class into ``_type_attributes``.
         This method will get all attributes of a type and assign index to them.
@@ -206,12 +206,13 @@ class DataStore(BaseStore):
         Returns:
             attr_dict (dict): The attribute dict of the given type.
         Raises:
-            RuntimeError: when the type is not provided by ontology file.
+            RuntimeError: when the type is not provided by ontology file and
+            dynamic import is disabled.
         """
         # check if type is in dictionary
         if type_name in self._type_attributes:
             return self._type_attributes[type_name]
-        if not self.dynamically_add_type:
+        if not self._dynamically_add_type:
             raise RuntimeError(
                 f"{type_name} is not an existing type in current data store."
                 f"Dynamically add type is disabled."
@@ -229,11 +230,10 @@ class DataStore(BaseStore):
             "attributes": attr_dict,
             "parent_entry": None,
         }
-        self.__elements[type_name] = SortedList()
 
         return attr_dict
 
-    def _get_type_attribute_entry(self, type_name: str):
+    def _get_type_attribute_info(self, type_name: str) -> Dict[str, Dict]:
         """Get the dict of an entry in ``_type_attributes``.
         Args:
             type_name (str): The fully qualified type name of the new entry.
@@ -249,23 +249,23 @@ class DataStore(BaseStore):
             raise KeyError(f"Type {type_name} does not exist.") from e
         return type_attribute_entry
 
-    def _get_entry_attribute_dict(self, type_name: str):
+    def _get_entry_attribute_dict(self, type_name: str) -> Dict[str, int]:
         """Get the attribute dict of an entry.
         Args:
             type_name (str): The fully qualified type name of the new entry.
         Returns:
             attr_dict (dict): The attributes-to-index dict of an entry.
         """
-        return self._get_type_attribute_entry(type_name)["attributes"]
+        return self._get_type_attribute_info(type_name)["attributes"]
 
-    def _get_entry_parent(self, type_name: str):
+    def _get_entry_parent(self, type_name: str) -> str:
         """Get the parent name of an entry.
         Args:
             type_name (str): The fully qualified type name of the new entry.
         Returns:
             parent_entry (str): The parent entry name of an entry.
         """
-        return self._get_type_attribute_entry(type_name)["parent_entry"]
+        return self._get_type_attribute_info(type_name)["parent_entry"]
 
     def _new_annotation(self, type_name: str, begin: int, end: int) -> List:
         r"""This function generates a new annotation with default fields.
@@ -285,7 +285,7 @@ class DataStore(BaseStore):
         tid: int = self._new_tid()
         entry: List[Any]
 
-        entry_attr_dict = self._add_new_type(type_name)
+        entry_attr_dict = self._get_type_info(type_name)
         entry = [begin, end, tid, type_name]
         entry += len(entry_attr_dict) * [None]
 
@@ -311,7 +311,7 @@ class DataStore(BaseStore):
         tid: int = self._new_tid()
         entry: List[Any]
 
-        entry_attr_dict = self._add_new_type(type_name)
+        entry_attr_dict = self._get_type_info(type_name)
         entry = [parent_tid, child_tid, tid, type_name]
         entry += len(entry_attr_dict) * [None]
 
@@ -333,7 +333,7 @@ class DataStore(BaseStore):
 
         tid: int = self._new_tid()
 
-        entry_attr_dict = self._add_new_type(type_name)
+        entry_attr_dict = self._get_type_info(type_name)
         entry = [member_type, [], tid, type_name]
         entry += len(entry_attr_dict) * [None]
 
@@ -423,7 +423,6 @@ class DataStore(BaseStore):
         ``attr_name`` with `attr_value`. It first finds ``attr_id``  according
         to ``attr_name``. ``tid``, ``attr_id``, and ``attr_value`` are
         passed to `set_attr()`.
-        Raises KeyError when ``tid`` or ``attr_name`` is not found.
 
         Args:
             tid (int): Unique Id of the entry.
@@ -464,7 +463,6 @@ class DataStore(BaseStore):
         ``tid``. It locates the entry data with ``tid`` and finds `attr_id`
         of its attribute ``attr_name``. ``tid`` and ``attr_id``  are passed
         to ``get_attr()``.
-        Raises KeyError when ``tid`` or ``attr_name`` is not found.
 
         Args:
             tid (int): Unique id of the entry.
@@ -506,8 +504,6 @@ class DataStore(BaseStore):
     def delete_entry(self, tid: int):
         r"""This function locates the entry data with ``tid`` and removes it
         from the data store. This function first removes it from `__entry_dict`.
-        Raises KeyError when entry with ``tid`` is not found. Raise RuntimeError
-        when internal storage is inconsistent.
 
         Args:
             tid (int): Unique id of the entry.
@@ -554,8 +550,6 @@ class DataStore(BaseStore):
     def _delete_entry_by_loc(self, type_name: str, index_id: int):
         r"""It removes an entry of `index_id` by taking both the `type_id`
         and `index_id`. Called by `delete_entry()`.
-        This function will raise an IndexError if the `type_id` or `index_id`
-        is invalid.
 
         Args:
             type_id (int): The index of the list in ``self.__elements``.
@@ -666,7 +660,7 @@ class DataStore(BaseStore):
         A user can use classes both in the ontology specification file and their parent
         entries's paths.
         """
-        if self.onto_file_path is None:
+        if self._onto_file_path is None:
             return
         raise NotImplementedError
 
