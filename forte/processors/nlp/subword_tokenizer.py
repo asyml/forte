@@ -19,7 +19,13 @@ __all__ = [
 
 from typing import List, Tuple, Iterator, Dict, Set
 
-from texar.torch.data.tokenizers.bert_tokenizer import BERTTokenizer
+try:
+    from texar.torch.data.tokenizers.bert_tokenizer import BERTTokenizer
+except ImportError:
+    print(
+        "Texar is not installed correctly. Please refer to [link](readme)"
+        " for more information. "
+    )
 
 from forte.common import Resources
 from forte.common.configuration import Config

@@ -50,19 +50,25 @@ pip install src/spacy
 
 Some components or modules in forte may require some [extra requirements](https://github.com/asyml/forte/blob/master/setup.py#L45):
 
-* `pip install forte[forte-models-ner]`: Install packages required for [ner_trainer](https://github.com/asyml/forte/blob/master/forte/trainer/ner_trainer.py)
+* `pip install forte[models]`: Install packages required for [ner_trainer](https://github.com/asyml/forte/blob/master/forte/trainer/ner_trainer.py), [srl](https://github.com/asyml/forte/tree/master/forte/models/srl) and [new_srl](https://github.com/asyml/forte/tree/master/forte/models/srl_new)
 * `pip install forte[test]`: Install packages required for running [unit tests](https://github.com/asyml/forte/tree/master/tests).
 * `pip install forte[example]`: Install packages required for running [forte examples](https://github.com/asyml/forte/tree/master/examples).
 * `pip install forte[wikipedia]`: Install packages required for reading [wikipedia datasets](https://github.com/asyml/forte/tree/master/forte/datasets/wikipedia).
-* `pip install forte[forte-processors-data_aug]`: Install packages required for [data augmentation module](https://github.com/asyml/forte/tree/master/forte/processors/data_augment).
+* `pip install forte[data_aug]`: Install packages required for [data augmentation module](https://github.com/asyml/forte/tree/master/forte/processors/data_augment).
 * `pip install forte[forte-processors-misc]`: Install packages required for [misc processors](https://github.com/asyml/forte/tree/master/forte/processors/misc)
-* `pip install forte[forte-processors-nlp]`: Install packages required for [nlp processor](https://github.com/asyml/forte/tree/master/forte/processors/nlp)
-* `pip install forte[forte-processors-third_party]`: Install packages required for [third party](https://github.com/asyml/forte/tree/master/forte/processors/third_party)
+* `pip install forte[subword_tokenize]`: Install packages required for [subword_tokenizer](https://github.com/asyml/forte/tree/master/forte/processors/nlp/subword_tokenizer.py)
+* `pip install forte[texar-encoder]`: Install packages required for [texar encoder](https://github.com/asyml/forte/tree/master/forte/processors/third_party/pretrained_encoder_processors.py)
 * `pip install forte[forte-data-extractor]`: Install packages required for [extractor](https://github.com/asyml/forte/blob/master/forte/data/extractors)
-* `pip install forte[forte-models-data_rl]`:Install packages required for [data_rl](https://github.com/asyml/forte/tree/master/forte/models/da_rl)
-* `pip install forte[forte-models-srl]`: Install packages required for [srl](https://github.com/asyml/forte/tree/master/forte/models/srl) or [new_srl](https://github.com/asyml/forte/tree/master/forte/models/srl_new)
+* `pip install forte[rl-aug]`: Install packages required for [data_rl](https://github.com/asyml/forte/tree/master/forte/models/da_rl)
 * `pip install forte[stave]`: Install packages required for [StaveProcessor](https://github.com/asyml/forte/blob/master/forte/processors/stave/stave_processor.py).
 * `pip install forte[audio_ext]`: Install packages required for [AudioReader](https://github.com/asyml/forte/blob/master/forte/data/readers/audio_reader.py).
+* `pip install forte[uda]`: Install packages required for [uda](https://github.com/asyml/forte/blob/master/forte/processors/data_augment/algorithms/UDA.py).
+* `pip install forte[mt]`: Install packages required for [mt](https://github.com/asyml/forte/blob/master/forte/processors/data_augment/algorithms/machine_translator.py).
+* `pip install forte[dict]`: Install packages required for [dict](https://github.com/asyml/forte/blob/master/forte/processors/data_augment/algorithms/dictionary.py).
+
+* `pip install forte[emb_sim_rep_op]`: Install packages required for [AudioReader](https://github.com/asyml/forte/blob/master/forte/processors/data_augment/algorithms/embedding_similarity_replacement_op.py).
+
+
 
 ## Getting Started
 

@@ -16,15 +16,23 @@ import json
 import os
 from abc import ABC
 from typing import Counter as CounterType, Dict, List, Optional
-
-import texar.torch as tx
-
 from forte.processors.base import PackProcessor
 
 __all__ = [
     "Alphabet",
     "VocabularyProcessor",
 ]
+
+
+class SpecialTokens:
+    r"""Special tokens, including :attr:`PAD`, :attr:`BOS`, :attr:`EOS`,
+    :attr:`UNK`. These tokens will by default have token ids 0, 1, 2, 3,
+    respectively.
+    """
+    PAD = "<PAD>"
+    BOS = "<BOS>"
+    EOS = "<EOS>"
+    UNK = "<UNK>"
 
 
 class Alphabet:
@@ -47,7 +55,7 @@ class Alphabet:
         other_embeddings: Optional[Dict] = None,
     ):
         self.__name = name
-        self.reserved_tokens = tx.data.SpecialTokens
+        self.reserved_tokens = SpecialTokens
 
         self.instance2index: Dict = {}
         self.instances: List = []

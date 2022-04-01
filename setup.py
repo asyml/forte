@@ -39,7 +39,7 @@ setuptools.setup(
         'importlib-resources>=5.1.4;python_version<"3.7"',
     ],
     extras_require={
-        "forte-models-ner": [
+        "models": [
             "torch>=1.1.0",
             "torchtext==0.4.0",
             "tqdm>=4.36.1",
@@ -59,17 +59,22 @@ setuptools.setup(
             "fastapi>=0.65.2",
             "uvicorn>=0.14.0",
         ],
-        "forte-models-data_rl": ["texar-pytorch>=0.1.1"],
-        "forte-models-srl": ["texar-pytorch>=0.1.1"],  # srl and srl_new
-        "forte-processors-misc": ["texar-pytorch>=0.1.1"],
-        "forte-processors-nlp": ["texar-pytorch>=0.1.1"],
-        "forte-processors-third_party": ["texar-pytorch>=0.1.1"],
-        "forte-processors-data_aug": [
+        "rl-aug": ["texar-pytorch>=0.1.1"],
+        "subword_tokenize": ["texar-pytorch>=0.1.1"],
+        "texar-encoder": ["texar-pytorch>=0.1.1"],
+        "data_aug": [
             "transformers>=3.1, <=4.9.2",
             "nltk",
             "texar-pytorch>=0.1.1",
         ],
-        "forte-data-extractor": ["texar-pytorch>=0.1.1"],
+        "uda": [
+            "texar-pytorch>=0.1.1",
+        ],
+        "mt": [
+            "transformers>=3.1, <=4.9.2",
+        ],
+        "dict": ["nltk"],
+        "emb_sim_rep_op": ["texar-pytorch>=0.1.1"],
     },
     entry_points={
         "console_scripts": [
