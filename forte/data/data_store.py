@@ -555,9 +555,9 @@ class DataStore(BaseStore):
                 ) from e
             except IndexError as e:  # self.__elements[tn][0] will be catched here.
                 raise ValueError(
-                    f"Entry list of type name ({tn}) "
-                    "(one list item of input argument `type_names`"
-                    " is empty. Please check data in this DataStore "
+                    f"Entry list of type name, {tn} which is "
+                    " one list item of input argument `type_names`,"
+                    " is empty. Please check data in this DataStore). "
                     " to see if empty lists are expected"
                     f" or remove {tn} from input parameter type_names"
                 ) from e
