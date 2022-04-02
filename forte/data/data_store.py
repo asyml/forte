@@ -233,7 +233,7 @@ class DataStore(BaseStore):
 
         return attr_dict
 
-    def _get_type_attribute_info(self, type_name: str) -> Dict[str, Dict]:
+    def _get_type_attribute_info(self, type_name: str) -> Dict[str, Any]:
         """Get the dict of an entry in ``_type_attributes``.
         Args:
             type_name (str): The fully qualified type name of the new entry.
