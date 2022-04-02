@@ -18,7 +18,17 @@ A wrapper adding data augmentation to a Bert model with arbitrary tasks.
 import random
 import math
 from typing import Tuple, Dict, Generator
-import texar.torch as tx
+
+
+try:
+    import texar.torch as tx
+except ImportError:
+    print(
+        " `texar-pytorch` is not installed correctly."
+        " Please refer to [extra requirement for aug wrapper](pip install forte[data_aug])"
+        " for more information. "
+    )
+
 import torch
 from torch import nn
 from torch.nn import functional as F

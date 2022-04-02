@@ -20,6 +20,15 @@ from typing import Tuple, List, Dict, Union, Optional, Iterable, Type
 
 from torch import Tensor
 
+try:
+    import texar.torch as tx
+except ImportError:
+    print(
+        " `texar-pytorch` is not installed correctly."
+        " Please refer to [extra modules to install for extractor](pip install forte[extractor])"
+        " for more information. "
+    )
+
 from forte.common.configuration import Config
 from forte.data.base_extractor import BaseExtractor
 from forte.data.converter.feature import Feature

@@ -55,9 +55,6 @@ jobs:
           pip install --progress-bar off coverage codecov
           python -m pip install ipykernel
           python -m ipykernel install --user
-          pip install testbook
-          pip install termcolor
-          pip install transformers>=4.15.0
       - name: Format check with Black
         run: |
           black --line-length 80 --check forte/

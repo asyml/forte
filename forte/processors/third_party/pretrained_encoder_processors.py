@@ -12,7 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import texar.torch as tx
+try:
+    import texar.torch as tx
+except ImportError:
+    print(
+        " `texar-pytorch` is not installed correctly."
+        " Please refer to [extra requirement for texar-encoder](pip install forte[texar-encoder])"
+        " for more information. "
+    )
 import torch
 
 from forte.common.configuration import Config

@@ -45,7 +45,14 @@ setuptools.setup(
             "tqdm>=4.36.1",
             "texar-pytorch>=0.1.1",
         ],
-        "test": ["ddt", "testfixtures"],
+        "test": [
+            "ddt",
+            "testfixtures",
+            "testbook",
+            "termcolor",
+            "transformers>=4.15.0",
+            "nltk",
+        ],
         "example": [
             "termcolor==1.1.0",
             "hypothesis==2.0.0",
@@ -59,6 +66,7 @@ setuptools.setup(
             "fastapi>=0.65.2",
             "uvicorn>=0.14.0",
         ],
+        "extractor": ["texar-pytorch>=0.1.1"],
         "rl-aug": ["texar-pytorch>=0.1.1"],
         "subword_tokenize": ["texar-pytorch>=0.1.1"],
         "texar-encoder": ["texar-pytorch>=0.1.1"],

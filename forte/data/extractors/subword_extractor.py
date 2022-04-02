@@ -18,7 +18,15 @@ from the subwords of an entry.
 import logging
 from typing import Union, Dict, Optional
 
-from texar.torch.data.tokenizers.bert_tokenizer import BERTTokenizer
+try:
+    from texar.torch.data.tokenizers.bert_tokenizer import BERTTokenizer
+except ImportError:
+    print(
+        " `texar-pytorch` is not installed correctly."
+        " Please refer to [extra requirement for aug wrapper](pip install forte[extractor])"
+        " for more information. "
+    )
+
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.data.converter.feature import Feature

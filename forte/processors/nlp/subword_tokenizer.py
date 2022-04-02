@@ -23,7 +23,8 @@ try:
     from texar.torch.data.tokenizers.bert_tokenizer import BERTTokenizer
 except ImportError:
     print(
-        "Texar is not installed correctly. Please refer to [link](readme)"
+        " Texar is not installed correctly."
+        " Please refer to [extra requirement for subword tokenizer](pip install forte[subword_tokenize])"
         " for more information. "
     )
 

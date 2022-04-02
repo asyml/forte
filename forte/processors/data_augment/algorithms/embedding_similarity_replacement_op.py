@@ -16,7 +16,15 @@ import random
 
 from typing import Tuple
 import numpy as np
-from texar.torch.data import Vocab, Embedding
+
+
+try:
+    from texar.torch.data import Vocab, Embedding
+except ImportError as e:
+    raise ImportError(
+        "texar is not installed correctly."
+        "Please refer to documentation to [install extra required modules](emb_sim_rep_op)"
+    ) from e
 
 from ft.onto.base_ontology import Annotation
 from forte.common.configuration import Config

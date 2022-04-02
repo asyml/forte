@@ -58,7 +58,7 @@ Some components or modules in forte may require some [extra requirements](https:
 * `pip install forte[forte-processors-misc]`: Install packages required for [misc processors](https://github.com/asyml/forte/tree/master/forte/processors/misc)
 * `pip install forte[subword_tokenize]`: Install packages required for [subword_tokenizer](https://github.com/asyml/forte/tree/master/forte/processors/nlp/subword_tokenizer.py)
 * `pip install forte[texar-encoder]`: Install packages required for [texar encoder](https://github.com/asyml/forte/tree/master/forte/processors/third_party/pretrained_encoder_processors.py)
-* `pip install forte[forte-data-extractor]`: Install packages required for [extractor](https://github.com/asyml/forte/blob/master/forte/data/extractors)
+* `pip install forte[extractor]`: Install packages required for [extractor](https://github.com/asyml/forte/blob/master/forte/data/extractors)
 * `pip install forte[rl-aug]`: Install packages required for [data_rl](https://github.com/asyml/forte/tree/master/forte/models/da_rl)
 * `pip install forte[stave]`: Install packages required for [StaveProcessor](https://github.com/asyml/forte/blob/master/forte/processors/stave/stave_processor.py).
 * `pip install forte[audio_ext]`: Install packages required for [AudioReader](https://github.com/asyml/forte/blob/master/forte/data/readers/audio_reader.py).
