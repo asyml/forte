@@ -479,6 +479,8 @@ class DataStore(BaseStore):
                 f"is out of boundary for entry list of length {len(target_list)}."
             )
         target_list.pop(index_id)
+        if not target_list:
+            self.__elements.pop(type_name)
 
     def get_entry(self, tid: int) -> Tuple[List, int, int]:
         r"""This function finds the entry with ``tid``. It returns the entry,
@@ -540,16 +542,10 @@ class DataStore(BaseStore):
         # Initialize the first entry of all entry lists
         # it avoids empty entry lists or non-existant entry list
         first_entries = []
-        # record the current entry index for elements
-        # pointers[i] is the index of entry at (i)th sorted entry lists
-        # initialize with -1 which means no indexing in the empty list
-        pointers = [-1] * n
 
-        for i, tn in enumerate(type_names):
+        for tn in type_names:
             try:
-                if self.__elements[tn]:
-                    first_entries.append(self.__elements[tn][0])
-                    pointers[i] = 0
+                first_entries.append(self.__elements[tn][0])
             except KeyError as e:  # self.__elements[tn] will be catched here.
                 raise ValueError(
                     f"Input argument `type_names` to the function contains"
@@ -557,6 +553,18 @@ class DataStore(BaseStore):
                     f" Please input available ones in this DataStore"
                     f" object: {list(self.__elements.keys())}"
                 ) from e
+            except IndexError as e:  # self.__elements[tn][0] will be catched here.
+                raise ValueError(
+                    f"Entry list of type name ({tn}) "
+                    "(one list item of input argument `type_names`"
+                    " is empty. Please check data in this DataStore "
+                    " to see if empty lists are expected"
+                    f" or remove {tn} from input parameter type_names"
+                ) from e
+
+        # record the current entry index for elements
+        # pointers[i] is the index of entry at (i)th sorted entry lists
+        pointers = [0] * n
 
         # compare tuple (begin, end, order of type name in input argument
         # type_names)
@@ -567,21 +575,18 @@ class DataStore(BaseStore):
         # the index of the entry type name in input parameter ``type_names``)
         h: List[Tuple[Tuple[int, int, int], str]] = []
         for p_idx in range(n):
-            # skip empty list
-            # which is when pointers[p_idx] == 0
-            if pointers[p_idx] >= 0:
-                entry_tuple = (
-                    (
-                        first_entries[p_idx][constants.BEGIN_INDEX],
-                        first_entries[p_idx][constants.END_INDEX],
-                        p_idx,
-                    ),
-                    first_entries[p_idx][constants.ENTRY_TYPE_INDEX],
-                )
-                heappush(
-                    h,
-                    entry_tuple,
-                )
+            entry_tuple = (
+                (
+                    first_entries[p_idx][constants.BEGIN_INDEX],
+                    first_entries[p_idx][constants.END_INDEX],
+                    p_idx,
+                ),
+                first_entries[p_idx][constants.ENTRY_TYPE_INDEX],
+            )
+            heappush(
+                h,
+                entry_tuple,
+            )
 
         while h:
             # NOTE: we push the ordering tuple to the heap

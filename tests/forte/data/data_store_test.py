@@ -419,12 +419,11 @@ class DataStoreTest(unittest.TestCase):
         self.assertRaises(ValueError, value_err_fn)
 
         # test iterate empty list
+        def value_err_fn():
+            type_names = [token_tn]
+            list(self.data_store.co_iterator_annotation_like(type_names))
 
-        type_names = [token_tn]
-        self.data_store._DataStore__elements[token_tn] = SortedList()
-        elements = list(self.data_store.co_iterator_annotation_like(type_names))
-        self.assertEqual(len(elements), 0)
-        # self.data_store._DataStore__elements.pop(token_tn)
+        self.assertRaises(ValueError, value_err_fn)
 
     def test_add_annotation_raw(self):
         # # test add Document entry
@@ -532,26 +531,23 @@ class DataStoreTest(unittest.TestCase):
                 "ft.onto.base_ontology.Document"
             ]
         )
-        num_sent = len(
-            self.data_store._DataStore__elements[
-                "ft.onto.base_ontology.Sentence"
-            ]
-        )
+
+        # num_sent = len(
+        #     self.data_store._DataStore__elements[
+        #         "ft.onto.base_ontology.Sentence"
+        #     ]
+        # )
 
         self.assertEqual(len(self.data_store._DataStore__entry_dict), 2)
         self.assertEqual(num_doc, 1)
-        self.assertEqual(num_sent, 0)
+        # self.assertEqual(num_sent, 0)
 
         # delete group
         self.data_store.delete_entry(10123)
         self.assertEqual(len(self.data_store._DataStore__entry_dict), 1)
-        self.assertEqual(
-            len(
-                self.data_store._DataStore__elements[
-                    "ft.onto.base_ontology.Phrase"
-                ]
-            ),
-            0,
+        self.assertTrue(
+            "ft.onto.base_ontology.Phrase"
+            not in self.data_store._DataStore__elements
         )
 
     def test_delete_entry_nonexist(self):
