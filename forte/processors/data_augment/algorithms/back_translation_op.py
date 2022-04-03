@@ -19,8 +19,8 @@ import random
 from typing import Any, Dict, Tuple
 
 from forte.data.ontology import Annotation
-from forte.processors.data_augment.algorithms.single_token_op import (
-    SingleTokenAugmentationOp,
+from forte.processors.data_augment.algorithms.single_annotation_op import (
+    SingleAnnotationAugmentOp,
 )
 from forte.common.configuration import Config
 from forte.utils.utils import create_class_with_kwargs
@@ -30,7 +30,7 @@ __all__ = [
 ]
 
 
-class BackTranslationOp(SingleTokenAugmentationOp):
+class BackTranslationOp(SingleAnnotationAugmentOp):
     r"""
     This class is a replacement op using back translation
     to generate data with the same semantic meanings. The
@@ -91,7 +91,9 @@ class BackTranslationOp(SingleTokenAugmentationOp):
         if device not in ("cpu", "cuda"):
             raise ValueError("The device must be 'cpu' or 'cuda'!")
 
-    def single_token_augment(self, input_anno: Annotation) -> Tuple[bool, str]:
+    def single_annotation_augment(
+        self, input_anno: Annotation
+    ) -> Tuple[bool, str]:
         r"""
         This function replaces a piece of text with back translation.
 

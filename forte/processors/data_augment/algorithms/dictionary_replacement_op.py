@@ -15,8 +15,8 @@ import random
 from typing import Tuple, Union, Dict, Any
 
 from forte.common.configuration import Config
-from forte.processors.data_augment.algorithms.single_token_op import (
-    SingleTokenAugmentationOp,
+from forte.processors.data_augment.algorithms.single_annotation_op import (
+    SingleAnnotationAugmentOp,
 )
 from forte.utils.utils import create_class_with_kwargs
 
@@ -27,7 +27,7 @@ __all__ = [
 from ft.onto.base_ontology import Token
 
 
-class DictionaryReplacementOp(SingleTokenAugmentationOp):
+class DictionaryReplacementOp(SingleAnnotationAugmentOp):
     r"""
     This class is a replacement op utilizing the dictionaries,
     such as WORDNET, to replace the input word with an synonym.
@@ -43,7 +43,7 @@ class DictionaryReplacementOp(SingleTokenAugmentationOp):
             self.configs["dictionary_class"], class_args={}
         )
 
-    def single_token_augment(self, input_anno: Token) -> Tuple[bool, str]:  # type: ignore
+    def single_annotation_augment(self, input_anno: Token) -> Tuple[bool, str]:  # type: ignore
         r"""
         This function replaces a word with synonyms from a WORDNET dictionary.
 
@@ -73,6 +73,7 @@ class DictionaryReplacementOp(SingleTokenAugmentationOp):
         Following are the keys for this dictionary:
             - `dictionary` (dict): The full qualified name of the dictionary class.
             - `prob` (float): The probability of replacement, should fall in [0, 1].
+                Default value is 0.1
             - `lang` (str): The language of the text.
         """
 

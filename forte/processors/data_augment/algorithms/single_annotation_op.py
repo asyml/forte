@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-SingleTokenAugmentationOp is the extension of the BaseDataAugmentationOp.
+SingleAnnotationAugmentOp is the extension of the BaseDataAugmentationOp.
 The aim of this Op is to increase ease of use and reduce freedom of
 operations that can be done on a data pack. This Op only allows the
 implementation of those augmentation algorithms that process one
@@ -35,10 +35,10 @@ from forte.processors.data_augment.algorithms.base_data_augmentation_op import (
 )
 
 
-__all__ = ["SingleTokenAugmentationOp"]
+__all__ = ["SingleAnnotationAugmentOp"]
 
 
-class SingleTokenAugmentationOp(BaseDataAugmentationOp):
+class SingleAnnotationAugmentOp(BaseDataAugmentationOp):
     r"""
     This class extends the `BaseDataAugmentationOp` to
     only allow augmentation of one annotation at a time.
@@ -48,9 +48,9 @@ class SingleTokenAugmentationOp(BaseDataAugmentationOp):
 
     def augment(self, data_pack: DataPack) -> bool:
         r"""
-        This method is left to be implemented by the user of this Op.
-        The user can use any of the given utility functions to perform
-        augmentation.
+        This method is implemented to restrict the flexibility
+        of the Base Data Augment Op. It allows the augmentation
+        of only one type of annotation.
 
         Args:
             input_anno: the input annotation to be replaced.
@@ -63,17 +63,19 @@ class SingleTokenAugmentationOp(BaseDataAugmentationOp):
         anno: Annotation
         replaced_text: str
         is_replace: bool
-        try:
-            for anno in data_pack.get(augment_entry):
-                is_replace, replaced_text = self.single_token_augment(anno)
-                if is_replace:
+        for anno in data_pack.get(augment_entry):
+            is_replace, replaced_text = self.single_annotation_augment(anno)
+            if is_replace:
+                try:
                     _ = self.replace_annotations(anno, replaced_text)
-            return True
-        except ValueError:
-            return False
+                except ValueError:
+                    return False
+        return True
 
     @abstractmethod
-    def single_token_augment(self, input_anno: Annotation) -> Tuple[bool, str]:
+    def single_annotation_augment(
+        self, input_anno: Annotation
+    ) -> Tuple[bool, str]:
         r"""
         This function takes in one annotation at a time and performs
         the desired augmentation on it. Through this function, one

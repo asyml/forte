@@ -19,14 +19,14 @@ import requests
 
 from forte.data.ontology import Annotation
 from forte.common.configuration import Config
-from forte.processors.data_augment.algorithms.single_token_op import (
-    SingleTokenAugmentationOp,
+from forte.processors.data_augment.algorithms.single_annotation_op import (
+    SingleAnnotationAugmentOp,
 )
 
 __all__ = ["CharacterFlipOp"]
 
 
-class CharacterFlipOp(SingleTokenAugmentationOp):
+class CharacterFlipOp(SingleAnnotationAugmentOp):
     r"""
     A uniform generator that randomly flips a character with a similar
     looking character from a predefined dictionary imported from
@@ -67,7 +67,9 @@ class CharacterFlipOp(SingleTokenAugmentationOp):
         else:
             return char
 
-    def single_token_augment(self, input_anno: Annotation) -> Tuple[bool, str]:
+    def single_annotation_augment(
+        self, input_anno: Annotation
+    ) -> Tuple[bool, str]:
         r"""
         Takes in the annotated string and performs the character
         flip operation on it that randomly augments few characters
@@ -99,7 +101,7 @@ class CharacterFlipOp(SingleTokenAugmentationOp):
                 typo json file,
             - prob (float):
                 The probability of replacement. This value
-                should fall in [0, 1].
+                should fall in [0, 1]. Default value is 0.1
         """
         return {
             "dict_path": (

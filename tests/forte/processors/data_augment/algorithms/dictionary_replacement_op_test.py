@@ -50,7 +50,9 @@ class TestDictionaryReplacementOp(unittest.TestCase):
 
         augmented_data_pack = self.dra.perform_augmentation(data_pack)
 
-        augmented_tokens = list(augmented_data_pack.get("ft.onto.base_ontology.Token"))
+        augmented_tokens = list(
+            augmented_data_pack.get("ft.onto.base_ontology.Token")
+        )
         aug_token_1 = augmented_tokens[0]
         aug_token_2 = augmented_tokens[1]
 

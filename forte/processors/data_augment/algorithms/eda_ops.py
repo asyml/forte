@@ -21,7 +21,8 @@ implemented based on the ReplacementDataAugmentProcessor.
 
 from math import ceil
 import random
-from typing import List, Dict, Iterable
+from typing import List, Dict, Iterable, Union, Any
+from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.data.ontology import Annotation
 from forte.processors.data_augment.algorithms.base_data_augmentation_op import (
@@ -220,7 +221,7 @@ english_stopwords = [
 
 class RandomSwapDataAugmentOp(BaseDataAugmentationOp):
     r"""
-    Data augmentation processor for the Random Swap operation.
+    Data augmentation operation for the Random Swap operation.
     Randomly choose two words in the sentence and swap their positions.
     Do this n times, where n = alpha * input length.
     """
@@ -235,7 +236,9 @@ class RandomSwapDataAugmentOp(BaseDataAugmentationOp):
             )
 
         try:
-            annotations: List[Annotation] = list(data_pack.get(augment_entry))
+            annotations: List[Annotation] = list(
+                data_pack.get(self.configs["augment_entry"])
+            )
             if len(annotations) > 0:
                 replace_map: Dict = {}
             for _ in range(ceil(self.configs["alpha"] * len(annotations))):
@@ -274,6 +277,7 @@ class RandomSwapDataAugmentOp(BaseDataAugmentationOp):
             - alpha: 0 <= alpha <= 1. indicates the percent of the words
               in a sentence that are changed. The processor will perform
               the Random Swap operation (input length * alpha) times.
+              Default Value is 0.1.
 
         Returns:
             A dictionary with the default config for this processor.
@@ -290,11 +294,15 @@ class RandomSwapDataAugmentOp(BaseDataAugmentationOp):
 
 class RandomInsertionDataAugmentOp(BaseDataAugmentationOp):
     r"""
-    Data augmentation processor for the Random Insertion operation.
+    Data augmentation operation for the Random Insertion operation.
     Find a random synonym of a random word in the sentence that is
     not a stop word. Insert that synonym into a random position in
     the sentence. Do this n times, where n = alpha * input length.
     """
+
+    def __init__(self, configs: Union[Config, Dict[str, Any]]) -> None:
+        super().__init__(configs)
+        self.stopwords = set(self.configs["stopwords"])
 
     def augment(self, data_pack: DataPack) -> bool:
 
@@ -302,20 +310,21 @@ class RandomInsertionDataAugmentOp(BaseDataAugmentationOp):
             self.configs["insertion_op"],
             class_args={"configs": self.configs["insertion_op_config"]},
         )
-        augment_entry = get_class(self.configs["augment_entry"])
 
         annotations: List[Annotation] = []
         pos = [0]
         try:
-            annos: Iterable[Annotation] = data_pack.get(augment_entry)
+            annos: Iterable[Annotation] = data_pack.get(
+                self.configs["augment_entry"]
+            )
             for anno in annos:
-                if anno.text not in set(self.configs["stopwords"]):
+                if anno.text not in self.stopwords:
                     annotations.append(anno)
                     pos.append(anno.end)
             if len(annotations) > 0:
                 for _ in range(ceil(self.configs["alpha"] * len(annotations))):
                     src_anno = random.choice(annotations)
-                    _, replaced_text = replacement_op.single_token_augment(
+                    _, replaced_text = replacement_op.single_annotation_augment(
                         src_anno
                     )
                     insert_pos = random.choice(pos)
@@ -346,6 +355,7 @@ class RandomInsertionDataAugmentOp(BaseDataAugmentationOp):
         - alpha: 0 <= alpha <= 1. indicates the percent of the words
           in a sentence that are changed. The processor will perform
           the Random Insertion operation (input length * alpha) times.
+          Default Value is 0.1
 
         - stopwords: a list of stopword for the language.
 
@@ -378,16 +388,15 @@ class RandomInsertionDataAugmentOp(BaseDataAugmentationOp):
 
 class RandomDeletionDataAugmentOp(BaseDataAugmentationOp):
     r"""
-    Data augmentation processor for the Random Insertion operation.
+    Data augmentation operation for the Random Insertion operation.
     Randomly remove each word in the sentence with probability alpha.
     """
 
     def augment(self, data_pack: DataPack) -> bool:
-        augment_entry = get_class(self.configs["augment_entry"])
 
         try:
             anno: Annotation
-            for anno in data_pack.get(augment_entry):
+            for anno in data_pack.get(self.configs["augment_entry"]):
                 if random.random() < self.configs["alpha"]:
                     self.delete_annotation(anno)
             return True
@@ -405,6 +414,7 @@ class RandomDeletionDataAugmentOp(BaseDataAugmentationOp):
                 Defines the entry the processor will augment.
                 It should be a full qualified name of the entry class.
                 For example, "ft.onto.base_ontology.Sentence".
+                Default Value is 0.1
 
             - alpha: 0 <= alpha <= 1. The probability to delete each word.
         """

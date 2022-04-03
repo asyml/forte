@@ -142,7 +142,7 @@ class TestWordSplittingProcessor(unittest.TestCase):
                 "other_entry_policy": {
                     "ft.onto.base_ontology.EntityMention": "auto_align"
                 }
-            }
+            },
         }
         self.nlp.add(
             component=BaseOpProcessor(),

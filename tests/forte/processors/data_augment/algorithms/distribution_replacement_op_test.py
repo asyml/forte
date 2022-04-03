@@ -47,7 +47,7 @@ class TestDistributionReplacementOp(unittest.TestCase):
             },
         }
         replacement = DistributionReplacementOp(configs)
-        _, word = replacement.single_token_augment(self.token)
+        _, word = replacement.single_annotation_augment(self.token)
         self.assertIn(word, self.word_list)
 
         configs = {
@@ -58,7 +58,7 @@ class TestDistributionReplacementOp(unittest.TestCase):
             },
         }
         replacement = DistributionReplacementOp(configs)
-        _, word = replacement.single_token_augment(self.token)
+        _, word = replacement.single_annotation_augment(self.token)
         self.assertEqual(word, self.word)
 
         configs = {
@@ -69,7 +69,7 @@ class TestDistributionReplacementOp(unittest.TestCase):
             },
         }
         replacement = DistributionReplacementOp(configs)
-        _, word = replacement.single_token_augment(self.token)
+        _, word = replacement.single_annotation_augment(self.token)
         self.assertIn(word, self.word_dict.keys())
 
         configs = {
@@ -80,7 +80,7 @@ class TestDistributionReplacementOp(unittest.TestCase):
             },
         }
         replacement = DistributionReplacementOp(configs)
-        _, word = replacement.single_token_augment(self.token)
+        _, word = replacement.single_annotation_augment(self.token)
         possible_values = list(self.word_dict.keys()) + [self.word]
         self.assertIn(word, possible_values)
 

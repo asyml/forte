@@ -13,6 +13,10 @@ Data Augmentation Processors
 ---------------------------------------------
 .. autoclass:: forte.processors.data_augment.base_data_augment_processor.BaseDataAugmentProcessor
 
+:hidden:`BaseOpProcessor`
+---------------------------------------------
+.. autoclass:: forte.processors.data_augment.base_op_processor.BaseOpProcessor
+
 :hidden:`ReplacementDataAugmentProcessor`
 ---------------------------------------------
 .. autoclass:: forte.processors.data_augment.base_data_augment_processor.ReplacementDataAugmentProcessor
@@ -66,6 +70,11 @@ Data Augmentation Ops
 :hidden:`TextReplacementOp`
 -----------------------------------
 .. autoclass:: forte.processors.data_augment.algorithms.text_replacement_op.TextReplacementOp
+    :members:
+
+:hidden:`SingleAnnotationAugmentOp`
+-----------------------------------
+.. autoclass:: forte.processors.data_augment.algorithms.single_annotation_op.SingleAnnotationAugmentOp
     :members:
 
 :hidden:`DistributionReplacementOp`
