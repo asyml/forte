@@ -60,7 +60,8 @@ setuptools.setup(
         ],
         "wikipedia": ["rdflib==4.2.2"],
         "data_aug": [
-            "transformers>=3.1, <=4.9.2",
+            "transformers>=3.1",
+            # "transformers>=3.1, <=4.9.2",
             "nltk",
             "texar-pytorch>=0.1.1",
         ],
@@ -79,7 +80,7 @@ setuptools.setup(
             "texar-pytorch>=0.1.1",
         ],
         "mt": [
-            "transformers>=4.15.0",
+            "transformers>=3.1",
             # "transformers>=3.1, <=4.9.2",
         ],
         "dict": ["nltk"],
