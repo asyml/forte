@@ -25,7 +25,8 @@ try:
 except ImportError:
     print(
         " `transformers` is not installed correctly."
-        " Please refer to [extra requirement for machine translator](pip install forte[machine_translator])"
+        " Please refer to [extra requirement for machine translator](pip "
+        "install forte[machine_translator])"
         " for more information. "
     )
 

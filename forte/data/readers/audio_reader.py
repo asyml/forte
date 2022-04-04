@@ -36,7 +36,8 @@ class AudioReader(PackReader):
         except ModuleNotFoundError as e:
             raise ModuleNotFoundError(
                 "AudioReader requires 'soundfile' package to be installed."
-                " You can refer to [extra modules to install]('pip install forte['audio_ext']) or 'pip install forte"
+                " You can refer to [extra modules to install]('pip install"
+                " forte['audio_ext']) or 'pip install forte"
                 ". Note that additional steps might apply to Linux"
                 " users (refer to "
                 "https://pysoundfile.readthedocs.io/en/latest/#installation)."

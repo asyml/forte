@@ -24,7 +24,8 @@ try:
 except ImportError:
     print(
         " Texar is not installed correctly."
-        " Please refer to [extra requirement for subword tokenizer](pip install forte[subword_tokenize])"
+        " Please refer to [extra requirement for subword tokenizer](pip"
+        " install forte[subword_tokenize])"
         " for more information. "
     )
 

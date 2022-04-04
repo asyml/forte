@@ -36,7 +36,8 @@ try:
 except ImportError:
     print(
         " `stave` is not installed correctly."
-        " Please refer to [extra requirement for stave_processors.py](stave extra requirement hyperlink])"
+        " Please refer to [extra requirement for stave_processors.py](stave"
+        " extra requirement hyperlink])"
         " for more information. "
     )
 
