@@ -79,7 +79,8 @@ setuptools.setup(
             "texar-pytorch>=0.1.1",
         ],
         "mt": [
-            "transformers>=3.1, <=4.9.2",
+            "transformers>=4.15.0",
+            # "transformers>=3.1, <=4.9.2",
         ],
         "dict": ["nltk"],
         "emb_sim_rep_op": ["texar-pytorch>=0.1.1"],
