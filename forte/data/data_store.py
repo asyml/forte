@@ -268,7 +268,7 @@ class DataStore(BaseStore):
         if type_name not in self._type_attributes:
             self._type_attributes[type_name] = {}
         if "parent_class" not in self._type_attributes[type_name]:
-            self._type_attributes[type_name].update(parent_class=[])
+            self._type_attributes[type_name]["parent_class"] = set()
         cls_qualified_name = get_full_module_name(cls)
         type_name_parent_class = self._type_attributes[type_name][
             "parent_class"
@@ -278,16 +278,18 @@ class DataStore(BaseStore):
         else:
             entry_class = get_class(type_name)
             if issubclass(entry_class, cls):
-                type_name_parent_class.append(cls_qualified_name)
-                cls_base_class = cls.__base__
-                if cls_base_class is not None:
-                    cls_base_qualified_name = get_full_module_name(
-                        cls_base_class
-                    )
-                    type_name_parent_class.append(cls_base_qualified_name)
+                type_name_parent_class.add(cls_qualified_name)
                 return True
             else:
-                return False
+                cls_subclasses = cls.__subclasses__()
+                for cls_subclass in cls_subclasses:
+                    if issubclass(entry_class, cls_subclass):
+                        cls_subclass_qualified_name = get_full_module_name(
+                            cls_subclass
+                        )
+                        type_name_parent_class.add(cls_qualified_name)
+                        type_name_parent_class.add(cls_subclass_qualified_name)
+                return bool(cls_qualified_name in type_name_parent_class)
 
     def _is_annotation(self, type_name: str) -> bool:
         r"""This function takes a type_id and returns whether a type
