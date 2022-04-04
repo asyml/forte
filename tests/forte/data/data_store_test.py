@@ -313,13 +313,20 @@ class DataStoreTest(unittest.TestCase):
                 "Negative",
                 "Class C",
                 "Class D",
-            ], "ft.onto.base_ontology.Sentence", 1),
+            ], "ft.onto.base_ontology.Sentence")
         )
 
         # Entry with such tid does not exist
         with self.assertRaises(ValueError):
             for doc in self.data_store.get_entry(1111):
                 print(doc)
+
+    def test_get_entry_index(self):
+        self.assertEqual(self.data_store.get_entry_index(1234567), 1)
+
+        # Entry with such tid does not exist
+        with self.assertRaises(ValueError):
+            self.data_store.get_entry_index(1111)
 
     def test_get(self):
         # get document entries
@@ -399,8 +406,7 @@ class DataStoreTest(unittest.TestCase):
             ],
         )
         # Last entry in list does not have a next entry.
-        with self.assertRaises(IndexError):
-            self.data_store.next_entry(3456)
+        self.assertIsNone(self.data_store.next_entry(3456))
         prev_ent = self.data_store.prev_entry(3456)
         self.assertEqual(
             prev_ent,
@@ -415,8 +421,7 @@ class DataStoreTest(unittest.TestCase):
             ],
         )
         # First entry in list does not have a previous entry.
-        with self.assertRaises(IndexError):
-            self.data_store.prev_entry(1234)
+        self.assertIsNone(self.data_store.prev_entry(1234))
 
     def test_get_entry_attribute_by_class(self):
         entry_name_attributes_dict = {

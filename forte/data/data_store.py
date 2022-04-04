@@ -477,16 +477,16 @@ class DataStore(BaseStore):
             )
         target_list.pop(index_id)
 
-    def get_entry(self, tid: int) -> Tuple[List, str, int]:
-        r"""This function finds the entry with ``tid``. It returns the entry,
-        its ``type_name``, and the index in the ``type_name`` list.
+    def get_entry(self, tid: int) -> Tuple[List, str]:
+        r"""This function finds the entry with ``tid``. It returns the entry
+        and its ``type_name``.
 
         Args:
             tid (int): Unique id of the entry.
 
         Returns:
-            The entry which ``tid`` corresponds to, its ``type_name`` and its
-            index in the ``type_name`` list.
+            The entry which ``tid`` corresponds to and its ``type_name``.
+
         """
         if tid not in self.__entry_dict:
             raise ValueError(f"Entry with tid {tid} not found.")
@@ -494,23 +494,38 @@ class DataStore(BaseStore):
         entry_type = entry[constants.ENTRY_TYPE_INDEX]
         if entry_type not in self.__elements:
             raise KeyError(f"Entry of type {entry_type} is not found.")
+        return entry, entry_type
 
+    def get_entry_index(self, tid: int) -> int:
+        """Look up the entry_dict with key ``tid``. Return the ``index_id`` of
+        the entry.
+
+        Args:
+            tid (int): Unique id of the entry.
+
+        Returns:
+            Index of the entry which ``tid`` corresponds to in the
+            ``entry_type`` list.
+
+        Raises:
+            ValueError: An error occurred when no corresponding entry is found.
+        """
+        entry, entry_type = self.get_entry(tid=tid)
         # If the entry is an annotation, bisect the annotation sortedlist
         # to find the entry. May use LRU cache to optimize speed.
         # Otherwise, use ``index_id`` to find the index of the entry.
         index_id = -1
         if self._is_annotation(entry_type):
             entry_list = self.__elements[entry_type]
-            begin: int = entry_list.bisect_left(entry)
-            for i, e in enumerate(entry_list[begin:]):
-                if e[constants.TID_INDEX] == entry[constants.TID_INDEX]:
-                    index_id = begin + i
-                    break
+            index_id = entry_list.bisect_left(entry)
+            if (not 0 <= index_id < len(entry_list)) or (
+                entry_list[index_id][constants.TID_INDEX]
+                != entry[constants.TID_INDEX]
+            ):
+                raise ValueError(f"Entry {entry} not found in entry list.")
         else:
             index_id = entry[constants.ENTRY_INDEX_INDEX]
-        if index_id == -1:
-            raise ValueError(f"Entry {entry} not found in entry list.")
-        return entry, entry_type, index_id
+        return index_id
 
     def get(
         self, type_name: str, include_sub_type: bool = True
@@ -543,51 +558,47 @@ class DataStore(BaseStore):
             for entry in entries:
                 yield entry
 
-    def next_entry(self, tid: int) -> List:
+    def next_entry(self, tid: int) -> Optional[List]:
         r"""Get the next entry of the same type as the ``tid`` entry.
         Call ``get_entry()`` to find the current index and use it to find
-        the next entry.
+        the next entry. If it is a non-annotation type, it will be sorted in
+        the insertion order, which means ``next_entry`` would return the next
+        inserted entry.
 
         Args:
             tid (int): Unique id of the entry.
 
         Returns:
             A list of attributes representing the next entry of the same type
-            as the ``tid`` entry.
-
-        Raises:
-            IndexError: An error occurred accessing the next entry of the last
-                element in entry list.
+            as the ``tid`` entry. Return `None` when accessing the next entry
+            of the last element in entry list.
         """
-        _, entry_type, index_id = self.get_entry(tid=tid)
+        _, entry_type = self.get_entry(tid=tid)
+        index_id: int = self.get_entry_index(tid=tid)
         entry_list = self.__elements[entry_type]
         if index_id >= len(entry_list) - 1:
-            raise IndexError(
-                f"Entry with tid {tid} is the last entry in entry list."
-            )
+            return None
         return entry_list[index_id + 1]
 
-    def prev_entry(self, tid: int) -> List:
+    def prev_entry(self, tid: int) -> Optional[List]:
         r"""Get the previous entry of the same type as the ``tid`` entry.
         Call ``get_entry()`` to find the current index and use it to find
-        the previous entry.
+        the previous entry. If it is a non-annotation type, it will be sorted
+        in the insertion order, which means ``prev_entry`` would return the
+        previous inserted entry.
 
         Args:
             tid (int): Unique id of the entry.
 
         Returns:
             A list of attributes representing the previous entry of the same
-            type as the ``tid`` entry.
-
-        Raises:
-            IndexError: An error occurred accessing the previous entry of the
-                first element in entry list.
+            type as the ``tid`` entry. Return `None` when accessing the previous
+            entry of the first element in entry list.
         """
-        _, entry_type, index_id = self.get_entry(tid=tid)
+        _, entry_type = self.get_entry(tid=tid)
+        index_id: int = self.get_entry_index(tid=tid)
         if index_id <= 0:
-            raise IndexError(
-                f"Entry with tid {tid} is the first entry in entry list."
-            )
+            return None
         return self.__elements[entry_type][index_id - 1]
 
     def _parse_onto_file(self):
