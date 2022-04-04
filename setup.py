@@ -59,6 +59,13 @@ setuptools.setup(
             "texar-pytorch>=0.1.1",
         ],
         "wikipedia": ["rdflib==4.2.2"],
+        "data_aug": [
+            "transformers>=3.1, <=4.9.2",
+            "nltk",
+            "texar-pytorch>=0.1.1",
+        ],
+        "subword_tokenize": ["texar-pytorch>=0.1.1"],
+        "texar-encoder": ["texar-pytorch>=0.1.1"],
         # transformers 4.10.0 will break the translation model we used here
         "stave": ["stave>=0.0.1.dev12"],
         "audio_ext": ["soundfile>=0.10.3"],
@@ -68,13 +75,6 @@ setuptools.setup(
         ],
         "extractor": ["texar-pytorch>=0.1.1"],
         "rl-aug": ["texar-pytorch>=0.1.1"],
-        "subword_tokenize": ["texar-pytorch>=0.1.1"],
-        "texar-encoder": ["texar-pytorch>=0.1.1"],
-        "data_aug": [
-            "transformers>=3.1, <=4.9.2",
-            "nltk",
-            "texar-pytorch>=0.1.1",
-        ],
         "uda": [
             "texar-pytorch>=0.1.1",
         ],

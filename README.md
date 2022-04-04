@@ -55,13 +55,15 @@ Some components or modules in forte may require some [extra requirements](https:
 * `pip install forte[example]`: Install packages required for running [forte examples](https://github.com/asyml/forte/tree/master/examples).
 * `pip install forte[wikipedia]`: Install packages required for reading [wikipedia datasets](https://github.com/asyml/forte/tree/master/forte/datasets/wikipedia).
 * `pip install forte[data_aug]`: Install packages required for [data augmentation module](https://github.com/asyml/forte/tree/master/forte/processors/data_augment).
-* `pip install forte[forte-processors-misc]`: Install packages required for [misc processors](https://github.com/asyml/forte/tree/master/forte/processors/misc)
+
 * `pip install forte[subword_tokenize]`: Install packages required for [subword_tokenizer](https://github.com/asyml/forte/tree/master/forte/processors/nlp/subword_tokenizer.py)
 * `pip install forte[texar-encoder]`: Install packages required for [texar encoder](https://github.com/asyml/forte/tree/master/forte/processors/third_party/pretrained_encoder_processors.py)
-* `pip install forte[extractor]`: Install packages required for [extractor](https://github.com/asyml/forte/blob/master/forte/data/extractors)
-* `pip install forte[rl-aug]`: Install packages required for [data_rl](https://github.com/asyml/forte/tree/master/forte/models/da_rl)
 * `pip install forte[stave]`: Install packages required for [StaveProcessor](https://github.com/asyml/forte/blob/master/forte/processors/stave/stave_processor.py).
 * `pip install forte[audio_ext]`: Install packages required for [AudioReader](https://github.com/asyml/forte/blob/master/forte/data/readers/audio_reader.py).
+* `pip install forte[remote]`: Install packages required for [AudioReader](https://github.com/asyml/forte/blob/master/forte/data/readers/audio_reader.py).
+
+* `pip install forte[extractor]`: Install packages required for [extractor](https://github.com/asyml/forte/blob/master/forte/data/extractors)
+* `pip install forte[rl-aug]`: Install packages required for [data_rl](https://github.com/asyml/forte/tree/master/forte/models/da_rl)
 * `pip install forte[uda]`: Install packages required for [uda](https://github.com/asyml/forte/blob/master/forte/processors/data_augment/algorithms/UDA.py).
 * `pip install forte[mt]`: Install packages required for [mt](https://github.com/asyml/forte/blob/master/forte/processors/data_augment/algorithms/machine_translator.py).
 * `pip install forte[dict]`: Install packages required for [dict](https://github.com/asyml/forte/blob/master/forte/processors/data_augment/algorithms/dictionary.py).
