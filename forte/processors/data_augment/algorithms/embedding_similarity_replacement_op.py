@@ -18,14 +18,6 @@ from typing import Tuple
 import numpy as np
 
 
-try:
-    from texar.torch.data import Vocab, Embedding
-except ImportError as e:
-    raise ImportError(
-        "texar is not installed correctly."
-        "Please refer to documentation to [install extra required modules](emb_sim_rep_op)"
-    ) from e
-
 from ft.onto.base_ontology import Annotation
 from forte.common.configuration import Config
 from forte.processors.data_augment.algorithms.text_replacement_op import (
@@ -60,6 +52,14 @@ class EmbeddingSimilarityReplacementOp(TextReplacementOp):
 
     def __init__(self, configs: Config):
         super().__init__(configs)
+        try:
+            from texar.torch.data import Vocab, Embedding
+        except ImportError as e:
+            raise ImportError(
+                "texar is not installed correctly."
+                "Please refer to documentation to [install extra required modules](emb_sim_rep_op)"
+            ) from e
+
         self.vocab = Vocab(self.configs["vocab_path"])
         embed_hparams = self.configs["embed_hparams"]
         embedding = Embedding(self.vocab.token_to_id_map_py, embed_hparams)

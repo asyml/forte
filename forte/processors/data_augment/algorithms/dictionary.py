@@ -14,14 +14,6 @@
 
 from typing import List
 
-try:
-    import nltk
-    from nltk.corpus import wordnet
-except ImportError as e:
-    raise ImportError(
-        "nltk is not installed correctly."
-        "Please refer to documentation at [pip install forte[dict]](link)"
-    ) from e
 
 __all__ = ["Dictionary", "WordnetDictionary"]
 
@@ -96,6 +88,15 @@ class WordnetDictionary(Dictionary):
     """
 
     def __init__(self):
+        try:
+            import nltk
+            from nltk.corpus import wordnet
+        except ImportError as e:
+            raise ImportError(
+                "nltk is not installed correctly."
+                "Please refer to documentation at [pip install forte[dict]](link)"
+            ) from e
+
         try:
             # Check if the wordnet package and
             # pos_tag package are downloaded.

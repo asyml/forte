@@ -12,14 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-try:
-    import texar.torch as tx
-except ImportError:
-    print(
-        " `texar-pytorch` is not installed correctly."
-        " Please refer to [extra requirement for texar-encoder](pip install forte[texar-encoder])"
-        " for more information. "
-    )
+
 import torch
 
 from forte.common.configuration import Config
@@ -51,6 +44,14 @@ class PretrainedEncoder(PackProcessor):
         self.tokenizer = None
         self.encoder = None
         self.entry_type = None
+        try:
+            import texar.torch as tx
+        except ImportError as e:
+            raise ImportError(
+                " `texar-pytorch` is not installed correctly."
+                " Please refer to [extra requirement for texar-encoder](pip install forte[texar-encoder])"
+                " for more information. "
+            ) from e
         self.name2tokenizer = {
             "bert-base-uncased": tx.data.BERTTokenizer,
             "bert-large-uncased": tx.data.BERTTokenizer,

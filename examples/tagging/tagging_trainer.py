@@ -15,7 +15,7 @@ import logging
 from typing import Iterator, Dict
 
 import torch
-from texar.torch.data import Batch
+
 from torch.optim import SGD
 from torch.optim.optimizer import Optimizer
 from tqdm import tqdm
@@ -131,6 +131,15 @@ class TaggingTrainer(BaseTrainer):
 
         while epoch < self.config_data.num_epochs:
             epoch += 1
+
+            try:
+                from texar.torch.data import Batch
+            except ImportError:
+                print(
+                    " `texar-pytorch` is not installed correctly."
+                    " Please refer to [extra requirement for texar-encoder](pip install forte[example])"
+                    " for more information. "
+                )
             # Get iterator of preprocessed batch of train data
             batch_iter: Iterator[Batch] = tp.get_train_batch_iterator()
 

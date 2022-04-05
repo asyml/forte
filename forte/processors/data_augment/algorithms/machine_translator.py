@@ -20,17 +20,6 @@ from typing import List
 from abc import abstractmethod
 
 
-try:
-    from transformers import MarianMTModel, MarianTokenizer
-except ImportError:
-    print(
-        " `transformers` is not installed correctly."
-        " Please refer to [extra requirement for machine translator](pip "
-        "install forte[machine_translator])"
-        " for more information. "
-    )
-
-
 __all__ = [
     "MachineTranslator",
     "MarianMachineTranslator",
@@ -79,6 +68,15 @@ class MarianMachineTranslator(MachineTranslator):
         self.model_name = "Helsinki-NLP/opus-mt-{src}-{tgt}".format(
             src=src_lang, tgt=tgt_lang
         )
+        try:
+            from transformers import MarianMTModel, MarianTokenizer
+        except ImportError as e:
+            raise ImportError(
+                " `transformers` is not installed correctly."
+                " Please refer to [extra requirement for machine translator](pip "
+                "install forte[machine_translator])"
+                " for more information. "
+            ) from e
         self.tokenizer = MarianTokenizer.from_pretrained(self.model_name)
         self.model = MarianMTModel.from_pretrained(self.model_name)
         self.model = self.model.to(self.device)

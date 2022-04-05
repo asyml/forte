@@ -20,21 +20,21 @@ import math
 from typing import Tuple, Dict, Generator
 
 
-try:
-    import texar.torch as tx
-except ImportError:
-    print(
-        " `texar-pytorch` is not installed correctly."
-        " Please refer to [extra requirement for aug wrapper](pip install forte[data_aug])"
-        " for more information. "
-    )
-
 import torch
 from torch import nn
 from torch.nn import functional as F
 from torch.optim import Optimizer
 
 from forte.models.da_rl.magic_model import MetaModule
+
+try:
+    import texar.torch as tx
+except ImportError as e:
+    raise ImportError(
+        " `texar-pytorch` is not installed correctly."
+        " Please refer to [extra requirement for aug wrapper](pip install forte[data_aug])"
+        " for more information. "
+    ) from e
 
 __all__ = ["MetaAugmentationWrapper"]
 
