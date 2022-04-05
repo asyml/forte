@@ -118,7 +118,7 @@ class DataStoreTest(unittest.TestCase):
                     "sentiment": 5,
                     "classifications": 6,
                 },
-                "parent_entry": None,
+                "parent_entry": set(),
             },
             "ft.onto.base_ontology.Sentence": {
                 "attributes": {
@@ -128,7 +128,7 @@ class DataStoreTest(unittest.TestCase):
                     "classification": 7,
                     "classifications": 8,
                 },
-                "parent_entry": None,
+                "parent_entry": set(),
             },
         }
         # The order is [Document, Sentence]. Initialize 2 entries in each list.
@@ -251,7 +251,7 @@ class DataStoreTest(unittest.TestCase):
         # initialize
         empty_data_store = DataStore()
 
-        # test add new type to _type_attributes
+        # test get new type
         doc_attr_dict = empty_data_store._get_type_info("ft.onto.base_ontology.Document")
         empty_data_store._get_type_info("ft.onto.base_ontology.Sentence")
         self.assertEqual(len(empty_data_store._DataStore__elements), 0)
@@ -260,13 +260,29 @@ class DataStoreTest(unittest.TestCase):
         self.assertEqual(empty_data_store._type_attributes["ft.onto.base_ontology.Document"],
                         self.data_store._type_attributes["ft.onto.base_ontology.Document"])
         # test the return value
-        self.assertEqual(doc_attr_dict, empty_data_store._type_attributes["ft.onto.base_ontology.Document"]["attributes"])
-        # test add invalid type
+        self.assertEqual(doc_attr_dict, empty_data_store._type_attributes["ft.onto.base_ontology.Document"])
+
+        # test get invalid type
         with self.assertRaisesRegex(
             ValueError, "Class not found in invalid.Type"
         ):
-            self.data_store._get_type_info("invalid.Type")
-        self.assertTrue("invalid.Type" not in self.data_store._type_attributes)
+            empty_data_store._get_type_info("invalid.Type")
+        self.assertTrue("invalid.Type" not in empty_data_store._type_attributes)
+
+        # test get existing type
+        doc_attr_dict = empty_data_store._get_type_info("ft.onto.base_ontology.Document")
+        self.assertEqual(len(empty_data_store._type_attributes), 2)
+        self.assertEqual(doc_attr_dict, empty_data_store._type_attributes["ft.onto.base_ontology.Document"])
+
+        # test get type info with ontology file input
+        with self.assertRaisesRegex(
+            RuntimeError, "DataStore is initialized with no existing types. Setting"
+                "dynamically_add_type to False without providing onto_file_path"
+                "will lead to no usable type in DataStore."
+        ):
+            DataStore(dynamically_add_type=False)
+
+        # TODO: need more tests for ontology file input
 
     def test_add_annotation_raw(self):
         # test add Document entry

@@ -197,23 +197,43 @@ class DataStore(BaseStore):
         r"""This function generates a new ``tid`` for an entry."""
         return uuid.uuid4().int
 
-    def _get_type_info(self, type_name: str) -> Dict[str, int]:
+    def _get_type_info(self, type_name: str) -> Dict[str, Any]:
         """
-        Add a new type input_entry_class into ``_type_attributes``.
-        This method will get all attributes of a type and assign index to them.
+        Get the dictionary containing type information from ``self._type_attributes``.
+        If the ``type_name`` does not currecntly exists and dynamic import is enabled,
+        this function will add a new key-value pair into ``self._type_attributes``. The
+        value consists of a full attribute-to-index dictionary and an empty parent set.
+
+        This function returns a dictionary containing an attribute dict and a set of parent
+        entries of the given type. For example:
+
+        .. code-block:: python
+
+            "ft.onto.base_ontology.Sentence": {
+                    "attributes": {
+                        "speaker": 4,
+                        "part_id": 5,
+                        "sentiment": 6,
+                        "classification": 7,
+                        "classifications": 8,
+                    },
+                    "parent_entry": set(),
+                }
+
         Args:
-            type_name (str): A string or class type representing a class.
+            type_name (str): The fully qualified type name of a type.
         Returns:
-            attr_dict (dict): The attribute dict of the given type.
+            attr_dict (dict): The dictionary containing an attribute dict and a set of parent
+            entries of the given type.
         Raises:
-            RuntimeError: when the type is not provided by ontology file and
+            RuntimeError: When the type is not provided by ontology file and
             dynamic import is disabled.
         """
         # check if type is in dictionary
         if type_name in self._type_attributes:
             return self._type_attributes[type_name]
         if not self._dynamically_add_type:
-            raise RuntimeError(
+            raise ValueError(
                 f"{type_name} is not an existing type in current data store."
                 f"Dynamically add type is disabled."
             )
@@ -226,46 +246,52 @@ class DataStore(BaseStore):
             attr_dict[attr_name] = attr_idx
             attr_idx += 1
 
-        self._type_attributes[type_name] = {
+        new_entry_info = {
             "attributes": attr_dict,
-            "parent_entry": None,
+            "parent_entry": set(),
         }
+        self._type_attributes[type_name] = new_entry_info
 
-        return attr_dict
+        return new_entry_info
 
-    def _get_type_attribute_info(self, type_name: str) -> Dict[str, Any]:
-        """Get the dict of an entry in ``_type_attributes``.
+    def _get_type_attribute_dict(self, type_name: str) -> Dict[str, int]:
+        """Get the attribute dict of an entry type. The attribute dict maps
+        attribute names to a list of consecutive integers as indicies. For example:
+        .. code-block:: python
+
+            "attributes": {
+                        "speaker": 4,
+                        "part_id": 5,
+                        "sentiment": 6,
+                        "classification": 7,
+                        "classifications": 8,
+            },
+
         Args:
-            type_name (str): The fully qualified type name of the new entry.
+            type_name (str): The fully qualified type name of a type.
         Returns:
-            type_attribute_entry (dict): The dict in ``_type_attributes``
-            storing attributes and parent information of an entry.
-        Raises:
-            KeyError: when ``type_name`` does not exist.
+            attr_dict (dict): The attribute-to-index dictionary of an entry.
         """
-        try:
-            type_attribute_entry = self._type_attributes[type_name]
-        except KeyError as e:
-            raise KeyError(f"Type {type_name} does not exist.") from e
-        return type_attribute_entry
+        return self._get_type_info(type_name)["attributes"]
 
-    def _get_entry_attribute_dict(self, type_name: str) -> Dict[str, int]:
-        """Get the attribute dict of an entry.
+    def _get_type_parent(self, type_name: str) -> str:
+        """Get a set of parent names of an entry type. The set is a subset of all
+        ancestors of the given type.
+        Args:
+            type_name (str): The fully qualified type name of a type.
+        Returns:
+            parent_entry (str): The parent entry name of an entry.
+        """
+        return self._get_type_info(type_name)["parent_entry"]
+
+    def _num_attributes_for_type(self, type_name: str) -> int:
+        """Get the length of the attribute dict of an entry type.
         Args:
             type_name (str): The fully qualified type name of the new entry.
         Returns:
             attr_dict (dict): The attributes-to-index dict of an entry.
         """
-        return self._get_type_attribute_info(type_name)["attributes"]
-
-    def _get_entry_parent(self, type_name: str) -> str:
-        """Get the parent name of an entry.
-        Args:
-            type_name (str): The fully qualified type name of the new entry.
-        Returns:
-            parent_entry (str): The parent entry name of an entry.
-        """
-        return self._get_type_attribute_info(type_name)["parent_entry"]
+        return len(self._get_type_attribute_dict(type_name))
 
     def _new_annotation(self, type_name: str, begin: int, end: int) -> List:
         r"""This function generates a new annotation with default fields.
@@ -285,9 +311,8 @@ class DataStore(BaseStore):
         tid: int = self._new_tid()
         entry: List[Any]
 
-        entry_attr_dict = self._get_type_info(type_name)
         entry = [begin, end, tid, type_name]
-        entry += len(entry_attr_dict) * [None]
+        entry += self._num_attributes_for_type(type_name) * [None]
 
         return entry
 
@@ -311,9 +336,8 @@ class DataStore(BaseStore):
         tid: int = self._new_tid()
         entry: List[Any]
 
-        entry_attr_dict = self._get_type_info(type_name)
         entry = [parent_tid, child_tid, tid, type_name]
-        entry += len(entry_attr_dict) * [None]
+        entry += self._num_attributes_for_type(type_name) * [None]
 
         return entry
 
@@ -333,9 +357,8 @@ class DataStore(BaseStore):
 
         tid: int = self._new_tid()
 
-        entry_attr_dict = self._get_type_info(type_name)
         entry = [member_type, [], tid, type_name]
-        entry += len(entry_attr_dict) * [None]
+        entry += self._num_attributes_for_type(type_name) * [None]
 
         return entry
 
@@ -439,7 +462,7 @@ class DataStore(BaseStore):
             raise KeyError(f"Entry with tid {tid} not found.") from e
 
         try:
-            attr_id = self._get_entry_attribute_dict(entry_type)[attr_name]
+            attr_id = self._get_type_attribute_dict(entry_type)[attr_name]
         except KeyError as e:
             raise KeyError(f"{entry_type} has no {attr_name} attribute.") from e
 
@@ -481,7 +504,7 @@ class DataStore(BaseStore):
             raise KeyError(f"Entry with tid {tid} not found.") from e
 
         try:
-            attr_id = self._get_entry_attribute_dict(entry_type)[attr_name]
+            attr_id = self._get_type_attribute_dict(entry_type)[attr_name]
         except KeyError as e:
             raise KeyError(f"{entry_type} has no {attr_name} attribute.") from e
 
