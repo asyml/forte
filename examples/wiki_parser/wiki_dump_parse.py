@@ -106,6 +106,7 @@ def add_wiki_info(
                 "pack_index": input_index_file_path,
                 "pack_dir": input_pack_path,
                 "resume_index": out_index_path,
+                "zip_pack": True,
             },
         )
     else:
@@ -114,6 +115,7 @@ def add_wiki_info(
             config={
                 "pack_index": input_index_file_path,
                 "pack_dir": input_pack_path,
+                "zip_pack": True,
             },
         )
 
@@ -326,9 +328,16 @@ def get_path(dataset: str):
 if __name__ == "__main__":
     base_dir = sys.argv[1]
     pack_output = sys.argv[2]
-    resume = sys.argv[3]
 
-    will_resume = resume.upper().startswith("TRUE")
+    try_samples = False
+    if len(sys.argv) > 3:
+        with_samples = sys.argv[3]
+        try_samples = with_samples.upper().startswith("TRUE")
+
+    will_resume = False
+    if len(sys.argv) > 4:
+        resume = sys.argv[4]
+        will_resume = resume.upper().startswith("TRUE")
 
     if not os.path.exists(pack_output):
         os.makedirs(pack_output)
@@ -339,15 +348,30 @@ if __name__ == "__main__":
         filename=os.path.join(pack_output, "dump.log"),
     )
 
-    main(
-        get_path("nif_context_en.tql.bz2"),
-        get_path("nif_page_structure_en.tql.bz2"),
-        get_path("mappingbased_literals_en.tql.bz2"),
-        get_path("mappingbased_objects_en.tql.bz2"),
-        get_path("nif_text_links_en.tql.bz2"),
-        get_path("redirects_en.tql.bz2"),
-        get_path("infobox_properties_mapped_en.tql.bz2"),
-        get_path("article_categories_en.tql.bz2"),
-        pack_output,
-        will_resume,
-    )
+    if try_samples:
+        main(
+            get_path("nif_context.tql"),
+            get_path("nif_page_structure.tql"),
+            get_path("literals.tql"),
+            get_path("mappingbased_objects_en.tql"),
+            get_path("text_links.tql"),
+            get_path("redirects.tql"),
+            get_path("infobox_properties_mapped_en.tql"),
+            get_path("article_categories_en.tql"),
+            pack_output,
+            will_resume,
+        )
+    else:
+        main(
+            get_path("nif_context_en.tql.bz2"),
+            get_path("nif_page_structure_en.tql.bz2"),
+            get_path("mappingbased_literals_en.tql.bz2"),
+            get_path("mappingbased_objects_en.tql.bz2"),
+            get_path("nif_text_links_en.tql.bz2"),
+            get_path("redirects_en.tql.bz2"),
+            get_path("infobox_properties_mapped_en.tql.bz2"),
+            get_path("article_categories_en.tql.bz2"),
+            pack_output,
+            will_resume,
+        )
+
