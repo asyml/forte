@@ -15,9 +15,9 @@
 from typing import List, Iterator, Tuple, Optional, Any
 import uuid
 import logging
-from sortedcontainers import SortedList
 from bisect import bisect_left
 from heapq import heappush, heappop
+from sortedcontainers import SortedList
 
 from forte.utils import get_class
 from forte.data.base_store import BaseStore
@@ -223,9 +223,8 @@ class DataStore(BaseStore):
         # self._DataStore__entry_dict = {int(k):v for k,v in self._DataStore__entry_dict.items()}
 
         keys = self.__elements.keys()
-        cls = get_class("forte.data.ontology.top.Annotation")
         for k in keys:
-            if issubclass(get_class(k), cls):
+            if self._is_annotation(k):
                 self.__elements[k] = SortedList(self.__elements[k])
             for e in self.__elements[k]:
                 # retrieve tid for every entry
@@ -262,31 +261,33 @@ class DataStore(BaseStore):
             An data store object deserialized from the string.
         """
         store = cls._deserialize(data_source, serialize_method)
-        if type(store) is dict:
+        # The following part is for customized json method only.
+        if isinstance(store, dict):
             obj = DataStore()
             obj._type_attributes = store["fields"]
             obj._DataStore__elements = store["elements"]
             obj._DataStore__entry_dict = {}
             keys = obj._DataStore__elements.keys()
-            anno = get_class("forte.data.ontology.top.Annotation")
             for k in keys:
-                if issubclass(get_class(k), anno):
-                    obj._DataStore__elements[k] = SortedList(obj._DataStore__elements[k])
+                if obj._is_annotation(k):
+                    obj._DataStore__elements[k] = SortedList(
+                        obj._DataStore__elements[k]
+                    )
                 for e in obj._DataStore__elements[k]:
                     # retrieve tid for every entry
-                    obj._DataStore__entry_dict[e[2]] = e
+                    obj._DataStore__entry_dict[e[constants.TID_INDEX]] = e
             store = obj
         if check_attribute:
-            try:
-                # should contain the same `entry_type` class name
-                assert (
-                    cls._type_attributes.keys() == store._type_attributes.keys()
-                )
-            except AssertionError as e:
-                raise ValueError(
-                    "Saved objects have different `entry_type` to the current "
-                    "datastore class."
-                ) from e
+            # try:
+            #     # should contain the same `entry_type` class name
+            #     assert (
+            #         cls._type_attributes.keys() == store._type_attributes.keys()
+            #     )
+            # except AssertionError as e:
+            #     raise ValueError(
+            #         "Saved objects have different `entry_type` to the current "
+            #         "datastore class."
+            #     ) from e
             if cls._type_attributes != store._type_attributes:
                 # find the `entry_type` with different fields, count different
                 # fields. `diff` records fields in the current class but not
@@ -294,13 +295,15 @@ class DataStore(BaseStore):
                 for t in cls._type_attributes:
                     change_map = {}
                     contradict_loc = []
-                    diff = set(cls._type_attributes[t].items()) - set(
-                        store._type_attributes[t].items()
-                    )
+                    diff = set(
+                        cls._type_attributes[t]["attributes"].items()
+                    ) - set(store._type_attributes[t]["attributes"].items())
                     for f in diff:
                         # if only order different, switch order
-                        if f[0] in store._type_attributes[t]:
-                            change_map[f[1]] = store._type_attributes[t][f[0]]
+                        if f[0] in store._type_attributes[t]["attributes"]:
+                            change_map[f[1]] = store._type_attributes[t][
+                                "attributes"
+                            ][f[0]]
                         # if fields contradictions, fill them with None
                         else:
                             contradict_loc.append(f[1])
@@ -321,7 +324,12 @@ class DataStore(BaseStore):
                                 d[change_map[i]] if i in change_map else d[i]
                                 # throw fields that are redundant
                                 for i in range(
-                                    max(cls._type_attributes[t].values()) + 1
+                                    max(
+                                        cls._type_attributes[t][
+                                            "attributes"
+                                        ].values()
+                                    )
+                                    + 1
                                 )
                             ]
                     if len(contradict_loc) > 0:

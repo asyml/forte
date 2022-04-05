@@ -17,11 +17,10 @@ Unit tests for data store related operations.
 
 import logging
 import unittest
-from sortedcontainers import SortedList
+import timeit
 import tempfile
 import os
-import timeit
-
+from sortedcontainers import SortedList
 from forte.data.data_store import DataStore
 
 logging.basicConfig(level=logging.DEBUG)
@@ -30,25 +29,30 @@ logging.basicConfig(level=logging.DEBUG)
 class DataStoreTest(unittest.TestCase):
     def setUp(self) -> None:
         self.data_store = DataStore()
-        # attribute fields for Document and Sentence entries
+        # attribute fields and parent entry for Document and Sentence entries
         self.data_store._type_attributes = {
             "ft.onto.base_ontology.Document": {
-                "sentiment": 4,
-                "classifications": 5,
+                "attributes": {
+                    "sentiment": 4,
+                    "classifications": 5,
+                },
+                "parent_entry": "forte.data.ontology.top.Annotation",
             },
             "ft.onto.base_ontology.Sentence": {
-                "sentiment": 4,
-                "speaker": 5,
-                "part_id": 6,
-                "classification_test": 7,
-                "classifications": 8,
-                "temp": 9,
+                "attributes": {
+                    "sentiment": 4,
+                    "speaker": 5,
+                    "part_id": 6,
+                    "classification_test": 7,
+                    "classifications": 8,
+                    "temp": 9,
+                },
+                "parent_entry": "forte.data.ontology.top.Annotation",
             },
         }
-        # The order is [Document, Sentence]. Initialize 2 entries in each list.
+
         # Document entries have tid 1234, 3456, 4567, 5678, 7890.
         # Sentence entries have tid 9999, 1234567, 100, 5000.
-
         self.data_store._DataStore__elements = {
             "ft.onto.base_ontology.Document": SortedList(
                 [
@@ -180,22 +184,27 @@ class DataStoreTest(unittest.TestCase):
 
         DataStore._type_attributes = {
             "ft.onto.base_ontology.Document": {
-                "document_class": 4,
-                "sentiment": 5,
-                "classifications": 6,
+                "attributes": {
+                    "document_class": 4,
+                    "sentiment": 5,
+                    "classifications": 6,
+                },
+                "parent_entry": "forte.data.ontology.top.Annotation",
             },
             "ft.onto.base_ontology.Sentence": {
-                "speaker": 4,
-                "part_id": 5,
-                "sentiment": 6,
-                "classification": 7,
-                "classifications": 8,
+                "attributes": {
+                    "speaker": 4,
+                    "part_id": 5,
+                    "sentiment": 6,
+                    "classification": 7,
+                    "classifications": 8,
+                },
+                "parent_entry": "forte.data.ontology.top.Annotation",
             },
         }
 
     def test_pickle(self):
         with tempfile.TemporaryDirectory() as tempdir:
-            tempdir = 'temp/'
             tmpfilepath = os.path.join(tempdir, "temp.txt")
             a = timeit.timeit()
             self.data_store.serialize(tmpfilepath, serialize_method="json")
