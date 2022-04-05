@@ -572,11 +572,18 @@ class DataStore(BaseStore):
             A list of attributes representing the next entry of the same type
             as the ``tid`` entry. Return `None` when accessing the next entry
             of the last element in entry list.
+
+        Raises:
+            IndexError: An error occurred accessing index out out of entry list.
         """
         _, entry_type = self.get_entry(tid=tid)
         index_id: int = self.get_entry_index(tid=tid)
         entry_list = self.__elements[entry_type]
-        if index_id >= len(entry_list) - 1:
+        if not 0 <= index_id < len(entry_list):
+            raise IndexError(
+                f"Index id ({index_id})) is out of bounds of the entry list."
+            )
+        elif index_id == len(entry_list) - 1:
             return None
         return entry_list[index_id + 1]
 
@@ -594,12 +601,20 @@ class DataStore(BaseStore):
             A list of attributes representing the previous entry of the same
             type as the ``tid`` entry. Return `None` when accessing the previous
             entry of the first element in entry list.
+
+        Raises:
+            IndexError: An error occurred accessing index out out of entry list.
         """
         _, entry_type = self.get_entry(tid=tid)
         index_id: int = self.get_entry_index(tid=tid)
-        if index_id <= 0:
+        entry_list = self.__elements[entry_type]
+        if not 0 <= index_id < len(entry_list):
+            raise IndexError(
+                f"Index id ({index_id})) is out of bounds of the entry list."
+            )
+        elif index_id == 0:
             return None
-        return self.__elements[entry_type][index_id - 1]
+        return entry_list[index_id - 1]
 
     def _parse_onto_file(self):
         r"""This function will populate the types and attributes used in the data_store
