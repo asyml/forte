@@ -19,7 +19,7 @@ from heapq import heappush, heappop
 
 from forte.utils import get_class
 from forte.data.base_store import BaseStore
-from forte.data.ontology.top import Annotation
+from forte.data.ontology.top import Annotation, AudioAnnotation
 from forte.common import constants
 
 __all__ = ["DataStore"]
@@ -265,7 +265,7 @@ class DataStore(BaseStore):
             type or not.
         """
         entry_class = get_class(type_name)
-        return issubclass(entry_class, Annotation)
+        return issubclass(entry_class, (Annotation, AudioAnnotation))
 
     def add_annotation_raw(self, type_name: str, begin: int, end: int) -> int:
         r"""This function adds an annotation entry with ``begin`` and ``end``
@@ -482,21 +482,58 @@ class DataStore(BaseStore):
         if not target_list:
             self.__elements.pop(type_name)
 
-    def get_entry(self, tid: int) -> Tuple[List, int, int]:
-        r"""This function finds the entry with ``tid``. It returns the entry,
-        its ``type_name``, and the index in the ``type_name`` list.
+    def get_entry(self, tid: int) -> Tuple[List, str]:
+        r"""This function finds the entry with ``tid``. It returns the entry
+        and its ``type_name``.
 
         Args:
             tid (int): Unique id of the entry.
 
         Returns:
-            The entry which ``tid`` corresponds to, its ``type_id`` and its index
-            in the ``type_name`` list.
+            The entry which ``tid`` corresponds to and its ``type_name``.
+
+        Raises:
+            ValueError: An error occurred when input tid is not found.
+            KeyError: An error occurred when entry_type is not found.
         """
+        if tid not in self.__entry_dict:
+            raise ValueError(f"Entry with tid {tid} not found.")
+        entry = self.__entry_dict[tid]
+        entry_type = entry[constants.ENTRY_TYPE_INDEX]
+        if entry_type not in self.__elements:
+            raise KeyError(f"Entry of type {entry_type} is not found.")
+        return entry, entry_type
+
+    def get_entry_index(self, tid: int) -> int:
+        """Look up the entry_dict with key ``tid``. Return the ``index_id`` of
+        the entry.
+
+        Args:
+            tid (int): Unique id of the entry.
+
+        Returns:
+            Index of the entry which ``tid`` corresponds to in the
+            ``entry_type`` list.
+
+        Raises:
+            ValueError: An error occurred when no corresponding entry is found.
+        """
+        entry, entry_type = self.get_entry(tid=tid)
         # If the entry is an annotation, bisect the annotation sortedlist
         # to find the entry. May use LRU cache to optimize speed.
         # Otherwise, use ``index_id`` to find the index of the entry.
-        raise NotImplementedError
+        index_id = -1
+        if self._is_annotation(entry_type):
+            entry_list = self.__elements[entry_type]
+            index_id = entry_list.bisect_left(entry)
+            if (not 0 <= index_id < len(entry_list)) or (
+                entry_list[index_id][constants.TID_INDEX]
+                != entry[constants.TID_INDEX]
+            ):
+                raise ValueError(f"Entry {entry} not found in entry list.")
+        else:
+            index_id = entry[constants.ENTRY_INDEX_INDEX]
+        return index_id
 
     def co_iterator_annotation_like(
         self, type_names: List[str]
@@ -660,31 +697,63 @@ class DataStore(BaseStore):
             for entry in entries:
                 yield entry
 
-    def next_entry(self, tid: int) -> List:
+    def next_entry(self, tid: int) -> Optional[List]:
         r"""Get the next entry of the same type as the ``tid`` entry.
         Call ``get_entry()`` to find the current index and use it to find
-        the next entry.
+        the next entry. If it is a non-annotation type, it will be sorted in
+        the insertion order, which means ``next_entry`` would return the next
+        inserted entry.
 
         Args:
             tid (int): Unique id of the entry.
 
         Returns:
-            The next entry of the same type as the ``tid`` entry.
-        """
-        raise NotImplementedError
+            A list of attributes representing the next entry of the same type
+            as the ``tid`` entry. Return `None` when accessing the next entry
+            of the last element in entry list.
 
-    def prev_entry(self, tid: int) -> List:
+        Raises:
+            IndexError: An error occurred accessing index out out of entry list.
+        """
+        _, entry_type = self.get_entry(tid=tid)
+        index_id: int = self.get_entry_index(tid=tid)
+        entry_list = self.__elements[entry_type]
+        if not 0 <= index_id < len(entry_list):
+            raise IndexError(
+                f"Index id ({index_id})) is out of bounds of the entry list."
+            )
+        elif index_id == len(entry_list) - 1:
+            return None
+        return entry_list[index_id + 1]
+
+    def prev_entry(self, tid: int) -> Optional[List]:
         r"""Get the previous entry of the same type as the ``tid`` entry.
         Call ``get_entry()`` to find the current index and use it to find
-        the previous entry.
+        the previous entry. If it is a non-annotation type, it will be sorted
+        in the insertion order, which means ``prev_entry`` would return the
+        previous inserted entry.
 
         Args:
             tid (int): Unique id of the entry.
 
         Returns:
-            The previous entry of the same type as the ``tid`` entry.
+            A list of attributes representing the previous entry of the same
+            type as the ``tid`` entry. Return `None` when accessing the previous
+            entry of the first element in entry list.
+
+        Raises:
+            IndexError: An error occurred accessing index out out of entry list.
         """
-        raise NotImplementedError
+        _, entry_type = self.get_entry(tid=tid)
+        index_id: int = self.get_entry_index(tid=tid)
+        entry_list = self.__elements[entry_type]
+        if not 0 <= index_id < len(entry_list):
+            raise IndexError(
+                f"Index id ({index_id})) is out of bounds of the entry list."
+            )
+        elif index_id == 0:
+            return None
+        return entry_list[index_id - 1]
 
     def _parse_onto_file(self):
         r"""This function will populate the types and attributes used in the data_store
