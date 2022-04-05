@@ -239,6 +239,8 @@ class DataStore(BaseStore):
             raise ValueError(
                 f"{type_name} is not an existing type in current data store."
                 f"Dynamically add type is disabled."
+                f"Set dynamically_add_type=True if you need to use types other than"
+                f"types specified in the ontology file."
             )
         # get attribute dictionary
         attributes = self._get_entry_attributes_by_class(type_name)
