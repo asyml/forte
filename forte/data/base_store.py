@@ -15,6 +15,7 @@
 from abc import abstractmethod
 from typing import List, Iterator, Tuple, Any
 import jsonpickle
+import json
 
 __all__ = ["BaseStore"]
 
@@ -44,9 +45,9 @@ class BaseStore:
         output_path: str,
         serialize_method: str = "jsonpickle",
     ):
-        if serialize_method == "jsonpickle":
+        if serialize_method in ["jsonpickle", "json"]:
             with open(output_path, mode="wt", encoding="utf-8") as json_out:
-                json_out.write(self.to_string("jsonpickle"))
+                json_out.write(self.to_string(serialize_method))
         else:
             raise NotImplementedError(
                 f"Unsupported serialization method {serialize_method}"
@@ -68,6 +69,8 @@ class BaseStore:
         """
         if json_method == "jsonpickle":
             return jsonpickle.encode(self, unpicklable=True)
+        elif json_method == "json":
+            return json.dumps(self, default=lambda o: o.__getstate__(), indent=2)
         else:
             raise ValueError(f"Unsupported JSON method {json_method}.")
 
@@ -95,6 +98,12 @@ class BaseStore:
         if serialize_method == "jsonpickle":
             with open(data_source, mode="rt", encoding="utf8") as f:
                 pack = cls.from_string(f.read())
+            return pack
+        elif serialize_method == "json":
+            with open(data_source, mode="rt", encoding="utf8") as f:
+                # pack = cls.from_string(f.read())
+                pack = json.loads(f.read())
+                # print(cls(**pack))
             return pack
         else:
             raise NotImplementedError(
