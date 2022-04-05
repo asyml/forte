@@ -407,6 +407,10 @@ class DataStoreTest(unittest.TestCase):
         )
         # Last entry in list does not have a next entry.
         self.assertIsNone(self.data_store.next_entry(3456))
+        # Raise exception when tid does not exist
+        with self.assertRaises(ValueError):
+            self.data_store.next_entry(1111)
+
         prev_ent = self.data_store.prev_entry(3456)
         self.assertEqual(
             prev_ent,
@@ -422,6 +426,9 @@ class DataStoreTest(unittest.TestCase):
         )
         # First entry in list does not have a previous entry.
         self.assertIsNone(self.data_store.prev_entry(1234))
+        # Raise exception when tid does not exist
+        with self.assertRaises(ValueError):
+            self.data_store.prev_entry(1111)
 
     def test_get_entry_attribute_by_class(self):
         entry_name_attributes_dict = {
