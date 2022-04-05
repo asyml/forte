@@ -69,14 +69,17 @@ class MarianMachineTranslator(MachineTranslator):
             src=src_lang, tgt=tgt_lang
         )
         try:
-            from transformers import MarianMTModel, MarianTokenizer
-        except ImportError as e:
+            from transformers import (
+                MarianMTModel,
+                MarianTokenizer,
+            )  # pylint: disable=import-outside-toplevel
+        except ImportError as err:
             raise ImportError(
                 " `transformers` is not installed correctly."
                 " Please refer to [extra requirement for machine translator](pip "
                 "install forte[machine_translator])"
                 " for more information. "
-            ) from e
+            ) from err
         self.tokenizer = MarianTokenizer.from_pretrained(self.model_name)
         self.model = MarianMTModel.from_pretrained(self.model_name)
         self.model = self.model.to(self.device)

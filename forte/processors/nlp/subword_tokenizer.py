@@ -28,6 +28,15 @@ from forte.processors.base import PackProcessor
 from forte.utils.utils import DiffAligner
 from ft.onto.base_ontology import Subword
 
+try:
+    from texar.torch.data.tokenizers.bert_tokenizer import BERTTokenizer
+except ImportError as err1:
+    raise ImportError(
+        " Texar is not installed correctly."
+        " Please refer to [extra requirement for subword tokenizer](pip"
+        " install forte[subword_tokenize])"
+        " for more information. "
+    ) from err1
 
 # This should probably be named as `BertTokenizer`.
 class SubwordTokenizer(PackProcessor):
@@ -37,15 +46,7 @@ class SubwordTokenizer(PackProcessor):
 
     def __init__(self):
         super().__init__()
-        try:
-            from texar.torch.data.tokenizers.bert_tokenizer import BERTTokenizer
-        except ImportError as e:
-            raise ImportError(
-                " Texar is not installed correctly."
-                " Please refer to [extra requirement for subword tokenizer](pip"
-                " install forte[subword_tokenize])"
-                " for more information. "
-            ) from e
+
         self.tokenizer: BERTTokenizer = None
         self.aligner: DiffAligner = None
         self.__do_lower_case = True
@@ -55,15 +56,6 @@ class SubwordTokenizer(PackProcessor):
         super().initialize(resources, configs)
         if not self.configs.tokenizer_configs.pretrained_model_name:
             raise ValueError("Please specify a pretrained bert model")
-        try:
-            from texar.torch.data.tokenizers.bert_tokenizer import BERTTokenizer
-        except ImportError as e:
-            raise ImportError(
-                " Texar is not installed correctly."
-                " Please refer to [extra requirement for subword tokenizer](pip"
-                " install forte[subword_tokenize])"
-                " for more information. "
-            ) from e
         self.tokenizer = BERTTokenizer(
             cache_dir=None,
             hparams=self.configs.tokenizer_configs,

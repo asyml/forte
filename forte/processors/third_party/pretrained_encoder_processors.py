@@ -13,8 +13,6 @@
 # limitations under the License.
 
 
-import torch
-
 from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
@@ -45,13 +43,14 @@ class PretrainedEncoder(PackProcessor):
         self.encoder = None
         self.entry_type = None
         try:
-            import texar.torch as tx
-        except ImportError as e:
+            import texar.torch as tx  # pylint: disable=import-outside-toplevel
+        except ImportError as err:
             raise ImportError(
                 " `texar-pytorch` is not installed correctly."
-                " Please refer to [extra requirement for texar-encoder](pip install forte[texar-encoder])"
+                " Please refer to [extra requirement for texar-encoder](pip"
+                " install forte[texar-encoder])"
                 " for more information. "
-            ) from e
+            ) from err
         self.name2tokenizer = {
             "bert-base-uncased": tx.data.BERTTokenizer,
             "bert-large-uncased": tx.data.BERTTokenizer,
@@ -135,6 +134,15 @@ class PretrainedEncoder(PackProcessor):
             raise ValueError("entry_type must be annotation type.")
 
     def _process(self, input_pack: DataPack):
+        try:
+            import torch  # pylint: disable=import-outside-toplevel
+        except ImportError as err:
+            raise ImportError(
+                " `texar-pytorch` is not installed correctly."
+                " Please refer to [extra requirement for texar-encoder]"
+                "(pip install forte[texar-encoder])"
+                " for more information. "
+            ) from err
         for entry in input_pack.get(entry_type=self.entry_type):  # type: ignore
             input_ids, segment_ids, _ = self.tokenizer.encode_text(
                 text_a=entry.text

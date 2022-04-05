@@ -25,12 +25,12 @@ try:
     from texar.torch.losses.info_loss import kl_divg_loss_with_logits
     from texar.torch.data import DataIterator
     from texar.torch.data.data.dataset_utils import Batch
-except ImportError as e:
+except ImportError as err:
     raise ImportError(
         " `texar` is not installed correctly."
         " Please refer to [extra requirement for uda](uda extra requirement hyperlink])"
         " for more information. "
-    ) from e
+    ) from err
 
 
 __all__ = [

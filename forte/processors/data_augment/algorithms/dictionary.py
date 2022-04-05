@@ -89,13 +89,15 @@ class WordnetDictionary(Dictionary):
 
     def __init__(self):
         try:
-            import nltk
-            from nltk.corpus import wordnet
-        except ImportError as e:
+            import nltk  # pylint: disable=import-outside-toplevel
+            from nltk.corpus import (
+                wordnet,
+            )  # pylint: disable=import-outside-toplevel
+        except ImportError as err:
             raise ImportError(
                 "nltk is not installed correctly."
                 "Please refer to documentation at [pip install forte[dict]](link)"
-            ) from e
+            ) from err
 
         try:
             # Check if the wordnet package and

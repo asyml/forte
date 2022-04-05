@@ -44,7 +44,9 @@ class SubwordExtractor(BaseExtractor):
         super().initialize(config=config)
 
         try:
-            from texar.torch.data.tokenizers.bert_tokenizer import BERTTokenizer
+            from texar.torch.data.tokenizers.bert_tokenizer import (
+                BERTTokenizer,
+            )  # pylint: disable=import-outside-toplevel
         except ImportError as e:
             raise ImportError(
                 " `texar-pytorch` is not installed correctly."
