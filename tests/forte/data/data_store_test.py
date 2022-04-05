@@ -21,7 +21,7 @@ from sortedcontainers import SortedList
 from typing import Optional, Dict
 from dataclasses import dataclass
 from forte.data.data_store import DataStore
-from forte.data.ontology.top import Annotation, Generics, Group, Link
+from forte.data.ontology.top import Annotation, Generics
 from forte.data.data_pack import DataPack
 
 
@@ -450,32 +450,22 @@ class DataStoreTest(unittest.TestCase):
     def test_is_subclass(self):
         self.assertTrue(
             self.data_store._is_subclass(
-                "ft.onto.base_ontology.Subword", Annotation
+                "data_store_test.TitleTest", Annotation
             )
         )
+
+        self.assertFalse(
+            self.data_store._is_subclass(
+                "data_store_test.TitleTest", MetricTest
+            )
+        )
+        # ``Generics`` is the grandfather of "data_store_test.SingleMetricTest" class.
         self.assertTrue(
             self.data_store._is_subclass(
-                "ft.onto.base_ontology.PredicateLink", Link
+                "data_store_test.SingleMetricTest", Generics
             )
         )
-        self.assertTrue(
-            self.data_store._is_subclass(
-                "ft.onto.base_ontology.CoreferenceGroup", Group
-            )
-        )
-        self.assertFalse(
-            self.data_store._is_subclass(
-                "ft.onto.base_ontology.PredicateLink", Annotation
-            )
-        )
-        self.assertFalse(
-            self.data_store._is_subclass(
-                "ft.onto.base_ontology.CoreferenceGroup", Link
-            )
-        )
-        self.assertFalse(
-            self.data_store._is_subclass("ft.onto.base_ontology.Subword", Group)
-        )
+
 
 
 if __name__ == "__main__":

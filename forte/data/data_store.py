@@ -251,14 +251,19 @@ class DataStore(BaseStore):
         entry += len(self._type_attributes[type_name]) * [None]
         return entry
 
-    def _is_subclass(self, type_name: str, cls) -> bool:
+    def _is_subclass(
+        self, type_name: str, cls, include_onto_file: bool = False
+    ) -> bool:
         r"""This function takes a fully qualified ``type_name`` class name,
         ``cls`` class and returns whether ``type_name``  class is the``cls``
-        subclass or not.
+        subclass or not. This function accpect two types of class: the class defined
+        in forte, or the classes in user provided ontology file.
 
         Args:
-            type_name: A fully qualified name of an entry class
+            type_name: A fully qualified name of an entry class.
             cls: An entry class.
+            include_onto_file: A boolean value whether ``type_name`` class
+             in user provided ontology file.
 
         Returns:
             A boolean value whether ``type_name``  class is the``cls``
@@ -273,23 +278,19 @@ class DataStore(BaseStore):
         type_name_parent_class = self._type_attributes[type_name][
             "parent_class"
         ]
-        if len(type_name_parent_class) > 0:
+
+        if include_onto_file:
             return bool(cls_qualified_name in type_name_parent_class)
         else:
-            entry_class = get_class(type_name)
-            if issubclass(entry_class, cls):
-                type_name_parent_class.add(cls_qualified_name)
+            if cls_qualified_name in type_name_parent_class:
                 return True
             else:
-                cls_subclasses = cls.__subclasses__()
-                for cls_subclass in cls_subclasses:
-                    if issubclass(entry_class, cls_subclass):
-                        cls_subclass_qualified_name = get_full_module_name(
-                            cls_subclass
-                        )
-                        type_name_parent_class.add(cls_qualified_name)
-                        type_name_parent_class.add(cls_subclass_qualified_name)
-                return bool(cls_qualified_name in type_name_parent_class)
+                entry_class = get_class(type_name)
+                if issubclass(entry_class, cls):
+                    type_name_parent_class.add(cls_qualified_name)
+                    return True
+                else:
+                    return False
 
     def _is_annotation(self, type_name: str) -> bool:
         r"""This function takes a type_id and returns whether a type
