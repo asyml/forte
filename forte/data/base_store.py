@@ -70,7 +70,9 @@ class BaseStore:
         if json_method == "jsonpickle":
             return jsonpickle.encode(self, unpicklable=True)
         elif json_method == "json":
-            return json.dumps(self, default=lambda o: o.__getstate__(), indent=2)
+            return json.dumps(
+                self, default=lambda o: o.__getstate__(), indent=2
+            )
         else:
             raise ValueError(f"Unsupported JSON method {json_method}.")
 
