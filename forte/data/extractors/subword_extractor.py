@@ -18,14 +18,6 @@ from the subwords of an entry.
 import logging
 from typing import Union, Dict, Optional
 
-try:
-    from texar.torch.data.tokenizers.bert_tokenizer import BERTTokenizer
-except ImportError:
-    print(
-        " `texar-pytorch` is not installed correctly."
-        " Please refer to [extra requirement for aug wrapper](pip install forte[extractor])"
-        " for more information. "
-    )
 
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
@@ -50,6 +42,15 @@ class SubwordExtractor(BaseExtractor):
     def initialize(self, config: Union[Dict, Config]):
         # pylint: disable=attribute-defined-outside-init
         super().initialize(config=config)
+
+        try:
+            from texar.torch.data.tokenizers.bert_tokenizer import BERTTokenizer
+        except ImportError as e:
+            raise ImportError(
+                " `texar-pytorch` is not installed correctly."
+                " Please refer to [extra requirement for aug wrapper](pip install forte[extractor])"
+                " for more information. "
+            ) from e
         self.tokenizer = BERTTokenizer(
             pretrained_model_name=self.config.pretrained_model_name,
             cache_dir=None,

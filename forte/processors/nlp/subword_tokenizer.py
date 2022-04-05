@@ -57,13 +57,13 @@ class SubwordTokenizer(PackProcessor):
             raise ValueError("Please specify a pretrained bert model")
         try:
             from texar.torch.data.tokenizers.bert_tokenizer import BERTTokenizer
-        except ImportError:
-            print(
+        except ImportError as e:
+            raise ImportError(
                 " Texar is not installed correctly."
                 " Please refer to [extra requirement for subword tokenizer](pip"
                 " install forte[subword_tokenize])"
                 " for more information. "
-            )
+            ) from e
         self.tokenizer = BERTTokenizer(
             cache_dir=None,
             hparams=self.configs.tokenizer_configs,
