@@ -74,15 +74,6 @@ setuptools.setup(
             "uvicorn>=0.14.0",
         ],
         "extractor": ["texar-pytorch>=0.1.1"],
-        "rl-aug": ["texar-pytorch>=0.1.1"],
-        "uda": [
-            "texar-pytorch>=0.1.1",
-        ],
-        "mt": [
-            "transformers>=3.1",
-        ],
-        "dict": ["nltk"],
-        "emb_sim_rep_op": ["texar-pytorch>=0.1.1"],
     },
     entry_points={
         "console_scripts": [

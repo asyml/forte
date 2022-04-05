@@ -63,12 +63,6 @@ Some components or modules in forte may require some [extra requirements](https:
 * `pip install forte[remote]`: Install packages required for [AudioReader](https://github.com/asyml/forte/blob/master/forte/data/readers/audio_reader.py).
 
 * `pip install forte[extractor]`: Install packages required for [extractor](https://github.com/asyml/forte/blob/master/forte/data/extractors)
-* `pip install forte[rl-aug]`: Install packages required for [data_rl](https://github.com/asyml/forte/tree/master/forte/models/da_rl)
-* `pip install forte[uda]`: Install packages required for [uda](https://github.com/asyml/forte/blob/master/forte/processors/data_augment/algorithms/UDA.py).
-* `pip install forte[mt]`: Install packages required for [mt](https://github.com/asyml/forte/blob/master/forte/processors/data_augment/algorithms/machine_translator.py).
-* `pip install forte[dict]`: Install packages required for [dict](https://github.com/asyml/forte/blob/master/forte/processors/data_augment/algorithms/dictionary.py).
-
-* `pip install forte[emb_sim_rep_op]`: Install packages required for [AudioReader](https://github.com/asyml/forte/blob/master/forte/processors/data_augment/algorithms/embedding_similarity_replacement_op.py).
 
 
 
