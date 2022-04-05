@@ -60,7 +60,7 @@ Some components or modules in forte may require some [extra requirements](https:
 * `pip install forte[texar-encoder]`: Install packages required for [texar encoder](https://github.com/asyml/forte/tree/master/forte/processors/third_party/pretrained_encoder_processors.py)
 * `pip install forte[stave]`: Install packages required for [StaveProcessor](https://github.com/asyml/forte/blob/master/forte/processors/stave/stave_processor.py).
 * `pip install forte[audio_ext]`: Install packages required for [AudioReader](https://github.com/asyml/forte/blob/master/forte/data/readers/audio_reader.py).
-* `pip install forte[remote]`: Install packages required for [AudioReader](https://github.com/asyml/forte/blob/master/forte/data/readers/audio_reader.py).
+* `pip install forte[remote]`: Install packages required for [AudioReader](https://github.com/asyml/forte/processors/misc/remote_processor.py).
 
 * `pip install forte[extractor]`: Install packages required for [extractor](https://github.com/asyml/forte/blob/master/forte/data/extractors)
 
