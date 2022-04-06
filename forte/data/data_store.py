@@ -138,8 +138,8 @@ class DataStore(BaseStore):
         ``type_name``, their parent entry, and the order of corresponding attributes.
         The keys are fully qualified names of every type; The value is a dictionary with
         two keys. Key ``attribute`` provides an inner dictionary with all valid attributes
-        for this type and the indices of attributes among these lists. Key ``parent_entry``
-        is a string representing the direct parent of this type.
+        for this type and the indices of attributes among these lists. Key ``parent_class``
+        is a string representing the ancesters of this type.
 
         This structure is supposed to be built dynamically. When a user adds new entries,
         data_store will check unknown types and add them to ``_type_attributes``.
@@ -154,16 +154,16 @@ class DataStore(BaseStore):
             #       "attributes": {"pos": 4, "ud_xpos": 5,
             #               "lemma": 6, "chunk": 7, "ner": 8, "sense": 9,
             #               "is_root": 10, "ud_features": 11, "ud_misc": 12},
-            #       "parent_entry": "forte.data.ontology.top.Annotation", },
+            #       "parent_class": "forte.data.ontology.top.Annotation", },
             #     "ft.onto.base_ontology.Document": {
             #       "attributes": {"document_class": 4,
             #               "sentiment": 5, "classifications": 6},
-            #       "parent_entry": "forte.data.ontology.top.Annotation", },
+            #       "parent_class": "forte.data.ontology.top.Annotation", },
             #     "ft.onto.base_ontology.Sentence": {
             #       "attributes": {"speaker": 4,
             #               "part_id": 5, "sentiment": 6,
             #               "classification": 7, "classifications": 8},
-            #       "parent_entry": "forte.data.ontology.top.Annotation", }
+            #       "parent_class": "forte.data.ontology.top.Annotation", }
             # }
         """
         self._type_attributes: dict = {}
@@ -220,7 +220,7 @@ class DataStore(BaseStore):
                         "classification": 7,
                         "classifications": 8,
                     },
-                    "parent_entry": set(),
+                    "parent_class": set(),
                 }
 
         Args:
@@ -253,7 +253,7 @@ class DataStore(BaseStore):
 
         new_entry_info = {
             "attributes": attr_dict,
-            "parent_entry": set(),
+            "parent_class": set(),
         }
         self._type_attributes[type_name] = new_entry_info
 
@@ -285,9 +285,9 @@ class DataStore(BaseStore):
         Args:
             type_name (str): The fully qualified type name of a type.
         Returns:
-            parent_entry (str): The parent entry name of an entry.
+            parent_class (str): The parent entry name of an entry.
         """
-        return self._get_type_info(type_name)["parent_entry"]
+        return self._get_type_info(type_name)["parent_class"]
 
     def _num_attributes_for_type(self, type_name: str) -> int:
         """Get the length of the attribute dict of an entry type.

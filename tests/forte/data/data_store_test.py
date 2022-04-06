@@ -119,7 +119,7 @@ class DataStoreTest(unittest.TestCase):
                     "sentiment": 5,
                     "classifications": 6,
                 },
-                "parent_entry": set(),
+                "parent_class": set(),
             },
             "ft.onto.base_ontology.Sentence": {
                 "attributes": {
@@ -129,7 +129,7 @@ class DataStoreTest(unittest.TestCase):
                     "classification": 7,
                     "classifications": 8,
                 },
-                "parent_entry": set(),
+                "parent_class": set(),
             },
         }
         # The order is [Document, Sentence]. Initialize 2 entries in each list.
