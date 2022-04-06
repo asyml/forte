@@ -205,7 +205,7 @@ class DataStore(BaseStore):
             )
         state.pop("onto_file_path")
         state["fields"] = state.pop("_type_attributes")
-        state["elements"] = state.pop("_DataStore__elements")
+        state["entries"] = state.pop("_DataStore__elements")
         state.pop("_DataStore__entry_dict")
         return state
 
@@ -217,7 +217,7 @@ class DataStore(BaseStore):
         """
         super().__setstate__(state)
         self._type_attributes = self.__dict__.pop("fields")
-        self._DataStore__elements = self.__dict__.pop("elements")
+        self._DataStore__elements = self.__dict__.pop("entries")
         self._DataStore__entry_dict = {}
 
         # self._DataStore__entry_dict = {int(k):v for k,v in self._DataStore__entry_dict.items()}
@@ -265,7 +265,7 @@ class DataStore(BaseStore):
         if isinstance(store, dict):
             obj = DataStore()
             obj._type_attributes = store["fields"]
-            obj._DataStore__elements = store["elements"]
+            obj._DataStore__elements = store["entries"]
             obj._DataStore__entry_dict = {}
             keys = obj._DataStore__elements.keys()
             for k in keys:
