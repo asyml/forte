@@ -519,27 +519,33 @@ class DataStoreTest(unittest.TestCase):
             self.data_store.set_attribute(9999, "speak", "human")
 
     def test_get_entry(self):
-        # sent = self.data_store.get_entry(1234567)
-        # self.assertEqual(
-        #     sent[0],
-        #     [
-        #         55,
-        #         70,
-        #         1234567,
-        #         1,
-        #         None,
-        #         None,
-        #         "Negative",
-        #         "Class C",
-        #         "Class D",
-        #     ],
-        # )
+        sent = self.data_store.get_entry(1234567)
+        self.assertEqual(
+            sent,
+            ([
+                55,
+                70,
+                1234567,
+                "ft.onto.base_ontology.Sentence",
+                None,
+                None,
+                "Negative",
+                "Class C",
+                "Class D",
+            ], "ft.onto.base_ontology.Sentence")
+        )
 
-        # # Entry with such tid does not exist
-        # with self.assertRaises(ValueError):
-        #     for doc in self.data_store.get_entry(1111):
-        #         print(doc)
-        pass
+        # Entry with such tid does not exist
+        with self.assertRaises(ValueError):
+            for doc in self.data_store.get_entry(1111):
+                print(doc)
+
+    def test_get_entry_index(self):
+        self.assertEqual(self.data_store.get_entry_index(1234567), 1)
+
+        # Entry with such tid does not exist
+        with self.assertRaises(ValueError):
+            self.data_store.get_entry_index(1111)
 
     def test_get(self):
         # get document entries
@@ -634,33 +640,43 @@ class DataStoreTest(unittest.TestCase):
         self.assertEqual(is_annot, False)
 
     def test_next_entry(self):
-        # next_ent = self.next_entry(1234)
-        # self.assertEqual(
-        #     next_ent,
-        #     [
-        #         10,
-        #         25,
-        #         3456,
-        #         "ft.onto.base_ontology.Document",
-        #         "Doc class A",
-        #         "Negative",
-        #         "Class B",
-        #     ],
-        # )
-        # prev_ent = self.prev_entry(3456)
-        # self.assertEqual(
-        #     prev_ent,
-        #     [
-        #         0,
-        #         5,
-        #         1234,
-        #         "ft.onto.base_ontology.Document",
-        #         None,
-        #         "Postive",
-        #         None,
-        #     ],
-        # )
-        pass
+        next_ent = self.data_store.next_entry(1234)
+        self.assertEqual(
+            next_ent,
+            [
+                10,
+                25,
+                3456,
+                "ft.onto.base_ontology.Document",
+                "Doc class A",
+                "Negative",
+                "Class B",
+            ],
+        )
+        # Last entry in list does not have a next entry.
+        self.assertIsNone(self.data_store.next_entry(3456))
+        # Raise exception when tid does not exist
+        with self.assertRaises(ValueError):
+            self.data_store.next_entry(1111)
+
+        prev_ent = self.data_store.prev_entry(3456)
+        self.assertEqual(
+            prev_ent,
+            [
+                0,
+                5,
+                1234,
+                "ft.onto.base_ontology.Document",
+                None,
+                "Postive",
+                None,
+            ],
+        )
+        # First entry in list does not have a previous entry.
+        self.assertIsNone(self.data_store.prev_entry(1234))
+        # Raise exception when tid does not exist
+        with self.assertRaises(ValueError):
+            self.data_store.prev_entry(1111)
 
     def test_get_entry_attribute_by_class(self):
         entry_name_attributes_dict = {
