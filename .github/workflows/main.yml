@@ -55,6 +55,7 @@ jobs:
           pip install --progress-bar off coverage codecov
           python -m pip install ipykernel
           python -m ipykernel install --user
+          pip install --progress-bar off asyml-utilities
       - name: Format check with Black
         run: |
           black --line-length 80 --check forte/
