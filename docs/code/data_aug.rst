@@ -158,7 +158,7 @@ Data Augmentation Models
 
 :hidden:`Reinforcement Learning`
 ----------------------------------
-.. autoclass:: forte.models.da_rl.MetaAugmentationWrapper
+.. autoclass:: forte.models.da_rl.aug_wrapper.MetaAugmentationWrapper
     :members:
 
 .. autoclass:: forte.models.da_rl.MetaModule

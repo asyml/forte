@@ -28,7 +28,8 @@ from transformers import BertForMaskedLM
 
 from config import config_data, config_classifier
 from utils import model_utils
-from forte.models.da_rl import MetaAugmentationWrapper, TexarBertMetaModule
+from forte.models.da_rl.aug_wrapper import MetaAugmentationWrapper
+from forte.models.da_rl import TexarBertMetaModule
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
