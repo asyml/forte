@@ -17,22 +17,12 @@ import os
 from abc import ABC
 from typing import Counter as CounterType, Dict, List, Optional
 from forte.processors.base import PackProcessor
+from asyml_utilities.special_tokens import SpecialTokens
 
 __all__ = [
     "Alphabet",
     "VocabularyProcessor",
 ]
-
-
-class SpecialTokens:
-    r"""Special tokens, including :attr:`PAD`, :attr:`BOS`, :attr:`EOS`,
-    :attr:`UNK`. These tokens will by default have token ids 0, 1, 2, 3,
-    respectively.
-    """
-    PAD = "<PAD>"
-    BOS = "<BOS>"
-    EOS = "<EOS>"
-    UNK = "<UNK>"
 
 
 class Alphabet:
