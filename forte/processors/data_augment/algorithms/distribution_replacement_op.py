@@ -107,8 +107,10 @@ class DistributionReplacementOp(SingleAnnotationAugmentOp, Configurable):
         according to the configuration values
         """
         try:
-            if "data_path" in self.configs["sampler_config"]:
-                distribution_path = self.configs["sampler_config"]["data_path"]
+            if "data_path" in self.configs["sampler_config"]["kwargs"]:
+                distribution_path = self.configs["sampler_config"]["kwargs"][
+                    "data_path"
+                ]
                 try:
                     r = requests.get(distribution_path)
                     data = r.json()
@@ -116,7 +118,7 @@ class DistributionReplacementOp(SingleAnnotationAugmentOp, Configurable):
                     with open(distribution_path, encoding="utf8") as json_file:
                         data = json.load(json_file)
             else:
-                data = self.configs["sampler_config"]["sampler_data"]
+                data = self.configs["sampler_config"]["kwargs"]["sampler_data"]
 
             self.sampler = create_class_with_kwargs(
                 self.configs["sampler_config"]["type"],
@@ -181,7 +183,7 @@ class DistributionReplacementOp(SingleAnnotationAugmentOp, Configurable):
             "prob": 0.1,
             "sampler_config": {
                 "type": "forte.processors.data_augment.algorithms.sampler.UniformSampler",
-                "sampler_data": [],
+                "kwargs": {"sampler_data": []}
+                # "sampler_data": [],
             },
-            "@no_typecheck": ["sampler_config"],
         }

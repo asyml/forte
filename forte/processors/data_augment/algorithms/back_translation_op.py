@@ -122,13 +122,15 @@ class BackTranslationOp(SingleAnnotationAugmentOp):
                 be augmented. By default, this value is set to
                 `ft.onto.base_ontology.Sentence`.
             - `prob` (float): The probability of replacement, should fall in [0, 1].
+                The Default value is 0.5
             - `src_language` (str): The source language of back translation.
             - `tgt_language` (str): The target language of back translation.
             - `model_to` (str): The full qualified name of the model from
                 source language to target language.
             - `model_back` (str): The full qualified name of the model from
                 target language to source language.
-            - `device` (str): "cpu" for the CPU or "cuda" for GPU.
+            - `device` (str): "cpu" for the CPU or "cuda" for GPU. The Default
+                value is cpu.
         """
         model_class_name = (
             "forte.processors.data_augment.algorithms."
@@ -136,7 +138,7 @@ class BackTranslationOp(SingleAnnotationAugmentOp):
         )
         return {
             "augment_entry": "ft.onto.base_ontology.Sentence",
-            "prob": 1.0,
+            "prob": 0.5,
             "model_to": model_class_name,
             "model_back": model_class_name,
             "src_language": "en",

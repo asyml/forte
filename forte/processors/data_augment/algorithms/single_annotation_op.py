@@ -42,15 +42,23 @@ class SingleAnnotationAugmentOp(BaseDataAugmentationOp):
     r"""
     This class extends the `BaseDataAugmentationOp` to
     only allow augmentation of one annotation at a time.
-    We leave the :func:`single_token_augment` method to
-    be implemented by subclasses.
+    This operation should be used when we only want to
+    augment one type of annotation in the whole data pack.
+    Thus, to use this operation, the developer only needs
+    to specify how a single annotation will be processed
+    as a part of their augmentation method.
+    We leave the :func:`single_annotation_augment` method to
+    be implemented by the subclass. This function will specify
+    what type of augmentation will a given annotation (of a
+    predefined type) undergo.
     """
 
     def augment(self, data_pack: DataPack) -> bool:
         r"""
-        This method is implemented to restrict the flexibility
-        of the Base Data Augment Op. It allows the augmentation
-        of only one type of annotation.
+        This method is not to be modified when using
+        the `SingleAnnotationAugmentOp`. This function takes
+        in the augmentation logic specified by :func:`single_annotation_augment`
+        method to apply it to each annotation of the specified type individually.
 
         Args:
             input_anno: the input annotation to be replaced.
@@ -79,7 +87,10 @@ class SingleAnnotationAugmentOp(BaseDataAugmentationOp):
         r"""
         This function takes in one annotation at a time and performs
         the desired augmentation on it. Through this function, one
-        annotation is processed at a time.
+        annotation is processed at a time. The developer needs to specify the
+        logic that will be adopted to process one annotation of a given type.
+        This method cannot suggest an augmentation logic which take in multiple
+        annotations of the same type.
 
         Args:
             input_anno: The annotation that needs to be augmented.
@@ -100,6 +111,6 @@ class SingleAnnotationAugmentOp(BaseDataAugmentationOp):
             - augment_entry:
                 Defines the entry the processor will augment.
                 It should be a full qualified name of the entry class.
-                For example, "ft.onto.base_ontology.Sentence".
+                Default value is "ft.onto.base_ontology.Token".
         """
         return {"augment_entry": "ft.onto.base_ontology.Token"}

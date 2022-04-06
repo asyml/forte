@@ -43,7 +43,7 @@ class TestDistributionReplacementOp(unittest.TestCase):
             "prob": 1.0,
             "sampler_config": {
                 "type": "forte.processors.data_augment.algorithms.sampler.UniformSampler",
-                "sampler_data": self.word_list,
+                "kwargs": {"sampler_data": self.word_list},
             },
         }
         replacement = DistributionReplacementOp(configs)
@@ -54,7 +54,7 @@ class TestDistributionReplacementOp(unittest.TestCase):
             "prob": 0,
             "sampler_config": {
                 "type": "forte.processors.data_augment.algorithms.sampler.UniformSampler",
-                "sampler_data": self.word_list,
+                "kwargs": {"sampler_data": self.word_list},
             },
         }
         replacement = DistributionReplacementOp(configs)
@@ -65,7 +65,7 @@ class TestDistributionReplacementOp(unittest.TestCase):
             "prob": 1.0,
             "sampler_config": {
                 "type": "forte.processors.data_augment.algorithms.sampler.UnigramSampler",
-                "sampler_data": self.word_dict,
+                "kwargs": {"sampler_data": self.word_dict},
             },
         }
         replacement = DistributionReplacementOp(configs)
@@ -76,7 +76,7 @@ class TestDistributionReplacementOp(unittest.TestCase):
             "prob": 0.5,
             "sampler_config": {
                 "type": "forte.processors.data_augment.algorithms.sampler.UnigramSampler",
-                "sampler_data": self.word_dict,
+                "kwargs": {"sampler_data": self.word_dict},
             },
         }
         replacement = DistributionReplacementOp(configs)

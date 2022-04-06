@@ -47,23 +47,6 @@ Data Augmentation Processors
 
 
 
-:hidden:`RandomSwapDataAugmentOp`
----------------------------------------------
-.. autoclass:: forte.processors.data_augment.algorithms.eda_ops.RandomSwapDataAugmentOp
-    :members:
-
-:hidden:`RandomInsertionDataAugmentOp`
----------------------------------------------
-.. autoclass:: forte.processors.data_augment.algorithms.eda_ops.RandomInsertionDataAugmentOp
-    :members:
-
-:hidden:`RandomDeletionDataAugmentOp`
----------------------------------------------
-.. autoclass:: forte.processors.data_augment.algorithms.eda_ops.RandomDeletionDataAugmentOp
-    :members:
-
-
-
 Data Augmentation Ops
 ========================
 
@@ -109,7 +92,6 @@ Data Augmentation Ops
 -----------------------------------
 .. autoclass:: forte.processors.data_augment.algorithms.machine_translator.MarianMachineTranslator
     :members:
-
 
 
 :hidden:`BackTranslationOp`
@@ -160,6 +142,21 @@ Data Augmentation Ops
 :hidden:`UniformTypoGenerator`
 --------------------------------
 .. autoclass:: forte.processors.data_augment.algorithms.typo_replacement_op.UniformTypoGenerator
+    :members:
+
+:hidden:`RandomSwapDataAugmentOp`
+---------------------------------------------
+.. autoclass:: forte.processors.data_augment.algorithms.eda_ops.RandomSwapDataAugmentOp
+    :members:
+
+:hidden:`RandomInsertionDataAugmentOp`
+---------------------------------------------
+.. autoclass:: forte.processors.data_augment.algorithms.eda_ops.RandomInsertionDataAugmentOp
+    :members:
+
+:hidden:`RandomDeletionDataAugmentOp`
+---------------------------------------------
+.. autoclass:: forte.processors.data_augment.algorithms.eda_ops.RandomDeletionDataAugmentOp
     :members:
 
 Data Augmentation Models

@@ -235,34 +235,34 @@ class RandomSwapDataAugmentOp(BaseDataAugmentationOp):
                 f"but {self.configs['augment_entry']} is not."
             )
 
-        try:
-            annotations: List[Annotation] = list(
-                data_pack.get(self.configs["augment_entry"])
+        annotations: List[Annotation] = list(
+            data_pack.get(self.configs["augment_entry"])
+        )
+        if len(annotations) > 0:
+            replace_map: Dict = {}
+        for _ in range(ceil(self.configs["alpha"] * len(annotations))):
+            swap_idx = random.sample(range(len(annotations)), 2)
+            new_idx_0 = (
+                swap_idx[1]
+                if swap_idx[1] not in replace_map
+                else replace_map[swap_idx[1]]
             )
-            if len(annotations) > 0:
-                replace_map: Dict = {}
-            for _ in range(ceil(self.configs["alpha"] * len(annotations))):
-                swap_idx = random.sample(range(len(annotations)), 2)
-                new_idx_0 = (
-                    swap_idx[1]
-                    if swap_idx[1] not in replace_map
-                    else replace_map[swap_idx[1]]
-                )
-                new_idx_1 = (
-                    swap_idx[0]
-                    if swap_idx[0] not in replace_map
-                    else replace_map[swap_idx[0]]
-                )
-                replace_map[swap_idx[0]] = new_idx_0
-                replace_map[swap_idx[1]] = new_idx_1
+            new_idx_1 = (
+                swap_idx[0]
+                if swap_idx[0] not in replace_map
+                else replace_map[swap_idx[0]]
+            )
+            replace_map[swap_idx[0]] = new_idx_0
+            replace_map[swap_idx[1]] = new_idx_1
 
-            for idx, replace_target in replace_map.items():
+        for idx, replace_target in replace_map.items():
+            try:
                 self.replace_annotations(
                     annotations[idx], annotations[replace_target].text
                 )
-            return True
-        except ValueError:
-            return False
+            except ValueError:
+                return False
+        return True
 
     @classmethod
     def default_configs(cls):
@@ -307,40 +307,47 @@ class RandomInsertionDataAugmentOp(BaseDataAugmentationOp):
     def augment(self, data_pack: DataPack) -> bool:
 
         replacement_op = create_class_with_kwargs(
-            self.configs["insertion_op"],
-            class_args={"configs": self.configs["insertion_op_config"]},
+            self.configs["insertion_op_configs"]["type"],
+            class_args={
+                "configs": self.configs["insertion_op_configs"]["kwargs"]
+            },
         )
 
         annotations: List[Annotation] = []
         pos = [0]
-        try:
-            annos: Iterable[Annotation] = data_pack.get(
-                self.configs["augment_entry"]
-            )
-            for anno in annos:
-                if anno.text not in self.stopwords:
-                    annotations.append(anno)
-                    pos.append(anno.end)
-            if len(annotations) > 0:
-                for _ in range(ceil(self.configs["alpha"] * len(annotations))):
-                    src_anno = random.choice(annotations)
+        annos: Iterable[Annotation] = data_pack.get(
+            self.configs["augment_entry"]
+        )
+        for anno in annos:
+            if anno.text not in self.stopwords:
+                annotations.append(anno)
+                pos.append(anno.end)
+        if len(annotations) > 0:
+            for _ in range(ceil(self.configs["alpha"] * len(annotations))):
+                src_anno = random.choice(annotations)
+                try:
                     _, replaced_text = replacement_op.single_annotation_augment(
                         src_anno
                     )
-                    insert_pos = random.choice(pos)
-                    if insert_pos > 0:
-                        replaced_text = " " + replaced_text
-                    else:
-                        replaced_text = replaced_text + " "
+                except ValueError:
+                    return False
+
+                insert_pos = random.choice(pos)
+                if insert_pos > 0:
+                    replaced_text = " " + replaced_text
+                else:
+                    replaced_text = replaced_text + " "
+
+                try:
                     self.insert_annotated_span(
                         replaced_text,
                         data_pack,
                         insert_pos,
                         self.configs["augment_entry"],
                     )
-            return True
-        except ValueError:
-            return False
+                except ValueError:
+                    return False
+        return True
 
     @classmethod
     def default_configs(cls):
@@ -359,6 +366,38 @@ class RandomInsertionDataAugmentOp(BaseDataAugmentationOp):
 
         - stopwords: a list of stopword for the language.
 
+        - `insertion_op_config`:
+            A dictionary representing the configurations
+            required operation to take random annotations
+            from the source data pack, augment them based
+            on specified rules and insert them in random
+            positions.
+
+            - type:
+                The type of data augmentation operation to be used
+                (pass the path of the class which defines the
+                required operation)
+
+            - kwargs:
+                This dictionary contains the data that is to be
+                fed to the required operation (Make sure to be
+                well versed with the required configurations of the
+                operation that is defined in the type config).
+
+            .. code-block:: python
+
+                {
+                    "type": "forte.processors.data_augment.algorithms."
+                    "dictionary_replacement_op.DictionaryReplacementOp",
+                    "kwargs":{
+                        "dictionary_class": (
+                            "forte.processors.data_augment."
+                            "algorithms.dictionary.WordnetDictionary"
+                        ),
+                        "prob": 1.0,
+                        "lang": "eng",
+                    }
+                }
 
         Returns:
             A dictionary with the default config for this processor.
@@ -371,16 +410,28 @@ class RandomInsertionDataAugmentOp(BaseDataAugmentationOp):
                 "ft.onto.base_ontology.Document": "auto_align",
                 "ft.onto.base_ontology.Sentence": "auto_align",
             },
-            "insertion_op": "forte.processors.data_augment.algorithms."
-            "dictionary_replacement_op.DictionaryReplacementOp",
-            "insertion_op_config": {
-                "dictionary_class": (
-                    "forte.processors.data_augment."
-                    "algorithms.dictionary.WordnetDictionary"
-                ),
-                "prob": 1.0,
-                "lang": "eng",
+            "insertion_op_configs": {
+                "type": "forte.processors.data_augment.algorithms."
+                "dictionary_replacement_op.DictionaryReplacementOp",
+                "kwargs": {
+                    "dictionary_class": (
+                        "forte.processors.data_augment."
+                        "algorithms.dictionary.WordnetDictionary"
+                    ),
+                    "prob": 1.0,
+                    "lang": "eng",
+                },
             },
+            # "insertion_op": "forte.processors.data_augment.algorithms."
+            # "dictionary_replacement_op.DictionaryReplacementOp",
+            # "insertion_op_config": {
+            #     "dictionary_class": (
+            #         "forte.processors.data_augment."
+            #         "algorithms.dictionary.WordnetDictionary"
+            #     ),
+            #     "prob": 1.0,
+            #     "lang": "eng",
+            # },
             "alpha": 0.1,
             "stopwords": english_stopwords,
         }
@@ -393,15 +444,14 @@ class RandomDeletionDataAugmentOp(BaseDataAugmentationOp):
     """
 
     def augment(self, data_pack: DataPack) -> bool:
-
-        try:
-            anno: Annotation
-            for anno in data_pack.get(self.configs["augment_entry"]):
-                if random.random() < self.configs["alpha"]:
+        anno: Annotation
+        for anno in data_pack.get(self.configs["augment_entry"]):
+            if random.random() < self.configs["alpha"]:
+                try:
                     self.delete_annotation(anno)
-            return True
-        except ValueError:
-            return False
+                except ValueError:
+                    return False
+        return True
 
     @classmethod
     def default_configs(cls):

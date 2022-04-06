@@ -98,7 +98,10 @@ class CharacterFlipOp(SingleAnnotationAugmentOp):
         Following are the keys for this dictionary:
             - dict_path (str):
                 the `url` or the path to the pre-defined
-                typo json file,
+                typo json file. One example dictionary is provided
+                at "https://raw.githubusercontent.com/ArnavParekhji"
+                "/temporaryJson/main/character_flip.json"
+                as a default value.
             - prob (float):
                 The probability of replacement. This value
                 should fall in [0, 1]. Default value is 0.1

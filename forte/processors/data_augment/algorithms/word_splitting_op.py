@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-Data augmentation processor for the Random Word Splitting operation.
+Data augmentation operation for the Random Word Splitting operation.
 Randomly choose n words (With length greater than 1) and split it at a random
 position. Do this n times, where n = alpha * input length.
 Example: Original Text -> "I will be there soon." ,
@@ -36,7 +36,7 @@ __all__ = ["RandomWordSplitDataAugmentOp"]
 
 class RandomWordSplitDataAugmentOp(BaseDataAugmentationOp):
     r"""
-    This class creates a processor to perform Random Word Splitting.
+    This class creates an operation to perform Random Word Splitting.
     It randomly chooses n words in a sentence and splits each word at
     a random position where n = alpha * input length.
     alpha indicates the percent of the words in a sentence that are changed.
