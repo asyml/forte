@@ -274,10 +274,11 @@ class RandomSwapDataAugmentOp(BaseDataAugmentationOp):
                 It should be a full qualified name of the entry class.
                 For example, "ft.onto.base_ontology.Sentence".
 
-            - alpha: 0 <= alpha <= 1. indicates the percent of the words
-              in a sentence that are changed. The processor will perform
-              the Random Swap operation (input length * alpha) times.
-              Default Value is 0.1.
+            - alpha: 
+                0 <= alpha <= 1. indicates the percent of the words
+                in a sentence that are changed. The processor will perform
+                the Random Swap operation (input length * alpha) times.
+                Default Value is 0.1.
 
         Returns:
             A dictionary with the default config for this processor.
@@ -359,12 +360,14 @@ class RandomInsertionDataAugmentOp(BaseDataAugmentationOp):
             It should be a full qualified name of the entry class.
             For example, "ft.onto.base_ontology.Sentence".
 
-        - alpha: 0 <= alpha <= 1. indicates the percent of the words
-          in a sentence that are changed. The processor will perform
-          the Random Insertion operation (input length * alpha) times.
-          Default Value is 0.1
+        - alpha:
+            0 <= alpha <= 1. indicates the percent of the words
+            in a sentence that are changed. The processor will perform
+            the Random Insertion operation (input length * alpha) times.
+            Default Value is 0.1
 
-        - stopwords: a list of stopword for the language.
+        - stopwords:
+            a list of stopword for the language.
 
         - `insertion_op_config`:
             A dictionary representing the configurations
@@ -422,16 +425,6 @@ class RandomInsertionDataAugmentOp(BaseDataAugmentationOp):
                     "lang": "eng",
                 },
             },
-            # "insertion_op": "forte.processors.data_augment.algorithms."
-            # "dictionary_replacement_op.DictionaryReplacementOp",
-            # "insertion_op_config": {
-            #     "dictionary_class": (
-            #         "forte.processors.data_augment."
-            #         "algorithms.dictionary.WordnetDictionary"
-            #     ),
-            #     "prob": 1.0,
-            #     "lang": "eng",
-            # },
             "alpha": 0.1,
             "stopwords": english_stopwords,
         }
@@ -466,7 +459,8 @@ class RandomDeletionDataAugmentOp(BaseDataAugmentationOp):
                 For example, "ft.onto.base_ontology.Sentence".
                 Default Value is 0.1
 
-            - alpha: 0 <= alpha <= 1. The probability to delete each word.
+            - alpha: 
+                0 <= alpha <= 1. The probability to delete each word.
         """
         return {
             "augment_entry": "ft.onto.base_ontology.Token",
