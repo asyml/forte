@@ -148,35 +148,21 @@ Each entry definition will define a couple (can be empty) attributes, mimicking 
      user-defined. These user-defined entries could be defined (a) in the same config
      (b) any of the imported configs. To avoid ambiguity, only full-names of the user-defined
      entry types are supported
-* `item_type: str`: If the `type` of the property is a `List`,
-   then `item_type` defines the type of the items contained in the list.
-* `key_type` and `value_type`: If the `type` of the property is a `Dict`,
-   then these two represent the types of the key and value of the dictionary,
-   currently, only primitive types are supported as the `key_type`.
-* `ndarray_dtype: str` and `ndarray_shape: array`: If the `type` of the property is a `NdArray`, then
-   these two represent the data type and the shape of the array. `NdArray` allows storing a N-dimensional (N-d) array in an entry. For instance, through the simple ontology of pet shop above, we are able to instantiate `Pet` and name it `dog`. Then, we can assign a matrix to the attribute `price` by `dog.price.data = [[2.99, 1.99], [4.99, 3.99]]`. Internally, this $2 \times 2$ matrix is stored as a NumPy array. When `ndarray_shape`/`ndarray_dtype` is specified, the shape/data type of the upcoming array will be verified whether they match. If both `ndarray_dtype` and `ndarray_shape` are provided, a placeholder will be created by `numpy.ndarray(ndarray_shape, dtype=ndarray_dtype)`.
+* `item_type: str`: If the `type` of the property is a `List`, then `item_type` defines the type of the items contained in the list.
+* `key_type` and `value_type`: If the `type` of the property is a `Dict`, then these two represent the types of the key and value of the dictionary, currently, only primitive types are supported as the `key_type`.
+* `ndarray_dtype: str` and `ndarray_shape: array`: If the `type` of the property is a `NdArray`, then these two represent the data type and the shape of the array. `NdArray` allows storing a N-dimensional (N-d) array in an entry. For instance, through the simple ontology of pet shop above, we are able to instantiate `Pet` and name it `dog`. Then, we can assign a matrix to the attribute `price` by `dog.price.data = [[2.99, 1.99], [4.99, 3.99]]`. Internally, this $2 \times 2$ matrix is stored as a NumPy array. When `ndarray_shape`/`ndarray_dtype` is specified, the shape/data type of the upcoming array will be verified whether they match. If both `ndarray_dtype` and `ndarray_shape` are provided, a placeholder will be created by `numpy.ndarray(ndarray_shape, dtype=ndarray_dtype)`.
 
 ## Major ontology types, Annotations, Links, Groups and Generics
 There are some very frequently used types in NLP:
 
 * **Annotation**: an annotation is a type of entry that correspond to a piece of text.
-  For example, a `sentence` can be an annotation. In our example, we use
-  `awesome.pet.com.Color` to annotate the color words in text documents. All
-  annotations need to inherit `forte.data.ontology.top.Annotation`. The annotation
-  entries will have special `begin` and `end` attributes to indicate their text
-  position.
+  For example, a `sentence` can be an annotation. In our example, we use `awesome.pet.com.Color` to annotate the color words in text documents. All annotations need to inherit `forte.data.ontology.top.Annotation`. The annotation entries will have special `begin` and `end` attributes to indicate their text position.
 
-* **Link**: a link is a type of entry that connect two other entries. For example, a dependency
-  link connect two words. All link in Forte need to inherit `forte.data.ontology.top.BaseLink`,
-  and the ontology need to specify ``parent_type`` and ``child_type`` for the linked entries.
+* **Link**: a link is a type of entry that connect two other entries. For example, a dependency link connect two words. All link in Forte need to inherit `forte.data.ontology.top.BaseLink`, and the ontology need to specify ``parent_type`` and ``child_type`` for the linked entries.
 
-* **Group**: a group is a type of entry that groups several entries. For example, a coreference
-  cluster will contain several entity mentions. All link in Forte inherits from
-  `forte.data.ontology.top.BaseGroup`.  The ``member_type`` need to be set to indicate the
-  types of entries in the group.
+* **Group**: a group is a type of entry that groups several entries. For example, a coreference cluster will contain several entity mentions. All link in Forte inherits from `forte.data.ontology.top.BaseGroup`. The ``member_type`` need to be set to indicate the types of entries in the group.
 
-* **Generics**: there are some entries that do not have the above characteristics, such as
-  general meta data storing information. These are `Generics` types.
+* **Generics**: there are some entries that do not have the above characteristics, such as general meta data storing information. These are `Generics` types.
 
 To see more examples of these different types of entries, you can read the
 [pet shop ontology](https://github.com/asyml/forte/blob/master/examples/ontology/pet_shop.json)
@@ -206,13 +192,9 @@ Each entry should be named following a package convention, such as `ft.onto.Pet`
 in this example. This allows the generator to create a package structure for the python
 class.
 
-In order to avoid polluting your package space accidentally, the package names
-that can be used on the types are restricted. The default package name allowed
-is `ft.onto`. However, in many cases you may want to use custom package name,
- let's say,`awesome.pet.com`, how can we achieve it?
+In order to avoid polluting your package space accidentally, the package names that can be used on the types are restricted. The default package name allowed is `ft.onto`. However, in many cases you may want to use custom package name, let's say,`awesome.pet.com`, how can we achieve it?
 
-We can explicitly set more attributes in the `additional_prefixes`, as in the
-following snippet:
+We can explicitly set more attributes in the `additional_prefixes`, as in the following snippet:
 
 ```json
 {
@@ -254,68 +236,65 @@ following snippet:
 
 ## Generating Python classes from ontology.
 * Write the json spec(s) as per the instructions in the previous sections.
-* Use the command `generate_ontology --create` (added during installation of Forte) to
-generate the ontology, and `generate_ontology --clean` to clean up the generated ontology.
+* Use the command `generate_ontology --create` (added during installation of Forte) to generate the ontology, and `generate_ontology --clean` to clean up the generated ontology.
 The steps are detailed in the following sections.
 
 ### Ontology Generation Steps
-At the beginning we have tried generating the ontology. Now let's go into the
-some details.
+At the beginning we have tried generating the ontology. Now let's go into the some details.
 
-* To verify that the `generate_ontology`
-command is found, run `generate_ontology -h`, and the output should look like the
-following -
-    ```
-    $ generate_ontology -h
-    usage: generate_ontology [-h] {create, clean} ...
+* To verify that the `generate_ontology` command is found, run `generate_ontology -h`, and the output should look like the following command
 
-    Utility to automatically generate or create ontologies.
+```
+$ generate_ontology -h
+usage: generate_ontology [-h] {create, clean} ...
 
-    *create*: Generate ontology given a root JSON config.
-    Example: python generate_ontology.py create --config forte/data/ontology/configs/example_ontology_config.json --no_dry_run
+Utility to automatically generate or create ontologies.
 
-    *clean*: Clean a folder of generated ontologies.
-    Example: python generate_ontology.py clean --dir generated-files
+*create*: Generate ontology given a root JSON config.
+Example: python generate_ontology.py create --config forte/data/ontology/configs/example_ontology_config.json --no_dry_run
 
-    positional arguments:
-      {create, clean}
+*clean*: Clean a folder of generated ontologies.
+Example: python generate_ontology.py clean --dir generated-files
 
-    optional arguments:
-      -h, --help      show this help message and exit
-    ```
+positional arguments:
+  {create, clean}
+
+optional arguments:
+  -h, --help      show this help message and exit
+```
 
 * All the arguments of `generate_ontology create` are explained as below:
-     ```
-    usage: generate_ontology create [-h] -i SPEC [-r] [-o DEST_PATH]
-                                    [-s [SPEC_PATHS [SPEC_PATHS ...]]]
-                                    [-m MERGED_PATH] [-d] [-a]
+```
+usage: generate_ontology create [-h] -i SPEC [-r] [-o DEST_PATH]
+                                [-s [SPEC_PATHS [SPEC_PATHS ...]]]
+                                [-m MERGED_PATH] [-d] [-a]
 
-    optional arguments:
-      -h, --help            show this help message and exit
-      -i SPEC, --spec SPEC  The main input JSON specification.
-      -r, --no_dry_run      Generates the package tree in a temporary directory if
-                            true, ignores the argument `--dest_path`
-      -o DEST_PATH, --dest_path DEST_PATH
-                            Destination directory provided by the user. Only used
-                            when --no_dry_run is specified. The default directory
-                            is the current working directory.
-      -s [SPEC_PATHS [SPEC_PATHS ...]], --spec_paths [SPEC_PATHS [SPEC_PATHS ...]]
-                            Paths in which the root and imported spec files are to
-                            be searched.
-      -m MERGED_PATH, --merged_path MERGED_PATH
-                            The destination file path for the mergedfile path.
-      -d, --namespace_depth    
-                            Set an integer argument to allow customized number of 
-                            levels of namespace packaging.
-                            The generation of __init__.py for all the directory
-                            levels above namespace_depth will be disabled.
-                            When namespace_depth<=0, namespace packaging will be disabled
-                            and __init__.py will be included in all directory levels.                            
-                            Default value is set to 0 to disable namespace packaging.
-      -a, --gen_all         If True, will generate all the ontology,including the
-                            existing ones shipped with Forte.
+optional arguments:
+  -h, --help            show this help message and exit
+  -i SPEC, --spec SPEC  The main input JSON specification.
+  -r, --no_dry_run      Generates the package tree in a temporary directory if
+                        true, ignores the argument `--dest_path`
+  -o DEST_PATH, --dest_path DEST_PATH
+                        Destination directory provided by the user. Only used
+                        when --no_dry_run is specified. The default directory
+                        is the current working directory.
+  -s [SPEC_PATHS [SPEC_PATHS ...]], --spec_paths [SPEC_PATHS [SPEC_PATHS ...]]
+                        Paths in which the root and imported spec files are to
+                        be searched.
+  -m MERGED_PATH, --merged_path MERGED_PATH
+                        The destination file path for the mergedfile path.
+  -d, --namespace_depth
+                        Set an integer argument to allow customized number of
+                        levels of namespace packaging.
+                        The generation of __init__.py for all the directory
+                        levels above namespace_depth will be disabled.
+                        When namespace_depth<=0, namespace packaging will be disabled
+                        and __init__.py will be included in all directory levels.
+                        Default value is set to 0 to disable namespace packaging.
+  -a, --gen_all         If True, will generate all the ontology,including the
+                        existing ones shipped with Forte.
 
-     ```
+```
 
 * Run the `generate_ontology` command in `create` mode. Let the destination path be a directory `src` in user project.
 
@@ -361,7 +340,7 @@ optional arguments:
 * Now, let's try to clean up *only* the automatically generated files and directories.
 Say, there are user-created files in the generated folder, ``user_project/src/ft``,
 called `important_stuff` that we do not want to clean up.
-     ```bash
+```
   $ mkdir user_project/src/ft/important_stuff
   $ touch user_project/src/ft/important_stuff/file.py
   $ tree user_project
@@ -379,23 +358,17 @@ called `important_stuff` that we do not want to clean up.
             └── onto
                 ├── example_import_ontology.py
                 └── ft_module.py
-    ```
+```
 
 * Run the cleanup command and observe the directory structure. The cleanup preserves the
 partial directory structure in the case there exists files that are not generated by the framework.
-    ```bash
-    $ generate_ontology clean --dir user-project/src
+```
+$ generate_ontology clean --dir user-project/src
 
-    INFO:scripts.generate_ontology.__main__:Directory /Users/mansi.gupta/user_project/src not empty, cannot delete completely.
-    INFO:scripts.generate_ontology.__main__:Deleted files moved to /Users/mansi.gupta/user_project/.deleted/2019-11-28-02-53-29-952561.
-    ```
+INFO:scripts.generate_ontology.__main__:Directory /Users/mansi.gupta/user_project/src not empty, cannot delete completely.
+INFO:scripts.generate_ontology.__main__:Deleted files moved to /Users/mansi.gupta/user_project/.deleted/2019-11-28-02-53-29-952561.
+```
 
-* For safety, the deleted directories are not immediately deleted but are moved to a timestamped
- directory inside ``.deleted`` and can be restored, unless `--force` is passed.
-
- * If the directories that are to be generated already exist, the files will be generated in the
- already existing directories.
-
- * Automatically generated folders are identified by an empty marker file of the name ``.generated``,
- and automatically generated files are identified by special headers. If the headers or marker files
- are removed manually, than the cleanup won't affect them.
+* For safety, the deleted directories are not immediately deleted but are moved to a timestamped directory inside ``.deleted`` and can be restored, unless `--force` is passed.
+* If the directories that are to be generated already exist, the files will be generated in the already existing directories.
+* Automatically generated folders are identified by an empty marker file of the name ``.generated``, and automatically generated files are identified by special headers. If the headers or marker files are removed manually, than the cleanup won't affect them.
