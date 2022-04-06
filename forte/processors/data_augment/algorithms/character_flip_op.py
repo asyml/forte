@@ -37,7 +37,7 @@ class CharacterFlipOp(SingleAnnotationAugmentOp):
     Args:
         string: input string whose characters need to be replaced,
         dict_path (str): the `url` or the path to the pre-defined
-                    typo json file,
+                    typo `json` file,
         configs: prob(float): The probability of replacement,
                     should fall in [0, 1].
     """
@@ -98,9 +98,9 @@ class CharacterFlipOp(SingleAnnotationAugmentOp):
         Following are the keys for this dictionary:
             - dict_path (str):
                 the `url` or the path to the pre-defined
-                typo json file. One example dictionary is provided
-                at "https://raw.githubusercontent.com/ArnavParekhji"
-                "/temporaryJson/main/character_flip.json"
+                typo `json` file. One example dictionary is provided
+                at `https://raw.githubusercontent.com/ArnavParekhji`
+                `/temporaryJson/main/character_flip.json`
                 as a default value.
             - prob (float):
                 The probability of replacement. This value
