@@ -54,10 +54,14 @@ class EmbeddingSimilarityReplacementOp(TextReplacementOp):
         super().__init__(configs)
         self.vocab = Vocab(self.configs["vocab_path"])
         embed_hparams = self.configs["embed_hparams"]
-        embedding = Embedding(self.vocab.token_to_id_map_py, embed_hparams)
+        embedding = Embedding(
+            self.vocab.token_to_id_map_py, embed_hparams
+        )
         self.normalized_vectors = (
             embedding.word_vecs
-            / np.sqrt((embedding.word_vecs ** 2).sum(axis=1))[:, np.newaxis]
+            / np.sqrt((embedding.word_vecs ** 2).sum(axis=1))[
+                :, np.newaxis
+            ]
         )
 
     def replace(self, input_anno: Annotation) -> Tuple[bool, str]:
@@ -79,13 +83,14 @@ class EmbeddingSimilarityReplacementOp(TextReplacementOp):
         source_id = self.vocab.token_to_id_map_py[word]
         source_vector = self.normalized_vectors[source_id]
         scores = np.dot(self.normalized_vectors, source_vector)
-        target_ids = np.argpartition(-scores, self.configs["top_k"] + 1)[
-            : self.configs["top_k"] + 1
-        ]
+        target_ids = np.argpartition(
+            -scores, self.configs["top_k"] + 1
+        )[: self.configs["top_k"] + 1]
         target_words = [
             self.vocab.id_to_token_map_py[idx]
             for idx in target_ids
             if idx != source_id
-            and self.vocab.id_to_token_map_py[idx].lower() != word.lower()
+            and self.vocab.id_to_token_map_py[idx].lower()
+            != word.lower()
         ]
         return True, random.choice(target_words)
