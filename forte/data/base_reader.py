@@ -44,13 +44,13 @@ class BaseReader(PipelineComponent[PackType], ABC):
     r"""The basic data reader class. To be inherited by all data readers.
 
     Args:
-        from_cache (bool, optional): Decide whether to read from cache
+        from_cache: Decide whether to read from cache
             if cache file exists. By default (``False``), the reader will
             only read from the original file and use the cache file path
             for caching, it will not read from the ``cache_directory``.
             If ``True``, the reader will try to read a datapack from the
             caching file.
-        cache_directory (str, optional): The base directory to place the
+        cache_directory: The base directory to place the
             path of the caching files. Each collection is contained in one
             cached file, under this directory. The cached location for each
             collection is computed by
@@ -61,7 +61,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
                 A collection is the data returned by
                 :meth:`~forte.data.base_reader.BaseReader._collect`.
 
-        append_to_cache (bool, optional): Decide whether to append write
+        append_to_cache: Decide whether to append write
             if cache file already exists.  By default (``False``), we
             will overwrite the existing caching file. If ``True``, we will
             cache the datapack append to end of the caching file.

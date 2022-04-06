@@ -198,14 +198,14 @@ class ConditionalRandomField(torch.nn.Module):
     See, e.g. http://www.cs.columbia.edu/~mcollins/fb.pdf
 
     Args:
-        num_tags (int) : The number of tags.
-        constraints (List[Tuple[int, int]]):
+        num_tags: The number of tags.
+        constraints:
             An optional list of allowed transitions (from_tag_id, to_tag_id).
             These are applied to ``viterbi_tags()`` but do not affect
             ``forward()``. These should be derived from `allowed_transitions`
             so that the start and end transitions are handled correctly for
             your tag type.
-        include_start_end_transitions (bool):
+        include_start_end_transitions:
             Whether to include the start and end transition parameters.
     """
 

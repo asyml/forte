@@ -184,9 +184,9 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         a pack within the multi pack (and in this case then get the sub_entry).
 
         Args:
-            pack_idx (int): The pack_id for the data_pack in the
+            pack_idx: The pack_id for the data_pack in the
               multi pack.
-            entry_id (int): the id for the entry from the pack with pack_id
+            entry_id: the id for the entry from the pack with pack_id
 
         Returns:
             sub-entry of the pack with id = `pack_idx`
@@ -232,13 +232,13 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         somewhere by user, after purging the lists.
 
         Args:
-            index_of_pack (int): The index of pack for removal from the
+            index_of_pack: The index of pack for removal from the
               multi pack. If invalid, no pack will be deleted.
-            clean_invalid_entries (bool): Switch for automatically cleaning
+            clean_invalid_entries: Switch for automatically cleaning
               the entries associated with the data pack being deleted which
               will become invalid after the removal of the pack. Default is
               False.
-            purge_lists (bool): Switch for automatically removing the empty
+            purge_lists: Switch for automatically removing the empty
               spaces in the lists of this multi pack of the removed pack and
               resulting in the index for the remaining packs after the removed
               pack to be changed, so user will be responsible to manage such
@@ -290,13 +290,13 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         somewhere by user, after purging the lists.
 
         Args:
-            pack (DataPack): The existing data pack.
+            pack: The existing data pack.
             index_of_pack: the index of the pack to be removed
             clean_invalid_entries: Switch for automatically
               cleaning the entries associated with the data pack
               being deleted which will become invalid after the
               removal of the pack. Default is False.
-            purge_lists (bool): Switch for automatically removing the empty
+            purge_lists: Switch for automatically removing the empty
               spaces in the lists of this multi pack of the removed pack and
               resulting in the index for the remaining packs after the removed
               pack to be changed, so user will be responsible to manage such
@@ -414,9 +414,9 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         created data pack will be returned.
 
         Args:
-            ref_name (str): The pack name used to reference this data pack from
+            ref_name: The pack name used to reference this data pack from
               the multi pack. If none, the reference name will not be set.
-            pack_name (str): The pack name of the data pack (itself). If none,
+            pack_name: The pack name of the data pack (itself). If none,
               the name will not be set.
 
         Returns: The newly created data pack.
@@ -441,8 +441,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         Add a existing data pack to the multi pack.
 
         Args:
-            pack (DataPack): The existing data pack.
-            ref_name (str): The name to used in this multi pack.
+            pack: The existing data pack.
+            ref_name: The name to used in this multi pack.
 
         Returns:
             None
@@ -624,7 +624,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         pack manually.
 
         Args:
-            component (str): Overwrite the component record with this.
+            component: Overwrite the component record with this.
 
         Returns:
             None
@@ -656,10 +656,10 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         :class:`~forte.data.data_pack.DataPack`.
 
         Args:
-            pack_index (int): The index of a single pack.
-            context_type (str): The granularity of the data context, which
+            pack_index: The index of a single pack.
+            context_type: The granularity of the data context, which
                 could be any Annotation type.
-            request (dict): The entry types and fields required.
+            request: The entry types and fields required.
                 The keys of the dict are the required entry types and the
                 value should be either a list of field names or a dict.
                 If the value is a dict, accepted items includes "fields",
@@ -745,10 +745,10 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         :class:`~forte.data.multi_pack.MultiPack` object.
 
         Args:
-            - entry (Entry): An :class:`~forte.data.ontology.core.Entry` object
+            - entry: An :class:`~forte.data.ontology.core.Entry` object
               to be added to the datapack.
 
-            - allow_duplicate (bool): Whether we allow duplicate in the datapack.
+            - allow_duplicate: Whether we allow duplicate in the datapack.
 
         Returns:
             The input entry itself
@@ -808,11 +808,11 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         generated by a component named ``relation_creator``
 
         Args:
-            entry_type (type): The type of the entries requested.
-            components (str or list, optional): The component generating the
+            entry_type: The type of the entries requested.
+            components: The component generating the
                 entries requested. If `None`, all valid entries generated by
                 any component will be returned.
-            include_sub_type (bool): whether to return the sub types of the
+            include_sub_type: whether to return the sub types of the
                 queried `entry_type`. True by default.
 
         Returns:
@@ -932,7 +932,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         Allow duplicate entries in a datapack.
 
         Args:
-            entry (Entry): An :class:`~forte.data.ontology.core.Entry` object
+            entry: An :class:`~forte.data.ontology.core.Entry` object
                 to be added to the datapack.
 
         Returns:
@@ -945,7 +945,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         :class:`~forte.data.multi_pack.MultiPack`.
 
         Args:
-            entry (Entry): An :class:`~forte.data.ontology.core.Entry`
+            entry: An :class:`~forte.data.ontology.core.Entry`
                 object to be deleted from the pack.
 
         """
