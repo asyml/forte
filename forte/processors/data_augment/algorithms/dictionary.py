@@ -90,9 +90,9 @@ class WordnetDictionary(Dictionary):
     def __init__(self):
         try:
             import nltk  # pylint: disable=import-outside-toplevel
-            from nltk.corpus import (
+            from nltk.corpus import (  # pylint:disable=import-outside-toplevel
                 wordnet,
-            )  # pylint: disable=import-outside-toplevel
+            )
         except ImportError as err:
             raise ImportError(
                 "nltk is not installed correctly."

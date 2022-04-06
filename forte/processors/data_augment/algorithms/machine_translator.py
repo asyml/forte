@@ -69,10 +69,10 @@ class MarianMachineTranslator(MachineTranslator):
             src=src_lang, tgt=tgt_lang
         )
         try:
-            from transformers import (
+            from transformers import (  # pylint:disable=import-outside-toplevel
                 MarianMTModel,
                 MarianTokenizer,
-            )  # pylint: disable=import-outside-toplevel
+            )
         except ImportError as err:
             raise ImportError(
                 " `transformers` is not installed correctly."

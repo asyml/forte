@@ -53,10 +53,10 @@ class EmbeddingSimilarityReplacementOp(TextReplacementOp):
     def __init__(self, configs: Config):
         super().__init__(configs)
         try:
-            from texar.torch.data import (
+            from texar.torch.data import (  # pylint:disable=import-outside-toplevel
                 Vocab,
                 Embedding,
-            )  # pylint: disable=import-outside-toplevel
+            )
         except ImportError as e:
             raise ImportError(
                 "texar is not installed correctly."
