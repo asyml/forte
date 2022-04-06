@@ -119,30 +119,30 @@ class BackTranslationOp(SingleAnnotationAugmentOp):
             A dictionary with the default config for this processor.
         Following are the keys for this dictionary:
 
-            - `augment_entry` (str): 
+            - `augment_entry` (str):
                 This indicates the entity that needs to
                 be augmented. By default, this value is set to
                 `ft.onto.base_ontology.Sentence`.
 
-            - `prob` (float): 
+            - `prob` (float):
                 The probability of replacement, should fall in [0, 1].
                 The Default value is 0.5
 
-            - `src_language` (str): 
+            - `src_language` (str):
                 The source language of back translation.
 
-            - `tgt_language` (str): 
+            - `tgt_language` (str):
                 The target language of back translation.
 
-            - `model_to` (str): 
+            - `model_to` (str):
                 The full qualified name of the model from
                 source language to target language.
 
-            - `model_back` (str): 
+            - `model_back` (str):
                 The full qualified name of the model from
                 target language to source language.
 
-            - `device` (str): 
+            - `device` (str):
                 "cpu" for the CPU or "cuda" for GPU. The Default
                 value is cpu.
         """

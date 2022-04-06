@@ -71,12 +71,12 @@ class DictionaryReplacementOp(SingleAnnotationAugmentOp):
         Returns:
             A dictionary with the default config for this processor.
         Following are the keys for this dictionary:
-            - `dictionary` (dict): 
+            - `dictionary` (dict):
                 The full qualified name of the dictionary class.
-            - `prob` (float): 
+            - `prob` (float):
                 The probability of replacement, should fall in [0, 1].
                 Default value is 0.1
-            - `lang` (str): 
+            - `lang` (str):
                 The language of the text.
         """
 

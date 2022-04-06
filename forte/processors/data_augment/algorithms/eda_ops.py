@@ -274,7 +274,7 @@ class RandomSwapDataAugmentOp(BaseDataAugmentationOp):
                 It should be a full qualified name of the entry class.
                 For example, "ft.onto.base_ontology.Sentence".
 
-            - alpha: 
+            - alpha:
                 0 <= alpha <= 1. indicates the percent of the words
                 in a sentence that are changed. The processor will perform
                 the Random Swap operation (input length * alpha) times.
@@ -459,7 +459,7 @@ class RandomDeletionDataAugmentOp(BaseDataAugmentationOp):
                 For example, "ft.onto.base_ontology.Sentence".
                 Default Value is 0.1
 
-            - alpha: 
+            - alpha:
                 0 <= alpha <= 1. The probability to delete each word.
         """
         return {
