@@ -17,8 +17,17 @@ import torch
 import torch.nn.functional as F
 import torch.nn.utils.rnn as rnn_utils
 from torch import nn
-import texar.torch as texar
-from texar.torch.modules.embedders import WordEmbedder
+
+
+try:
+    import texar.torch as texar
+    from texar.torch.modules.embedders import WordEmbedder
+except ImportError as e:
+    raise ImportError(
+        "texar is not installed correctly."
+        "Please refer to documentation to [install extra required modules](ner)"
+    ) from e
+
 
 from forte.common.configuration import Config
 from forte.models.ner.conditional_random_field import ConditionalRandomField

@@ -18,8 +18,6 @@ from typing import Dict, Any
 
 import torch
 
-from texar.torch.data.tokenizers.bert_tokenizer import BERTTokenizer
-
 from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.multi_pack import MultiPack
@@ -61,7 +59,14 @@ class BertRerankingProcessor(MultiPackProcessor):
             cache_dir=cache_dir,
             hparams=self.config,
         ).to(self.device)
-
+        try:
+            from texar.torch.data import (
+                BERTTokenizer,
+            )  # pylint: disable=import-outside-toplevel
+        except ImportError as e:
+            raise ImportError(
+                "Please refer to documentation to [install extra required modules](ner)"
+            ) from e
         self.tokenizer = BERTTokenizer(
             pretrained_model_name=self.config.pretrained_model_name,
             cache_dir=cache_dir,

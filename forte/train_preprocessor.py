@@ -18,7 +18,16 @@ import logging
 from typing import Optional, Dict, Type, Any, Union, Iterator, List
 
 import torch
-from texar.torch.data import DataIterator, Batch
+
+try:
+    from texar.torch.data import DataIterator, Batch
+except ImportError as e:
+    raise ImportError(
+        " `texar-pytorch` is not installed correctly."
+        " Please refer to [extra requirement for aug wrapper](pip install forte[data_aug])"
+        " for more information. "
+    ) from e
+
 from torch import device
 
 from forte.common.configuration import Config

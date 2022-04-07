@@ -18,7 +18,15 @@ from typing import Any, Dict, List, Optional, Tuple, Union, overload
 import torch
 from torch import nn
 from torch.nn import functional as F
-import texar.torch as tx
+
+try:
+    import texar.torch as tx
+except ImportError as e:
+    raise ImportError(
+        "texar is not installed correctly."
+        "Please refer to documentation to [install extra required modules](srl)"
+    ) from e
+
 
 LSTMState = Tuple[torch.Tensor, torch.Tensor]
 

@@ -129,7 +129,9 @@ class TaggingTrainer(BaseTrainer):
 
         logger.info("Start training.")
         try:
-            from texar.torch.data import Batch
+            from texar.torch.data import (
+                Batch,
+            )  # pylint: disable=import-outside-toplevel
         except ImportError as e:
             raise ImportError(
                 " `texar-pytorch` is not installed correctly."

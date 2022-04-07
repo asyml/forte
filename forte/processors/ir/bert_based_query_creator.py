@@ -18,8 +18,7 @@ from typing import Any, Dict, Tuple
 
 import numpy as np
 import torch
-from texar.torch.data import BERTTokenizer
-from texar.torch.modules import BERTEncoder
+
 
 from forte.common.configuration import Config
 from forte.common.resources import Resources
@@ -44,6 +43,19 @@ class BertBasedQueryCreator(QueryProcessor):
         self.device = torch.device(
             "cuda" if torch.cuda.is_available() else "cpu"
         )
+
+        try:
+            from texar.torch.data import (
+                BERTTokenizer,
+            )  # pylint: disable=import-outside-toplevel
+            from texar.torch.modules import (
+                BERTEncoder,
+            )  # pylint: disable=import-outside-toplevel
+        except ImportError as e:
+            raise ImportError(
+                "processor"
+                "Please refer to documentation to [install extra required modules](ner)"
+            ) from e
 
         if "name" in self.config.tokenizer:
             self.tokenizer = BERTTokenizer(
