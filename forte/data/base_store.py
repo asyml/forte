@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from abc import abstractmethod
-from typing import List, Iterator, Tuple, Any
+from typing import List, Iterator, Tuple, Any, Optional
 
 __all__ = ["BaseStore"]
 
@@ -153,16 +153,30 @@ class BaseStore:
         raise NotImplementedError
 
     @abstractmethod
-    def get_entry(self, tid: int) -> Tuple[List, int, int]:
-        r"""Look up the entry_dict with key ``tid``. Return the entry,
-        its ``type_name``, and its ``index_id`` in the ``entry_type`` list.
+    def get_entry(self, tid: int) -> Tuple[List, str]:
+        r"""Look up the entry_dict with key ``tid``. Return the entry and its
+        ``type_name``.
 
         Args:
             tid (int): Unique id of the entry.
 
         Returns:
-            The entry which ``tid`` corresponds to, its ``type_name`` and its index
-            in the ``entry_type`` list.
+            The entry which ``tid`` corresponds to and its ``type_name``.
+
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_entry_index(self, tid: int) -> int:
+        r"""Look up the entry_dict with key ``tid``. Return the ``index_id`` of
+        the entry.
+
+        Args:
+            tid (int): Unique id of the entry.
+
+        Returns:
+            Index of the entry which ``tid`` corresponds to in the
+            ``entry_type`` list.
 
         """
         raise NotImplementedError
@@ -184,7 +198,7 @@ class BaseStore:
         raise NotImplementedError
 
     @abstractmethod
-    def next_entry(self, tid: int) -> List:
+    def next_entry(self, tid: int) -> Optional[List]:
         r"""Get the next entry of the same type as the ``tid`` entry.
 
         Args:
@@ -198,7 +212,7 @@ class BaseStore:
         raise NotImplementedError
 
     @abstractmethod
-    def prev_entry(self, tid: int) -> List:
+    def prev_entry(self, tid: int) -> Optional[List]:
         r"""Get the previous entry of the same type as the ``tid`` entry.
 
         Args:

@@ -17,6 +17,24 @@ Forte also brings technology to you by supporting deep learning via Texar, and b
 model data interface that allows user to cast tasks to models.
 
 
+Download and Installation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Forte is available through PIP by 
+::
+
+  pip install forte
+
+
+You can get our latest code through source.
+::
+
+  git clone https://github.com/asyml/forte.git
+  cd forte
+  pip install .
+
+
+
 
 Library API example
 --------------------
@@ -59,21 +77,6 @@ A simple code example that runs Named Entity Recognizer
 
 Many more examples are available `here  <index_appendices.html>`_. We are also working assembling some
 interesting `tutorials <https://github.com/asyml/forte/wiki>`_
-
-
-Download and Installation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Download the repository through
-
-```bash
-git clone https://github.com/asyml/forte.git
-```
-
-After `cd` into `forte`, you can install it through
-
-```bash
-pip install .
-```
 
 
 License
