@@ -68,6 +68,7 @@ setuptools.setup(
         "srl_predictor": ["texar-pytorch>=0.1.1"],
         "ir": ["texar-pytorch>=0.1.1"],
         "texar-encoder": ["texar-pytorch>=0.1.1"],
+        "train-preprocessor": ["texar-pytorch>=0.1.1"],
         # transformers 4.10.0 will break the translation model we used here
         "stave": ["stave>=0.0.1.dev12"],
         "audio_ext": ["soundfile>=0.10.3"],

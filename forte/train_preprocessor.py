@@ -24,7 +24,7 @@ try:
 except ImportError as e:
     raise ImportError(
         " `texar-pytorch` is not installed correctly."
-        " Please refer to [extra requirement for aug wrapper](pip install forte[data_aug])"
+        " Please refer to [extra requirement for aug wrapper](pip install forte[data])"
         " for more information. "
     ) from e
 
