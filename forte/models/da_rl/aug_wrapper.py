@@ -515,8 +515,8 @@ def _torch_adam_delta(
             exp_avg_sq = exp_avg_sq * beta2 + (1.0 - beta2) * grad * grad
             denom = exp_avg_sq.sqrt() + group["eps"]
 
-            bias_correction1 = 1.0 - beta1 ** step
-            bias_correction2 = 1.0 - beta2 ** step
+            bias_correction1 = 1.0 - beta1**step
+            bias_correction2 = 1.0 - beta2**step
             step_size = (
                 group["lr"] * math.sqrt(bias_correction2) / bias_correction1
             )
