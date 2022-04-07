@@ -16,8 +16,9 @@ import json
 import os
 from abc import ABC
 from typing import Counter as CounterType, Dict, List, Optional
-from forte.processors.base import PackProcessor
 from asyml_utilities.special_tokens import SpecialTokens
+from forte.processors.base import PackProcessor
+
 
 __all__ = [
     "Alphabet",
