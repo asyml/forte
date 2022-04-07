@@ -180,7 +180,7 @@ class Vocabulary(Generic[ElementType]):
             #  a vector of zeros.
             pad_id = -1 if method == "one-hot" else None
             self.add_special_element(
-                tx.data.SpecialTokens.PAD,
+                asyml_utilities.special_tokens.SpecialTokens.PAD,
                 element_id=pad_id,
                 special_token_name="PAD",
                 representation=pad_value,
@@ -188,7 +188,7 @@ class Vocabulary(Generic[ElementType]):
 
         if use_unk:
             self.add_special_element(
-                tx.data.SpecialTokens.UNK,
+                asyml_utilities.special_tokens.SpecialTokens.UNK,
                 special_token_name="UNK",
                 representation=unk_value,
             )
