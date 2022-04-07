@@ -236,13 +236,13 @@ class PackingBatchProcessor(BaseBatchProcessor[PackType], ABC):
         pack.
 
         Args:
-            pack (PackType): The pack to add entries or fields to.
-            predict_results (Dict): The prediction results returned by
+            pack: The pack to add entries or fields to.
+            predict_results: The prediction results returned by
                 :meth:`~forte.processors.base.batch_processor
                 .BaseBatchProcessor.predict`.
                 This processor will add these results to the provided `pack`
                 as entry and attributes.
-            context (Optional[Annotation]): The context entry that the
+            context: The context entry that the
                 prediction is performed, and the pack operation should
                 be performed related to this range annotation. If None,
                 then we consider the whole data pack is used as the context.
@@ -466,7 +466,7 @@ class Predictor(PackingBatchProcessor[PackType]):
         predictions for the input ``data_batch``.
 
         Args:
-              data_batch (dict): A batch of instances in our ``dict`` format.
+              data_batch: A batch of instances in our ``dict`` format.
 
         Returns:
               The prediction results in dict datasets.

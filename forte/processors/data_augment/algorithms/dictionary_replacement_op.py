@@ -54,7 +54,7 @@ class DictionaryReplacementOp(TextReplacementOp):
         This function replaces a word with synonyms from a WORDNET dictionary.
 
         Args:
-            input_anno (Token): The input word.
+            input_anno: The input word.
         Returns:
             A tuple of two values, where the first element is a boolean value
             indicating whether the replacement happens, and the second

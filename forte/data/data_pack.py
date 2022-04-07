@@ -1585,8 +1585,8 @@ class DataIndex(BaseIndex):
         r"""Get the coverage index from ``outer_type`` to ``inner_type``.
 
         Args:
-            outer_type (type): an annotation or `AudioAnnotation` type.
-            inner_type (type): an entry type.
+            outer_type: an annotation or `AudioAnnotation` type.
+            inner_type: an entry type.
 
         Returns:
             If the coverage index does not exist, return `None`. Otherwise,
@@ -1670,10 +1670,10 @@ class DataIndex(BaseIndex):
         r"""Check whether the two annotations have overlap in span.
 
         Args:
-            entry1 (int or Annotation or `AudioAnnotation`): An
+            entry1: An
                 :class:`Annotation` or :class:`AudioAnnotation` object to be
                 checked, or the tid of the Annotation.
-            entry2 (int or Annotation or `AudioAnnotation`: Another
+            entry2: Another
                 :class:`Annotation` or :class:`AudioAnnotation` object to be
                 checked, or the tid of the Annotation.
         """

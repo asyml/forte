@@ -57,7 +57,7 @@ class EmbeddingSimilarityReplacementOp(TextReplacementOp):
         embedding = Embedding(self.vocab.token_to_id_map_py, embed_hparams)
         self.normalized_vectors = (
             embedding.word_vecs
-            / np.sqrt((embedding.word_vecs**2).sum(axis=1))[:, np.newaxis]
+            / np.sqrt((embedding.word_vecs ** 2).sum(axis=1))[:, np.newaxis]
         )
 
     def replace(self, input_anno: Annotation) -> Tuple[bool, str]:
@@ -66,7 +66,7 @@ class EmbeddingSimilarityReplacementOp(TextReplacementOp):
         pretrained embeddings.
 
         Args:
-            input_anno (Annotation): The input annotation.
+            input_anno: The input annotation.
         Returns:
             A tuple of two values, where the first element is a boolean value
             indicating whether the replacement happens, and the second
