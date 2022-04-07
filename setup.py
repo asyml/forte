@@ -65,6 +65,8 @@ setuptools.setup(
             "texar-pytorch>=0.1.1",
         ],
         "subword_tokenize": ["texar-pytorch>=0.1.1"],
+        "srl_predictor": ["texar-pytorch>=0.1.1"],
+        "ir": ["texar-pytorch>=0.1.1"],
         "texar-encoder": ["texar-pytorch>=0.1.1"],
         # transformers 4.10.0 will break the translation model we used here
         "stave": ["stave>=0.0.1.dev12"],

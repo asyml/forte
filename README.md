@@ -57,7 +57,10 @@ Some components or modules in forte may require some [extra requirements](https:
 * `pip install forte[data_aug]`: Install packages required for [data augmentation module](https://github.com/asyml/forte/tree/master/forte/processors/data_augment).
 
 * `pip install forte[subword_tokenize]`: Install packages required for [subword_tokenizer](https://github.com/asyml/forte/tree/master/forte/processors/nlp/subword_tokenizer.py)
+* `pip install forte[srl_predictor]`: Install packages required for [srl_predictor](https://github.com/asyml/forte/tree/master/forte/processors/nlp/srl_predictor.py)
+* `pip install forte[ir]`: Install packages required for [ir](https://github.com/asyml/forte/tree/master/forte/processors/ir/)
 * `pip install forte[texar-encoder]`: Install packages required for [texar encoder](https://github.com/asyml/forte/tree/master/forte/processors/third_party/pretrained_encoder_processors.py)
+* `pip install forte[train-preprocessor]`: Install packages required for [train_preprocessor](https://github.com/asyml/forte/tree/master/forte/train_preprocessor.py)
 * `pip install forte[stave]`: Install packages required for [StaveProcessor](https://github.com/asyml/forte/blob/master/forte/processors/stave/stave_processor.py).
 * `pip install forte[audio_ext]`: Install packages required for [AudioReader](https://github.com/asyml/forte/blob/master/forte/data/readers/audio_reader.py).
 * `pip install forte[remote]`: Install packages required for [RemoteProcessor](https://github.com/asyml/forte/processors/misc/remote_processor.py).

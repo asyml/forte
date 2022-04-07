@@ -53,7 +53,6 @@ class BertBasedQueryCreator(QueryProcessor):
             )  # pylint: disable=import-outside-toplevel
         except ImportError as e:
             raise ImportError(
-                "processor"
                 "Please refer to documentation to [install extra required modules](ner)"
             ) from e
 
