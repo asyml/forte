@@ -60,9 +60,9 @@ class BertRerankingProcessor(MultiPackProcessor):
             hparams=self.config,
         ).to(self.device)
         try:
-            from texar.torch.data import (
+            from texar.torch.data import (  # pylint: disable=import-outside-toplevel
                 BERTTokenizer,
-            )  # pylint: disable=import-outside-toplevel
+            )
         except ImportError as e:
             raise ImportError(
                 "Please refer to documentation to [install extra required modules](ner)"

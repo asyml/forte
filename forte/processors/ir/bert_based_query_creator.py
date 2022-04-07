@@ -45,12 +45,12 @@ class BertBasedQueryCreator(QueryProcessor):
         )
 
         try:
-            from texar.torch.data import (
+            from texar.torch.data import (  # pylint: disable=import-outside-toplevel
                 BERTTokenizer,
-            )  # pylint: disable=import-outside-toplevel
-            from texar.torch.modules import (
+            )
+            from texar.torch.modules import (  # pylint: disable=import-outside-toplevel
                 BERTEncoder,
-            )  # pylint: disable=import-outside-toplevel
+            )
         except ImportError as e:
             raise ImportError(
                 "Please refer to documentation to [install extra required modules](ner)"
