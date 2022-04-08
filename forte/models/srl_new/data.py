@@ -17,16 +17,6 @@ from typing import List, NamedTuple, Tuple
 import numpy as np
 from mypy_extensions import TypedDict
 
-try:
-    import texar.torch as tx
-except ImportError as e:
-    raise ImportError(
-        " `texar-pytorch` is not installed correctly."
-        " Consider install texar via `pip install texar-pytorch`."
-        " Or refer to [extra requirement for Texar model support](pip install forte[models])"
-        " for more information."
-    ) from e
-
 
 class SRLSpan(NamedTuple):
     predicate: int

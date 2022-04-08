@@ -27,14 +27,14 @@ try:
     from texar.torch.modules.classifiers import (
         BERTClassifier as TxBERTClassifier,
     )
-except ImportError as e:
+except ImportError as e1:
     raise ImportError(
         " `texar-pytorch` is not installed correctly."
         " Consider install texar via `pip install texar-pytorch`"
         " Or refer to extra requirement for IR support"
         " (pip install forte[ir])"
         " for more information."
-    ) from e
+    ) from e1
 
 from forte.common.configuration import Config
 

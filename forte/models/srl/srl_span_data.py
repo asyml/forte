@@ -1,6 +1,6 @@
 import json
-import torch
 from typing import List
+import torch
 from forte.models.srl.data import RawExample, Example, SRLSpan
 
 try:
