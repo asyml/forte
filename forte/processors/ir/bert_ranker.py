@@ -29,9 +29,10 @@ try:
     )
 except ImportError as e:
     raise ImportError(
-        " `texar-pytorch` is not installed correctly."
-        " Please refer to [extra requirement for aug wrapper](pip install forte[ir])"
-        " for more information. "
+            " `texar-pytorch` is not installed correctly."
+            " Consider install texar via `pip install texar-pytorch`"
+            " Or refer to [extra requirement for IR support](pip install forte[ir])"
+            " for more information."
     ) from e
 
 from forte.common.configuration import Config
@@ -114,13 +115,12 @@ class BERTClassifier(TxBERTClassifier, PretrainedBERTMixin):
         try:
             import numpy as np
             import tensorflow as tf
-        except ImportError:
-            print(
+        except ImportError as e:
+            raise ImportError(
                 "Loading TensorFlow models in PyTorch requires installing "
                 "TensorFlow. Please see https://www.tensorflow.org/install/ "
                 "for installation instructions."
-            )
-            raise
+            ) from e            
 
         py_prefix = "encoder." if "prefix" not in kwargs else kwargs["prefix"]
 
