@@ -83,7 +83,7 @@ jobs:
           rm -rf texar-pytorch
       - name: Install Forte
         run: |
-          pip install --use-feature=in-tree-build --progress-bar off .[models,test,example,wikipedia,data_aug,subword_tokenize,srl_predictor,ir,texar-encoder,train-preprocessor,stave,audio_ext,remote,extractor]
+          pip install --use-feature=in-tree-build --progress-bar off .[models,test,wikipedia,data_aug,subword_tokenize,ir,texar-encoder,stave,audio_ext,remote,extractor]
       - name: Build ontology
         run: |
           ./scripts/build_ontology_specs.sh
