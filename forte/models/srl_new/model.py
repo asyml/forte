@@ -37,8 +37,10 @@ try:
     import texar.torch as tx
 except ImportError as e:
     raise ImportError(
-        "texar is not installed correctly."
-        "Please refer to documentation to [install extra required modules](srl)"
+        " `texar-pytorch` is not installed correctly."
+        " Consider install texar via `pip install texar-pytorch`."
+        " Or refer to [extra requirement for Texar model support](pip install forte[models])"
+        " for more information."
     ) from e
 
 from forte.data.converter import Feature
