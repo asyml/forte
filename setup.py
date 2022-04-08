@@ -43,7 +43,7 @@ setuptools.setup(
             "torch>=1.1.0",
             "torchtext==0.4.0",
             "tqdm>=4.36.1",
-            "texar-pytorch>=0.1.1",
+            "texar-pytorch>=0.1.2",
         ],
         "test": [
             "ddt",
@@ -58,18 +58,18 @@ setuptools.setup(
         "data_aug": [
             "transformers>=4.15.0",
             "nltk",
-            "texar-pytorch>=0.1.1",
+            "texar-pytorch>=0.1.2",
         ],
-        "nlp": ["texar-pytorch>=0.1.1"],
-        "ir": ["texar-pytorch>=0.1.1"],
-        "texar-encoder": ["texar-pytorch>=0.1.1"],
+        "nlp": ["texar-pytorch>=0.1.2"],
+        "ir": ["texar-pytorch>=0.1.2"],
+        "texar-encoder": ["texar-pytorch>=0.1.2"],
         "stave": ["stave>=0.0.1.dev12"],
         "audio_ext": ["soundfile>=0.10.3"],
         "remote": [
             "fastapi>=0.65.2",
             "uvicorn>=0.14.0",
         ],
-        "extractor": ["texar-pytorch>=0.1.1"],
+        "extractor": ["texar-pytorch>=0.1.2"],
     },
     entry_points={
         "console_scripts": [
