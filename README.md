@@ -82,7 +82,6 @@ for pack in Pipeline().set_reader(
         print("The entities are: ")
         for ent in pack.get("ft.onto.base_ontology.EntityMention", sentence):
             print(ent.text, ent.ner_type)
-
 ```
 
 
