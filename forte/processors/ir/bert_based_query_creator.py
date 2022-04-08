@@ -53,7 +53,10 @@ class BertBasedQueryCreator(QueryProcessor):
             )
         except ImportError as e:
             raise ImportError(
-                "Please refer to documentation to [install extra required modules](ner)"
+                " `texar-pytorch` is not installed correctly."
+                " Consider install texar via `pip install texar-pytorch`"
+                " Or refer to [extra requirement for IR support](pip install forte[ir])"
+                " for more information."
             ) from e
 
         if "name" in self.config.tokenizer:
