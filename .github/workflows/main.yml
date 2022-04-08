@@ -89,7 +89,7 @@ jobs:
           # Try to install Forte backbone only and test basic imports.
           pip install --use-feature=in-tree-build --progress-bar off .
           # needs to remove it in after torch dependency is removed
-          pip uninstall texar-pytorch
+          pip uninstall -y texar-pytorch
           pytest tests/forte/texar_nondependency_test.py
       - name: Build ontology
         run: |
