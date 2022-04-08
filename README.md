@@ -63,28 +63,6 @@ This allows developers to fully utilize the strength of individual module, combi
 
 Forte not only makes it easy to integrate with arbitrary 3rd party tools (Check out these [examples](./examples)!), but also brings technology to you by offering a miscellaneous collection of deep learning modules via Texar, and a convenient model-data interface for casting tasks to models.
 
-## Library Example
-
-A simple code example that runs Named Entity Recognizer from Spacy (required installing forte spacy wrapper)
-
-```python
-from forte import Pipeline
-from forte.data.readers import TerminalReader
-from fortex.spacy import SpacyProcessor
-
-for pack in Pipeline().set_reader(
-        TerminalReader()
-).add(
-    SpacyProcessor(), {"processors": ["sentence", "ner"]}
-).initialize().process_dataset():
-    for sentence in pack.get("ft.onto.base_ontology.Sentence"):
-        print("The sentence is: ", sentence.text)
-        print("The entities are: ")
-        for ent in pack.get("ft.onto.base_ontology.EntityMention", sentence):
-            print(ent.text, ent.ner_type)
-```
-
-
 ## Quick Start Guide
 ```
 from forte import Pipeline
