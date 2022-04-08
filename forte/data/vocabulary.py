@@ -166,14 +166,7 @@ class Vocabulary(Generic[ElementType]):
 
         # Store the id position of the special ids.
         self.__special_ids: Set[int] = set()
-        try:
-            import texar.torch as tx  # pylint: disable=import-outside-toplevel
-        except ImportError as e:
-            raise ImportError(
-                " `texar-pytorch` is not installed correctly."
-                " Please refer to [extra requirement for texar-encoder](pip install forte[example])"
-                " for more information. "
-            ) from e
+
         if use_pad:
             # If not specified, will use -1 for padding in the case of
             #  one-hot. This will make the actual PAD representation to be
