@@ -47,8 +47,8 @@ class PretrainedEncoder(PackProcessor):
         except ImportError as err:
             raise ImportError(
                 " `texar-pytorch` is not installed correctly."
-                " Please refer to [extra requirement for texar-encoder](pip"
-                " install forte[texar-encoder])"
+                " Please refer to [extra requirement for nlp](pip"
+                " install forte[nlp])"
                 " for more information. "
             ) from err
         self.name2tokenizer = {
@@ -139,8 +139,8 @@ class PretrainedEncoder(PackProcessor):
         except ImportError as err:
             raise ImportError(
                 " `texar-pytorch` is not installed correctly."
-                " Please refer to [extra requirement for texar-encoder]"
-                "(pip install forte[texar-encoder])"
+                " Please refer to [extra requirement for nlp]"
+                "(pip install forte[nlp])"
                 " for more information. "
             ) from err
         for entry in input_pack.get(entry_type=self.entry_type):  # type: ignore
