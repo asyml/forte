@@ -85,6 +85,59 @@ for pack in Pipeline().set_reader(
 ```
 
 
+## Quick Start Guide
+```
+from forte import Pipeline
+from forte.processors.base import PackProcessor
+from forte.data.data_pack import DataPack
+from dataclasses import dataclass
+from forte.data.ontology.top import Generics
+from typing import Optional, Dict, Any
+from forte.data.readers import TerminalReader
+from fortex.spacy import SpacyProcessor
+
+
+
+@dataclass
+class NewType(Generics):
+    """A dummy generic type."""
+    value: Optional[str] = None
+    def __init__(self, pack, value):
+        super().__init__(pack)
+        self.value = value
+
+class DummyPackProcessor(PackProcessor):
+    """A dummy processor that writes new data entry in the data pack"""
+    def __init__(self):
+        super().__init__()
+
+    def initialize(self, resources, configs):
+        super().initialize(resources, configs)
+
+    def _process(self, input_pack: DataPack):
+        # write a data type NewType into the data pack
+        NewType(pack=input_pack, value="[PACK]")
+
+    @classmethod
+    def default_configs(cls) -> Dict[str, Any]:
+        return {"test": "test, successor"}
+
+
+pipeline: Pipeline = Pipeline[DataPack]()
+pipeline.set_reader(TerminalReader())
+pipeline.add(SpacyProcessor(), {"processors": ["sentence", "ner"]})
+pipeline.add(DummyPackProcessor())
+for pack in pipeline.initialize().process_dataset():
+    print("NewType data: ", list(pack.get(NewType)))
+    for sentence in pack.get("ft.onto.base_ontology.Sentence"):
+        print("The sentence is: ", sentence.text)
+        print("The entities are: ")
+        for ent in pack.get("ft.onto.base_ontology.EntityMention", sentence):
+            print(ent.text, ent.ner_type)
+```
+
+
+
 -----------------
 | ![forte_arch.jpg](https://raw.githubusercontent.com/asyml/forte/master/docs/_static/img/forte_arch.png) ||:--:| | *A high level Architecture of Forte showing how ontology and entries work with the pipeline.* |
 -----------------
