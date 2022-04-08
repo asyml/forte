@@ -121,7 +121,7 @@ class BERTClassifier(TxBERTClassifier, PretrainedBERTMixin):
                 "Loading TensorFlow models in PyTorch requires installing "
                 "TensorFlow. Please see https://www.tensorflow.org/install/ "
                 "for installation instructions."
-            ) from e            
+            ) from e
 
         py_prefix = "encoder." if "prefix" not in kwargs else kwargs["prefix"]
 
