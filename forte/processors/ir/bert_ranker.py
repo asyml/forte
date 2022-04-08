@@ -29,10 +29,11 @@ try:
     )
 except ImportError as e:
     raise ImportError(
-            " `texar-pytorch` is not installed correctly."
-            " Consider install texar via `pip install texar-pytorch`"
-            " Or refer to [extra requirement for IR support](pip install forte[ir])"
-            " for more information."
+        " `texar-pytorch` is not installed correctly."
+        " Consider install texar via `pip install texar-pytorch`"
+        " Or refer to extra requirement for IR support"
+        " (pip install forte[ir])"
+        " for more information."
     ) from e
 
 from forte.common.configuration import Config
