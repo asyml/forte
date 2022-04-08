@@ -33,8 +33,8 @@ try:
 except ImportError as err1:
     raise ImportError(
         " Texar is not installed correctly."
-        " Please refer to [extra requirement for subword tokenizer](pip"
-        " install forte[subword_tokenize])"
+        " Please refer to extra requirements for additional NLP support."
+        " (pip install forte[nlp])"
         " for more information. "
     ) from err1
 
