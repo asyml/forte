@@ -135,7 +135,8 @@ class TaggingTrainer(BaseTrainer):
         except ImportError as e:
             raise ImportError(
                 " `texar-pytorch` is not installed correctly."
-                " Please refer to [extra requirement for texar-encoder](pip install forte[example])"
+                " Consider install texar via `pip install texar-pytorch`."
+                " Or refer to [extra requirement for extractor system](pip install forte[extractor])"
                 " for more information. "
             ) from e
         while epoch < self.config_data.num_epochs:
