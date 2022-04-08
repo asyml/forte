@@ -59,13 +59,6 @@ jobs:
       - name: Format check with Black
         run: |
           black --line-length 80 --check forte/
-      - name: Test backbone Forte import test
-        run: |
-          # Try to install Forte backbone only and test basic imports.
-          pip install --use-feature=in-tree-build --progress-bar off .
-          # needs to remove it in after torch dependency is removed
-          pip install torch>=1.1.0
-          pytest tests/forte/texar_nondependency_test.py
       - name: Obtain Stave Database Examples
         run: |
           git clone https://github.com/asyml/stave.git
@@ -91,6 +84,13 @@ jobs:
       - name: Install Forte
         run: |
           pip install --use-feature=in-tree-build --progress-bar off .[models,test,wikipedia,data_aug,nlp,ir,texar-encoder,stave,audio_ext,remote,extractor]
+      - name: Test backbone Forte import test
+        run: |
+          # Try to install Forte backbone only and test basic imports.
+          pip install --use-feature=in-tree-build --progress-bar off .
+          # needs to remove it in after torch dependency is removed
+          pip uninstall texar-pytorch
+          pytest tests/forte/texar_nondependency_test.py
       - name: Build ontology
         run: |
           ./scripts/build_ontology_specs.sh
