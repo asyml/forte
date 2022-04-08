@@ -60,7 +60,7 @@ setuptools.setup(
             "nltk",
             "texar-pytorch>=0.1.1",
         ],
-        "subword_tokenize": ["texar-pytorch>=0.1.1"],
+        "nlp": ["texar-pytorch>=0.1.1"],
         "ir": ["texar-pytorch>=0.1.1"],
         "texar-encoder": ["texar-pytorch>=0.1.1"],
         "stave": ["stave>=0.0.1.dev12"],
