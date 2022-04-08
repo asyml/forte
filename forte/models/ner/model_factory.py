@@ -32,9 +32,9 @@ class BiRecurrentConvCRF(nn.Module):
         super().__init__()
         try:
             import texar.torch as texar  # pylint: disable=import-outside-toplevel
-            from texar.torch.modules.embedders import (
+            from texar.torch.modules.embedders import (  # pylint: disable=import-outside-toplevel
                 WordEmbedder,
-            )  # pylint: disable=import-outside-toplevel
+            )
         except ImportError as e:
             raise ImportError(
                 " `texar-pytorch` is not installed correctly."
