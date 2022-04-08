@@ -27,7 +27,8 @@ try:
 except ImportError as e:
     raise ImportError(
         " `texar-pytorch` is not installed correctly."
-        " Please refer to [extra requirement for aug wrapper](pip install forte[data_aug])"
+        " Consider install texar via `pip install texar-pytorch`"
+        " Or refer to [extra requirement for extrator](pip install forte[extractor])"
         " for more information. "
     ) from e
 from asyml_utilities.hyperparams import HParams
