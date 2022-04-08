@@ -59,6 +59,11 @@ jobs:
       - name: Format check with Black
         run: |
           black --line-length 80 --check forte/
+      - name: Test backbone Forte import test
+        run: |
+          # Try to install Forte backbone only and test basic imports.
+          pip install --use-feature=in-tree-build --progress-bar off .
+          pytest tests/forte/texar_nondependency_test.py
       - name: Obtain Stave Database Examples
         run: |
           git clone https://github.com/asyml/stave.git
