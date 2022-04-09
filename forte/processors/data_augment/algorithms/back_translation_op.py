@@ -16,11 +16,11 @@ Class for back translation op. The input is translated
 to another language, then translated back to the original language.
 """
 import random
-from typing import Tuple
+from typing import Any, Dict, Tuple
 
 from forte.data.ontology import Annotation
-from forte.processors.data_augment.algorithms.text_replacement_op import (
-    TextReplacementOp,
+from forte.processors.data_augment.algorithms.single_annotation_op import (
+    SingleAnnotationAugmentOp,
 )
 from forte.common.configuration import Config
 from forte.utils.utils import create_class_with_kwargs
@@ -30,7 +30,7 @@ __all__ = [
 ]
 
 
-class BackTranslationOp(TextReplacementOp):
+class BackTranslationOp(SingleAnnotationAugmentOp):
     r"""
     This class is a replacement op using back translation
     to generate data with the same semantic meanings. The
@@ -41,29 +41,13 @@ class BackTranslationOp(TextReplacementOp):
     It will sample from a Bernoulli distribution to decide
     whether to replace the input, with `prob` as the probability
     of replacement.
-
-    The configuration should have the following fields:
-
-    Config Values:
-
-        - `prob` (float): The probability of replacement, should fall in [0, 1].
-
-        - `src_lang` (str): The source language of back translation.
-
-        - `tgt_lang` (str): The target language of back translation.
-
-        - `model_to` (str): The full qualified name of the model from
-          source language to target language.
-
-        - `model_back` (str): The full qualified name of the model from
-          target language to source language.
-
-        - `device` (str): "cpu" for the CPU or "cuda" for GPU.
     """
 
     def __init__(self, configs: Config):
         super().__init__(configs)
+
         self._validate_configs(configs)
+
         self.model_to = create_class_with_kwargs(
             configs["model_to"],
             class_args={
@@ -72,6 +56,7 @@ class BackTranslationOp(TextReplacementOp):
                 "device": configs["device"],
             },
         )
+
         self.model_back = create_class_with_kwargs(
             configs["model_back"],
             class_args={
@@ -106,7 +91,9 @@ class BackTranslationOp(TextReplacementOp):
         if device not in ("cpu", "cuda"):
             raise ValueError("The device must be 'cpu' or 'cuda'!")
 
-    def replace(self, input_anno: Annotation) -> Tuple[bool, str]:
+    def single_annotation_augment(
+        self, input_anno: Annotation
+    ) -> Tuple[bool, str]:
         r"""
         This function replaces a piece of text with back translation.
 
@@ -120,7 +107,55 @@ class BackTranslationOp(TextReplacementOp):
             replaced string.
         """
         # If the replacement does not happen, return False.
-        if random.random() > self.configs.prob:
+        if random.random() > self.configs["prob"]:
             return False, input_anno.text
         intermediate_text: str = self.model_to.translate(input_anno.text)
         return True, self.model_back.translate(intermediate_text)
+
+    @classmethod
+    def default_configs(cls) -> Dict[str, Any]:
+        """
+        Returns:
+            A dictionary with the default config for this processor.
+        Following are the keys for this dictionary:
+
+            - `augment_entry` (str):
+                This indicates the entity that needs to
+                be augmented. By default, this value is set to
+                `ft.onto.base_ontology.Sentence`.
+
+            - `prob` (float):
+                The probability of replacement, should fall in [0, 1].
+                The Default value is 0.5
+
+            - `src_language` (str):
+                The source language of back translation.
+
+            - `tgt_language` (str):
+                The target language of back translation.
+
+            - `model_to` (str):
+                The full qualified name of the model from
+                source language to target language.
+
+            - `model_back` (str):
+                The full qualified name of the model from
+                target language to source language.
+
+            - `device` (str):
+                "cpu" for the CPU or "cuda" for GPU. The Default
+                value is cpu.
+        """
+        model_class_name = (
+            "forte.processors.data_augment.algorithms."
+            "machine_translator.MarianMachineTranslator"
+        )
+        return {
+            "augment_entry": "ft.onto.base_ontology.Sentence",
+            "prob": 0.5,
+            "model_to": model_class_name,
+            "model_back": model_class_name,
+            "src_language": "en",
+            "tgt_language": "fr",
+            "device": "cpu",
+        }

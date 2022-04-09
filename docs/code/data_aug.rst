@@ -13,6 +13,10 @@ Data Augmentation Processors
 ---------------------------------------------
 .. autoclass:: forte.processors.data_augment.base_data_augment_processor.BaseDataAugmentProcessor
 
+:hidden:`BaseOpProcessor`
+---------------------------------------------
+.. autoclass:: forte.processors.data_augment.base_op_processor.BaseOpProcessor
+
 :hidden:`ReplacementDataAugmentProcessor`
 ---------------------------------------------
 .. autoclass:: forte.processors.data_augment.base_data_augment_processor.ReplacementDataAugmentProcessor
@@ -43,29 +47,17 @@ Data Augmentation Processors
 
 
 
-:hidden:`RandomSwapDataAugmentProcessor`
----------------------------------------------
-.. autoclass:: forte.processors.data_augment.algorithms.eda_processors.RandomSwapDataAugmentProcessor
-    :members:
-
-:hidden:`RandomInsertionDataAugmentProcessor`
----------------------------------------------
-.. autoclass:: forte.processors.data_augment.algorithms.eda_processors.RandomInsertionDataAugmentProcessor
-    :members:
-
-:hidden:`RandomDeletionDataAugmentProcessor`
----------------------------------------------
-.. autoclass:: forte.processors.data_augment.algorithms.eda_processors.RandomDeletionDataAugmentProcessor
-    :members:
-
-
-
 Data Augmentation Ops
 ========================
 
 :hidden:`TextReplacementOp`
 -----------------------------------
 .. autoclass:: forte.processors.data_augment.algorithms.text_replacement_op.TextReplacementOp
+    :members:
+
+:hidden:`SingleAnnotationAugmentOp`
+-----------------------------------
+.. autoclass:: forte.processors.data_augment.algorithms.single_annotation_op.SingleAnnotationAugmentOp
     :members:
 
 :hidden:`DistributionReplacementOp`
@@ -102,7 +94,6 @@ Data Augmentation Ops
     :members:
 
 
-
 :hidden:`BackTranslationOp`
 ------------------------------
 .. autoclass:: forte.processors.data_augment.algorithms.back_translation_op.BackTranslationOp
@@ -135,7 +126,7 @@ Data Augmentation Ops
 
 :hidden:`WordSplittingOp`
 ----------------------------
-.. autoclass:: forte.processors.data_augment.algorithms.word_splitting_processor.RandomWordSplitDataAugmentProcessor
+.. autoclass:: forte.processors.data_augment.algorithms.word_splitting_op.RandomWordSplitDataAugmentOp
     :members:
 
 :hidden:`BaseDataAugmentationOp`
@@ -151,6 +142,21 @@ Data Augmentation Ops
 :hidden:`UniformTypoGenerator`
 --------------------------------
 .. autoclass:: forte.processors.data_augment.algorithms.typo_replacement_op.UniformTypoGenerator
+    :members:
+
+:hidden:`RandomSwapDataAugmentOp`
+---------------------------------------------
+.. autoclass:: forte.processors.data_augment.algorithms.eda_ops.RandomSwapDataAugmentOp
+    :members:
+
+:hidden:`RandomInsertionDataAugmentOp`
+---------------------------------------------
+.. autoclass:: forte.processors.data_augment.algorithms.eda_ops.RandomInsertionDataAugmentOp
+    :members:
+
+:hidden:`RandomDeletionDataAugmentOp`
+---------------------------------------------
+.. autoclass:: forte.processors.data_augment.algorithms.eda_ops.RandomDeletionDataAugmentOp
     :members:
 
 Data Augmentation Models

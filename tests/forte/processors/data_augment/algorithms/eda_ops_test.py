@@ -23,11 +23,7 @@ from forte.pipeline import Pipeline
 from forte.data.multi_pack import MultiPack
 from forte.data.readers import StringReader
 from forte.data.caster import MultiPackBoxer
-from forte.processors.data_augment.algorithms.eda_processors import (
-    RandomDeletionDataAugmentProcessor,
-    RandomInsertionDataAugmentProcessor,
-    RandomSwapDataAugmentProcessor,
-)
+from forte.processors.data_augment.base_op_processor import BaseOpProcessor
 from forte.processors.misc import WhiteSpaceTokenizer
 from ft.onto.base_ontology import Token
 
@@ -83,7 +79,12 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
     )
     @unpack
     def test_random_swap(self, texts, expected_outputs, expected_tokens):
-        self.nlp.add(component=RandomSwapDataAugmentProcessor())
+
+        swap_config = {
+            "data_aug_op": "forte.processors.data_augment.algorithms.eda_ops.RandomSwapDataAugmentOp"
+        }
+
+        self.nlp.add(component=BaseOpProcessor(), config=swap_config)
         self.nlp.initialize()
 
         for idx, m_pack in enumerate(self.nlp.process_dataset(texts)):
@@ -130,7 +131,12 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
     )
     @unpack
     def test_random_insert(self, texts, expected_outputs, expected_tokens):
-        self.nlp.add(component=RandomInsertionDataAugmentProcessor())
+
+        insert_config = {
+            "data_aug_op": "forte.processors.data_augment.algorithms.eda_ops.RandomInsertionDataAugmentOp"
+        }
+
+        self.nlp.add(component=BaseOpProcessor(), config=insert_config)
         self.nlp.initialize()
 
         for idx, m_pack in enumerate(self.nlp.process_dataset(texts)):
@@ -166,9 +172,15 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
     )
     @unpack
     def test_random_delete(self, texts, expected_outputs, expected_tokens):
+
+        insert_config = {
+            "data_aug_op": "forte.processors.data_augment.algorithms.eda_ops.RandomDeletionDataAugmentOp",
+            "data_aug_op_config": {"alpha": 0.5},
+        }
+
         self.nlp.add(
-            component=RandomDeletionDataAugmentProcessor(),
-            config={"alpha": 0.5},
+            component=BaseOpProcessor(),
+            config=insert_config,
         )
         self.nlp.initialize()
 

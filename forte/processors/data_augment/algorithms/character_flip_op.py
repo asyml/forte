@@ -19,14 +19,14 @@ import requests
 
 from forte.data.ontology import Annotation
 from forte.common.configuration import Config
-from forte.processors.data_augment.algorithms.text_replacement_op import (
-    TextReplacementOp,
+from forte.processors.data_augment.algorithms.single_annotation_op import (
+    SingleAnnotationAugmentOp,
 )
 
 __all__ = ["CharacterFlipOp"]
 
 
-class CharacterFlipOp(TextReplacementOp):
+class CharacterFlipOp(SingleAnnotationAugmentOp):
     r"""
     A uniform generator that randomly flips a character with a similar
     looking character from a predefined dictionary imported from
@@ -37,21 +37,15 @@ class CharacterFlipOp(TextReplacementOp):
     Args:
         string: input string whose characters need to be replaced,
         dict_path (str): the `url` or the path to the pre-defined
-                    typo json file,
+                    typo `json` file,
         configs: prob(float): The probability of replacement,
                     should fall in [0, 1].
     """
 
-    def __init__(self, configs: Union[Config, Dict[str, Any]]):
+    def __init__(self, configs: Union[Config, Dict[str, Any]]) -> None:
         super().__init__(configs)
-        if "dict_path" in configs.keys():
-            self.dict_path = configs["dict_path"]
-        else:
-            # default character dictionary
-            self.dict_path = (
-                "https://raw.githubusercontent.com/ArnavParekhji/"
-                + "temporaryJson/main/character_flip.json"
-            )
+
+        self.dict_path = self.configs["dict_path"]
         try:
             r = requests.get(self.dict_path)
             self.data = r.json()
@@ -73,7 +67,9 @@ class CharacterFlipOp(TextReplacementOp):
         else:
             return char
 
-    def replace(self, input_anno: Annotation) -> Tuple[bool, str]:
+    def single_annotation_augment(
+        self, input_anno: Annotation
+    ) -> Tuple[bool, str]:
         r"""
         Takes in the annotated string and performs the character
         flip operation on it that randomly augments few characters
@@ -88,8 +84,32 @@ class CharacterFlipOp(TextReplacementOp):
         """
         augmented_string = ""
         for char in input_anno.text:
-            if char == " " or random.random() > self.configs.prob:
+            if char == " " or random.random() > self.configs["prob"]:
                 augmented_string += char
             else:
                 augmented_string += self._flip(char)
         return True, augmented_string
+
+    @classmethod
+    def default_configs(cls) -> Dict[str, Any]:
+        """
+        Returns:
+            A dictionary with the default config for this processor.
+        Following are the keys for this dictionary:
+            - dict_path (str):
+                the `url` or the path to the pre-defined
+                typo `json` file. One example dictionary is provided
+                at `https://raw.githubusercontent.com/ArnavParekhji`
+                `/temporaryJson/main/character_flip.json`
+                as a default value.
+            - prob (float):
+                The probability of replacement. This value
+                should fall in [0, 1]. Default value is 0.1
+        """
+        return {
+            "dict_path": (
+                "https://raw.githubusercontent.com/ArnavParekhji/"
+                + "temporaryJson/main/character_flip.json"
+            ),
+            "prob": 0.1,
+        }
