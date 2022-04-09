@@ -91,7 +91,12 @@ jobs:
           # needs to remove it in after torch dependency is removed
           pip uninstall -y texar-pytorch
           pytest tests/forte/texar_nondependency_test.py
-          pip install --progress-bar off texar-pytorch>=0.1.2
+          # install lastest texar pytorch
+          git clone https://github.com/asyml/texar-pytorch.git
+          cd texar-pytorch
+          pip install --progress-bar off .
+          cd ..
+          rm -rf texar-pytorch
       - name: Build ontology
         run: |
           ./scripts/build_ontology_specs.sh
