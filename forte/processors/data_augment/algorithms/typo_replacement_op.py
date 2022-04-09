@@ -19,8 +19,8 @@ from typing import Tuple, Union, Dict, Any
 
 import requests
 from forte.data.ontology import Annotation
-from forte.processors.data_augment.algorithms.text_replacement_op import (
-    TextReplacementOp,
+from forte.processors.data_augment.algorithms.single_annotation_op import (
+    SingleAnnotationAugmentOp,
 )
 from forte.common.configuration import Config
 
@@ -65,21 +65,10 @@ class UniformTypoGenerator:
             return word
 
 
-class TypoReplacementOp(TextReplacementOp):
+class TypoReplacementOp(SingleAnnotationAugmentOp):
     r"""
     This class is a replacement op using a pre-defined
     spelling mistake dictionary to simulate spelling mistake.
-
-    Args:
-        configs:
-            - prob (float): The probability of replacement,
-              should fall in [0, 1].
-            - dict_path (str): the `url` or the path to the pre-defined
-              typo json file. The key is a word we want to replace.
-              The value is a list containing various typos
-              of the corresponding key.
-            - typo_generator (str): A generator that takes in a word and
-              outputs the replacement typo.
     """
 
     def __init__(self, configs: Union[Config, Dict[str, Any]]):
@@ -99,7 +88,9 @@ class TypoReplacementOp(TextReplacementOp):
                 "The valid options for typo_generator are [uniform]"
             )
 
-    def replace(self, input_anno: Annotation) -> Tuple[bool, str]:
+    def single_annotation_augment(
+        self, input_anno: Annotation
+    ) -> Tuple[bool, str]:
         r"""
         This function replaces a word from a typo dictionary.
 
@@ -115,3 +106,25 @@ class TypoReplacementOp(TextReplacementOp):
             return False, input_anno.text
         word: str = self.typo_generator.generate(input_anno.text)
         return True, word
+
+    @classmethod
+    def default_configs(cls):
+        r"""
+        Returns:
+            A dictionary with the default config for this processor.
+        Following are the keys for this dictionary:
+            - prob (float): The probability of replacement,
+              should fall in [0, 1]. Default value is 0.1
+            - dict_path (str): the `url` or the path to the pre-defined
+              typo json file. The key is a word we want to replace.
+              The value is a list containing various typos
+              of the corresponding key.
+            - typo_generator (str): A generator that takes in a word and
+              outputs the replacement typo.
+        """
+        return {
+            "prob": 0.1,
+            "dict_path": "https://raw.githubusercontent.com/wanglec/"
+            + "temporaryJson/main/misspelling.json",
+            "typo_generator": "uniform",
+        }
