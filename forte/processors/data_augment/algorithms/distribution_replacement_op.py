@@ -18,8 +18,8 @@ import requests
 from forte.common.configurable import Configurable
 from forte.common.configuration import Config
 from forte.data.ontology import Annotation
-from forte.processors.data_augment.algorithms.text_replacement_op import (
-    TextReplacementOp,
+from forte.processors.data_augment.algorithms.single_annotation_op import (
+    SingleAnnotationAugmentOp,
 )
 from forte.utils.utils import create_class_with_kwargs
 
@@ -28,52 +28,10 @@ __all__ = [
 ]
 
 
-class DistributionReplacementOp(TextReplacementOp, Configurable):
+class DistributionReplacementOp(SingleAnnotationAugmentOp, Configurable):
     r"""
     This class is a replacement op to replace the input word
     with a new word that is sampled by a sampler from a distribution.
-
-    Config Values:
-
-        - `prob`:
-          The probability of whether to replace the
-          input, it should fall in `[0, 1]`.
-
-        - `sampler_data`:
-          A dictionary representing the configurations
-          required to create the required sampler.
-
-            - type:
-              The type of sampler to be used (pass the
-              path of the class which defines the required sampler)
-
-            - kwargs:
-              This dictionary contains the data that is to be
-              fed to the required sampler. 2 possible values are
-              `sampler_data` and `data_path`.If both parameters are passed,
-              the data read from the file pointed to by `data_path` will be
-              considered.
-
-                - `sampler_data`:
-                  Raw input to the sampler, This will be passed as the
-                  `sampler_data`
-                  config to the required sampler.
-
-                - `data_path`:
-                  The path to the file that contains the
-                  the input that will be given to the sampler. For example,
-                  when using `UniformSampler`, `data_path` will point to a file
-                  (or `URl`) containing a list of values to be used as
-                  `sampler_data` in `UniformSampler`.
-
-            .. code-block:: python
-
-                {
-                    "type": "forte.processors.data_augment.algorithms.sampler.UniformSampler",
-                    "kwargs":{
-                        "sample": ["apple", "banana", "orange"]
-                    }
-                }
     """
 
     def __init__(self, configs: Union[Config, Dict[str, Any]]):
@@ -81,7 +39,9 @@ class DistributionReplacementOp(TextReplacementOp, Configurable):
         self.configs = self.make_configs(configs)
         self.cofigure_sampler()
 
-    def replace(self, input_anno: Annotation) -> Tuple[bool, str]:
+    def single_annotation_augment(
+        self, input_anno: Annotation
+    ) -> Tuple[bool, str]:
         r"""
         This function replaces a word by sampling from a distribution.
 
@@ -105,7 +65,7 @@ class DistributionReplacementOp(TextReplacementOp, Configurable):
         according to the configuration values
         """
         try:
-            if "data_path" in self.configs["sampler_config"]["kwargs"].keys():
+            if "data_path" in self.configs["sampler_config"]["kwargs"]:
                 distribution_path = self.configs["sampler_config"]["kwargs"][
                     "data_path"
                 ]
@@ -127,14 +87,61 @@ class DistributionReplacementOp(TextReplacementOp, Configurable):
                 },
             )
         except KeyError as error:
-            print("Could not configure Sampler: " + repr(error))
+            raise Exception from error
 
     @classmethod
     def default_configs(cls):
+        r"""
+        Returns:
+            A dictionary with the default config for this processor.
+        Following are the keys for this dictionary:
+
+            - `prob`:
+                The probability of whether to replace the
+                input, it should fall in `[0, 1]`. Default
+                value is 0.1
+
+            - `sampler_data`:
+                A dictionary representing the configurations
+                required to create the required sampler.
+
+                - type:
+                    The type of sampler to be used (pass the
+                    path of the class which defines the required sampler)
+
+                - kwargs:
+                    This dictionary contains the data that is to be
+                    fed to the required sampler. 2 possible values are
+                    `sampler_data` and `data_path`.If both parameters are passed,
+                    the data read from the file pointed to by `data_path` will be
+                    considered.
+
+                    - `sampler_data`:
+                        Raw input to the sampler, This will be passed as the
+                        `sampler_data`
+                        config to the required sampler.
+
+                    - `data_path`:
+                        The path to the file that contains the
+                        the input that will be given to the sampler. For example,
+                        when using `UniformSampler`, `data_path` will point to a file
+                        (or `URl`) containing a list of values to be used as
+                        `sampler_data` in `UniformSampler`.
+
+                .. code-block:: python
+
+                    {
+                        "type": "forte.processors.data_augment.algorithms.sampler.UniformSampler",
+                        "kwargs":{
+                            "sample": ["apple", "banana", "orange"]
+                        }
+                    }
+        """
         return {
             "prob": 0.1,
             "sampler_config": {
                 "type": "forte.processors.data_augment.algorithms.sampler.UniformSampler",
-                "kwargs": {"sampler_data": []},
+                "kwargs": {"sampler_data": []}
+                # "sampler_data": [],
             },
         }

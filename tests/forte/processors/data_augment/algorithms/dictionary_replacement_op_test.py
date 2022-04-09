@@ -48,8 +48,16 @@ class TestDictionaryReplacementOp(unittest.TestCase):
         data_pack.add_entry(token_1)
         data_pack.add_entry(token_2)
 
+        augmented_data_pack = self.dra.perform_augmentation(data_pack)
+
+        augmented_tokens = list(
+            augmented_data_pack.get("ft.onto.base_ontology.Token")
+        )
+        aug_token_1 = augmented_tokens[0]
+        aug_token_2 = augmented_tokens[1]
+
         self.assertIn(
-            self.dra.replace(token_1)[1],
+            aug_token_1.text,
             [
                 "eat",
                 "feed",
@@ -66,7 +74,7 @@ class TestDictionaryReplacementOp(unittest.TestCase):
             ],
         )
         self.assertIn(
-            self.dra.replace(token_2)[1],
+            aug_token_2.text,
             [
                 "telephone",
                 "phone",
