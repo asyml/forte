@@ -13,3 +13,4 @@
 # limitations under the License.
 
 from forte.processors.nlp.eliza_processor import *
+from forte.processors.nlp.ner_predictor import *
