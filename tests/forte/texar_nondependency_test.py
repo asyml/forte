@@ -28,7 +28,7 @@ class ForteImportTest(unittest.TestCase):
         from forte.processors.misc import AnnotationRemover
         from forte.processors.base import BaseProcessor
         from forte.processors.data_augment import BaseDataAugmentProcessor
-        from forte.processors.ir import SearchProcessor
+        from forte.processors.ir.search_processor import SearchProcessor
         from forte.processors.nlp import CoNLLNERPredictor
         from forte.processors.third_party import (
             MicrosoftBingTranslator,
