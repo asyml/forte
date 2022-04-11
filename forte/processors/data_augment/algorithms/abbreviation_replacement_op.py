@@ -36,9 +36,9 @@ class AbbreviationReplacementOp(SingleAnnotationAugmentOp):
 
     Args:
         configs:
-            - prob (float): The probability of replacement,
+            - prob: The probability of replacement,
               should fall in [0, 1].
-            - dict_path (str): the `url` or the path to the pre-defined
+            - dict_path: the `url` or the path to the pre-defined
              abbreviation json file. The key is a word / phrase we want to replace.
              The value is an abbreviated word of the corresponding key.
     """
@@ -68,7 +68,7 @@ class AbbreviationReplacementOp(SingleAnnotationAugmentOp):
         This function replaces a word from an abbreviation dictionary.
 
         Args:
-            input_anno (Annotation): The input annotation.
+            input_anno: The input annotation.
         Returns:
             A tuple, where the first element is a boolean value indicating
             whether the replacement happens, and the second element is the
@@ -89,9 +89,9 @@ class AbbreviationReplacementOp(SingleAnnotationAugmentOp):
         Returns:
             A dictionary with the default config for this processor.
         Following are the keys for this dictionary:
-            - prob (float): The probability of replacement,
+            - prob: The probability of replacement,
               should fall in [0, 1]. Default value is 0.1
-            - dict_path (str): the `url` or the path to the pre-defined
+            - dict_path: the `url` or the path to the pre-defined
               abbreviation json file. The key is a word / phrase we want
               to replace. The value is an abbreviated word of the
               corresponding key.
