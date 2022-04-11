@@ -733,8 +733,6 @@ class DataStoreTest(unittest.TestCase):
         self.assertEqual(self.data_store._type_attributes["ft.onto.base_ontology.Document"]["parent_class"],
                          {"forte.data.ontology.top.Annotation", "forte.data.ontology.core.Entry"})
 
-        self.assertEqual(self.data_store._type_attributes["ft.onto.base_ontology.Title"]["parent_class"],
-                         set())
         self.assertFalse(
             self.data_store._is_subclass(
                 "ft.onto.base_ontology.Title", forte.data.ontology.top.Annotation, no_dynamic_subclass=True
@@ -750,7 +748,6 @@ class DataStoreTest(unittest.TestCase):
             )
         )
         self.data_store._type_attributes["ft.onto.base_ontology.Title"]["parent_class"].add("forte.data.ontology.top.Link")
-
         self.assertTrue(
             self.data_store._is_subclass(
                 "ft.onto.base_ontology.Title", forte.data.ontology.top.Link
