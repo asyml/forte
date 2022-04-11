@@ -98,7 +98,7 @@ class BackTranslationOp(SingleAnnotationAugmentOp):
         This function replaces a piece of text with back translation.
 
         Args:
-            input_anno (Entry): An annotation, could be a word, sentence
+            input_anno: An annotation, could be a word, sentence
               or document.
 
         Returns:

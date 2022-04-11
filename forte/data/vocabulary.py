@@ -95,19 +95,19 @@ class Vocabulary(Generic[ElementType]):
           - 0->element0
 
     Args:
-        method (str): The method to represent element in vocabulary, currently
+        method: The method to represent element in vocabulary, currently
             supporting "indexing" and "one-hot".
-        use_pad (bool): Whether to add <PAD> element to the vocabulary on
+        use_pad: Whether to add <PAD> element to the vocabulary on
             creation. It will be added to the vocabulary first, but the id of
             it depends on the specific settings.
-        use_unk (bool): Whether to add <UNK> element to the vocabulary on
+        use_unk: Whether to add <UNK> element to the vocabulary on
             creation. Elements that are not found in vocabulary will be
             directed to <UNK> element. It will be added right after the <PAD>
             element if provided.
-        special_tokens (List[str]): Additional special tokens to be added, they
+        special_tokens: Additional special tokens to be added, they
             will be added at the beginning of vocabulary (but right after the
             <UNK> token) one by one.
-        do_counting (bool): Whether the vocabulary class will count the
+        do_counting: Whether the vocabulary class will count the
             elements.
         pad_value: A customized value/representation to be used for
             padding, for example, following the PyTorch convention you may
@@ -223,8 +223,8 @@ class Vocabulary(Generic[ElementType]):
         a special required element (i.e `PAD` or `UNK`).
 
         Args:
-            element_id (int): The id to be set for the special element.
-            element_name (str): The name of this element to be set, it can
+            element_id: The id to be set for the special element.
+            element_name: The name of this element to be set, it can
               be one of `PAD`, `UNK`.
             representation: The representation/value that this element should
               be assigned. Default is None, then its representation will be
@@ -278,15 +278,15 @@ class Vocabulary(Generic[ElementType]):
             but should let the `init` function to handle that.
 
         Args:
-            element (str): The surface form of this special element.
-            element_id (Optional[int]): The to be used for this special token.
+            element: The surface form of this special element.
+            element_id: The to be used for this special token.
                 If not provided, the vocabulary will use the next id internally.
                 If the provided id is occupied, a `ValueError` will be thrown.
                 The id can be any integer, including negative ones.
             representation: The representation you want to assign to this
                 special token. If None, the representation may be computed
                 based on the index (which depends on the vocabulary setting).
-            special_token_name (Optional[str]): An internal name of
+            special_token_name: An internal name of
                 this special token. This only matters for the base special
                 tokens: <PAD> or <UNK>, and the name should be "PAD" and "UNK"
                 respectively. Any other name here is considered invalid,
@@ -323,14 +323,14 @@ class Vocabulary(Generic[ElementType]):
         r"""This function will add a regular element to the vocabulary.
 
         Args:
-            element (Hashable): The element to be added.
+            element: The element to be added.
             representation: The vocabulary representation of this element
                 will use this value. For example, you may want to use `-100`
                 for ignored tokens for PyTorch skipped tokens. Note that the
                 class do not check whether this representation is used by
                 another element, so the caller have to manage the behavior
                 itself.
-            count (int): the count to be incremented for this element, default
+            count: the count to be incremented for this element, default
                 is 1 (i.e. consider it appear once on every add). This value
                 will have effect only if `do_counting` is True.
 
@@ -367,7 +367,7 @@ class Vocabulary(Generic[ElementType]):
         r"""This function will map id to element.
 
         Args:
-            idx (int): The queried id of element.
+            idx: The queried id of element.
 
         Returns:
             The corresponding element if exist. Check the behavior
@@ -384,7 +384,7 @@ class Vocabulary(Generic[ElementType]):
         r"""This function will map element to representation.
 
         Args:
-            element (Hashable): The queried element. It can be either the same
+            element: The queried element. It can be either the same
               type as the element, or string (for the special tokens).
 
         Returns:
@@ -453,7 +453,7 @@ class Vocabulary(Generic[ElementType]):
         r"""This function checks whether an element is added to vocabulary.
 
         Args:
-            element (Hashable): The queried element.
+            element: The queried element.
 
         Returns:
             bool: Whether element is found.
@@ -577,9 +577,9 @@ class FrequencyVocabFilter(VocabFilter):
 
     Args:
         vocab: The vocabulary object.
-        min_frequency (int): The min frequency threshold, default -1 (i.e. no
+        min_frequency: The min frequency threshold, default -1 (i.e. no
           frequency check for min).
-        max_frequency (int): The max frequency threshold, default -1 (i.e. no
+        max_frequency: The max frequency threshold, default -1 (i.e. no
           frequency check for max).
 
     """

@@ -81,9 +81,9 @@ class SubwordExtractor(BaseExtractor):
         r"""Extract the subword feature of one instance.
 
         Args:
-            pack (Datapack): The datapack that contains the current
+            pack: The datapack that contains the current
                 instance.
-            context (Annotation): The context is an Annotation entry where
+            context: The context is an Annotation entry where
                 features will be extracted within its range. If None, then the
                 whole data pack will be used as the context. Default is None.
 
