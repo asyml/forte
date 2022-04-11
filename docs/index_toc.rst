@@ -21,6 +21,7 @@ Chapter 2. Building NLP Pipeline
    toc/pipeline_component
    notebook_tutorial/wrap_MT_inference_pipeline
    notebook_tutorial/text_classification_pipeline
+   notebook_tutorial/Text_classification_Banking77
 
 
 
