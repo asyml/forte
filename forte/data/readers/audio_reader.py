@@ -74,6 +74,7 @@ class AudioReader(PackReader):
         r"""This defines a basic configuration structure for audio reader.
 
         Here:
+
           - file_ext (str): The file extension to find the target audio files
              under a specific directory path. Default value is ".flac".
 

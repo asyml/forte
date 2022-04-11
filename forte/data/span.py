@@ -29,8 +29,8 @@ class Span:
     key.
 
     Args:
-        begin (int): The offset of the first character in the span.
-        end (int): The offset of the last character in the span + 1. So the
+        begin: The offset of the first character in the span.
+        end: The offset of the last character in the span + 1. So the
             span is a left-closed and right-open interval ``[begin, end)``.
     """
 

@@ -188,8 +188,8 @@ class BaseIndex(Generic[EntryType]):
         built, this will throw a :class:`~forte.common.exception.PackIndexError`.
 
         Args:
-            tid (int): the tid of the entry being looked up.
-            as_parent (bool): If `as_patent` is True, will look up
+            tid: the tid of the entry being looked up.
+            as_parent: If `as_patent` is True, will look up
                 :attr:`link_index["parent_index"] and return the tids of links
                 whose parent is ``tid``. Otherwise,  will look up
                 :attr:`link_index["child_index"] and return the tids of links
@@ -223,7 +223,7 @@ class BaseIndex(Generic[EntryType]):
               corresponding links.
 
         Args:
-            links (list): a list of links to be added into the index.
+            links: a list of links to be added into the index.
         """
         if not self.link_index_on:
             raise PackIndexError("Link index has not been built.")
@@ -241,7 +241,7 @@ class BaseIndex(Generic[EntryType]):
         to groups.
 
         Args:
-            groups (list): a list of groups to be added into the index.
+            groups: a list of groups to be added into the index.
         """
         logger.debug("Updating group index")
 
