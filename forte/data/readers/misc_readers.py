@@ -33,7 +33,7 @@ __all__ = [
 ]
 
 
-class PlainTextReaderTerminalReader(PackReader):
+class TerminalReader(PackReader):
     r"""A reader designed to read text from the terminal."""
 
     # pylint: disable=unused-argument

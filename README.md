@@ -64,6 +64,8 @@ This allows developers to fully utilize the strength of individual module, combi
 Forte not only makes it easy to integrate with arbitrary 3rd party tools (Check out these [examples](./examples)!), but also brings technology to you by offering a miscellaneous collection of deep learning modules via Texar, and a convenient model-data interface for casting tasks to models.
 
 ## Quick Start Guide
+Consider a case we want to get words in the sentence and also extract entities from the sentence. We can write two processors for the two separate tasks.
+First, we imports all required libraries.
 ```
 from forte import Pipeline
 from forte.processors.base import PackProcessor
@@ -73,19 +75,29 @@ from forte.data.ontology.top import Generics
 from typing import Optional, Dict, Any
 from forte.data.readers import TerminalReader
 from fortex.spacy import SpacyProcessor
-
-
-
+import re
+```
+In forte, we use data entry with different entry types to represent data.
+The following class is an example of data entry storing `value`. New user
+don't need to pay too much attention about it and just need to use it as it is.
+```
 @dataclass
-class NewType(Generics):
-    """A dummy generic type."""
+class Word(Generics):
+    """A dummy generic type for words."""
     value: Optional[str] = None
     def __init__(self, pack, value):
         super().__init__(pack)
         self.value = value
-
-class DummyPackProcessor(PackProcessor):
-    """A dummy processor that writes new data entry in the data pack"""
+```
+Next we can write a simple customized processor for the first task, split sentences into words.
+There are two steps for the sentence processing.
+First, we need to strip all punctuations as splitted words shouldn't contain them.
+Second, we need to split stripped sentences into words and write words into the data pack.
+```
+class WordSplitPackProcessor(PackProcessor):
+    """A processor that removes punctuations in sentences in the data pack
+    and split sentences into words and write words into the data pack.
+    """
     def __init__(self):
         super().__init__()
 
@@ -93,27 +105,42 @@ class DummyPackProcessor(PackProcessor):
         super().initialize(resources, configs)
 
     def _process(self, input_pack: DataPack):
-        # write a data type NewType into the data pack
-        NewType(pack=input_pack, value="[PACK]")
+        # write a data type Word into the data pack
+        for sentence in pack.get("ft.onto.base_ontology.Sentence"):
+            # first step: strip all punctuations
+            words = re.sub(r'[^\w\s]','',sentence.text).split(" ")
+            # second step: split stripped sentences into words and write
+            # words into the data pack
+            for w in words:
+                Word(pack=input_pack, value=w)
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
         return {"test": "test, successor"}
-
-
+```
+Finally, we set up pipeline and add all pipeline components into it, and process
+input read from the terminal.
+```
 pipeline: Pipeline = Pipeline[DataPack]()
+# add a reader that reads input by prompting user in the terminal
 pipeline.set_reader(TerminalReader())
+# NOTE: we can add multiple processors and they process the input sequentially
+#       without a conflict.
+# add a SpacyProcessor from third party library that extract entity mentions
 pipeline.add(SpacyProcessor(), {"processors": ["sentence", "ner"]})
-pipeline.add(DummyPackProcessor())
+# add the customized processor that split sentences into words
+pipeline.add(WordSplitPackProcessor())
 for pack in pipeline.initialize().process_dataset():
-    print("NewType data: ", list(pack.get(NewType)))
     for sentence in pack.get("ft.onto.base_ontology.Sentence"):
         print("The sentence is: ", sentence.text)
         print("The entities are: ")
         for ent in pack.get("ft.onto.base_ontology.EntityMention", sentence):
             print(ent.text, ent.ner_type)
+    print("Customized WordSplitPackProcessor results: ")
+    for token in pack.get(Word):
+        print(token, end = " ")
+    print()
 ```
-
 
 
 -----------------
