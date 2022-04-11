@@ -48,6 +48,3 @@ class ForteImportTest(unittest.TestCase):
     def test_import_trainer(self):
         from forte.trainer.base import BaseTrainer
         from forte.trainer.ner_trainer import CoNLLNERTrainer
-
-    # def test_import_utils(self):
-    #     from forte.utils import
