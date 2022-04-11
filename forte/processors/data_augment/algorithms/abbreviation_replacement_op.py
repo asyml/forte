@@ -85,15 +85,15 @@ class AbbreviationReplacementOp(SingleAnnotationAugmentOp):
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
         r"""
-       Returns:
-           A dictionary with the default config for this processor.
-       Following are the keys for this dictionary:
-           - prob (float): The probability of replacement,
-             should fall in [0, 1]. Default value is 0.1
-           - dict_path (str): the `url` or the path to the pre-defined
-             abbreviation json file. The key is a word / phrase we want to replace.
-             The value is an abbreviated word of the corresponding key.
-       """
+        Returns:
+            A dictionary with the default config for this processor.
+        Following are the keys for this dictionary:
+            - prob (float): The probability of replacement,
+              should fall in [0, 1]. Default value is 0.1
+            - dict_path (str): the `url` or the path to the pre-defined
+              abbreviation json file. The key is a word / phrase we want to replace.
+              The value is an abbreviated word of the corresponding key.
+        """
         return {
             "dict_path": "https://raw.githubusercontent.com/GEM-benchmark/NL-Augmenter/main/transformations"
             + "/abbreviation_transformation/phrase_abbrev_dict.json",

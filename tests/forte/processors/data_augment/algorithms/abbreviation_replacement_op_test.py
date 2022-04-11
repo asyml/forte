@@ -40,7 +40,9 @@ class TestAbbreviationReplacementOp(unittest.TestCase):
 
         augmented_data_pack = self.abre.perform_augmentation(data_pack)
 
-        augmented_token = list(augmented_data_pack.get('ft.onto.base_ontology.Token'))[0]
+        augmented_token = list(
+            augmented_data_pack.get("ft.onto.base_ontology.Token")
+        )[0]
 
         self.assertIn(
             augmented_token.text,
