@@ -21,6 +21,7 @@ from forte.utils import get_class
 from forte.data.base_store import BaseStore
 from forte.data.ontology.top import Annotation, AudioAnnotation
 from forte.common import constants
+from forte.utils.utils import get_full_module_name
 
 __all__ = ["DataStore"]
 
@@ -366,6 +367,48 @@ class DataStore(BaseStore):
         entry += self._num_attributes_for_type(type_name) * [None]
 
         return entry
+
+    def _is_subclass(
+        self, type_name: str, cls, no_dynamic_subclass: bool = False
+    ) -> bool:
+        r"""This function takes a fully qualified ``type_name`` class name,
+        ``cls`` class and returns whether ``type_name``  class is the``cls``
+        subclass or not. This function accpect two types of class: the class defined
+        in forte, or the classes in user provided ontology file.
+
+        Args:
+            type_name: A fully qualified name of an entry class.
+            cls: An entry class.
+            no_dynamic_subclass: A boolean value controlling where to look for subclasses.
+            If True, this function will not check the subclass relations via `issubclass`
+            but rely on pre-populated states only.
+
+        Returns:
+            A boolean value whether ``type_name``  class is the``cls``
+            subclass or not.
+
+        """
+        if type_name not in self._type_attributes:
+            self._type_attributes[type_name] = {}
+        if "parent_class" not in self._type_attributes[type_name]:
+            self._type_attributes[type_name]["parent_class"] = set()
+        cls_qualified_name = get_full_module_name(cls)
+        type_name_parent_class = self._type_attributes[type_name][
+            "parent_class"
+        ]
+
+        if no_dynamic_subclass:
+            return cls_qualified_name in type_name_parent_class
+        else:
+            if cls_qualified_name in type_name_parent_class:
+                return True
+            else:
+                entry_class = get_class(type_name)
+                if issubclass(entry_class, cls):
+                    type_name_parent_class.add(cls_qualified_name)
+                    return True
+                else:
+                    return False
 
     def _is_annotation(self, type_name: str) -> bool:
         r"""This function takes a type_id and returns whether a type

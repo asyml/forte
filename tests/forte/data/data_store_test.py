@@ -705,6 +705,56 @@ class DataStoreTest(unittest.TestCase):
                 attribute_result, entry_name_attributes_dict[entry_name]
             )
 
+    def test_is_subclass(self):
+
+        import forte
+
+        self.assertEqual(self.data_store._type_attributes["ft.onto.base_ontology.Document"]["parent_class"],
+                         set())
+
+        self.assertTrue(
+            self.data_store._is_subclass(
+                'ft.onto.base_ontology.Document', forte.data.ontology.top.Annotation
+            )
+        )
+
+        self.assertTrue(
+            self.data_store._is_subclass(
+                "ft.onto.base_ontology.Document", forte.data.ontology.core.Entry
+            )
+        )
+
+        self.assertFalse(
+            self.data_store._is_subclass(
+                "ft.onto.base_ontology.Document", forte.data.ontology.top.Link
+            )
+        )
+
+        self.assertEqual(self.data_store._type_attributes["ft.onto.base_ontology.Document"]["parent_class"],
+                         {"forte.data.ontology.top.Annotation", "forte.data.ontology.core.Entry"})
+
+        self.assertFalse(
+            self.data_store._is_subclass(
+                "ft.onto.base_ontology.Title", forte.data.ontology.top.Annotation, no_dynamic_subclass=True
+            )
+        )
+
+        self.data_store._type_attributes["ft.onto.base_ontology.Title"]["parent_class"].add(
+            "forte.data.ontology.top.Annotation")
+
+        self.assertTrue(
+            self.data_store._is_subclass(
+                "ft.onto.base_ontology.Title", forte.data.ontology.top.Annotation, no_dynamic_subclass=True
+            )
+        )
+        self.data_store._type_attributes["ft.onto.base_ontology.Title"]["parent_class"].add("forte.data.ontology.top.Link")
+        self.assertTrue(
+            self.data_store._is_subclass(
+                "ft.onto.base_ontology.Title", forte.data.ontology.top.Link
+            )
+        )
+
+
 
 if __name__ == "__main__":
     unittest.main()
