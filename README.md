@@ -64,7 +64,8 @@ This allows developers to fully utilize the strength of individual module, combi
 Forte not only makes it easy to integrate with arbitrary 3rd party tools (Check out these [examples](./examples)!), but also brings technology to you by offering a miscellaneous collection of deep learning modules via Texar, and a convenient model-data interface for casting tasks to models.
 
 ## Quick Start Guide
-Consider a case we want to get words in the sentence and also extract entities from the sentence. We can write two processors for the two separate tasks.
+Here we provide an example to user to get start with Forte easier. Consider a case we want to get words in the sentence and also extract entities from the sentence. We can write two processors for the two separate tasks.
+
 First, we imports all required libraries.
 ```
 from forte import Pipeline
@@ -77,9 +78,9 @@ from forte.data.readers import TerminalReader
 from fortex.spacy import SpacyProcessor
 import re
 ```
-In forte, we use data entry with different entry types to represent data.
-The following class is an example of data entry storing `value`. New user
-don't need to pay too much attention about it and just need to use it as it is.
+In Forte, we use data entry with different entry types to represent data.
+The following class is an example of data entry storing `value`. New User
+doesn't need to pay too much attention about it and can just use it as it is.
 ```
 @dataclass
 class Word(Generics):
@@ -119,16 +120,16 @@ class WordSplitPackProcessor(PackProcessor):
         return {"test": "test, successor"}
 ```
 Finally, we set up pipeline and add all pipeline components into it, and process
-input read from the terminal.
 ```
 pipeline: Pipeline = Pipeline[DataPack]()
 # add a reader that reads input by prompting user in the terminal
 pipeline.set_reader(TerminalReader())
-# NOTE: we can add multiple processors and they process the input sequentially
-#       without a conflict.
-# add a SpacyProcessor from third party library that extract entity mentions
+# NOTE: we can add multiple processors into the pipeline
+#       and pipeline processes the input sequentially without a conflict.
+
+# add the first processor: SpacyProcessor from third party library that extract entity mentions
 pipeline.add(SpacyProcessor(), {"processors": ["sentence", "ner"]})
-# add the customized processor that split sentences into words
+# add the second processor: the customized processor that split sentences into words
 pipeline.add(WordSplitPackProcessor())
 for pack in pipeline.initialize().process_dataset():
     for sentence in pack.get("ft.onto.base_ontology.Sentence"):
@@ -141,6 +142,7 @@ for pack in pipeline.initialize().process_dataset():
         print(token, end = " ")
     print()
 ```
+
 
 
 -----------------
