@@ -15,8 +15,8 @@ import random
 from typing import Tuple, Union, Dict, Any
 
 from forte.common.configuration import Config
-from forte.processors.data_augment.algorithms.text_replacement_op import (
-    TextReplacementOp,
+from forte.processors.data_augment.algorithms.single_annotation_op import (
+    SingleAnnotationAugmentOp,
 )
 from forte.utils.utils import create_class_with_kwargs
 
@@ -27,7 +27,7 @@ __all__ = [
 from ft.onto.base_ontology import Token
 
 
-class DictionaryReplacementOp(TextReplacementOp):
+class DictionaryReplacementOp(SingleAnnotationAugmentOp):
     r"""
     This class is a replacement op utilizing the dictionaries,
     such as WORDNET, to replace the input word with an synonym.
@@ -35,21 +35,15 @@ class DictionaryReplacementOp(TextReplacementOp):
     retrieving synonyms with the same POS. It will sample from a
     Bernoulli distribution to decide whether to replace the input,
     with `prob` as the probability of replacement.
-
-    The config should contain the following fields:
-
-        - `dictionary`: The full qualified name of the dictionary class.
-        - `prob`: The probability of replacement, should fall in [0, 1].
-        - `lang`: The language of the text.
     """
 
     def __init__(self, configs: Union[Config, Dict[str, Any]]):
         super().__init__(configs)
         self.dictionary = create_class_with_kwargs(
-            configs["dictionary_class"], class_args={}
+            self.configs["dictionary_class"], class_args={}
         )
 
-    def replace(self, input_anno: Token) -> Tuple[bool, str]:  # type: ignore
+    def single_annotation_augment(self, input_anno: Token) -> Tuple[bool, str]:  # type: ignore
         r"""
         This function replaces a word with synonyms from a WORDNET dictionary.
 
@@ -70,3 +64,28 @@ class DictionaryReplacementOp(TextReplacementOp):
         if len(synonyms) == 0:
             return False, word
         return True, random.choice(synonyms)
+
+    @classmethod
+    def default_configs(cls) -> Dict[str, Any]:
+        r"""
+        Returns:
+            A dictionary with the default config for this processor.
+        Following are the keys for this dictionary:
+            - `dictionary` (dict):
+                The full qualified name of the dictionary class.
+            - `prob` (float):
+                The probability of replacement, should fall in [0, 1].
+                Default value is 0.1
+            - `lang` (str):
+                The language of the text.
+        """
+
+        dict_name = (
+            "forte.processors.data_augment."
+            "algorithms.dictionary.WordnetDictionary"
+        )
+        return {
+            "dictionary_class": dict_name,
+            "prob": 0.5,
+            "lang": "eng",
+        }
