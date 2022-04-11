@@ -11,15 +11,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-from typing import List, Iterator, Tuple, Optional, Any
+from typing import Dict, List, Iterator, Tuple, Optional, Any
 import uuid
 from bisect import bisect_left
 from heapq import heappush, heappop
+from sortedcontainers import SortedList
 
 from forte.utils import get_class
 from forte.data.base_store import BaseStore
-from forte.data.ontology.top import Annotation
+from forte.data.ontology.top import Annotation, AudioAnnotation
 from forte.common import constants
 from forte.utils.utils import get_full_module_name
 
@@ -30,7 +30,9 @@ class DataStore(BaseStore):
     # TODO: temporarily disable this for development purposes.
     # pylint: disable=pointless-string-statement
 
-    def __init__(self, onto_file_path: Optional[str] = None):
+    def __init__(
+        self, onto_file_path: Optional[str] = None, dynamically_add_type=True
+    ):
         r"""An implementation of the data store object that mainly uses
         primitive types. This class will be used as the internal data
         representation behind data pack. The usage of primitive types provides
@@ -122,15 +124,23 @@ class DataStore(BaseStore):
             onto_file_path (str, optional): the path to the ontology file.
         """
         super().__init__()
-        self.onto_file_path = onto_file_path
+
+        if onto_file_path is None and not dynamically_add_type:
+            raise RuntimeError(
+                "DataStore is initialized with no existing types. Setting"
+                "dynamically_add_type to False without providing onto_file_path"
+                "will lead to no usable type in DataStore."
+            )
+        self._onto_file_path = onto_file_path
+        self._dynamically_add_type = dynamically_add_type
 
         """
         The ``_type_attributes`` is a private dictionary that provides
         ``type_name``, their parent entry, and the order of corresponding attributes.
         The keys are fully qualified names of every type; The value is a dictionary with
         two keys. Key ``attribute`` provides an inner dictionary with all valid attributes
-        for this type and the indices of attributes among these lists. Key ``parent_entry``
-        is a string representing the direct parent of this type.
+        for this type and the indices of attributes among these lists. Key ``parent_class``
+        is a string representing the ancesters of this type.
 
         This structure is supposed to be built dynamically. When a user adds new entries,
         data_store will check unknown types and add them to ``_type_attributes``.
@@ -145,20 +155,20 @@ class DataStore(BaseStore):
             #       "attributes": {"pos": 4, "ud_xpos": 5,
             #               "lemma": 6, "chunk": 7, "ner": 8, "sense": 9,
             #               "is_root": 10, "ud_features": 11, "ud_misc": 12},
-            #       "parent_entry": "forte.data.ontology.top.Annotation", },
+            #       "parent_class": "forte.data.ontology.top.Annotation", },
             #     "ft.onto.base_ontology.Document": {
             #       "attributes": {"document_class": 4,
             #               "sentiment": 5, "classifications": 6},
-            #       "parent_entry": "forte.data.ontology.top.Annotation", },
+            #       "parent_class": "forte.data.ontology.top.Annotation", },
             #     "ft.onto.base_ontology.Sentence": {
             #       "attributes": {"speaker": 4,
             #               "part_id": 5, "sentiment": 6,
             #               "classification": 7, "classifications": 8},
-            #       "parent_entry": "forte.data.ontology.top.Annotation", }
+            #       "parent_class": "forte.data.ontology.top.Annotation", }
             # }
         """
         self._type_attributes: dict = {}
-        if self.onto_file_path:
+        if self._onto_file_path:
             self._parse_onto_file()
 
         """
@@ -191,6 +201,104 @@ class DataStore(BaseStore):
         r"""This function generates a new ``tid`` for an entry."""
         return uuid.uuid4().int
 
+    def _get_type_info(self, type_name: str) -> Dict[str, Any]:
+        """
+        Get the dictionary containing type information from ``self._type_attributes``.
+        If the ``type_name`` does not currecntly exists and dynamic import is enabled,
+        this function will add a new key-value pair into ``self._type_attributes``. The
+        value consists of a full attribute-to-index dictionary and an empty parent set.
+
+        This function returns a dictionary containing an attribute dict and a set of parent
+        entries of the given type. For example:
+
+        .. code-block:: python
+
+            "ft.onto.base_ontology.Sentence": {
+                    "attributes": {
+                        "speaker": 4,
+                        "part_id": 5,
+                        "sentiment": 6,
+                        "classification": 7,
+                        "classifications": 8,
+                    },
+                    "parent_class": set(),
+                }
+
+        Args:
+            type_name (str): The fully qualified type name of a type.
+        Returns:
+            attr_dict (dict): The dictionary containing an attribute dict and a set of parent
+            entries of the given type.
+        Raises:
+            RuntimeError: When the type is not provided by ontology file and
+            dynamic import is disabled.
+        """
+        # check if type is in dictionary
+        if type_name in self._type_attributes:
+            return self._type_attributes[type_name]
+        if not self._dynamically_add_type:
+            raise ValueError(
+                f"{type_name} is not an existing type in current data store."
+                f"Dynamically add type is disabled."
+                f"Set dynamically_add_type=True if you need to use types other than"
+                f"types specified in the ontology file."
+            )
+        # get attribute dictionary
+        attributes = self._get_entry_attributes_by_class(type_name)
+
+        attr_dict = {}
+        attr_idx = constants.ENTRY_TYPE_INDEX + 1
+        for attr_name in attributes:
+            attr_dict[attr_name] = attr_idx
+            attr_idx += 1
+
+        new_entry_info = {
+            "attributes": attr_dict,
+            "parent_class": set(),
+        }
+        self._type_attributes[type_name] = new_entry_info
+
+        return new_entry_info
+
+    def _get_type_attribute_dict(self, type_name: str) -> Dict[str, int]:
+        """Get the attribute dict of an entry type. The attribute dict maps
+        attribute names to a list of consecutive integers as indicies. For example:
+        .. code-block:: python
+
+            "attributes": {
+                        "speaker": 4,
+                        "part_id": 5,
+                        "sentiment": 6,
+                        "classification": 7,
+                        "classifications": 8,
+            },
+
+        Args:
+            type_name (str): The fully qualified type name of a type.
+        Returns:
+            attr_dict (dict): The attribute-to-index dictionary of an entry.
+        """
+        return self._get_type_info(type_name)["attributes"]
+
+    def _get_type_parent(self, type_name: str) -> str:
+        """Get a set of parent names of an entry type. The set is a subset of all
+        ancestors of the given type.
+        Args:
+            type_name (str): The fully qualified type name of a type.
+        Returns:
+            parent_class (str): The parent entry name of an entry.
+        """
+        return self._get_type_info(type_name)["parent_class"]
+
+    def _num_attributes_for_type(self, type_name: str) -> int:
+        """Get the length of the attribute dict of an entry type.
+        Args:
+            type_name (str): The fully qualified type name of the new entry.
+        Returns:
+            attr_dict (dict): The attributes-to-index dict of an entry.
+        """
+        return len(self._get_type_attribute_dict(type_name))
+
     def _new_annotation(self, type_name: str, begin: int, end: int) -> List:
         r"""This function generates a new annotation with default fields.
         All default fields are filled with None.
@@ -208,8 +316,10 @@ class DataStore(BaseStore):
 
         tid: int = self._new_tid()
         entry: List[Any]
+
         entry = [begin, end, tid, type_name]
-        entry += len(self._type_attributes[type_name]) * [None]
+        entry += self._num_attributes_for_type(type_name) * [None]
+
         return entry
 
     def _new_link(
@@ -231,8 +341,10 @@ class DataStore(BaseStore):
 
         tid: int = self._new_tid()
         entry: List[Any]
+
         entry = [parent_tid, child_tid, tid, type_name]
-        entry += len(self._type_attributes[type_name]) * [None]
+        entry += self._num_attributes_for_type(type_name) * [None]
+
         return entry
 
     def _new_group(self, type_name: str, member_type: str) -> List:
@@ -250,8 +362,10 @@ class DataStore(BaseStore):
         """
 
         tid: int = self._new_tid()
+
         entry = [member_type, [], tid, type_name]
-        entry += len(self._type_attributes[type_name]) * [None]
+        entry += self._num_attributes_for_type(type_name) * [None]
+
         return entry
 
     def _is_subclass(
@@ -298,16 +412,15 @@ class DataStore(BaseStore):
     def _is_annotation(self, type_name: str) -> bool:
         r"""This function takes a type_id and returns whether a type
         is an annotation type or not.
-
         Args:
             type_name (str): The name of type in `self.__elements`.
-
         Returns:
             A boolean value whether this type_id belongs to an annotation
             type or not.
         """
+        # TODO: use is_subclass() in DataStore to replace this
         entry_class = get_class(type_name)
-        return issubclass(entry_class, Annotation)
+        return issubclass(entry_class, (Annotation, AudioAnnotation))
 
     def add_annotation_raw(self, type_name: str, begin: int, end: int) -> int:
         r"""This function adds an annotation entry with ``begin`` and ``end``
@@ -328,7 +441,15 @@ class DataStore(BaseStore):
         # annotation type entry data with default fields.
         # A reference to the entry should be store in both self.__elements and
         # self.__entry_dict.
-        raise NotImplementedError
+        entry = self._new_annotation(type_name, begin, end)
+        try:
+            self.__elements[type_name].add(entry)
+        except KeyError:
+            self.__elements[type_name] = SortedList(key=lambda s: (s[0], s[1]))
+            self.__elements[type_name].add(entry)
+        tid = entry[constants.TID_INDEX]
+        self.__entry_dict[tid] = entry
+        return tid
 
     def add_link_raw(
         self, type_name: str, parent_tid: int, child_tid: int
@@ -382,16 +503,17 @@ class DataStore(BaseStore):
             KeyError: when ``tid`` or ``attr_name`` is not found.
         """
         try:
-            entry_type = self.__entry_dict[tid][constants.ENTRY_TYPE_INDEX]
+            entry = self.__entry_dict[tid]
+            entry_type = entry[constants.ENTRY_TYPE_INDEX]
         except KeyError as e:
             raise KeyError(f"Entry with tid {tid} not found.") from e
 
         try:
-            attr_id = self._type_attributes[entry_type][attr_name]
+            attr_id = self._get_type_attribute_dict(entry_type)[attr_name]
         except KeyError as e:
             raise KeyError(f"{entry_type} has no {attr_name} attribute.") from e
 
-        self._set_attr(tid, attr_id, attr_value)
+        entry[attr_id] = attr_value
 
     def _set_attr(self, tid: int, attr_id: int, attr_value: Any):
         r"""This function locates the entry data with ``tid`` and sets its
@@ -423,16 +545,17 @@ class DataStore(BaseStore):
             KeyError: when ``tid`` or ``attr_name`` is not found.
         """
         try:
-            entry_type = self.__entry_dict[tid][constants.ENTRY_TYPE_INDEX]
+            entry = self.__entry_dict[tid]
+            entry_type = entry[constants.ENTRY_TYPE_INDEX]
         except KeyError as e:
             raise KeyError(f"Entry with tid {tid} not found.") from e
 
         try:
-            attr_id = self._type_attributes[entry_type][attr_name]
+            attr_id = self._get_type_attribute_dict(entry_type)[attr_name]
         except KeyError as e:
             raise KeyError(f"{entry_type} has no {attr_name} attribute.") from e
 
-        return self._get_attr(tid, attr_id)
+        return entry[attr_id]
 
     def _get_attr(self, tid: int, attr_id: int) -> Any:
         r"""This function locates the entry data with ``tid`` and gets the value
@@ -481,7 +604,7 @@ class DataStore(BaseStore):
         if self._is_annotation(type_name):
             entry_index = bisect_left(target_list, entry_data)
         else:  # if it's group or link, use the index in entry_list
-            entry_index = entry_data[-1]
+            entry_index = entry_data[constants.ENTRY_INDEX_INDEX]
 
         if (
             entry_index >= len(target_list)
@@ -497,8 +620,6 @@ class DataStore(BaseStore):
     def _delete_entry_by_loc(self, type_name: str, index_id: int):
         r"""It removes an entry of `index_id` by taking both the `type_id`
         and `index_id`. Called by `delete_entry()`.
-        This function will raise an IndexError if the `type_id` or `index_id`
-        is invalid.
 
         Args:
             type_id (int): The index of the list in ``self.__elements``.
@@ -524,21 +645,58 @@ class DataStore(BaseStore):
         if not target_list:
             self.__elements.pop(type_name)
 
-    def get_entry(self, tid: int) -> Tuple[List, int, int]:
-        r"""This function finds the entry with ``tid``. It returns the entry,
-        its ``type_name``, and the index in the ``type_name`` list.
+    def get_entry(self, tid: int) -> Tuple[List, str]:
+        r"""This function finds the entry with ``tid``. It returns the entry
+        and its ``type_name``.
 
         Args:
             tid (int): Unique id of the entry.
 
         Returns:
-            The entry which ``tid`` corresponds to, its ``type_id`` and its index
-            in the ``type_name`` list.
+            The entry which ``tid`` corresponds to and its ``type_name``.
+
+        Raises:
+            ValueError: An error occurred when input tid is not found.
+            KeyError: An error occurred when entry_type is not found.
         """
+        if tid not in self.__entry_dict:
+            raise ValueError(f"Entry with tid {tid} not found.")
+        entry = self.__entry_dict[tid]
+        entry_type = entry[constants.ENTRY_TYPE_INDEX]
+        if entry_type not in self.__elements:
+            raise KeyError(f"Entry of type {entry_type} is not found.")
+        return entry, entry_type
+
+    def get_entry_index(self, tid: int) -> int:
+        """Look up the entry_dict with key ``tid``. Return the ``index_id`` of
+        the entry.
+
+        Args:
+            tid (int): Unique id of the entry.
+
+        Returns:
+            Index of the entry which ``tid`` corresponds to in the
+            ``entry_type`` list.
+
+        Raises:
+            ValueError: An error occurred when no corresponding entry is found.
+        """
+        entry, entry_type = self.get_entry(tid=tid)
         # If the entry is an annotation, bisect the annotation sortedlist
         # to find the entry. May use LRU cache to optimize speed.
         # Otherwise, use ``index_id`` to find the index of the entry.
-        raise NotImplementedError
+        index_id = -1
+        if self._is_annotation(entry_type):
+            entry_list = self.__elements[entry_type]
+            index_id = entry_list.bisect_left(entry)
+            if (not 0 <= index_id < len(entry_list)) or (
+                entry_list[index_id][constants.TID_INDEX]
+                != entry[constants.TID_INDEX]
+            ):
+                raise ValueError(f"Entry {entry} not found in entry list.")
+        else:
+            index_id = entry[constants.ENTRY_INDEX_INDEX]
+        return index_id
 
     def co_iterator_annotation_like(
         self, type_names: List[str]
@@ -702,31 +860,63 @@ class DataStore(BaseStore):
             for entry in entries:
                 yield entry
 
-    def next_entry(self, tid: int) -> List:
+    def next_entry(self, tid: int) -> Optional[List]:
         r"""Get the next entry of the same type as the ``tid`` entry.
         Call ``get_entry()`` to find the current index and use it to find
-        the next entry.
+        the next entry. If it is a non-annotation type, it will be sorted in
+        the insertion order, which means ``next_entry`` would return the next
+        inserted entry.
 
         Args:
             tid (int): Unique id of the entry.
 
         Returns:
-            The next entry of the same type as the ``tid`` entry.
-        """
-        raise NotImplementedError
+            A list of attributes representing the next entry of the same type
+            as the ``tid`` entry. Return `None` when accessing the next entry
+            of the last element in entry list.
 
-    def prev_entry(self, tid: int) -> List:
+        Raises:
+            IndexError: An error occurred accessing index out out of entry list.
+        """
+        _, entry_type = self.get_entry(tid=tid)
+        index_id: int = self.get_entry_index(tid=tid)
+        entry_list = self.__elements[entry_type]
+        if not 0 <= index_id < len(entry_list):
+            raise IndexError(
+                f"Index id ({index_id})) is out of bounds of the entry list."
+            )
+        elif index_id == len(entry_list) - 1:
+            return None
+        return entry_list[index_id + 1]
+
+    def prev_entry(self, tid: int) -> Optional[List]:
         r"""Get the previous entry of the same type as the ``tid`` entry.
         Call ``get_entry()`` to find the current index and use it to find
-        the previous entry.
+        the previous entry. If it is a non-annotation type, it will be sorted
+        in the insertion order, which means ``prev_entry`` would return the
+        previous inserted entry.
 
         Args:
             tid (int): Unique id of the entry.
 
         Returns:
-            The previous entry of the same type as the ``tid`` entry.
+            A list of attributes representing the previous entry of the same
+            type as the ``tid`` entry. Return `None` when accessing the previous
+            entry of the first element in entry list.
+
+        Raises:
+            IndexError: An error occurred accessing index out out of entry list.
         """
-        raise NotImplementedError
+        _, entry_type = self.get_entry(tid=tid)
+        index_id: int = self.get_entry_index(tid=tid)
+        entry_list = self.__elements[entry_type]
+        if not 0 <= index_id < len(entry_list):
+            raise IndexError(
+                f"Index id ({index_id})) is out of bounds of the entry list."
+            )
+        elif index_id == 0:
+            return None
+        return entry_list[index_id - 1]
 
     def _parse_onto_file(self):
         r"""This function will populate the types and attributes used in the data_store
@@ -742,7 +932,7 @@ class DataStore(BaseStore):
         A user can use classes both in the ontology specification file and their parent
         entries's paths.
         """
-        if self.onto_file_path is None:
+        if self._onto_file_path is None:
             return
         raise NotImplementedError
 
