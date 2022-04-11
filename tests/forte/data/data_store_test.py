@@ -706,21 +706,54 @@ class DataStoreTest(unittest.TestCase):
             )
 
     def test_is_subclass(self):
+
+        import forte
+
+        self.assertEqual(self.data_store._type_attributes["ft.onto.base_ontology.Document"]["parent_class"],
+                         set())
+
         self.assertTrue(
             self.data_store._is_subclass(
-                "data_store_test.TitleTest", Annotation
+                'ft.onto.base_ontology.Document', forte.data.ontology.top.Annotation
+            )
+        )
+
+        self.assertTrue(
+            self.data_store._is_subclass(
+                "ft.onto.base_ontology.Document", forte.data.ontology.core.Entry
             )
         )
 
         self.assertFalse(
             self.data_store._is_subclass(
-                "data_store_test.TitleTest", MetricTest
+                "ft.onto.base_ontology.Document", forte.data.ontology.top.Link
             )
         )
-        # ``Generics`` is the grandfather of "data_store_test.SingleMetricTest" class.
+
+        self.assertEqual(self.data_store._type_attributes["ft.onto.base_ontology.Document"]["parent_class"],
+                         {"forte.data.ontology.top.Annotation", "forte.data.ontology.core.Entry"})
+
+        self.assertEqual(self.data_store._type_attributes["ft.onto.base_ontology.Title"]["parent_class"],
+                         set())
+        self.assertFalse(
+            self.data_store._is_subclass(
+                "ft.onto.base_ontology.Title", forte.data.ontology.top.Annotation, no_dynamic_subclass=True
+            )
+        )
+
+        self.data_store._type_attributes["ft.onto.base_ontology.Title"]["parent_class"].add(
+            "forte.data.ontology.top.Annotation")
+
         self.assertTrue(
             self.data_store._is_subclass(
-                "data_store_test.SingleMetricTest", Generics
+                "ft.onto.base_ontology.Title", forte.data.ontology.top.Annotation, no_dynamic_subclass=True
+            )
+        )
+        self.data_store._type_attributes["ft.onto.base_ontology.Title"]["parent_class"].add("forte.data.ontology.top.Link")
+
+        self.assertTrue(
+            self.data_store._is_subclass(
+                "ft.onto.base_ontology.Title", forte.data.ontology.top.Link
             )
         )
 

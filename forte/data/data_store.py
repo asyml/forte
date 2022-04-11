@@ -369,7 +369,7 @@ class DataStore(BaseStore):
         return entry
 
     def _is_subclass(
-        self, type_name: str, cls, include_onto_file: bool = False
+        self, type_name: str, cls, no_dynamic_subclass: bool = False
     ) -> bool:
         r"""This function takes a fully qualified ``type_name`` class name,
         ``cls`` class and returns whether ``type_name``  class is the``cls``
@@ -379,8 +379,9 @@ class DataStore(BaseStore):
         Args:
             type_name: A fully qualified name of an entry class.
             cls: An entry class.
-            include_onto_file: A boolean value whether ``type_name`` class
-             in user provided ontology file.
+            no_dynamic_subclass: A boolean value controlling where to look for subclasses.
+            If True, this function will not check the subclass relations via `issubclass`
+            but rely on pre-populated states only.
 
         Returns:
             A boolean value whether ``type_name``  class is the``cls``
@@ -396,8 +397,8 @@ class DataStore(BaseStore):
             "parent_class"
         ]
 
-        if include_onto_file:
-            return bool(cls_qualified_name in type_name_parent_class)
+        if no_dynamic_subclass:
+            return cls_qualified_name in type_name_parent_class
         else:
             if cls_qualified_name in type_name_parent_class:
                 return True
