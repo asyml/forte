@@ -22,7 +22,7 @@ except ImportError as e:
     raise ImportError(
         " `texar-pytorch` is not installed correctly."
         " Consider install texar via `pip install texar-pytorch`"
-        " Or refer to [extra requirement for texar models](pip install forte[models])"
+        " Or refer to [extra requirement for texar models](pip install forte[nlp])"
         " for more information."
     ) from e
 

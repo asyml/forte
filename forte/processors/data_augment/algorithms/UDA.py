@@ -28,7 +28,7 @@ try:
 except ImportError as err:
     raise ImportError(
         " `texar` is not installed correctly."
-        " Please refer to [extra requirement for uda](uda extra requirement hyperlink])"
+        " Please refer to [extra requirement for uda](pip install forte[data_aug]])"
         " for more information. "
     ) from err
 

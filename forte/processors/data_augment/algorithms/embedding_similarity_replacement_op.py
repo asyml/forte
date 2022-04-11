@@ -63,7 +63,7 @@ class EmbeddingSimilarityReplacementOp(TextReplacementOp):
         except ImportError as e:
             raise ImportError(
                 "texar is not installed correctly."
-                "Please refer to documentation to [install extra required modules](emb_sim_rep_op)"
+                "Please refer to documentation to [install extra required modules](pip install forte[data_aug])"
             ) from e
 
         self.vocab = Vocab(self.configs["vocab_path"])

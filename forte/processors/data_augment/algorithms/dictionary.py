@@ -96,7 +96,7 @@ class WordnetDictionary(Dictionary):
         except ImportError as err:
             raise ImportError(
                 "nltk is not installed correctly."
-                "Please refer to documentation at [pip install forte[dict]](link)"
+                "Please refer to documentation at [link](pip install forte[data_aug])"
             ) from err
 
         try:
