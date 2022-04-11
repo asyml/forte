@@ -49,8 +49,9 @@ class AbbreviationReplacementOp(SingleAnnotationAugmentOp):
             self.dict_path = configs["dict_path"]
         else:
             self.dict_path = (
-                "https://raw.githubusercontent.com/GEM-benchmark/NL-Augmenter/main/transformations"
-                "/abbreviation_transformation/phrase_abbrev_dict.json"
+                "https://raw.githubusercontent.com/GEM-benchmark/NL-Augmenter/"
+                + "main/transformations/abbreviation_transformation/"
+                + "phrase_abbrev_dict.json"
             )
 
         try:
@@ -91,11 +92,13 @@ class AbbreviationReplacementOp(SingleAnnotationAugmentOp):
             - prob (float): The probability of replacement,
               should fall in [0, 1]. Default value is 0.1
             - dict_path (str): the `url` or the path to the pre-defined
-              abbreviation json file. The key is a word / phrase we want to replace.
-              The value is an abbreviated word of the corresponding key.
+              abbreviation json file. The key is a word / phrase we want
+              to replace. The value is an abbreviated word of the
+              corresponding key.
         """
         return {
-            "dict_path": "https://raw.githubusercontent.com/GEM-benchmark/NL-Augmenter/main/transformations"
-            + "/abbreviation_transformation/phrase_abbrev_dict.json",
+            "dict_path": "https://raw.githubusercontent.com/GEM-benchmark/"
+            + "NL-Augmenter/main/transformations/"
+            + "abbreviation_transformation/phrase_abbrev_dict.json",
             "prob": 0.5,
         }
