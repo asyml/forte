@@ -62,8 +62,8 @@ class CharExtractor(BaseExtractor):
         r"""Add all character into vocabulary.
 
         Args:
-            pack (DataPack): The input data pack.
-            context (Annotation): The context is an Annotation entry where
+            pack: The input data pack.
+            context: The context is an Annotation entry where
                 features will be extracted within its range. If None, then the
                 whole data pack will be used as the context. Default is None.
         """
@@ -78,8 +78,8 @@ class CharExtractor(BaseExtractor):
         r"""Extract the character feature of one instance.
 
         Args:
-            pack (Datapack): The datapack to extract features from.
-            context (Annotation): The context is an Annotation entry where
+            pack: The datapack to extract features from.
+            context: The context is an Annotation entry where
                 features will be extracted within its range. If None, then the
                 whole data pack will be used as the context. Default is None.
 

@@ -130,7 +130,7 @@ class Converter:
         `torch.tensor`.
 
         Args:
-            features (List[Feature]):
+            features:
                 A list of :class:`forte.data.converter.Feature`
 
         Returns:
