@@ -32,7 +32,7 @@ jobs:
         notebook-details:
           - { dep: "huggingface nltk", extra: "'tensorflow>=2.5.0,<2.8.0,termcolor>=1.1.0'"}
         models:
-          - { extra: "'torch>=1.1.0, torchtext==0.4.0, tqdm>=4.36.1, texar-pytorch>=0.1.2, transformers, yaml'" }
+          - { dep: "torch>=1.1.0 torchtext==0.4.0 tqdm>=4.36.1 texar-pytorch>=0.1.2 transformers yaml" }
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
