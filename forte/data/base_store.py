@@ -194,7 +194,7 @@ class BaseStore:
         raise NotImplementedError
 
     @abstractmethod
-    def set_attr(self, tid: int, attr_id: int, attr_value: Any):
+    def _set_attr(self, tid: int, attr_id: int, attr_value: Any):
         r"""This function locates the entry data with ``tid`` and sets its
         attribute ``attr_id``  with value ``attr_value``.
         Called by `set_attribute()`.
@@ -223,7 +223,7 @@ class BaseStore:
         raise NotImplementedError
 
     @abstractmethod
-    def get_attr(self, tid: int, attr_id: int):
+    def _get_attr(self, tid: int, attr_id: int):
         r"""This function locates the entry data with ``tid`` and gets the value
         of ``attr_id``  of this entry. Called by `get_attribute()`.
 
