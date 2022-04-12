@@ -140,9 +140,15 @@ We also recommend using tools `pre-commit` that automates the checking process b
 ### Docstring
 
  All public methods require docstring and type annotation. It is recommended to add docstring for all functions. The docstrings should follow the [`Comments and Docstrings` section](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings) of Google Python Style guide. We will include a pylint plugin called [docparams](https://github.com/PyCQA/pylint/blob/main/pylint/extensions/docparams.rst) to validate the parameters of docstrings:
-* parameters and their types
+* parameters ~~and their types~~
+  * types are only required in function signatures and sphinx will build parameter type hyperlinks based on that.
 * return value and its type
 * exceptions raised
+
+
+
+
+
 
 You should take special care of the indentations in your documentation. Make sure the indents are consistent and follow the Google Style guide. All sections other than the heading should maintain a hanging indent of two or four spaces. Refer to the examples [here](https://google.github.io/styleguide/pyguide.html#383-functions-and-methods) for what is expected and what are the requirements for different sections like `args`, `lists`, `returns`, etc. Invalid indentations might trigger errors in `sphinx-build` and will cause confusing rendering of the documentation. You can run `sphinx-build` locally to see whether the generated docs look reasonable.
 

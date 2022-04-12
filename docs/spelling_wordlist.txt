@@ -155,3 +155,8 @@ granularities
 doesn
 structuralizing
 pseudocode
+EntryType
+LinkType
+GroupType
+PathLike
+ElementType

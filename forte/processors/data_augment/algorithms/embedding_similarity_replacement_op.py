@@ -41,13 +41,16 @@ class EmbeddingSimilarityReplacementOp(TextReplacementOp):
         configs:
             The config should contain the following key-value pairs:
 
-            - vocab_path (str): The absolute path to the vocabulary file for
-              the pretrained embeddings
+            - vocab_path (str):
+                The absolute path to the vocabulary file for
+                the pretrained embeddings
 
-            - embed_hparams (dict): The hparams to initialize the
+            - embed_hparams (dict):
+                The hparams to initialize the
                 texar.torch.data.Embedding object.
 
-            - top_k (int): the number of k most similar words to choose from
+            - top_k (int):
+                the number of k most similar words to choose from
     """
 
     def __init__(self, configs: Config):
@@ -66,7 +69,7 @@ class EmbeddingSimilarityReplacementOp(TextReplacementOp):
         pretrained embeddings.
 
         Args:
-            input_anno (Annotation): The input annotation.
+            input_anno: The input annotation.
         Returns:
             A tuple of two values, where the first element is a boolean value
             indicating whether the replacement happens, and the second

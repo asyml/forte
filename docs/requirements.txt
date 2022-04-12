@@ -44,3 +44,5 @@ nltk==3.6.6
 
 nbsphinx==0.8.8
 jinja2<=3.0.3
+
+sphinx_autodoc_typehints
