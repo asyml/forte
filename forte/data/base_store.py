@@ -43,11 +43,14 @@ class BaseStore:
     def serialize(
         self,
         output_path: str,
-        serialize_method: str = "jsonpickle",
+        serialize_method: str = "json",
+        check_attribute: bool = True,
     ):
         if serialize_method in ["jsonpickle", "json"]:
             with open(output_path, mode="wt", encoding="utf-8") as json_out:
-                json_out.write(self.to_string(serialize_method))
+                json_out.write(
+                    self.to_string(serialize_method, check_attribute)
+                )
         else:
             raise NotImplementedError(
                 f"Unsupported serialization method {serialize_method}"
@@ -55,24 +58,34 @@ class BaseStore:
 
     def to_string(
         self,
-        json_method: str = "jsonpickle",
+        json_method: str = "json",
+        check_attribute: bool = True,
     ) -> str:
         """
         Return the string representation (json encoded) of this method.
 
         Args:
             json_method: What method is used to convert data pack to json.
-              Only supports `json_pickle` for now. Default value is
-              `json_pickle`.
+                Only supports `json_pickle` and `json` for now. Default value
+                is `json`.
+            check_attribute: Boolean value indicating whether users want to
+                save `_type_attributes`.
 
         Returns: String representation of the data pack.
         """
         if json_method == "jsonpickle":
+            if not check_attribute:
+                self.__dict__.pop("_type_attributes")
+            else:
+                self.__dict__["check_attribute"] = True
             return jsonpickle.encode(self, unpicklable=True)
         elif json_method == "json":
-            return json.dumps(
-                self, default=lambda o: o.__getstate__(), indent=2
-            )
+            state = self.__getstate__()
+            if not check_attribute:
+                state.pop("_type_attributes")
+            else:
+                state["check_attribute"] = True
+            return json.dumps(state, indent=2)
         else:
             raise ValueError(f"Unsupported JSON method {json_method}.")
 
@@ -80,7 +93,7 @@ class BaseStore:
     def _deserialize(
         cls,
         data_source: str,
-        serialize_method: str = "jsonpickle",
+        serialize_method: str = "json",
     ):
         """
         This function should deserialize a data store from a string. The
@@ -92,7 +105,7 @@ class BaseStore:
                 serialization.
             serialize_method: The method used to serialize the data, this
                 should be the same as how serialization is done. The current
-                option is "jsonpickle"。
+                option is "json"。
 
         Returns:
             An data store object deserialized from the data.
@@ -103,9 +116,7 @@ class BaseStore:
             return pack
         elif serialize_method == "json":
             with open(data_source, mode="rt", encoding="utf8") as f:
-                # pack = cls.from_string(f.read())
                 pack = json.loads(f.read())
-                # print(cls(**pack))
             return pack
         else:
             raise NotImplementedError(

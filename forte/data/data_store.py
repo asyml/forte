@@ -205,38 +205,45 @@ class DataStore(BaseStore):
         r"""
         In serialization,
             1) will serialize the annotation sorted list as a normal list;
-            2) will remove the `_type_attributes`, `entry_dict` and
-                `parent_entry` to save space.
+            2) will remove `_onto_file_path`, `_dynamically_add_type`, and
+                `entry_dict` to save space.
         """
         state = super().__getstate__()
-        keys = state["_DataStore__elements"].keys()
-        for k in keys:
+        for k in state["_DataStore__elements"]:
             state["_DataStore__elements"][k] = list(
                 state["_DataStore__elements"][k]
             )
-        state.pop("onto_file_path")
-        state["fields"] = state.pop("_type_attributes")
-        for t in state["fields"]:
-            state["fields"][t].pop("parent_entry")
-        state["entries"] = state.pop("_DataStore__elements")
+        state.pop("_onto_file_path")
+        state.pop("_dynamically_add_type")
         state.pop("_DataStore__entry_dict")
+        state["entries"] = state.pop("_DataStore__elements")
+        state["fields"] = state.pop("_type_attributes")
         return state
 
     def __setstate__(self, state):
         r"""
         In deserialization, we
             1) transform the annotation list back to a sorted list;
-            2) recreate the `entry_dict` from `elements`
+            2) recreate the `entry_dict` from `__elements`;
+            3) recreate the `_type_attributes` if `fields` are not saved in
+                the object.
         """
         super().__setstate__(state)
-        self._type_attributes = self.__dict__.pop("fields")
-        self._DataStore__elements = self.__dict__.pop("entries")
+        self.__elements = self.__dict__.pop("entries")
+        self._dynamically_add_type = True
+        # recreate the `_type_attributes` if `fields` are not found
+        regenerate = False
+        try:
+            self._type_attributes = self.__dict__.pop("fields")
+        except KeyError:
+            self._type_attributes = {}
+            regenerate = True
+        # recreate the `entry_dict` from `__elements`
         self._DataStore__entry_dict = {}
 
-        # self._DataStore__entry_dict = {int(k):v for k,v in self._DataStore__entry_dict.items()}
-
-        keys = self.__elements.keys()
-        for k in keys:
+        for k in self.__elements:
+            if regenerate:
+                self._type_attributes[k] = self._get_type_info(k)
             if self._is_annotation(k):
                 self.__elements[k] = SortedList(self.__elements[k])
             for e in self.__elements[k]:
@@ -247,9 +254,9 @@ class DataStore(BaseStore):
     def deserialize(
         cls,
         data_source: str,
-        serialize_method: str = "jsonpickle",
+        serialize_method: str = "json",
         check_attribute: bool = True,
-        allow_warning: bool = False, # silent mode
+        silent_mode: bool = True,
         accept_none: bool = True,
     ) -> "DataStore":
         """
@@ -261,10 +268,11 @@ class DataStore(BaseStore):
             data_source: The path storing data source.
             serialize_method: The method used to serialize the data, this
                 should be the same as how serialization is done. The current
-                option is "jsonpickle"。
+                option is "json".
             check_attribute: Boolean value indicating whether users want to
-                check compatibility of attributes
-            allow_warning: Boolean value indicating whether users want to
+                check compatibility of attributes. Only applicable when
+                `check_attribute` is set to True in BaseStore.serialize.
+            silent_mode: Boolean value indicating whether users want to
                 see warnings when it checks attributes.
             accept_none: Boolean value indicating whether users want to
                 fill contradictory fields with none. If false, it will raise
@@ -280,16 +288,11 @@ class DataStore(BaseStore):
             obj.__setstate__(store)
             store = obj
         if check_attribute:
-            # try:
-            #     # should contain the same `entry_type` class name
-            #     assert (
-            #         cls._type_attributes.keys() == store._type_attributes.keys()
-            #     )
-            # except AssertionError as e:
-            #     raise ValueError(
-            #         "Saved objects have different `entry_type` to the current "
-            #         "datastore class."
-            #     ) from e
+            # `check_attribute` needs to set to True in BaseStore.serialize.
+            if not store.check_attribute:
+                raise ValueError(
+                    "Saved object does not support check_attribute."
+                )
             if cls._type_attributes != store._type_attributes:
                 # find the `entry_type` with different fields, count different
                 # fields. `diff` records fields in the current class but not
@@ -301,17 +304,17 @@ class DataStore(BaseStore):
                         cls._type_attributes[t]["attributes"].items()
                     ) - set(store._type_attributes[t]["attributes"].items())
                     for f in diff:
-                        # if only order different, switch order
+                        # if only orders are different, switch order
                         if f[0] in store._type_attributes[t]["attributes"]:
                             change_map[f[1]] = store._type_attributes[t][
                                 "attributes"
                             ][f[0]]
-                        # if fields contradictions, fill them with None
+                        # if fields contradict, fill them with None
                         else:
                             contradict_loc.append(f[1])
 
                     if len(change_map) > 0:
-                        if allow_warning:
+                        if not silent_mode:
                             logger.warning(
                                 "Saved %s objects have %s different orders of "
                                 "attribute fields to the current datastore. "
@@ -320,7 +323,7 @@ class DataStore(BaseStore):
                                 t,
                                 len(change_map),
                             )
-                        # change the data in lists in the `elements` list
+                        # change the data in lists in the `__elements` list
                         for d in store._DataStore__elements[t]:
                             d[:] = [
                                 d[change_map[i]] if i in change_map else d[i]
@@ -335,7 +338,7 @@ class DataStore(BaseStore):
                                 )
                             ]
                     if len(contradict_loc) > 0:
-                        if allow_warning:
+                        if not silent_mode:
                             logger.warning(
                                 "Saved %s objects have %s attribute fields "
                                 "that could not be identified. "
