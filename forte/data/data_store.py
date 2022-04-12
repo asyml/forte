@@ -271,7 +271,7 @@ class DataStore(BaseStore):
                 option is `json`.
             check_attribute: Boolean value indicating whether users want to
                 check compatibility of attributes. Only applicable when
-                `check_attribute` is set to True in BaseStore.serialize.
+                `save_attribute` is set to True in BaseStore.serialize.
             silent_mode: Boolean value indicating whether users want to
                 see warnings when it checks attributes.
             accept_none: Boolean value indicating whether users want to
@@ -288,8 +288,8 @@ class DataStore(BaseStore):
             obj.__setstate__(store)
             store = obj
         if check_attribute:
-            # `check_attribute` needs to set to True in BaseStore.serialize.
-            if not store.check_attribute:
+            # `save_attribute` needs to set to True in BaseStore.serialize.
+            if not store.save_attribute:
                 raise ValueError(
                     "Saved object does not support check_attribute."
                 )

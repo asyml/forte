@@ -44,12 +44,12 @@ class BaseStore:
         self,
         output_path: str,
         serialize_method: str = "json",
-        check_attribute: bool = True,
+        save_attribute: bool = True,
     ):
         if serialize_method in ["jsonpickle", "json"]:
             with open(output_path, mode="wt", encoding="utf-8") as json_out:
                 json_out.write(
-                    self.to_string(serialize_method, check_attribute)
+                    self.to_string(serialize_method, save_attribute)
                 )
         else:
             raise NotImplementedError(
@@ -59,7 +59,7 @@ class BaseStore:
     def to_string(
         self,
         json_method: str = "json",
-        check_attribute: bool = True,
+        save_attribute: bool = True,
     ) -> str:
         """
         Return the string representation (json encoded) of this method.
@@ -68,23 +68,23 @@ class BaseStore:
             json_method: What method is used to convert data pack to json.
                 Only supports `json_pickle` and `json` for now. Default value
                 is `json`.
-            check_attribute: Boolean value indicating whether users want to
+            save_attribute: Boolean value indicating whether users want to
                 save `_type_attributes`.
 
         Returns: String representation of the data pack.
         """
         if json_method == "jsonpickle":
-            if not check_attribute:
+            if not save_attribute:
                 self.__dict__.pop("_type_attributes")
             else:
-                self.__dict__["check_attribute"] = True
+                self.__dict__["save_attribute"] = True
             return jsonpickle.encode(self, unpicklable=True)
         elif json_method == "json":
             state = self.__getstate__()
-            if not check_attribute:
+            if not save_attribute:
                 state.pop("_type_attributes")
             else:
-                state["check_attribute"] = True
+                state["save_attribute"] = True
             return json.dumps(state, indent=2)
         else:
             raise ValueError(f"Unsupported JSON method {json_method}.")
