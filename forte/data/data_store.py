@@ -910,7 +910,7 @@ class DataStore(BaseStore):
         for tn in type_names:
             try:
                 first_entries.append(self.__elements[tn][0])
-            except KeyError as e:  # self.__elements[tn] will be catched here.
+            except KeyError as e:  # self.__elements[tn] will be caught here.
                 raise ValueError(
                     f"Input argument `type_names` to the function contains"
                     f" a type name [{tn}], which is not recognized."
