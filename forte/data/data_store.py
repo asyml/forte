@@ -195,7 +195,8 @@ class DataStore(BaseStore):
         r"""
         In serialization,
             1) will serialize the annotation sorted list as a normal list;
-            2) will remove the `entry_dict` to save space
+            2) will remove the `_type_attributes`, `entry_dict` and
+                `parent_entry` to save space.
         """
         state = super().__getstate__()
         keys = state["_DataStore__elements"].keys()
@@ -205,6 +206,8 @@ class DataStore(BaseStore):
             )
         state.pop("onto_file_path")
         state["fields"] = state.pop("_type_attributes")
+        for t in state["fields"]:
+            state["fields"][t].pop("parent_entry")
         state["entries"] = state.pop("_DataStore__elements")
         state.pop("_DataStore__entry_dict")
         return state
@@ -236,7 +239,7 @@ class DataStore(BaseStore):
         data_source: str,
         serialize_method: str = "jsonpickle",
         check_attribute: bool = True,
-        allow_warning: bool = False,
+        allow_warning: bool = False, # silent mode
         accept_none: bool = True,
     ) -> "DataStore":
         """
@@ -264,18 +267,7 @@ class DataStore(BaseStore):
         # The following part is for customized json method only.
         if isinstance(store, dict):
             obj = DataStore()
-            obj._type_attributes = store["fields"]
-            obj._DataStore__elements = store["entries"]
-            obj._DataStore__entry_dict = {}
-            keys = obj._DataStore__elements.keys()
-            for k in keys:
-                if obj._is_annotation(k):
-                    obj._DataStore__elements[k] = SortedList(
-                        obj._DataStore__elements[k]
-                    )
-                for e in obj._DataStore__elements[k]:
-                    # retrieve tid for every entry
-                    obj._DataStore__entry_dict[e[constants.TID_INDEX]] = e
+            obj.__setstate__(store)
             store = obj
         if check_attribute:
             # try:
