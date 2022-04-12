@@ -93,11 +93,11 @@ class Word(Generics):
 ```
 Next we can write a simple customized processor for the first task, split sentences into words.
 There are two steps for the sentence processing.
-First, we need to strip all punctuations as splitted words shouldn't contain them.
+First, we need to strip all punctuation as splitted words should not contain them.
 Second, we need to split stripped sentences into words and write words into the data pack.
 ```
 class WordSplitPackProcessor(PackProcessor):
-    """A processor that removes punctuations in sentences in the data pack
+    """A processor that removes punctuation in sentences in the data pack
     and split sentences into words and write words into the data pack.
     """
     def __init__(self):
@@ -109,7 +109,7 @@ class WordSplitPackProcessor(PackProcessor):
     def _process(self, input_pack: DataPack):
         # write a data type Word into the data pack
         for sentence in pack.get("ft.onto.base_ontology.Sentence"):
-            # first step: strip all punctuations
+            # first step: strip all punctuation
             words = re.sub(r'[^\w\s]','',sentence.text).split(" ")
             # second step: split stripped sentences into words and write
             # words into the data pack
