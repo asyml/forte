@@ -48,7 +48,7 @@ jobs:
             ${{ runner.os }}-
       - name: Test models module
         run: |
-          for d in ${{ matrix.modules }}; do pip install --use-feature=in-tree-build --progress-bar off .$d; done
+          for d in ${{ matrix.modules }}; do pip install --use-feature=in-tree-build --progress-bar off .[$d]; done
           coverage run -m pytest tests/forte/models
       - name: Install dependencies
         run: |
