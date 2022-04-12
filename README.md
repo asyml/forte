@@ -144,8 +144,8 @@ for pack in pipeline.initialize().process_dataset():
     print()
 ```
 
-
-## Core Design Principles
+## Project Info
+#### Core Design Principles
 
 The core design principle of Forte is the abstraction of NLP concepts and
 machine learning models. It not only separates data, model and tasks but also
@@ -188,17 +188,17 @@ principle, we make Forte:
 -----------------
 
 
-## Contributing
+#### Contributing
 
 If you are interested in making enhancement to Forte, please first go over our [Code of Conduct](https://github.com/asyml/forte/blob/master/CODE_OF_CONDUCT.md) and [Contribution Guideline](https://github.com/asyml/forte/blob/master/CONTRIBUTING.md)
 
 
 
-## License
+#### License
 
 [Apache License 2.0](https://github.com/asyml/forte/blob/master/LICENSE)
 
-## Companies and Universities Supporting Forte
+#### Companies and Universities Supporting Forte
 
 <p float="left">
    <img src="https://raw.githubusercontent.com/asyml/forte/master/docs/_static/img/Petuum.png" width="200" align="top">
