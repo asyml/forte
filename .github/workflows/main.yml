@@ -31,8 +31,7 @@ jobs:
             tensorflow-version: 2.5.0
         notebook-details:
           - { dep: "huggingface nltk", extra: "'tensorflow>=2.5.0,<2.8.0,termcolor>=1.1.0'"}
-        models:
-          - { dep: ["torch>=1.1.0", "torchtext==0.4.0", "tqdm>=4.36.1", "texar-pytorch>=0.1.2", "transformers", "yaml"]}
+        modules: ["models","test","wikipedia","data_aug","nlp","ir","texar-encoder","stave","audio_ext","remote","extractor"]
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
@@ -47,6 +46,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
             ${{ runner.os }}-
+      - name: Test models module
+        run: |
+          for d in ${{ matrix.modules }}; do pip install --use-feature=in-tree-build --progress-bar off .$d; done
+          coverage run -m pytest tests/forte/models
       - name: Install dependencies
         run: |
           sudo apt-get install -y libsndfile1-dev
@@ -83,10 +86,7 @@ jobs:
           cd ..
           # Remove them to avoid confusion.
           rm -rf texar-pytorch
-      - name: Test models module
-        run: |
-          for d in ${{ matrix.models.dep }}; do pip install $d; done
-          coverage run -m pytest tests/forte/models
+
       - name: Install Forte
         run: |
           pip install --use-feature=in-tree-build --progress-bar off .[models,test,wikipedia,data_aug,nlp,ir,texar-encoder,stave,audio_ext,remote,extractor]
