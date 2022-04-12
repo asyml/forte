@@ -12,11 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from forte.data.data_utils_io import *
-from forte.data.data_pack import *
-from forte.data.multi_pack import *
-from forte.data.span import *
-from forte.data.base_extractor import *
-from forte.data.data_store import *
-from forte.data.selector import *
-from forte.data.index import *
+# This package contains Information Retrieval Processors, to use processor in
+# this package, run the 'ir' option in setup.py
+
+from forte.processors.ir.bert.bert_based_query_creator import *
+from forte.processors.ir.bert.bert_ranker import *
+from forte.processors.ir.bert.bert_reranking_processor import *

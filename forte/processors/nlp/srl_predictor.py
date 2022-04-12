@@ -16,7 +16,17 @@ import logging
 import os
 from typing import Dict, List, Tuple, Optional
 
-import texar.torch as tx
+try:
+    import texar.torch as tx
+except ImportError as e:
+    raise ImportError(
+        " `texar-pytorch` is not installed correctly."
+        " Consider install texar via `pip install texar-pytorch`"
+        " Or refer to [extra requirement for texar models](pip install forte[nlp])"
+        " for more information."
+    ) from e
+
+
 import torch
 
 from forte.common.configuration import Config

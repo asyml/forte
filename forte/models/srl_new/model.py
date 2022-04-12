@@ -32,7 +32,16 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 from mypy_extensions import TypedDict
-import texar.torch as tx
+
+try:
+    import texar.torch as tx
+except ImportError as e:
+    raise ImportError(
+        " `texar-pytorch` is not installed correctly."
+        " Consider install texar via `pip install texar-pytorch`."
+        " Or refer to [extra requirement for Texar model support](pip install forte[models])"
+        " for more information."
+    ) from e
 
 from forte.data.converter import Feature
 from forte.models.srl_new import model_utils as utils

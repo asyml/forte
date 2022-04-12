@@ -17,7 +17,7 @@ import unittest
 from itertools import product
 
 from ddt import ddt, data, unpack
-from texar.torch.data import SpecialTokens
+from asyml_utilities.special_tokens import SpecialTokens
 
 from forte.common import InvalidOperationException
 from forte.data import dataset_path_iterator

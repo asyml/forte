@@ -15,7 +15,7 @@ import logging
 from typing import Iterator, Dict
 
 import torch
-from texar.torch.data import Batch
+
 from torch.optim import SGD
 from torch.optim.optimizer import Optimizer
 from tqdm import tqdm
@@ -112,11 +112,12 @@ class TaggingTrainer(BaseTrainer):
         val_pl: Pipeline = Pipeline()
         val_pl.set_reader(val_reader)
         val_pl.add(
-            predictor, config={
+            predictor,
+            config={
                 "batcher": {
                     "batch_size": 10,
                 }
-            }
+            },
         )
         val_pl.add(evaluator, config=evaluator_config)
         val_pl.initialize()
@@ -127,9 +128,20 @@ class TaggingTrainer(BaseTrainer):
         train_sentence_len_sum: float = 0.0
 
         logger.info("Start training.")
-
+        try:
+            from texar.torch.data import (
+                Batch,
+            )  # pylint: disable=import-outside-toplevel
+        except ImportError as e:
+            raise ImportError(
+                " `texar-pytorch` is not installed correctly."
+                " Consider install texar via `pip install texar-pytorch`."
+                " Or refer to [extra requirement for extractor system](pip install forte[extractor])"
+                " for more information. "
+            ) from e
         while epoch < self.config_data.num_epochs:
             epoch += 1
+
             # Get iterator of preprocessed batch of train data
             batch_iter: Iterator[Batch] = tp.get_train_batch_iterator()
 
