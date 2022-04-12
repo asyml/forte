@@ -11,7 +11,13 @@
 [![Chat](http://img.shields.io/badge/gitter.im-asyml/forte-blue.svg)](https://gitter.im/asyml/community)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-**Forte** is a toolkit for building Natural Language Processing pipelines, featuring composable components, convenient data interfaces, and cross-task interaction. Forte designs a universal data representation format for text, making it a one-stop platform to assemble state-of-the-art NLP/ML technologies, ranging from Information Retrieval, Natural Language Understanding to Natural Language Generation.
+
+**Forte** is a toolkit for building Natural Language Processing pipelines, featuring
+composable components, convenient data interfaces, and cross-task interaction. Forte designs
+a universal data representation format for text, making it a
+one-stop platform to assemble state-of-the-art NLP/ML technologies, ranging
+from Information Retrieval, Natural Language Understanding to Natural Language Generation.
+
 
 Forte was originally developed in CMU and is actively contributed by [Petuum](https://petuum.com/) in collaboration with other institutes. This project is part of the [CASL Open Source](http://casl-project.ai/) family.
 
@@ -42,13 +48,18 @@ pip install src/spacy
 
 Some components or modules in forte may require some [extra requirements](https://github.com/asyml/forte/blob/master/setup.py#L45):
 
-* ```pip install forte[ner]```: Install packages required for [ner_trainer](https://github.com/asyml/forte/blob/master/forte/trainer/ner_trainer.py)
-* ```pip install forte[test]```: Install packages required for running [unit tests](https://github.com/asyml/forte/tree/master/tests).
-* ```pip install forte[example]```: Install packages required for running [forte examples](https://github.com/asyml/forte/tree/master/examples).
-* ```pip install forte[wikipedia]```: Install packages required for reading [wikipedia datasets](https://github.com/asyml/forte/tree/master/forte/datasets/wikipedia).
-* ```pip install forte[augment]```: Install packages required for [data augmentation module](https://github.com/asyml/forte/tree/master/forte/processors/data_augment).
-* ```pip install forte[stave]```: Install packages required for [StaveProcessor](https://github.com/asyml/forte/blob/master/forte/processors/stave/stave_processor.py).
-* ```pip install forte[audio_ext]```: Install packages required for [AudioReader](https://github.com/asyml/forte/blob/master/forte/data/readers/audio_reader.py).
+
+* `pip install forte[data_aug]`: Install packages required for [data augmentation modules](https://github.com/asyml/forte/tree/master/forte/processors/data_augment).
+* `pip install forte[ir]`: Install packages required for [Information Retrieval Supports](https://github.com/asyml/forte/tree/master/forte/processors/ir/)
+* `pip install forte[remote]`: Install packages required for pipeline serving functionalities, such as [Remote Processor](https://github.com/asyml/forte/processors/misc/remote_processor.py).
+* `pip install forte[audio_ext]`: Install packages required for Forte Audio support, such as [Audio Reader](https://github.com/asyml/forte/blob/master/forte/data/readers/audio_reader.py).
+* `pip install forte[stave]`: Install packages required for [Stave](https://github.com/asyml/forte/blob/master/forte/processors/stave/stave_processor.py) integration.
+* `pip install forte[models]`: Install packages required for [ner training](https://github.com/asyml/forte/blob/master/forte/trainer/ner_trainer.py), [srl](https://github.com/asyml/forte/tree/master/forte/models/srl), [srl with new training system](https://github.com/asyml/forte/tree/master/forte/models/srl_new), and [srl_predictor](https://github.com/asyml/forte/tree/master/forte/processors/nlp/srl_predictor.py)
+* `pip install forte[test]`: Install packages required for running [unit tests](https://github.com/asyml/forte/tree/master/tests).
+* `pip install forte[wikipedia]`: Install packages required for reading [wikipedia datasets](https://github.com/asyml/forte/tree/master/forte/datasets/wikipedia).
+* `pip install forte[nlp]`: Install packages required for additional NLP supports, such as [subword_tokenizer](https://github.com/asyml/forte/tree/master/forte/processors/nlp/subword_tokenizer.py) and [texar encoder](https://github.com/asyml/forte/tree/master/forte/processors/third_party/pretrained_encoder_processors.py)
+* `pip install forte[extractor]`: Install packages required for extrator-based training system, [extractor](https://github.com/asyml/forte/blob/master/forte/data/extractors), [train_preprocessor](https://github.com/asyml/forte/tree/master/forte/train_preprocessor.py) and [tagging trainer](https://github.com/asyml/forte/tree/master/examples/tagging/tagging_trainer.py)
+
 
 
 ## Getting Started

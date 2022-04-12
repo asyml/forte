@@ -20,6 +20,7 @@ from typing import Tuple, List, Dict, Union, Optional, Iterable, Type
 
 from torch import Tensor
 
+
 from forte.common.configuration import Config
 from forte.data.base_extractor import BaseExtractor
 from forte.data.converter.feature import Feature

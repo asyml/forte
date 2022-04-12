@@ -21,8 +21,18 @@ an extracted feature corresponding to an input data point.
 from typing import Dict, Iterator, Type, Optional, List, Tuple, Union, Any
 
 import torch
-from texar.torch import HParams
-from texar.torch.data import IterDataSource, DatasetBase, Batch
+
+try:
+    from texar.torch.data import IterDataSource, DatasetBase, Batch
+except ImportError as e:
+    raise ImportError(
+        " `texar-pytorch` is not installed correctly."
+        " Consider install texar via `pip install texar-pytorch`"
+        " Or refer to [extra requirement for extrator](pip install forte[extractor])"
+        " for more information. "
+    ) from e
+from asyml_utilities.hyperparams import HParams
+
 
 from forte.data.converter import Converter
 from forte.data.converter import Feature

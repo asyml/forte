@@ -16,10 +16,9 @@ import json
 import os
 from abc import ABC
 from typing import Counter as CounterType, Dict, List, Optional
-
-import texar.torch as tx
-
+from asyml_utilities.special_tokens import SpecialTokens
 from forte.processors.base import PackProcessor
+
 
 __all__ = [
     "Alphabet",
@@ -47,7 +46,7 @@ class Alphabet:
         other_embeddings: Optional[Dict] = None,
     ):
         self.__name = name
-        self.reserved_tokens = tx.data.SpecialTokens
+        self.reserved_tokens = SpecialTokens
 
         self.instance2index: Dict = {}
         self.instances: List = []
