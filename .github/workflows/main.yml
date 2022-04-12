@@ -32,7 +32,7 @@ jobs:
         notebook-details:
           - { dep: "huggingface nltk", extra: "'tensorflow>=2.5.0,<2.8.0,termcolor>=1.1.0'"}
         models:
-          - { dep: "torch>=1.1.0 torchtext==0.4.0 tqdm>=4.36.1 texar-pytorch>=0.1.2 transformers yaml"}
+          - { extra: "torch>=1.1.0 torchtext==0.4.0 tqdm>=4.36.1 texar-pytorch>=0.1.2 transformers yaml"}
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
@@ -85,7 +85,7 @@ jobs:
           rm -rf texar-pytorch
       - name: Test models module
         run: |
-          for d in ${{ matrix.models.dep }}; do pip install $d; done
+          pip install --use-feature=in-tree-build --progress-bar off ${{ matrix.models.extra }}
           coverage run -m pytest tests/forte/models
       - name: Install Forte
         run: |
