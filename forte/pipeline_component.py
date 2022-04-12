@@ -79,9 +79,9 @@ class PipelineComponent(Generic[PackType], Configurable):
         implementation should set up the states of the component.
 
         Args:
-            resources (Resources): A global resource register. User can register
+            resources: A global resource register. User can register
                 shareable resources here, for example, the vocabulary.
-            configs (Config): The configuration passed in to set up this
+            configs: The configuration passed in to set up this
                 component.
         """
         self.resources = resources
@@ -106,8 +106,8 @@ class PipelineComponent(Generic[PackType], Configurable):
         automatically when this component finishes.
 
         Args:
-            pack (BasePack): The pack to add the entry into.
-            entry (Entry):  The entry to be added.
+            pack: The pack to add the entry into.
+            entry:  The entry to be added.
 
         Returns:
             None
@@ -131,7 +131,7 @@ class PipelineComponent(Generic[PackType], Configurable):
         objects to the resources.
 
         Args:
-            resource (Resources): A global resource registry.
+            resource: A global resource registry.
         """
         self.__is_initialized = False
 

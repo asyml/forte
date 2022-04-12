@@ -36,8 +36,10 @@ class CharacterFlipOp(SingleAnnotationAugmentOp):
 
     Args:
         string: input string whose characters need to be replaced,
-        dict_path (str): the `url` or the path to the pre-defined
-                    typo `json` file,
+
+        dict_path: the `url` or the path to the pre-defined
+                    typo json file,
+
         configs: prob(float): The probability of replacement,
                     should fall in [0, 1].
     """

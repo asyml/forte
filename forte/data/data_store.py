@@ -306,9 +306,9 @@ class DataStore(BaseStore):
         ``type_name``, ``begin``, and ``end``.
 
         Args:
-            type_name (str): The fully qualified type name of the new entry.
-            begin (int): Begin index of the entry.
-            end (int): End index of the entry.
+            type_name: The fully qualified type name of the new entry.
+            begin: Begin index of the entry.
+            end: End index of the entry.
 
         Returns:
             A list representing a new annotation type entry data.
@@ -331,9 +331,9 @@ class DataStore(BaseStore):
         ``parent_tid``, and ``child_tid``.
 
         Args:
-            type_name (str): The fully qualified type name of the new entry.
-            parent_tid (int): ``tid`` of the parent entry.
-            child_tid (int): ``tid`` of the child entry.
+            type_name: The fully qualified type name of the new entry.
+            parent_tid: ``tid`` of the parent entry.
+            child_tid: ``tid`` of the child entry.
 
         Returns:
             A list representing a new link type entry data.
@@ -354,8 +354,8 @@ class DataStore(BaseStore):
         ``type_name`` and ``member_type``.
 
         Args:
-            type_name (str): The fully qualified type name of the new entry.
-            member_type (str): Fully qualified name of its members.
+            type_name: The fully qualified type name of the new entry.
+            member_type: Fully qualified name of its members.
 
         Returns:
             A list representing a new group type entry data.
@@ -414,7 +414,8 @@ class DataStore(BaseStore):
         r"""This function takes a type_id and returns whether a type
         is an annotation type or not.
         Args:
-            type_name (str): The name of type in `self.__elements`.
+            type_name: The name of type in `self.__elements`.
+
         Returns:
             A boolean value whether this type_id belongs to an annotation
             type or not.
@@ -429,9 +430,9 @@ class DataStore(BaseStore):
         entry.
 
         Args:
-            type_name (str): The fully qualified type name of the new Annotation.
-            begin (int): Begin index of the entry.
-            end (int): End index of the entry.
+            type_name: The fully qualified type name of the new Annotation.
+            begin: Begin index of the entry.
+            end: End index of the entry.
 
         Returns:
             ``tid`` of the entry.
@@ -461,9 +462,9 @@ class DataStore(BaseStore):
         in the ``type_name`` list.
 
         Args:
-            type_name (str):  The fully qualified type name of the new Link.
-            parent_tid (int): ``tid`` of the parent entry.
-            child_tid (int): ``tid`` of the child entry.
+            type_name:  The fully qualified type name of the new Link.
+            parent_tid: ``tid`` of the parent entry.
+            child_tid: ``tid`` of the child entry.
 
         Returns:
             ``tid`` of the entry and its index in the ``type_name`` list.
@@ -480,8 +481,8 @@ class DataStore(BaseStore):
         of the entry in the ``type_name`` list.
 
         Args:
-            type_name (str): The fully qualified type name of the new Group.
-            member_type (str): Fully qualified name of its members.
+            type_name: The fully qualified type name of the new Group.
+            member_type: Fully qualified name of its members.
 
         Returns:
             ``tid`` of the entry and its index in the (``type_id``)th list.
@@ -496,9 +497,9 @@ class DataStore(BaseStore):
         passed to `set_attr()`.
 
         Args:
-            tid (int): Unique Id of the entry.
-            attr_name (str): Name of the attribute.
-            attr_value (any): Value of the attribute.
+            tid: Unique Id of the entry.
+            attr_name: Name of the attribute.
+            attr_value: Value of the attribute.
 
         Raises:
             KeyError: when ``tid`` or ``attr_name`` is not found.
@@ -522,9 +523,9 @@ class DataStore(BaseStore):
         `set_attribute()`.
 
         Args:
-            tid (int): The unique id of the entry.
-            attr_id (int): The id of the attribute.
-            attr_value (any): The value of the attribute.
+            tid: The unique id of the entry.
+            attr_id: The id of the attribute.
+            attr_value: The value of the attribute.
         """
         entry = self.__entry_dict[tid]
         entry[attr_id] = attr_value
@@ -536,8 +537,8 @@ class DataStore(BaseStore):
         to ``get_attr()``.
 
         Args:
-            tid (int): Unique id of the entry.
-            attr_name (str): Name of the attribute.
+            tid: Unique id of the entry.
+            attr_name: Name of the attribute.
 
         Returns:
             The value of ``attr_name`` for the entry with ``tid``.
@@ -563,8 +564,8 @@ class DataStore(BaseStore):
         of ``attr_id``  of this entry. Called by `get_attribute()`.
 
         Args:
-            tid (int): Unique id of the entry.
-            attr_id (int): The id of the attribute.
+            tid: Unique id of the entry.
+            attr_id: The id of the attribute.
 
         Returns:
             The value of ``attr_id``  for the entry with ``tid``.
@@ -577,7 +578,7 @@ class DataStore(BaseStore):
         from the data store. This function first removes it from `__entry_dict`.
 
         Args:
-            tid (int): Unique id of the entry.
+            tid: Unique id of the entry.
 
         Raises:
             KeyError: when entry with ``tid`` is not found.
@@ -623,8 +624,8 @@ class DataStore(BaseStore):
         and `index_id`. Called by `delete_entry()`.
 
         Args:
-            type_id (int): The index of the list in ``self.__elements``.
-            index_id (int): The index of the entry in the list.
+            type_id: The index of the list in ``self.__elements``.
+            index_id: The index of the entry in the list.
 
         Raises:
             KeyError: when ``type_name`` is not found.
@@ -651,7 +652,7 @@ class DataStore(BaseStore):
         and its ``type_name``.
 
         Args:
-            tid (int): Unique id of the entry.
+            tid: Unique id of the entry.
 
         Returns:
             The entry which ``tid`` corresponds to and its ``type_name``.
@@ -673,7 +674,7 @@ class DataStore(BaseStore):
         the entry.
 
         Args:
-            tid (int): Unique id of the entry.
+            tid: Unique id of the entry.
 
         Returns:
             Index of the entry which ``tid`` corresponds to in the
@@ -726,7 +727,7 @@ class DataStore(BaseStore):
         the order will be determined arbitrarily.
 
         Args:
-            type_names (List[str]): a list of string type names
+            type_names: a list of string type names
 
         Returns:
 
@@ -837,7 +838,7 @@ class DataStore(BaseStore):
         type ``type_name``.
 
         Args:
-            type_name (str): The fully qualified name of the entry.
+            type_name: The fully qualified name of the entry.
             include_sub_type: A boolean to indicate whether get its subclass.
 
         Returns:
@@ -869,7 +870,7 @@ class DataStore(BaseStore):
         inserted entry.
 
         Args:
-            tid (int): Unique id of the entry.
+            tid: Unique id of the entry.
 
         Returns:
             A list of attributes representing the next entry of the same type
@@ -898,7 +899,7 @@ class DataStore(BaseStore):
         previous inserted entry.
 
         Args:
-            tid (int): Unique id of the entry.
+            tid: Unique id of the entry.
 
         Returns:
             A list of attributes representing the previous entry of the same

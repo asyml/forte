@@ -47,7 +47,7 @@ class MachineTranslator:
         This function translates the input text into target language.
 
         Args:
-            src_text (str): The input text in source language.
+            src_text: The input text in source language.
         Returns:
             The output text in target language.
         """

@@ -64,7 +64,7 @@ class ProcessManager:
                   index-2. All elements from indices [0, 2] are PROCESSED
 
         Args:
-            pipeline_length(int): The length of the current pipeline being executed
+            pipeline_length: The length of the current pipeline being executed
     """
 
     def __init__(self, pipeline_length):

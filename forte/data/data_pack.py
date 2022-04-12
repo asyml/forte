@@ -152,7 +152,7 @@ class DataPack(BasePack[Entry, Link, Group]):
     language text could be a document, paragraph or in any other granularity.
 
     Args:
-        pack_name (str, optional): A name for this data pack.
+        pack_name: A name for this data pack.
     """
 
     def __init__(self, pack_name: Optional[str] = None):
@@ -378,8 +378,8 @@ class DataPack(BasePack[Entry, Link, Group]):
         r"""Get the text in the data pack contained in the span.
 
         Args:
-            begin (int): begin index to query.
-            end (int): end index to query.
+            begin: begin index to query.
+            end: end index to query.
 
         Returns:
             The text within this span.
@@ -393,8 +393,8 @@ class DataPack(BasePack[Entry, Link, Group]):
         audio time series.
 
         Args:
-            begin (int): begin index to query.
-            end (int): end index to query.
+            begin: begin index to query.
+            end: end index to query.
 
         Returns:
             The audio within this span.
@@ -465,9 +465,9 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         Args:
 
-            input_processed_span (Span): Span of the processed text for which
+            input_processed_span: Span of the processed text for which
                 the corresponding span of the original text is desired.
-            align_mode (bool): The strictness criteria for alignment in the
+            align_mode: The strictness criteria for alignment in the
                 ambiguous cases, that is, if a part of input_processed_span
                 spans a part of the inserted span, then align_mode controls
                 whether to use the span fully or ignore it completely according
@@ -623,7 +623,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         :class:`~forte.data.data_pack.DataPack` object. Allow duplicate entries in a pack.
 
         Args:
-            entry (Entry): An :class:`~forte.data.ontology.core.Entry`
+            entry: An :class:`~forte.data.ontology.core.Entry`
                 object to be added to the pack.
 
         Returns:
@@ -638,9 +638,9 @@ class DataPack(BasePack[Entry, Link, Group]):
         object to the :class:`~forte.data.DataPack` object.
 
         Args:
-            entry (Entry): An :class:`~forte.data.ontology.core.Entry` object
+            entry: An :class:`~forte.data.ontology.core.Entry` object
                 to be added to the datapack.
-            allow_duplicate (bool): Whether we allow duplicate in the datapack.
+            allow_duplicate: Whether we allow duplicate in the datapack.
 
         Returns:
             The input entry itself
@@ -716,7 +716,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         the related entries.
 
         Args:
-            entry (Entry): An :class:`~forte.data.ontology.core.Entry`
+            entry: An :class:`~forte.data.ontology.core.Entry`
                 object to be deleted from the pack.
 
         """
@@ -804,7 +804,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                 pack.get_data(base_ontology.Sentence, requests)
 
         Args:
-            context_type (Union[str, Type[Annotation], Type[AudioAnnotation]]):
+            context_type:
                 The granularity of the data context, which
                 could be any :class:`~forte.data.ontology.top.Annotation` or
                 :class:`~forte.data.ontology.top.AudioAnnotation` type.
@@ -821,7 +821,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                   numpy arrays. This function iterates
                   :attr:`all_audio_annotations` to search target entry data.
 
-            request (Dict[Entry, Union(List[str], Dict[str, Union(List[str] , str)])]): The
+            request: The
                 entry types and fields User wants to request.
                 The keys of the requests dict are the required entry types
                 and the value should be either:
@@ -847,7 +847,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
                 For all link types, `"child"` and `"parent"` fields are
                 returned by default.
-            skip_k (int): Will skip the first `skip_k` instances and generate
+            skip_k: Will skip the first `skip_k` instances and generate
                 data from the (`offset` + 1)th instance.
 
         Returns:
@@ -912,7 +912,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             r"""Get an annotation list of a given context type.
 
             Args:
-                c_type (Union[Type[Annotation], Type[AudioAnnotation]]):
+                c_type:
                     The granularity of the data context, which
                     could be any :class:`~forte.data.ontology.top.Annotation` type.
 
@@ -942,10 +942,10 @@ class DataPack(BasePack[Entry, Link, Group]):
                 context.
 
             Args:
-                c_type (Union[Type[Annotation], Type[AudioAnnotation]]):
+                c_type:
                     The granularity of the data context, which
                     could be any :class:`~forte.data.ontology.top.Annotation` type.
-                context (Union[Annotation, AudioAnnotation]): context that
+                context: context that
                     contains data to be extracted.
 
             Raises:
@@ -1353,7 +1353,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         entry_type: Union[str, Type[EntryType]],
         range_annotation: Optional[Union[Annotation, AudioAnnotation]] = None,
         components: Optional[Union[str, Iterable[str]]] = None,
-        include_sub_type=True,
+        include_sub_type: bool = True,
     ) -> Iterable[EntryType]:
         r"""This function is used to get data from a data pack with various
         methods.
@@ -1415,15 +1415,16 @@ class DataPack(BasePack[Entry, Link, Group]):
             After building the index from the snippet above, you will be able
             to retrieve the tokens covered by sentence much faster.
 
+
         Args:
-            entry_type (type): The type of entries requested.
-            range_annotation (Annotation, `AudioAnnotation`, optional): The
+            entry_type: The type of entries requested.
+            range_annotation: The
                 range of entries requested. If `None`, will return valid
                 entries in the range of whole data pack.
-            components (str or list, optional): The component (creator)
+            components: The component (creator)
                 generating the entries requested. If `None`, will return valid
                 entries generated by any component.
-            include_sub_type (bool): whether to consider the sub types of
+            include_sub_type: whether to consider the sub types of
                 the provided entry type. Default `True`.
 
         Yields:
@@ -1584,8 +1585,8 @@ class DataIndex(BaseIndex):
         r"""Get the coverage index from ``outer_type`` to ``inner_type``.
 
         Args:
-            outer_type (type): an annotation or `AudioAnnotation` type.
-            inner_type (type): an entry type.
+            outer_type: an annotation or `AudioAnnotation` type.
+            inner_type: an entry type.
 
         Returns:
             If the coverage index does not exist, return `None`. Otherwise,
@@ -1630,9 +1631,9 @@ class DataIndex(BaseIndex):
         r"""Build the coverage index from ``outer_type`` to ``inner_type``.
 
         Args:
-            data_pack (DataPack): The data pack to build coverage for.
-            outer_type (type): an annotation or `AudioAnnotation` type.
-            inner_type (type): an entry type, can be Annotation, Link, Group,
+            data_pack: The data pack to build coverage for.
+            outer_type: an annotation or `AudioAnnotation` type.
+            inner_type: an entry type, can be Annotation, Link, Group,
                 `AudioAnnotation`.
         """
         if not issubclass(
@@ -1669,10 +1670,10 @@ class DataIndex(BaseIndex):
         r"""Check whether the two annotations have overlap in span.
 
         Args:
-            entry1 (int or Annotation or `AudioAnnotation`): An
+            entry1: An
                 :class:`Annotation` or :class:`AudioAnnotation` object to be
                 checked, or the tid of the Annotation.
-            entry2 (int or Annotation or `AudioAnnotation`: Another
+            entry2: Another
                 :class:`Annotation` or :class:`AudioAnnotation` object to be
                 checked, or the tid of the Annotation.
         """
@@ -1743,10 +1744,10 @@ class DataIndex(BaseIndex):
         `False`.
 
         Args:
-            inner_entry (int or Entry): The inner entry object to be checked
+            inner_entry: The inner entry object to be checked
              whether it is within ``span``. The argument can be the entry id
              or the entry object itself.
-            span (Span): A :class:`~forte.data.span.Span` object to be checked. We will check
+            span: A :class:`~forte.data.span.Span` object to be checked. We will check
                 whether the ``inner_entry`` is within this span.
 
         Returns:
@@ -1833,10 +1834,10 @@ class DataIndex(BaseIndex):
         function will always return `False`.
 
         Args:
-            inner_entry (int or Entry): The inner entry object to be checked
+            inner_entry: The inner entry object to be checked
                 whether it is within ``span``. The argument can be the entry id
                 or the entry object itself.
-            span (Span): A :class:`~forte.data.span.Span` object to be checked.
+            span: A :class:`~forte.data.span.Span` object to be checked.
                 We will check whether the ``inner_entry`` is within this span.
 
         Returns:

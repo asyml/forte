@@ -95,7 +95,7 @@ class TypoReplacementOp(SingleAnnotationAugmentOp):
         This function replaces a word from a typo dictionary.
 
         Args:
-            input_anno (Annotation): The input annotation.
+            input_anno: The input annotation.
         Returns:
             A tuple, where the first element is a boolean value indicating
             whether the replacement happens, and the second element is the
