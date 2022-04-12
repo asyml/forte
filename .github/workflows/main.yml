@@ -46,10 +46,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
             ${{ runner.os }}-
-      - name: Test models module
-        run: |
-          for d in ${{ matrix.modules }}; do pip install --use-feature=in-tree-build --progress-bar off .[$d]; done
-          coverage run -m pytest tests/forte/models
+
       - name: Install dependencies
         run: |
           sudo apt-get install -y libsndfile1-dev
@@ -78,15 +75,18 @@ jobs:
         run: |
           pip install --progress-bar off torch==${{ matrix.torch-version }}
           pip install --progress-bar off tensorflow==${{ matrix.tensorflow-version }}
-      - name: Install Texar
+      # - name: Install Texar
+      #   run: |
+      #     git clone https://github.com/asyml/texar-pytorch.git
+      #     cd texar-pytorch
+      #     pip install --use-feature=in-tree-build --progress-bar off .
+      #     cd ..
+      #     # Remove them to avoid confusion.
+      #     rm -rf texar-pytorch
+      - name: Test models module
         run: |
-          git clone https://github.com/asyml/texar-pytorch.git
-          cd texar-pytorch
-          pip install --use-feature=in-tree-build --progress-bar off .
-          cd ..
-          # Remove them to avoid confusion.
-          rm -rf texar-pytorch
-
+          for d in ${{ matrix.modules }}; do pip install --use-feature=in-tree-build --progress-bar off .[$d]; done
+          coverage run -m pytest tests/forte/models
       - name: Install Forte
         run: |
           pip install --use-feature=in-tree-build --progress-bar off .[models,test,wikipedia,data_aug,nlp,ir,texar-encoder,stave,audio_ext,remote,extractor]
