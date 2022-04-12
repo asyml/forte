@@ -3,13 +3,18 @@ Welcome to Forte's documentation!
 
 Content
 ----------------
-.. mdinclude:: ../README.md
-
 
 
 .. toctree::
    :maxdepth: 2
+   :caption: Overview
+
+   readme_link.md
+
+.. toctree::
+   :maxdepth: 2
    :caption: NLP with Forte
+
 
    index_toc
 

@@ -40,10 +40,9 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.extlinks",
     "sphinx.ext.napoleon",
-    # "myst_parser",
+    "myst_parser",
     "sphinxcontrib.spelling",
     "nbsphinx",
-    "m2r2",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -123,6 +122,7 @@ pygments_style = "sphinx"
 
 # If true, keep warnings as "system message" paragraphs in the built documents.
 # keep_warnings = False
+suppress_warnings = ["myst.header"]
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
