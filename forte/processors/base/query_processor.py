@@ -39,7 +39,7 @@ class QueryProcessor(MultiPackProcessor, ABC):
         a query from a text string.
 
         Args:
-            text (str): A string for which a query will be generated
+            text: A string for which a query will be generated
 
         Returns:
             A str or numpy array representing a query for `text`
@@ -54,7 +54,7 @@ class QueryProcessor(MultiPackProcessor, ABC):
         takes in an `input_pack` and processes it to generate a query.
 
         Args:
-            input_pack (DataPack or a MultiPack): A (data/multi)-pack for which
+            input_pack: A (data/multi)-pack for which
                 a query is generated. If `input_pack` is a multipack, the
                 processor should fetch the relevant datapack and process it to
                 generate a query.

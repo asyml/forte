@@ -279,7 +279,7 @@ class FixedSizeDataPackBatcherWithExtractor(ProcessingBatcher):
         features.
 
         Args:
-            features_collection (List[Dict[str, Feature]]): A list of features.
+            features_collection: A list of features.
 
         Returns:
             A instance of `Dict[str, Union[Tensor, Dict]]`, which

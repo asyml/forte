@@ -90,9 +90,9 @@ class AttributeExtractor(BaseExtractor):
         attribute from entry.
 
         Args:
-            entry (Entry): An instance of Entry type, where the
+            entry: An instance of Entry type, where the
                 attribute will be extracted from.
-            attr (str): The name of the attribute.
+            attr: The name of the attribute.
 
         Returns:
             Any. The attribute extracted from entry.
@@ -106,10 +106,10 @@ class AttributeExtractor(BaseExtractor):
         set the attribute.
 
         Args:
-            entry (Entry): An instance of Entry type, where the
+            entry: An instance of Entry type, where the
                 attribute will be set.
-            attr (str): The name of the attribute.
-            value (Any): The value to be set for the attribute.
+            attr: The name of the attribute.
+            value: The value to be set for the attribute.
         """
         if attr == "text":
             raise AttributeError("text attribute of entry cannot be changed.")
@@ -121,8 +121,8 @@ class AttributeExtractor(BaseExtractor):
         r"""Get all attributes of one instance and add them into the vocabulary.
 
         Args:
-            pack (DataPack): The data pack input to extract vocabulary.
-            context (Annotation): The context is an Annotation entry where
+            pack: The data pack input to extract vocabulary.
+            context: The context is an Annotation entry where
                 features will be extracted within its range. If None, then the
                 whole data pack will be used as the context. Default is None.
         """
@@ -150,8 +150,8 @@ class AttributeExtractor(BaseExtractor):
         The entry type is passed in from via extractor config `entry_type`.
 
         Args:
-            pack (DataPack): The datapack that contains the current instance.
-            context (Annotation): The context is an Annotation entry where
+            pack: The datapack that contains the current instance.
+            context: The context is an Annotation entry where
                 features will be extracted within its range. If None, then the
                 whole data pack will be used as the context. Default is None.
 
@@ -185,9 +185,9 @@ class AttributeExtractor(BaseExtractor):
         config (set them to None). You can overwrite this function by yourself.
 
         Args:
-            pack (DataPack): The datapack that contains the current
+            pack: The datapack that contains the current
                 instance.
-            context (Annotation): The context is an Annotation entry where
+            context: The context is an Annotation entry where
                 data are extracted within its range. If None, then the
                 whole data pack will be used as the context. Default is None.
         """
@@ -206,11 +206,11 @@ class AttributeExtractor(BaseExtractor):
         the number of the entries of the defined type in the data pack.
 
         Args:
-            pack (DataPack): The datapack that contains the current
+            pack: The datapack that contains the current
                 instance.
-            predictions (Iterable[SupportsInt]): This is the output
+            predictions: This is the output
                 of the model, which should be the class index for the attribute.
-            context (Optional[Annotation]): The context is an Annotation
+            context: The context is an Annotation
                 entry where predictions will be added to. This has the same
                 meaning with `context` as in
                 :meth:`~forte.data.base_extractor.BaseExtractor.extract`.

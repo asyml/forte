@@ -260,13 +260,13 @@ class BaseDataAugmentationOp(Configurable):
         In this case, the `is_begin` is True.
 
         Args:
-            index (int): The index to map.
-            old_spans (SortedList): The spans before replacement. It should be
+            index: The index to map.
+            old_spans: The spans before replacement. It should be
                 a sorted list in ascending order.
-            new_spans (SortedList): The spans after replacement. It should be
+            new_spans: The spans after replacement. It should be
                 a sorted list in ascending order.
-            is_begin (bool): True if the input index is the start index of a span.
-            is_inclusive (bool): True if the span constructed by the aligned
+            is_begin: True if the input index is the start index of a span.
+            is_inclusive: True if the span constructed by the aligned
                 index should include inserted spans.
 
         Returns:
