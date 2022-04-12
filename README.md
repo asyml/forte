@@ -61,7 +61,7 @@ Some components or modules in forte may require some [extra requirements](https:
 With Forte, it is extremely simple to build an integrated system that can search documents, analyze, extract information and generate language all in one place.
 This allows developers to fully utilize the strength of individual modules, combine the results from each step, and enables the system to make fully informed decision at the end of the pipeline.
 
-Forte not only makes it easy to integrate with arbitrary 3rd party tools (Check out these [examples](./examples)!), but also brings technology to you by offering a miscellaneous collection of deep learning modules via Texar, and a convenient model-data interface for casting tasks to models.
+Forte not only makes it easy to integrate with arbitrary 3rd party tools (Check out these [examples](https://github.com/asyml/forte/tree/master/examples)!), but also brings technology to you by offering a miscellaneous collection of deep learning modules via Texar, and a convenient model-data interface for casting tasks to models.
 
 ## Quick Start Guide
 Here we provide an example to user to get start with Forte easier. Consider a case we want to get words in the sentence and also extract entities from the sentence. We can write two processors for the two separate tasks.
