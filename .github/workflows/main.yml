@@ -31,7 +31,8 @@ jobs:
             tensorflow-version: 2.5.0
         notebook-details:
           - { dep: "huggingface nltk", extra: "'tensorflow>=2.5.0,<2.8.0,termcolor>=1.1.0'"}
-        modules: ["models","test","wikipedia","data_aug","nlp","ir","texar-encoder","stave","audio_ext","remote","extractor"]
+        modules:
+          - {name: "models", test_dirs: ["tests/forte/trainer/ner_trainer.py","forte/tree/master/forte/models/srl"]}
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
@@ -85,7 +86,7 @@ jobs:
       #     rm -rf texar-pytorch
       - name: Test models module
         run: |
-          for d in ${{ matrix.modules }}; do pip install --use-feature=in-tree-build --progress-bar off .[$d]; done
+          for m in ${{ matrix.modules }}; do pip install --use-feature=in-tree-build --progress-bar off .[$m.name]; done
           coverage run -m pytest tests/forte/models
       - name: Install Forte
         run: |
