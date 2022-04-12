@@ -85,7 +85,7 @@ jobs:
           rm -rf texar-pytorch
       - name: Test models module
         run: |
-          pip install --use-feature=in-tree-build --progress-bar off ${{ matrix.models.extra }}
+          pip install --progress-bar off ${{ matrix.models.extra }}
           coverage run -m pytest tests/forte/models
       - name: Install Forte
         run: |
