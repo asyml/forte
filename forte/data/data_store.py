@@ -268,7 +268,7 @@ class DataStore(BaseStore):
             data_source: The path storing data source.
             serialize_method: The method used to serialize the data, this
                 should be the same as how serialization is done. The current
-                option is "json".
+                option is `json`.
             check_attribute: Boolean value indicating whether users want to
                 check compatibility of attributes. Only applicable when
                 `check_attribute` is set to True in BaseStore.serialize.

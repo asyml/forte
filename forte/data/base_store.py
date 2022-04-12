@@ -105,7 +105,7 @@ class BaseStore:
                 serialization.
             serialize_method: The method used to serialize the data, this
                 should be the same as how serialization is done. The current
-                option is "json"。
+                option is `json`。
 
         Returns:
             An data store object deserialized from the data.
