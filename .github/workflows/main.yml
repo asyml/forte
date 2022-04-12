@@ -131,7 +131,7 @@ jobs:
           then
             git clone https://github.com/asyml/forte-wrappers.git
             cd forte-wrappers
-            for d in ${{ matrix.notebook-details.dep }}; do pip install "src/"$d; done
+            for d in ${{ matrix.notebook-details.dep }}; do pip install $d; done
             cd ..
             coverage run -m pytest tests/forte/notebooks
           fi
