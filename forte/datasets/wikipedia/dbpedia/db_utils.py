@@ -35,7 +35,7 @@ def load_redirects(redirect_path: str) -> Dict[str, str]:
     directed from, and the value is the page being directed to.
 
     Args:
-        redirect_path (str): A path pointing to a file that contains the NIF
+        redirect_path: A path pointing to a file that contains the NIF
           formatted statements of redirect. A file like this can be obtained
           here: http://wiki.dbpedia.org/services-resources/documentation/datasets#Redirects
 
@@ -73,8 +73,8 @@ def get_resource_attribute(url: str, param_name: str) -> Optional[str]:
     'context'
 
     Args:
-        url (str): A NIF URL.
-        param_name (str): The attribute name to extract.
+        url: A NIF URL.
+        param_name: The attribute name to extract.
 
     Returns (str):
         The extracted parameter value.

@@ -422,7 +422,7 @@ class LabeledSpanGraphNetwork(tx.ModuleBase):
     def _arange(self, *args, **kwargs):
         return torch.arange(*args, device=self._device, **kwargs)
 
-    def forward(self, inputs: tx.data.Batch) -> "ReturnType":
+    def forward(self, inputs: tx.data.Batch) -> ReturnType:
         # Compute embeddings and recurrent states.
         char_embed = self.char_cnn(inputs.text)
         with torch.no_grad():

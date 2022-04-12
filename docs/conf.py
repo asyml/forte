@@ -43,6 +43,7 @@ extensions = [
     "myst_parser",
     "sphinxcontrib.spelling",
     "nbsphinx",
+    "sphinx_autodoc_typehints",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -361,7 +362,7 @@ rst_prolog = r"""
 """
 
 autodoc_member_order = "bysource"
-autodoc_typehints = "none"
+autodoc_typehints = "signature"
 
 napoleon_numpy_docstring = False
 

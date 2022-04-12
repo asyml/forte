@@ -90,7 +90,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
     :class:`~forte.data.multi_pack.MultiPack`.
 
     Args:
-        pack_name (str, Optional): a string name of the pack.
+        pack_name: a string name of the pack.
 
     """
 
@@ -233,9 +233,9 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         :class:`~forte.data.base_pack.BasePack` object. Allow duplicate entries in a pack.
 
         Args:
-            entry (Entry): An :class:`~forte.data.ontology.core.Entry`
+            entry: An :class:`~forte.data.ontology.core.Entry`
                 object to be added to the pack.
-            component_name (str): A name to record that the entry is created by
+            component_name: A name to record that the entry is created by
              this component.
 
         Returns:
@@ -252,7 +252,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         :class:`~forte.data.base_pack.BasePack` object. Allow duplicate entries in a pack.
 
         Args:
-            entry (Entry): An :class:`~forte.data.ontology.core.Entry`
+            entry: An :class:`~forte.data.ontology.core.Entry`
                 object to be added to the pack.
 
         Returns:
@@ -266,7 +266,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         pack manually.
 
         Args:
-            component (str): Overwrite the component record with this.
+            component: Overwrite the component record with this.
 
         Returns:
             None
@@ -404,8 +404,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         its `__init__` function is called.
 
         Args:
-            entry (Entry): The entry to be added.
-            component_name (str): A name to record that the entry is created by
+            entry: The entry to be added.
+            component_name: A name to record that the entry is created by
              this component.
 
         Returns:
@@ -532,7 +532,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         Look up all entries from the `component` as a unordered set
 
         Args:
-            component (str): The component (creator) to get the entries. It is
+            component: The component (creator) to get the entries. It is
                 normally the full qualified name of the creator class, but it
                 may also be customized based on the implementation.
 
@@ -549,7 +549,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         each creator iteratively and combine the result.
 
         Args:
-            components (List[str]): The list of components to find.
+            components: The list of components to find.
 
         Returns:
             The list of entry ids that are created from these components.
@@ -586,8 +586,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         use :meth:`forte.data.base_pack.BasePack.get`.
 
         Args:
-            entry_type (Type[EntryType]): The type of the entry you are looking for.
-            exclude_sub_types (bool): Whether to ignore the inherited sub type
+            entry_type: The type of the entry you are looking for.
+            exclude_sub_types: Whether to ignore the inherited sub type
                 of the provided `entry_type`. Default is True.
 
         Returns:

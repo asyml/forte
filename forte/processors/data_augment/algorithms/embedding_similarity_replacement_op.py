@@ -69,7 +69,7 @@ class EmbeddingSimilarityReplacementOp(TextReplacementOp):
         pretrained embeddings.
 
         Args:
-            input_anno (Annotation): The input annotation.
+            input_anno: The input annotation.
         Returns:
             A tuple of two values, where the first element is a boolean value
             indicating whether the replacement happens, and the second

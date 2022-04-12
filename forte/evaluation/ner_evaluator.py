@@ -40,10 +40,10 @@ class CoNLLNEREvaluator(Evaluator):
         This method is called by the pipeline during the initialization.
 
         Args:
-            resources (Resources): An object of class
+            resources: An object of class
                 :class:`~forte.common.Resources` that holds references to
                 objects that can be shared throughout the pipeline.
-            configs (Config): A configuration to initialize the
+            configs: A configuration to initialize the
                 evaluator. This evaluator is expected to hold the
                 following (key, value) pairs
                 - `"entry_type"` (str): The entry to be evaluated.

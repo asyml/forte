@@ -111,8 +111,8 @@ class LinkExtractor(BaseExtractor):
         Update values of relation attributes to the vocabulary.
 
         Args:
-            pack (DataPack): The input data pack.
-            context (Annotation): The context is an Annotation entry where
+            pack: The input data pack.
+            context: The context is an Annotation entry where
                 features will be extracted within its range. If None, then the
                 whole data pack will be used as the context. Default is None.
         Returns:
@@ -130,8 +130,8 @@ class LinkExtractor(BaseExtractor):
         """Extract link data as features from the context.
 
         Args:
-            pack (DataPack): The input data pack that contains the features.
-            context (Annotation): The context is an Annotation entry where
+            pack: The input data pack that contains the features.
+            context: The context is an Annotation entry where
                 features will be extracted within its range. If None, then the
                 whole data pack will be used as the context. Default is None.
 
@@ -183,13 +183,13 @@ class LinkExtractor(BaseExtractor):
         Convert prediction back to Links inside the data pack.
 
         Args:
-            pack (DataPack): The datapack to add predictions back.
-            predictions (List): This is the output of the model, it is a
+            pack: The datapack to add predictions back.
+            predictions: This is the output of the model, it is a
                 triplet, the first element shows the parent, the second
                 element shows the child. These two are indexed by the
                 `index_annotation` of this extractor. The last element is the
                 index of the relation attribute.
-            context (Optional[Annotation]): The context is an Annotation
+            context: The context is an Annotation
                 entry where predictions will be added to. This has the same
                 meaning with `context` as in
                 :meth:`~forte.data.base_extractor.BaseExtractor.extract`.
