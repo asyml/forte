@@ -53,11 +53,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
             ${{ runner.os }}-
-      - name: Test models module
-        run: |
-          pip install --use-feature=in-tree-build --progress-bar off .[test]
-          pip install --use-feature=in-tree-build --progress-bar off .[${{ matrix.modules }}]
-          coverage run -m pytest ${{matrix.test_file}}
       - name: Install dependencies
         run: |
           sudo apt-get install -y libsndfile1-dev
@@ -89,6 +84,11 @@ jobs:
       - name: Install Forte
         run: |
           pip install --use-feature=in-tree-build --progress-bar off .[models,test,wikipedia,data_aug,nlp,ir,texar-encoder,stave,audio_ext,remote,extractor]
+      - name: Test models module
+        run: |
+          pip install --use-feature=in-tree-build --progress-bar off .[test]
+          pip install --use-feature=in-tree-build --progress-bar off .[${{ matrix.modules }}]
+          coverage run -m pytest ${{matrix.test_file}}
       - name: Test backbone Forte import test
         run: |
           # Try to install Forte backbone only and test basic imports.
