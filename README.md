@@ -74,91 +74,71 @@ Some components or modules in forte may require some [extra requirements](https:
 
 
 ## Quick Start Guide
-Here we provide an example for user to get started with Forte easier. Consider a case we want to get words in the sentence and also extract entities from the sentence. We can write two processors for the two separate tasks.
+Here we provide an example for user to get started with Forte easier. Consider a case we want to tag tokens' POS and extract entities from the sentence. We can write two processors for the two separate tasks.
 
 First, we imports all required libraries.
 ```python
 from forte import Pipeline
 from forte.processors.base import PackProcessor
 from forte.data.data_pack import DataPack
-from dataclasses import dataclass
-from forte.data.ontology.top import Generics
-from typing import Optional, Dict, Any
 from forte.data.readers import TerminalReader
 from fortex.spacy import SpacyProcessor
-import re
+from ft.onto.base_ontology import Token
+from forte.processors.misc import WhiteSpaceTokenizer
+import nltk
 ```
-In Forte, we use data entry with different entry types to represent data.
-The following class is an example of data entry storing word texts in the class variable `value`.
-New User doesn't need to pay too much attention about it and can just use it as it is.
-
-```python
-@dataclass
-class Word(Generics):
-    """A dummy generic type for words."""
-    value: Optional[str] = None
-    def __init__(self, pack, value):
-        super().__init__(pack)
-        self.value = value
-```
-Next, we can write a simple customized processor for the first task, split sentences into words.
-There are two steps for the sentence processing.
+Next, we can write a simple customized processor for the first task, analyzing POS tags to tokens.
+There are two steps for sentence processing.
 First, we need to strip all punctuation as split words should not contain them.
 Second, we need to split stripped sentences into words and write words into the data pack.
 ```python
-class WordSplitPackProcessor(PackProcessor):
-    """A processor that removes punctuation in sentences in the data pack
-    and split sentences into words and write words into the data pack.
-    """
-    def __init__(self):
-        super().__init__()
+class NLTKPOSTagger(PackProcessor):
+    r"""A wrapper of NLTK pos tagger."""
 
     def initialize(self, resources, configs):
         super().initialize(resources, configs)
+        # download tagger using average perceptron neural network
+        nltk.download("averaged_perceptron_tagger")
+
+    def __init__(self):
+        super().__init__()
 
     def _process(self, input_pack: DataPack):
-        # write a data type Word into the data pack
-        # since in the first processor, it writes sentence into the
-        # data pack, we can get sentences by DataPack.get() which
-        # generate data entries of parameter type.
-        for sentence in input_pack.get("ft.onto.base_ontology.Sentence"):
-            # first step: strip all punctuation
-            words = re.sub(r'[^\w\s]','',sentence.text).split(" ")
-            # second step: split stripped sentences into words and write
-            # words into the data pack
-            for w in words:
-                # we pass the input pack and word strings
-                # into `Word` class, and the `Word.value` store
-                # `input_pack` will internally add `Word` entries into `input_pack`'s internal storage
-                # while `Word` initializes itself.
-                Word(pack=input_pack, value=w)
-    # Configuration is a dictionary format
-    # it can be defined to hold user-input configurations
-    @classmethod
-    def default_configs(cls) -> Dict[str, Any]:
-        return {}
+        # get a list of token data entries from `input_pack`
+        # using `DataPack.get()`` method
+        token_entries = list(
+            input_pack.get(Token)
+        )
+        # get a list of token data entries text
+        token_texts = [token.text for token in token_entries]
+        # use nltk pos tagging module to tag token texts
+        taggings = nltk.pos_tag(token_texts)
+        # assign nltk taggings to token data entry attributes
+        for token, tag in zip(token_entries, taggings):
+            # tag is a tuple: (token text, tag)
+            token.pos = tag[1]
 ```
 Finally, we set up pipeline and add all pipeline components into it, and process the input read from the terminal.
 ```python
 pipeline: Pipeline = Pipeline[DataPack]()
-# add a reader that reads input by prompting user in the terminal
+# set a reader that reads input by prompting user in the terminal
 pipeline.set_reader(TerminalReader())
-# NOTE: we can add multiple processors into the pipeline
-#       and pipeline processes the input sequentially without a conflict.
-
 # add the first processor: SpacyProcessor from third party library that extract entity mentions
 pipeline.add(SpacyProcessor(), {"processors": ["sentence", "ner"]})
-# add the second processor: the customized processor that split sentences into words
-pipeline.add(WordSplitPackProcessor())
+# add the second processor: the tokenizer that tokenize a sentence into tokens
+pipeline.add(WhiteSpaceTokenizer())
+# add the third processor: a cutomized NLTK POS tagger that tags token texts
+pipeline.add(NLTKPOSTagger())
 for pack in pipeline.initialize().process_dataset():
     for sentence in pack.get("ft.onto.base_ontology.Sentence"):
         print("The sentence is: ", sentence.text)
         print("The entities are: ")
         for ent in pack.get("ft.onto.base_ontology.EntityMention", sentence):
             print(ent.text, ent.ner_type)
-    print("Customized WordSplitPackProcessor results: ")
-    for token in pack.get(Word):
-        print(token, end = " ")
+    print("Customized NLTKPOSTagger results: ")
+    # print NLTK tagging results following token texts
+    for token in pack.get(Token):
+        print(f" {token.text}({token.pos})", end = " ")
     print()
 ```
 
