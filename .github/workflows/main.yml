@@ -64,6 +64,11 @@ jobs:
           python -m pip install ipykernel
           python -m ipykernel install --user
           pip install --progress-bar off asyml-utilities
+      - name: Test models module
+        run: |
+          pip install --use-feature=in-tree-build --progress-bar off .[test]
+          pip install --use-feature=in-tree-build --progress-bar off .[${{ matrix.modules }}]
+          coverage run -m pytest $matrix.test_file
       - name: Format check with Black
         run: |
           black --line-length 80 --check forte/
@@ -84,11 +89,7 @@ jobs:
       - name: Install Forte
         run: |
           pip install --use-feature=in-tree-build --progress-bar off .[models,test,wikipedia,data_aug,nlp,ir,texar-encoder,stave,audio_ext,remote,extractor]
-      - name: Test models module
-        run: |
-          pip install --use-feature=in-tree-build --progress-bar off .[test]
-          pip install --use-feature=in-tree-build --progress-bar off .[${{ matrix.modules }}]
-          coverage run -m pytest ${{matrix.test_file}}
+
       - name: Test backbone Forte import test
         run: |
           # Try to install Forte backbone only and test basic imports.
