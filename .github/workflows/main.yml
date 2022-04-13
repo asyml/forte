@@ -31,8 +31,8 @@ jobs:
             tensorflow-version: 2.5.0
         notebook-details:
           - { dep: "huggingface nltk", extra: "'tensorflow>=2.5.0,<2.8.0,termcolor>=1.1.0'"}
-        modules:
-          - {name: "models", test_dirs: ["tests/forte/trainer/ner_trainer.py","forte/tree/master/forte/models/srl"]}
+        modules: ["models"]
+          # - {name: "models", test_dirs: ["tests/forte/trainer/ner_trainer.py","forte/tree/master/forte/models/srl"]}
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
@@ -49,7 +49,7 @@ jobs:
             ${{ runner.os }}-
       - name: Test models module
         run: |
-          for m in matrix.modules; do pip install --use-feature=in-tree-build --progress-bar off .[${{m.name}}] ; done
+          for m in matrix.modules; do pip install --use-feature=in-tree-build --progress-bar off .[$m] ; done
           coverage run -m pytest tests/forte/models
       - name: Install dependencies
         run: |
