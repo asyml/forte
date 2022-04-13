@@ -121,7 +121,7 @@ class WordSplitPackProcessor(PackProcessor):
         # since in the first processor, it writes sentence into the
         # data pack, we can get sentences by DataPack.get() which
         # generate data entries of parameter type.
-        for sentence in pack.get("ft.onto.base_ontology.Sentence"):
+        for sentence in input_pack.get("ft.onto.base_ontology.Sentence"):
             # first step: strip all punctuation
             words = re.sub(r'[^\w\s]','',sentence.text).split(" ")
             # second step: split stripped sentences into words and write
