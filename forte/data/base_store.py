@@ -48,9 +48,7 @@ class BaseStore:
     ):
         if serialize_method in ["jsonpickle", "json"]:
             with open(output_path, mode="wt", encoding="utf-8") as json_out:
-                json_out.write(
-                    self.to_string(serialize_method, save_attribute)
-                )
+                json_out.write(self.to_string(serialize_method, save_attribute))
         else:
             raise NotImplementedError(
                 f"Unsupported serialization method {serialize_method}"
