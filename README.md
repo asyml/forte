@@ -74,7 +74,7 @@ Some components or modules in forte may require some [extra requirements](https:
 
 
 ## Quick Start Guide
-Here we provide an example for user to get started with Forte easier. Consider a case we want to tag tokens' POS and extract entities from the sentence. We can write two processors for the two separate tasks.
+Writing NLP pipelines with Forte is easy. The following example creates a simple pipeline that analyzes the sentences, tokens, and named entities from a piece of text.
 
 First, we imports all required libraries.
 ```python
