@@ -21,6 +21,17 @@ from Information Retrieval, Natural Language Understanding to Natural Language G
 
 Forte was originally developed in CMU and is actively contributed by [Petuum](https://petuum.com/) in collaboration with other institutes. This project is part of the [CASL Open Source](http://casl-project.ai/) family.
 
+-----------------
+| ![forte_arch.jpg](https://raw.githubusercontent.com/asyml/forte/master/docs/_static/img/forte_arch.png) |
+|:--:|
+| *A high level Architecture of Forte showing how ontology and entries work with the pipeline.* |
+-----------------
+| ![forte_results.jpg](https://raw.githubusercontent.com/asyml/forte/master/docs/_static/img/forte_results.png) |
+|:--:|
+|*Forte stores results in data packs and use the ontology to represent task logic.* |
+-----------------
+
+
 ## Download and Installation
 
 To install the released version from PyPI:
@@ -60,22 +71,6 @@ Some components or modules in forte may require some [extra requirements](https:
 * `pip install forte[nlp]`: Install packages required for additional NLP supports, such as [subword_tokenizer](https://github.com/asyml/forte/tree/master/forte/processors/nlp/subword_tokenizer.py) and [texar encoder](https://github.com/asyml/forte/tree/master/forte/processors/third_party/pretrained_encoder_processors.py)
 * `pip install forte[extractor]`: Install packages required for extractor-based training system, [extractor](https://github.com/asyml/forte/blob/master/forte/data/extractors), [train_preprocessor](https://github.com/asyml/forte/tree/master/forte/train_preprocessor.py) and [tagging trainer](https://github.com/asyml/forte/tree/master/examples/tagging/tagging_trainer.py)
 
-
-
-## Getting Started
-
-
-
-With Forte, it is extremely simple to build an integrated system that can search documents, analyze, extract information and generate language all in one place.
-This allows developers to fully utilize the strength of individual modules, combine the results from each step, and enables the system to make fully informed decision at the end of the pipeline.
-
-Forte not only makes it easy to integrate with arbitrary 3rd party tools (Check out these [examples](https://github.com/asyml/forte/tree/master/examples)!), but also brings technology to you by offering a miscellaneous collection of deep learning modules via Texar, and a convenient model-data interface for casting tasks to models.
-
-## Learn More
-
-* [Examples](https://github.com/asyml/forte/tree/master/examples)
-* [Documentation](https://asyml-forte.readthedocs.io/)
-* Currently we are working on some interesting tutorials such as [MT pipeline](https://github.com/asyml/forte/wiki) and [Text classification pipeline](https://asyml-forte.readthedocs.io/en/latest/notebook_tutorial/text_classification_pipeline.html)
 
 
 ## Quick Start Guide
@@ -167,6 +162,19 @@ for pack in pipeline.initialize().process_dataset():
     print()
 ```
 
+
+## Learn More
+With Forte, it is extremely simple to build an integrated system that can search documents, analyze, extract information and generate language all in one place.
+This allows developers to fully utilize the strength of individual modules, combine the results from each step, and enables the system to make fully informed decision at the end of the pipeline.
+
+Forte not only makes it easy to integrate with arbitrary 3rd party tools (Check out these [examples](https://github.com/asyml/forte/tree/master/examples)!), but also brings technology to you by offering a miscellaneous collection of deep learning modules via Texar, and a convenient model-data interface for casting tasks to models.
+
+
+
+* [Examples](https://github.com/asyml/forte/tree/master/examples)
+* [Documentation](https://asyml-forte.readthedocs.io/)
+* Currently we are working on some interesting tutorials such as [MT pipeline](https://github.com/asyml/forte/wiki) and [Text classification pipeline](https://asyml-forte.readthedocs.io/en/latest/notebook_tutorial/text_classification_pipeline.html)
+
 ## Project Info
 ### Core Design Principles
 
@@ -200,15 +208,6 @@ principle, we make Forte:
   swapping and result sharing. This is particularly helpful during team
   collaborations!
 
------------------
-| ![forte_arch.jpg](https://raw.githubusercontent.com/asyml/forte/master/docs/_static/img/forte_arch.png) |
-|:--:|
-| *A high level Architecture of Forte showing how ontology and entries work with the pipeline.* |
------------------
-| ![forte_results.jpg](https://raw.githubusercontent.com/asyml/forte/master/docs/_static/img/forte_results.png) |
-|:--:|
-|*Forte stores results in data packs and use the ontology to represent task logic.* |
------------------
 
 
 ### Contributing
