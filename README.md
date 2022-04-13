@@ -25,13 +25,13 @@ Forte was originally developed in CMU and is actively contributed by [Petuum](ht
 
 To install the released version from PyPI:
 
-```
+```bash
 pip install forte
 ```
 
 To install from source,
 
-```
+```bash
 git clone https://github.com/asyml/forte.git
 cd forte
 pip install .
@@ -39,7 +39,7 @@ pip install .
 
 To install some forte adapter for some existing [libraries](https://github.com/asyml/forte-wrappers#libraries-and-tools-supported):
 
-```
+```bash
 git clone https://github.com/asyml/forte-wrappers.git
 cd forte-wrappers
 # Change spacy to other tools. Check here https://github.com/asyml/forte-wrappers#libraries-and-tools-supported for available tools.
@@ -64,9 +64,6 @@ Some components or modules in forte may require some [extra requirements](https:
 
 ## Getting Started
 
-* [Examples](https://github.com/asyml/forte/tree/master/examples)
-* [Documentation](https://asyml-forte.readthedocs.io/)
-* Currently we are working on some interesting [tutorials](https://github.com/asyml/forte/wiki)
 
 
 With Forte, it is extremely simple to build an integrated system that can search documents, analyze, extract information and generate language all in one place.
@@ -74,11 +71,18 @@ This allows developers to fully utilize the strength of individual modules, comb
 
 Forte not only makes it easy to integrate with arbitrary 3rd party tools (Check out these [examples](https://github.com/asyml/forte/tree/master/examples)!), but also brings technology to you by offering a miscellaneous collection of deep learning modules via Texar, and a convenient model-data interface for casting tasks to models.
 
+## Learn More
+
+* [Examples](https://github.com/asyml/forte/tree/master/examples)
+* [Documentation](https://asyml-forte.readthedocs.io/)
+* Currently we are working on some interesting tutorials such as [MT pipeline](https://github.com/asyml/forte/wiki) and [Text classification pipeline](https://asyml-forte.readthedocs.io/en/latest/notebook_tutorial/text_classification_pipeline.html)
+
+
 ## Quick Start Guide
-Here we provide an example to user to get start with Forte easier. Consider a case we want to get words in the sentence and also extract entities from the sentence. We can write two processors for the two separate tasks.
+Here we provide an example for user to get started with Forte easier. Consider a case we want to get words in the sentence and also extract entities from the sentence. We can write two processors for the two separate tasks.
 
 First, we imports all required libraries.
-```
+```python
 from forte import Pipeline
 from forte.processors.base import PackProcessor
 from forte.data.data_pack import DataPack
@@ -90,10 +94,10 @@ from fortex.spacy import SpacyProcessor
 import re
 ```
 In Forte, we use data entry with different entry types to represent data.
-The following class is an example of data entry storing `value`. New User
-doesn't need to pay too much attention about it and can just use it as it is.
+The following class is an example of data entry storing word texts in the class variable `value`.
+New User doesn't need to pay too much attention about it and can just use it as it is.
 
-```
+```python
 @dataclass
 class Word(Generics):
     """A dummy generic type for words."""
@@ -102,11 +106,11 @@ class Word(Generics):
         super().__init__(pack)
         self.value = value
 ```
-Next we can write a simple customized processor for the first task, split sentences into words.
+Next, we can write a simple customized processor for the first task, split sentences into words.
 There are two steps for the sentence processing.
-First, we need to strip all punctuation as splitted words should not contain them.
+First, we need to strip all punctuation as split words should not contain them.
 Second, we need to split stripped sentences into words and write words into the data pack.
-```
+```python
 class WordSplitPackProcessor(PackProcessor):
     """A processor that removes punctuation in sentences in the data pack
     and split sentences into words and write words into the data pack.
@@ -119,20 +123,28 @@ class WordSplitPackProcessor(PackProcessor):
 
     def _process(self, input_pack: DataPack):
         # write a data type Word into the data pack
+        # since in the first processor, it writes sentence into the
+        # data pack, we can get sentences by DataPack.get() which
+        # generate data entries of parameter type.
         for sentence in pack.get("ft.onto.base_ontology.Sentence"):
             # first step: strip all punctuation
             words = re.sub(r'[^\w\s]','',sentence.text).split(" ")
             # second step: split stripped sentences into words and write
             # words into the data pack
             for w in words:
+                # we pass the input pack and word strings
+                # into `Word` class, and the `Word.value` store
+                # `input_pack` will internally add `Word` entries into `input_pack`'s internal storage
+                # while `Word` initializes itself.
                 Word(pack=input_pack, value=w)
-
+    # Configuration is a dictionary format
+    # it can be defined to hold user-input configurations
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
-        return {"test": "test, successor"}
+        return {}
 ```
 Finally, we set up pipeline and add all pipeline components into it, and process the input read from the terminal.
-```
+```python
 pipeline: Pipeline = Pipeline[DataPack]()
 # add a reader that reads input by prompting user in the terminal
 pipeline.set_reader(TerminalReader())
