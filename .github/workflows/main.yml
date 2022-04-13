@@ -57,7 +57,8 @@ jobs:
         run: |
           pip install --use-feature=in-tree-build --progress-bar off .[test]
           pip install --use-feature=in-tree-build --progress-bar off .[${{ matrix.modules }}]
-          pytest $matrix.test_file
+          pip install --progress-bar off pytest==5.1.3 coverage
+          coverage run -m pytest $matrix.test_file
       - name: Install dependencies
         run: |
           sudo apt-get install -y libsndfile1-dev
