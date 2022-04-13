@@ -31,8 +31,7 @@ jobs:
             tensorflow-version: 2.5.0
         notebook-details:
           - { dep: "huggingface nltk", extra: "'tensorflow>=2.5.0,<2.8.0,termcolor>=1.1.0'"}
-        modules: ["models"]
-          # - {name: "models", test_dirs: ["tests/forte/trainer/ner_trainer.py","forte/tree/master/forte/models/srl"]}
+        modules: ["models", "test", "wikipedia", "data_aug", "nlp", "ir"]
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
