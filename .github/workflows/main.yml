@@ -53,6 +53,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
             ${{ runner.os }}-
+      - name: Test models module
+        run: |
+          pip install --use-feature=in-tree-build --progress-bar off .[test]
+          pip install --use-feature=in-tree-build --progress-bar off .[${{ matrix.modules }}]
+          pytest $matrix.test_file
       - name: Install dependencies
         run: |
           sudo apt-get install -y libsndfile1-dev
@@ -64,11 +69,7 @@ jobs:
           python -m pip install ipykernel
           python -m ipykernel install --user
           pip install --progress-bar off asyml-utilities
-      - name: Test models module
-        run: |
-          pip install --use-feature=in-tree-build --progress-bar off .[test]
-          pip install --use-feature=in-tree-build --progress-bar off .[${{ matrix.modules }}]
-          coverage run -m pytest $matrix.test_file
+
       - name: Format check with Black
         run: |
           black --line-length 80 --check forte/
