@@ -62,7 +62,6 @@ setuptools.setup(
         ],
         "nlp": ["texar-pytorch>=0.1.2"],
         "ir": ["texar-pytorch>=0.1.2"],
-        "texar-encoder": ["texar-pytorch>=0.1.2"],
         "stave": ["stave>=0.0.1.dev12"],
         "audio_ext": ["soundfile>=0.10.3"],
         "remote": [

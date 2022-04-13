@@ -31,7 +31,14 @@ jobs:
             tensorflow-version: 2.5.0
         notebook-details:
           - { dep: "huggingface nltk", extra: "'tensorflow>=2.5.0,<2.8.0,termcolor>=1.1.0'"}
-        modules: ["models", "test", "wikipedia", "data_aug", "nlp", "ir"]
+        modules:
+          - { module: "models", test_file: "tests/forte/processors/subword_tokenizer_test.py tests/forte/processors/pretrained_encoder_processors_test.py"}
+          - { module: "data_aug", test_file: "tests/forte/processors/subword_tokenizer_test.py tests/forte/processors/pretrained_encoder_processors_test.py"}
+          - { module:  "nlp",test_file: "tests/forte/models"}
+          - { module: "ir",test_file: "tests/forte/processors/ir"}
+          - { module: "stave",test_file: "tests/forte/data/readers/stave_reader_test.py tests/forte/processors/stave_processor_test.py"}
+          - { module: "audio_ext",test_file: "tests/forte/data/readers/audio_reader_test.py"}
+          - { module: "extractor",test_file: "tests/forte/train_preprocessor_test.py"}
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
@@ -48,8 +55,9 @@ jobs:
             ${{ runner.os }}-
       - name: Test models module
         run: |
+          pip install --use-feature=in-tree-build --progress-bar off .[test]
           pip install --use-feature=in-tree-build --progress-bar off .[${{ matrix.modules }}]
-          coverage run -m pytest tests/forte/models
+          coverage run -m pytest ${{matrix.test_file}}
       - name: Install dependencies
         run: |
           sudo apt-get install -y libsndfile1-dev
@@ -78,15 +86,6 @@ jobs:
         run: |
           pip install --progress-bar off torch==${{ matrix.torch-version }}
           pip install --progress-bar off tensorflow==${{ matrix.tensorflow-version }}
-      # - name: Install Texar
-      #   run: |
-      #     git clone https://github.com/asyml/texar-pytorch.git
-      #     cd texar-pytorch
-      #     pip install --use-feature=in-tree-build --progress-bar off .
-      #     cd ..
-      #     # Remove them to avoid confusion.
-      #     rm -rf texar-pytorch
-
       - name: Install Forte
         run: |
           pip install --use-feature=in-tree-build --progress-bar off .[models,test,wikipedia,data_aug,nlp,ir,texar-encoder,stave,audio_ext,remote,extractor]
