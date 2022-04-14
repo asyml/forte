@@ -39,6 +39,18 @@ setuptools.setup(
         "asyml-utilities",
     ],
     extras_require={
+        "data_aug": [
+            "transformers>=4.15.0",
+            "nltk",
+            "texar-pytorch>=0.1.4",
+        ],
+        "ir": ["texar-pytorch>=0.1.4"],
+        "remote": [
+            "fastapi>=0.65.2",
+            "uvicorn>=0.14.0",
+        ],
+        "audio_ext": ["soundfile>=0.10.3"],
+        "stave": ["stave>=0.0.1.dev12"],
         "models": [
             "torch>=1.1.0",
             "torchtext==0.4.0",
@@ -55,19 +67,7 @@ setuptools.setup(
         ],
         "wikipedia": ["rdflib==4.2.2"],
         # transformers 4.10.0 will break the translation model we used here
-        "data_aug": [
-            "transformers>=4.15.0",
-            "nltk",
-            "texar-pytorch>=0.1.4",
-        ],
         "nlp": ["texar-pytorch>=0.1.4"],
-        "ir": ["texar-pytorch>=0.1.4"],
-        "stave": ["stave>=0.0.1.dev12"],
-        "audio_ext": ["soundfile>=0.10.3"],
-        "remote": [
-            "fastapi>=0.65.2",
-            "uvicorn>=0.14.0",
-        ],
         "extractor": ["texar-pytorch>=0.1.4"],
     },
     entry_points={
