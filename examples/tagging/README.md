@@ -56,10 +56,13 @@ author:
 
 ## Install the dependencies
 
-You need to install the [Texar-pytorch](https://github.com/asyml/texar-pytorch)
-first.
+You need to install the dependency first.
+```bash
+pip install forte[extractor]
+```
 
-For data part, put the CONLL03 english data in the corresponding
+
+For the data part, put the CONLL03 english data in the corresponding
 directory (`train_path`,
 `val_path`, and `test_path`) specified in `config_data.yml`. The data format is
 the same as the official
@@ -67,7 +70,7 @@ codebase (https://github.com/XuezheMax/NeuroNLP2#data-format).
 
 Then simply run
 
- ```bash
+```bash
 python main_train_tagging.py
 ```
 
@@ -93,7 +96,7 @@ memory. You should be able to achieve the following results during training.
 ```bash
 INFO:forte.trainer.ner_trainer:Best val acc:  98.900, precision: 95.040, recall: 94.720, F1: 94.880, epoch=129
 INFO:forte.trainer.ner_trainer:Best test acc:  98.010, precision:  91.430, recall:  91.450, F1:  91.440, epoch=129
-```    
+```
 
 # Adapt tagging for other tasks
 
