@@ -29,8 +29,18 @@ import logging
 import collections
 from typing import Dict, Set, Any
 
-from stave_backend.lib.stave_viewer import StaveViewer
-from stave_backend.lib.stave_project import StaveProjectWriter
+
+try:
+    from stave_backend.lib.stave_viewer import StaveViewer
+    from stave_backend.lib.stave_project import StaveProjectWriter
+except ImportError as e:
+    raise ImportError(
+        " `stave` is not installed correctly."
+        " Please refer to [extra requirement for stave_processors.py](stave"
+        " extra requirement hyperlink])"
+        " for more information. "
+    ) from e
+
 
 from forte.common import Resources, ProcessorConfigError
 from forte.common.configuration import Config

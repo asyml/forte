@@ -16,7 +16,7 @@ import random
 
 from typing import Tuple
 import numpy as np
-from texar.torch.data import Vocab, Embedding
+
 
 from ft.onto.base_ontology import Annotation
 from forte.common.configuration import Config
@@ -55,6 +55,18 @@ class EmbeddingSimilarityReplacementOp(TextReplacementOp):
 
     def __init__(self, configs: Config):
         super().__init__(configs)
+        try:
+            from texar.torch.data import (  # pylint:disable=import-outside-toplevel
+                Vocab,
+                Embedding,
+            )
+        except ImportError as e:
+            raise ImportError(
+                "texar is not installed correctly."
+                "Please refer to documentation to [install extra required"
+                " modules](pip install forte[data_aug])"
+            ) from e
+
         self.vocab = Vocab(self.configs["vocab_path"])
         embed_hparams = self.configs["embed_hparams"]
         embedding = Embedding(self.vocab.token_to_id_map_py, embed_hparams)

@@ -18,7 +18,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     license="Apache License Version 2.0",
     packages=setuptools.find_namespace_packages(
-        include=['ft.*', 'ftx.*', 'forte']
+        include=["ft.*", "ftx.*", "forte"]
     ),
     include_package_data=True,
     platforms="any",
@@ -32,22 +32,44 @@ setuptools.setup(
         "funcsigs>=1.0.2",
         "typed_ast>=1.4.3",
         "jsonschema>=3.0.2",
-        "texar-pytorch",
         'typing>=3.7.4;python_version<"3.5"',
         "typing-inspect>=0.6.0",
         'dataclasses~=0.7;python_version<"3.7"',
         'importlib-resources>=5.1.4;python_version<"3.7"',
+        "asyml-utilities",
     ],
     extras_require={
-        "ner": ["torch>=1.1.0", "torchtext==0.4.0", "tqdm>=4.36.1"],
-        "test": ["ddt", "testfixtures"],
-        "example": ["termcolor==1.1.0", "hypothesis==2.0.0"],
+        "models": [
+            "torch>=1.1.0",
+            "torchtext==0.4.0",
+            "tqdm>=4.36.1",
+            "texar-pytorch>=0.1.2",
+        ],
+        "test": [
+            "ddt",
+            "testfixtures",
+            "testbook",
+            "termcolor",
+            "transformers>=4.15.0",
+            "nltk",
+        ],
         "wikipedia": ["rdflib==4.2.2"],
         # transformers 4.10.0 will break the translation model we used here
-        "augment": ["transformers>=3.1, <=4.9.2", "nltk"],
+        "data_aug": [
+            "transformers>=4.15.0",
+            "nltk",
+            "texar-pytorch>=0.1.2",
+        ],
+        "nlp": ["texar-pytorch>=0.1.2"],
+        "ir": ["texar-pytorch>=0.1.2"],
+        "texar-encoder": ["texar-pytorch>=0.1.2"],
         "stave": ["stave>=0.0.1.dev12"],
         "audio_ext": ["soundfile>=0.10.3"],
-        "remote": ["fastapi>=0.65.2", "uvicorn>=0.14.0",],
+        "remote": [
+            "fastapi>=0.65.2",
+            "uvicorn>=0.14.0",
+        ],
+        "extractor": ["texar-pytorch>=0.1.2"],
     },
     entry_points={
         "console_scripts": [
