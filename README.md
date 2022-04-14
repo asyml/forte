@@ -50,6 +50,8 @@ pip install src/spacy
 
 Some components or modules in forte may require some [extra requirements](https://github.com/asyml/forte/blob/master/setup.py#L45):
 
+
+* `pip install forte[data]`: Install packages required for [data pack dataset](https://github.com/asyml/forte/blob/master/forte/data/data_pack_dataset.py), [types](https://github.com/asyml/forte/blob/master/forte/data/types.py), and [converter](https://github.com/asyml/forte/blob/master/forte/data/converter).
 * `pip install forte[data_aug]`: Install packages required for [data augmentation modules](https://github.com/asyml/forte/tree/master/forte/processors/data_augment).
 * `pip install forte[ir]`: Install packages required for [Information Retrieval Supports](https://github.com/asyml/forte/tree/master/forte/processors/ir/)
 * `pip install forte[remote]`: Install packages required for pipeline serving functionalities, such as [Remote Processor](https://github.com/asyml/forte/processors/misc/remote_processor.py).

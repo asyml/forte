@@ -13,10 +13,20 @@
 # limitations under the License.
 
 from typing import Dict
-import torch
-import torch.nn.functional as F
-import torch.nn.utils.rnn as rnn_utils
-from torch import nn
+
+
+try:
+    import torch
+    import torch.nn.functional as F
+    import torch.nn.utils.rnn as rnn_utils
+    from torch import nn
+except ImportError as e:
+    raise ImportError(
+        " `pytorch` is not installed correctly."
+        " Please refer to [extra requirement for models](pip install forte[models])"
+        " for more information. "
+    ) from e
+
 from forte.common.configuration import Config
 from forte.models.ner.conditional_random_field import ConditionalRandomField
 

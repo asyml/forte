@@ -21,8 +21,17 @@ and performs memory-efficient parameter updates locally.
 
 import copy
 from typing import Dict
-import torch
-from torch import nn
+
+try:
+    import torch
+    from torch import nn
+except ImportError as e:
+    raise ImportError(
+        " `pytorch` is not installed correctly."
+        " Please refer to [extra requirement for models](pip install forte[models])"
+        " for more information. "
+    ) from e
+
 
 try:
     import texar.torch as tx

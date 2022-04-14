@@ -14,7 +14,15 @@
 
 from typing import Dict, List, Tuple, Type, Union
 
-import torch
+try:
+    import torch
+except ImportError as e:
+    raise ImportError(
+        " `pytorch` is not installed correctly."
+        " Please refer to [extra requirement for data module](pip install forte[data])"
+        " for more information. "
+    ) from e
+
 import numpy as np
 
 from forte.data.ontology.core import Entry

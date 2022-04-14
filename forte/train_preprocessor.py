@@ -17,7 +17,14 @@ Train preprocessor helps doing data pre-processing during training.
 import logging
 from typing import Optional, Dict, Type, Any, Union, Iterator, List
 
-import torch
+try:
+    import torch
+except ImportError as e:
+    raise ImportError(
+        " `pytorch` is not installed correctly."
+        " Please refer to [extra requirement for an extractor system](pip install forte[extractor])"
+        " for more information. "
+    ) from e
 
 try:
     from texar.torch.data import DataIterator, Batch

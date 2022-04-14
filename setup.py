@@ -39,6 +39,7 @@ setuptools.setup(
         "asyml-utilities",
     ],
     extras_require={
+        "data": "torch>=1.1.0",
         "models": [
             "torch>=1.1.0",
             "torchtext==0.4.0",

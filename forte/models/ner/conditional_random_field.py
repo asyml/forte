@@ -19,7 +19,15 @@ __all__ = ["ConditionalRandomField"]
 from typing import Optional, List, Tuple, Dict, Union
 import logging
 
-import torch
+
+try:
+    import torch
+except ImportError as e:
+    raise ImportError(
+        " `pytorch` is not installed correctly."
+        " Please refer to [extra requirement for models](pip install forte[models])"
+        " for more information. "
+    ) from e
 
 logger = logging.getLogger(__name__)
 

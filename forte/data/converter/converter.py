@@ -15,7 +15,15 @@ import logging
 from typing import List, Tuple, Any, Optional, Union, Dict, Sequence
 
 import numpy as np
-import torch
+
+try:
+    import torch
+except ImportError as e:
+    raise ImportError(
+        " `pytorch` is not installed correctly."
+        " Please refer to [extra requirement for data module](pip install forte[data])"
+        " for more information. "
+    ) from e
 
 from forte.common.configuration import Config
 from forte.common import ValidationError

@@ -13,8 +13,15 @@
 # limitations under the License.
 from copy import deepcopy
 from typing import List, Any, Tuple, Union, Dict, Optional
-import torch
 
+try:
+    import torch
+except ImportError as e:
+    raise ImportError(
+        " `pytorch` is not installed correctly."
+        " Please refer to [extra requirement for data module](pip install forte[data])"
+        " for more information. "
+    ) from e
 from forte.common import ValidationError
 from forte.data.vocabulary import Vocabulary
 

@@ -22,12 +22,20 @@ except ImportError as e:
     raise ImportError(
         " `texar-pytorch` is not installed correctly."
         " Consider install texar via `pip install texar-pytorch`"
-        " Or refer to [extra requirement for texar models](pip install forte[nlp])"
+        " Or refer to [extra requirement for nlp processors](pip install forte[nlp])"
         " for more information."
     ) from e
 
 
-import torch
+try:
+    import torch
+except ImportError as e:
+    raise ImportError(
+        " `pytorch` is not installed correctly."
+        " Please refer to [extra requirement for nlp processors](pip install forte[nlp])"
+        " for more information. "
+    ) from e
+
 
 from forte.common.configuration import Config
 from forte.common.resources import Resources

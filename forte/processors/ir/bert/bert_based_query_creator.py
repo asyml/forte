@@ -17,7 +17,15 @@ import pickle
 from typing import Any, Dict, Tuple
 
 import numpy as np
-import torch
+
+try:
+    import torch
+except ImportError as e:
+    raise ImportError(
+        " `pytorch` is not installed correctly."
+        " Please refer to [extra requirement for ir processors](pip install forte[ir])"
+        " for more information. "
+    ) from e
 
 
 from forte.common.configuration import Config
