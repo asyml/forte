@@ -2,6 +2,9 @@
 Test cases to ensure native Forte code can be imported
 with only backbone Forte library installed (without any
 extra imports).
+Current nondepency packages:
+- texar
+- torch
 """
 import os
 import unittest
