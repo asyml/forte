@@ -82,11 +82,7 @@ jobs:
         run: |
           pip install --progress-bar off torch==${{ matrix.torch-version }}
           pip install --progress-bar off tensorflow==${{ matrix.tensorflow-version }}
-      - name: Test backbone Forte import test
-        run: |
-          # Try to install Forte backbone only and test basic imports.
-          pip install --use-feature=in-tree-build --progress-bar off .
-          pytest tests/forte/texar_nondependency_test.py
+
       - name: Test modules need extra packages
         run: |
           pip install --use-feature=in-tree-build --progress-bar off .[test]
@@ -98,6 +94,15 @@ jobs:
       - name: Install Forte
         run: |
           pip install --use-feature=in-tree-build --progress-bar off .[models,test,wikipedia,data_aug,nlp,ir,texar-encoder,stave,audio_ext,remote,extractor]
+      - name: Test backbone Forte import test
+        run: |
+          # Try to install Forte backbone only and test basic imports.
+          pip install --use-feature=in-tree-build --progress-bar off .
+          # needs to remove it in after all other extra require
+          # dependency such as torch, torchtext and transformers are removed
+          pip uninstall -y texar-pytorch
+          pytest tests/forte/texar_nondependency_test.py
+          pip install --progress-bar off texar-pytorch>=0.1.4
       - name: Build ontology
         run: |
           ./scripts/build_ontology_specs.sh
