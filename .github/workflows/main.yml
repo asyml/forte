@@ -40,6 +40,7 @@ jobs:
           - { module: "wikipedia", test_file: "tests/forte/datasets/wikipedia"}
           - { module:  "nlp",test_file: "tests/forte/processors/subword_tokenizer_test.py tests/forte/processors/pretrained_encoder_processors_test.py"}
           - { module: "extractor",test_file: "tests/forte/train_preprocessor_test.py forte/data/extractors"}
+          - { module: "remote", test_file: "tests/forte/advanced_pipeline_test.py"}
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
@@ -86,6 +87,8 @@ jobs:
 
       - name: Test modules need extra packages
         run: |
+          # Try to install Forte backbone only and test basic imports.
+          pip install --use-feature=in-tree-build --progress-bar off .
           pip install --use-feature=in-tree-build --progress-bar off .[test]
           if [ ${{ matrix.modules.module }} != "" ]
           then
@@ -97,13 +100,10 @@ jobs:
           pip install --use-feature=in-tree-build --progress-bar off .[models,test,wikipedia,data_aug,nlp,ir,texar-encoder,stave,audio_ext,remote,extractor]
       - name: Test backbone Forte import test
         run: |
-          # Try to install Forte backbone only and test basic imports.
-          pip install --use-feature=in-tree-build --progress-bar off .
-          # Two ways for testing non dependency:
-          # 1. Remove install/uninstall script in after all other extra require
-          # dependency such as torch, torchtext and transformers are removed
-          # 2. test non dependency for each package independently
-          # just as this script with install/uninstall script
+          # Since the test import only test nondependency on texar but it still has dependency on `torch`, `torchtext` etc.
+          # Therefore, there are two ways for testing non dependency:
+          # 1. Remove install/uninstall script and also remove test import that have dependency on other extra packages such as torch, torchtext and transformers.
+          # 2. test non dependency for each package independently just as this script with install/uninstall script.
           pip uninstall -y texar-pytorch
           pytest tests/forte/texar_nondependency_test.py
           pip install --progress-bar off texar-pytorch>=0.1.4
