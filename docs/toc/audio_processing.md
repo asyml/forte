@@ -30,7 +30,7 @@ The example above builds a simple pipeline that can walk through the specified d
 ## Automatic Speech Recognition
 Automatic Speech Recognition (ASR) develops methodologies and technologies that enable the recognition and translation of spoken language into text by computers. Here we using a simple example to show how to build a forte pipeline to perform speech transcription tasks. This example is based on a pretrained `wav2vec2` model and you can check out the details [here](https://huggingface.co/facebook/wav2vec2-base-960h).
 ## Speaker Segmentation
-Speaker segmentation consists in partitioning a conversation between one or more speakers into speaker turns. It is the process of partitioning an input audio stream into acoustically homogeneous segments according to the speaker identity. A typical speaker segmentation system finds potential speaker change points using the audio characteristics. In this example, the speaker segmentation is backed by a pretrained Hugging Face model where you can find details [here](https://huggingface.co/pyannote/speaker-segmentation).
+Speaker segmentation consists in partitioning a conversation between one or more speakers into speaker turns. It is the process of partitioning an input audio stream into acoustically homogeneous segments according to the speaker identity. A typical speaker segmentation system finds potential speaker change points using the audio characteristics. In this example, the speaker segmentation is backed by a pretrained Hugging Face model where you can find details in this [link](https://huggingface.co/pyannote/speaker-segmentation).
 
 ## Example script
 For full example script, please refer to [this audio example](https://github.com/asyml/forte/tree/master/examples/audio)

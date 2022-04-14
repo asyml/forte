@@ -932,9 +932,9 @@ class DataPack(BasePack[Entry, Link, Group]):
                 return list(self.audio_annotations)
             else:
                 raise NotImplementedError(
-                    f"Context type is set to {c_type}"
-                    "but currently we only support"
-                    "[Annotation, AudioAnnotation]."
+                    f"Context type is set to {c_type},"
+                    " but currently we only support"
+                    " [Annotation, AudioAnnotation]."
                 )
 
         def get_context_data(c_type, context):
