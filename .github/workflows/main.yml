@@ -32,12 +32,13 @@ jobs:
         notebook-details:
           - { dep: "huggingface nltk", extra: "'tensorflow>=2.5.0,<2.8.0,termcolor>=1.1.0'"}
         modules:
-          - { module: "models", test_file: "tests/forte/processors/subword_tokenizer_test.py tests/forte/processors/pretrained_encoder_processors_test.py"}
           - { module: "data_aug", test_file: "tests/forte/processors/subword_tokenizer_test.py tests/forte/processors/pretrained_encoder_processors_test.py"}
-          - { module:  "nlp",test_file: "tests/forte/models"}
           - { module: "ir",test_file: "tests/forte/processors/ir/"}
-          - { module: "stave",test_file: "tests/forte/data/readers/stave_reader_test.py tests/forte/processors/stave_processor_test.py"}
           - { module: "audio_ext",test_file: "tests/forte/data/readers/audio_reader_test.py"}
+          - { module: "stave",test_file: "tests/forte/data/readers/stave_reader_test.py tests/forte/processors/stave_processor_test.py"}
+          - { module: "models", test_file: "tests/forte/models"}
+          - { module: "wikipedia", test_file: "tests/forte/datasets/wikipedia"}
+          - { module:  "nlp",test_file: "tests/forte/processors/subword_tokenizer_test.py tests/forte/processors/pretrained_encoder_processors_test.py"}
           - { module: "extractor",test_file: "tests/forte/train_preprocessor_test.py forte/data/extractors"}
     steps:
       - uses: actions/checkout@v2
@@ -98,8 +99,11 @@ jobs:
         run: |
           # Try to install Forte backbone only and test basic imports.
           pip install --use-feature=in-tree-build --progress-bar off .
-          # needs to remove it in after all other extra require
+          # Two ways for testing non dependency:
+          # 1. Remove install/uninstall script in after all other extra require
           # dependency such as torch, torchtext and transformers are removed
+          # 2. test non dependency for each package independently
+          # just as this script with install/uninstall script
           pip uninstall -y texar-pytorch
           pytest tests/forte/texar_nondependency_test.py
           pip install --progress-bar off texar-pytorch>=0.1.4
