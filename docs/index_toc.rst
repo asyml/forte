@@ -82,6 +82,7 @@ Chapter 8. Chatbot
    :maxdepth: 2
 
    toc/chatbot.md
+   notebook_tutorial/tutorial_eliza
 
 .. rst-class:: page-break
 
