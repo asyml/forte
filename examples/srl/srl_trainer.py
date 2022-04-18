@@ -26,7 +26,7 @@ from forte.data.readers import OntonotesReader
 from forte.models.srl_new import data
 from forte.models.srl_new.model import LabeledSpanGraphNetwork
 from forte.pipeline import Pipeline
-from forte.processors.base.batch_processor import Predictor
+from forte.processors.base.batch_processor_w_extractor import Predictor
 from forte.trainer.base.trainer import BaseTrainer
 
 logger = logging.getLogger(__name__)

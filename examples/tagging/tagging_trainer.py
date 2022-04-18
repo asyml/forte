@@ -27,7 +27,7 @@ from forte.data.readers.conll03_reader import CoNLL03Reader
 from forte.evaluation.ner_evaluator import CoNLLNEREvaluator
 from forte.models.ner.model_factory import BiRecurrentConvCRF
 from forte.pipeline import Pipeline
-from forte.processors.base.batch_processor import Predictor
+from forte.processors.base.batch_processor_w_extractor import Predictor
 from forte.trainer.base.trainer import BaseTrainer
 
 logger = logging.getLogger(__name__)

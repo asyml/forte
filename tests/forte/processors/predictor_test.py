@@ -21,7 +21,7 @@ from forte.data.ontology import Generics
 from forte.data.readers.conll03_reader import CoNLL03Reader
 from forte.evaluation.ner_evaluator import CoNLLNEREvaluator
 from forte.pipeline import Pipeline
-from forte.processors.base.batch_processor import Predictor
+from forte.processors.base.batch_processor_w_extractor import Predictor
 from ft.onto.base_ontology import Sentence, EntityMention
 
 FAKEOUTPUT = 2

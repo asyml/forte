@@ -59,8 +59,7 @@ class ForteImportTest(unittest.TestCase):
         from forte.trainer.base import BaseTrainer
 
     def test_import_forte_modules(self):
-        from forte.train_pipeline import TrainPipeline
+        from forte.pipeline_component import PipelineComponent
+        from forte.pipeline import Pipeline
 
-        # from forte.pipeline_component import PipelineComponent
-        # from forte.pipeline import Pipeline
         # from forte.pipeline import serve
