@@ -204,13 +204,6 @@ class AdvancedPipelineTest(unittest.TestCase):
                     pack.num_generics_entries, int(pack.pack_name in ("1", "2"))
                 )
 
-    @data(
-        [
-            "I would like to have a chat bot.",
-            "You say you would like to have a chat bot ?",
-        ],
-        ["bye", "Goodbye.  Thank you for talking to me."],
-    )
     def _assertEntryTreeEqual(self, root1: EntryTreeNode, root2: EntryTreeNode):
         """
         Test if two `EntryTreeNode` objects are recursively equivalent

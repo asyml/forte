@@ -40,7 +40,7 @@ jobs:
           - { module: "wikipedia", test_file: "tests/forte/datasets/wikipedia"}
           - { module: "nlp",test_file: "tests/forte/processors/subword_tokenizer_test.py tests/forte/processors/pretrained_encoder_processors_test.py"}
           - { module: "extractor",test_file: "tests/forte/train_preprocessor_test.py forte/data/extractors"}
-          - { module: "remote", test_file: "tests/forte/advanced_pipeline_test.py"}
+          - { module: "remote", test_file: "tests/forte/remote_processor_test.py"}
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
