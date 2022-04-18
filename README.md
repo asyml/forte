@@ -79,7 +79,7 @@ Writing NLP pipelines with Forte is easy. The following example creates a simple
 
 First, we imports all required libraries.
 ```python
-from forte import Pipeline
+from forte.pipeline import Pipeline
 from forte.processors.base import PackProcessor
 from forte.data.data_pack import DataPack
 from forte.data.readers import TerminalReader

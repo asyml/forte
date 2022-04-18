@@ -15,7 +15,7 @@ import sys
 from importlib_metadata import csv
 from termcolor import colored
 
-from forte import Pipeline
+from forte.pipeline import Pipeline
 from forte.data.readers import ClassificationDatasetReader
 from fortex.nltk import NLTKSentenceSegmenter
 from fortex.huggingface import ZeroShotClassifier
@@ -113,9 +113,7 @@ this_reader_config = {
         "label",
     ],
     "index2class": index2class,
-    "text_fields": [
-        "ft.onto.base_ontology.Body"
-    ],
+    "text_fields": ["ft.onto.base_ontology.Body"],
     "digit_label": False,
     "one_based_index_label": False,
 }

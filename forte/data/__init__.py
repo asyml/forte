@@ -16,7 +16,8 @@ from forte.data.data_utils_io import *
 from forte.data.data_pack import *
 from forte.data.multi_pack import *
 from forte.data.span import *
-from forte.data.base_extractor import *
+
+# from forte.data.base_extractor import *
 from forte.data.data_store import *
 from forte.data.selector import *
 from forte.data.index import *

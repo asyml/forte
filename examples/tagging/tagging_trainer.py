@@ -21,7 +21,7 @@ from torch.optim.optimizer import Optimizer
 from tqdm import tqdm
 
 from forte.common.configuration import Config
-from forte.data import BaseExtractor
+from forte.data.base_extractor import BaseExtractor
 from forte.data.data_pack import DataPack
 from forte.data.readers.conll03_reader import CoNLL03Reader
 from forte.evaluation.ner_evaluator import CoNLLNEREvaluator
