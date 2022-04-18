@@ -12,5 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from forte.processors.third_party.machine_translation_processor import *
+
 from forte.processors.third_party.pretrained_encoder_processors import *

@@ -25,9 +25,6 @@ class ForteImportTest(unittest.TestCase):
         from forte.processors.writers import (
             PackIdJsonPackWriter,
         )  # check dependency on torch
-        from forte.processors.third_party import (
-            MicrosoftBingTranslator,
-        )  # check dependency on torch
         from forte.processors.nlp import (
             ElizaProcessor,
         )  # check dependency on torch
@@ -43,10 +40,6 @@ class ForteImportTest(unittest.TestCase):
         from forte.processors.ir.search_processor import (
             SearchProcessor,
         )  # check dependency on torch
-        from forte.processors.third_party import (
-            MicrosoftBingTranslator,
-            MachineTranslationProcessor,
-        )
 
     def test_import_evaluator(self):
         from forte.evaluation.ner_evaluator import (
