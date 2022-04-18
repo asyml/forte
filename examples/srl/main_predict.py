@@ -21,7 +21,7 @@ from ft.onto.base_ontology import Sentence
 from forte.data.converter.feature import Feature
 from forte.pipeline import Pipeline
 from forte.data.readers.ontonotes_reader import OntonotesReader
-from forte.processors.base import Predictor
+from forte.processors.base.batch_processor import Predictor
 
 
 reader = OntonotesReader()
