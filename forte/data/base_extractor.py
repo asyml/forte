@@ -175,7 +175,7 @@ class BaseExtractor(ABC):
         externally.
 
         Args:
-            vocab (Vocabulary): The vocabulary to be assigned.
+            vocab: The vocabulary to be assigned.
 
         Returns:
 
@@ -247,8 +247,8 @@ class BaseExtractor(ABC):
             element into `self._vocab`.
 
         Args:
-            pack (DataPack): The input data pack.
-            context (Annotation): The context is an Annotation entry where
+            pack: The input data pack.
+            context: The context is an Annotation entry where
                 features will be extracted within its range. If None, then the
                 whole data pack will be used as the context. Default is None.
         """
@@ -262,8 +262,8 @@ class BaseExtractor(ABC):
         datapack.
 
         Args:
-            pack (DataPack): The input data pack that contains the features.
-            context (Annotation): The context is an Annotation entry where
+            pack: The input data pack that contains the features.
+            context: The context is an Annotation entry where
                 features will be extracted within its range. If None, then the
                 whole data pack will be used as the context. Default is None.
 
@@ -282,8 +282,8 @@ class BaseExtractor(ABC):
         the entry. By default, this function will not do anything.
 
         Args:
-            pack (DataPack): The datapack that contains the current instance.
-            context (Optional[Annotation]): The context is an Annotation entry
+            pack: The datapack that contains the current instance.
+            context: The context is an Annotation entry
                 where data are extracted within its range. If None, then the
                 whole data pack will be used as the context. Default is None.
         """
@@ -314,11 +314,11 @@ class BaseExtractor(ABC):
             3. Add the element to corresponding entry based on the need.
 
         Args:
-            pack (DataPack): The datapack to add predictions back.
-            predictions (Any): This is the output of the model, the format of
+            pack: The datapack to add predictions back.
+            predictions: This is the output of the model, the format of
               which will be determined by the predict function defined in the
               Predictor.
-            context (Optional[Annotation]): The context is an Annotation
+            context: The context is an Annotation
                 entry where predictions will be added to. This has the same
                 meaning with `context` as in
                 :meth:`~forte.data.base_extractor.BaseExtractor.extract`.

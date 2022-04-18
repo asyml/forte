@@ -27,7 +27,7 @@ def post_edit(element: Tuple[Optional[str], str]) -> str:
     to string.
 
     Args:
-        element Tuple[Optional[str], str]:
+        element:
             a tuple of BIO tag with element[0]
             as tag label and element[1] as
             BIO, e.g. `("PER", "B")`.
@@ -55,25 +55,25 @@ def bio_tagging(
     determine B, I, O tagging for the entry on each tagging_unit element.
 
     Args:
-        pack (DataPack): The datapack that contains the current
+        pack: The datapack that contains the current
             instance.
 
-        tagging_unit_type (Annotation): The type of tagging unit that entry
+        tagging_unit_type: The type of tagging unit that entry
             tag should align to. For example, it can be Token, which means
             returned tags should aligned to tokens in one sentence.
 
-        entry_type (Annotation): The type of entry that contains tags. For
+        entry_type: The type of entry that contains tags. For
             example, it can be EntityMention, which means tags comes from the
             EntityMention of one sentence. Note that the number of EntityMention
             can be different from the number of Token. That is why we need to
             use BIO tagging to align them.
 
-        attribute (Union[Callable[[Annotation], str], str]): A function to
+        attribute: A function to
             get the tags via the attribute of an entry. Or a str of the name
             of the attribute. For example, it can be "ner_type", which means
             the attribute ner_type of the entry will be treated as tags.
 
-        context (Annotation): The instance from which the
+        context: The instance from which the
             extractor will extractor feature. For example, an instance of
             Sentence type, which mean the tagging sequence comes from
             one sentence. If None, then the whole data pack will be used.
@@ -135,25 +135,25 @@ def get_tag(
     r"""Align entries to tagging units, and convert it to string format.
 
     Args:
-        pack (DataPack): The datapack that contains the current
+        pack: The datapack that contains the current
             instance.
 
-        instance (Annotation): The instance from which the
+        instance: The instance from which the
             extractor will extractor feature. For example, an instance of
             Sentence type, which mean the tagging sequence comes from
             one sentence.
 
-        tagging_unit (Type[Annotation]): The type of tagging unit that entry
+        tagging_unit: The type of tagging unit that entry
             tag should align to. For example, it can be Token, which means
             returned tags should aligned to tokens in one sentence.
 
-        entry_type (Type[Annotation]): The type of entry that contains tags. For
+        entry_type: The type of entry that contains tags. For
             example, it can be EntityMethion, which means tags comes from the
             EntityMention of one sentence. Note that the number of EntityMention
             can be different from the number of Token. That is why we need to
             use BIO tagging to aglin them.
 
-        attribute (str): A str of the name of the attribute. For example,
+        attribute: A str of the name of the attribute. For example,
             it can be "ner_type", which means the attribute ner_type of
             the entry will be treated as tags.
 
@@ -179,27 +179,27 @@ def write_tokens_to_file(
     labels, for performance evaluation.
 
     Args:
-        pred_pack (DataPack): The predicated datapack.
+        pred_pack: The predicated datapack.
 
-        refer_pack (DataPack): The reference datapack.
+        refer_pack: The reference datapack.
 
-        refer_request (Dict): Reference request.
+        refer_request: Reference request.
 
-        tagging_unit (Type[Annotation]): The type of tagging unit that entry
+        tagging_unit: The type of tagging unit that entry
             tag should align to. For example, it can be Token, which means
             returned tags should aligned to tokens in one sentence.
 
-        entry_type (Type[Annotation]): The type of entry that contains tags. For
+        entry_type: The type of entry that contains tags. For
             example, it can be EntityMethion, which means tags comes from the
             EntityMention of one sentence. Note that the number of EntityMention
             can be different from the number of Token. That is why we need to
             use BIO tagging to aglin them.
 
-        attribute (str): A str of the name of the attribute. For example,
+        attribute: A str of the name of the attribute. For example,
             it can be "ner_type", which means the attribute ner_type of the
             entry will be treated as tags.
 
-        output_file (str): The path where results write.
+        output_file: The path where results write.
 
     """
     with open(output_file, "a+", encoding="utf-8") as opened_file:

@@ -23,7 +23,15 @@ import copy
 from typing import Dict
 import torch
 from torch import nn
-import texar.torch as tx
+
+try:
+    import texar.torch as tx
+except ImportError as e:
+    raise ImportError(
+        " `texar-pytorch` is not installed correctly."
+        " Please refer to [extra requirement for aug wrapper](pip install forte[models])"
+        " for more information. "
+    ) from e
 
 __all__ = ["MetaModule", "TexarBertMetaModule"]
 

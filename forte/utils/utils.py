@@ -111,12 +111,12 @@ def get_class(class_name: str, module_paths: Optional[List[str]] = None):
     return class_
 
 
-def get_qual_name(o, lower: bool = False) -> str:
+def get_qual_name(o: object, lower: bool = False) -> str:
     r"""Returns the qualified name of an object ``o``.
 
     Args:
-        o (object): An object class.
-        lower (bool): Whether to lowercase the qualified class name.
+        o: An object class.
+        lower: Whether to lowercase the qualified class name.
 
     Returns:
          The qualified class name.
@@ -133,8 +133,8 @@ def create_class_with_kwargs(class_name: str, class_args: Dict):
     r"""Create class with the given arguments.
 
     Args:
-        class_name (str): Class name.
-        class_args (Dict): Class arguments.
+        class_name: Class name.
+        class_args: Class arguments.
 
     Returns:
         An object with class of type `class_name`.
@@ -242,8 +242,8 @@ class DiffAligner:
         [(0, 2), (3, 5), (6, 10)]
 
         Args:
-            text (str): The original text.
-            segments (str): The list of segments to be mapped.
+            text: The original text.
+            segments: The list of segments to be mapped.
 
         Returns:
             The list of mapped offsets for each segment.

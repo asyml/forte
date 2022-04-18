@@ -43,6 +43,7 @@ extensions = [
     "myst_parser",
     "sphinxcontrib.spelling",
     "nbsphinx",
+    "sphinx_autodoc_typehints",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -122,6 +123,7 @@ pygments_style = "sphinx"
 
 # If true, keep warnings as "system message" paragraphs in the built documents.
 # keep_warnings = False
+suppress_warnings = ["myst.header"]
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
@@ -361,7 +363,7 @@ rst_prolog = r"""
 """
 
 autodoc_member_order = "bysource"
-autodoc_typehints = "none"
+autodoc_typehints = "signature"
 
 napoleon_numpy_docstring = False
 

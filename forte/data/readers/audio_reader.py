@@ -36,8 +36,9 @@ class AudioReader(PackReader):
         except ModuleNotFoundError as e:
             raise ModuleNotFoundError(
                 "AudioReader requires 'soundfile' package to be installed."
-                " You can run 'pip install soundfile' or 'pip install forte"
-                "[audio_ext]'. Note that additional steps might apply to Linux"
+                " You can refer to [extra modules to install]('pip install"
+                " forte['audio_ext']) or 'pip install forte"
+                ". Note that additional steps might apply to Linux"
                 " users (refer to "
                 "https://pysoundfile.readthedocs.io/en/latest/#installation)."
             ) from e
@@ -74,6 +75,7 @@ class AudioReader(PackReader):
         r"""This defines a basic configuration structure for audio reader.
 
         Here:
+
           - file_ext (str): The file extension to find the target audio files
              under a specific directory path. Default value is ".flac".
 

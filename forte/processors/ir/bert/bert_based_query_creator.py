@@ -18,8 +18,7 @@ from typing import Any, Dict, Tuple
 
 import numpy as np
 import torch
-from texar.torch.data import BERTTokenizer
-from texar.torch.modules import BERTEncoder
+
 
 from forte.common.configuration import Config
 from forte.common.resources import Resources
@@ -44,6 +43,21 @@ class BertBasedQueryCreator(QueryProcessor):
         self.device = torch.device(
             "cuda" if torch.cuda.is_available() else "cpu"
         )
+
+        try:
+            from texar.torch.data import (  # pylint: disable=import-outside-toplevel
+                BERTTokenizer,
+            )
+            from texar.torch.modules import (  # pylint: disable=import-outside-toplevel
+                BERTEncoder,
+            )
+        except ImportError as e:
+            raise ImportError(
+                " `texar-pytorch` is not installed correctly."
+                " Consider install texar via `pip install texar-pytorch`"
+                " Or refer to [extra requirement for IR support](pip install forte[ir])"
+                " for more information."
+            ) from e
 
         if "name" in self.config.tokenizer:
             self.tokenizer = BERTTokenizer(

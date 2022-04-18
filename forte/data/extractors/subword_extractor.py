@@ -18,7 +18,7 @@ from the subwords of an entry.
 import logging
 from typing import Union, Dict, Optional
 
-from texar.torch.data.tokenizers.bert_tokenizer import BERTTokenizer
+
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.data.converter.feature import Feature
@@ -42,6 +42,17 @@ class SubwordExtractor(BaseExtractor):
     def initialize(self, config: Union[Dict, Config]):
         # pylint: disable=attribute-defined-outside-init
         super().initialize(config=config)
+
+        try:
+            from texar.torch.data.tokenizers.bert_tokenizer import (  # pylint:disable=import-outside-toplevel
+                BERTTokenizer,
+            )
+        except ImportError as e:
+            raise ImportError(
+                " `texar-pytorch` is not installed correctly."
+                " Please refer to [extra requirement for aug wrapper](pip install forte[extractor])"
+                " for more information. "
+            ) from e
         self.tokenizer = BERTTokenizer(
             pretrained_model_name=self.config.pretrained_model_name,
             cache_dir=None,
@@ -81,9 +92,9 @@ class SubwordExtractor(BaseExtractor):
         r"""Extract the subword feature of one instance.
 
         Args:
-            pack (Datapack): The datapack that contains the current
+            pack: The datapack that contains the current
                 instance.
-            context (Annotation): The context is an Annotation entry where
+            context: The context is an Annotation entry where
                 features will be extracted within its range. If None, then the
                 whole data pack will be used as the context. Default is None.
 
