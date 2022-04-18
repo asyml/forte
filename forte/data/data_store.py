@@ -150,7 +150,7 @@ class DataStore(BaseStore):
 
         .. code-block:: python
 
-            # self._type_attributes is:
+            # DataStore._type_attributes is:
             # {
             #     "ft.onto.base_ontology.Token": {
             #       "attributes": {"pos": 4, "ud_xpos": 5,
@@ -204,9 +204,9 @@ class DataStore(BaseStore):
 
     def _get_type_info(self, type_name: str) -> Dict[str, Any]:
         """
-        Get the dictionary containing type information from ``self._type_attributes``.
+        Get the dictionary containing type information from ``DataStore._type_attributes``.
         If the ``type_name`` does not currecntly exists and dynamic import is enabled,
-        this function will add a new key-value pair into ``self._type_attributes``. The
+        this function will add a new key-value pair into ``DataStore._type_attributes``. The
         value consists of a full attribute-to-index dictionary and an empty parent set.
 
         This function returns a dictionary containing an attribute dict and a set of parent
@@ -925,7 +925,7 @@ class DataStore(BaseStore):
         r"""This function will populate the types and attributes used in the data_store
         with an ontology specification file. If a user provides a customized ontology
         specification file, forte will parse this file and set the internal dictionary
-        ``self._type_attributes`` to store type name, parent entry, and its attribute
+        ``DataStore._type_attributes`` to store type name, parent entry, and its attribute
         information accordingly.
 
         For every ontology, this function will import paths containing its parent entry and
