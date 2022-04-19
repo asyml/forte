@@ -9,7 +9,7 @@
    <a href="https://asyml-forte.readthedocs.io/en/latest/"><img src="https://readthedocs.org/projects/asyml-forte/badge/?version=latest" alt="documentation"></a>
    <a href="https://github.com/asyml/forte/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue.svg" alt="apache license"></a>
    <a href="https://gitter.im/asyml/community"><img src="http://img.shields.io/badge/gitter.im-asyml/forte-blue.svg" alt="gitter"></a>
-   <a href="https://github.com/psf/black"><img src="http://img.shields.io/badge/gitter.im-asyml/forte-blue.svg" alt="code style: black"></a>
+   <a href="https://github.com/psf/black"><img src="https://img.shields.io/badge/code%20style-black-000000.svg" alt="code style: black"></a>
 </p>
 
 <p align="center">
