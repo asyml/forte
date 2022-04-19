@@ -766,14 +766,14 @@ class DataStoreTest(unittest.TestCase):
                     "aliases": 8,
                     "score": 9,
                 },
-                "parent_entry": "forte.data.ontology.top.Generics",
+                "parent_class": {"forte.data.ontology.top.Generics"},
             },
             "ftx.onto.clinical.MedicalEntityMention": {
                 "attributes": {
                     "umls_link": 4,
                     "umls_entities": 5,
                 },
-                "parent_entry": "ft.onto.base_ontology.EntityMention",
+                "parent_class": {"ft.onto.base_ontology.EntityMention"},
             }
         }
         data_store_from_file = DataStore(onto_file_path="forte/ontology_specs/medical.json")

@@ -11,9 +11,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Dict, List, Iterator, Tuple, Optional, Any
+from typing import Dict, List, Iterator, Tuple, Optional, Any, Set
 import uuid
 from bisect import bisect_left
+from heapq import heappush, heappop
+from sortedcontainers import SortedList
 
 from forte.data.ontology.ontology_code_generator import OntologyCodeGenerator
 from forte.utils import get_class
@@ -22,8 +24,6 @@ from forte.data.ontology.top import Annotation, AudioAnnotation
 from forte.common import constants
 from forte.utils.utils import get_full_module_name
 
-from heapq import heappush, heappop
-from sortedcontainers import SortedList
 
 
 __all__ = ["DataStore"]
@@ -158,19 +158,21 @@ class DataStore(BaseStore):
             #       "attributes": {"pos": 4, "ud_xpos": 5,
             #               "lemma": 6, "chunk": 7, "ner": 8, "sense": 9,
             #               "is_root": 10, "ud_features": 11, "ud_misc": 12},
-            #       "parent_class": "forte.data.ontology.top.Annotation", },
+            #       "parent_class": set("forte.data.ontology.top.Annotation"), },
             #     "ft.onto.base_ontology.Document": {
             #       "attributes": {"document_class": 4,
             #               "sentiment": 5, "classifications": 6},
-            #       "parent_class": "forte.data.ontology.top.Annotation", },
+            #       "parent_class": set("forte.data.ontology.top.Annotation"), },
             #     "ft.onto.base_ontology.Sentence": {
             #       "attributes": {"speaker": 4,
             #               "part_id": 5, "sentiment": 6,
             #               "classification": 7, "classifications": 8},
-            #       "parent_class": "forte.data.ontology.top.Annotation", }
+            #       "parent_class": set(), }
             # }
         """
+        self.onto_gen = OntologyCodeGenerator(generate_all=True)
         self._type_attributes: dict = {}
+
         if self._onto_file_path:
             self._parse_onto_file()
 
@@ -283,13 +285,13 @@ class DataStore(BaseStore):
         """
         return self._get_type_info(type_name)["attributes"]
 
-    def _get_type_parent(self, type_name: str) -> str:
+    def _get_type_parent(self, type_name: str) -> Set[str]:
         """Get a set of parent names of an entry type. The set is a subset of all
         ancestors of the given type.
         Args:
             type_name (str): The fully qualified type name of a type.
         Returns:
-            parent_class (str): The parent entry name of an entry.
+            parent_class (set): The parent entry name of an entry.
         """
         return self._get_type_info(type_name)["parent_class"]
 
@@ -923,6 +925,15 @@ class DataStore(BaseStore):
             return None
         return entry_list[index_id - 1]
 
+    def _init_top_to_core_entries(self):
+        r"""This function will populate the basic user extendable entry types in Top
+        and Core module during DataStore initialization.
+        """
+        for top_entry, parents in self.onto_gen.top_to_core_entries.items():
+            entry_dict = {}
+            entry_dict["parent_class"] = set(parents)
+            self._type_attributes[top_entry] = entry_dict
+
     def _parse_onto_file(self):
         r"""This function will populate the types and attributes used in the data_store
         with an ontology specification file. If a user provides a customized ontology
@@ -937,16 +948,15 @@ class DataStore(BaseStore):
         A user can use classes both in the ontology specification file and their parent
         entries's paths.
         """
-        if self.onto_file_path is None:
+        if self._onto_file_path is None:
             return
 
-        onto_gen = OntologyCodeGenerator()
         merged_scheme, merged_dict = [], []
-        onto_gen.parse_ontology_spec(
-            self.onto_file_path, merged_scheme, merged_dict
+        self.onto_gen.parse_ontology_spec(
+            self._onto_file_path, merged_scheme, merged_dict
         )
 
-        self._type_attributes = {}
+        self._init_top_to_core_entries()
 
         for onto in merged_scheme:
             entry_name = onto["entry_name"]
@@ -958,7 +968,8 @@ class DataStore(BaseStore):
                     attr_dict[name] = idx
                     idx += 1
             entry_dict = {}
-            entry_dict["parent_entry"] = onto["parent_entry"]
+            entry_dict["parent_class"] = set()
+            entry_dict["parent_class"].add(onto["parent_entry"])
             entry_dict["attributes"] = attr_dict
             self._type_attributes[entry_name] = entry_dict
 
