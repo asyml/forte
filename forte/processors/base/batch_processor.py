@@ -19,7 +19,8 @@ from typing import List, Dict, Optional, Any
 
 from forte.common import Resources, ProcessorConfigError
 from forte.common.configuration import Config
-from forte.data import slice_batch, BaseExtractor
+from forte.data.base_extractor import BaseExtractor
+from forte.data.data_utils_io import slice_batch
 from forte.data.base_pack import PackType
 from forte.data.batchers import (
     ProcessingBatcher,

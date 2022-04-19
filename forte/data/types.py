@@ -28,10 +28,8 @@ import numpy as np
 from forte.data.ontology.core import Entry
 from forte.data.span import Span
 
-__all__ = ["ReplaceOperationsType", "DataRequest", "MatrixLike"]
+__all__ = ["ReplaceOperationsType", "DataRequest"]
 
 ReplaceOperationsType = List[Tuple[Span, str]]
 
 DataRequest = Dict[Type[Entry], Union[Dict, List]]
-
-MatrixLike = Union[torch.TensorType, np.ndarray, List]

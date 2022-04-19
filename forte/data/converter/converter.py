@@ -28,7 +28,7 @@ except ImportError as e:
 from forte.common.configuration import Config
 from forte.common import ValidationError
 from forte.data.converter.feature import Feature
-from forte.data.types import MatrixLike
+from forte.data.extra_types import MatrixLike
 
 logger = logging.getLogger(__name__)
 

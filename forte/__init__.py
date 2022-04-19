@@ -16,4 +16,3 @@ Modules of Forte library.
 """
 
 from forte.version import VERSION as __version__
-from forte.pipeline import *

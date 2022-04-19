@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from forte.data.data_utils_io import *
-from forte.data.data_pack import *
-from forte.data.multi_pack import *
-from forte.data.span import *
+from typing import List, Union
 
-from forte.data.data_store import *
-from forte.data.selector import *
-from forte.data.index import *
+import torch
+import numpy as np
+
+__all__ = ["MatrixLike"]
+
+MatrixLike = Union[torch.TensorType, np.ndarray, List]
