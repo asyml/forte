@@ -14,7 +14,9 @@
 import os
 import unittest
 
-from forte.data.batchers import FixedSizeDataPackBatcherWithExtractor
+from forte.data.batchers_w_extractor import (
+    FixedSizeDataPackBatcherWithExtractor,
+)
 from forte.data.converter import Converter
 from forte.data.data_pack import DataPack
 from forte.data.extractors.attribute_extractor import AttributeExtractor

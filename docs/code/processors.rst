@@ -48,7 +48,7 @@ Base Processors
 
 :hidden:`Predictor`
 ----------------------------
-.. autoclass:: forte.processors.base.batch_processor.Predictor
+.. autoclass:: forte.processors.base.batch_processor_w_extractor.Predictor
     :members:
     :noindex:
 

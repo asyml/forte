@@ -54,8 +54,8 @@ from forte.processors.base import (
 )
 from forte.processors.base.batch_processor import (
     RequestPackingProcessor,
-    Predictor,
 )
+from forte.processors.base.batch_processor_w_extractor import Predictor
 from forte.processors.misc import PeriodSentenceSplitter
 from forte.utils import get_full_module_name
 from ft.onto.base_ontology import Token, Sentence, EntityMention, RelationLink

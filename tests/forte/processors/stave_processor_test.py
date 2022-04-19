@@ -16,22 +16,13 @@ Unit tests for stave processor.
 """
 
 import os
-import sys
 import json
 import unittest
-import threading
 
-from typing import Any, Dict, Iterator, Optional, Type, Set, List
 from forte.common import ProcessorConfigError
 from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
 from forte.data.readers import OntonotesReader
-from forte.processors.base import PackProcessor
-from forte.processors.base.batch_processor import (
-    Predictor,
-    RequestPackingProcessor,
-)
-from ft.onto.base_ontology import Token, Sentence, EntityMention, RelationLink
 
 from forte.processors.stave import StaveProcessor
 from stave_backend.lib.stave_project import StaveProjectReader

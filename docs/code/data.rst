@@ -338,7 +338,7 @@ Batchers
 
 :hidden:`FixedSizeDataPackBatcherWithExtractor`
 ---------------------------------------------------
-.. autoclass:: forte.data.batchers.FixedSizeDataPackBatcherWithExtractor
+.. autoclass:: forte.data.batchers_w_extractor.FixedSizeDataPackBatcherWithExtractor
     :members:
 
 :hidden:`FixedSizeRequestDataPackBatcher`
