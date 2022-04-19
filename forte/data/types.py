@@ -18,8 +18,17 @@ from typing import Dict, List, Tuple, Type, Union
 from forte.data.ontology.core import Entry
 from forte.data.span import Span
 
-__all__ = ["ReplaceOperationsType", "DataRequest"]
+__all__ = ["ReplaceOperationsType", "DataRequest", "MatrixLike"]
 
 ReplaceOperationsType = List[Tuple[Span, str]]
 
 DataRequest = Dict[Type[Entry], Union[Dict, List]]
+
+try:
+    import torch
+
+    MatrixLike = Union[torch.TensorType, np.ndarray, List]
+except ImportError:
+    import numpy as np
+
+    MatrixLike = Union[np.ndarray, List]

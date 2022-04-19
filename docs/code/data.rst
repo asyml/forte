@@ -407,7 +407,7 @@ Types
 
 :hidden:`MatrixLike`
 ------------------------------
-.. autoclass:: forte.data.extra_types.MatrixLike
+.. autoclass:: forte.data.types.MatrixLike
     :members:
 
 
