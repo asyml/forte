@@ -82,9 +82,11 @@ jobs:
           rm -rf stave
       - name: Test backbone Forte import test
         run: |
+          pip install --progress-bar off torch==${{ matrix.torch-version }}
           # Try to install Forte backbone only and test basic imports.
           pip install --use-feature=in-tree-build --progress-bar off .
           pytest tests/forte/texar_nondependency_test.py
+          pip uninstall -y torch
       - name: Install Forte
         run: |
           pip install --use-feature=in-tree-build --progress-bar off .[models,test,wikipedia,data_aug,nlp,ir,texar-encoder,stave,audio_ext,remote,extractor]
