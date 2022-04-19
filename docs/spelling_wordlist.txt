@@ -160,3 +160,5 @@ LinkType
 GroupType
 PathLike
 ElementType
+extensibility
+centric
