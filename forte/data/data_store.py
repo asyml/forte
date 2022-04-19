@@ -29,6 +29,7 @@ __all__ = ["DataStore"]
 class DataStore(BaseStore):
     # TODO: temporarily disable this for development purposes.
     # pylint: disable=pointless-string-statement
+    _type_attributes: dict = {}
 
     def __init__(
         self, onto_file_path: Optional[str] = None, dynamically_add_type=True
@@ -149,7 +150,7 @@ class DataStore(BaseStore):
 
         .. code-block:: python
 
-            # self._type_attributes is:
+            # DataStore._type_attributes is:
             # {
             #     "ft.onto.base_ontology.Token": {
             #       "attributes": {"pos": 4, "ud_xpos": 5,
@@ -167,7 +168,7 @@ class DataStore(BaseStore):
             #       "parent_class": "forte.data.ontology.top.Annotation", }
             # }
         """
-        self._type_attributes: dict = {}
+
         if self._onto_file_path:
             self._parse_onto_file()
 
@@ -203,9 +204,9 @@ class DataStore(BaseStore):
 
     def _get_type_info(self, type_name: str) -> Dict[str, Any]:
         """
-        Get the dictionary containing type information from ``self._type_attributes``.
+        Get the dictionary containing type information from ``DataStore._type_attributes``.
         If the ``type_name`` does not currecntly exists and dynamic import is enabled,
-        this function will add a new key-value pair into ``self._type_attributes``. The
+        this function will add a new key-value pair into ``DataStore._type_attributes``. The
         value consists of a full attribute-to-index dictionary and an empty parent set.
 
         This function returns a dictionary containing an attribute dict and a set of parent
@@ -234,8 +235,8 @@ class DataStore(BaseStore):
             dynamic import is disabled.
         """
         # check if type is in dictionary
-        if type_name in self._type_attributes:
-            return self._type_attributes[type_name]
+        if type_name in DataStore._type_attributes:
+            return DataStore._type_attributes[type_name]
         if not self._dynamically_add_type:
             raise ValueError(
                 f"{type_name} is not an existing type in current data store."
@@ -244,7 +245,7 @@ class DataStore(BaseStore):
                 f"types specified in the ontology file."
             )
         # get attribute dictionary
-        attributes = self._get_entry_attributes_by_class(type_name)
+        attributes = DataStore._get_entry_attributes_by_class(type_name)
 
         attr_dict = {}
         attr_idx = constants.ENTRY_TYPE_INDEX + 1
@@ -256,7 +257,7 @@ class DataStore(BaseStore):
             "attributes": attr_dict,
             "parent_class": set(),
         }
-        self._type_attributes[type_name] = new_entry_info
+        DataStore._type_attributes[type_name] = new_entry_info
 
         return new_entry_info
 
@@ -388,12 +389,12 @@ class DataStore(BaseStore):
             subclass or not.
 
         """
-        if type_name not in self._type_attributes:
-            self._type_attributes[type_name] = {}
-        if "parent_class" not in self._type_attributes[type_name]:
-            self._type_attributes[type_name]["parent_class"] = set()
+        if type_name not in DataStore._type_attributes:
+            DataStore._type_attributes[type_name] = {}
+        if "parent_class" not in DataStore._type_attributes[type_name]:
+            DataStore._type_attributes[type_name]["parent_class"] = set()
         cls_qualified_name = get_full_module_name(cls)
-        type_name_parent_class = self._type_attributes[type_name][
+        type_name_parent_class = DataStore._type_attributes[type_name][
             "parent_class"
         ]
 
@@ -924,7 +925,7 @@ class DataStore(BaseStore):
         r"""This function will populate the types and attributes used in the data_store
         with an ontology specification file. If a user provides a customized ontology
         specification file, forte will parse this file and set the internal dictionary
-        ``self._type_attributes`` to store type name, parent entry, and its attribute
+        ``DataStore._type_attributes`` to store type name, parent entry, and its attribute
         information accordingly.
 
         For every ontology, this function will import paths containing its parent entry and
@@ -938,9 +939,8 @@ class DataStore(BaseStore):
             return
         raise NotImplementedError
 
-    def _get_entry_attributes_by_class(
-        self, input_entry_class_name: str
-    ) -> List:
+    @staticmethod
+    def _get_entry_attributes_by_class(input_entry_class_name: str) -> List:
         """Get type attributes by class name. `input_entry_class_name` should be
         a fully qualified name of an entry class.
 
