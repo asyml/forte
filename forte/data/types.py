@@ -14,10 +14,9 @@
 
 from typing import Dict, List, Tuple, Type, Union
 
-
+import numpy as np
 from forte.data.ontology.core import Entry
 from forte.data.span import Span
-import numpy as np
 
 __all__ = ["ReplaceOperationsType", "DataRequest", "MatrixLike"]
 
