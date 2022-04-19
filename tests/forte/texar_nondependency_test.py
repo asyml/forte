@@ -12,14 +12,22 @@ import unittest
 
 class ForteImportTest(unittest.TestCase):
     def test_basic_import(self):
+
+        from forte.datasets.mrc.squad_reader import SquadReader
+
+    def test_import_data(self):
+        from forte.data.readers import TerminalReader
         from forte.data import DataPack
         from forte.data import DataStore
         from forte.data import SinglePackSelector
         from forte.data import BaseIndex
-
-    def test_import_data(self):
-        from forte.data.readers import TerminalReader
-        from forte.datasets.mrc.squad_reader import SquadReader
+        from forte.data.data_utils_io import (
+            batch_instances,
+            merge_batches,
+            slice_batch,
+            dataset_path_iterator,
+        )
+        from forte.data.data_utils import maybe_download
 
     def test_import_processors(self):
         from forte.processors.writers import (

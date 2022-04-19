@@ -16,7 +16,6 @@
 from typing import List, NamedTuple, Tuple
 
 import numpy as np
-
 from mypy_extensions import TypedDict
 
 
