@@ -19,6 +19,7 @@ from typing import Optional, Dict, Type, Any, Union, Iterator, List
 
 try:
     import torch
+    from torch import device
 except ImportError as e:
     raise ImportError(
         " `pytorch` is not installed correctly."
@@ -36,7 +37,6 @@ except ImportError as e:
         " (pip install forte[extractor]) for more information."
     ) from e
 
-from torch import device
 
 from forte.common.configuration import Config
 from forte.data.base_extractor import BaseExtractor
