@@ -210,6 +210,8 @@ class DataStore(BaseStore):
         """
         state = super().__getstate__()
         for k in state["_DataStore__elements"]:
+            # build the full `_type_attributes`
+            self._get_type_info(k)
             state["_DataStore__elements"][k] = list(
                 state["_DataStore__elements"][k]
             )
@@ -217,6 +219,7 @@ class DataStore(BaseStore):
         state.pop("_dynamically_add_type")
         state.pop("_DataStore__entry_dict")
         state["entries"] = state.pop("_DataStore__elements")
+        # rename fields to other names
         state["fields"] = state.pop("_type_attributes")
         return state
 
@@ -225,25 +228,16 @@ class DataStore(BaseStore):
         In deserialization, we
             1) transform the annotation list back to a sorted list;
             2) recreate the `entry_dict` from `__elements`;
-            3) recreate the `_type_attributes` if `fields` are not saved in
-                the object.
         """
         super().__setstate__(state)
         self.__elements = self.__dict__.pop("entries")
         self._dynamically_add_type = True
         # recreate the `_type_attributes` if `fields` are not found
-        regenerate = False
-        try:
-            self._type_attributes = self.__dict__.pop("fields")
-        except KeyError:
-            self._type_attributes = {}
-            regenerate = True
+        self._type_attributes = self.__dict__.pop("fields", {})
         # recreate the `entry_dict` from `__elements`
         self._DataStore__entry_dict = {}
 
         for k in self.__elements:
-            if regenerate:
-                self._type_attributes[k] = self._get_type_info(k)
             if self._is_annotation(k):
                 self.__elements[k] = SortedList(self.__elements[k])
             for e in self.__elements[k]:
@@ -288,8 +282,7 @@ class DataStore(BaseStore):
             obj.__setstate__(store)
             store = obj
         if check_attribute:
-            # `save_attribute` needs to set to True in BaseStore.serialize.
-            if not store.save_attribute:
+            if len(store._type_attributes) == 0:
                 raise ValueError(
                     "Saved object does not support check_attribute."
                 )
@@ -357,6 +350,7 @@ class DataStore(BaseStore):
                                 " raise an error."
                             )
 
+        store._type_attributes = {}
         return store
 
     def _new_tid(self) -> int:

@@ -74,15 +74,11 @@ class BaseStore:
         if json_method == "jsonpickle":
             if not save_attribute:
                 self.__dict__.pop("_type_attributes")
-            else:
-                self.__dict__["save_attribute"] = True
             return jsonpickle.encode(self, unpicklable=True)
         elif json_method == "json":
             state = self.__getstate__()
             if not save_attribute:
-                state.pop("_type_attributes")
-            else:
-                state["save_attribute"] = True
+                state.pop("fields")
             return json.dumps(state, indent=2)
         else:
             raise ValueError(f"Unsupported JSON method {json_method}.")
