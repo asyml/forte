@@ -140,7 +140,7 @@ for pack in pipeline.initialize().process_dataset():
 
 ## Learn More
 The data-centric abstraction of Forte opens the gate to many other opportunities.
-Not only does Forte allow engineers to develop reusable components easily, it further provides a simple way to develop composable ML modules. For example, Forte allows one to develop off-the-shelf processors from [3rd party toolkits](https://github.com/asyml/forte-wrappers) easily, build plug-and-play [data augmentation tools](https://asyml-forte.readthedocs.io/en/latest/code/data_aug.html), and allow one to build build reusable models as depicted below: 
+Not only does Forte allow engineers to develop reusable components easily, it further provides a simple way to develop composable ML modules. For example, Forte allows one to develop off-the-shelf processors from [3rd party toolkits](https://github.com/asyml/forte-wrappers) easily, build plug-and-play [data augmentation tools](https://asyml-forte.readthedocs.io/en/latest/code/data_aug.html), and allow one to build reusable models as depicted below: 
 
 ![image](https://user-images.githubusercontent.com/1015991/164107427-66a5c9bd-a3ae-4d75-bfe2-24246e574e07.png)
 
