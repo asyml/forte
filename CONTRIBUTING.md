@@ -135,7 +135,7 @@ the [Google Python Style guide](http://google.github.io/styleguide/pyguide.html)
 project code is examined using `pylint`, `flake8`, `mypy`, `black` and `sphinx-build` which will be run
 automatically in CI. It's recommended that you should run these tests locally before submitting your pull request to save time. Refer to the github workflow [here](https://github.com/asyml/forte/blob/master/.github/workflows/main.yml) for detailed steps to carry out the tests. Basically what you need to do is to install the requirements (check out the `Install dependencies` sections) and run the commands (refer to the steps in `Format check with Black`, `Lint with flake8`, `Lint with pylint`, `Lint main code with mypy when torch version is not 1.5.0`, `Build Docs`, etc.).
 
-We also recommend using tools `pre-commit` that automates the checking process before each commit since checking format is a repetitive process. We have the configuration file `.pre-commit-config.yaml` that lists several plugins including `black` to check format in the project root folder. Developers only need to install the package by `pip install pre-commit`.
+We also recommend using tools `pre-commit` that automates the checking process before each commit since checking format is a repetitive process. We have the configuration file `.pre-commit-config.yaml` that lists several plugins including `black` to check format in the project root folder. Developers only need to install the package by `pip install pre-commit`. All the package versions in the `.pre-commit-config.yaml` must be consistent with package versions in [workflow configuration](https://github.com/asyml/forte/blob/master/.github/workflows/main.yml). For example, `black` package version should be set to the same.
 
 ### Docstring
 

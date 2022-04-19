@@ -14,5 +14,3 @@
 
 from forte.processors.nlp.eliza_processor import *
 from forte.processors.nlp.ner_predictor import *
-from forte.processors.nlp.srl_predictor import *
-from forte.processors.nlp.subword_tokenizer import *

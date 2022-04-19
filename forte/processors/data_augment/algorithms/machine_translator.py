@@ -18,7 +18,7 @@ For simplicity, the model is not wrapped as a processor.
 """
 from typing import List
 from abc import abstractmethod
-from transformers import MarianMTModel, MarianTokenizer
+
 
 __all__ = [
     "MachineTranslator",
@@ -68,6 +68,18 @@ class MarianMachineTranslator(MachineTranslator):
         self.model_name = "Helsinki-NLP/opus-mt-{src}-{tgt}".format(
             src=src_lang, tgt=tgt_lang
         )
+        try:
+            from transformers import (  # pylint:disable=import-outside-toplevel
+                MarianMTModel,
+                MarianTokenizer,
+            )
+        except ImportError as err:
+            raise ImportError(
+                " `transformers` is not installed correctly."
+                " Please refer to [extra requirement for machine translator]"
+                "(pip install forte[data_aug])"
+                " for more information. "
+            ) from err
         self.tokenizer = MarianTokenizer.from_pretrained(self.model_name)
         self.model = MarianMTModel.from_pretrained(self.model_name)
         self.model = self.model.to(self.device)

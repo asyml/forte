@@ -55,8 +55,7 @@ jobs:
           pip install --progress-bar off coverage codecov
           python -m pip install ipykernel
           python -m ipykernel install --user
-          pip install testbook
-          pip install termcolor
+          pip install --progress-bar off asyml-utilities
       - name: Format check with Black
         run: |
           black --line-length 80 --check forte/
@@ -84,7 +83,20 @@ jobs:
           rm -rf texar-pytorch
       - name: Install Forte
         run: |
-          pip install --use-feature=in-tree-build --progress-bar off .[ner,test,example,wikipedia,augment,stave,audio_ext,remote]
+          pip install --use-feature=in-tree-build --progress-bar off .[models,test,wikipedia,data_aug,nlp,ir,texar-encoder,stave,audio_ext,remote,extractor]
+      - name: Test backbone Forte import test
+        run: |
+          # Try to install Forte backbone only and test basic imports.
+          pip install --use-feature=in-tree-build --progress-bar off .
+          # needs to remove it in after torch dependency is removed
+          pip uninstall -y texar-pytorch
+          pytest tests/forte/texar_nondependency_test.py
+          # install lastest texar pytorch
+          git clone https://github.com/asyml/texar-pytorch.git
+          cd texar-pytorch
+          pip install --progress-bar off .
+          cd ..
+          rm -rf texar-pytorch
       - name: Build ontology
         run: |
           ./scripts/build_ontology_specs.sh
@@ -102,7 +114,7 @@ jobs:
           if [[ ${{ matrix.torch-version }} != "1.5.0" && ${{ matrix.python-version }} == "3.9" ]]; then mypy forte; fi
       - name: Test with pytest and run coverage
         run: |
-          coverage run -m pytest tests  --ignore=tests/forte/notebooks
+          coverage run -m pytest tests  --ignore=tests/forte/notebooks --ignore=tests/forte/texar_nondependency_test.py
           coverage run --append -m pytest --doctest-modules forte
       - name: Upload coverage
         run: |
