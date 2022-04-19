@@ -22,12 +22,12 @@ from typing import Optional, cast
 try:
     import torch
     from torch.nn import Parameter
-except ImportError as e:
+except ImportError as e1:
     raise ImportError(
         " `pytorch` is not installed correctly."
         " Please refer to [extra requirement for ir processors](pip install forte[ir])"
         " for more information. "
-    ) from e
+    ) from e1
 
 
 try:
@@ -36,14 +36,14 @@ try:
     from texar.torch.modules.classifiers import (
         BERTClassifier as TxBERTClassifier,
     )
-except ImportError as e1:
+except ImportError as e2:
     raise ImportError(
         " `texar-pytorch` is not installed correctly."
         " Consider install texar via `pip install texar-pytorch`"
         " Or refer to extra requirement for IR support"
         " (pip install forte[ir])"
         " for more information."
-    ) from e1
+    ) from e2
 
 from forte.common.configuration import Config
 
@@ -125,12 +125,12 @@ class BERTClassifier(TxBERTClassifier, PretrainedBERTMixin):
         try:
             import numpy as np
             import tensorflow as tf
-        except ImportError as e:
+        except ImportError as e3:
             raise ImportError(
                 "Loading TensorFlow models in PyTorch requires installing "
                 "TensorFlow. Please see https://www.tensorflow.org/install/ "
                 "for installation instructions."
-            ) from e
+            ) from e3
 
         py_prefix = "encoder." if "prefix" not in kwargs else kwargs["prefix"]
 

@@ -20,12 +20,12 @@ import numpy as np
 
 try:
     import torch
-except ImportError as e:
+except ImportError as e1:
     raise ImportError(
         " `pytorch` is not installed correctly."
         " Please refer to [extra requirement for ir processors](pip install forte[ir])"
         " for more information. "
-    ) from e
+    ) from e1
 
 
 from forte.common.configuration import Config
@@ -59,13 +59,13 @@ class BertBasedQueryCreator(QueryProcessor):
             from texar.torch.modules import (  # pylint: disable=import-outside-toplevel
                 BERTEncoder,
             )
-        except ImportError as e:
+        except ImportError as e2:
             raise ImportError(
                 " `texar-pytorch` is not installed correctly."
                 " Consider install texar via `pip install texar-pytorch`"
                 " Or refer to [extra requirement for IR support](pip install forte[ir])"
                 " for more information."
-            ) from e
+            ) from e2
 
         if "name" in self.config.tokenizer:
             self.tokenizer = BERTTokenizer(
