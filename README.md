@@ -168,7 +168,6 @@ If you are interested in making enhancement to Forte, please first go over our [
    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 </p>
 
-### The CASL Eco-System
 ![image](https://user-images.githubusercontent.com/1015991/164106557-13dd3781-95d6-42db-b90d-1685679184fe.png)
 
 ### License
