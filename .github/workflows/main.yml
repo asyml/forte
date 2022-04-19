@@ -80,16 +80,16 @@ jobs:
           # Simply keep the database file but remove the repo.
           cp stave/simple-backend/db.sqlite3 .
           rm -rf stave
-      - name: Install Forte
-        run: |
-          pip install --use-feature=in-tree-build --progress-bar off .[models,test,wikipedia,data_aug,nlp,ir,texar-encoder,stave,audio_ext,remote,extractor]
       - name: Test backbone Forte import test
-        run: |
-          pytest tests/forte/texar_nondependency_test.py
-      - name: Test modules need extra packages
         run: |
           # Try to install Forte backbone only and test basic imports.
           pip install --use-feature=in-tree-build --progress-bar off .
+          pytest tests/forte/texar_nondependency_test.py
+      - name: Install Forte
+        run: |
+          pip install --use-feature=in-tree-build --progress-bar off .[models,test,wikipedia,data_aug,nlp,ir,texar-encoder,stave,audio_ext,remote,extractor]
+      - name: Test modules need extra packages
+        run: |
           pip install --use-feature=in-tree-build --progress-bar off .[test]
           if [ ${{ matrix.modules.module }} != "" ]
           then
