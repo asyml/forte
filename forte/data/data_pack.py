@@ -608,8 +608,8 @@ class DataPack(BasePack[Entry, Link, Group]):
             data_source: The path storing data source.
             serialize_method: The method used to serialize the data, this
               should be the same as how serialization is done. The current
-              options are "jsonpickle" and "pickle". The default method
-              is "jsonpickle".
+              options are `jsonpickle` and `pickle`. The default method
+              is `jsonpickle`.
             zip_pack: Boolean value indicating whether the input source is
               zipped.
 
