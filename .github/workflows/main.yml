@@ -45,6 +45,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
             ${{ runner.os }}-
+
       - name: Install dependencies
         run: |
           sudo apt-get install -y libsndfile1-dev
@@ -69,34 +70,20 @@ jobs:
           # Simply keep the database file but remove the repo.
           cp stave/simple-backend/db.sqlite3 .
           rm -rf stave
+      - name: Test backbone Forte import test
+        run: |
+          pip install --progress-bar off torch==${{ matrix.torch-version }}
+          # Try to install Forte backbone only and test basic imports.
+          pip install --use-feature=in-tree-build --progress-bar off .
+          pytest tests/forte/texar_nondependency_test.py
+          pip uninstall -y torch
+      - name: Install Forte
+        run: |
+          pip install --use-feature=in-tree-build --progress-bar off .[data_aug,ir,remote,audio_ext,stave,models,test,wikipedia,nlp,extractor]
       - name: Install deep learning frameworks
         run: |
           pip install --progress-bar off torch==${{ matrix.torch-version }}
           pip install --progress-bar off tensorflow==${{ matrix.tensorflow-version }}
-      - name: Install Texar
-        run: |
-          git clone https://github.com/asyml/texar-pytorch.git
-          cd texar-pytorch
-          pip install --use-feature=in-tree-build --progress-bar off .
-          cd ..
-          # Remove them to avoid confusion.
-          rm -rf texar-pytorch
-      - name: Install Forte
-        run: |
-          pip install --use-feature=in-tree-build --progress-bar off .[models,test,wikipedia,data_aug,nlp,ir,texar-encoder,stave,audio_ext,remote,extractor]
-      - name: Test backbone Forte import test
-        run: |
-          # Try to install Forte backbone only and test basic imports.
-          pip install --use-feature=in-tree-build --progress-bar off .
-          # needs to remove it in after torch dependency is removed
-          pip uninstall -y texar-pytorch
-          pytest tests/forte/texar_nondependency_test.py
-          # install lastest texar pytorch
-          git clone https://github.com/asyml/texar-pytorch.git
-          cd texar-pytorch
-          pip install --progress-bar off .
-          cd ..
-          rm -rf texar-pytorch
       - name: Build ontology
         run: |
           ./scripts/build_ontology_specs.sh
@@ -130,6 +117,63 @@ jobs:
             coverage run -m pytest tests/forte/notebooks
           fi
 
+
+  test_modules:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ 3.6 ]
+        torch-version: [ 1.5.0 ]
+        tensorflow-version: [ 1.15.0 ]
+        modules:
+          - { module: "data_aug", test_file: "tests/forte/processors/data_augment"}
+          - { module: "ir",test_file: "tests/forte/processors/ir/"}
+          - { module: "remote", test_file: "tests/forte/remote_processor_test.py"}
+          - { module: "audio_ext",test_file: "tests/forte/data/readers/audio_reader_test.py"}
+          - { module: "stave",test_file: "tests/forte/data/readers/stave_reader_test.py tests/forte/processors/stave_processor_test.py"}
+          - { module: "models", test_file: "tests/forte/models"}
+          - { module: "wikipedia", test_file: "tests/forte/datasets/wikipedia"}
+          - { module: "nlp",test_file: "tests/forte/processors/subword_tokenizer_test.py tests/forte/processors/pretrained_encoder_processors_test.py"}
+          - { module: "extractor",test_file: "tests/forte/train_preprocessor_test.py forte/data/extractors"}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Cache pip
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('setup.py') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+            ${{ runner.os }}-
+      - name: install forte
+        run: |
+          pip install --use-feature=in-tree-build --progress-bar off .
+      - name: install dependencies
+        run: |
+          sudo apt-get install -y libsndfile1-dev
+          python -m pip install --progress-bar off --upgrade pip
+          pip install --progress-bar off Django django-guardian
+      - name: Obtain Stave Database Examples
+        run: |
+          git clone https://github.com/asyml/stave.git
+          cd stave/simple-backend
+          python manage.py migrate
+          cat sample_sql/*.sql | sqlite3 db.sqlite3
+          cd ../..
+          # Simply keep the database file but remove the repo.
+          cp stave/simple-backend/db.sqlite3 .
+          rm -rf stave
+      - name: Test modules need extra packages
+        run: |
+          pip install --use-feature=in-tree-build --progress-bar off .[test]
+          pip install --use-feature=in-tree-build --progress-bar off .[${{ matrix.modules.module }}]
+          pip install --progress-bar off torch==${{ matrix.torch-version }}
+          pip install --progress-bar off pytest==5.1.3
+          pytest ${{ matrix.modules.test_file }}
 
   docs:
     needs: build
