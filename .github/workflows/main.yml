@@ -125,19 +125,6 @@ jobs:
         python-version: [ 3.6 ]
         torch-version: [ 1.5.0 ]
         tensorflow-version: [ 1.15.0 ]
-        include:
-          - python-version: 3.8
-            torch-version: 1.7.1
-            tensorflow-version: 2.2.0
-          - python-version: 3.8
-            torch-version: 1.8.1
-            tensorflow-version: 2.2.0
-          - python-version: 3.9
-            torch-version: 1.7.1
-            tensorflow-version: 2.5.0
-          - python-version: 3.9
-            torch-version: 1.8.1
-            tensorflow-version: 2.5.0
         notebook-details:
           - { dep: "huggingface nltk", extra: "'tensorflow>=2.5.0,<2.8.0,termcolor>=1.1.0'"}
         modules:
