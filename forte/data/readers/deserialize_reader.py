@@ -74,8 +74,8 @@ class BaseDeserializeReader(PackReader, ABC):
             default value is None.
 
           - serialize_method: The method used to serialize the data. Current
-            available options are "jsonpickle" and "pickle". Default is
-            "jsonpickle".
+            available options are `jsonpickle` and `pickle`. Default is
+            `jsonpickle`.
 
         Returns:
             The default configuration of this writer.
@@ -262,8 +262,8 @@ class MultiPackDeserializerBase(MultiPackReader):
 
         Here:
           - serialize_method: The method used to serialize the data. Current
-              available options are "jsonpickle" and "pickle". Default is
-              "jsonpickle".
+              available options are `jsonpickle` and `pickle`. Default is
+              `jsonpickle`.
 
         Returns: The default configuration of this writer.
         """
@@ -326,8 +326,8 @@ class MultiPackDirectoryReader(MultiPackDeserializerBase):
 
           - serialize_method (str): The method used to serialize the data, this
               should be the same as how serialization is done. The current
-              options are "jsonpickle" and "pickle". The default method
-              is "jsonpickle".
+              options are `jsonpickle` and `pickle`. The default method
+              is `jsonpickle`.
 
           - zip_pack (bool): whether to zip the data pack. The default value is
               False.

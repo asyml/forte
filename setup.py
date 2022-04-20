@@ -30,7 +30,7 @@ setuptools.setup(
         "smart-open>=1.8.4",
         "typed_astunparse>=2.1.4",
         "funcsigs>=1.0.2",
-        "typed_ast>=1.4.3",
+        "typed_ast>=1.5.0",
         "jsonschema>=3.0.2",
         'typing>=3.7.4;python_version<"3.5"',
         "typing-inspect>=0.6.0",
