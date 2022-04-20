@@ -70,7 +70,7 @@ jobs:
           python -m ipykernel install --user
           pip install --progress-bar off asyml-utilities
       - name: Format check with Black
-        if: matrix.modules.module != 'main'
+        if: matrix.modules.module == 'main'
         run: |
           black --line-length 80 --check forte/
       - name: Obtain Stave Database Examples
