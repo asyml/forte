@@ -13,22 +13,25 @@
 </p>
 
 <p align="center">
-  <a href="#download-and-installation">Download</a> •
+  <a href="#installation">Download</a> •
   <a href="#quick-start-guide">Quick Start</a> •
-  <a href="#license">License</a> •
   <a href="#contributing">Contribution Guide</a> •
+  <a href="#license">License</a> •
+  <a href="https://asyml-forte.readthedocs.io/en/latest">Documentation</a> •
   <a href="https://aclanthology.org/2020.emnlp-demos.26/">Publication</a>
 </p>
 
 **Bring good software engineering to your ML solutions, starting from Data!** 
 
-**Forte** introduces [Data Pack](https://asyml-forte.readthedocs.io/en/latest/notebook_tutorial/handling_structued_data.html), a standardized data structure for unstructured data, distilling 
+**Forte** is a data-centric framework designed to engineer complex ML workflows. Forte allows practitioners to build ML components in a composable and modular way. Behind the scene, it introduces [Data Pack](https://asyml-forte.readthedocs.io/en/latest/notebook_tutorial/handling_structued_data.html), a standardized data structure for unstructured data, distilling 
 good software engineering practices such as reusability, extensibility, and flexibility into 
 ML solutions. 
 
 ![image](https://user-images.githubusercontent.com/1015991/164107272-593ef68f-7438-4f11-9b76-251435995943.png)
 
-## Download and Installation
+Data Packs are standard data packages in an ML workflow, that can represent the source data (e.g. text, audio, images) and additional markups (e.g. entity mentions, bounding boxes). It is powered by a customizable data schema named "Ontology", allowing domain experts to inject their knowledge into ML engineering processes easily.
+
+## Installation
 
 To install the released version from PyPI:
 
