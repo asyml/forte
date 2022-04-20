@@ -156,7 +156,8 @@ jobs:
         run: |
           pip install --use-feature=in-tree-build --progress-bar off .[test]
           pip install --use-feature=in-tree-build --progress-bar off .[${{ matrix.modules.module }}]
-          # pytest ${{ matrix.modules.test_file }}
+          pip install --progress-bar off torch==${{ matrix.torch-version }}
+          pytest ${{ matrix.modules.test_file }}
 
   docs:
     needs: build
