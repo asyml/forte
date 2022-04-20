@@ -71,78 +71,93 @@ Some components or modules in forte may require some [extra requirements](https:
 ## Quick Start Guide
 Writing NLP pipelines with Forte is easy. The following example creates a simple pipeline that analyzes the sentences, tokens, and named entities from a piece of text.
 
-First, we imports all required libraries.
+Let's start by writing a simple processor that analyze POS tags to tokens using the good old NLTK library.
 ```python
-from forte import Pipeline
+import nltk
+
 from forte.processors.base import PackProcessor
 from forte.data.data_pack import DataPack
-from forte.data.readers import TerminalReader
-from fortex.spacy import SpacyProcessor
 from ft.onto.base_ontology import Token
-from forte.processors.misc import WhiteSpaceTokenizer
-import nltk
-```
-Next, we can write a simple customized processor for the first task, analyzing POS tags to tokens.
-There are two steps for sentence processing.
-First, we need to strip all punctuation as split words should not contain them.
-Second, we need to split stripped sentences into words and write words into the data pack.
-```python
+
 class NLTKPOSTagger(PackProcessor):
     r"""A wrapper of NLTK pos tagger."""
-
+    
     def initialize(self, resources, configs):
         super().initialize(resources, configs)
-        # download tagger using average perceptron neural network
+        # download the NLTK average perceptron tagger
         nltk.download("averaged_perceptron_tagger")
-
-    def __init__(self):
-        super().__init__()
 
     def _process(self, input_pack: DataPack):
         # get a list of token data entries from `input_pack`
         # using `DataPack.get()`` method
-        token_entries = list(
-            input_pack.get(Token)
-        )
-        # get a list of token data entries text
-        token_texts = [token.text for token in token_entries]
+        token_texts = [token.text for token in input_pack.get(Token)]
+
         # use nltk pos tagging module to tag token texts
         taggings = nltk.pos_tag(token_texts)
-        # assign nltk taggings to token data entry attributes
+        
+        # assign nltk taggings to token attributes
         for token, tag in zip(token_entries, taggings):
-            # tag is a tuple: (token text, tag)
             token.pos = tag[1]
 ```
-Finally, we set up pipeline and add all pipeline components into it, and process the input read from the terminal.
+If we break it down, we will notice there are two main functions. 
+In the `initialize` function, we download and prepare the model. And then in the `_process`
+function, we actually process the `DataPack` object, take the some tokens from it, and 
+use the NLTK tagger to create POS tags. The results are stored as the `pos` attribute of
+the tokens.
+
+Before we go into the details of where the `Datapack` and `Token` come from, let's try it in
+a full pipeline.
+
 ```python
+from forte import Pipeline
+
+from forte.data.readers import TerminalReader
+from fortex.spacy import SpacyProcessor
+
 pipeline: Pipeline = Pipeline[DataPack]()
-# set a reader that reads input by prompting user in the terminal
 pipeline.set_reader(TerminalReader())
-# add the first processor: SpacyProcessor from third party library that extract entity mentions
-pipeline.add(SpacyProcessor(), {"processors": ["sentence", "ner"]})
-# add the second processor: the tokenizer that tokenize a sentence into tokens
-pipeline.add(WhiteSpaceTokenizer())
-# add the third processor: a cutomized NLTK POS tagger that tags token texts
+pipeline.add(SpacyProcessor(), {"processors": ["sentence", "tokenize"]})
 pipeline.add(NLTKPOSTagger())
+```
+
+Here we have successfully created a pipline with a few components:
+* a `TerminalReader` that reads data from terminal
+* a `SpacyProcessor` that calls SpaCy to split the sentences and create tokenization
+* and finally the brand new `NLTKPOSTagger` we just implemented,
+
+Let's see it run in action!
+
+```python
 for pack in pipeline.initialize().process_dataset():
     for sentence in pack.get("ft.onto.base_ontology.Sentence"):
         print("The sentence is: ", sentence.text)
-        print("The entities are: ")
-        for ent in pack.get("ft.onto.base_ontology.EntityMention", sentence):
-            print(ent.text, ent.ner_type)
-    print("Customized NLTKPOSTagger results: ")
-    # print NLTK tagging results following token texts
-    for token in pack.get(Token):
-        print(f" {token.text}({token.pos})", end = " ")
-    print()
+        print("The POS tags of the tokens are:")
+        for token in pack.get(Token, sentence):
+            print(f" {token.text}({token.pos})", end = " ")
+        print()
 ```
 
+We have successfully created a simple pipeline. In the nutshell, the `DataPack`s are
+the standard packages "flowing" on the pipeline. They are created by the reader, and
+then pass along the pipeline. 
 
-## Learn More
+Each processor, such as our `NLTKPOSTagger`,
+interfaces directly with `DataPack`s and do not need to worry about the
+other part of the pipeline, making the engineering process more modular.
+
+To learn more about the details, check out of [documentation](https://asyml-forte.readthedocs.io/)!
+The classes used in this guide can also be found in this repository or 
+[the Forte Wrappers repository](https://github.com/asyml/forte-wrappers/tree/main/src/spacy) 
+
+## And There's More
 The data-centric abstraction of Forte opens the gate to many other opportunities.
-Not only does Forte allow engineers to develop reusable components easily, it further provides a simple way to develop composable ML modules. For example, Forte allows one to develop off-the-shelf processors from [3rd party toolkits](https://github.com/asyml/forte-wrappers) easily, build plug-and-play [data augmentation tools](https://asyml-forte.readthedocs.io/en/latest/code/data_aug.html), and allow one to build reusable models as depicted below: 
+Not only does Forte allow engineers to develop reusable components easily, it further provides a simple way to develop composable ML modules. For example, Forte allows us to: 
+* create composable ML solutions with reusable models and processing logic
+* easily interface with a great collection of [3rd party toolkits](https://github.com/asyml/forte-wrappers) built by the community
+* build plug-and-play [data augmentation tools](https://asyml-forte.readthedocs.io/en/latest/code/data_aug.html) 
 
 ![image](https://user-images.githubusercontent.com/1015991/164107427-66a5c9bd-a3ae-4d75-bfe2-24246e574e07.png)
+
 
 To learn more about these, you can visit:
 * [Examples](https://github.com/asyml/forte/tree/master/examples)
