@@ -44,7 +44,7 @@ setuptools.setup(
             "nltk",
             "texar-pytorch>=0.1.4",
         ],
-        "ir": ["texar-pytorch>=0.1.4", "tensorflow==1.15.0"],
+        "ir": ["texar-pytorch>=0.1.4", "tensorflow>=1.15.0"],
         "remote": [
             "fastapi>=0.65.2",
             "uvicorn>=0.14.0",
