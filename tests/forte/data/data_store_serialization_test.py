@@ -184,7 +184,6 @@ class DataStoreTest(unittest.TestCase):
 
     def test_save_attribute_pickle(self):
         with tempfile.TemporaryDirectory() as tempdir:
-            tempdir = "temp/"
             tmpfilepath = os.path.join(tempdir, "temp.txt")
             a = timeit.timeit()
             self.data_store.serialize(
@@ -509,7 +508,6 @@ class DataStoreTest(unittest.TestCase):
 
     def test_fast_pickle(self):
         with tempfile.TemporaryDirectory() as tempdir:
-            tempdir = "temp/"
             tmpfilepath = os.path.join(tempdir, "temp2.txt")
             a = timeit.timeit()
             self.data_store.serialize(
