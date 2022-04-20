@@ -31,6 +31,115 @@ jobs:
             tensorflow-version: 2.5.0
         notebook-details:
           - { dep: "huggingface nltk", extra: "'tensorflow>=2.5.0,<2.8.0,termcolor>=1.1.0'"}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Cache pip
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('setup.py') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+            ${{ runner.os }}-
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get install -y libsndfile1-dev
+          python -m pip install --progress-bar off --upgrade pip
+          pip install --progress-bar off Django django-guardian
+          pip install --progress-bar off pylint==2.10.2 flake8==3.9.2 mypy==0.931 pytest==5.1.3 black==22.3.0
+          pip install --progress-bar off types-PyYAML==5.4.8 types-typed-ast==1.4.4 types-requests==2.25.6 types-dataclasses==0.1.7
+          pip install --progress-bar off coverage codecov
+          python -m pip install ipykernel
+          python -m ipykernel install --user
+          pip install --progress-bar off asyml-utilities
+      - name: Format check with Black
+        run: |
+          black --line-length 80 --check forte/
+      - name: Obtain Stave Database Examples
+        run: |
+          git clone https://github.com/asyml/stave.git
+          cd stave/simple-backend
+          python manage.py migrate
+          cat sample_sql/*.sql | sqlite3 db.sqlite3
+          cd ../..
+          # Simply keep the database file but remove the repo.
+          cp stave/simple-backend/db.sqlite3 .
+          rm -rf stave
+      - name: Test backbone Forte import test
+        run: |
+          pip install --progress-bar off torch==${{ matrix.torch-version }}
+          # Try to install Forte backbone only and test basic imports.
+          pip install --use-feature=in-tree-build --progress-bar off .
+          pytest tests/forte/texar_nondependency_test.py
+          pip uninstall -y torch
+      - name: Install Forte
+        run: |
+          pip install --use-feature=in-tree-build --progress-bar off .[data_aug,ir,remote,audio_ext,stave,models,test,wikipedia,nlp,extractor]
+      - name: Install deep learning frameworks
+        run: |
+          pip install --progress-bar off torch==${{ matrix.torch-version }}
+          pip install --progress-bar off tensorflow==${{ matrix.tensorflow-version }}
+      - name: Build ontology
+        run: |
+          ./scripts/build_ontology_specs.sh
+      - name: Lint with flake8
+        run: |
+          # stop the build if there are Python syntax errors or undefined names
+          flake8 forte/ examples/ ft/ scripts/ tests/ --count --select=E9,F63,F7,F82 --show-source --statistics
+          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+          flake8 forte/ examples/ ft/ scripts/ tests/ --ignore E203,W503 --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+      - name: Lint with pylint
+        run: |
+          pylint forte/
+      - name: Lint main code with mypy when torch version is not 1.5.0 and python is 3.9
+        run: |
+          if [[ ${{ matrix.torch-version }} != "1.5.0" && ${{ matrix.python-version }} == "3.9" ]]; then mypy forte; fi
+      - name: Test with pytest and run coverage
+        run: |
+          coverage run -m pytest tests  --ignore=tests/forte/notebooks --ignore=tests/forte/texar_nondependency_test.py
+          coverage run --append -m pytest --doctest-modules forte
+      - name: Upload coverage
+        run: |
+          codecov
+      - name: Test notebook tutorials with installing Fortex
+        run: |
+          if [ ${{ matrix.torch-version }} == "1.5.0" ]
+          then
+            git clone https://github.com/asyml/forte-wrappers.git
+            cd forte-wrappers
+            for d in ${{ matrix.notebook-details.dep }}; do pip install "src/"$d; done
+            cd ..
+            coverage run -m pytest tests/forte/notebooks
+          fi
+
+
+  test_modules:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ 3.6, 3.7 ]
+        torch-version: [ 1.5.0, 1.6.0 ]
+        tensorflow-version: [ 1.15.0 ]
+        include:
+          - python-version: 3.8
+            torch-version: 1.7.1
+            tensorflow-version: 2.2.0
+          - python-version: 3.8
+            torch-version: 1.8.1
+            tensorflow-version: 2.2.0
+          - python-version: 3.9
+            torch-version: 1.7.1
+            tensorflow-version: 2.5.0
+          - python-version: 3.9
+            torch-version: 1.8.1
+            tensorflow-version: 2.5.0
+        notebook-details:
+          - { dep: "huggingface nltk", extra: "'tensorflow>=2.5.0,<2.8.0,termcolor>=1.1.0'"}
         modules:
           - { module: "main"}
           - { module: "data_aug", test_file: "tests/forte/processors/data_augment"}
@@ -56,44 +165,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
             ${{ runner.os }}-
-
-      - name: Install dependencies
-        if: matrix.modules.module == 'main'
+      - name: install forte
         run: |
-          sudo apt-get install -y libsndfile1-dev
-          python -m pip install --progress-bar off --upgrade pip
-          pip install --progress-bar off Django django-guardian
-          pip install --progress-bar off pylint==2.10.2 flake8==3.9.2 mypy==0.931 pytest==5.1.3 black==22.3.0
-          pip install --progress-bar off types-PyYAML==5.4.8 types-typed-ast==1.4.4 types-requests==2.25.6 types-dataclasses==0.1.7
-          pip install --progress-bar off coverage codecov
-          python -m pip install ipykernel
-          python -m ipykernel install --user
-          pip install --progress-bar off asyml-utilities
-      - name: Format check with Black
-        if: matrix.modules.module == 'main'
-        run: |
-          black --line-length 80 --check forte/
-      - name: Obtain Stave Database Examples
-        if: matrix.modules.module == 'main'
-        run: |
-          git clone https://github.com/asyml/stave.git
-          cd stave/simple-backend
-          python manage.py migrate
-          cat sample_sql/*.sql | sqlite3 db.sqlite3
-          cd ../..
-          # Simply keep the database file but remove the repo.
-          cp stave/simple-backend/db.sqlite3 .
-          rm -rf stave
-      - name: Test backbone Forte import test
-        if: matrix.modules.module == 'main'
-        run: |
-          pip install --progress-bar off torch==${{ matrix.torch-version }}
-          # Try to install Forte backbone only and test basic imports.
           pip install --use-feature=in-tree-build --progress-bar off .
-          pytest tests/forte/texar_nondependency_test.py
-          pip uninstall -y torch
       - name: Test modules need extra packages
-        if: matrix.modules.module != 'main'
         run: |
           pip install --use-feature=in-tree-build --progress-bar off .[test]
           if [ ${{ matrix.modules.module }} != "" ]
@@ -101,56 +176,6 @@ jobs:
             pip install --use-feature=in-tree-build --progress-bar off .[${{ matrix.modules.module }}]
             pip install --progress-bar off pytest==5.1.3 coverage
           fi
-      - name: Install Forte
-        if: matrix.modules.module == 'main'
-        run: |
-          pip install --use-feature=in-tree-build --progress-bar off .[data_aug,ir,remote,audio_ext,stave,models,test,wikipedia,nlp,extractor]
-      - name: Install deep learning frameworks
-        if: matrix.modules.module == 'main'
-        run: |
-          pip install --progress-bar off torch==${{ matrix.torch-version }}
-          pip install --progress-bar off tensorflow==${{ matrix.tensorflow-version }}
-      - name: Build ontology
-        if: matrix.modules.module == 'main'
-        run: |
-          ./scripts/build_ontology_specs.sh
-      - name: Lint with flake8
-        if: matrix.modules.module == 'main'
-        run: |
-          # stop the build if there are Python syntax errors or undefined names
-          flake8 forte/ examples/ ft/ scripts/ tests/ --count --select=E9,F63,F7,F82 --show-source --statistics
-          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-          flake8 forte/ examples/ ft/ scripts/ tests/ --ignore E203,W503 --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-      - name: Lint with pylint
-        if: matrix.modules.module == 'main'
-        run: |
-          pylint forte/
-      - name: Lint main code with mypy when torch version is not 1.5.0 and python is 3.9
-        if: matrix.modules.module == 'main'
-        run: |
-          if [[ ${{ matrix.torch-version }} != "1.5.0" && ${{ matrix.python-version }} == "3.9" ]]; then mypy forte; fi
-      - name: Test with pytest and run coverage
-        if: matrix.modules.module == 'main'
-        run: |
-          coverage run -m pytest tests  --ignore=tests/forte/notebooks --ignore=tests/forte/texar_nondependency_test.py
-          coverage run --append -m pytest --doctest-modules forte
-      - name: Upload coverage
-        if: matrix.modules.module == 'main'
-        run: |
-          codecov
-      - name: Test notebook tutorials with installing Fortex
-        if: matrix.modules.module == 'main'
-        run: |
-          if [ ${{ matrix.torch-version }} == "1.5.0" ]
-          then
-            git clone https://github.com/asyml/forte-wrappers.git
-            cd forte-wrappers
-            for d in ${{ matrix.notebook-details.dep }}; do pip install "src/"$d; done
-            cd ..
-            coverage run -m pytest tests/forte/notebooks
-          fi
-
-
 
   docs:
     needs: build
