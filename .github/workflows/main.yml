@@ -157,7 +157,7 @@ jobs:
           pip install --use-feature=in-tree-build --progress-bar off .[test]
           pip install --use-feature=in-tree-build --progress-bar off .[${{ matrix.modules.module }}]
           pip install --progress-bar off pytest==5.1.3 coverage
-          # coverage run -m pytest tests ${{ matrix.modules.test_file }}
+          pytest ${{ matrix.modules.test_file }}
 
   docs:
     needs: build
