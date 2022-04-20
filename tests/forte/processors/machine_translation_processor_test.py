@@ -24,9 +24,7 @@ from ddt import ddt, data, unpack
 from forte.data.multi_pack import MultiPack
 from forte.pipeline import Pipeline
 from forte.data.readers import MultiPackSentenceReader
-from forte.processors.third_party.machine_translation_processor import (
-    MicrosoftBingTranslator,
-)
+from forte.processors.third_party import MicrosoftBingTranslator
 
 
 @unittest.skip(
