@@ -155,6 +155,16 @@ jobs:
       - name: install dependencies
         run: |
           sudo apt-get install -y libsndfile1-dev
+      - name: Obtain Stave Database Examples
+        run: |
+          git clone https://github.com/asyml/stave.git
+          cd stave/simple-backend
+          python manage.py migrate
+          cat sample_sql/*.sql | sqlite3 db.sqlite3
+          cd ../..
+          # Simply keep the database file but remove the repo.
+          cp stave/simple-backend/db.sqlite3 .
+          rm -rf stave
       - name: Test modules need extra packages
         run: |
           pip install --use-feature=in-tree-build --progress-bar off .[test]
