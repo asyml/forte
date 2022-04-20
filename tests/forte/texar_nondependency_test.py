@@ -4,7 +4,6 @@ with only backbone Forte library installed (without any
 extra imports).
 Current nondepency packages:
 - texar
-- torch
 """
 import os
 import unittest
