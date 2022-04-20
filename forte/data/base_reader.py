@@ -107,8 +107,8 @@ class BaseReader(PipelineComponent[PackType], ABC):
             False.
 
           - serialize_method: The method used to serialize the data. Current
-            available options are "jsonpickle" and "pickle". Default is
-            "jsonpickle".
+            available options are `jsonpickle` and `pickle`. Default is
+            `jsonpickle`.
 
         """
         return {"zip_pack": False, "serialize_method": "jsonpickle"}
