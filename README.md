@@ -36,7 +36,7 @@ To install the released version from PyPI:
 pip install forte
 ```
 
-To install from source,
+To install from source:
 
 ```bash
 git clone https://github.com/asyml/forte.git
@@ -45,6 +45,13 @@ pip install .
 ```
 
 To install some forte adapter for some existing [libraries](https://github.com/asyml/forte-wrappers#libraries-and-tools-supported):
+
+Install from PyPI:
+```bash
+pip install forte.spacy
+```
+
+Install from source:
 
 ```bash
 git clone https://github.com/asyml/forte-wrappers.git
@@ -70,6 +77,11 @@ Some components or modules in forte may require some [extra requirements](https:
 
 ## Quick Start Guide
 Writing NLP pipelines with Forte is easy. The following example creates a simple pipeline that analyzes the sentences, tokens, and named entities from a piece of text.
+
+Before we start, make sure the SpaCy wrapper is installed.
+```bash
+pip install forte.spacy
+```
 
 Let's start by writing a simple processor that analyze POS tags to tokens using the good old NLTK library.
 ```python
