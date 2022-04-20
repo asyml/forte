@@ -133,7 +133,7 @@ pipeline.add(SpacyProcessor(), {"processors": ["sentence", "tokenize"]})
 pipeline.add(NLTKPOSTagger())
 ```
 
-Here we have successfully created a pipline with a few components:
+Here we have successfully created a pipeline with a few components:
 * a `TerminalReader` that reads data from terminal
 * a `SpacyProcessor` that calls SpaCy to split the sentences and create tokenization
 * and finally the brand new `NLTKPOSTagger` we just implemented,

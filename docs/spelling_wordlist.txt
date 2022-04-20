@@ -150,3 +150,8 @@ structuralizing
 pseudocode
 centric
 extensibility
+EntryType
+LinkType
+GroupType
+PathLike
+ElementType

@@ -38,7 +38,7 @@ __all__ = ["BaseIndex"]
 class BaseIndex(Generic[EntryType]):
     r"""A set of indexes used in :class:`~forte.data.base_pack.BasePack`:
 
-    #. :attr:`entry_index`, the index from each tid to the corresponding entry
+    #. :attr:`entry_index`, the index from each ``tid`` to the corresponding entry
     #. :attr:`type_index`, the index from each type to the entries of
        that type
     #. :attr:`link_index`, the index from child
@@ -188,7 +188,7 @@ class BaseIndex(Generic[EntryType]):
         built, this will throw a :class:`~forte.common.exception.PackIndexError`.
 
         Args:
-            tid: the tid of the entry being looked up.
+            tid: the ``tid`` of the entry being looked up.
             as_parent: If `as_patent` is True, will look up
                 :attr:`link_index["parent_index"] and return the tids of links
                 whose parent is ``tid``. Otherwise,  will look up
