@@ -48,6 +48,7 @@ To install some forte adapter for some existing [libraries](https://github.com/a
 
 Install from PyPI:
 ```bash
+# To install other tools. Check here https://github.com/asyml/forte-wrappers#libraries-and-tools-supported for available tools.
 pip install forte.spacy
 ```
 
