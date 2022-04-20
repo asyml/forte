@@ -659,8 +659,8 @@ class DataStore(BaseStore):
             The entry which ``tid`` corresponds to and its ``type_name``.
 
         Raises:
-            ValueError: An error occurred when input tid is not found.
-            KeyError: An error occurred when entry_type is not found.
+            ValueError: An error occurred when input ``tid`` is not found.
+            KeyError: An error occurred when ``entry_type`` is not found.
         """
         if tid not in self.__entry_dict:
             raise ValueError(f"Entry with tid {tid} not found.")
