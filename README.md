@@ -21,11 +21,11 @@
   <a href="https://aclanthology.org/2020.emnlp-demos.26/">Publication</a>
 </p>
 
-**Bring good software engineering to your ML solutions, starting from Data!**
+**Bring good software engineering to your ML solutions, starting from Data!** 
 
-**Forte** is a data-centric framework designed to engineer complex ML workflows. Forte allows practitioners to build ML components in a composable and modular way. Behind the scene, it introduces [Data Pack](https://asyml-forte.readthedocs.io/en/latest/notebook_tutorial/handling_structued_data.html), a standardized data structure for unstructured data, distilling
-good software engineering practices such as reusability, extensibility, and flexibility into
-ML solutions.
+**Forte** is a data-centric framework designed to engineer complex ML workflows. Forte allows practitioners to build ML components in a composable and modular way. Behind the scene, it introduces [Data Pack](https://asyml-forte.readthedocs.io/en/latest/notebook_tutorial/handling_structued_data.html), a standardized data structure for unstructured data, distilling 
+good software engineering practices such as reusability, extensibility, and flexibility into 
+ML solutions. 
 
 ![image](https://user-images.githubusercontent.com/1015991/164107272-593ef68f-7438-4f11-9b76-251435995943.png)
 
@@ -97,7 +97,7 @@ from ft.onto.base_ontology import Token
 
 class NLTKPOSTagger(PackProcessor):
     r"""A wrapper of NLTK pos tagger."""
-
+    
     def initialize(self, resources, configs):
         super().initialize(resources, configs)
         # download the NLTK average perceptron tagger
@@ -110,14 +110,14 @@ class NLTKPOSTagger(PackProcessor):
 
         # use nltk pos tagging module to tag token texts
         taggings = nltk.pos_tag(token_texts)
-
+        
         # assign nltk taggings to token attributes
         for token, tag in zip(token_entries, taggings):
             token.pos = tag[1]
 ```
-If we break it down, we will notice there are two main functions.
+If we break it down, we will notice there are two main functions. 
 In the `initialize` function, we download and prepare the model. And then in the `_process`
-function, we actually process the `DataPack` object, take the some tokens from it, and
+function, we actually process the `DataPack` object, take the some tokens from it, and 
 use the NLTK tagger to create POS tags. The results are stored as the `pos` attribute of
 the tokens.
 
@@ -155,7 +155,7 @@ for pack in pipeline.initialize().process_dataset():
 
 We have successfully created a simple pipeline. In the nutshell, the `DataPack`s are
 the standard packages "flowing" on the pipeline. They are created by the reader, and
-then pass along the pipeline.
+then pass along the pipeline. 
 
 Each processor, such as our `NLTKPOSTagger`,
 interfaces directly with `DataPack`s and do not need to worry about the
@@ -164,15 +164,15 @@ pipeline, `SpacyProcessor` creates the `Sentence` and `Token`, and then we imple
 the `NLTKPOSTagger` to add Part-of-Speech tags to the tokens.
 
 To learn more about the details, check out of [documentation](https://asyml-forte.readthedocs.io/)!
-The classes used in this guide can also be found in this repository or
-[the Forte Wrappers repository](https://github.com/asyml/forte-wrappers/tree/main/src/spacy)
+The classes used in this guide can also be found in this repository or 
+[the Forte Wrappers repository](https://github.com/asyml/forte-wrappers/tree/main/src/spacy) 
 
 ## And There's More
 The data-centric abstraction of Forte opens the gate to many other opportunities.
-Not only does Forte allow engineers to develop reusable components easily, it further provides a simple way to develop composable ML modules. For example, Forte allows us to:
+Not only does Forte allow engineers to develop reusable components easily, it further provides a simple way to develop composable ML modules. For example, Forte allows us to: 
 * create composable ML solutions with reusable models and processing logic
 * easily interface with a great collection of [3rd party toolkits](https://github.com/asyml/forte-wrappers) built by the community
-* build plug-and-play [data augmentation tools](https://asyml-forte.readthedocs.io/en/latest/code/data_aug.html)
+* build plug-and-play [data augmentation tools](https://asyml-forte.readthedocs.io/en/latest/code/data_aug.html) 
 
 ![image](https://user-images.githubusercontent.com/1015991/164107427-66a5c9bd-a3ae-4d75-bfe2-24246e574e07.png)
 
@@ -206,3 +206,4 @@ If you are interested in making enhancement to Forte, please first go over our [
 ### License
 
 [Apache License 2.0](https://github.com/asyml/forte/blob/master/LICENSE)
+
