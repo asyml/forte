@@ -16,6 +16,7 @@ jobs:
         python-version: [ 3.6, 3.7 ]
         torch-version: [ 1.5.0, 1.6.0 ]
         tensorflow-version: [ 1.15.0 ]
+        test_type: ["main", "modules"]
         include:
           - python-version: 3.8
             torch-version: 1.7.1
@@ -57,6 +58,7 @@ jobs:
             ${{ runner.os }}-
 
       - name: Install dependencies
+        if: ${{ matrix.test_type }} == "main"
         run: |
           sudo apt-get install -y libsndfile1-dev
           python -m pip install --progress-bar off --upgrade pip
@@ -68,9 +70,11 @@ jobs:
           python -m ipykernel install --user
           pip install --progress-bar off asyml-utilities
       - name: Format check with Black
+        if: ${{ matrix.test_type }} == "main"
         run: |
           black --line-length 80 --check forte/
       - name: Obtain Stave Database Examples
+        if: ${{ matrix.test_type }} == "main"
         run: |
           git clone https://github.com/asyml/stave.git
           cd stave/simple-backend
@@ -81,6 +85,7 @@ jobs:
           cp stave/simple-backend/db.sqlite3 .
           rm -rf stave
       - name: Test backbone Forte import test
+        if: ${{ matrix.test_type }} == "main"
         run: |
           pip install --progress-bar off torch==${{ matrix.torch-version }}
           # Try to install Forte backbone only and test basic imports.
@@ -88,6 +93,7 @@ jobs:
           pytest tests/forte/texar_nondependency_test.py
           pip uninstall -y torch
       - name: Test modules need extra packages
+        if: ${{ matrix.test_type }} == "modules"
         run: |
           pip install --use-feature=in-tree-build --progress-bar off .[test]
           if [ ${{ matrix.modules.module }} != "" ]
@@ -96,35 +102,44 @@ jobs:
             pip install --progress-bar off pytest==5.1.3 coverage
           fi
       - name: Install Forte
+        if: ${{ matrix.test_type }} == "main"
         run: |
           pip install --use-feature=in-tree-build --progress-bar off .[data_aug,ir,remote,audio_ext,stave,models,test,wikipedia,nlp,extractor]
       - name: Install deep learning frameworks
+        if: ${{ matrix.test_type }} == "main"
         run: |
           pip install --progress-bar off torch==${{ matrix.torch-version }}
           pip install --progress-bar off tensorflow==${{ matrix.tensorflow-version }}
       - name: Build ontology
+        if: ${{ matrix.test_type }} == "main"
         run: |
           ./scripts/build_ontology_specs.sh
       - name: Lint with flake8
+        if: ${{ matrix.test_type }} == "main"
         run: |
           # stop the build if there are Python syntax errors or undefined names
           flake8 forte/ examples/ ft/ scripts/ tests/ --count --select=E9,F63,F7,F82 --show-source --statistics
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           flake8 forte/ examples/ ft/ scripts/ tests/ --ignore E203,W503 --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       - name: Lint with pylint
+        if: ${{ matrix.test_type }} == "main"
         run: |
           pylint forte/
       - name: Lint main code with mypy when torch version is not 1.5.0 and python is 3.9
+        if: ${{ matrix.test_type }} == "main"
         run: |
           if [[ ${{ matrix.torch-version }} != "1.5.0" && ${{ matrix.python-version }} == "3.9" ]]; then mypy forte; fi
       - name: Test with pytest and run coverage
+        if: ${{ matrix.test_type }} == "main"
         run: |
           coverage run -m pytest tests  --ignore=tests/forte/notebooks --ignore=tests/forte/texar_nondependency_test.py
           coverage run --append -m pytest --doctest-modules forte
       - name: Upload coverage
+        if: ${{ matrix.test_type }} == "main"
         run: |
           codecov
       - name: Test notebook tutorials with installing Fortex
+        if: ${{ matrix.test_type }} == "main"
         run: |
           if [ ${{ matrix.torch-version }} == "1.5.0" ]
           then
