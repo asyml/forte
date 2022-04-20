@@ -15,7 +15,7 @@ import sys
 from importlib_metadata import csv
 from termcolor import colored
 
-from forte.pipeline import Pipeline
+from forte import Pipeline
 from forte.data.readers import ClassificationDatasetReader
 from fortex.nltk import NLTKSentenceSegmenter
 from fortex.huggingface import ZeroShotClassifier

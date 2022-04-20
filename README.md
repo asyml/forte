@@ -20,11 +20,11 @@
   <a href="https://aclanthology.org/2020.emnlp-demos.26/">Publication</a>
 </p>
 
-**Bring good software engineering to your ML solutions, starting from Data!** 
+**Bring good software engineering to your ML solutions, starting from Data!**
 
-**Forte** introduces [Data Pack](https://asyml-forte.readthedocs.io/en/latest/notebook_tutorial/handling_structued_data.html), a standardized data structure for unstructured data, distilling 
-good software engineering practices such as reusability, extensibility, and flexibility into 
-ML solutions. 
+**Forte** introduces [Data Pack](https://asyml-forte.readthedocs.io/en/latest/notebook_tutorial/handling_structued_data.html), a standardized data structure for unstructured data, distilling
+good software engineering practices such as reusability, extensibility, and flexibility into
+ML solutions.
 
 ![image](https://user-images.githubusercontent.com/1015991/164107272-593ef68f-7438-4f11-9b76-251435995943.png)
 
@@ -74,7 +74,7 @@ Writing NLP pipelines with Forte is easy. The following example creates a simple
 
 First, we imports all required libraries.
 ```python
-from forte.pipeline import Pipeline
+from forte import Pipeline
 from forte.processors.base import PackProcessor
 from forte.data.data_pack import DataPack
 from forte.data.readers import TerminalReader
@@ -141,7 +141,7 @@ for pack in pipeline.initialize().process_dataset():
 
 ## Learn More
 The data-centric abstraction of Forte opens the gate to many other opportunities.
-Not only does Forte allow engineers to develop reusable components easily, it further provides a simple way to develop composable ML modules. For example, Forte allows one to develop off-the-shelf processors from [3rd party toolkits](https://github.com/asyml/forte-wrappers) easily, build plug-and-play [data augmentation tools](https://asyml-forte.readthedocs.io/en/latest/code/data_aug.html), and allow one to build reusable models as depicted below: 
+Not only does Forte allow engineers to develop reusable components easily, it further provides a simple way to develop composable ML modules. For example, Forte allows one to develop off-the-shelf processors from [3rd party toolkits](https://github.com/asyml/forte-wrappers) easily, build plug-and-play [data augmentation tools](https://asyml-forte.readthedocs.io/en/latest/code/data_aug.html), and allow one to build reusable models as depicted below:
 
 ![image](https://user-images.githubusercontent.com/1015991/164107427-66a5c9bd-a3ae-4d75-bfe2-24246e574e07.png)
 
@@ -174,4 +174,3 @@ If you are interested in making enhancement to Forte, please first go over our [
 ### License
 
 [Apache License 2.0](https://github.com/asyml/forte/blob/master/LICENSE)
-

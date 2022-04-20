@@ -1,7 +1,7 @@
 from fortex.huggingface import ZeroShotClassifier
 from fortex.stanza import StandfordNLPProcessor
 
-from forte.pipeline import Pipeline
+from forte import Pipeline
 from forte.data.readers import TerminalReader
 from forte.processors.stave import StaveProcessor
 

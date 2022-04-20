@@ -2,7 +2,7 @@ import os
 import shutil
 from typing import Dict
 from transformers import T5Tokenizer, T5ForConditionalGeneration
-from forte.pipeline import Pipeline
+from forte import Pipeline
 from forte.data import DataPack
 from forte.common import Resources, Config
 from forte.processors.base import PackProcessor
