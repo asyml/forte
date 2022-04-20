@@ -154,7 +154,7 @@ class DataPack(BasePack[Entry, Link, Group]):
     Args:
         pack_name: A name for this data pack.
     """
-
+    pass
 
 class DataIndex(BaseIndex):
     r"""A set of indexes used in :class:`~forte.data.data_pack.DataPack`, note that this class is
