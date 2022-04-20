@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from forte.processors.base.base_processor import *
+from forte.processors.base.batch_processor import *
 from forte.processors.base.index_processor import *
 from forte.processors.base.pack_processor import *
 from forte.processors.base.query_processor import *

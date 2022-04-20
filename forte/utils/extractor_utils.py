@@ -15,7 +15,7 @@ import pickle
 from typing import Dict, Any, Optional
 
 from forte.common.configuration import Config
-from forte.data.base_extractor import BaseExtractor
+from forte.data import BaseExtractor
 from forte.data.converter import Converter
 from forte.utils import get_class
 
