@@ -71,10 +71,8 @@ class BaseStore:
         """
         if json_method == "json":
             state = self.__getstate__()
-            if save_attribute:
-                state["fields"] = self._type_attributes
-                for _, v in state["fields"].items():
-                    v.pop("parent_entry")
+            if not save_attribute:
+                state.pop("fields")
             return json.dumps(state, indent=2)
         else:
             raise ValueError(f"Unsupported JSON method {json_method}.")

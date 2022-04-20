@@ -220,6 +220,9 @@ class DataStore(BaseStore):
         state.pop("_dynamically_add_type")
         state.pop("_DataStore__entry_dict")
         state["entries"] = state.pop("_DataStore__elements")
+        state["fields"] = self._type_attributes
+        for _, v in state["fields"].items():
+            v.pop("parent_entry")
         return state
 
     def __setstate__(self, state):
