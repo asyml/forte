@@ -30,7 +30,7 @@ class DataStoreTest(unittest.TestCase):
     def setUp(self) -> None:
         self.data_store = DataStore()
         # attribute fields and parent entry for Document and Sentence entries
-        self.data_store._type_attributes = {
+        DataStore._type_attributes = {
             "ft.onto.base_ontology.Document": {
                 "attributes": {
                     "sentiment": 4,
@@ -182,35 +182,42 @@ class DataStoreTest(unittest.TestCase):
             ][3],
         }
 
-        DataStore._type_attributes = {
-            "ft.onto.base_ontology.Document": {
-                "attributes": {
-                    "document_class": 4,
-                    "sentiment": 5,
-                    "classifications": 6,
-                },
-                "parent_entry": "forte.data.ontology.top.Annotation",
-            },
-            "ft.onto.base_ontology.Sentence": {
-                "attributes": {
-                    "speaker": 4,
-                    "part_id": 5,
-                    "sentiment": 6,
-                    "classification": 7,
-                    "classifications": 8,
-                },
-                "parent_entry": "forte.data.ontology.top.Annotation",
-            },
-        }
-
-    def test_pickle(self):
+    def test_save_attribute_pickle(self):
         with tempfile.TemporaryDirectory() as tempdir:
+            tempdir = "temp/"
             tmpfilepath = os.path.join(tempdir, "temp.txt")
             a = timeit.timeit()
-            self.data_store.serialize(tmpfilepath, serialize_method="json")
+            self.data_store.serialize(
+                tmpfilepath, serialize_method="json", save_attribute=True
+            )
             b = timeit.timeit()
-            temp = DataStore.deserialize(tmpfilepath, serialize_method="json")
+
+            DataStore._type_attributes = {
+                "ft.onto.base_ontology.Document": {
+                    "attributes": {
+                        "document_class": 4,
+                        "sentiment": 5,
+                        "classifications": 6,
+                    },
+                    "parent_entry": "forte.data.ontology.top.Annotation",
+                },
+                "ft.onto.base_ontology.Sentence": {
+                    "attributes": {
+                        "speaker": 4,
+                        "part_id": 5,
+                        "sentiment": 6,
+                        "classification": 7,
+                        "classifications": 8,
+                    },
+                    "parent_entry": "forte.data.ontology.top.Annotation",
+                },
+            }
             c = timeit.timeit()
+            temp = DataStore.deserialize(
+                tmpfilepath, serialize_method="json", check_attribute=True
+            )
+            d = timeit.timeit()
+            self.assertEqual(temp._type_attributes, DataStore._type_attributes)
             self.assertEqual(
                 temp._DataStore__elements,
                 {
@@ -345,12 +352,15 @@ class DataStoreTest(unittest.TestCase):
                     ][3],
                 },
             )
-            print(f"serialization time cost {b-a}")
-            print(f"deserialization with check attribute time cost {c-b}")
+            print(f"serialization with save attribute time cost {b-a}")
+            print(f"deserialization with check attribute time cost {d-c}")
 
-            d = timeit.timeit()
-            temp = DataStore.deserialize(tmpfilepath, check_attribute=False)
             e = timeit.timeit()
+            temp = DataStore.deserialize(
+                tmpfilepath, serialize_method="json", check_attribute=False
+            )
+            f = timeit.timeit()
+            self.assertEqual(temp._type_attributes, DataStore._type_attributes)
             self.assertEqual(
                 temp._DataStore__elements,
                 {
@@ -484,13 +494,93 @@ class DataStoreTest(unittest.TestCase):
                     ][3],
                 },
             )
-            print(f"deserialization without check attribute time cost {e-d}")
+            print(f"deserialization without check attribute time cost {f-e}")
 
             with self.assertRaisesRegex(
                 ValueError,
                 "Saved objects have unidentified fields, which raise an error.",
             ):
-                DataStore.deserialize(tmpfilepath, accept_none=False)
+                DataStore.deserialize(
+                    tmpfilepath,
+                    serialize_method="json",
+                    check_attribute=True,
+                    accept_none=False,
+                )
+
+    def test_fast_pickle(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            tempdir = "temp/"
+            tmpfilepath = os.path.join(tempdir, "temp2.txt")
+            a = timeit.timeit()
+            self.data_store.serialize(
+                tmpfilepath, serialize_method="json", save_attribute=False
+            )
+            b = timeit.timeit()
+            DataStore._type_attributes = {
+                "ft.onto.base_ontology.Document": {
+                    "attributes": {
+                        "document_class": 4,
+                        "sentiment": 5,
+                        "classifications": 6,
+                    },
+                    "parent_entry": "forte.data.ontology.top.Annotation",
+                },
+                "ft.onto.base_ontology.Sentence": {
+                    "attributes": {
+                        "speaker": 4,
+                        "part_id": 5,
+                        "sentiment": 6,
+                        "classification": 7,
+                        "classifications": 8,
+                    },
+                    "parent_entry": "forte.data.ontology.top.Annotation",
+                },
+            }
+            c = timeit.timeit()
+            temp = DataStore.deserialize(
+                tmpfilepath, serialize_method="json", check_attribute=False
+            )
+            d = timeit.timeit()
+            print(f"serialization without save attribute time cost {b-a}")
+            self.assertEqual(temp._type_attributes, DataStore._type_attributes)
+            self.assertEqual(
+                temp._DataStore__entry_dict,
+                {
+                    1234: temp._DataStore__elements[
+                        "ft.onto.base_ontology.Document"
+                    ][0],
+                    3456: temp._DataStore__elements[
+                        "ft.onto.base_ontology.Document"
+                    ][1],
+                    4567: temp._DataStore__elements[
+                        "ft.onto.base_ontology.Document"
+                    ][2],
+                    5678: temp._DataStore__elements[
+                        "ft.onto.base_ontology.Document"
+                    ][3],
+                    7890: temp._DataStore__elements[
+                        "ft.onto.base_ontology.Document"
+                    ][4],
+                    9999: temp._DataStore__elements[
+                        "ft.onto.base_ontology.Sentence"
+                    ][0],
+                    1234567: temp._DataStore__elements[
+                        "ft.onto.base_ontology.Sentence"
+                    ][1],
+                    100: temp._DataStore__elements[
+                        "ft.onto.base_ontology.Sentence"
+                    ][2],
+                    5000: temp._DataStore__elements[
+                        "ft.onto.base_ontology.Sentence"
+                    ][3],
+                },
+            )
+            print(f"deserialization without check attribute time cost {d-c}")
+
+            with self.assertRaisesRegex(
+                ValueError, "Saved object does not support check_attribute."
+            ):
+                DataStore.deserialize(tmpfilepath, serialize_method="json")
 
 
 if __name__ == "__main__":

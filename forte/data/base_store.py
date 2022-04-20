@@ -15,7 +15,6 @@
 from abc import abstractmethod
 from typing import List, Iterator, Tuple, Any, Optional
 import json
-import jsonpickle
 
 __all__ = ["BaseStore"]
 
@@ -46,7 +45,7 @@ class BaseStore:
         serialize_method: str = "json",
         save_attribute: bool = True,
     ):
-        if serialize_method in ["jsonpickle", "json"]:
+        if serialize_method == "json":
             with open(output_path, mode="wt", encoding="utf-8") as json_out:
                 json_out.write(self.to_string(serialize_method, save_attribute))
         else:
@@ -64,21 +63,18 @@ class BaseStore:
 
         Args:
             json_method: What method is used to convert data pack to json.
-                Only supports `json_pickle` and `json` for now. Default value
-                is `json`.
+                Only supports `json` for now. Default value is `json`.
             save_attribute: Boolean value indicating whether users want to
                 save `_type_attributes`.
 
         Returns: String representation of the data pack.
         """
-        if json_method == "jsonpickle":
-            if not save_attribute:
-                self.__dict__.pop("_type_attributes")
-            return jsonpickle.encode(self, unpicklable=True)
-        elif json_method == "json":
+        if json_method == "json":
             state = self.__getstate__()
-            if not save_attribute:
-                state.pop("fields")
+            if save_attribute:
+                state["fields"] = self._type_attributes
+                for _, v in state["fields"].items():
+                    v.pop("parent_entry")
             return json.dumps(state, indent=2)
         else:
             raise ValueError(f"Unsupported JSON method {json_method}.")
@@ -104,11 +100,7 @@ class BaseStore:
         Returns:
             An data store object deserialized from the data.
         """
-        if serialize_method == "jsonpickle":
-            with open(data_source, mode="rt", encoding="utf8") as f:
-                pack = cls.from_string(f.read())
-            return pack
-        elif serialize_method == "json":
+        if serialize_method == "json":
             with open(data_source, mode="rt", encoding="utf8") as f:
                 pack = json.loads(f.read())
             return pack
@@ -116,10 +108,6 @@ class BaseStore:
             raise NotImplementedError(
                 f"Unsupported deserialization method {serialize_method}"
             )
-
-    @classmethod
-    def from_string(cls, data_content: str) -> "BaseStore":
-        return jsonpickle.decode(data_content)
 
     @abstractmethod
     def add_annotation_raw(self, type_name: str, begin: int, end: int) -> int:

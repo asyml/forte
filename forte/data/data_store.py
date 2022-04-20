@@ -220,8 +220,6 @@ class DataStore(BaseStore):
         state.pop("_dynamically_add_type")
         state.pop("_DataStore__entry_dict")
         state["entries"] = state.pop("_DataStore__elements")
-        # rename fields to other names
-        state["fields"] = state.pop("_type_attributes")
         return state
 
     def __setstate__(self, state):
@@ -232,8 +230,7 @@ class DataStore(BaseStore):
         """
         super().__setstate__(state)
         self.__elements = self.__dict__.pop("entries")
-        self._dynamically_add_type = True
-        # recreate the `_type_attributes` if `fields` are not found
+        # add `_type_attributes` to this object to check attributes
         self._type_attributes = self.__dict__.pop("fields", {})
         # recreate the `entry_dict` from `__elements`
         self._DataStore__entry_dict = {}
@@ -270,7 +267,8 @@ class DataStore(BaseStore):
             silent_mode: Boolean value indicating whether users want to
                 see warnings when it checks attributes.
             accept_none: Boolean value indicating whether users want to
-                fill contradictory fields with none. If false, it will raise
+                fill contradictory fields with none. Only applicable when
+                `check_attribute` is set to True. If false, it will raise
                 an ValueError if there are any contradictions in fields.
 
         Returns:
@@ -291,12 +289,12 @@ class DataStore(BaseStore):
                 # find the `entry_type` with different fields, count different
                 # fields. `diff` records fields in the current class but not
                 # in the serialized objects.
-                for t in cls._type_attributes:
+                for t, v in cls._type_attributes.items():
                     change_map = {}
                     contradict_loc = []
-                    diff = set(
-                        cls._type_attributes[t]["attributes"].items()
-                    ) - set(store._type_attributes[t]["attributes"].items())
+                    diff = set(v["attributes"].items()) - set(
+                        store._type_attributes[t]["attributes"].items()
+                    )
                     for f in diff:
                         # if only orders are different, switch order
                         if f[0] in store._type_attributes[t]["attributes"]:
@@ -323,12 +321,7 @@ class DataStore(BaseStore):
                                 d[change_map[i]] if i in change_map else d[i]
                                 # throw fields that are redundant
                                 for i in range(
-                                    max(
-                                        cls._type_attributes[t][
-                                            "attributes"
-                                        ].values()
-                                    )
-                                    + 1
+                                    max(v["attributes"].values()) + 1
                                 )
                             ]
                     if len(contradict_loc) > 0:
@@ -350,8 +343,7 @@ class DataStore(BaseStore):
                                 "Saved objects have unidentified fields, which"
                                 " raise an error."
                             )
-
-        store._type_attributes = {}
+        delattr(store, "_type_attributes")
         return store
 
     def _new_tid(self) -> int:
