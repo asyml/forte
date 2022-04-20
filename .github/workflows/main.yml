@@ -122,8 +122,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ 3.6, 3.7 ]
-        torch-version: [ 1.5.0, 1.6.0 ]
+        python-version: [ 3.6 ]
+        torch-version: [ 1.5.0 ]
         tensorflow-version: [ 1.15.0 ]
         include:
           - python-version: 3.8
@@ -141,7 +141,6 @@ jobs:
         notebook-details:
           - { dep: "huggingface nltk", extra: "'tensorflow>=2.5.0,<2.8.0,termcolor>=1.1.0'"}
         modules:
-          - { module: "main"}
           - { module: "data_aug", test_file: "tests/forte/processors/data_augment"}
           - { module: "ir",test_file: "tests/forte/processors/ir/"}
           - { module: "remote", test_file: "tests/forte/remote_processor_test.py"}
