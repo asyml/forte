@@ -22,11 +22,8 @@ from typing import Any, Dict, Iterator, Optional, Type, Set, List
 from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
 from forte.data.readers import StringReader
-from forte.processors.base import PackProcessor
-from forte.processors.base.batch_processor import (
-    Predictor,
-    RequestPackingProcessor,
-)
+from forte.processors.base import PackProcessor, RequestPackingProcessor
+from forte.processors.base.batch_processor import Predictor
 from ft.onto.base_ontology import Token, Sentence, EntityMention, RelationLink
 
 

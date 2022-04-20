@@ -50,10 +50,10 @@ from forte.evaluation.base import Evaluator
 from forte.pipeline import Pipeline
 from forte.processors.base import (
     PackProcessor,
+    RequestPackingProcessor,
     MultiPackProcessor,
 )
 from forte.processors.base.batch_processor import (
-    RequestPackingProcessor,
     Predictor,
 )
 from forte.processors.misc import PeriodSentenceSplitter
