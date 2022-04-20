@@ -93,7 +93,7 @@ jobs:
           pytest tests/forte/texar_nondependency_test.py
           pip uninstall -y torch
       - name: Test modules need extra packages
-        if: ${{ matrix.test_type }} == "modules"
+        if: ${{ ${{ matrix.test_type }} == "modules" }}
         run: |
           pip install --use-feature=in-tree-build --progress-bar off .[test]
           if [ ${{ matrix.modules.module }} != "" ]
