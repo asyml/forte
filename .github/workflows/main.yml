@@ -79,7 +79,7 @@ jobs:
           pip uninstall -y torch
       - name: Install Forte
         run: |
-          pip install --use-feature=in-tree-build --progress-bar off .[data_aug,ir,remote,audio_ext,stave,models,test,wikipedia,nlp,extractor,data]
+          pip install --use-feature=in-tree-build --progress-bar off .[data_aug,ir,remote,audio_ext,stave,models,test,wikipedia,nlp,extractor]
       - name: Install deep learning frameworks
         run: |
           pip install --progress-bar off torch==${{ matrix.torch-version }}

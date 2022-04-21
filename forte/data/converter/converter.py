@@ -282,7 +282,7 @@ class Converter:
         except ImportError as e:
             raise ImportError(
                 " `pytorch` is not installed correctly."
-                " Please refer to [extra requirement for data module](pip install forte[data])"
+                " Please refer to [extra requirement for data module](pip install forte[extractor])"
                 " for more information. "
             ) from e
         # Note: to_torch == True overwrite to_numpy option
@@ -315,7 +315,7 @@ class Converter:
         except ImportError as e:
             raise ImportError(
                 " `pytorch` is not installed correctly."
-                " Please refer to [extra requirement for data module](pip install forte[data])"
+                " Please refer to [extra requirement for data module](pip install forte[extractor])"
                 " for more information. "
             ) from e
         # BFS to pad each dimension
@@ -366,7 +366,7 @@ class Converter:
         except ImportError as e:
             raise ImportError(
                 " `pytorch` is not installed correctly."
-                " Please refer to [extra requirement for data module](pip install forte[data])"
+                " Please refer to [extra requirement for data module](pip install forte[extractor])"
                 " for more information. "
             ) from e
         return torch.tensor(data, dtype=dtype)
