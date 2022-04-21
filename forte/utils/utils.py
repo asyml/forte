@@ -31,6 +31,7 @@ __all__ = [
     "create_class_with_kwargs",
     "check_type",
     "DiffAligner",
+    "try_import",
 ]
 
 
