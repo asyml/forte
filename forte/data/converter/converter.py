@@ -241,6 +241,15 @@ class Converter:
             #                  dtype=np.bool)
             # ]
         """
+        if self.to_torch:
+            try:
+                import torch  # pylint: disable=import-outside-toplevel
+            except ImportError as e:
+                raise ImportError(
+                    " `pytorch` is not installed correctly."
+                    " Please refer to [extra requirement for data module](pip install forte[extractor])"
+                    " for more information. "
+                ) from e
         dtype: Optional[np.dtype] = None
         need_pad: bool = features[0].need_pad
 
@@ -277,14 +286,7 @@ class Converter:
         # Convert to target type
         if not self.to_numpy and not self.to_torch:
             return data_list, masks_list
-        try:
-            import torch  # pylint: disable=import-outside-toplevel
-        except ImportError as e:
-            raise ImportError(
-                " `pytorch` is not installed correctly."
-                " Please refer to [extra requirement for data module](pip install forte[extractor])"
-                " for more information. "
-            ) from e
+
         # Note: to_torch == True overwrite to_numpy option
         if self.to_torch:
             data_tensor: torch.Tensor = self._to_tensor_type(data_list, dtype)
