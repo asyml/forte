@@ -20,10 +20,17 @@ import math
 from typing import Tuple, Dict, Generator
 
 
-import torch
-from torch import nn
-from torch.nn import functional as F
-from torch.optim import Optimizer
+try:
+    import torch
+    from torch import nn
+    from torch.nn import functional as F
+    from torch.optim import Optimizer
+except ImportError as e:
+    raise ImportError(
+        " `pytorch` is not installed correctly."
+        " Please refer to [extra requirement for aug wrapper](pip install forte[models])"
+        " for more information. "
+    ) from e
 
 from forte.models.da_rl.magic_model import MetaModule
 
