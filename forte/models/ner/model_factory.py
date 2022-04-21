@@ -44,14 +44,14 @@ class BiRecurrentConvCRF(nn.Module):
             from texar.torch.modules.embedders import (  # pylint: disable=import-outside-toplevel
                 WordEmbedder,
             )
-        except ImportError as e:
+        except ImportError as e2:
             raise ImportError(
                 " `texar-pytorch` is not installed correctly."
                 " Consider install texar via `pip install texar-pytorch`."
                 " Or refer to [extra requirement for Texar model support]"
                 "(pip install forte[models])"
                 " for more information."
-            ) from e
+            ) from e2
         self.word_embedder = WordEmbedder(
             init_value=texar.data.Embedding(
                 vocab=word_vocab,
@@ -160,14 +160,14 @@ class BiRecurrentConvCRF(nn.Module):
         predicted_tags = [torch.tensor(x).unsqueeze(0) for x in predicted_tags]
         try:
             import texar.torch as texar  # pylint: disable=import-outside-toplevel
-        except ImportError as e2:
+        except ImportError as e3:
             raise ImportError(
                 " `texar-pytorch` is not installed correctly."
                 " Consider install texar via `pip install texar-pytorch`."
                 " Or refer to [extra requirement for Texar model support]"
                 "(pip install forte[models])"
                 " for more information."
-            ) from e2
+            ) from e3
 
         predicted_tags = texar.utils.pad_and_concat(
             predicted_tags, axis=0, pad_constant_values=0
