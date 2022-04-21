@@ -16,14 +16,6 @@ from typing import List, Tuple, Any, Optional, Union, Dict, Sequence
 
 import numpy as np
 
-try:
-    import torch
-except ImportError as e:
-    raise ImportError(
-        " `pytorch` is not installed correctly."
-        " Please refer to [extra requirement for data module](pip install forte[data])"
-        " for more information. "
-    ) from e
 
 from forte.common.configuration import Config
 from forte.common import ValidationError
@@ -285,7 +277,14 @@ class Converter:
         # Convert to target type
         if not self.to_numpy and not self.to_torch:
             return data_list, masks_list
-
+        try:
+            import torch
+        except ImportError as e:
+            raise ImportError(
+                " `pytorch` is not installed correctly."
+                " Please refer to [extra requirement for data module](pip install forte[data])"
+                " for more information. "
+            ) from e
         # Note: to_torch == True overwrite to_numpy option
         if self.to_torch:
             data_tensor: torch.Tensor = self._to_tensor_type(data_list, dtype)
@@ -310,7 +309,15 @@ class Converter:
         raise RuntimeError("Invalid converter internal state")
 
     @staticmethod
-    def _padding(features: List[Feature]) -> Optional[torch.dtype]:
+    def _padding(features: List[Feature]):
+        try:
+            import torch
+        except ImportError as e:
+            raise ImportError(
+                " `pytorch` is not installed correctly."
+                " Please refer to [extra requirement for data module](pip install forte[data])"
+                " for more information. "
+            ) from e
         # BFS to pad each dimension
         queue: List[Feature] = []
         curr_max_len: int = -1
@@ -353,5 +360,13 @@ class Converter:
         return np.array(data, dtype=dtype)
 
     @staticmethod
-    def _to_tensor_type(data: List[Any], dtype) -> torch.Tensor:
+    def _to_tensor_type(data: List[Any], dtype):
+        try:
+            import torch
+        except ImportError as e:
+            raise ImportError(
+                " `pytorch` is not installed correctly."
+                " Please refer to [extra requirement for data module](pip install forte[data])"
+                " for more information. "
+            ) from e
         return torch.tensor(data, dtype=dtype)
