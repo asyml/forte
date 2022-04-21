@@ -79,7 +79,7 @@ jobs:
           pip uninstall -y torch
       - name: Install Forte
         run: |
-          pip install --use-feature=in-tree-build --progress-bar off .[data_aug,ir,remote,audio_ext,stave,models,test,wikipedia,nlp,extractor]
+          pip install --use-feature=in-tree-build --progress-bar off .[data_aug,ir,remote,audio_ext,stave,models,test,wikipedia,nlp,extractor,data]
       - name: Install deep learning frameworks
         run: |
           pip install --progress-bar off torch==${{ matrix.torch-version }}
@@ -135,6 +135,7 @@ jobs:
           - { module: "wikipedia", test_file: "tests/forte/datasets/wikipedia"}
           - { module: "nlp",test_file: "tests/forte/processors/subword_tokenizer_test.py tests/forte/processors/pretrained_encoder_processors_test.py"}
           - { module: "extractor",test_file: "tests/forte/train_preprocessor_test.py forte/data/extractors"}
+          - { module: "data", test_file: "tests/forte/data/data_pack_dataset_test.py tests/forte/data/converter/converter_test.py"}
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
