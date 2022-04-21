@@ -56,3 +56,10 @@ class ForteImportTest(unittest.TestCase):
 
     def test_import_trainer(self):
         from forte.trainer.base import BaseTrainer
+
+    def test_import_forte_modules(self):
+        from forte.pipeline_component import PipelineComponent
+        from forte.pipeline import Pipeline
+        from forte.process_job import ProcessJob, ProcessJobStatus
+        from forte.process_manager import ProcessManager
+        from forte.train_pipeline import TrainPipeline
