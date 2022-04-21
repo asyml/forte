@@ -6,7 +6,9 @@ try:
 except ImportError as e:
     raise ImportError(
         " `pytorch` is not installed correctly."
-        " Please refer to [extra requirement for model support](pip install forte[models])"
+        f" Consider install torch "
+        f"via `pip install torch`."
+        " Or refer to [extra requirement for model support](pip install forte[models])"
         " for more information. "
     ) from e
 from forte.models.srl.data import RawExample, Example, SRLSpan
