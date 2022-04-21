@@ -46,13 +46,6 @@ class ForteImportTest(unittest.TestCase):
         )
         from forte.evaluation.base import Evaluator
 
-    def test_import_models(self):
-        from forte.models.srl import (
-            Span,
-            RawExample,
-            Example,
-        )
-
     def test_import_trainer(self):
         from forte.trainer.base import BaseTrainer
 
