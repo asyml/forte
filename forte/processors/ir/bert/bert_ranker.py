@@ -18,8 +18,15 @@ encoder.
 import os
 from typing import Optional, cast
 
-import torch
-from torch.nn import Parameter
+try:
+    import torch
+    from torch.nn import Parameter
+except ImportError as e1:
+    raise ImportError(
+        " `pytorch` is not installed correctly."
+        " Please refer to [extra requirement for ir processors](pip install forte[ir])"
+        " for more information. "
+    ) from e1
 
 try:
     from texar.torch.modules.pretrained import PretrainedBERTMixin
