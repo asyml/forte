@@ -69,7 +69,7 @@ setuptools.setup(
         "wikipedia": ["rdflib==4.2.2"],
         # transformers 4.10.0 will break the translation model we used here
         "nlp": ["texar-pytorch>=0.1.4"],
-        "extractor": ["texar-pytorch>=0.1.4", "torch>=1.1.0"],
+        "extractor": ["texar-pytorch>=0.1.4"],
     },
     entry_points={
         "console_scripts": [
