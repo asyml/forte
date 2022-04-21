@@ -419,10 +419,6 @@ Data Utilities
 ----------------------------------
 .. autofunction:: forte.data.data_utils.maybe_download
 
-:hidden:`maybe_download`
-----------------------------------
-.. autofunction:: forte.data.data_utils.try_import
-
 :hidden:`batch_instances`
 ----------------------------------
 .. autofunction:: forte.data.data_utils_io.batch_instances
