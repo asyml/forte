@@ -16,7 +16,15 @@ import random
 import re
 
 import numpy as np
-import torch
+
+try:
+    import torch
+except ImportError as e:
+    raise ImportError(
+        " `pytorch` is not installed correctly."
+        " Please refer to [extra requirement for models](pip install forte[models])"
+        " for more information. "
+    ) from e
 
 MAX_CHAR_LENGTH = 45
 NUM_CHAR_PAD = 2
