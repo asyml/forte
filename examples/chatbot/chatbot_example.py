@@ -22,7 +22,7 @@ from forte.data.readers import MultiPackTerminalReader
 from forte.common.resources import Resources
 from forte.pipeline import Pipeline
 from forte.processors.third_party import MicrosoftBingTranslator
-from forte.processors.nlp import SRLPredictor
+from forte.processors.nlp.srl_predictor import SRLPredictor
 from forte.processors.ir import SearchProcessor, BertBasedQueryCreator
 from forte.data.selector import NameMatchSelector
 from ft.onto.base_ontology import PredicateLink, Sentence
