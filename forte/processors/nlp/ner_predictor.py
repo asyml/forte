@@ -18,7 +18,15 @@ import os
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
-import torch
+
+try:
+    import torch
+except ImportError as e:
+    raise ImportError(
+        " `pytorch` is not installed correctly."
+        " Please refer to [extra requirement for nlp processors](pip install forte[nlp])"
+        " for more information. "
+    ) from e
 
 from forte.common.configuration import Config
 from forte.common.resources import Resources
