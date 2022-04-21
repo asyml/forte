@@ -24,7 +24,7 @@ try:
 except ImportError as e:
     raise ImportError(
         " `pytorch` is not installed correctly."
-        " Please refer to [extra requirement for nlp processors](pip install forte[nlp])"
+        " Please refer to [extra requirement for ner predictor](pip install forte[models])"
         " for more information. "
     ) from e
 
