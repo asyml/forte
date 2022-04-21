@@ -312,15 +312,32 @@ def try_import(
     top_level: bool = False,
 ):
     """
-    Try to import a module and raise ImportError
-    if the module is not installed.
+    Use try-except to import a list of modules from one package and raise
+    ImportError
+    with proper error messages if the package is not installed.
+
+    .. note::
+        All modules must come from one package. For example, you cannot import
+        ``torch`` and ``nltk`` within one call of this method as they have
+        different ``import_module_name`` and corresponding error messages.
+        Another correct example of importing modules from one package is given below.
+
+    Suppose User wants to import ``torch`` and ``torch.nn.functional.F`` as ``F`` for module ``forte[models]`` at the top level of a script. They can do the following.
+
+    .. code-block:: python
+        import_modules = [ (None, "torch", None), ("torch.nn.functional.F", None, "F") ]
+        try_import(import_modules, "torch", "models", True)
+
+
 
     Args:
         import_modules: A list of tuples
-            (module_path, module_name).
-        import_module_name: module name to be installed.
-        forte_module: forte module User should install import module without
-            ImportError.
+            (module_path, module_name, alias).
+            When module_path is None, ``import module_name``
+            When module_path is not None, ``from module_path import module_name``
+            When alias is not None, ``import module_name as alias`` or ``from   module_path import module_name as alias``
+        import_module_name: module name should be installed by pip.
+        forte_module: forte module User should install by ``pip install forte[`forte_module`]``
         top_level: whether the importing is at the top level of a file.
             Defaults to False.
 
@@ -328,12 +345,26 @@ def try_import(
         ImportError: raised when the install module name is not installed.
     """
 
-    def import_module(module_path, top_level):
-        parent_path, module_name = module_path
+    def import_module(
+        module_info: Tuple[Union[str, None], str, Union[str, None]],
+        top_level: str,
+    ):
+        """
+        Import module from a module path and set a alias for the module.
+
+        Args:
+            module_info: a tuple of ``(module_path, module_name, alias)``
+            top_level: if the module is not imported from top level of the
+                file, then set it to True to suppress `import-outside-toplevel`
+                 error.
+        """
+        parent_path, module_name, alias = module_info
         if parent_path is None:
             import_script = f"import {module_name}"
         else:
             import_script = f"from {parent_path} import {module_name} "
+        if alias is not None:
+            import_script += f" as {alias}"
         if not top_level:
             import_script += "# pylint: disable=import-outside-toplevel"
         exec(import_script)
