@@ -16,9 +16,16 @@ import math
 from collections import defaultdict
 from typing import Any, Dict, List, Tuple
 
-import torch
-from torch import nn
-from torch.nn import functional as F
+try:
+    import torch
+    from torch import nn
+    from torch.nn import functional as F
+except ImportError as e:
+    raise ImportError(
+        " `pytorch` is not installed correctly."
+        " Please refer to [extra requirement for models](pip install forte[models])"
+        " for more information. "
+    ) from e
 from mypy_extensions import TypedDict
 
 try:
