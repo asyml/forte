@@ -278,7 +278,7 @@ class Converter:
         if not self.to_numpy and not self.to_torch:
             return data_list, masks_list
         try:
-            import torch
+            import torch  # pylint: disable=import-outside-toplevel
         except ImportError as e:
             raise ImportError(
                 " `pytorch` is not installed correctly."
@@ -311,7 +311,7 @@ class Converter:
     @staticmethod
     def _padding(features: List[Feature]):
         try:
-            import torch
+            import torch  # pylint: disable=import-outside-toplevel
         except ImportError as e:
             raise ImportError(
                 " `pytorch` is not installed correctly."
@@ -362,7 +362,7 @@ class Converter:
     @staticmethod
     def _to_tensor_type(data: List[Any], dtype):
         try:
-            import torch
+            import torch  # pylint: disable=import-outside-toplevel
         except ImportError as e:
             raise ImportError(
                 " `pytorch` is not installed correctly."
