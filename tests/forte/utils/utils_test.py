@@ -102,6 +102,7 @@ class UtilsTest(unittest.TestCase):
 
         # from torch import Tensor
         try_import([("torch", "Tensor")], "PyTorch", "nlp")
+        Tensor
 
         def err_import():
             # test error message
