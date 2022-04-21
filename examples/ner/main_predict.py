@@ -18,7 +18,7 @@ from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
 from forte.data.readers.conll03_reader import CoNLL03Reader
-from forte.processors.nlp import CoNLLNERPredictor
+from forte.processors.nlp.ner_predictor import CoNLLNERPredictor
 from ft.onto.base_ontology import Token, Sentence, EntityMention
 
 config_data = yaml.safe_load(open("config_data.yml", "r"))

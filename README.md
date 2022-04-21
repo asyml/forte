@@ -21,11 +21,11 @@
   <a href="https://aclanthology.org/2020.emnlp-demos.26/">Publication</a>
 </p>
 
-**Bring good software engineering to your ML solutions, starting from Data!** 
+**Bring good software engineering to your ML solutions, starting from Data!**
 
-**Forte** is a data-centric framework designed to engineer complex ML workflows. Forte allows practitioners to build ML components in a composable and modular way. Behind the scene, it introduces [Data Pack](https://asyml-forte.readthedocs.io/en/latest/notebook_tutorial/handling_structued_data.html), a standardized data structure for unstructured data, distilling 
-good software engineering practices such as reusability, extensibility, and flexibility into 
-ML solutions. 
+**Forte** is a data-centric framework designed to engineer complex ML workflows. Forte allows practitioners to build ML components in a composable and modular way. Behind the scene, it introduces [Data Pack](https://asyml-forte.readthedocs.io/en/latest/notebook_tutorial/handling_structued_data.html), a standardized data structure for unstructured data, distilling
+good software engineering practices such as reusability, extensibility, and flexibility into
+ML solutions.
 
 ![image](https://user-images.githubusercontent.com/1015991/164107272-593ef68f-7438-4f11-9b76-251435995943.png)
 
@@ -72,12 +72,11 @@ Some components or modules in forte may require some [extra requirements](https:
 * `pip install forte[remote]`: Install packages required for pipeline serving functionalities, such as [Remote Processor](https://github.com/asyml/forte/processors/misc/remote_processor.py).
 * `pip install forte[audio_ext]`: Install packages required for Forte Audio support, such as [Audio Reader](https://github.com/asyml/forte/blob/master/forte/data/readers/audio_reader.py).
 * `pip install forte[stave]`: Install packages required for [Stave](https://github.com/asyml/forte/blob/master/forte/processors/stave/stave_processor.py) integration.
-* `pip install forte[models]`: Install packages required for [ner training](https://github.com/asyml/forte/blob/master/forte/trainer/ner_trainer.py), [srl](https://github.com/asyml/forte/tree/master/forte/models/srl), [srl with new training system](https://github.com/asyml/forte/tree/master/forte/models/srl_new), and [srl_predictor](https://github.com/asyml/forte/tree/master/forte/processors/nlp/srl_predictor.py)
+* `pip install forte[models]`: Install packages required for [ner training](https://github.com/asyml/forte/blob/master/forte/trainer/ner_trainer.py), [srl](https://github.com/asyml/forte/tree/master/forte/models/srl), [srl with new training system](https://github.com/asyml/forte/tree/master/forte/models/srl_new), and [srl_predictor](https://github.com/asyml/forte/tree/master/forte/processors/nlp/srl_predictor.py) and [ner_predictor](https://github.com/asyml/forte/tree/master/forte/processors/nlp/ner_predictor.py)
 * `pip install forte[test]`: Install packages required for running [unit tests](https://github.com/asyml/forte/tree/master/tests).
 * `pip install forte[wikipedia]`: Install packages required for reading [wikipedia datasets](https://github.com/asyml/forte/tree/master/forte/datasets/wikipedia).
 * `pip install forte[nlp]`: Install packages required for additional NLP supports, such as [subword_tokenizer](https://github.com/asyml/forte/tree/master/forte/processors/nlp/subword_tokenizer.py) and [texar encoder](https://github.com/asyml/forte/tree/master/forte/processors/third_party/pretrained_encoder_processors.py)
-* `pip install forte[extractor]`: Install packages required for extractor-based training system, [extractor](https://github.com/asyml/forte/blob/master/forte/data/extractors), [train_preprocessor](https://github.com/asyml/forte/tree/master/forte/train_preprocessor.py) and [tagging trainer](https://github.com/asyml/forte/tree/master/examples/tagging/tagging_trainer.py)
-
+* `pip install forte[extractor]`: Install packages required for extractor-based training system, [extractor](https://github.com/asyml/forte/blob/master/forte/data/extractors), [train_preprocessor](https://github.com/asyml/forte/tree/master/forte/train_preprocessor.py), [tagging trainer](https://github.com/asyml/forte/tree/master/examples/tagging/tagging_trainer.py), [data pack dataset](https://github.com/asyml/forte/blob/master/forte/data/data_pack_dataset.py), [types](https://github.com/asyml/forte/blob/master/forte/data/types.py), and [converter](https://github.com/asyml/forte/blob/master/forte/data/converter).
 
 ## Quick Start Guide
 Writing NLP pipelines with Forte is easy. The following example creates a simple pipeline that analyzes the sentences, tokens, and named entities from a piece of text.
@@ -97,7 +96,7 @@ from ft.onto.base_ontology import Token
 
 class NLTKPOSTagger(PackProcessor):
     r"""A wrapper of NLTK pos tagger."""
-    
+
     def initialize(self, resources, configs):
         super().initialize(resources, configs)
         # download the NLTK average perceptron tagger
@@ -110,14 +109,14 @@ class NLTKPOSTagger(PackProcessor):
 
         # use nltk pos tagging module to tag token texts
         taggings = nltk.pos_tag(token_texts)
-        
+
         # assign nltk taggings to token attributes
         for token, tag in zip(token_entries, taggings):
             token.pos = tag[1]
 ```
-If we break it down, we will notice there are two main functions. 
+If we break it down, we will notice there are two main functions.
 In the `initialize` function, we download and prepare the model. And then in the `_process`
-function, we actually process the `DataPack` object, take the some tokens from it, and 
+function, we actually process the `DataPack` object, take the some tokens from it, and
 use the NLTK tagger to create POS tags. The results are stored as the `pos` attribute of
 the tokens.
 
@@ -155,7 +154,7 @@ for pack in pipeline.initialize().process_dataset():
 
 We have successfully created a simple pipeline. In the nutshell, the `DataPack`s are
 the standard packages "flowing" on the pipeline. They are created by the reader, and
-then pass along the pipeline. 
+then pass along the pipeline.
 
 Each processor, such as our `NLTKPOSTagger`,
 interfaces directly with `DataPack`s and do not need to worry about the
@@ -164,15 +163,15 @@ pipeline, `SpacyProcessor` creates the `Sentence` and `Token`, and then we imple
 the `NLTKPOSTagger` to add Part-of-Speech tags to the tokens.
 
 To learn more about the details, check out of [documentation](https://asyml-forte.readthedocs.io/)!
-The classes used in this guide can also be found in this repository or 
-[the Forte Wrappers repository](https://github.com/asyml/forte-wrappers/tree/main/src/spacy) 
+The classes used in this guide can also be found in this repository or
+[the Forte Wrappers repository](https://github.com/asyml/forte-wrappers/tree/main/src/spacy)
 
 ## And There's More
 The data-centric abstraction of Forte opens the gate to many other opportunities.
-Not only does Forte allow engineers to develop reusable components easily, it further provides a simple way to develop composable ML modules. For example, Forte allows us to: 
+Not only does Forte allow engineers to develop reusable components easily, it further provides a simple way to develop composable ML modules. For example, Forte allows us to:
 * create composable ML solutions with reusable models and processing logic
 * easily interface with a great collection of [3rd party toolkits](https://github.com/asyml/forte-wrappers) built by the community
-* build plug-and-play [data augmentation tools](https://asyml-forte.readthedocs.io/en/latest/code/data_aug.html) 
+* build plug-and-play [data augmentation tools](https://asyml-forte.readthedocs.io/en/latest/code/data_aug.html)
 
 ![image](https://user-images.githubusercontent.com/1015991/164107427-66a5c9bd-a3ae-4d75-bfe2-24246e574e07.png)
 
@@ -206,4 +205,3 @@ If you are interested in making enhancement to Forte, please first go over our [
 ### License
 
 [Apache License 2.0](https://github.com/asyml/forte/blob/master/LICENSE)
-

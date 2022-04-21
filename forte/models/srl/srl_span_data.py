@@ -1,6 +1,16 @@
 import json
 from typing import List
-import torch
+
+try:
+    import torch
+except ImportError as e:
+    raise ImportError(
+        " `pytorch` is not installed correctly."
+        " Consider install torch "
+        "via `pip install torch`."
+        " Or refer to [extra requirement for model support](pip install forte[models])"
+        " for more information. "
+    ) from e
 from forte.models.srl.data import RawExample, Example, SRLSpan
 
 try:
