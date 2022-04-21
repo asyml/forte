@@ -18,7 +18,7 @@ import difflib
 from functools import wraps
 from inspect import getfullargspec
 from pydoc import locate
-from typing import Dict, List, Optional, get_type_hints, Tuple
+from typing import Dict, List, Optional, get_type_hints, Tuple, Union
 
 from sortedcontainers import SortedList
 from typing_inspect import is_union_type, get_origin
@@ -303,3 +303,50 @@ class DiffAligner:
 
     def _get_opcodes(self):
         yield from self.__matcher.get_opcodes()
+
+
+def try_import(
+    import_modules: List[Tuple[Union[str, None], str]],
+    import_module_name: str,
+    forte_module: str,
+    top_level: bool = False,
+):
+    """
+    Try to import a module and raise ImportError
+    if the module is not installed.
+
+    Args:
+        import_modules: A list of tuples
+            (module_path, module_name).
+        import_module_name: module name to be installed.
+        forte_module: forte module User should install import module without
+            ImportError.
+        top_level: whether the importing is at the top level of a file.
+            Defaults to False.
+
+    Raises:
+        ImportError: raised when the install module name is not installed.
+    """
+
+    def import_module(module_path, top_level):
+        parent_path, module_name = module_path
+        if parent_path is None:
+            import_script = f"import {module_name}"
+        else:
+            import_script = f"from {parent_path} import {module_name} "
+        if not top_level:
+            import_script += "# pylint: disable=import-outside-toplevel"
+        exec(import_script)
+
+    try:
+        for module in import_modules:
+            import_module(module, top_level)
+    except ImportError as e:
+        raise ImportError(
+            f" `{import_module_name}` is not installed correctly."
+            f" Consider install {import_module_name}"
+            f"via `pip install {import_module_name}`."
+            f" Or refer to [extra requirement for extractor"
+            f" system](pip install forte[{forte_module}])"
+            " for more information. "
+        ) from e
