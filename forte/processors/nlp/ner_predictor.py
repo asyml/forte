@@ -24,8 +24,8 @@ try:
 except ImportError as e:
     raise ImportError(
         " `pytorch` is not installed correctly."
-        f" Consider install torch "
-        f"via `pip install torch`."
+        " Consider install torch "
+        "via `pip install torch`."
         " Please refer to [extra requirement for ner predictor](pip install forte[models])"
         " for more information. "
     ) from e

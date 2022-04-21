@@ -247,8 +247,8 @@ class Converter:
             except ImportError as e:
                 raise ImportError(
                     " `pytorch` is not installed correctly."
-                    f" Consider install torch "
-                    f"via `pip install torch`."
+                    " Consider install torch "
+                    "via `pip install torch`."
                     " Or refer to [extra requirement for data module](pip install forte[extractor])"
                     " for more information. "
                 ) from e
@@ -319,8 +319,8 @@ class Converter:
         except ImportError as e:
             raise ImportError(
                 " `pytorch` is not installed correctly."
-                f" Consider install torch "
-                f"via `pip install torch`."
+                " Consider install torch "
+                "via `pip install torch`."
                 " Or refer to [extra requirement for data module](pip install forte[extractor])"
                 " for more information. "
             ) from e
@@ -372,8 +372,8 @@ class Converter:
         except ImportError as e:
             raise ImportError(
                 " `pytorch` is not installed correctly."
-                f" Consider install torch "
-                f"via `pip install torch`."
+                " Consider install torch "
+                "via `pip install torch`."
                 " Or refer to [extra requirement for data module](pip install forte[extractor])"
                 " for more information. "
             ) from e

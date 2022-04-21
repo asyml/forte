@@ -23,8 +23,8 @@ try:
 except ImportError as e1:
     raise ImportError(
         " `pytorch` is not installed correctly."
-        f" Consider install torch "
-        f"via `pip install torch`."
+        " Consider install torch "
+        "via `pip install torch`."
         " Or refer to [extra requirement for ir processors](pip install forte[ir])"
         " for more information. "
     ) from e1
