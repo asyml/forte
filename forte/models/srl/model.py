@@ -21,13 +21,7 @@ try:
     from torch import nn
     from torch.nn import functional as F
 except ImportError as e:
-    raise ImportError(
-        " `pytorch` is not installed correctly."
-        " Consider install torch "
-        "via `pip install torch`."
-        " Please refer to [extra requirement for models](pip install forte[models])"
-        " for more information. "
-    ) from e
+    raise ImportError(create_error_msg("torch", "models", "srl model")) from e
 from mypy_extensions import TypedDict
 
 try:

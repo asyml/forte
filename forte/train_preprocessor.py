@@ -16,15 +16,14 @@ Train preprocessor helps doing data pre-processing during training.
 """
 import logging
 from typing import Optional, Dict, Type, Any, Union, Iterator, List
+from forte.utils import create_error_msg
 
 try:
     import torch
     from torch import device
 except ImportError as e:
     raise ImportError(
-        " `pytorch` is not installed correctly."
-        " Please refer to [extra requirement for an extractor system](pip install forte[extractor])"
-        " for more information. "
+        create_error_msg("torch", "extractor", "an extrator system")
     ) from e
 
 try:

@@ -22,11 +22,7 @@ try:
     import torch
 except ImportError as e1:
     raise ImportError(
-        " `pytorch` is not installed correctly."
-        " Consider install torch "
-        "via `pip install torch`."
-        " Or refer to [extra requirement for ir processors](pip install forte[ir])"
-        " for more information. "
+        create_error_msg("torch", "ir", "Information Retrieval supports")
     ) from e1
 
 

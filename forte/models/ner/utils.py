@@ -16,17 +16,12 @@ import random
 import re
 
 import numpy as np
+from forte.utils import create_error_msg
 
 try:
     import torch
 except ImportError as e:
-    raise ImportError(
-        " `pytorch` is not installed correctly."
-        " Consider install torch "
-        "via `pip install torch`."
-        " Or refer to [extra requirement for models](pip install forte[models])"
-        " for more information. "
-    ) from e
+    raise ImportError(create_error_msg("torch", "models", "models")) from e
 
 MAX_CHAR_LENGTH = 45
 NUM_CHAR_PAD = 2

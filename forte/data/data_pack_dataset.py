@@ -19,16 +19,13 @@ represents a single data point in the dataset. A feature collection represents
 an extracted feature corresponding to an input data point.
 """
 from typing import Dict, Iterator, Type, Optional, List, Tuple, Union, Any
+from forte.utils import create_error_msg
 
 try:
     import torch
 except ImportError as e:
     raise ImportError(
-        " `pytorch` is not installed correctly."
-        " Consider install torch "
-        "via `pip install torch`."
-        " Or refer to [extra requirement for data module](pip install forte[extractor])"
-        " for more information. "
+        create_error_msg("torch", "extractor", "data module")
     ) from e
 
 try:

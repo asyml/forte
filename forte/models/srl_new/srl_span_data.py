@@ -4,13 +4,7 @@ from typing import List
 try:
     import torch
 except ImportError as e:
-    raise ImportError(
-        " `pytorch` is not installed correctly."
-        " Consider install torch "
-        "via `pip install torch`."
-        " Or refer to [extra requirement for model support](pip install forte[models])"
-        " for more information. "
-    ) from e
+    raise ImportError(create_error_msg("torch", "models", "models")) from e
 from forte.models.srl_new.data import RawExample, Example, SRLSpan
 
 try:

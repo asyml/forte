@@ -15,6 +15,7 @@
 import logging
 import os
 from typing import Dict, List, Tuple, Optional
+from forte.utils import create_error_msg
 
 try:
     import texar.torch as tx
@@ -30,11 +31,7 @@ except ImportError as e:
 try:
     import torch
 except ImportError as e:
-    raise ImportError(
-        " `pytorch` is not installed correctly."
-        " Please refer to [extra requirement for nlp processors](pip install forte[nlp])"
-        " for more information. "
-    ) from e
+    raise ImportError(create_error_msg("torch", "nlp", "nlp processors")) from e
 
 from forte.common.configuration import Config
 from forte.common.resources import Resources

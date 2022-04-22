@@ -96,23 +96,6 @@ class UtilsTest(unittest.TestCase):
         spans = aligner.align_with_segments(text, segments)
         self.assertEqual(spans, expected_spans)
 
-    def test_try_import(self):
-        # import torch
-        try_import([(None, "torch")], "PyTorch", "nlp")
-
-        # from torch import Tensor
-        try_import([("torch", "Tensor")], "PyTorch", "nlp")
-        Tensor
-
-        def err_import():
-            # test error message
-            try_import(
-                [(None, "some_module")], "some_module_name", "some_forte_module"
-            )
-
-        # import some_module
-        self.assertRaises(ImportError, err_import)
-
 
 if __name__ == "__main__":
     unittest.main()

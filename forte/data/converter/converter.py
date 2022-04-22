@@ -16,7 +16,7 @@ from typing import List, Tuple, Any, Optional, Union, Dict, Sequence
 
 import numpy as np
 
-
+from forte.utils import create_error_msg
 from forte.common.configuration import Config
 from forte.common import ValidationError
 from forte.data.converter.feature import Feature
@@ -246,11 +246,7 @@ class Converter:
                 import torch  # pylint: disable=import-outside-toplevel
             except ImportError as e:
                 raise ImportError(
-                    " `pytorch` is not installed correctly."
-                    " Consider install torch "
-                    "via `pip install torch`."
-                    " Or refer to [extra requirement for data module](pip install forte[extractor])"
-                    " for more information. "
+                    create_error_msg("torch", "extractor", "data module")
                 ) from e
         dtype: Optional[np.dtype] = None
         need_pad: bool = features[0].need_pad
@@ -371,10 +367,6 @@ class Converter:
             import torch  # pylint: disable=import-outside-toplevel
         except ImportError as e:
             raise ImportError(
-                " `pytorch` is not installed correctly."
-                " Consider install torch "
-                "via `pip install torch`."
-                " Or refer to [extra requirement for data module](pip install forte[extractor])"
-                " for more information. "
+                create_error_msg("torch", "extractor", "data module")
             ) from e
         return torch.tensor(data, dtype=dtype)

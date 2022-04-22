@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from typing import Dict
+from forte.utils import create_error_msg
 
 try:
     import torch
@@ -21,11 +22,7 @@ try:
     from torch import nn
 except ImportError as e1:
     raise ImportError(
-        " `pytorch` is not installed correctly."
-        " Consider install torch "
-        "via `pip install torch`."
-        " Or refer to [extra requirement for models](pip install forte[models])"
-        " for more information. "
+        create_error_msg("torch", "models", "model factory")
     ) from e1
 
 from forte.common.configuration import Config
