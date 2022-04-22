@@ -18,7 +18,17 @@ import os
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
-import torch
+
+try:
+    import torch
+except ImportError as e:
+    raise ImportError(
+        " `pytorch` is not installed correctly."
+        " Consider install torch "
+        "via `pip install torch`."
+        " Please refer to [extra requirement for ner predictor](pip install forte[models])"
+        " for more information. "
+    ) from e
 
 from forte.common.configuration import Config
 from forte.common.resources import Resources

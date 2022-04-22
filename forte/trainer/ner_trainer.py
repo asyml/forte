@@ -24,9 +24,17 @@ from pathlib import Path
 from typing import List, Tuple, Iterator, Optional, Dict
 
 import numpy as np
-import torch
-from torch.optim import SGD
-import torchtext
+
+try:
+    import torch
+    from torch.optim import SGD
+    import torchtext
+except ImportError as e:
+    raise ImportError(
+        " `pytorch` is not installed correctly."
+        " Please refer to [extra requirement for models](pip install forte[models])"
+        " for more information. "
+    ) from e
 from tqdm import tqdm
 
 from forte.common.configuration import Config

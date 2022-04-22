@@ -75,7 +75,7 @@ jobs:
           pip install --progress-bar off torch==${{ matrix.torch-version }}
           # Try to install Forte backbone only and test basic imports.
           pip install --use-feature=in-tree-build --progress-bar off .
-          pytest tests/forte/texar_nondependency_test.py
+          pytest tests/forte/forte_backbone_test.py
           pip uninstall -y torch
       - name: Install Forte
         run: |
@@ -101,7 +101,7 @@ jobs:
           if [[ ${{ matrix.torch-version }} != "1.5.0" && ${{ matrix.python-version }} == "3.9" ]]; then mypy forte; fi
       - name: Test with pytest and run coverage
         run: |
-          coverage run -m pytest tests  --ignore=tests/forte/notebooks --ignore=tests/forte/texar_nondependency_test.py
+          coverage run -m pytest tests  --ignore=tests/forte/notebooks --ignore=tests/forte/forte_backbone_test.py
           coverage run --append -m pytest --doctest-modules forte
       - name: Upload coverage
         run: |
@@ -134,7 +134,7 @@ jobs:
           - { module: "models", test_file: "tests/forte/models"}
           - { module: "wikipedia", test_file: "tests/forte/datasets/wikipedia"}
           - { module: "nlp",test_file: "tests/forte/processors/subword_tokenizer_test.py tests/forte/processors/pretrained_encoder_processors_test.py"}
-          - { module: "extractor",test_file: "tests/forte/train_preprocessor_test.py forte/data/extractors"}
+          - { module: "extractor",test_file: "tests/forte/train_preprocessor_test.py forte/data/extractors tests/forte/data/data_pack_dataset_test.py tests/forte/data/converter/converter_test.py"}
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}

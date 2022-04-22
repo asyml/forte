@@ -16,7 +16,16 @@
 import os
 from typing import Dict, Any
 
-import torch
+try:
+    import torch
+except ImportError as e1:
+    raise ImportError(
+        " `pytorch` is not installed correctly."
+        " Consider install torch "
+        "via `pip install torch`."
+        " Or refer to [extra requirement for ir processors](pip install forte[ir])"
+        " for more information. "
+    ) from e1
 
 from forte.common.configuration import Config
 from forte.common.resources import Resources

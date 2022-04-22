@@ -20,7 +20,16 @@ an extracted feature corresponding to an input data point.
 """
 from typing import Dict, Iterator, Type, Optional, List, Tuple, Union, Any
 
-import torch
+try:
+    import torch
+except ImportError as e:
+    raise ImportError(
+        " `pytorch` is not installed correctly."
+        " Consider install torch "
+        "via `pip install torch`."
+        " Or refer to [extra requirement for data module](pip install forte[extractor])"
+        " for more information. "
+    ) from e
 
 try:
     from texar.torch.data import IterDataSource, DatasetBase, Batch
