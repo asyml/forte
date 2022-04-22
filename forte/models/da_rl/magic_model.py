@@ -35,9 +35,7 @@ try:
     import texar.torch as tx
 except ImportError as e:
     raise ImportError(
-        " `texar-pytorch` is not installed correctly."
-        " Please refer to [extra requirement for aug wrapper](pip install forte[models])"
-        " for more information. "
+        create_error_msg("texar-pytorch", "models", "magic models")
     ) from e
 
 __all__ = ["MetaModule", "TexarBertMetaModule"]

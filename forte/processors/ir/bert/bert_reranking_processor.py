@@ -16,6 +16,15 @@
 import os
 from typing import Dict, Any
 from forte.utils import create_error_msg
+from forte.common.configuration import Config
+from forte.common.resources import Resources
+from forte.data.multi_pack import MultiPack
+from forte.data.ontology import Query
+from forte.processors.base import MultiPackProcessor
+from forte.processors.ir.bert.bert_ranker import (
+    BERTClassifier,
+    BERTEncoder,
+)
 
 try:
     import torch
@@ -24,16 +33,6 @@ except ImportError as e1:
         create_error_msg("torch", "ir", "Information Retrieval supports")
     ) from e1
 
-from forte.common.configuration import Config
-from forte.common.resources import Resources
-from forte.data.multi_pack import MultiPack
-from forte.data.ontology import Query
-from forte.processors.base import MultiPackProcessor
-
-from forte.processors.ir.bert.bert_ranker import (
-    BERTClassifier,
-    BERTEncoder,
-)
 
 __all__ = ["BertRerankingProcessor"]
 
@@ -71,10 +70,7 @@ class BertRerankingProcessor(MultiPackProcessor):
             )
         except ImportError as e:
             raise ImportError(
-                " `texar-pytorch` is not installed correctly."
-                " Consider install texar via `pip install texar-pytorch`"
-                " Or refer to [extra requirement for IR support](pip install forte[ir])"
-                " for more information."
+                create_error_msg("texar-pytorch", "ir", "IR support")
             ) from e
         self.tokenizer = BERTTokenizer(
             pretrained_model_name=self.config.pretrained_model_name,

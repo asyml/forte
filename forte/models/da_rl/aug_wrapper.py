@@ -19,6 +19,7 @@ import random
 import math
 from typing import Tuple, Dict, Generator
 from forte.utils import create_error_msg
+from forte.models.da_rl.magic_model import MetaModule
 
 try:
     import torch
@@ -26,17 +27,16 @@ try:
     from torch.nn import functional as F
     from torch.optim import Optimizer
 except ImportError as e:
-    raise ImportError(create_error_msg("torch", "models", "aug wrapper")) from e
+    raise ImportError(
+        create_error_msg("torch", "models", "Augmentation Wrapper")
+    ) from e
 
-from forte.models.da_rl.magic_model import MetaModule
 
 try:
     import texar.torch as tx
 except ImportError as e:
     raise ImportError(
-        " `texar-pytorch` is not installed correctly."
-        " Please refer to [extra requirement for aug wrapper](pip install forte[models])"
-        " for more information. "
+        create_error_msg("texar-pytorch", "models", "Augmentation Wrapper")
     ) from e
 
 __all__ = ["MetaAugmentationWrapper"]

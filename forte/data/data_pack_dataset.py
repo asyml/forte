@@ -19,24 +19,7 @@ represents a single data point in the dataset. A feature collection represents
 an extracted feature corresponding to an input data point.
 """
 from typing import Dict, Iterator, Type, Optional, List, Tuple, Union, Any
-from forte.utils import create_error_msg
 
-try:
-    import torch
-except ImportError as e:
-    raise ImportError(
-        create_error_msg("torch", "extractor", "data module")
-    ) from e
-
-try:
-    from texar.torch.data import IterDataSource, DatasetBase, Batch
-except ImportError as e:
-    raise ImportError(
-        " `texar-pytorch` is not installed correctly."
-        " Consider install texar via `pip install texar-pytorch`"
-        " Or refer to [extra requirement for extractor](pip install forte[extractor])"
-        " for more information. "
-    ) from e
 from asyml_utilities.hyperparams import HParams
 
 
@@ -47,6 +30,22 @@ from forte.data.base_extractor import BaseExtractor
 from forte.data.ontology.core import EntryType
 from forte.data.ontology.top import Annotation
 from forte.data.types import DataRequest
+from forte.utils import create_error_msg
+
+try:
+    import torch
+except ImportError as e:
+    raise ImportError(
+        create_error_msg("torch", "extractor", "data pack dataset")
+    ) from e
+
+try:
+    from texar.torch.data import IterDataSource, DatasetBase, Batch
+except ImportError as e:
+    raise ImportError(
+        create_error_msg("texar-pytorch", "extractor", "data pack dataset")
+    ) from e
+
 
 __all__ = [
     "DataPackIterator",

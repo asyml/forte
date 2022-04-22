@@ -24,14 +24,6 @@ from pathlib import Path
 from typing import List, Tuple, Iterator, Optional, Dict
 
 import numpy as np
-from forte.utils import create_error_msg
-
-try:
-    import torch
-    from torch.optim import SGD
-    import torchtext
-except ImportError as e:
-    raise ImportError(create_error_msg("torch", "models", "models")) from e
 from tqdm import tqdm
 
 from forte.common.configuration import Config
@@ -39,7 +31,16 @@ from forte.common.resources import Resources
 from forte.models.ner import utils
 from forte.models.ner.model_factory import BiRecurrentConvCRF
 from forte.trainer.base.base_trainer import BaseTrainer
+from forte.utils import create_error_msg
 from ft.onto.base_ontology import Token, Sentence
+
+try:
+    import torch
+    from torch.optim import SGD
+    import torchtext
+except ImportError as e:
+    raise ImportError(create_error_msg("torch", "models", "models")) from e
+
 
 logger = logging.getLogger(__name__)
 

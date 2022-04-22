@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from typing import List
-
+from forte.utils import create_error_msg
 
 __all__ = ["Dictionary", "WordnetDictionary"]
 
@@ -95,8 +95,7 @@ class WordnetDictionary(Dictionary):
             )
         except ImportError as err:
             raise ImportError(
-                "nltk is not installed correctly."
-                "Please refer to documentation at [link](pip install forte[data_aug])"
+                create_error_msg("nltk", "data_aug", "Data Augmentation(UDA)")
             ) from err
 
         try:

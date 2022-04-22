@@ -29,10 +29,7 @@ try:
     import texar.torch as tx
 except ImportError as e:
     raise ImportError(
-        " `texar-pytorch` is not installed correctly."
-        " Consider install texar via `pip install texar-pytorch`."
-        " Or refer to [extra requirement for Texar model support](pip install forte[models])"
-        " for more information."
+        create_error_msg("texar-pytorch", "models", "Texar model support")
     ) from e
 
 
