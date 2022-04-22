@@ -16,7 +16,7 @@
 import pickle
 from typing import Any, Dict, Tuple
 import numpy as np
-from forte.utils import create_error_msg
+from forte.utils import create_import_error_msg
 from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
@@ -28,7 +28,7 @@ try:
     import torch
 except ImportError as e1:
     raise ImportError(
-        create_error_msg("torch", "ir", "Information Retrieval supports")
+        create_import_error_msg("torch", "ir", "Information Retrieval supports")
     ) from e1
 
 
@@ -59,7 +59,7 @@ class BertBasedQueryCreator(QueryProcessor):
             )
         except ImportError as e:
             raise ImportError(
-                create_error_msg("texar-pytorch", "ir", "IR support")
+                create_import_error_msg("texar-pytorch", "ir", "IR support")
             ) from e
 
         if "name" in self.config.tokenizer:

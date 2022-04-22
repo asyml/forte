@@ -28,7 +28,7 @@ import math
 from collections import defaultdict
 from typing import Any, Dict, List, Tuple, Optional
 from mypy_extensions import TypedDict
-from forte.utils import create_error_msg
+from forte.utils import create_import_error_msg
 from forte.data.converter import Feature
 from forte.models.srl_new import model_utils as utils
 from forte.models.srl_new.data import Span
@@ -39,14 +39,18 @@ try:
     from torch import nn
     from torch.nn import functional as F
 except ImportError as e:
-    raise ImportError(create_error_msg("torch", "models", "models")) from e
+    raise ImportError(
+        create_import_error_msg("torch", "models", "models")
+    ) from e
 
 
 try:
     import texar.torch as tx
 except ImportError as e:
     raise ImportError(
-        create_error_msg("texar-pytorch", "models", "Texar model support")
+        create_import_error_msg(
+            "texar-pytorch", "models", "Texar model support"
+        )
     ) from e
 
 

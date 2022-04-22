@@ -30,20 +30,22 @@ from forte.data.base_extractor import BaseExtractor
 from forte.data.ontology.core import EntryType
 from forte.data.ontology.top import Annotation
 from forte.data.types import DataRequest
-from forte.utils import create_error_msg
+from forte.utils import create_import_error_msg
 
 try:
     import torch
 except ImportError as e:
     raise ImportError(
-        create_error_msg("torch", "extractor", "data pack dataset")
+        create_import_error_msg("torch", "extractor", "data pack dataset")
     ) from e
 
 try:
     from texar.torch.data import IterDataSource, DatasetBase, Batch
 except ImportError as e:
     raise ImportError(
-        create_error_msg("texar-pytorch", "extractor", "data pack dataset")
+        create_import_error_msg(
+            "texar-pytorch", "extractor", "data pack dataset"
+        )
     ) from e
 
 

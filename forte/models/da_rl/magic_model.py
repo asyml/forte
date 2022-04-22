@@ -21,21 +21,21 @@ and performs memory-efficient parameter updates locally.
 
 import copy
 from typing import Dict
-from forte.utils import create_error_msg
+from forte.utils import create_import_error_msg
 
 try:
     import torch
     from torch import nn
 except ImportError as e:
     raise ImportError(
-        create_error_msg("torch", "models", "magic models")
+        create_import_error_msg("torch", "models", "magic models")
     ) from e
 
 try:
     import texar.torch as tx
 except ImportError as e:
     raise ImportError(
-        create_error_msg("texar-pytorch", "models", "magic models")
+        create_import_error_msg("texar-pytorch", "models", "magic models")
     ) from e
 
 __all__ = ["MetaModule", "TexarBertMetaModule"]

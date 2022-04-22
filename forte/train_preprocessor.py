@@ -25,7 +25,7 @@ from forte.data.data_pack import DataPack
 from forte.data.data_pack_dataset import DataPackDataset, DataPackIterator
 from forte.data.ontology import Annotation
 from forte.data.ontology.core import EntryType
-from forte.utils import extractor_utils, create_error_msg
+from forte.utils import extractor_utils, create_import_error_msg
 from forte.utils.extractor_utils import parse_feature_extractors
 
 try:
@@ -33,14 +33,16 @@ try:
     from torch import device
 except ImportError as e:
     raise ImportError(
-        create_error_msg("torch", "extractor", "the extrator system support")
+        create_import_error_msg(
+            "torch", "extractor", "the extrator system support"
+        )
     ) from e
 
 try:
     from texar.torch.data import DataIterator, Batch
 except ImportError as e:
     raise ImportError(
-        create_error_msg(
+        create_import_error_msg(
             "texar-pytorch", "extractor", "the extrator system support"
         )
     ) from e

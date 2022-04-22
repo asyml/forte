@@ -15,7 +15,7 @@
 import logging
 import os
 from typing import Dict, List, Tuple, Optional
-from forte.utils import create_error_msg
+from forte.utils import create_import_error_msg
 from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
@@ -33,14 +33,16 @@ try:
     import texar.torch as tx
 except ImportError as e:
     raise ImportError(
-        create_error_msg("texar-pytorch", "nlp", "Texar models")
+        create_import_error_msg("texar-pytorch", "nlp", "Texar models")
     ) from e
 
 
 try:
     import torch
 except ImportError as e:
-    raise ImportError(create_error_msg("torch", "nlp", "nlp processors")) from e
+    raise ImportError(
+        create_import_error_msg("torch", "nlp", "nlp processors")
+    ) from e
 
 
 logger = logging.getLogger(__name__)

@@ -19,7 +19,7 @@ from forte.data.data_pack import DataPack
 from forte.data.ontology.top import Annotation
 from forte.processors.base import PackProcessor
 from forte.utils.utils import get_class
-from forte.utils import create_error_msg
+from forte.utils import create_import_error_msg
 
 
 __all__ = [
@@ -48,7 +48,7 @@ class PretrainedEncoder(PackProcessor):
             import texar.torch as tx  # pylint: disable=import-outside-toplevel
         except ImportError as err:
             raise ImportError(
-                create_error_msg("texar-pytorch", "nlp", "NLP support")
+                create_import_error_msg("texar-pytorch", "nlp", "NLP support")
             ) from err
         self.name2tokenizer = {
             "bert-base-uncased": tx.data.BERTTokenizer,
@@ -137,7 +137,7 @@ class PretrainedEncoder(PackProcessor):
             import torch  # pylint: disable=import-outside-toplevel
         except ImportError as err:
             raise ImportError(
-                create_error_msg("texar-pytorch", "nlp", "NLP support")
+                create_import_error_msg("texar-pytorch", "nlp", "NLP support")
             ) from err
         for entry in input_pack.get(entry_type=self.entry_type):  # type: ignore
             input_ids, segment_ids, _ = self.tokenizer.encode_text(

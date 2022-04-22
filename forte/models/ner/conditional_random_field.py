@@ -18,13 +18,13 @@ Adapted from AllenNLP but removed the feature of external restriction
 __all__ = ["ConditionalRandomField"]
 from typing import Optional, List, Tuple, Dict, Union
 import logging
-from forte.utils import create_error_msg
+from forte.utils import create_import_error_msg
 
 try:
     import torch
 except ImportError as e:
     raise ImportError(
-        create_error_msg("torch", "models", "conditional random fields")
+        create_import_error_msg("torch", "models", "conditional random fields")
     ) from e
 
 logger = logging.getLogger(__name__)

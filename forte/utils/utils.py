@@ -34,7 +34,7 @@ __all__ = [
     "check_type",
     "DiffAligner",
     "try_import",
-    "create_error_msg",
+    "create_import_error_msg",
 ]
 
 
@@ -309,40 +309,23 @@ class DiffAligner:
         yield from self.__matcher.get_opcodes()
 
 
-def create_error_msg(
-    module2import_name: str,
+def create_import_error_msg(
+    extra_module: str,
     forte_module: str,
     component_name: str,
 ):
     """
-    Use try-except to import a list of modules from one package and raise
-    ImportError
-    with proper error messages if the package is not installed.
-
-    .. note::
-        All modules must come from one package. For example, you cannot import
-        ``torch`` and ``nltk`` within one call of this method as they have
-        different ``module2import_name`` and corresponding error messages.
-        Another correct example of importing modules from one package is given below.
-
-    Suppose User wants to import ``torch`` and ``torch.nn.functional.F`` as ``F`` for module ``forte[models]`` at the top level of a script. They can do the following.
-
-    .. code-block:: python
-        modules2import = [ ("torch", None), ("torch.nn.functional.F", "F") ]
-        try_import(modules2import, "torch", "models", True)
-
+    Create an error message for importing package extra required by a forte
+    module.
 
 
     Args:
-        modules2import: A list of tuples
-            (module_path, alias).
-            When module_path is None, ``import module_path``
-            When alias is not None, ``import module_name as alias`` or ``import module_name as alias``
-        module2import_name: module name should be installed by pip.
-        forte_module: forte module User should install by ``pip install forte[`forte_module`]``
+        extra_module: module name should be installed by pip.
+        forte_module: forte module User should install by
+            ``pip install forte[`forte_module`]`` to install all
+            extra packages for using the forte module.
+        component_name: the forte component that needs the module.
 
-    Raises:
-        ImportError: raised when the install module name is not installed.
     """
     forte_module_link_d = {
         "data_aug": "https://github.com/asyml/forte/blame/master/README.md#L70",
@@ -358,9 +341,9 @@ def create_error_msg(
     }
 
     error_msg = (
-        f" `{module2import_name}` is not installed correctly."
-        + f" Consider install {module2import_name}"
-        + f"via `pip install {module2import_name}`."
+        f" `{extra_module}` is not installed correctly."
+        + f" Consider install {extra_module}"
+        + f"via `pip install {extra_module}`."
         + f" Or refer to extra requirement for {component_name}"
         + f" at {forte_module_link_d[forte_module]}"
         + " for more information. "

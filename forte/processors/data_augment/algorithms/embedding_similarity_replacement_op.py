@@ -19,7 +19,7 @@ import numpy as np
 
 
 from ft.onto.base_ontology import Annotation
-from forte.utils import create_error_msg
+from forte.utils import create_import_error_msg
 from forte.common.configuration import Config
 from forte.processors.data_augment.algorithms.text_replacement_op import (
     TextReplacementOp,
@@ -63,7 +63,7 @@ class EmbeddingSimilarityReplacementOp(TextReplacementOp):
             )
         except ImportError as e:
             raise ImportError(
-                create_error_msg(
+                create_import_error_msg(
                     "texar-pytorch",
                     "data_aug",
                     "EmbeddingSimilarityReplacementOp",

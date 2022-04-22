@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from typing import List
-from forte.utils import create_error_msg
+from forte.utils import create_import_error_msg
 
 __all__ = ["Dictionary", "WordnetDictionary"]
 
@@ -95,7 +95,9 @@ class WordnetDictionary(Dictionary):
             )
         except ImportError as err:
             raise ImportError(
-                create_error_msg("nltk", "data_aug", "Data Augmentation(UDA)")
+                create_import_error_msg(
+                    "nltk", "data_aug", "Data Augmentation(UDA)"
+                )
             ) from err
 
         try:

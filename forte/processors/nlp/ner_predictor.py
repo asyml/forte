@@ -17,7 +17,7 @@ import logging
 import os
 from typing import Dict, List, Optional, Tuple
 import numpy as np
-from forte.utils import create_error_msg
+from forte.utils import create_import_error_msg
 from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
@@ -31,7 +31,7 @@ try:
     import torch
 except ImportError as e:
     raise ImportError(
-        create_error_msg("torch", "models", "ner predictor")
+        create_import_error_msg("torch", "models", "ner predictor")
     ) from e
 
 

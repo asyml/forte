@@ -17,7 +17,7 @@ encoder.
 """
 import os
 from typing import Optional, cast
-from forte.utils import create_error_msg
+from forte.utils import create_import_error_msg
 from forte.common.configuration import Config
 
 try:
@@ -25,7 +25,7 @@ try:
     from torch.nn import Parameter
 except ImportError as e1:
     raise ImportError(
-        create_error_msg("torch", "ir", "Information Retrieval supports")
+        create_import_error_msg("torch", "ir", "Information Retrieval supports")
     ) from e1
 
 try:
@@ -36,7 +36,7 @@ try:
     )
 except ImportError as e1:
     raise ImportError(
-        create_error_msg("texar-pytorch", "ir", "IR support")
+        create_import_error_msg("texar-pytorch", "ir", "IR support")
     ) from e1
 
 

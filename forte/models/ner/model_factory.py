@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from typing import Dict
-from forte.utils import create_error_msg
+from forte.utils import create_import_error_msg
 from forte.common.configuration import Config
 from forte.models.ner.conditional_random_field import ConditionalRandomField
 
@@ -24,7 +24,7 @@ try:
     from torch import nn
 except ImportError as e1:
     raise ImportError(
-        create_error_msg("torch", "models", "model factory")
+        create_import_error_msg("torch", "models", "model factory")
     ) from e1
 
 
@@ -44,7 +44,7 @@ class BiRecurrentConvCRF(nn.Module):
             )
         except ImportError as e2:
             raise ImportError(
-                create_error_msg(
+                create_import_error_msg(
                     "texar-pytorch", "models", "BiRecurrentConvCRF"
                 )
             ) from e2
@@ -158,7 +158,7 @@ class BiRecurrentConvCRF(nn.Module):
             import texar.torch as texar  # pylint: disable=import-outside-toplevel
         except ImportError as e3:
             raise ImportError(
-                create_error_msg(
+                create_import_error_msg(
                     "texar-pytorch", "models", "BiRecurrentConvCRF"
                 )
             ) from e3

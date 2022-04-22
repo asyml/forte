@@ -15,7 +15,7 @@
 # pylint: disable=attribute-defined-outside-init
 import os
 from typing import Dict, Any
-from forte.utils import create_error_msg
+from forte.utils import create_import_error_msg
 from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.multi_pack import MultiPack
@@ -30,7 +30,7 @@ try:
     import torch
 except ImportError as e1:
     raise ImportError(
-        create_error_msg("torch", "ir", "Information Retrieval supports")
+        create_import_error_msg("torch", "ir", "Information Retrieval supports")
     ) from e1
 
 
@@ -70,7 +70,7 @@ class BertRerankingProcessor(MultiPackProcessor):
             )
         except ImportError as e:
             raise ImportError(
-                create_error_msg("texar-pytorch", "ir", "IR support")
+                create_import_error_msg("texar-pytorch", "ir", "IR support")
             ) from e
         self.tokenizer = BERTTokenizer(
             pretrained_model_name=self.config.pretrained_model_name,

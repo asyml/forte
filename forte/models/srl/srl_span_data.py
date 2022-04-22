@@ -1,19 +1,23 @@
 import json
 from typing import List
-from forte.utils import create_error_msg
+from forte.utils import create_import_error_msg
 from forte.models.srl.data import RawExample, Example, SRLSpan
 
 try:
     import torch
 except ImportError as e:
-    raise ImportError(create_error_msg("torch", "models", "models")) from e
+    raise ImportError(
+        create_import_error_msg("torch", "models", "models")
+    ) from e
 
 
 try:
     import texar.torch as tx
 except ImportError as e:
     raise ImportError(
-        create_error_msg("texar-pytorch", "models", "Texar model support")
+        create_import_error_msg(
+            "texar-pytorch", "models", "Texar model support"
+        )
     ) from e
 
 

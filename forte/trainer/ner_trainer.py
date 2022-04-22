@@ -31,7 +31,7 @@ from forte.common.resources import Resources
 from forte.models.ner import utils
 from forte.models.ner.model_factory import BiRecurrentConvCRF
 from forte.trainer.base.base_trainer import BaseTrainer
-from forte.utils import create_error_msg
+from forte.utils import create_import_error_msg
 from ft.onto.base_ontology import Token, Sentence
 
 try:
@@ -39,7 +39,9 @@ try:
     from torch.optim import SGD
     import torchtext
 except ImportError as e:
-    raise ImportError(create_error_msg("torch", "models", "models")) from e
+    raise ImportError(
+        create_import_error_msg("torch", "models", "models")
+    ) from e
 
 
 logger = logging.getLogger(__name__)

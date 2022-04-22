@@ -28,7 +28,7 @@ import os
 import logging
 import collections
 from typing import Dict, Set, Any
-from forte.utils import create_error_msg
+from forte.utils import create_import_error_msg
 from forte.common import Resources, ProcessorConfigError
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
@@ -40,7 +40,7 @@ try:
     from stave_backend.lib.stave_project import StaveProjectWriter
 except ImportError as e:
     raise ImportError(
-        create_error_msg("stave", "stave", "stave processor")
+        create_import_error_msg("stave", "stave", "stave processor")
     ) from e
 
 

@@ -18,7 +18,7 @@ For simplicity, the model is not wrapped as a processor.
 """
 from typing import List
 from abc import abstractmethod
-from forte.utils import create_error_msg
+from forte.utils import create_import_error_msg
 
 __all__ = [
     "MachineTranslator",
@@ -75,7 +75,7 @@ class MarianMachineTranslator(MachineTranslator):
             )
         except ImportError as err:
             raise ImportError(
-                create_error_msg(
+                create_import_error_msg(
                     "transformers", "data_aug", "Machine Translator"
                 )
             ) from err
