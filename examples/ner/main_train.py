@@ -20,7 +20,7 @@ from ner_vocab_processor import CoNLL03VocabularyProcessor
 from forte.common.configuration import Config
 from forte.data.readers.conll03_reader import CoNLL03Reader
 from forte.evaluation.ner_evaluator import CoNLLNEREvaluator
-from forte.processors.nlp import CoNLLNERPredictor
+from forte.processors.nlp.ner_predictor import CoNLLNERPredictor
 from forte.train_pipeline import TrainPipeline
 from forte.trainer.ner_trainer import CoNLLNERTrainer
 
