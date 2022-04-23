@@ -1,4 +1,4 @@
-gitChapter 1. Handling Structured Data
+Chapter 1. Handling Structured Data
 ====================================
 .. toctree::
    :maxdepth: 2
