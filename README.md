@@ -192,11 +192,11 @@ If you are interested in making enhancement to Forte, please first go over our [
 ### Supported By
 
 <p align="center">
-   <img src="https://asyml.io/assets/institutions/cmu.png", width="200" align="top">
+   <img src="https://www.cmu.edu/brand/brand-guidelines/images/wordmarksquare-red-600x600.png", width="200" align="top">
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-   <img src="https://www.ucsd.edu/_resources/img/logo_UCSD.png" width="200" align="top">
+   <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSXGNEKXMxt25a0FffhMpms3WpCDfUFV83OoQ&usqp=CAU" width="200" align="top">
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-   <img src="https://raw.githubusercontent.com/asyml/forte/master/docs/_static/img/Petuum.png" width="200" align="top">
+   <img src="https://www.walltowall.com/media/W1siZiIsIjIwMTkvMDYvMTcvZjNjbHdiMWEzX3BldHV1bV9pbnRyb18xLmpwZyJdLFsicCIsInRodW1iIiwiNjQweCJdXQ/petuum_intro_1.jpg" width="200" align="top">
    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 </p>
 
