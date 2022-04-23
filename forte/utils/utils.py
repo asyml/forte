@@ -15,12 +15,10 @@
 Utility functions
 """
 import difflib
-from ftplib import error_temp
-import importlib
 from functools import wraps
 from inspect import getfullargspec
 from pydoc import locate
-from typing import Dict, List, Optional, get_type_hints, Tuple, Union
+from typing import Dict, List, Optional, get_type_hints, Tuple
 
 from sortedcontainers import SortedList
 from typing_inspect import is_union_type, get_origin
