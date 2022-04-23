@@ -29,6 +29,7 @@ from forte.models.ner.model_factory import BiRecurrentConvCRF
 from forte.pipeline import Pipeline
 from forte.processors.base import Predictor
 from forte.trainer.base.trainer import BaseTrainer
+from forte.utils import create_import_error_msg
 
 logger = logging.getLogger(__name__)
 
@@ -134,10 +135,9 @@ class TaggingTrainer(BaseTrainer):
             )  # pylint: disable=import-outside-toplevel
         except ImportError as e:
             raise ImportError(
-                " `texar-pytorch` is not installed correctly."
-                " Consider install texar via `pip install texar-pytorch`."
-                " Or refer to [extra requirement for extractor system](pip install forte[extractor])"
-                " for more information. "
+                create_import_error_msg(
+                    "texar-pytorch", "extractor", "the extractor system"
+                )
             ) from e
         while epoch < self.config_data.num_epochs:
             epoch += 1

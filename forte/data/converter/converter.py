@@ -314,11 +314,9 @@ class Converter:
             import torch  # pylint: disable=import-outside-toplevel
         except ImportError as e:
             raise ImportError(
-                " `pytorch` is not installed correctly."
-                " Consider install torch "
-                "via `pip install torch`."
-                " Or refer to [extra requirement for data module](pip install forte[extractor])"
-                " for more information. "
+                create_import_error_msg(
+                    "torch", "extractor", "the extractor system"
+                )
             ) from e
         # BFS to pad each dimension
         queue: List[Feature] = []
