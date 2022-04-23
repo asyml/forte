@@ -19,7 +19,7 @@ import unittest
 from ddt import data, ddt
 
 from forte.utils import utils
-from forte.utils.utils import DiffAligner, try_import
+from forte.utils.utils import DiffAligner
 
 
 @ddt
