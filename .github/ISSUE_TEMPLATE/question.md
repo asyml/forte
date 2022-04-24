@@ -1,6 +1,6 @@
 ---
 name: Question
-about: Get confused on how Forte work
+about: Get confused on how Forte works
 title: ''
 labels: 'question'
 assignees: ''
