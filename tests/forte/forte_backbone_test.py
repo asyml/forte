@@ -17,7 +17,34 @@ class ForteImportTest(unittest.TestCase):
         from forte.data import BaseIndex
 
     def test_import_data(self):
-        from forte.data.readers import TerminalReader
+        from forte.data.readers import (
+            AGNewsReader,
+            ClassificationDatasetReader,
+            CoNLL03Reader,
+            ConllUDReader,
+            RawDataDeserializeReader,
+            RecursiveDirectoryDeserializeReader,
+            DirPackReader,
+            MultiPackDirectoryReader,
+            MultiPackDeserializerBase,
+            SinglePackReader,
+            HTMLReader,
+            LargeMovieReader,
+            TerminalReader,
+            RawPackReader,
+            RawMultiPackReader,
+            MSMarcoPassageReader,
+            MultiPackSentenceReader,
+            MultiPackTerminalReader,
+            OntonotesReader,
+            OpenIEReader,
+            PlainTextReader,
+            ProdigyReader,
+            RACEMultiChoiceQAReader,
+            SemEvalTask8Reader,
+            SST2Reader,
+            StringReader,
+        )
         from forte.datasets.mrc.squad_reader import SquadReader
 
     def test_import_processors(self):
@@ -29,6 +56,14 @@ class ForteImportTest(unittest.TestCase):
         )
         from forte.processors.misc import (
             AnnotationRemover,
+            AttributeMasker,
+            DeleteOverlapEntry,
+            LowerCaserProcessor,
+            RemoteProcessor,
+            PeriodSentenceSplitter,
+            WhiteSpaceTokenizer,
+            Alphabet,
+            VocabularyProcessor,
         )
         from forte.processors.base import (
             BaseProcessor,
@@ -55,3 +90,59 @@ class ForteImportTest(unittest.TestCase):
         from forte.process_job import ProcessJob, ProcessJobStatus
         from forte.process_manager import ProcessManager
         from forte.train_pipeline import TrainPipeline
+
+    def test_import_base_data_aug(self):
+        from forte.processors.data_augment import (
+            BaseDataAugmentProcessor,
+            ReplacementDataAugmentProcessor,
+        )
+        from forte.processors.data_augment.base_op_processor import (
+            BaseOpProcessor,
+        )
+
+        from forte.processors.data_augment.algorithms.back_translation_op import (
+            BackTranslationOp,
+        )
+
+        from forte.processors.data_augment.algorithms.back_translation_op import (
+            BackTranslationOp,
+        )
+        from forte.processors.data_augment.algorithms.base_data_augmentation_op import (
+            BaseDataAugmentationOp,
+        )
+        from forte.processors.data_augment.algorithms.character_flip_op import (
+            CharacterFlipOp,
+        )
+        from forte.processors.data_augment.algorithms.dictionary_replacement_op import (
+            DictionaryReplacementOp,
+        )
+        from forte.processors.data_augment.algorithms.dictionary import (
+            Dictionary,
+        )
+        from forte.processors.data_augment.algorithms.distribution_replacement_op import (
+            DistributionReplacementOp,
+        )
+        from forte.processors.data_augment.algorithms.eda_ops import (
+            RandomSwapDataAugmentOp,
+            RandomInsertionDataAugmentOp,
+            RandomDeletionDataAugmentOp,
+        )
+        from forte.processors.data_augment.algorithms.sampler import (
+            Sampler,
+            UniformSampler,
+            UnigramSampler,
+        )
+
+        from forte.processors.data_augment.algorithms.single_annotation_op import (
+            SingleAnnotationAugmentOp,
+        )
+        from forte.processors.data_augment.algorithms.text_replacement_op import (
+            TextReplacementOp,
+        )
+        from forte.processors.data_augment.algorithms.typo_replacement_op import (
+            UniformTypoGenerator,
+            TypoReplacementOp,
+        )
+        from forte.processors.data_augment.algorithms.word_splitting_op import (
+            RandomWordSplitDataAugmentOp,
+        )
