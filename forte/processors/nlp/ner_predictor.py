@@ -16,20 +16,8 @@
 import logging
 import os
 from typing import Dict, List, Optional, Tuple
-
 import numpy as np
-
-try:
-    import torch
-except ImportError as e:
-    raise ImportError(
-        " `pytorch` is not installed correctly."
-        " Consider install torch "
-        "via `pip install torch`."
-        " Please refer to [extra requirement for ner predictor](pip install forte[models])"
-        " for more information. "
-    ) from e
-
+from forte.utils import create_import_error_msg
 from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
@@ -38,6 +26,14 @@ from forte.models.ner import utils
 from forte.models.ner.model_factory import BiRecurrentConvCRF
 from forte.processors.base.batch_processor import RequestPackingProcessor
 from ft.onto.base_ontology import Token, EntityMention
+
+try:
+    import torch
+except ImportError as e:
+    raise ImportError(
+        create_import_error_msg("torch", "models", "ner predictor")
+    ) from e
+
 
 logger = logging.getLogger(__name__)
 

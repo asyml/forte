@@ -1,26 +1,23 @@
 import json
 from typing import List
+from forte.utils import create_import_error_msg
+from forte.models.srl.data import RawExample, Example, SRLSpan
 
 try:
     import torch
 except ImportError as e:
     raise ImportError(
-        " `pytorch` is not installed correctly."
-        " Consider install torch "
-        "via `pip install torch`."
-        " Or refer to [extra requirement for model support](pip install forte[models])"
-        " for more information. "
+        create_import_error_msg("torch", "models", "models")
     ) from e
-from forte.models.srl.data import RawExample, Example, SRLSpan
+
 
 try:
     import texar.torch as tx
 except ImportError as e:
     raise ImportError(
-        " `texar-pytorch` is not installed correctly."
-        " Consider install texar via `pip install texar-pytorch`"
-        " Or refer to [extra requirement for model support](pip install forte[models])"
-        " for more information."
+        create_import_error_msg(
+            "texar-pytorch", "models", "Texar model support"
+        )
     ) from e
 
 

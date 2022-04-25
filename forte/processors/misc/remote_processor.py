@@ -27,6 +27,7 @@ from forte.common import Resources, ProcessorConfigError
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
+from forte.utils import create_import_error_msg
 
 logger = logging.getLogger(__name__)
 
@@ -163,10 +164,7 @@ class RemoteProcessor(PackProcessor):
             from fastapi.testclient import TestClient
         except ImportError as err:
             raise ImportError(
-                "'fastapi' must be installed to run the test client for "
-                "RemoteProcessor. You can refer to [extra modules to install]"
-                "('pip install forte[remote]') to "
-                "install all the requirements needed to use RemoteProcessor."
+                create_import_error_msg("fastapi", "remote", "RemoteProcessor")
             ) from err
         self._requests = TestClient(app)
 
