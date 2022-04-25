@@ -18,14 +18,26 @@ from typing import Dict, Any
 from urllib.parse import urlencode
 import os
 import requests
-from transformers import T5Tokenizer, T5ForConditionalGeneration
+
 from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.processors.base import MultiPackProcessor, PackProcessor
+from forte.utils import create_import_error_msg
 from ft.onto.base_ontology import Document, Utterance
 
+try:
+    from transformers import (  # pylint:disable=import-outside-toplevel
+        T5Tokenizer,
+        T5ForConditionalGeneration,
+    )
+except ImportError as err:
+    raise ImportError(
+        create_import_error_msg(
+            "transformers", "data_aug", "Machine Translator"
+        )
+    ) from err
 
 __all__ = ["MicrosoftBingTranslator", "MachineTranslationProcessor"]
 
