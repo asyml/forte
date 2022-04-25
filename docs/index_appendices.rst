@@ -1,9 +1,12 @@
 .. role:: hidden
     :class: hidden-section
 
+Appendices
+===========
+
 
 Core Design Principles
-==========================
+-------------------------
 
 
 The core design principle of Forte is the abstraction of NLP concepts and machine learning models,

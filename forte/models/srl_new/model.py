@@ -27,6 +27,12 @@
 import math
 from collections import defaultdict
 from typing import Any, Dict, List, Tuple, Optional
+from mypy_extensions import TypedDict
+from forte.utils import create_import_error_msg
+from forte.data.converter import Feature
+from forte.models.srl_new import model_utils as utils
+from forte.models.srl_new.data import Span
+
 
 try:
     import torch
@@ -34,25 +40,18 @@ try:
     from torch.nn import functional as F
 except ImportError as e:
     raise ImportError(
-        " `pytorch` is not installed correctly."
-        " Please refer to [extra requirement for model support](pip install forte[models])"
-        " for more information. "
+        create_import_error_msg("torch", "models", "models")
     ) from e
-from mypy_extensions import TypedDict
+
 
 try:
     import texar.torch as tx
 except ImportError as e:
     raise ImportError(
-        " `texar-pytorch` is not installed correctly."
-        " Consider install texar via `pip install texar-pytorch`."
-        " Or refer to [extra requirement for Texar model support](pip install forte[models])"
-        " for more information."
+        create_import_error_msg(
+            "texar-pytorch", "models", "Texar model support"
+        )
     ) from e
-
-from forte.data.converter import Feature
-from forte.models.srl_new import model_utils as utils
-from forte.models.srl_new.data import Span
 
 
 class LabeledSpanGraphNetwork(tx.ModuleBase):
