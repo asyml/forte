@@ -6,4 +6,4 @@ Chapter 3. Information Extraction
 
    toc/named_entity_recognition.md
    toc/relation_extraction.md
-   toc/medical_notes_analysis_system.md
+   notebook_tutorial/medical_notes_analysis_system
