@@ -4,4 +4,4 @@ Chapter 4. Information Retrieval
    :maxdepth: 2
 
    toc/indexing.md
-   toc/ranking.md
+   notebook_tutorial/ranking
