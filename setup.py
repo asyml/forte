@@ -1,5 +1,6 @@
 import sys
 from pathlib import Path
+import os
 
 import setuptools
 
@@ -8,9 +9,15 @@ long_description = (Path(__file__).parent / "README.md").read_text()
 if sys.version_info < (3, 6):
     sys.exit("Python>=3.6 is required by Forte.")
 
+version = {}
+with open(os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "forte/version.py"
+)) as fp:
+    exec(fp.read(), version)
+
 setuptools.setup(
     name="forte",
-    version="0.1.2",
+    version=version["VERSION"],
     url="https://github.com/asyml/forte",
     description="Forte is extensible framework for building composable and "
     "modularized NLP workflows.",
