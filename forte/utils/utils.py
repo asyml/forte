@@ -332,7 +332,7 @@ def create_import_error_msg(
     pip_msg = f" via `pip install {extra_module}` "
     refer_msg = (
         f" or refer to extra requirement for {component_name}"
-        + f" at https://github.com/asyml/forte#installation"
+        + " at https://github.com/asyml/forte#installation"
         + f" for more information about installing {forte_module}. "
     )
     if pip_installable:
