@@ -96,7 +96,7 @@ class WordnetDictionary(Dictionary):
         except ImportError as err:
             raise ImportError(
                 create_import_error_msg(
-                    "nltk", "data_aug", "Data Augmentation(UDA)"
+                    "nltk", "data_aug", "dictionary based data augmentation"
                 )
             ) from err
 
