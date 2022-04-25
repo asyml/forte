@@ -23,13 +23,13 @@
 
 **Bring good software engineering to your ML solutions, starting from Data!**
 
-**Forte** is a data-centric framework designed to engineer complex ML workflows. Forte allows practitioners to build ML components in a composable and modular way. Behind the scene, it introduces [Data Pack](https://asyml-forte.readthedocs.io/en/latest/notebook_tutorial/handling_structued_data.html), a standardized data structure for unstructured data, distilling
+**Forte** is a data-centric framework designed to engineer complex ML workflows. Forte allows practitioners to build ML components in a composable and modular way. Behind the scene, it introduces [DataPack](https://asyml-forte.readthedocs.io/en/latest/notebook_tutorial/handling_structued_data.html), a standardized data structure for unstructured data, distilling
 good software engineering practices such as reusability, extensibility, and flexibility into
 ML solutions.
 
 ![image](https://user-images.githubusercontent.com/1015991/164107272-593ef68f-7438-4f11-9b76-251435995943.png)
 
-Data Packs are standard data packages in an ML workflow, that can represent the source data (e.g. text, audio, images) and additional markups (e.g. entity mentions, bounding boxes). It is powered by a customizable data schema named "Ontology", allowing domain experts to inject their knowledge into ML engineering processes easily.
+DataPacks are standard data packages in an ML workflow, that can represent the source data (e.g. text, audio, images) and additional markups (e.g. entity mentions, bounding boxes). It is powered by a customizable data schema named "Ontology", allowing domain experts to inject their knowledge into ML engineering processes easily.
 
 ## Installation
 
@@ -76,7 +76,7 @@ Some components or modules in forte may require some [extra requirements](https:
 * `pip install forte[test]`: Install packages required for running [unit tests](https://github.com/asyml/forte/tree/master/tests).
 * `pip install forte[wikipedia]`: Install packages required for reading [wikipedia datasets](https://github.com/asyml/forte/tree/master/forte/datasets/wikipedia).
 * `pip install forte[nlp]`: Install packages required for additional NLP supports, such as [subword_tokenizer](https://github.com/asyml/forte/tree/master/forte/processors/nlp/subword_tokenizer.py) and [texar encoder](https://github.com/asyml/forte/tree/master/forte/processors/third_party/pretrained_encoder_processors.py)
-* `pip install forte[extractor]`: Install packages required for extractor-based training system, [extractor](https://github.com/asyml/forte/blob/master/forte/data/extractors), [train_preprocessor](https://github.com/asyml/forte/tree/master/forte/train_preprocessor.py), [tagging trainer](https://github.com/asyml/forte/tree/master/examples/tagging/tagging_trainer.py), [data pack dataset](https://github.com/asyml/forte/blob/master/forte/data/data_pack_dataset.py), [types](https://github.com/asyml/forte/blob/master/forte/data/types.py), and [converter](https://github.com/asyml/forte/blob/master/forte/data/converter).
+* `pip install forte[extractor]`: Install packages required for extractor-based training system, [extractor](https://github.com/asyml/forte/blob/master/forte/data/extractors), [train_preprocessor](https://github.com/asyml/forte/tree/master/forte/train_preprocessor.py), [tagging trainer](https://github.com/asyml/forte/tree/master/examples/tagging/tagging_trainer.py), [DataPack dataset](https://github.com/asyml/forte/blob/master/forte/data/data_pack_dataset.py), [types](https://github.com/asyml/forte/blob/master/forte/data/types.py), and [converter](https://github.com/asyml/forte/blob/master/forte/data/converter).
 
 ## Quick Start Guide
 Writing NLP pipelines with Forte is easy. The following example creates a simple pipeline that analyzes the sentences, tokens, and named entities from a piece of text.
