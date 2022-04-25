@@ -27,7 +27,7 @@
 good software engineering practices such as reusability, extensibility, and flexibility into
 ML solutions.
 
-![image](https://user-images.githubusercontent.com/1015991/164107272-593ef68f-7438-4f11-9b76-251435995943.png)
+![image](https://user-images.githubusercontent.com/1015991/165164897-e69fd9e7-278c-4e2b-80e4-5d1c389c1bfe.png)
 
 DataPacks are standard data packages in an ML workflow, that can represent the source data (e.g. text, audio, images) and additional markups (e.g. entity mentions, bounding boxes). It is powered by a customizable data schema named "Ontology", allowing domain experts to inject their knowledge into ML engineering processes easily.
 
