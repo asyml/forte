@@ -310,6 +310,7 @@ def create_import_error_msg(
     extra_module: str,
     forte_module: str,
     component_name: str,
+    pip_installable: bool = True,
 ):
     """
     Create an error message for importing package extra required by a forte
@@ -324,25 +325,18 @@ def create_import_error_msg(
         component_name: the forte component that needs the module.
 
     """
-    forte_module_link_d = {
-        "data_aug": "https://github.com/asyml/forte/blame/master/README.md#L70",
-        "ir": "https://github.com/asyml/forte/blame/master/README.md#L71",
-        "remote": "https://github.com/asyml/forte/blame/master/README.md#L72",
-        "audio_ext": "https://github.com/asyml/forte/blame/master/README.md#L73",
-        "stave": "https://github.com/asyml/forte/blame/master/README.md#L74",
-        "models": "https://github.com/asyml/forte/blame/master/README.md#L75",
-        "test": "https://github.com/asyml/forte/blame/master/README.md#L76",
-        "wikipedia": "https://github.com/asyml/forte/blame/master/README.md#L77",
-        "nlp": "https://github.com/asyml/forte/blame/master/README.md#L78",
-        "extractor": "https://github.com/asyml/forte/blame/master/README.md#L79",
-    }
-
-    error_msg = (
+    install_msg = (
         f" `{extra_module}` is not installed correctly."
         + f" Consider install {extra_module}"
-        + f"via `pip install {extra_module}`."
-        + f" Or refer to extra requirement for {component_name}"
-        + f" at {forte_module_link_d[forte_module]}"
-        + " for more information. "
     )
+    pip_msg = f" via `pip install {extra_module}` "
+    refer_msg = (
+        f" or refer to extra requirement for {component_name}"
+        + f" at https://github.com/asyml/forte#installation"
+        + f" for more information about installing {forte_module}. "
+    )
+    if pip_installable:
+        error_msg = install_msg + pip_msg + refer_msg
+    else:
+        error_msg = install_msg + refer_msg
     return error_msg
