@@ -112,15 +112,14 @@ jobs:
           fi
   test_backbone:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [ 3.6 ]
+    env:
+      python-version: 3.7
     steps:
       - uses: actions/checkout@v2
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python ${{ env.python-version }}
         uses: actions/setup-python@v2
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ env.python-version }}
       - name: Cache pip
         uses: actions/cache@v2
         with:
