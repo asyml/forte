@@ -2,7 +2,7 @@
 Unit tests for remote processor.
 """
 from forte.data.readers import RawDataDeserializeReader
-from forte.processors.misc import RemoteProcessor
+from forte.processors.misc.remote_processor import RemoteProcessor
 from forte.data.common_entry_utils import get_last_utterance
 from forte.data.data_pack import DataPack
 from forte.data.readers import StringReader
