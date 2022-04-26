@@ -21,13 +21,19 @@ being set as its reader.
 import json
 import logging
 from typing import Dict, Set, Any, Optional
-import requests
 
 from forte.common import Resources, ProcessorConfigError
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
 from forte.utils import create_import_error_msg
+
+try:
+    import requests
+except ImportError:
+    raise ImportError(
+        create_import_error_msg("requests", "remote", "Remote Processor")
+    )
 
 logger = logging.getLogger(__name__)
 
