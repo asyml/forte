@@ -17,7 +17,6 @@ from os import getenv
 from typing import Dict, Any
 from urllib.parse import urlencode
 import os
-import requests
 
 from forte.common.configuration import Config
 from forte.common.resources import Resources
@@ -92,6 +91,14 @@ class MicrosoftBingTranslator(MultiPackProcessor):
             self.out_pack_name = configs.out_pack_name
 
     def _process(self, input_pack: MultiPack):
+        try:
+            import requests
+        except ImportError:
+            raise ImportError(
+                create_import_error_msg(
+                    "requests", "data_aug", "data augment support"
+                )
+            )
         query = input_pack.get_pack(self.in_pack_name).text
         params = "?" + urlencode(
             {
