@@ -72,11 +72,9 @@ jobs:
           rm -rf stave
       - name: Test backbone Forte import test
         run: |
-          pip install --progress-bar off torch==${{ matrix.torch-version }}
           # Try to install Forte backbone only and test basic imports.
           pip install --use-feature=in-tree-build --progress-bar off .
           pytest tests/forte/forte_backbone_test.py
-          pip uninstall -y torch
       - name: Install Forte
         run: |
           pip install --use-feature=in-tree-build --progress-bar off .[data_aug,ir,remote,audio_ext,stave,models,test,wikipedia,nlp,extractor]
