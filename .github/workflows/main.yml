@@ -131,14 +131,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
             ${{ runner.os }}-
-      - name: Install Pytest
-        run: |
-          pip install --progress-bar off pytest==5.1.3
       - name: Test backbone Forte import test
         run: |
           # Try to install Forte backbone only and test basic imports.
           pip install --use-feature=in-tree-build --progress-bar off .
-          pytest tests/forte/forte_backbone_test.py
+          python tests/forte/forte_backbone_test.py
 
   test_modules:
     runs-on: ubuntu-latest
