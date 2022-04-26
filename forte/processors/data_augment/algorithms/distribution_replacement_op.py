@@ -66,13 +66,13 @@ class DistributionReplacementOp(SingleAnnotationAugmentOp, Configurable):
         according to the configuration values
         """
         try:
-            import requests
-        except ImportError:
+            import requests  # pylint: disable=import-outside-toplevel
+        except ImportError as e:
             raise ImportError(
                 create_import_error_msg(
                     "requests", "data_aug", "data augment support"
                 )
-            )
+            ) from e
 
         try:
             if "data_path" in self.configs["sampler_config"]["kwargs"]:

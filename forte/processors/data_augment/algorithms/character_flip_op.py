@@ -47,13 +47,13 @@ class CharacterFlipOp(SingleAnnotationAugmentOp):
 
     def __init__(self, configs: Union[Config, Dict[str, Any]]) -> None:
         try:
-            import requests
-        except ImportError:
+            import requests  # pylint: disable=import-outside-toplevel
+        except ImportError as e:
             raise ImportError(
                 create_import_error_msg(
                     "requests", "data_aug", "data augment support"
                 )
-            )
+            ) from e
         super().__init__(configs)
 
         self.dict_path = self.configs["dict_path"]

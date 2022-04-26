@@ -52,13 +52,13 @@ class UniformTypoGenerator:
 
     def __init__(self, dict_path: str):
         try:
-            import requests
-        except ImportError:
+            import requests  # pylint: disable=import-outside-toplevel
+        except ImportError as e:
             raise ImportError(
                 create_import_error_msg(
                     "requests", "data_aug", "data augment support"
                 )
-            )
+            ) from e
 
         try:
             r = requests.get(dict_path)
