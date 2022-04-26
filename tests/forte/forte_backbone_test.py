@@ -59,7 +59,6 @@ class ForteImportTest(unittest.TestCase):
             AttributeMasker,
             DeleteOverlapEntry,
             LowerCaserProcessor,
-            RemoteProcessor,
             PeriodSentenceSplitter,
             WhiteSpaceTokenizer,
             Alphabet,
