@@ -10,9 +10,9 @@ if sys.version_info < (3, 6):
     sys.exit("Python>=3.6 is required by Forte.")
 
 version = {}
-with open(os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), "forte/version.py"
-)) as fp:
+with open(
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "forte/version.py")
+) as fp:
     exec(fp.read(), version)
 
 setuptools.setup(
@@ -50,12 +50,10 @@ setuptools.setup(
             "transformers>=4.15.0",
             "nltk",
             "texar-pytorch>=0.1.4",
+            "requests",
         ],
         "ir": ["texar-pytorch>=0.1.4", "tensorflow>=1.15.0"],
-        "remote": [
-            "fastapi>=0.65.2",
-            "uvicorn>=0.14.0",
-        ],
+        "remote": ["fastapi>=0.65.2", "uvicorn>=0.14.0", "requests"],
         "audio_ext": ["soundfile>=0.10.3"],
         "stave": ["stave>=0.0.1.dev12"],
         "models": [

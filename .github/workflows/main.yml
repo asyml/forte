@@ -70,13 +70,7 @@ jobs:
           # Simply keep the database file but remove the repo.
           cp stave/simple-backend/db.sqlite3 .
           rm -rf stave
-      - name: Test backbone Forte import test
-        run: |
-          pip install --progress-bar off torch==${{ matrix.torch-version }}
-          # Try to install Forte backbone only and test basic imports.
-          pip install --use-feature=in-tree-build --progress-bar off .
-          pytest tests/forte/forte_backbone_test.py
-          pip uninstall -y torch
+
       - name: Install Forte
         run: |
           pip install --use-feature=in-tree-build --progress-bar off .[data_aug,ir,remote,audio_ext,stave,models,test,wikipedia,nlp,extractor]
@@ -116,7 +110,29 @@ jobs:
             cd ..
             coverage run -m pytest tests/forte/notebooks
           fi
-
+  test_backbone:
+    runs-on: ubuntu-latest
+    env:
+      python-version: 3.7
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ env.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.python-version }}
+      - name: Cache pip
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('setup.py') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+            ${{ runner.os }}-
+      - name: Test backbone Forte import test
+        run: |
+          # Try to install Forte backbone only and test basic imports.
+          pip install --use-feature=in-tree-build --progress-bar off .
+          python tests/forte/forte_backbone_test.py
 
   test_modules:
     runs-on: ubuntu-latest
