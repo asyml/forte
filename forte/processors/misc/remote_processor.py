@@ -29,11 +29,11 @@ from forte.processors.base import PackProcessor
 from forte.utils import create_import_error_msg
 
 try:
-    import requests
-except ImportError:
+    import requests  # pylint: disable=import-outside-toplevel
+except ImportError as e:
     raise ImportError(
         create_import_error_msg("requests", "remote", "Remote Processor")
-    )
+    ) from e
 
 logger = logging.getLogger(__name__)
 

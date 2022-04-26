@@ -92,13 +92,13 @@ class MicrosoftBingTranslator(MultiPackProcessor):
 
     def _process(self, input_pack: MultiPack):
         try:
-            import requests
-        except ImportError:
+            import requests  # pylint: disable=import-outside-toplevel
+        except ImportError as e:
             raise ImportError(
                 create_import_error_msg(
                     "requests", "data_aug", "data augment support"
                 )
-            )
+            ) from e
         query = input_pack.get_pack(self.in_pack_name).text
         params = "?" + urlencode(
             {
