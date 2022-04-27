@@ -578,6 +578,12 @@ class DataStoreTest(unittest.TestCase):
         self.assertEqual(instances[0][2], 1234)
         self.assertEqual(instances[1][2], 3456)
 
+        # get document entries with range
+        instances = list(self.data_store.get("ft.onto.base_ontology.Document", range_annotation=[0, 6]))
+        self.assertEqual(len(instances), 1)
+        instances = list(self.data_store.get("ft.onto.base_ontology.Document", range_annotation=[1, 6]))
+        self.assertEqual(len(instances), 0)
+
         # get all entries
         instances = list(self.data_store.get("forte.data.ontology.core.Entry"))
         self.assertEqual(len(instances), 5)

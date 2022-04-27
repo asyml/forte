@@ -833,7 +833,10 @@ class DataStore(BaseStore):
             yield entry
 
     def get(
-        self, type_name: str, include_sub_type: bool = True, range_annotation: Optional[List[int, int]] = None
+        self,
+        type_name: str,
+        include_sub_type: bool = True,
+        range_annotation: Optional[List[int]] = None,
     ) -> Iterator[List]:
         r"""This function fetches entries from the data store of
         type ``type_name``.
@@ -841,20 +844,43 @@ class DataStore(BaseStore):
         Args:
             type_name: The fully qualified name of the entry.
             include_sub_type: A boolean to indicate whether get its subclass.
+            range_annotation: A list that contains the begin and end indices
+                of the searching range of annotation-like entries.
 
         Returns:
             An iterator of the entries matching the provided arguments.
         """
         if include_sub_type:
             entry_class = get_class(type_name)
-            all_types = []
+            annotation_types = []
+            other_types = []
             # iterate all classes to find subclasses
             for type in self.__elements:
                 if issubclass(get_class(type), entry_class):
-                    all_types.append(type)
-            for type in all_types:
-                for entry in self.__elements[type]:
-                    yield entry
+                    if self._is_annotation(type):
+                        annotation_types.append(type)
+                    else:
+                        other_types.append(type)
+            if len(annotation_types) > 0:
+                if range_annotation is None:
+                    yield from self.co_iterator_annotation_like(
+                        annotation_types
+                    )
+                else:
+                    for entry in self.co_iterator_annotation_like(
+                        annotation_types
+                    ):
+                        if (
+                            entry[constants.BEGIN_INDEX]
+                            >= range_annotation[constants.BEGIN_INDEX]
+                            and entry[constants.END_INDEX]
+                            <= range_annotation[constants.END_INDEX]
+                        ):
+                            yield entry
+            if len(other_types) > 0:
+                for type in other_types:
+                    for entry in self.__elements[type]:
+                        yield entry
         else:
             try:
                 entries = self.__elements[type_name]
