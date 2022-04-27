@@ -833,7 +833,7 @@ class DataStore(BaseStore):
             yield entry
 
     def get(
-        self, type_name: str, include_sub_type: bool = True
+        self, type_name: str, include_sub_type: bool = True, range_annotation: Optional[List[int, int]] = None
     ) -> Iterator[List]:
         r"""This function fetches entries from the data store of
         type ``type_name``.
