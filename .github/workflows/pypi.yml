@@ -9,7 +9,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     # Run deploy only on main repo.
-    if: github.repository == ‘asyml/forte’
+    if: github.repository == 'asyml/forte'
     env:
       python-version: 3.7
     steps:
