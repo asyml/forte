@@ -19,7 +19,6 @@ __all__ = [
 
 from typing import List, Tuple, Iterator, Dict, Set
 
-from texar.torch.data.tokenizers.bert_tokenizer import BERTTokenizer
 
 from forte.common import Resources
 from forte.common.configuration import Config
@@ -27,8 +26,16 @@ from forte.data.data_pack import DataPack
 from forte.data.ontology import Annotation
 from forte.processors.base import PackProcessor
 from forte.utils.utils import DiffAligner
+from forte.utils import create_import_error_msg
 from ft.onto.base_ontology import Subword
 
+
+try:
+    from texar.torch.data.tokenizers.bert_tokenizer import BERTTokenizer
+except ImportError as err1:
+    raise ImportError(
+        create_import_error_msg("texar-pytorch", "nlp", "NLP support")
+    ) from err1
 
 # This should probably be named as `BertTokenizer`.
 class SubwordTokenizer(PackProcessor):
@@ -38,6 +45,7 @@ class SubwordTokenizer(PackProcessor):
 
     def __init__(self):
         super().__init__()
+
         self.tokenizer: BERTTokenizer = None
         self.aligner: DiffAligner = None
         self.__do_lower_case = True

@@ -608,8 +608,8 @@ class DataPack(BasePack[Entry, Link, Group]):
             data_source: The path storing data source.
             serialize_method: The method used to serialize the data, this
               should be the same as how serialization is done. The current
-              options are "jsonpickle" and "pickle". The default method
-              is "jsonpickle".
+              options are `jsonpickle` and `pickle`. The default method
+              is `jsonpickle`.
             zip_pack: Boolean value indicating whether the input source is
               zipped.
 
@@ -932,9 +932,9 @@ class DataPack(BasePack[Entry, Link, Group]):
                 return list(self.audio_annotations)
             else:
                 raise NotImplementedError(
-                    f"Context type is set to {c_type}"
-                    "but currently we only support"
-                    "[Annotation, AudioAnnotation]."
+                    f"Context type is set to {c_type},"
+                    " but currently we only support"
+                    " [Annotation, AudioAnnotation]."
                 )
 
         def get_context_data(c_type, context):
@@ -1533,7 +1533,7 @@ class DataIndex(BaseIndex):
     r"""A set of indexes used in :class:`~forte.data.data_pack.DataPack`, note that this class is
     used by the `DataPack` internally.
 
-    #. :attr:`entry_index`, the index from each tid to the corresponding entry
+    #. :attr:`entry_index`, the index from each ``tid`` to the corresponding entry
     #. :attr:`type_index`, the index from each type to the entries of
        that type
     #. :attr:`component_index`, the index from each component to the
@@ -1546,7 +1546,7 @@ class DataIndex(BaseIndex):
        the entries it covers. :attr:`_coverage_index` is a dict of dict, where
        the key is a tuple of the outer entry type and the inner entry type.
        The outer entry type should be an annotation type. The value is a dict,
-       where the key is the tid of the outer entry, and the value is a set of
+       where the key is the ``tid`` of the outer entry, and the value is a set of
        ``tid`` that are covered by the outer entry. We say an Annotation A covers
        an entry E if one of the following condition is met:
        1. E is of Annotation type, and that E.begin >= A.begin, E.end <= E.end
@@ -1672,10 +1672,10 @@ class DataIndex(BaseIndex):
         Args:
             entry1: An
                 :class:`Annotation` or :class:`AudioAnnotation` object to be
-                checked, or the tid of the Annotation.
+                checked, or the ``tid`` of the Annotation.
             entry2: Another
                 :class:`Annotation` or :class:`AudioAnnotation` object to be
-                checked, or the tid of the Annotation.
+                checked, or the ``tid`` of the Annotation.
         """
         entry1_: Union[Annotation, AudioAnnotation] = (
             self._entry_index[entry1]

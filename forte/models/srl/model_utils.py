@@ -16,10 +16,26 @@ from contextlib import contextmanager
 from typing import Any, Dict, List, Optional, Tuple, Union, overload
 
 import numpy as np
-import torch
-from torch import nn
-from torch.nn import functional as F
-import texar.torch as tx
+from forte.utils import create_import_error_msg
+
+try:
+    import torch
+    from torch import nn
+    from torch.nn import functional as F
+except ImportError as e:
+    raise ImportError(
+        create_import_error_msg("torch", "models", "models")
+    ) from e
+
+try:
+    import texar.torch as tx
+except ImportError as e:
+    raise ImportError(
+        create_import_error_msg(
+            "texar-pytorch", "models", "Texar model support"
+        )
+    ) from e
+
 
 LSTMState = Tuple[torch.Tensor, torch.Tensor]
 

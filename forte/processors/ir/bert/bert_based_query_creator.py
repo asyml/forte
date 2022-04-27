@@ -15,17 +15,22 @@
 # pylint: disable=attribute-defined-outside-init
 import pickle
 from typing import Any, Dict, Tuple
-
 import numpy as np
-import torch
-from texar.torch.data import BERTTokenizer
-from texar.torch.modules import BERTEncoder
-
+from forte.utils import create_import_error_msg
 from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.processors.base import QueryProcessor
+
+
+try:
+    import torch
+except ImportError as e1:
+    raise ImportError(
+        create_import_error_msg("torch", "ir", "Information Retrieval supports")
+    ) from e1
+
 
 __all__ = ["BertBasedQueryCreator"]
 
@@ -44,6 +49,18 @@ class BertBasedQueryCreator(QueryProcessor):
         self.device = torch.device(
             "cuda" if torch.cuda.is_available() else "cpu"
         )
+
+        try:
+            from texar.torch.data import (  # pylint: disable=import-outside-toplevel
+                BERTTokenizer,
+            )
+            from texar.torch.modules import (  # pylint: disable=import-outside-toplevel
+                BERTEncoder,
+            )
+        except ImportError as e:
+            raise ImportError(
+                create_import_error_msg("texar-pytorch", "ir", "IR support")
+            ) from e
 
         if "name" in self.config.tokenizer:
             self.tokenizer = BERTTokenizer(

@@ -17,16 +17,28 @@ encoder.
 """
 import os
 from typing import Optional, cast
-
-import torch
-from torch.nn import Parameter
-from texar.torch.modules.pretrained import PretrainedBERTMixin
-from texar.torch.modules.encoders import BERTEncoder as TxBERTEncoder
-from texar.torch.modules.classifiers import (
-    BERTClassifier as TxBERTClassifier,
-)
-
+from forte.utils import create_import_error_msg
 from forte.common.configuration import Config
+
+try:
+    import torch
+    from torch.nn import Parameter
+except ImportError as e1:
+    raise ImportError(
+        create_import_error_msg("torch", "ir", "Information Retrieval supports")
+    ) from e1
+
+try:
+    from texar.torch.modules.pretrained import PretrainedBERTMixin
+    from texar.torch.modules.encoders import BERTEncoder as TxBERTEncoder
+    from texar.torch.modules.classifiers import (
+        BERTClassifier as TxBERTClassifier,
+    )
+except ImportError as e1:
+    raise ImportError(
+        create_import_error_msg("texar-pytorch", "ir", "IR support")
+    ) from e1
+
 
 __all__ = ["BERTEncoder", "BERTClassifier"]
 
@@ -106,13 +118,12 @@ class BERTClassifier(TxBERTClassifier, PretrainedBERTMixin):
         try:
             import numpy as np
             import tensorflow as tf
-        except ImportError:
-            print(
+        except ImportError as e:
+            raise ImportError(
                 "Loading TensorFlow models in PyTorch requires installing "
                 "TensorFlow. Please see https://www.tensorflow.org/install/ "
                 "for installation instructions."
-            )
-            raise
+            ) from e
 
         py_prefix = "encoder." if "prefix" not in kwargs else kwargs["prefix"]
 

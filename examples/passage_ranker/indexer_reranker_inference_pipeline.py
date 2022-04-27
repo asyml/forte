@@ -23,7 +23,7 @@ from forte.common.configuration import Config
 from forte.data.multi_pack import MultiPack
 from forte.data.readers import MultiPackTerminalReader
 from forte.pipeline import Pipeline
-from forte.processors.ir import BertRerankingProcessor
+from forte.processors.ir.bert import BertRerankingProcessor
 from ft.onto.base_ontology import Sentence
 
 

@@ -41,7 +41,7 @@ class PackIdPicklePackWriter(PackIdJsonPackWriter):
     def default_configs(cls):
         """
         Update the default config and set the default `serialize_method` value
-        to "pickle".
+        to `pickle`.
 
         Returns: The default configuration of this writer.
         """
@@ -75,7 +75,7 @@ class PackNamePicklePackWriter(PackNameJsonPackWriter):
     def default_configs(cls):
         """
         Update the default config and set the default `serialize_method` value
-        to "pickle".
+        to `pickle`.
 
         Returns: The default configuration of this writer.
         """

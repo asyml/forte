@@ -19,7 +19,7 @@ import torch
 import texar.torch as tx
 from texar.torch.modules.networks.networks import FeedForwardNetwork
 
-from forte.models.da_rl import MetaModule, TexarBertMetaModule
+from forte.models.da_rl.magic_model import MetaModule, TexarBertMetaModule
 
 
 class TestMetaModule(unittest.TestCase):

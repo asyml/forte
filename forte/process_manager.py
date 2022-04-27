@@ -41,14 +41,14 @@ class ProcessManager:
             the index of the first UNPROCESSED element in the corresponding
             queue. Length of this list equals the "pipeline_length".
 
-            If unprocessed_queue_indices = [0, 2]
+            If `unprocessed_queue_indices = [0, 2]`
 
                 - This means for the 1st queue, the first UNPROCESSED job is at
-                  index-0. All elements from indices [0, len(queue[0]) ) are
+                  index-0. All elements from indices `[0, len(queue[0]) )` are
                   UNPROCESSED.
 
                 - Similarly, for the 2nd queue, the first UNPROCESSED job is at
-                  index-2. All elements from indices [2, len(queue[1])) are
+                  index-2. All elements from indices `[2, len(queue[1]))` are
                   UNPROCESSED
 
         _processed_queue_indices (List [int]):  Each element of this list is

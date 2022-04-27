@@ -21,7 +21,8 @@ from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.data.readers import PlainTextReader
 from forte.pipeline import Pipeline
-from forte.processors.nlp import CoNLLNERPredictor, SRLPredictor
+from forte.processors.nlp.ner_predictor import CoNLLNERPredictor
+from forte.processors.nlp.srl_predictor import SRLPredictor
 from fortex.nltk import NLTKWordTokenizer, NLTKPOSTagger, NLTKSentenceSegmenter
 from ft.onto.base_ontology import (
     Token,

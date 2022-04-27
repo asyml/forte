@@ -13,9 +13,7 @@
 # limitations under the License.
 
 from typing import List
-import nltk
-from nltk.corpus import wordnet
-
+from forte.utils import create_import_error_msg
 
 __all__ = ["Dictionary", "WordnetDictionary"]
 
@@ -90,6 +88,18 @@ class WordnetDictionary(Dictionary):
     """
 
     def __init__(self):
+        try:
+            import nltk  # pylint: disable=import-outside-toplevel
+            from nltk.corpus import (  # pylint:disable=import-outside-toplevel
+                wordnet,
+            )
+        except ImportError as err:
+            raise ImportError(
+                create_import_error_msg(
+                    "nltk", "data_aug", "dictionary based data augmentation"
+                )
+            ) from err
+
         try:
             # Check if the wordnet package and
             # pos_tag package are downloaded.

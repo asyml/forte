@@ -16,8 +16,7 @@ from abc import ABC
 from collections import Counter
 from typing import List, Tuple, Dict, Union, Hashable, Iterable, Optional
 from typing import TypeVar, Generic, Any, Set
-
-import texar.torch as tx
+from asyml_utilities.special_tokens import SpecialTokens
 
 from forte.common import InvalidOperationException
 
@@ -174,7 +173,7 @@ class Vocabulary(Generic[ElementType]):
             #  a vector of zeros.
             pad_id = -1 if method == "one-hot" else None
             self.add_special_element(
-                tx.data.SpecialTokens.PAD,
+                SpecialTokens.PAD,
                 element_id=pad_id,
                 special_token_name="PAD",
                 representation=pad_value,
@@ -182,7 +181,7 @@ class Vocabulary(Generic[ElementType]):
 
         if use_unk:
             self.add_special_element(
-                tx.data.SpecialTokens.UNK,
+                SpecialTokens.UNK,
                 special_token_name="UNK",
                 representation=unk_value,
             )

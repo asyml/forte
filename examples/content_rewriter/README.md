@@ -8,11 +8,11 @@ will rewrite the sentence based on the table.
 The code has been tested on:
  - Python 3.6.0 and Python 3.7.6
  - tensorflow-gpu==1.14.0
- - texar-pytorch==0.1.1
+ - texar-pytorch==0.1.2
  - texar==0.2.1
  - cuda 10.0
 
-** NOTE **: 
+** NOTE **:
 Due to some historical texar compatibility issue, the model is only compatible
 by installing texar 0.2.1 from source, which can be installed via the following
 command.
@@ -27,12 +27,12 @@ Run the following commands:
 ```bash
 cd model
 pip install -r requirements.txt
-``` 
+```
 
 ### Downloading the models and data
 
-Before we run the rewriting demo, we need to download models and data from the 
-[link](https://drive.google.com/drive/folders/1jNaJ_R_f89G8xbAC8iwe49Yx_Z-LXr0i?usp=sharing) 
+Before we run the rewriting demo, we need to download models and data from the
+[link](https://drive.google.com/drive/folders/1jNaJ_R_f89G8xbAC8iwe49Yx_Z-LXr0i?usp=sharing)
 and put the two directories(e2e_data, e2e_model) under the same directory [model_dir]
 
 ### Running the example

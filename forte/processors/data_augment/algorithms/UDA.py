@@ -20,9 +20,19 @@ Unsupervised Data Augmentation for Consistency Training
 """
 from typing import Optional, List, Tuple, Iterator
 from torch import Tensor
-from texar.torch.losses.info_loss import kl_divg_loss_with_logits
-from texar.torch.data import DataIterator
-from texar.torch.data.data.dataset_utils import Batch
+from forte.utils import create_import_error_msg
+
+try:
+    from texar.torch.losses.info_loss import kl_divg_loss_with_logits
+    from texar.torch.data import DataIterator
+    from texar.torch.data.data.dataset_utils import Batch
+except ImportError as err:
+    raise ImportError(
+        create_import_error_msg(
+            "texar-pytorch", "models", "Unsupervised Data Augmentation(UDA)"
+        )
+    ) from err
+
 
 __all__ = [
     "UDAIterator",

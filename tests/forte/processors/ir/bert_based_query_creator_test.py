@@ -24,7 +24,7 @@ from ddt import ddt, data, unpack
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.pipeline import Pipeline
-from forte.processors.ir import BertBasedQueryCreator
+from forte.processors.ir.bert import BertBasedQueryCreator
 from forte.data.readers import MultiPackSentenceReader
 from forte.data.ontology import Query
 
