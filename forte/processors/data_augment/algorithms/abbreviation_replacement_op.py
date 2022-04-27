@@ -18,7 +18,7 @@ import json
 from typing import Tuple, Dict, Any
 
 import requests
-from ft.onto.base_ontology import Phrase
+from forte.data.ontology import Annotation
 from forte.processors.data_augment.algorithms.single_annotation_op import (
     SingleAnnotationAugmentOp,
 )
@@ -57,7 +57,7 @@ class AbbreviationReplacementOp(SingleAnnotationAugmentOp):
                 self.data = json.load(json_file)
 
     def single_annotation_augment(
-        self, input_phrase: Phrase
+        self, input_anno: Annotation
     ) -> Tuple[bool, str]:
         r"""
         This function replaces a phrase from an abbreviation dictionary
@@ -66,7 +66,7 @@ class AbbreviationReplacementOp(SingleAnnotationAugmentOp):
         dictionary, no replacement will happen, return False.
 
         Args:
-            input_phrase: The input phrase.
+            input_anno: The input annotation, could be a word or phrase.
         Returns:
             A tuple, where the first element is a boolean value indicating
             whether the replacement happens, and the second element is the
@@ -74,12 +74,12 @@ class AbbreviationReplacementOp(SingleAnnotationAugmentOp):
         """
         # If the replacement does not happen, return False.
         if random.random() > self.configs.prob:
-            return False, input_phrase.text
-        if input_phrase.text in self.data.keys():
-            result: str = self.data[input_phrase.text]
+            return False, input_anno.text
+        if input_anno.text in self.data.keys():
+            result: str = self.data[input_anno.text]
             return True, result
         else:
-            return False, input_phrase.text
+            return False, input_anno.text
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
