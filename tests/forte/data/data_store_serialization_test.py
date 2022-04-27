@@ -17,7 +17,6 @@ Unit tests for data store related operations.
 
 import logging
 import unittest
-import timeit
 import tempfile
 import os
 from sortedcontainers import SortedList
@@ -29,6 +28,10 @@ logging.basicConfig(level=logging.DEBUG)
 class DataStoreTest(unittest.TestCase):
     def setUp(self) -> None:
         self.data_store = DataStore()
+        # This test setup changes the order of fields and delete one field of
+        # Document entries. It also changes the order of fields and delete one
+        # field and add two more fields of Sentence entries.
+
         # attribute fields and parent entry for Document and Sentence entries
         DataStore._type_attributes = {
             "ft.onto.base_ontology.Document": {
@@ -183,13 +186,17 @@ class DataStoreTest(unittest.TestCase):
         }
 
     def test_save_attribute_pickle(self):
+        # test serialize with save_attribute and deserialize with/without
+        # check_attribute and accept_none
         with tempfile.TemporaryDirectory() as tempdir:
+            # tempdir = 'temp/'
             tmpfilepath = os.path.join(tempdir, "temp.txt")
-            a = timeit.timeit()
             self.data_store.serialize(
-                tmpfilepath, serialize_method="json", save_attribute=True
+                tmpfilepath,
+                serialize_method="json",
+                save_attribute=True,
+                indent=2,
             )
-            b = timeit.timeit()
 
             DataStore._type_attributes = {
                 "ft.onto.base_ontology.Document": {
@@ -211,11 +218,11 @@ class DataStoreTest(unittest.TestCase):
                     "parent_entry": "forte.data.ontology.top.Annotation",
                 },
             }
-            c = timeit.timeit()
+
+            # test check_attribute
             temp = DataStore.deserialize(
                 tmpfilepath, serialize_method="json", check_attribute=True
             )
-            d = timeit.timeit()
             self.assertEqual(temp._type_attributes, DataStore._type_attributes)
             self.assertEqual(
                 temp._DataStore__elements,
@@ -351,14 +358,10 @@ class DataStoreTest(unittest.TestCase):
                     ][3],
                 },
             )
-            print(f"serialization with save attribute time cost {b-a}")
-            print(f"deserialization with check attribute time cost {d-c}")
 
-            e = timeit.timeit()
             temp = DataStore.deserialize(
                 tmpfilepath, serialize_method="json", check_attribute=False
             )
-            f = timeit.timeit()
             self.assertEqual(temp._type_attributes, DataStore._type_attributes)
             self.assertEqual(
                 temp._DataStore__elements,
@@ -493,11 +496,12 @@ class DataStoreTest(unittest.TestCase):
                     ][3],
                 },
             )
-            print(f"deserialization without check attribute time cost {f-e}")
 
+            # test check_attribute with accept_none = False
             with self.assertRaisesRegex(
                 ValueError,
-                "Saved objects have unidentified fields, which raise an error.",
+                "Saved ft.onto.base_ontology.Document objects have unidentified"
+                " fields at indices 4, which raise an error.",
             ):
                 DataStore.deserialize(
                     tmpfilepath,
@@ -507,13 +511,14 @@ class DataStoreTest(unittest.TestCase):
                 )
 
     def test_fast_pickle(self):
+        # test serialize without save_attribute and deserialize with/without
+        # check_attribute and accept_none
         with tempfile.TemporaryDirectory() as tempdir:
+            # tempdir = 'temp/'
             tmpfilepath = os.path.join(tempdir, "temp2.txt")
-            a = timeit.timeit()
             self.data_store.serialize(
                 tmpfilepath, serialize_method="json", save_attribute=False
             )
-            b = timeit.timeit()
             DataStore._type_attributes = {
                 "ft.onto.base_ontology.Document": {
                     "attributes": {
@@ -534,12 +539,9 @@ class DataStoreTest(unittest.TestCase):
                     "parent_entry": "forte.data.ontology.top.Annotation",
                 },
             }
-            c = timeit.timeit()
             temp = DataStore.deserialize(
                 tmpfilepath, serialize_method="json", check_attribute=False
             )
-            d = timeit.timeit()
-            print(f"serialization without save attribute time cost {b-a}")
             self.assertEqual(temp._type_attributes, DataStore._type_attributes)
             self.assertEqual(
                 temp._DataStore__entry_dict,
@@ -573,12 +575,14 @@ class DataStoreTest(unittest.TestCase):
                     ][3],
                 },
             )
-            print(f"deserialization without check attribute time cost {d-c}")
 
+            # test check_attribute without save_attribute
             with self.assertRaisesRegex(
                 ValueError, "Saved object does not support check_attribute."
             ):
-                DataStore.deserialize(tmpfilepath, serialize_method="json")
+                DataStore.deserialize(
+                    tmpfilepath, serialize_method="json", check_attribute=True
+                )
 
 
 if __name__ == "__main__":

@@ -32,22 +32,33 @@ class BaseStore:
         various fields stored in entry lists.
         """
 
-    def __getstate__(self):
-        state = self.__dict__.copy()
-        return state
-
-    def __setstate__(self, state):
-        self.__dict__.update(state)
-
     def serialize(
         self,
         output_path: str,
         serialize_method: str = "json",
         save_attribute: bool = True,
+        indent: Optional[int] = None,
     ):
+        """
+        Serializes the data store to the provided path. The output of this
+        function depends on the serialization method chosen.
+
+        Args:
+            output_path: The path to write data to.
+            serialize_method: The method used to serialize the data. Currently
+                supports `json` (outputs json dictionary).
+            save_attribute: Boolean value indicating whether users want to
+                save attributes for field checks later during deserializations.
+                Attributes and their indices for every entry type will be saved.
+            indent: Whether to indent the file if written as JSON.
+
+        Returns: Results of serialization.
+        """
         if serialize_method == "json":
             with open(output_path, mode="wt", encoding="utf-8") as json_out:
-                json_out.write(self.to_string(serialize_method, save_attribute))
+                json_out.write(
+                    self.to_string(serialize_method, save_attribute, indent)
+                )
         else:
             raise NotImplementedError(
                 f"Unsupported serialization method {serialize_method}"
@@ -57,6 +68,7 @@ class BaseStore:
         self,
         json_method: str = "json",
         save_attribute: bool = True,
+        indent: Optional[int] = None,
     ) -> str:
         """
         Return the string representation (json encoded) of this method.
@@ -65,15 +77,15 @@ class BaseStore:
             json_method: What method is used to convert data pack to json.
                 Only supports `json` for now. Default value is `json`.
             save_attribute: Boolean value indicating whether users want to
-                save `_type_attributes`.
-
+                save attributes for field checks later during deserializations.
+                Attributes and their indices for every entry type will be saved.
         Returns: String representation of the data pack.
         """
         if json_method == "json":
             state = self.__getstate__()
             if not save_attribute:
                 state.pop("fields")
-            return json.dumps(state, indent=2)
+            return json.dumps(state, indent=indent)
         else:
             raise ValueError(f"Unsupported JSON method {json_method}.")
 

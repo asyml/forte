@@ -209,7 +209,7 @@ class DataStore(BaseStore):
             2) will remove `_onto_file_path`, `_dynamically_add_type`, and
                 `entry_dict` to save space.
         """
-        state = super().__getstate__()
+        state = self.__dict__.copy()
         for k in state["_DataStore__elements"]:
             # build the full `_type_attributes`
             self._get_type_info(k)
@@ -231,11 +231,10 @@ class DataStore(BaseStore):
             1) transform the annotation list back to a sorted list;
             2) recreate the `entry_dict` from `__elements`;
         """
-        super().__setstate__(state)
+        self.__dict__.update(state)
+
         self.__elements = self.__dict__.pop("entries")
-        # add `_type_attributes` to this object to check attributes
         self._type_attributes = self.__dict__.pop("fields", {})
-        # recreate the `entry_dict` from `__elements`
         self._DataStore__entry_dict = {}
 
         for k in self.__elements:
@@ -289,22 +288,28 @@ class DataStore(BaseStore):
                     "Saved object does not support check_attribute."
                 )
             if cls._type_attributes != store._type_attributes:
-                # find the `entry_type` with different fields, count different
-                # fields. `diff` records fields in the current class but not
-                # in the serialized objects.
                 for t, v in cls._type_attributes.items():
                     change_map = {}
                     contradict_loc = []
+                    # find fields that appear in the current class, but not in
+                    # the serialized objects,
+                    # or fields that have different orders in the current class
+                    # and the serialized objects.
                     diff = set(v["attributes"].items()) - set(
                         store._type_attributes[t]["attributes"].items()
                     )
                     for f in diff:
-                        # if only orders are different, switch order
+                        # if fields appear in both the current class and the
+                        # serialized objects but have different orders, switch
+                        # fields to match the order of the current class.
                         if f[0] in store._type_attributes[t]["attributes"]:
+                            # record indices of the same field in the class and
+                            # objects. Save different indices to a dictionary.
                             change_map[f[1]] = store._type_attributes[t][
                                 "attributes"
                             ][f[0]]
-                        # if fields contradict, fill them with None
+                        # record indices of fields that only appear in the
+                        # current class. We want to fill them with None.
                         else:
                             contradict_loc.append(f[1])
 
@@ -318,7 +323,7 @@ class DataStore(BaseStore):
                                 t,
                                 len(change_map),
                             )
-                        # change the data in lists in the `__elements` list
+                        # switch the order of fields for the serialized objects
                         for d in store._DataStore__elements[t]:
                             d[:] = [
                                 d[change_map[i]] if i in change_map else d[i]
@@ -338,13 +343,17 @@ class DataStore(BaseStore):
                                 len(contradict_loc),
                             )
                         if accept_none:
+                            # fill fields that only appear in the current class
+                            # but not in the serialized objects with None.
                             for d in store._DataStore__elements[t]:
                                 for idx in contradict_loc:
                                     d[idx] = None
                         else:
                             raise ValueError(
-                                "Saved objects have unidentified fields, which"
-                                " raise an error."
+                                f"Saved {t} objects have unidentified fields "
+                                "at indices "
+                                f"{', '.join(str(v) for v in contradict_loc)}, "
+                                "which raise an error."
                             )
         delattr(store, "_type_attributes")
         return store
