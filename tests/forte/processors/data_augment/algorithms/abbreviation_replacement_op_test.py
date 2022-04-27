@@ -1,4 +1,4 @@
-# Copyright 2020 The Forte Authors. All Rights Reserved.
+# Copyright 2022 The Forte Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ Unit tests for dictionary word replacement op.
 
 import unittest
 from forte.data.data_pack import DataPack
-from ft.onto.base_ontology import Token
+from ft.onto.base_ontology import Phrase
 from forte.processors.data_augment.algorithms.abbreviation_replacement_op import (
     AbbreviationReplacementOp,
 )
@@ -27,25 +27,26 @@ class TestAbbreviationReplacementOp(unittest.TestCase):
     def setUp(self):
         self.abre = AbbreviationReplacementOp(
             configs={
+                "dict_path": "https://raw.githubusercontent.com/abbeyyyy/"
+                "JsonFiles/main/abbreviate.json",
                 "prob": 1.0,
             }
         )
 
     def test_replace(self):
         data_pack = DataPack()
-        text = "see you later"
+        text = "I will see you later!"
         data_pack.set_text(text)
-        token = Token(data_pack, 0, len(text))
-        data_pack.add_entry(token)
+        phrase = Phrase(data_pack, 7, len(text) - 1)
+        data_pack.add_entry(phrase)
 
         augmented_data_pack = self.abre.perform_augmentation(data_pack)
-
-        augmented_token = list(
-            augmented_data_pack.get("ft.onto.base_ontology.Token")
+        augmented_phrase = list(
+            augmented_data_pack.get("ft.onto.base_ontology.Phrase")
         )[0]
 
         self.assertIn(
-            augmented_token.text,
+            augmented_phrase.text,
             ["syl8r", "cul83r", "cul8r"],
         )
 
