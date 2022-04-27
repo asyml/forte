@@ -9,15 +9,21 @@ long_description = (Path(__file__).parent / "README.md").read_text()
 if sys.version_info < (3, 6):
     sys.exit("Python>=3.6 is required by Forte.")
 
+VERSION_VAR = "VERSION"
 version = {}
 with open(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "forte/version.py")
 ) as fp:
     exec(fp.read(), version)
+if VERSION_VAR not in version or not version[VERSION_VAR]:
+    raise ValueError(
+        f"Cannot find {VERSION_VAR} in forte/version.py. Please make sure that "
+        f"{VERSION_VAR} is correctly defined and formatted in forte/version.py."
+    )
 
 setuptools.setup(
     name="forte",
-    version=version["VERSION"],
+    version=version[VERSION_VAR],
     url="https://github.com/asyml/forte",
     description="Forte is extensible framework for building composable and "
     "modularized NLP workflows.",
