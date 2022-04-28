@@ -13,6 +13,9 @@
 # limitations under the License.
 
 from typing import Dict
+from forte.utils import create_import_error_msg
+from forte.common.configuration import Config
+from forte.models.ner.conditional_random_field import ConditionalRandomField
 
 try:
     import torch
@@ -21,15 +24,8 @@ try:
     from torch import nn
 except ImportError as e1:
     raise ImportError(
-        " `pytorch` is not installed correctly."
-        " Consider install torch "
-        "via `pip install torch`."
-        " Or refer to [extra requirement for models](pip install forte[models])"
-        " for more information. "
+        create_import_error_msg("torch", "models", "model factory")
     ) from e1
-
-from forte.common.configuration import Config
-from forte.models.ner.conditional_random_field import ConditionalRandomField
 
 
 class BiRecurrentConvCRF(nn.Module):
@@ -48,11 +44,9 @@ class BiRecurrentConvCRF(nn.Module):
             )
         except ImportError as e2:
             raise ImportError(
-                " `texar-pytorch` is not installed correctly."
-                " Consider install texar via `pip install texar-pytorch`."
-                " Or refer to [extra requirement for Texar model support]"
-                "(pip install forte[models])"
-                " for more information."
+                create_import_error_msg(
+                    "texar-pytorch", "models", "BiRecurrentConvCRF"
+                )
             ) from e2
         self.word_embedder = WordEmbedder(
             init_value=texar.data.Embedding(
@@ -164,11 +158,9 @@ class BiRecurrentConvCRF(nn.Module):
             import texar.torch as texar  # pylint: disable=import-outside-toplevel
         except ImportError as e3:
             raise ImportError(
-                " `texar-pytorch` is not installed correctly."
-                " Consider install texar via `pip install texar-pytorch`."
-                " Or refer to [extra requirement for Texar model support]"
-                "(pip install forte[models])"
-                " for more information."
+                create_import_error_msg(
+                    "texar-pytorch", "models", "BiRecurrentConvCRF"
+                )
             ) from e3
 
         predicted_tags = texar.utils.pad_and_concat(

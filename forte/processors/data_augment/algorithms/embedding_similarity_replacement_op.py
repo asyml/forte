@@ -19,6 +19,7 @@ import numpy as np
 
 
 from ft.onto.base_ontology import Annotation
+from forte.utils import create_import_error_msg
 from forte.common.configuration import Config
 from forte.processors.data_augment.algorithms.text_replacement_op import (
     TextReplacementOp,
@@ -62,9 +63,11 @@ class EmbeddingSimilarityReplacementOp(TextReplacementOp):
             )
         except ImportError as e:
             raise ImportError(
-                "texar is not installed correctly."
-                "Please refer to documentation to [install extra required"
-                " modules](pip install forte[data_aug])"
+                create_import_error_msg(
+                    "texar-pytorch",
+                    "data_aug",
+                    "EmbeddingSimilarityReplacementOp",
+                )
             ) from e
 
         self.vocab = Vocab(self.configs["vocab_path"])

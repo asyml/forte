@@ -17,26 +17,6 @@ Train preprocessor helps doing data pre-processing during training.
 import logging
 from typing import Optional, Dict, Type, Any, Union, Iterator, List
 
-try:
-    import torch
-    from torch import device
-except ImportError as e:
-    raise ImportError(
-        " `pytorch` is not installed correctly."
-        " Please refer to [extra requirement for an extractor system](pip install forte[extractor])"
-        " for more information. "
-    ) from e
-
-try:
-    from texar.torch.data import DataIterator, Batch
-except ImportError as e:
-    raise ImportError(
-        " `texar-pytorch` is not installed correctly."
-        " Consider install texar via `pip install texar-pytorch`."
-        " Or refer to extra requirement for extractor system"
-        " (pip install forte[extractor]) for more information."
-    ) from e
-
 
 from forte.common.configuration import Config
 from forte.data.base_extractor import BaseExtractor
@@ -45,8 +25,28 @@ from forte.data.data_pack import DataPack
 from forte.data.data_pack_dataset import DataPackDataset, DataPackIterator
 from forte.data.ontology import Annotation
 from forte.data.ontology.core import EntryType
-from forte.utils import extractor_utils
+from forte.utils import extractor_utils, create_import_error_msg
 from forte.utils.extractor_utils import parse_feature_extractors
+
+try:
+    import torch
+    from torch import device
+except ImportError as e:
+    raise ImportError(
+        create_import_error_msg(
+            "torch", "extractor", "the extrator system support"
+        )
+    ) from e
+
+try:
+    from texar.torch.data import DataIterator, Batch
+except ImportError as e:
+    raise ImportError(
+        create_import_error_msg(
+            "texar-pytorch", "extractor", "the extrator system support"
+        )
+    ) from e
+
 
 logger = logging.getLogger(__name__)
 
