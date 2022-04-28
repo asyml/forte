@@ -14,7 +14,7 @@
 import json
 import random
 from typing import Tuple, Union, Dict, Any
-import requests
+
 from forte.common.configurable import Configurable
 from forte.common.configuration import Config
 from forte.data.ontology import Annotation
@@ -22,6 +22,7 @@ from forte.processors.data_augment.algorithms.single_annotation_op import (
     SingleAnnotationAugmentOp,
 )
 from forte.utils.utils import create_class_with_kwargs
+from forte.utils import create_import_error_msg
 
 __all__ = [
     "DistributionReplacementOp",
@@ -64,6 +65,15 @@ class DistributionReplacementOp(SingleAnnotationAugmentOp, Configurable):
         used by the distribution replacement op. The sampler will be set
         according to the configuration values
         """
+        try:
+            import requests  # pylint: disable=import-outside-toplevel
+        except ImportError as e:
+            raise ImportError(
+                create_import_error_msg(
+                    "requests", "data_aug", "data augment support"
+                )
+            ) from e
+
         try:
             if "data_path" in self.configs["sampler_config"]["kwargs"]:
                 distribution_path = self.configs["sampler_config"]["kwargs"][

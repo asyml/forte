@@ -15,13 +15,14 @@
 import random
 import json
 from typing import Tuple, Any, Dict, Union
-import requests
+
 
 from forte.data.ontology import Annotation
 from forte.common.configuration import Config
 from forte.processors.data_augment.algorithms.single_annotation_op import (
     SingleAnnotationAugmentOp,
 )
+from forte.utils import create_import_error_msg
 
 __all__ = ["CharacterFlipOp"]
 
@@ -45,9 +46,18 @@ class CharacterFlipOp(SingleAnnotationAugmentOp):
     """
 
     def __init__(self, configs: Union[Config, Dict[str, Any]]) -> None:
+        try:
+            import requests  # pylint: disable=import-outside-toplevel
+        except ImportError as e:
+            raise ImportError(
+                create_import_error_msg(
+                    "requests", "data_aug", "data augment support"
+                )
+            ) from e
         super().__init__(configs)
 
         self.dict_path = self.configs["dict_path"]
+
         try:
             r = requests.get(self.dict_path)
             self.data = r.json()
