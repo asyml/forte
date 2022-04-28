@@ -200,7 +200,7 @@ If you are interested in making enhancement to Forte, please first go over our [
    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 </p>
 
-![image](docs/_static/img/CASLCircleTranspBackgrnd.png)
+![image](https://user-images.githubusercontent.com/28021889/165806563-1542aeac-9656-4ad4-bf9c-f9a2e083f5d8.png)
 
 ### License
 
