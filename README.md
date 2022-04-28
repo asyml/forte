@@ -192,15 +192,15 @@ If you are interested in making enhancement to Forte, please first go over our [
 ### Supported By
 
 <p align="center">
-   <img src="https://www.cmu.edu/brand/brand-guidelines/images/wordmarksquare-red-600x600.png", width="200" align="top">
+   <img src="docs/_static/img/CMURedWordmark200pxSquare.png", width="200" align="top">
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-   <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSXGNEKXMxt25a0FffhMpms3WpCDfUFV83OoQ&usqp=CAU" width="200" align="top">
+   <img src="docs/_static/img/UCSanDiegoLogo-BlueSquare.png" width="200" align="top">
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-   <img src="https://www.walltowall.com/media/W1siZiIsIjIwMTkvMDYvMTcvZjNjbHdiMWEzX3BldHV1bV9pbnRyb18xLmpwZyJdLFsicCIsInRodW1iIiwiNjQweCJdXQ/petuum_intro_1.jpg" width="200" align="top">
+   <img src="docs/_static/img/PetuumTranspBackgrnd.png" width="200" align="top">
    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 </p>
 
-![image](https://user-images.githubusercontent.com/1015991/164106557-13dd3781-95d6-42db-b90d-1685679184fe.png)
+![image](docs/_static/img/CASLCircleTranspBackgrnd.png)
 
 ### License
 
