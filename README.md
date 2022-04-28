@@ -196,7 +196,7 @@ If you are interested in making enhancement to Forte, please first go over our [
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
    <img src="https://user-images.githubusercontent.com/28021889/165799272-9e51b864-04f6-432a-92e8-e0f84e091f72.png" width="200" align="top">
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-   <img src="https://user-images.githubusercontent.com/28021889/165799405-2879bf4c-25d4-4910-8076-cc8e991842ce.png" width="200" align="top">
+   <img src="https://user-images.githubusercontent.com/28021889/165802470-f478de54-6c44-4ec8-8cab-ba74ed1f0163.png" width="200" align="top">
    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 </p>
 
