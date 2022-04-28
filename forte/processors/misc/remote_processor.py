@@ -21,13 +21,13 @@ being set as its reader.
 import json
 import logging
 from typing import Dict, Set, Any, Optional
-import requests
 
 from forte.common import Resources, ProcessorConfigError
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
 from forte.utils import create_import_error_msg
+
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +53,14 @@ class RemoteProcessor(PackProcessor):
 
     def __init__(self):
         super().__init__()
+        try:
+            import requests  # pylint: disable=import-outside-toplevel
+        except ImportError as e:
+            raise ImportError(
+                create_import_error_msg(
+                    "requests", "remote", "Remote Processor"
+                )
+            ) from e
         self._requests: Any = requests
         self._records: Optional[Dict[str, Set[str]]] = None
         self._expectation: Optional[Dict[str, Set[str]]] = None
