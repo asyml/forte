@@ -209,7 +209,7 @@ class DataStore(BaseStore):
             2) will remove `_onto_file_path`, `_dynamically_add_type`, and
                 `entry_dict` to save space.
         """
-        state = self.__dict__.copy()
+        state = super().__getstate__()
         for k in state["_DataStore__elements"]:
             # build the full `_type_attributes`
             self._get_type_info(k)

@@ -32,6 +32,10 @@ class BaseStore:
         various fields stored in entry lists.
         """
 
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        return state
+
     def serialize(
         self,
         output_path: str,
