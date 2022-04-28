@@ -192,11 +192,11 @@ If you are interested in making enhancement to Forte, please first go over our [
 ### Supported By
 
 <p align="center">
-   <img src="docs/_static/img/CMURedWordmark200pxSquare.png", width="200" align="top">
+   <img src="https://raw.githubusercontent.com/asyml/forte/master/docs/_static/img/CMURedWordmark200pxSquare.png", width="200" align="top">
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-   <img src="docs/_static/img/UCSanDiegoLogo-BlueSquare.png" width="200" align="top">
+   <img src="https://raw.githubusercontent.com/asyml/forte/master/docs/_static/img/UCSanDiegoLogo-BlueSquare.png" width="200" align="top">
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-   <img src="docs/_static/img/PetuumTranspBackgrnd.png" width="200" align="top">
+   <img src="https://raw.githubusercontent.com/asyml/forte/master/docs/_static/img/PetuumTranspBackgrnd.png" width="200" align="top">
    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 </p>
 
