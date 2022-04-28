@@ -60,7 +60,7 @@ generic class method
 
             - To implement a new reader, User should check the appropriate
               reader to inherit from. One consideration is whether User
-              wants to read a data pack or a data pack batch for
+              wants to read a ``DataPack`` or a ``DataPack`` batch for
               each reading iteration. If it's the
               :class:`~forte.data.data_pack.DataPack`,
               then User should inherit from
@@ -101,7 +101,7 @@ generic class method
     * Example from from `ClassificationDatasetReader <https://github.com/asyml/forte/blob/4bb8fa5bd0be960426be223f0d295b9786c49b0a/forte/data/readers/classification_reader.py#L140>`_ which use line id as cache key (it is `line_info[0]` in the line of code).:
 
 - ``_parse_pack``
-    * load a basic unit of raw data into data pack. It's also a process of structuralizing the data: wrap data into ontology classes and assign data to data fields.
+    * load a basic unit of raw data into ``DataPack``. It's also a process of structuralizing the data: wrap data into ontology classes and assign data to data fields.
     * Example from `PlainTextReader <https://github.com/asyml/forte/blob/0ca9602d3d287beb2521584f5fc50c2f5905cebc/forte/data/readers/plaintext_reader.py#L30>`_ which reads ``txt`` file.
 
     .. code-block:: python
@@ -110,7 +110,7 @@ generic class method
             pack = DataPack()
             with open(file_path, "r", encoding="utf8", errors="ignore") as file:
                 text = file.read()
-            # writing into data pack data fields
+            # writing into ``DataPack`` data fields
             pack.set_text(text, replace_func=self.text_replace_operation)
             pack.pack_name = file_path
             # Wrap data into ontology classes
