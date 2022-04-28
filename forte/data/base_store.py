@@ -52,7 +52,7 @@ class BaseStore:
             serialize_method: The method used to serialize the data. Currently
                 supports `json` (outputs json dictionary).
             save_attribute: Boolean value indicating whether users want to
-                save attributes for field checks later during deserializations.
+                save attributes for field checks later during deserialization.
                 Attributes and their indices for every entry type will be saved.
             indent: Whether to indent the file if written as JSON.
 
@@ -81,7 +81,7 @@ class BaseStore:
             json_method: What method is used to convert data pack to json.
                 Only supports `json` for now. Default value is `json`.
             save_attribute: Boolean value indicating whether users want to
-                save attributes for field checks later during deserializations.
+                save attributes for field checks later during deserialization.
                 Attributes and their indices for every entry type will be saved.
         Returns: String representation of the data pack.
         """
