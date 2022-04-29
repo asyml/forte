@@ -11,12 +11,25 @@ Content
 
    readme_link.md
 
+
+
+
+This tutorial section is currently **in progress** so some sections may be incomplete.
+
 .. toctree::
    :maxdepth: 2
    :caption: NLP with Forte
 
+   ch1.rst
+   ch2.rst
+   ch3.rst
+   ch4.rst
+   ch5.rst
+   ch6.rst
+   ch7.rst
+   ch8.rst
+   ch9.rst
 
-   index_toc
 
 
 .. toctree::
@@ -30,4 +43,11 @@ Content
    :maxdepth: 2
    :caption:  API
 
-   index_api
+   code/common.rst
+   code/data.rst
+   code/pipeline.rst
+   code/processors.rst
+   code/models.rst
+   code/training_system.rst
+   code/data_aug.rst
+   code/vocabulary.rst

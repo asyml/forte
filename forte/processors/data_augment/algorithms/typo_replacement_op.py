@@ -17,12 +17,13 @@ import random
 import json
 from typing import Tuple, Union, Dict, Any
 
-import requests
+
 from forte.data.ontology import Annotation
 from forte.processors.data_augment.algorithms.single_annotation_op import (
     SingleAnnotationAugmentOp,
 )
 from forte.common.configuration import Config
+from forte.utils import create_import_error_msg
 
 __all__ = [
     "UniformTypoGenerator",
@@ -50,6 +51,15 @@ class UniformTypoGenerator:
     """
 
     def __init__(self, dict_path: str):
+        try:
+            import requests  # pylint: disable=import-outside-toplevel
+        except ImportError as e:
+            raise ImportError(
+                create_import_error_msg(
+                    "requests", "data_aug", "data augment support"
+                )
+            ) from e
+
         try:
             r = requests.get(dict_path)
             self.data = r.json()

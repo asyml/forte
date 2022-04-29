@@ -19,6 +19,7 @@ import numpy as np
 
 
 from ft.onto.base_ontology import Annotation
+from forte.utils import create_import_error_msg
 from forte.common.configuration import Config
 from forte.processors.data_augment.algorithms.text_replacement_op import (
     TextReplacementOp,
@@ -41,15 +42,15 @@ class EmbeddingSimilarityReplacementOp(TextReplacementOp):
         configs:
             The config should contain the following key-value pairs:
 
-            - vocab_path (str):
+            - `vocab_path` (str):
                 The absolute path to the vocabulary file for
                 the pretrained embeddings
 
-            - embed_hparams (dict):
-                The hparams to initialize the
+            - `embed_hparams` (dict):
+                The hyper-parameters to initialize the
                 texar.torch.data.Embedding object.
 
-            - top_k (int):
+            - `top_k` (int):
                 the number of k most similar words to choose from
     """
 
@@ -62,9 +63,11 @@ class EmbeddingSimilarityReplacementOp(TextReplacementOp):
             )
         except ImportError as e:
             raise ImportError(
-                "texar is not installed correctly."
-                "Please refer to documentation to [install extra required"
-                " modules](pip install forte[data_aug])"
+                create_import_error_msg(
+                    "texar-pytorch",
+                    "data_aug",
+                    "EmbeddingSimilarityReplacementOp",
+                )
             ) from e
 
         self.vocab = Vocab(self.configs["vocab_path"])

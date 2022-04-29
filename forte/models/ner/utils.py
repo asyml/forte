@@ -16,7 +16,14 @@ import random
 import re
 
 import numpy as np
-import torch
+from forte.utils import create_import_error_msg
+
+try:
+    import torch
+except ImportError as e:
+    raise ImportError(
+        create_import_error_msg("torch", "models", "models")
+    ) from e
 
 MAX_CHAR_LENGTH = 45
 NUM_CHAR_PAD = 2

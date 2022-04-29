@@ -15,16 +15,22 @@
 # pylint: disable=attribute-defined-outside-init
 import pickle
 from typing import Any, Dict, Tuple
-
 import numpy as np
-import torch
-
-
+from forte.utils import create_import_error_msg
 from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.processors.base import QueryProcessor
+
+
+try:
+    import torch
+except ImportError as e1:
+    raise ImportError(
+        create_import_error_msg("torch", "ir", "Information Retrieval supports")
+    ) from e1
+
 
 __all__ = ["BertBasedQueryCreator"]
 
@@ -53,10 +59,7 @@ class BertBasedQueryCreator(QueryProcessor):
             )
         except ImportError as e:
             raise ImportError(
-                " `texar-pytorch` is not installed correctly."
-                " Consider install texar via `pip install texar-pytorch`"
-                " Or refer to [extra requirement for IR support](pip install forte[ir])"
-                " for more information."
+                create_import_error_msg("texar-pytorch", "ir", "IR support")
             ) from e
 
         if "name" in self.config.tokenizer:
