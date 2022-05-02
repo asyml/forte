@@ -18,7 +18,7 @@ For simplicity, the model is not wrapped as a processor.
 """
 from typing import List
 from abc import abstractmethod
-
+from forte.utils import create_import_error_msg
 
 __all__ = [
     "MachineTranslator",
@@ -75,10 +75,9 @@ class MarianMachineTranslator(MachineTranslator):
             )
         except ImportError as err:
             raise ImportError(
-                " `transformers` is not installed correctly."
-                " Please refer to [extra requirement for machine translator]"
-                "(pip install forte[data_aug])"
-                " for more information. "
+                create_import_error_msg(
+                    "transformers", "data_aug", "Machine Translator"
+                )
             ) from err
         self.tokenizer = MarianTokenizer.from_pretrained(self.model_name)
         self.model = MarianMTModel.from_pretrained(self.model_name)

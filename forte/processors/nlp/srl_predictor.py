@@ -15,27 +15,7 @@
 import logging
 import os
 from typing import Dict, List, Tuple, Optional
-
-try:
-    import texar.torch as tx
-except ImportError as e:
-    raise ImportError(
-        " `texar-pytorch` is not installed correctly."
-        " Consider install texar via `pip install texar-pytorch`"
-        " Or refer to [extra requirement for texar models](pip install forte[nlp])"
-        " for more information."
-    ) from e
-
-
-try:
-    import torch
-except ImportError as e:
-    raise ImportError(
-        " `pytorch` is not installed correctly."
-        " Please refer to [extra requirement for nlp processors](pip install forte[nlp])"
-        " for more information. "
-    ) from e
-
+from forte.utils import create_import_error_msg
 from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
@@ -48,6 +28,22 @@ from ft.onto.base_ontology import (
     PredicateMention,
     PredicateArgument,
 )
+
+try:
+    import texar.torch as tx
+except ImportError as e:
+    raise ImportError(
+        create_import_error_msg("texar-pytorch", "nlp", "Texar models")
+    ) from e
+
+
+try:
+    import torch
+except ImportError as e:
+    raise ImportError(
+        create_import_error_msg("torch", "nlp", "nlp processors")
+    ) from e
+
 
 logger = logging.getLogger(__name__)
 

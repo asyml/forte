@@ -31,7 +31,7 @@ from typing import (
     Optional,
 )
 
-import rdflib
+
 from smart_open import open
 
 from forte.common import Resources
@@ -49,6 +49,7 @@ from forte.datasets.wikipedia.dbpedia.db_utils import (
     state_type,
 )
 from forte.processors.base import PackWriter
+from forte.utils import create_import_error_msg
 from ft.onto.wikipedia import (
     WikiPage,
     WikiSection,
@@ -59,6 +60,16 @@ from ft.onto.wikipedia import (
     WikiInfoBoxMapped,
     WikiCategory,
 )
+
+try:
+    import rdflib
+except ImportError as e:
+    raise ImportError(
+        create_import_error_msg(
+            "rbflib", "wikipedia", "DBpedia dataset supports"
+        )
+    ) from e
+
 
 __all__ = [
     "DBpediaWikiReader",

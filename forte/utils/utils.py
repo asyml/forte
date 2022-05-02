@@ -31,6 +31,7 @@ __all__ = [
     "create_class_with_kwargs",
     "check_type",
     "DiffAligner",
+    "create_import_error_msg",
 ]
 
 
@@ -303,3 +304,39 @@ class DiffAligner:
 
     def _get_opcodes(self):
         yield from self.__matcher.get_opcodes()
+
+
+def create_import_error_msg(
+    extra_module: str,
+    forte_module: str,
+    component_name: str,
+    pip_installable: bool = True,
+):
+    """
+    Create an error message for importing package extra required by a forte
+    module.
+
+
+    Args:
+        extra_module: module name should be installed by pip.
+        forte_module: forte module User should install by
+            ``pip install forte[`forte_module`]`` to install all
+            extra packages for using the forte module.
+        component_name: the forte component that needs the module.
+
+    """
+    install_msg = (
+        f" `{extra_module}` is not installed correctly."
+        + f" Consider install {extra_module}"
+    )
+    pip_msg = f" via `pip install {extra_module}` "
+    refer_msg = (
+        f" or refer to extra requirement for {component_name}"
+        + " at https://github.com/asyml/forte#installation"
+        + f" for more information about installing {forte_module}. "
+    )
+    if pip_installable:
+        error_msg = install_msg + pip_msg + refer_msg
+    else:
+        error_msg = install_msg + refer_msg
+    return error_msg
