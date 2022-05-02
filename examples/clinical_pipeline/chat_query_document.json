@@ -1,0 +1,5 @@
+{
+  "name": "query_chatbot.json",
+  "project_id": 99,
+  "textPack": "{\n  \"py/object\": \"forte.data.data_pack.DataPack\",\n  \"py/state\": {\n    \"creation_records\": {},\n    \"field_records\": {},\n    \"links\": [],\n    \"groups\": [],\n    \"meta\": {\n      \"py/object\": \"forte.data.data_pack.Meta\",\n      \"py/state\": {\n        \"pack_name\": \"query_chatbot\",\n        \"_pack_id\": 3,\n        \"language\": \"eng\",\n        \"span_unit\": \"character\"\n      }\n    },\n    \"_text\": \"Welcome! Please type in a query to retrieve relevant clinical reports.\",\n    \"annotations\": [\n      {\n        \"py/object\": \"ft.onto.base_ontology.Utterance\",\n        \"py/state\": {\n          \"_span\": {\n            \"py/object\": \"forte.data.span.Span\",\n            \"begin\": 0,\n            \"end\": 70\n          },\n          \"_tid\": 0,\n          \"speaker\": \"ai\"\n        }\n      }\n    ],\n    \"generics\": [],\n    \"replace_back_operations\": [],\n    \"processed_original_spans\": [],\n    \"orig_text_len\": 70,\n    \"serialization\": {\n      \"next_id\": 1\n    }\n  }\n}"
+}

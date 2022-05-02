@@ -7,10 +7,14 @@ BioBERTNERPredictor:
   ignore_labels: ["O"]
 
 LastUtteranceSearcher:
-  query_result_project_id: 4
   stave_db_path: /home/p1yadav/stave/simple-backend/stave_backend/db.sqlite3
 
 Remote:
   port: 8008
   input_format: "DataPack"
   service_name: "Medical_Chatbot"
+
+Stave:
+  url: "http://localhost:8899"
+  username: admin
+  pw: admin
