@@ -119,6 +119,6 @@ class LastUtteranceSearcher(PackProcessor):
                 "other_kwargs": {"request_timeout": 10, "refresh": False},
             },
             "stave_db_path": "~/projects/stave/simple-backend/db.sqlite3",
-            "url_stub": "http://localhost:3000",
+            "url_stub": "http://localhost:8889",
             "query_result_project_id": -1,
         }

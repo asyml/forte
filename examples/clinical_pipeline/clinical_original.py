@@ -5,11 +5,11 @@ import yaml
 from mimic3_note_reader import Mimic3DischargeNoteReader
 from utterance_searcher import LastUtteranceSearcher
 
+from forte.data.readers import RawDataDeserializeReader
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
 from forte.processors.writers import PackIdJsonPackWriter
-from forte.processors.stave import StaveProcessor
 
 from fortex.elastic import ElasticSearchPackIndexProcessor
 from fortex.huggingface.bio_ner_predictor import BioBERTNERPredictor
@@ -23,21 +23,21 @@ def main(input_path: str, output_path: str, max_packs: int = -1):
     )
     pl.add(NLTKSentenceSegmenter())
 
-    config = yaml.safe_load(open("bio_ner_config.yml", "r"))
+    config = yaml.safe_load(open("clinical_config.yml", "r"))
     config = Config(config, default_hparams=None)
 
     pl.add(BERTTokenizer(), config=config.BERTTokenizer)
-    #pl.add(BioBERTNERPredictor(), config=config.BioBERTNERPredictor)
+    pl.add(BioBERTNERPredictor(), config=config.BioBERTNERPredictor)
     pl.add(ElasticSearchPackIndexProcessor())
-    pl.add(LastUtteranceSearcher(), config={"query_result_project_id": 1, "stave_db_path": "/home/p1yadav/db.sqlite3"})
-    #pl.add(StaveProcessor(), config={
-    #   "project_name": "clinical_pipeline_test"})
 
-    pl.serve(input_format="DataPack", service_name="clinical_pipeline")
-    #pl.initialize()
-    #for idx, _ in enumerate(pl.process_dataset(input_path)):
-    #   if (idx + 1) % 50 == 0:
-    #        print(f"{time.strftime('%m-%d %H:%M')}: Processed {idx + 1} packs")
-
+    pl.initialize()
+    for idx, _ in enumerate(pl.process_dataset(input_path)):
+        if (idx + 1) % 50 == 0:
+            print(f"{time.strftime('%m-%d %H:%M')}: Processed {idx + 1} packs")
+    
+    remote_pl = Pipeline[DataPack]()
+    remote_pl.set_reader(RawDataDeserializeReader())
+    remote_pl.add(LastUtteranceSearcher(), config=config.LastUtteranceSearcher)
+    remote_pl.serve(port=config.Remote.port, input_format=config.Remote.input_format, service_name=config.Remote.service_name)
 
 main(sys.argv[1], sys.argv[2], int(sys.argv[3]))
