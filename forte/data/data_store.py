@@ -644,9 +644,14 @@ class DataStore(BaseStore):
                 f"The specified index_id [{index_id}] of type [{type_name}]"
                 f"is out of boundary for entry list of length {len(target_list)}."
             )
-        target_list.pop(index_id)
-        if not target_list:
-            self.__elements.pop(type_name)
+        if self._is_annotation(type_name):
+            target_list.pop(index_id)
+            if not target_list:
+                self.__elements.pop(type_name)
+        else:
+            target_list[index_id] = None
+            if len(target_list) - target_list.count(None) == 0:
+                self.__elements.pop(type_name)
 
     def get_entry(self, tid: int) -> Tuple[List, str]:
         r"""This function finds the entry with ``tid``. It returns the entry

@@ -746,22 +746,26 @@ class DataStoreTest(unittest.TestCase):
             ]
         )
 
-        # num_sent = len(
-        #     self.data_store._DataStore__elements[
-        #         "ft.onto.base_ontology.Sentence"
-        #     ]
-        # )
+        num_group = len(
+            self.data_store._DataStore__elements[
+                "forte.data.ontology.top.Group"
+            ]
+        ) - self.data_store._DataStore__elements[
+            "forte.data.ontology.top.Group"
+        ].count(
+            None
+        )
 
         self.assertEqual(len(self.data_store._DataStore__entry_dict), 5)
         self.assertEqual(num_doc, 1)
-        # self.assertEqual(num_sent, 0)
+        self.assertEqual(num_group, 2)
 
         # delete group
         self.data_store.delete_entry(10123)
         self.assertEqual(len(self.data_store._DataStore__entry_dict), 4)
-        # self.data_store.delete_entry(23456)
-        # self.assertEqual(len(self.data_store._DataStore__entry_dict), 3)
-        self.assertFalse(
+        self.data_store.delete_entry(23456)
+        self.assertEqual(len(self.data_store._DataStore__entry_dict), 3)
+        self.assertTrue(
             "forte.data.ontology.top.Group"
             not in self.data_store._DataStore__elements
         )
