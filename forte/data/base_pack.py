@@ -184,8 +184,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
               serialization.
             serialize_method: The method used to serialize the data, this
               should be the same as how serialization is done. The current
-              options are "jsonpickle" and "pickle". The default method
-              is "jsonpickle".
+              options are `jsonpickle` and `pickle`. The default method
+              is `jsonpickle`.
             zip_pack: Boolean value indicating whether the input source is
               zipped.
 
@@ -319,8 +319,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             zip_pack: Whether to compress the result with `gzip`.
             drop_record: Whether to drop the creation records, default is False.
             serialize_method: The method used to serialize the data. Currently
-              supports "jsonpickle" (outputs str) and Python's built-in
-              "pickle" (outputs bytes).
+              supports `jsonpickle` (outputs str) and Python's built-in
+              `pickle` (outputs bytes).
             indent: Whether to indent the file if written as JSON.
 
         Returns: Results of serialization.

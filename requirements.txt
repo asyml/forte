@@ -6,7 +6,7 @@ smart-open==1.8.4
 typed_astunparse~=2.1.4
 funcsigs==1.0.2
 mypy_extensions~=0.4.3
-typed_ast~=1.4.0
+typed_ast>=1.5.0
 jsonschema>=3.0.2
 typing-inspect>=0.6.0
 dataclasses~=0.7; python_version <'3.7'

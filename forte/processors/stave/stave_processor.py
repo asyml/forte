@@ -28,25 +28,21 @@ import os
 import logging
 import collections
 from typing import Dict, Set, Any
-
+from forte.utils import create_import_error_msg
+from forte.common import Resources, ProcessorConfigError
+from forte.common.configuration import Config
+from forte.data.data_pack import DataPack
+from forte.data.ontology.code_generation_objects import search
+from forte.processors.base import PackProcessor
 
 try:
     from stave_backend.lib.stave_viewer import StaveViewer
     from stave_backend.lib.stave_project import StaveProjectWriter
 except ImportError as e:
     raise ImportError(
-        " `stave` is not installed correctly."
-        " Please refer to [extra requirement for stave_processors.py](stave"
-        " extra requirement hyperlink])"
-        " for more information. "
+        create_import_error_msg("stave", "stave", "stave processor")
     ) from e
 
-
-from forte.common import Resources, ProcessorConfigError
-from forte.common.configuration import Config
-from forte.data.data_pack import DataPack
-from forte.data.ontology.code_generation_objects import search
-from forte.processors.base import PackProcessor
 
 logger = logging.getLogger(__name__)
 

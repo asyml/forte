@@ -17,9 +17,16 @@ encoder.
 """
 import os
 from typing import Optional, cast
+from forte.utils import create_import_error_msg
+from forte.common.configuration import Config
 
-import torch
-from torch.nn import Parameter
+try:
+    import torch
+    from torch.nn import Parameter
+except ImportError as e1:
+    raise ImportError(
+        create_import_error_msg("torch", "ir", "Information Retrieval supports")
+    ) from e1
 
 try:
     from texar.torch.modules.pretrained import PretrainedBERTMixin
@@ -29,14 +36,9 @@ try:
     )
 except ImportError as e1:
     raise ImportError(
-        " `texar-pytorch` is not installed correctly."
-        " Consider install texar via `pip install texar-pytorch`"
-        " Or refer to extra requirement for IR support"
-        " (pip install forte[ir])"
-        " for more information."
+        create_import_error_msg("texar-pytorch", "ir", "IR support")
     ) from e1
 
-from forte.common.configuration import Config
 
 __all__ = ["BERTEncoder", "BERTClassifier"]
 

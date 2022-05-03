@@ -34,11 +34,11 @@ class BaseStore:
     @abstractmethod
     def add_annotation_raw(self, type_name: str, begin: int, end: int) -> int:
         r"""This function adds an annotation entry with ``begin`` and ``end``
-        indices to the ``type_name`` sortedlist in ``self.__elements``,
+        indices to the ``type_name`` sorted list in ``self.__elements``,
         returns the ``tid`` for the inserted entry.
 
         Args:
-            type_name: The index of Annotation sortedlist in ``self.__elements``.
+            type_name: The index of Annotation sorted list in ``self.__elements``.
             begin: Begin index of the entry.
             end: End index of the entry.
         Returns:

@@ -429,7 +429,7 @@ class MultiPackLink(MultiEntry, BaseLink):
 
         Args:
             parent: The parent of the link, which is an Entry from a data pack,
-                it has access to the pack index and its own tid in the pack.
+                it has access to the pack index and its own ``tid`` in the pack.
         """
         if not isinstance(parent, self.ParentType):
             raise TypeError(
@@ -448,7 +448,7 @@ class MultiPackLink(MultiEntry, BaseLink):
 
         Args:
             child: The child of the link, which is an Entry from a data pack,
-                it has access to the pack index and its own tid in the pack.
+                it has access to the pack index and its own ``tid`` in the pack.
         """
 
         if not isinstance(child, self.ChildType):

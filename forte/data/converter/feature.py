@@ -13,7 +13,7 @@
 # limitations under the License.
 from copy import deepcopy
 from typing import List, Any, Tuple, Union, Dict, Optional
-import torch
+
 
 from forte.common import ValidationError
 from forte.data.vocabulary import Vocabulary
@@ -139,7 +139,7 @@ class Feature:
         return self._leaf_feature
 
     @property
-    def dtype(self) -> torch.dtype:
+    def dtype(self):
         """
         Returns:
             The data type of this feature.
