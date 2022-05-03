@@ -878,16 +878,18 @@ class DataStore(BaseStore):
                     all_types.add(type)
         else:
             all_types.add(type_name)
+        all_types = list(all_types)
+        all_types.sort()
 
         if self._is_annotation(type_name):
             if range_annotation is None:
-                yield from self.co_iterator_annotation_like(list(all_types))
+                yield from self.co_iterator_annotation_like(all_types)
             else:
-                for entry in self.co_iterator_annotation_like(list(all_types)):
+                for entry in self.co_iterator_annotation_like(all_types):
                     if within_range(entry, range_annotation):
                         yield entry
         elif issubclass(entry_class, Link):
-            for type in list(all_types):
+            for type in all_types:
                 if range_annotation is None:
                     yield from self.__elements[type]
                 else:
@@ -899,7 +901,7 @@ class DataStore(BaseStore):
                         ) and within_range(child, range_annotation):
                             yield entry
         elif issubclass(entry_class, Group):
-            for type in list(all_types):
+            for type in all_types:
                 if range_annotation is None:
                     yield from self.__elements[type]
                 else:
