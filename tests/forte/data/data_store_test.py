@@ -789,8 +789,6 @@ class DataStoreTest(unittest.TestCase):
         )
 
     def test_check_onto_file(self):
-        data_store_init = DataStore()
-        print("data_store_init", data_store_init)
 
         expected_type_attributes = {
             "ftx.onto.clinical.UMLSConceptLink": {

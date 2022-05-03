@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Dict, List, Iterator, Tuple, Optional, Any, Set
+from typing import Dict, List, Iterator, Tuple, Optional, Any
 import uuid
 from bisect import bisect_left
 from heapq import heappush, heappop
@@ -23,6 +23,7 @@ from forte.data.base_store import BaseStore
 from forte.data.ontology.top import Annotation, AudioAnnotation
 from forte.common import constants
 from forte.utils.utils import get_full_module_name
+from forte.data.ontology.ontology_code_const import SchemaKeywords
 
 
 __all__ = ["DataStore"]
@@ -148,7 +149,7 @@ class DataStore(BaseStore):
         is a string representing the ancesters of this type.
 
         This structure is supposed to be built dynamically. When a user adds new entries,
-        data_store will check unknown types and add them to ``_type_attributes``.
+        DataStore will check unknown types and add them to ``_type_attributes``.
 
         Example:
 
@@ -283,16 +284,6 @@ class DataStore(BaseStore):
             attr_dict (dict): The attribute-to-index dictionary of an entry.
         """
         return self._get_type_info(type_name)["attributes"]
-
-    def _get_type_parent(self, type_name: str) -> Set[str]:
-        """Get a set of parent names of an entry type. The set is a subset of all
-        ancestors of the given type.
-        Args:
-            type_name (str): The fully qualified type name of a type.
-        Returns:
-            parent_class (set): The parent entry name of an entry.
-        """
-        return self._get_type_info(type_name)["parent_class"]
 
     def _num_attributes_for_type(self, type_name: str) -> int:
         """Get the length of the attribute dict of an entry type.
@@ -925,18 +916,18 @@ class DataStore(BaseStore):
         return entry_list[index_id - 1]
 
     def _parse_onto_file(self):
-        r"""This function will populate the types and attributes used in the data_store
+        r"""This function will populate the types and attributes used in the DataStore
         with an ontology specification file. If a user provides a customized ontology
         specification file, forte will parse this file and set the internal dictionary
         ``DataStore._type_attributes`` to store type name, parent entry, and its attribute
         information accordingly.
 
-        For every ontology, this function will import paths containing its parent entry and
-        merge all classes contained in the imported file into the dictionary. For example,
-        if an ontology has a parent entry in ``ft.onto.base_ontology``, all classes in
-        ``ft.onto.base_ontology`` will be imported and stored in the internal dictionary.
-        A user can use classes both in the ontology specification file and their parent
-        entries's paths.
+        For every entry type, this function will first recursively import files specified by
+        `imports` in the ontology specification file, and then parse the ontology for the
+        current file. For example, if a type has a parent entry in ``ft.onto.base_ontology``,
+        all classes in ``ft.onto.base_ontology`` will be imported and stored in the internal
+        dictionary. A user can use typess both in the ontology specification file and their
+        parent entries's paths.
         """
         if self._onto_file_path is None:
             return
@@ -947,21 +938,25 @@ class DataStore(BaseStore):
         )
 
         for onto in merged_scheme:
-            entry_name = onto["entry_name"]
+            entry_name = onto[SchemaKeywords.entry_name]
             if entry_name in DataStore._type_attributes:
                 continue
 
             attr_dict = {}
             idx = constants.ATTR_BEGIN_INDEX
-            if "attributes" in onto:
-                for d in onto["attributes"]:
-                    name = d["name"]
+            if SchemaKeywords.attributes in onto:
+                for d in onto[SchemaKeywords.attributes]:
+                    name = d[SchemaKeywords.attribute_name]
                     attr_dict[name] = idx
                     idx += 1
+            # sort the attribute dictionary
+            attr_dict = dict(sorted(attr_dict.items()))
+
             entry_dict = {}
             entry_dict["parent_class"] = set()
-            entry_dict["parent_class"].add(onto["parent_entry"])
+            entry_dict["parent_class"].add(onto[SchemaKeywords.parent_entry])
             entry_dict["attributes"] = attr_dict
+
             DataStore._type_attributes[entry_name] = entry_dict
 
     def _init_top_to_core_entries(self):
@@ -987,9 +982,8 @@ class DataStore(BaseStore):
         a fully qualified name of an entry class.
 
         The `dataclass` module<https://docs.python.org/3/library/dataclasses.html> can add
-        generated special methods to user-defined classes. There is an in-built function
-        called `__dataclass_fields__` that is called on the class object, and it returns
-        all the fields the class contains.
+        generated special methods to user-defined classes. `__dataclass_fields__` is an in-built
+        function that is called on the class object, and it returns all the fields a class contains.
 
         .. note::
 
@@ -1003,8 +997,8 @@ class DataStore(BaseStore):
         Returns:
             A list of attributes corresponding to the input class.
 
-        For example, for Sentence we want to get a list of
-        ["speaker", "part_id", "sentiment", "classification", "classifications"].
+        For example, for an entry ``ft.onto.base_ontology.Sentence`` we want to
+        get a list of ["speaker", "part_id", "sentiment", "classification", "classifications"].
         The solution looks like the following:
 
         .. code-block:: python
