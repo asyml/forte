@@ -426,11 +426,29 @@ class DataStore(BaseStore):
         return issubclass(entry_class, (Annotation, AudioAnnotation))
 
     def all_entries(self, entry_type_name: str) -> Iterator[List]:
+        """
+        Retrieve all entry data of given ``entry_type_name``.
+
+        Args:
+            entry_type_name (str): the type name of entries that the User wants to retrieve.
+
+        Yields:
+            Iterator of raw entry data in list format.
+        """
         for entry in self.__entry_dict.values():
             if entry[constants.ENTRY_TYPE_INDEX] == entry_type_name:
                 yield entry
 
     def num_entries(self, entry_type_name: str) -> int:
+        """
+        Compute the number of entries of given ``entry_type_name``.
+
+        Args:
+            entry_type_name (str): the type name of entries that the User wants to get its count.
+
+        Returns:
+            The number of entries of given ``entry_type_name``.
+        """
         for entry in self.__entry_dict.values():
             if entry[constants.ENTRY_TYPE_INDEX] == entry_type_name:
                 count += 1
