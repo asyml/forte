@@ -11,19 +11,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 from typing import Dict, List, Iterator, Tuple, Optional, Any
 import uuid
 from bisect import bisect_left
 from heapq import heappush, heappop
 from sortedcontainers import SortedList
 
-from forte.data.ontology.ontology_code_generator import OntologyCodeGenerator
 from forte.utils import get_class
-from forte.data.base_store import BaseStore
-from forte.data.ontology.top import Annotation, AudioAnnotation
-from forte.common import constants
 from forte.utils.utils import get_full_module_name
-from forte.data.ontology.ontology_code_const import SchemaKeywords
+from forte.data.ontology.code_generation_objects import EntryTree
+from forte.data.ontology.ontology_code_generator import OntologyCodeGenerator
+from forte.data.ontology.top import Annotation, AudioAnnotation
+from forte.data.base_store import BaseStore
+from forte.common import constants
 
 
 __all__ = ["DataStore"]
@@ -932,29 +933,33 @@ class DataStore(BaseStore):
         if self._onto_file_path is None:
             return
 
-        merged_scheme, merged_dict = [], []
-        DataStore.onto_gen.parse_ontology_spec(
-            self._onto_file_path, merged_scheme, merged_dict
+        entry_tree = EntryTree()
+        with open(self._onto_file_path, "r", encoding="utf8") as f:
+            onto_dict = json.load(f)
+        DataStore.onto_gen.parse_schema_for_no_import_onto_specs_file(
+            self._onto_file_path, onto_dict, merged_entry_tree=entry_tree
         )
 
-        for onto in merged_scheme:
-            entry_name = onto[SchemaKeywords.entry_name]
+        children = entry_tree.root.children
+        while len(children) > 0:
+            entry_node = children.pop(0)
+            children.extend(entry_node.children)
+
+            entry_name = entry_node.name
             if entry_name in DataStore._type_attributes:
                 continue
-
             attr_dict = {}
             idx = constants.ATTR_BEGIN_INDEX
-            if SchemaKeywords.attributes in onto:
-                for d in onto[SchemaKeywords.attributes]:
-                    name = d[SchemaKeywords.attribute_name]
-                    attr_dict[name] = idx
-                    idx += 1
+
             # sort the attribute dictionary
-            attr_dict = dict(sorted(attr_dict.items()))
+            for d in sorted(entry_node.attributes):
+                name = d
+                attr_dict[name] = idx
+                idx += 1
 
             entry_dict = {}
             entry_dict["parent_class"] = set()
-            entry_dict["parent_class"].add(onto[SchemaKeywords.parent_entry])
+            entry_dict["parent_class"].add(entry_node.parent.name)
             entry_dict["attributes"] = attr_dict
 
             DataStore._type_attributes[entry_name] = entry_dict

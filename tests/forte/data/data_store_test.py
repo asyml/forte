@@ -791,28 +791,31 @@ class DataStoreTest(unittest.TestCase):
     def test_check_onto_file(self):
 
         expected_type_attributes = {
-            "ftx.onto.clinical.UMLSConceptLink": {
+            "ft.onto.test.Description": {
                 "attributes": {
-                    "cui": 4,
-                    "name": 5,
-                    "definition": 6,
-                    "tuis": 7,
-                    "aliases": 8,
-                    "score": 9,
+                    "author": 4,
+                    "passage_id": 5,
                 },
-                "parent_class": {"forte.data.ontology.top.Generics"},
+                "parent_class": {"forte.data.ontology.top.Annotation"},
             },
-            "ftx.onto.clinical.MedicalEntityMention": {
+            "ft.onto.test.EntityMention": {
                 "attributes": {
-                    "umls_link": 4,
-                    "umls_entities": 5,
+                    "ner_type": 4,
                 },
-                "parent_class": {"ft.onto.base_ontology.EntityMention"},
+                "parent_class": {"forte.data.ontology.top.Annotation"},
+            },
+            "ft.onto.test.MedicalEntityMention": {
+                "attributes": {
+                    "umls_entities": 4,
+                    "umls_link": 5,
+                },
+                "parent_class": {"ft.onto.test.EntityMention"},
             }
         }
-        data_store_from_file = DataStore(onto_file_path="forte/ontology_specs/medical.json")
+        data_store_from_file = DataStore(onto_file_path="tests/forte/data/ontology/test_specs/test_check_onto_file.json")
         self.assertDictContainsSubset(expected_type_attributes, data_store_from_file._type_attributes)
 
+        # DataStores share a static type_attribute dict.
         data_store_non_file = DataStore()
         self.assertDictEqual(data_store_non_file._type_attributes, data_store_from_file._type_attributes)
 
