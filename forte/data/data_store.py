@@ -449,6 +449,7 @@ class DataStore(BaseStore):
         Returns:
             The number of entries of given ``entry_type_name``.
         """
+        count = 0
         for entry in self.__entry_dict.values():
             if entry[constants.ENTRY_TYPE_INDEX] == entry_type_name:
                 count += 1
