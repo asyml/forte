@@ -192,15 +192,15 @@ If you are interested in making enhancement to Forte, please first go over our [
 ### Supported By
 
 <p align="center">
-   <img src="https://asyml.io/assets/institutions/cmu.png", width="200" align="top">
+   <img src="https://user-images.githubusercontent.com/28021889/165799232-2bb9f819-f394-4ade-98b0-c55c751ec8b1.png", width="180" align="top">
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-   <img src="https://www.ucsd.edu/_resources/img/logo_UCSD.png" width="200" align="top">
+   <img src="https://user-images.githubusercontent.com/28021889/165799272-9e51b864-04f6-432a-92e8-e0f84e091f72.png" width="180" align="top">
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-   <img src="https://raw.githubusercontent.com/asyml/forte/master/docs/_static/img/Petuum.png" width="200" align="top">
+   <img src="https://user-images.githubusercontent.com/28021889/165802470-f478de54-6c44-4ec8-8cab-ba74ed1f0163.png" width="180" align="top">
    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 </p>
 
-![image](https://user-images.githubusercontent.com/1015991/164106557-13dd3781-95d6-42db-b90d-1685679184fe.png)
+![image](https://user-images.githubusercontent.com/28021889/165806563-1542aeac-9656-4ad4-bf9c-f9a2e083f5d8.png)
 
 ### License
 
