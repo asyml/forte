@@ -425,6 +425,17 @@ class DataStore(BaseStore):
         entry_class = get_class(type_name)
         return issubclass(entry_class, (Annotation, AudioAnnotation))
 
+    def all_entries(self, entry_type_name: str) -> Iterator[List]:
+        for entry in self.__entry_dict.values():
+            if entry[constants.ENTRY_TYPE_INDEX] == entry_type_name:
+                yield entry
+
+    def num_entries(self, entry_type_name: str) -> int:
+        for entry in self.__entry_dict.values():
+            if entry[constants.ENTRY_TYPE_INDEX] == entry_type_name:
+                count += 1
+        return count
+
     def add_annotation_raw(self, type_name: str, begin: int, end: int) -> int:
         r"""This function adds an annotation entry with ``begin`` and ``end``
         indices to current data store object. Returns the ``tid`` for the inserted
