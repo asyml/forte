@@ -48,8 +48,9 @@ def update_stave_db(default_project_json, chat_project_json, chat_doc_json, conf
         project_id_chat = json.loads(resp2.text)["id"]
         
         chat_doc_json['project_id'] = project_id_chat
-        print (chat_doc_json['project_id'])
-        session.create_document(chat_doc_json)
+        print ("project Id", chat_doc_json['project_id'])
+        doc_id = session.create_document(chat_doc_json)
+        print("Doc ID: ", doc_id.text)
         project_list = session.get_project_list().json()
         
         print(project_id_base, project_id_chat, project_list)
@@ -85,7 +86,7 @@ def main(input_path: str, output_path: str, max_packs: int = -1):
     print ("base ID: ", base_project_id)
     remote_pl = Pipeline[DataPack]()
     remote_pl.set_reader(RawDataDeserializeReader())
-    remote_pl.add(LastUtteranceSearcher(), config={"query_result_project_id": base_project_id, "stave_db_path": config.LastUtteranceSearcher.stave_db_path})
+    remote_pl.add(LastUtteranceSearcher(), config={"query_result_project_id": base_project_id, "stave_db_path": config.LastUtteranceSearcher.stave_db_path, "url_stub": config.LastUtteranceSearcher.url})
     remote_pl.serve(port=config.Remote.port, input_format=config.Remote.input_format, service_name=config.Remote.service_name)
 
 main(sys.argv[1], sys.argv[2], int(sys.argv[3]))

@@ -7,7 +7,8 @@ BioBERTNERPredictor:
   ignore_labels: ["O"]
 
 LastUtteranceSearcher:
-  stave_db_path: /home/p1yadav/stave/simple-backend/stave_backend/db.sqlite3
+  stave_db_path: "/home/p1yadav/.stave/db.sqlite3"
+  url: "http://localhost:8000"
 
 Remote:
   port: 8008

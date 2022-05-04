@@ -2,7 +2,7 @@ import os
 import logging
 import sqlite3
 from typing import Dict, Any, Optional, List
-
+from stave_backend.lib.stave_session import StaveSession
 from fortex.elastic import ElasticSearchIndexer
 
 from forte.common import Resources, ProcessorConfigError
@@ -76,11 +76,24 @@ class LastUtteranceSearcher(PackProcessor):
                 pack_id: str = source["doc_id"]
 
                 # Now you can write the pack into the database and generate url.
+                print (self.configs.query_result_project_id)
                 item = {
                     "name": f"clinical_results_{idx}",
                     "textPack": raw_pack_str,
-                    "project_id": 5,
+                    "project_id": self.configs.query_result_project_id,
                 }
+                
+                db_id = -1
+                '''
+                with StaveSession(url="http://localhost:8899") as session:
+                    session.login(
+                        username="admin",
+                        password="admin"
+                    )
+                    print ("1")
+                    db_id = session.create_document(item)
+                    print ("1")
+                '''
                 db_id = sqlite_insert(conn, "stave_backend_document", item)
                 answers += [db_id]
                 print(pack_id, db_id)
@@ -119,6 +132,6 @@ class LastUtteranceSearcher(PackProcessor):
                 "other_kwargs": {"request_timeout": 10, "refresh": False},
             },
             "stave_db_path": "~/projects/stave/simple-backend/db.sqlite3",
-            "url_stub": "http://localhost:8889",
+            "url_stub": "http://localhost:3000",
             "query_result_project_id": -1,
         }
