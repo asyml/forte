@@ -30,6 +30,7 @@ class DataStore(BaseStore):
     # TODO: temporarily disable this for development purposes.
     # pylint: disable=pointless-string-statement
     _type_attributes: dict = {}
+    enable_cache = True
 
     def __init__(
         self, onto_file_path: Optional[str] = None, dynamically_add_type=True
@@ -369,8 +370,9 @@ class DataStore(BaseStore):
 
         return entry
 
+    @staticmethod
     def _is_subclass(
-        self, type_name: str, cls, no_dynamic_subclass: bool = False
+        type_name: str, cls, no_dynamic_subclass: bool = False
     ) -> bool:
         r"""This function takes a fully qualified ``type_name`` class name,
         ``cls`` class and returns whether ``type_name``  class is the``cls``
@@ -404,7 +406,7 @@ class DataStore(BaseStore):
             if cls_qualified_name in type_name_parent_class:
                 return True
             else:
-                entry_class = get_class(type_name)
+                entry_class = DataStore.get_class(type_name)
                 if issubclass(entry_class, cls):
                     type_name_parent_class.add(cls_qualified_name)
                     return True
@@ -846,11 +848,11 @@ class DataStore(BaseStore):
             An iterator of the entries matching the provided arguments.
         """
         if include_sub_type:
-            entry_class = get_class(type_name)
+            entry_class = DataStore.get_class(type_name)
             all_types = []
             # iterate all classes to find subclasses
             for type in self.__elements:
-                if issubclass(get_class(type), entry_class):
+                if issubclass(DataStore.get_class(type), entry_class):
                     all_types.append(type)
             for type in all_types:
                 for entry in self.__elements[type]:
@@ -938,6 +940,39 @@ class DataStore(BaseStore):
         if self._onto_file_path is None:
             return
         raise NotImplementedError
+
+    @staticmethod
+    def get_class(type_name):
+        r"""Returns the ontology class based on class name. Only a class that exists in current
+        DataStore will be returned.
+
+        Args:
+            type_name (str): Fully qualified name of the class.
+        Returns:
+            The target class.
+
+        Raises:
+            ValueError: If class is not found based on :attr:`class_name` in DataStore.
+        """
+        if type_name not in DataStore._type_attributes:
+            raise ValueError(f"Class not found in DataStore: {type_name}")
+        return get_class(type_name)
+
+    @staticmethod
+    def get_subtypes(type_name):
+        r"""Returns a complete list of subclasses based on class name.
+
+        Args:
+            type_name (str): Fully qualified name of the class.
+        Returns:
+            A list of subtypes.
+        """
+        cls = DataStore.get_class(type_name)
+        subtypes = []
+        for subtype in DataStore._type_attributes:
+            if DataStore._is_subclass(subtype, cls):
+                subtypes.append(subtype)
+        return subtypes
 
     @staticmethod
     def _get_entry_attributes_by_class(input_entry_class_name: str) -> List:

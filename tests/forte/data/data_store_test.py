@@ -152,6 +152,18 @@ class DataStoreTest(unittest.TestCase):
                 },
                 "parent_class": set(),
             },
+            "ft.onto.base_ontology.Phrase": {
+                "attributes": {
+                    "predicate_lemma": 4,
+                    "framenet_id": 5,
+                    "is_verb": 6,
+                },
+                "parent_class": set(),
+            },
+            "forte.data.ontology.core.Entry": {
+                "attributes": {},
+                "parent_class": set(),
+            }
         }
         # The order is [Document, Sentence]. Initialize 2 entries in each list.
         # Document entries have tid 1234, 3456.
@@ -500,7 +512,7 @@ class DataStoreTest(unittest.TestCase):
         self.data_store.add_annotation_raw("ft.onto.base_ontology.EntityMention", 10, 12)
         num_phrase = len(self.data_store._DataStore__elements["ft.onto.base_ontology.EntityMention"])
         self.assertEqual(num_phrase, 1)
-        self.assertEqual(len(DataStore._type_attributes), 3)
+        self.assertEqual(len(DataStore._type_attributes), 5)
         self.assertEqual(len(self.data_store._DataStore__entry_dict), 8)
 
     def test_get_attribute(self):
@@ -776,6 +788,13 @@ class DataStoreTest(unittest.TestCase):
                 "ft.onto.base_ontology.Title", forte.data.ontology.top.Link
             )
         )
+    
+    def test_get_subtypes(self):
+        with self.assertRaises(ValueError):
+            DataStore.get_subtypes("ft.onto.base_ontology.EntityMention")
+        entry_subtypes = DataStore.get_subtypes("forte.data.ontology.core.Entry")
+        self.assertEqual(len(entry_subtypes), 4)
+        self.assertListEqual(entry_subtypes, ['ft.onto.base_ontology.Document', 'ft.onto.base_ontology.Sentence', 'ft.onto.base_ontology.Phrase', 'forte.data.ontology.core.Entry'])
 
 
 if __name__ == "__main__":
