@@ -436,7 +436,11 @@ class DataStore(BaseStore):
             Iterator of raw entry data in list format.
         """
         for entry in self.__entry_dict.values():
-            if entry[constants.ENTRY_TYPE_INDEX] == entry_type_name:
+            if entry[
+                constants.ENTRY_TYPE_INDEX
+            ] == entry_type_name or self._is_subclass(
+                entry[constants.ENTRY_TYPE_INDEX], get_class(entry_type_name)
+            ):
                 yield entry
 
     def num_entries(self, entry_type_name: str) -> int:
@@ -451,7 +455,11 @@ class DataStore(BaseStore):
         """
         count = 0
         for entry in self.__entry_dict.values():
-            if entry[constants.ENTRY_TYPE_INDEX] == entry_type_name:
+            if entry[
+                constants.ENTRY_TYPE_INDEX
+            ] == entry_type_name or self._is_subclass(
+                entry[constants.ENTRY_TYPE_INDEX], get_class(entry_type_name)
+            ):
                 count += 1
         return count
 

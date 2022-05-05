@@ -329,59 +329,33 @@ class DataStoreTest(unittest.TestCase):
     def test_entry_methods(self):
         sent_type = "ft.onto.base_ontology.Sentence"
         doc_type = "ft.onto.base_ontology.Document"
-        doc_list = [
-            [
-                0,
-                5,
-                1234,
-                "ft.onto.base_ontology.Document",
-                None,
-                "Postive",
-                None,
-            ],
-            [
-                10,
-                25,
-                3456,
-                "ft.onto.base_ontology.Document",
-                "Doc class A",
-                "Negative",
-                "Class B",
-            ],
-        ]
+        ann_type = "forte.data.ontology.top.Annotation"
         sent_list = [
-            [
-                6,
-                9,
-                9999,
-                "ft.onto.base_ontology.Sentence",
-                "teacher",
-                1,
-                "Postive",
-                None,
-                None,
-            ],
-            [
-                55,
-                70,
-                1234567,
-                "ft.onto.base_ontology.Sentence",
-                None,
-                None,
-                "Negative",
-                "Class C",
-                "Class D",
-            ],
+            entry
+            for entry in list(self.data_store._DataStore__entry_dict.values())
+            if entry[3] == "ft.onto.base_ontology.Sentence"
         ]
+        doc_list = [
+            entry
+            for entry in list(self.data_store._DataStore__entry_dict.values())
+            if entry[3] == "ft.onto.base_ontology.Document"
+        ]
+        ann_list = list(self.data_store._DataStore__entry_dict.values())
         sent_entries = list(self.data_store.all_entries(sent_type))
         doc_entries = list(self.data_store.all_entries(doc_type))
+        ann_entries = list(self.data_store.all_entries(ann_type))
+
         self.assertEqual(sent_list, sent_entries)
         self.assertEqual(doc_list, doc_entries)
 
+        self.assertEqual(ann_list, ann_entries)
+
         num_sent_entries = self.data_store.num_entries(sent_type)
         num_doc_entry = self.data_store.num_entries(doc_type)
+        num_ann_entry = self.data_store.num_entries(ann_type)
         self.assertEqual(num_sent_entries, len(sent_list))
         self.assertEqual(num_doc_entry, len(doc_list))
+        self.assertEqual(num_ann_entry, len(ann_entries))
 
     def test_co_iterator_annotation_like(self):
         type_names = [
