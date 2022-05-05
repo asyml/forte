@@ -27,7 +27,7 @@ from typing import (
     Callable,
     Tuple,
 )
-
+from packaging.version import Version
 import numpy as np
 from sortedcontainers import SortedList
 
@@ -52,6 +52,7 @@ from forte.data.ontology.top import (
 from forte.data.span import Span
 from forte.data.types import ReplaceOperationsType, DataRequest
 from forte.utils import get_class
+from forte.version import PACK_ID_COMPATIBLE_VERSION, DEFAULT_PACK_VERSION
 
 logger = logging.getLogger(__name__)
 
@@ -155,7 +156,7 @@ class DataPack(BasePack[Entry, Link, Group]):
     Args:
         pack_name: A name for this data pack.
     """
-    
+
     def __init__(self, pack_name: Optional[str] = None):
         super().__init__(pack_name)
         self._text = ""
@@ -170,12 +171,19 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         self._index: DataIndex = DataIndex()
 
-    def __getstate__(self):
-        # TODO: Backward compatibility for PACK_VERSION=="0.0.0"
-        return super().__getstate__()
-
     def __setstate__(self, state):
-         # TODO: Backward compatibility for PACK_VERSION=="0.0.0"
+        pack_version: str = (
+            state["pack_version"]
+            if "pack_version" in state
+            else DEFAULT_PACK_VERSION
+        )
+        if Version(pack_version) < Version(PACK_ID_COMPATIBLE_VERSION):
+            raise ValueError(
+                "The DataPack cannot be deserialized because its version "
+                f"{pack_version} is outdated. We only support DataPack with "
+                f"version greater or equal to {PACK_ID_COMPATIBLE_VERSION}"
+            )
+
         super().__setstate__(state)
 
         # For backward compatibility.
@@ -230,13 +238,15 @@ class DataPack(BasePack[Entry, Link, Group]):
         type :class:`~forte.data.ontology.top.Annotation`.
 
         """
-        for annotation in self._data_store.all_entries("forte.data.ontology.top.Annotation"):
+        for annotation in self._data_store.all_entries(
+            "forte.data.ontology.top.Annotation"
+        ):
             # TODO: Create Annotatino object from its entry data (in list format)
             # TODO: Pass TID
             yield Annotation(
                 pack=self,
                 begin=annotation[BEGIN_INDEX],
-                end=annotation[END_INDEX]
+                end=annotation[END_INDEX],
             )
 
     @property
@@ -247,7 +257,9 @@ class DataPack(BasePack[Entry, Link, Group]):
         Returns: (int) Number of the links.
 
         """
-        return self._data_store.num_entries("forte.data.ontology.top.Annotation")
+        return self._data_store.num_entries(
+            "forte.data.ontology.top.Annotation"
+        )
 
     @property
     def all_links(self) -> Iterator[Link]:
@@ -258,12 +270,12 @@ class DataPack(BasePack[Entry, Link, Group]):
         type :class:`~forte.data.ontology.top.Link`.
 
         """
-        for link in self._data_store.all_entries("forte.data.ontology.top.Link"):
+        for link in self._data_store.all_entries(
+            "forte.data.ontology.top.Link"
+        ):
             # TODO: Create a Link object from its entry data (in list format)
             # TODO: Pass TID and parent/child entry
-            yield Link(
-                pack=self, parent=None, child=None
-            )
+            yield Link(pack=self, parent=None, child=None)
 
     @property
     def num_links(self) -> int:
@@ -284,7 +296,9 @@ class DataPack(BasePack[Entry, Link, Group]):
         type :class:`~forte.data.ontology.top.Group`.
 
         """
-        for group in self._data_store.all_entries("forte.data.ontology.top.Group"):
+        for group in self._data_store.all_entries(
+            "forte.data.ontology.top.Group"
+        ):
             # TODO: Create a Group object from its entry data (in list format)
             # TODO: Pass TID and group members
             yield Group(self, group)
@@ -307,7 +321,9 @@ class DataPack(BasePack[Entry, Link, Group]):
         Returns: Iterator of generic
 
         """
-        for generic in self._data_store.all_entries("forte.data.ontology.top.Generics"):
+        for generic in self._data_store.all_entries(
+            "forte.data.ontology.top.Generics"
+        ):
             # TODO: Create a Generics object from its entry data (in list format)
             # TODO: Pass TID
             yield Generics(self, generic)
@@ -331,7 +347,9 @@ class DataPack(BasePack[Entry, Link, Group]):
         type :class:`~forte.data.ontology.top.AudioAnnotation`.
 
         """
-        for audio_annotation in self._data_store.all_entries("forte.data.ontology.top.AudioAnnotation"):
+        for audio_annotation in self._data_store.all_entries(
+            "forte.data.ontology.top.AudioAnnotation"
+        ):
             # TODO: Create a Generics object from its entry data (in list format)
             # TODO: Pass TID
             yield AudioAnnotation(self, audio_annotation)
@@ -344,7 +362,9 @@ class DataPack(BasePack[Entry, Link, Group]):
         Returns: Number of audio annotations.
 
         """
-        return self._data_store.num_entries("forte.data.ontology.top.AudioAnnotation")
+        return self._data_store.num_entries(
+            "forte.data.ontology.top.AudioAnnotation"
+        )
 
     def get_span_text(self, begin: int, end: int) -> str:
         r"""Get the text in the data pack contained in the span.
@@ -646,9 +666,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
             # TODO: Pass in the TID
             self._data_store.add_annotation_raw(
-                type_name=entry.entry_type(),
-                begin=entry.begin,
-                end=entry.end
+                type_name=entry.entry_type(), begin=entry.begin, end=entry.end
             )
 
         elif isinstance(entry, Link):
@@ -656,13 +674,12 @@ class DataPack(BasePack[Entry, Link, Group]):
             self._data_store.add_link_raw(
                 type_name=entry.entry_type(),
                 parent_tid=entry.parent,
-                child_tid=entry.child
+                child_tid=entry.child,
             )
         elif isinstance(entry, Group):
             # TODO: Pass in the TID
             self._data_store.add_group_raw(
-                type_name=entry.entry_type(),
-                member_type=entry.MemberType
+                type_name=entry.entry_type(), member_type=entry.MemberType
             )
         elif isinstance(entry, Generics):
             # TODO: Implement add_generics_raw in DataStore
@@ -1374,7 +1391,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         for entry_data in self._data_store.get(
             type_name=entry_type_.entry_type(),
             range_annotation=range_annotation,
-            include_sub_type=include_sub_type
+            include_sub_type=include_sub_type,
         ):
             # TODO: Convert entry data in list to a class object
             entry = entry_type_(entry_data)
@@ -1394,6 +1411,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         # TODO: Not recommended to directly update __dict__. Should find a
         #   better solution.
         self.__dict__.update(datapack.__dict__)
+
 
 class DataIndex(BaseIndex):
     r"""A set of indexes used in :class:`~forte.data.data_pack.DataPack`, note that this class is
