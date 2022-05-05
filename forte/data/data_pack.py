@@ -35,8 +35,9 @@ from forte.common.exception import (
     ProcessExecutionException,
     UnknownOntologyClassException,
 )
-from forte.common.constants import BEGIN_INDEX, END_INDEX
-from forte.data import data_utils_io, DataStore
+from forte.common.constants import TID_INDEX
+from forte.data import data_utils_io
+from forte.data.data_store import DataStore
 from forte.data.base_pack import BaseMeta, BasePack
 from forte.data.index import BaseIndex
 from forte.data.ontology.core import Entry
@@ -238,16 +239,10 @@ class DataPack(BasePack[Entry, Link, Group]):
         type :class:`~forte.data.ontology.top.Annotation`.
 
         """
-        for annotation in self._data_store.all_entries(
+        for entry in self._data_store.all_entries(
             "forte.data.ontology.top.Annotation"
         ):
-            # TODO: Create Annotatino object from its entry data (in list format)
-            # TODO: Pass TID
-            yield Annotation(
-                pack=self,
-                begin=annotation[BEGIN_INDEX],
-                end=annotation[END_INDEX],
-            )
+            yield self.get_entry(tid=entry[TID_INDEX])
 
     @property
     def num_annotations(self) -> int:
@@ -270,12 +265,10 @@ class DataPack(BasePack[Entry, Link, Group]):
         type :class:`~forte.data.ontology.top.Link`.
 
         """
-        for link in self._data_store.all_entries(
+        for entry in self._data_store.all_entries(
             "forte.data.ontology.top.Link"
         ):
-            # TODO: Create a Link object from its entry data (in list format)
-            # TODO: Pass TID and parent/child entry
-            yield Link(pack=self, parent=None, child=None)
+            yield self.get_entry(tid=entry[TID_INDEX])
 
     @property
     def num_links(self) -> int:
@@ -296,12 +289,10 @@ class DataPack(BasePack[Entry, Link, Group]):
         type :class:`~forte.data.ontology.top.Group`.
 
         """
-        for group in self._data_store.all_entries(
+        for entry in self._data_store.all_entries(
             "forte.data.ontology.top.Group"
         ):
-            # TODO: Create a Group object from its entry data (in list format)
-            # TODO: Pass TID and group members
-            yield Group(self, group)
+            yield self.get_entry(tid=entry[TID_INDEX])
 
     @property
     def num_groups(self):
@@ -321,12 +312,10 @@ class DataPack(BasePack[Entry, Link, Group]):
         Returns: Iterator of generic
 
         """
-        for generic in self._data_store.all_entries(
+        for entry in self._data_store.all_entries(
             "forte.data.ontology.top.Generics"
         ):
-            # TODO: Create a Generics object from its entry data (in list format)
-            # TODO: Pass TID
-            yield Generics(self, generic)
+            yield self.get_entry(tid=entry[TID_INDEX])
 
     @property
     def num_generics_entries(self):
@@ -347,12 +336,10 @@ class DataPack(BasePack[Entry, Link, Group]):
         type :class:`~forte.data.ontology.top.AudioAnnotation`.
 
         """
-        for audio_annotation in self._data_store.all_entries(
+        for entry in self._data_store.all_entries(
             "forte.data.ontology.top.AudioAnnotation"
         ):
-            # TODO: Create a Generics object from its entry data (in list format)
-            # TODO: Pass TID
-            yield AudioAnnotation(self, audio_annotation)
+            yield self.get_entry(tid=entry[TID_INDEX])
 
     @property
     def num_audio_annotations(self):
@@ -664,42 +651,54 @@ class DataPack(BasePack[Entry, Link, Group]):
                         f"at [{begin}:{end}], in pack {pack_ref}."
                     )
 
-            # TODO: Pass in the TID
+            # TODO: Add `tid` and `allow_duplicate` to DataStore.add_annotation_raw()
             self._data_store.add_annotation_raw(
-                type_name=entry.entry_type(), begin=entry.begin, end=entry.end
+                type_name=entry.entry_type(),
+                begin=entry.begin,
+                end=entry.end,
+                tid=entry.tid,
+                allow_duplicate=allow_duplicate,
             )
 
         elif isinstance(entry, Link):
-            # TODO: Pass in the TID
+            # TODO: Add `tid` and `allow_duplicate` to DataStore.add_link_raw()
             self._data_store.add_link_raw(
                 type_name=entry.entry_type(),
                 parent_tid=entry.parent,
                 child_tid=entry.child,
+                tid=entry.tid,
+                allow_duplicate=allow_duplicate,
             )
         elif isinstance(entry, Group):
-            # TODO: Pass in the TID
+            # TODO: Add `tid` and `allow_duplicate` to DataStore.add_group_raw()
             self._data_store.add_group_raw(
-                type_name=entry.entry_type(), member_type=entry.MemberType
+                type_name=entry.entry_type(),
+                member_type=entry.MemberType,
+                tid=entry.tid,
+                allow_duplicate=allow_duplicate,
             )
         elif isinstance(entry, Generics):
             # TODO: Implement add_generics_raw in DataStore
-            self._data_store.add_generics_raw()
+            self._data_store.add_generics_raw(
+                type_name=entry.entry_type(),
+                tid=entry.tid,
+                allow_duplicate=allow_duplicate,
+            )
         elif isinstance(entry, AudioAnnotation):
-            # TODO: Implement add_generics_raw in DataStore
-            self._data_store.add_audio_annotation_raw()
+            # TODO: Implement add_audio_annotation_raw in DataStore
+            self._data_store.add_audio_annotation_raw(
+                type_name=entry.entry_type(),
+                begin=entry.begin,
+                end=entry.end,
+                tid=entry.tid,
+                allow_duplicate=allow_duplicate,
+            )
         else:
             raise ValueError(
                 f"Invalid entry type {type(entry)}. A valid entry "
                 f"should be an instance of Annotation, Link, Group, Generics "
                 "or AudioAnnotation."
             )
-
-        # TODO: allow_duplicate should be handled by DataStore
-        # if not allow_duplicate:
-        #     index = target.index(entry)
-        #     if index < 0:
-        #         # Return the existing entry if duplicate is not allowed.
-        #         return target[index]
 
         # update the data pack index if needed
         self._index.update_basic_index([entry])
@@ -1393,8 +1392,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             range_annotation=range_annotation,
             include_sub_type=include_sub_type,
         ):
-            # TODO: Convert entry data in list to a class object
-            entry = entry_type_(entry_data)
+            entry = self.get_entry(tid=entry_data[TID_INDEX])
             # Filter by components
             if components is not None:
                 if not self.is_created_by(entry, components):
