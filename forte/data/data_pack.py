@@ -810,8 +810,359 @@ class DataPack(BasePack[Entry, Link, Group]):
             A data generator, which generates one piece of data (a dict
             containing the required entries, fields, and context).
         """
-        # TODO: This can be implemented in DataStore or DataPack
-        self._data_store.get_data(context_type, request, skip_k)
+        context_type_: Union[Type[Annotation], Type[AudioAnnotation]]
+        if isinstance(context_type, str):
+            context_type_ = get_class(context_type)
+            if not issubclass(context_type_, Entry):
+                raise ValueError(
+                    f"The provided `context_type` [{context_type_}] "
+                    f"is not a subclass to the"
+                    f"`forte.data.ontology.top.Annotation` class"
+                )
+        else:
+            context_type_ = context_type
+
+        annotation_types: Dict[
+            Union[Type[Annotation], Type[AudioAnnotation]], Union[Dict, List]
+        ] = {}
+        link_types: Dict[Type[Link], Union[Dict, List]] = {}
+        group_types: Dict[Type[Group], Union[Dict, List]] = {}
+        generics_types: Dict[Type[Generics], Union[Dict, List]] = {}
+        audio_annotation_types: Dict[
+            Type[AudioAnnotation], Union[Dict, List]
+        ] = {}
+
+        if request is not None:
+            for key_, value in request.items():
+                key = as_entry_type(key_)
+                if issubclass(key, Annotation):
+                    annotation_types[key] = value
+                elif issubclass(key, Link):
+                    link_types[key] = value
+                elif issubclass(key, Group):
+                    group_types[key] = value
+                elif issubclass(key, Generics):
+                    generics_types[key] = value
+                elif issubclass(key, AudioAnnotation):
+                    audio_annotation_types[key] = value
+
+        context_args = annotation_types.get(context_type_)
+
+        context_components, _, context_fields = self._parse_request_args(
+            context_type_, context_args
+        )
+
+        valid_context_ids: Set[int] = self._index.query_by_type_subtype(
+            context_type_
+        )
+
+        if context_components:
+            valid_component_id: Set[int] = set()
+            for component in context_components:
+                valid_component_id |= self.get_ids_by_creator(component)
+            valid_context_ids &= valid_component_id
+
+        def get_annotation_list(
+            c_type: Union[Type[Annotation], Type[AudioAnnotation]]
+        ):
+            r"""Get an annotation list of a given context type.
+
+            Args:
+                c_type:
+                    The granularity of the data context, which
+                    could be any :class:`~forte.data.ontology.top.Annotation` type.
+
+            Raises:
+                NotImplementedError: raised when the given context type is
+                    not implemented.
+
+            Returns:
+                List(Union[Annotation, AudioAnnotation]):
+                    a list of annotations which is a copy of `self.annotations`
+                    and it enables modifications of `self.annotations` while
+                    iterating through its copy.
+            """
+            if issubclass(c_type, Annotation):
+                return list(self.all_annotations)
+            elif issubclass(c_type, AudioAnnotation):
+                return list(self.all_audio_annotations)
+            else:
+                raise NotImplementedError(
+                    f"Context type is set to {c_type},"
+                    " but currently we only support"
+                    " [Annotation, AudioAnnotation]."
+                )
+
+        def get_context_data(c_type, context):
+            r"""Get context-specific data of a given context type and
+                context.
+
+            Args:
+                c_type:
+                    The granularity of the data context, which
+                    could be any :class:`~forte.data.ontology.top.Annotation` type.
+                context: context that
+                    contains data to be extracted.
+
+            Raises:
+                NotImplementedError: raised when the given context type is
+                    not implemented.
+
+            Returns:
+                str: context data.
+            """
+            if issubclass(c_type, Annotation):
+                return self.text[context.begin : context.end]
+            elif issubclass(c_type, AudioAnnotation):
+                return self.audio[context.begin : context.end]
+            else:
+                raise NotImplementedError(
+                    f"Context type is set to {context_type}"
+                    "but currently we only support"
+                    "[Annotation, AudioAnnotation]"
+                )
+
+        skipped = 0
+        for context in get_annotation_list(context_type_):
+            if context.tid not in valid_context_ids or not isinstance(
+                context, context_type_
+            ):
+                continue
+            if skipped < skip_k:
+                skipped += 1
+                continue
+            data: Dict[str, Any] = {}
+            data["context"] = get_context_data(context_type_, context)
+            data["offset"] = context.begin
+
+            for field in context_fields:
+                data[field] = getattr(context, field)
+
+            if annotation_types:
+                for a_type, a_args in annotation_types.items():
+                    if issubclass(a_type, context_type_):
+                        continue
+                    if a_type.__name__ in data:
+                        raise KeyError(
+                            f"Requesting two types of entries with the "
+                            f"same class name {a_type.__name__} at the "
+                            f"same time is not allowed"
+                        )
+                    data[
+                        a_type.__name__
+                    ] = self._generate_annotation_entry_data(
+                        a_type, a_args, data, context
+                    )
+
+            if audio_annotation_types:
+                for a_type, a_args in audio_annotation_types.items():
+                    if a_type.__name__ in data:
+                        raise KeyError(
+                            f"Requesting two types of entries with the "
+                            f"same class name {a_type.__name__} at the "
+                            f"same time is not allowed"
+                        )
+                    data[
+                        a_type.__name__
+                    ] = self._generate_annotation_entry_data(
+                        a_type, a_args, data, context
+                    )
+
+            if link_types:
+                for l_type, l_args in link_types.items():
+                    if l_type.__name__ in data:
+                        raise KeyError(
+                            f"Requesting two types of entries with the "
+                            f"same class name {l_type.__name__} at the "
+                            f"same time is not allowed"
+                        )
+                    data[l_type.__name__] = self._generate_link_entry_data(
+                        l_type, l_args, data, context
+                    )
+            # TODO: Getting Group based on range is not done yet.
+            if group_types:
+                raise NotImplementedError(
+                    "Querying groups based on ranges is "
+                    "currently not supported."
+                )
+            if generics_types:
+                raise NotImplementedError(
+                    "Querying generic types based on ranges is "
+                    "currently not supported."
+                )
+            yield data
+
+    def _parse_request_args(self, a_type, a_args):
+        # request which fields generated by which component
+        components = None
+        unit = None
+        fields = set()
+        if isinstance(a_args, dict):
+            components = a_args.get("component")
+            # pylint: disable=isinstance-second-argument-not-valid-type
+            # TODO: until fix: https://github.com/PyCQA/pylint/issues/3507
+            if components is not None and not isinstance(components, Iterable):
+                raise TypeError(
+                    "Invalid request format for 'components'. "
+                    "The value of 'components' should be of an iterable type."
+                )
+            unit = a_args.get("unit")
+            if unit is not None and not isinstance(unit, str):
+                raise TypeError(
+                    "Invalid request format for 'unit'. "
+                    "The value of 'unit' should be a string."
+                )
+            a_args = a_args.get("fields", set())
+
+        # pylint: disable=isinstance-second-argument-not-valid-type
+        # TODO: disable until fix: https://github.com/PyCQA/pylint/issues/3507
+        if isinstance(a_args, Iterable):
+            fields = set(a_args)
+        elif a_args is not None:
+            raise TypeError(
+                f"Invalid request format for '{a_type}'. "
+                f"The request should be of an iterable type or a dict."
+            )
+
+        fields.add("tid")
+        return components, unit, fields
+
+    def _generate_annotation_entry_data(
+        self,
+        a_type: Union[Type[Annotation], Type[AudioAnnotation]],
+        a_args: Union[Dict, Iterable],
+        data: Dict,
+        cont: Optional[Annotation],
+    ) -> Dict:
+
+        components, unit, fields = self._parse_request_args(a_type, a_args)
+
+        a_dict: Dict[str, Any] = {}
+        a_dict["span"] = []
+        # For AudioAnnotation, since the data is single numpy array
+        # we don't initialize an empty list for a_dict["audio"]
+        if issubclass(a_type, Annotation):
+            a_dict["text"] = []
+        elif issubclass(a_type, AudioAnnotation):
+            a_dict["audio"] = []
+
+        for field in fields:
+            a_dict[field] = []
+        unit_begin = 0
+        if unit is not None:
+            if unit not in data:
+                raise KeyError(
+                    f"{unit} is missing in data. You need to "
+                    f"request {unit} before {a_type}."
+                )
+            a_dict["unit_span"] = []
+
+        cont_begin = cont.begin if cont else 0
+        annotation: Union[Type[Annotation], Type[AudioAnnotation]]
+        for annotation in self.get(a_type, cont, components):  # type: ignore
+            # we provide span, text (and also tid) by default
+            a_dict["span"].append((annotation.begin, annotation.end))
+
+            if isinstance(annotation, Annotation):
+                a_dict["text"].append(annotation.text)
+            elif isinstance(annotation, AudioAnnotation):
+                a_dict["audio"].append(annotation.audio)
+            else:
+                raise NotImplementedError(
+                    f"Annotation is set to {annotation}"
+                    "but currently we only support"
+                    "instances of [Annotation, "
+                    "AudioAnnotation] and their subclass."
+                )
+            for field in fields:
+                if field in ("span", "text", "audio"):
+                    continue
+                if field == "context_span":
+                    a_dict[field].append(
+                        (
+                            annotation.begin - cont_begin,
+                            annotation.end - cont_begin,
+                        )
+                    )
+                    continue
+
+                a_dict[field].append(getattr(annotation, field))
+
+            if unit is not None:
+                while not self._index.in_span(
+                    data[unit]["tid"][unit_begin],
+                    annotation.span,
+                ):
+                    unit_begin += 1
+
+                unit_span_begin = unit_begin
+                unit_span_end = unit_span_begin + 1
+
+                while self._index.in_span(
+                    data[unit]["tid"][unit_span_end],
+                    annotation.span,
+                ):
+                    unit_span_end += 1
+
+                a_dict["unit_span"].append((unit_span_begin, unit_span_end))
+        for key, value in a_dict.items():
+            a_dict[key] = np.array(value)
+
+        return a_dict
+
+    def _generate_link_entry_data(
+        self,
+        a_type: Type[Link],
+        a_args: Union[Dict, Iterable],
+        data: Dict,
+        cont: Optional[Annotation],
+    ) -> Dict:
+
+        components, unit, fields = self._parse_request_args(a_type, a_args)
+
+        if unit is not None:
+            raise ValueError(f"Link entries cannot be indexed by {unit}.")
+
+        a_dict: Dict[str, Any] = {}
+        for field in fields:
+            a_dict[field] = []
+        a_dict["parent"] = []
+        a_dict["child"] = []
+
+        link: Link
+        for link in self.get(a_type, cont, components):
+            parent_type = link.ParentType.__name__
+            child_type = link.ChildType.__name__
+
+            if parent_type not in data:
+                raise KeyError(
+                    f"The Parent entry of {a_type} is not requested."
+                    f" You should also request {parent_type} with "
+                    f"{a_type}"
+                )
+            if child_type not in data:
+                raise KeyError(
+                    f"The child entry of {a_type} is not requested."
+                    f" You should also request {child_type} with "
+                    f"{a_type}"
+                )
+
+            a_dict["parent"].append(
+                np.where(data[parent_type]["tid"] == link.parent)[0][0]
+            )
+            a_dict["child"].append(
+                np.where(data[child_type]["tid"] == link.child)[0][0]
+            )
+
+            for field in fields:
+                if field in ("parent", "child"):
+                    continue
+
+                a_dict[field].append(getattr(link, field))
+
+        for key, value in a_dict.items():
+            a_dict[key] = np.array(value)
+        return a_dict
 
     def build_coverage_for(
         self,
@@ -971,8 +1322,67 @@ class DataPack(BasePack[Entry, Link, Group]):
         Yields:
             Each `Entry` found using this method.
         """
-        # TODO: This can be implemented in DataStore or DataPack
-        self._data_store.get()
+        entry_type_: Type[EntryType] = as_entry_type(entry_type)
+
+        def require_annotations(entry_class=Annotation) -> bool:
+            if issubclass(entry_type_, entry_class):
+                return True
+            if issubclass(entry_type_, Link):
+                return issubclass(
+                    entry_type_.ParentType, entry_class
+                ) and issubclass(entry_type_.ChildType, entry_class)
+            if issubclass(entry_type_, Group):
+                return issubclass(entry_type_.MemberType, entry_class)
+            return False
+
+        # If we don't have any annotations but the items to check requires them,
+        # then we simply yield from an empty list.
+        if (
+            len(list(self.all_annotations)) == 0
+            and isinstance(range_annotation, Annotation)
+            and require_annotations(Annotation)
+        ) or (
+            len(list(self.all_audio_annotations)) == 0
+            and isinstance(range_annotation, AudioAnnotation)
+            and require_annotations(AudioAnnotation)
+        ):
+            yield from []
+            return
+
+        # If the ``entry_type`` and `range_annotation` are for different types of
+        # payload, then we yield from an empty list with a warning.
+        if (
+            require_annotations(Annotation)
+            and isinstance(range_annotation, AudioAnnotation)
+        ) or (
+            require_annotations(AudioAnnotation)
+            and isinstance(range_annotation, Annotation)
+        ):
+            logger.warning(
+                "Incompatible combination of ``entry_type`` and "
+                "`range_annotation` found in the input of `DataPack.get()`"
+                " method. An empty iterator will be returned when inputs "
+                "contain multi-media entries. Please double check the input "
+                "arguments and make sure they are associated with the same type"
+                " of payload (i.e., either text or audio)."
+            )
+            yield from []
+            return
+
+        # TODO: Add range_annotation in DataStore.get()
+        # refer to https://github.com/asyml/forte/pull/769
+        for entry_data in self._data_store.get(
+            type_name=entry_type_.entry_type(),
+            range_annotation=range_annotation,
+            include_sub_type=include_sub_type
+        ):
+            # TODO: Convert entry data in list to a class object
+            entry = entry_type_(entry_data)
+            # Filter by components
+            if components is not None:
+                if not self.is_created_by(entry, components):
+                    continue
+            yield entry  # type: ignore
 
     def update(self, datapack: "DataPack"):
         r"""Update the attributes and properties of the current DataPack with
