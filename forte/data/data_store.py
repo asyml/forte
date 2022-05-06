@@ -511,7 +511,15 @@ class DataStore(BaseStore):
             ``tid`` of the entry and its index in the (``type_id``)th list.
 
         """
-        raise NotImplementedError
+        entry = self._new_group(type_name, member_type, tid)
+        try:
+            self.__elements[type_name].add(entry)
+        except KeyError:
+            self.__elements[type_name] = SortedList(key=lambda s: (s[0], s[1]))
+            self.__elements[type_name].add(entry)
+        tid = entry[constants.TID_INDEX]
+        self.__entry_dict[tid] = entry
+        return tid
 
     def set_attribute(self, tid: int, attr_name: str, attr_value: Any):
         r"""This function locates the entry data with ``tid`` and sets its
