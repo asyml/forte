@@ -354,7 +354,9 @@ class DataStore(BaseStore):
 
         return entry
 
-    def _new_group(self, type_name: str, member_type: str) -> List:
+    def _new_group(
+        self, type_name: str, member_type: str, tid: Optional[int] = None
+    ) -> List:
         r"""This function generates a new group with default fields. All
         default fields are filled with None.
         Called by add_group_raw() to create a new group with
@@ -368,7 +370,7 @@ class DataStore(BaseStore):
             A list representing a new group type entry data.
         """
 
-        tid: int = self._new_tid()
+        tid: int = self._new_tid() if tid is None else tid
 
         entry = [member_type, [], tid, type_name]
         entry += self._num_attributes_for_type(type_name) * [None]
@@ -431,7 +433,9 @@ class DataStore(BaseStore):
         entry_class = get_class(type_name)
         return issubclass(entry_class, (Annotation, AudioAnnotation))
 
-    def add_annotation_raw(self, type_name: str, begin: int, end: int) -> int:
+    def add_annotation_raw(
+        self, type_name: str, begin: int, end: int, tid: Optional[int] = None
+    ) -> int:
         r"""This function adds an annotation entry with ``begin`` and ``end``
         indices to current data store object. Returns the ``tid`` for the inserted
         entry.
@@ -450,7 +454,7 @@ class DataStore(BaseStore):
         # annotation type entry data with default fields.
         # A reference to the entry should be store in both self.__elements and
         # self.__entry_dict.
-        entry = self._new_annotation(type_name, begin, end)
+        entry = self._new_annotation(type_name, begin, end, tid)
         try:
             self.__elements[type_name].add(entry)
         except KeyError:
@@ -461,7 +465,11 @@ class DataStore(BaseStore):
         return tid
 
     def add_link_raw(
-        self, type_name: str, parent_tid: int, child_tid: int
+        self,
+        type_name: str,
+        parent_tid: int,
+        child_tid: int,
+        tid: Optional[int] = None,
     ) -> Tuple[int, int]:
         r"""This function adds a link entry with ``parent_tid`` and ``child_tid``
         to current data store object. Returns the ``tid`` and the ``index_id`` for
@@ -477,10 +485,18 @@ class DataStore(BaseStore):
             ``tid`` of the entry and its index in the ``type_name`` list.
 
         """
-        raise NotImplementedError
+        entry = self._new_link(type_name, parent_tid, child_tid, tid)
+        try:
+            self.__elements[type_name].add(entry)
+        except KeyError:
+            self.__elements[type_name] = SortedList(key=lambda s: (s[0], s[1]))
+            self.__elements[type_name].add(entry)
+        tid = entry[constants.TID_INDEX]
+        self.__entry_dict[tid] = entry
+        return tid
 
     def add_group_raw(
-        self, type_name: str, member_type: str
+        self, type_name: str, member_type: str, tid: Optional[int] = None
     ) -> Tuple[int, int]:
         r"""This function adds a group entry with ``member_type`` to the
         current data store object. Returns the ``tid`` and the ``index_id``
