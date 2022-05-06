@@ -32,8 +32,10 @@ __all__ = [
 class AbbreviationReplacementOp(SingleAnnotationAugmentOp):
     r"""
     This class is a replacement op utilizing a pre-defined
-    abbreviation to replace words, to replace the input phrase
-    with an abbreviation.
+    abbreviation dictionary to replace word or phrase
+    with an abbreviation. The abbreviation dictionary can
+    be user-defined, we also provide a default dictionary.
+    `prob` indicates the probability of replacement.
 
     Args:
         configs:

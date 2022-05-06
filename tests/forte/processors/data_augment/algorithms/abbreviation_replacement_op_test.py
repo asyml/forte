@@ -34,22 +34,53 @@ class TestAbbreviationReplacementOp(unittest.TestCase):
         )
 
     def test_replace(self):
-        data_pack = DataPack()
-        text = "I will see you later!"
-        data_pack.set_text(text)
-        phrase = Phrase(data_pack, 7, len(text) - 1)
-        data_pack.add_entry(phrase)
+        data_pack_1 = DataPack()
+        text_1 = "I will see you later!"
+        data_pack_1.set_text(text_1)
+        phrase_1 = Phrase(data_pack_1, 7, len(text_1) - 1)
+        data_pack_1.add_entry(phrase_1)
 
-        augmented_data_pack = self.abre.perform_augmentation(data_pack)
-        augmented_phrase = list(
-            augmented_data_pack.get("ft.onto.base_ontology.Phrase")
+        augmented_data_pack_1 = self.abre.perform_augmentation(data_pack_1)
+        augmented_phrase_1 = list(
+            augmented_data_pack_1.get("ft.onto.base_ontology.Phrase")
         )[0]
 
         self.assertIn(
-            augmented_phrase.text,
+            augmented_phrase_1.text,
             ["syl8r", "cul83r", "cul8r"],
         )
 
+        # Empty phrase
+        data_pack_2 = DataPack()
+        data_pack_2.set_text(text_1)
+        phrase_2 = Phrase(data_pack_2, 0, 0)
+        data_pack_2.add_entry(phrase_2)
+
+        augmented_data_pack_2 = self.abre.perform_augmentation(data_pack_2)
+        augmented_phrase_2 = list(
+            augmented_data_pack_2.get("ft.onto.base_ontology.Phrase")
+        )[0]
+
+        self.assertIn(
+            augmented_phrase_2.text,
+            [""],
+        )
+
+        # no abbreviation exist
+        data_pack_3 = DataPack()
+        data_pack_3.set_text(text_1)
+        phrase_3 = Phrase(data_pack_3, 2, 6)
+        data_pack_3.add_entry(phrase_3)
+
+        augmented_data_pack_3 = self.abre.perform_augmentation(data_pack_3)
+        augmented_phrase_3 = list(
+            augmented_data_pack_3.get("ft.onto.base_ontology.Phrase")
+        )[0]
+
+        self.assertIn(
+            augmented_phrase_3.text,
+            ["will"],
+        )
 
 if __name__ == "__main__":
     unittest.main()
