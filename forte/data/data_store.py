@@ -300,7 +300,9 @@ class DataStore(BaseStore):
         """
         return len(self._get_type_attribute_dict(type_name))
 
-    def _new_annotation(self, type_name: str, begin: int, end: int) -> List:
+    def _new_annotation(
+        self, type_name: str, begin: int, end: int, tid: Optional[int] = None
+    ) -> List:
         r"""This function generates a new annotation with default fields.
         All default fields are filled with None.
         Called by add_annotation_raw() to create a new annotation with
@@ -315,7 +317,7 @@ class DataStore(BaseStore):
             A list representing a new annotation type entry data.
         """
 
-        tid: int = self._new_tid()
+        tid: int = self._new_tid() if tid is None else tid
         entry: List[Any]
 
         entry = [begin, end, tid, type_name]
@@ -324,7 +326,11 @@ class DataStore(BaseStore):
         return entry
 
     def _new_link(
-        self, type_name: str, parent_tid: int, child_tid: int
+        self,
+        type_name: str,
+        parent_tid: int,
+        child_tid: int,
+        tid: Optional[int] = None,
     ) -> List:
         r"""This function generates a new link with default fields. All
         default fields are filled with None.
@@ -340,7 +346,7 @@ class DataStore(BaseStore):
             A list representing a new link type entry data.
         """
 
-        tid: int = self._new_tid()
+        tid: int = self._new_tid() if tid is None else tid
         entry: List[Any]
 
         entry = [parent_tid, child_tid, tid, type_name]
