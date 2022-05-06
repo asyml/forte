@@ -435,6 +435,10 @@ class DataStore(BaseStore):
         Yields:
             Iterator of raw entry data in list format.
         """
+        excluded_entry_types = [
+            "forte.data.ontology.top.Link",
+            "forte.data.ontology.top.Group",
+        ]
         for entry in self.__entry_dict.values():
             if (
                 entry[constants.ENTRY_TYPE_INDEX] == entry_type_name
@@ -442,7 +446,7 @@ class DataStore(BaseStore):
                     entry[constants.ENTRY_TYPE_INDEX],
                     get_class(entry_type_name),
                 )
-            ) and type(entry[constants.END_INDEX]) is not list:
+            ) and entry_type_name not in excluded_entry_types:
                 yield entry
 
     def num_entries(self, entry_type_name: str) -> int:
@@ -455,6 +459,10 @@ class DataStore(BaseStore):
         Returns:
             The number of entries of given ``entry_type_name``.
         """
+        excluded_entry_types = [
+            "forte.data.ontology.top.Link",
+            "forte.data.ontology.top.Group",
+        ]
         count = 0
         for entry in self.__entry_dict.values():
             if (
@@ -463,7 +471,7 @@ class DataStore(BaseStore):
                     entry[constants.ENTRY_TYPE_INDEX],
                     get_class(entry_type_name),
                 )
-            ) and type(entry[constants.END_INDEX]) is not list:
+            ) and entry_type_name not in excluded_entry_types:
                 count += 1
         return count
 
