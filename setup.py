@@ -46,7 +46,7 @@ setuptools.setup(
         ],
         "ir": ["texar-pytorch>=0.1.4", "tensorflow>=1.15.0"],
         "remote": [
-            "fastapi>=0.65.2",
+            "fastapi>=0.65.2, <=0.75.2",
             "uvicorn>=0.14.0",
         ],
         "audio_ext": ["soundfile>=0.10.3"],
