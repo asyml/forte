@@ -357,6 +357,12 @@ class DataStoreTest(unittest.TestCase):
         self.assertEqual(num_doc_entry, len(doc_list))
         self.assertEqual(num_ann_entry, len(ann_entries))
 
+        # remove a sentence
+        self.data_store.delete_entry(9999)
+        num_sent_entries = self.data_store.num_entries(sent_type)
+
+        self.assertEqual(num_sent_entries, len(sent_list) - 1)
+
     def test_co_iterator_annotation_like(self):
         type_names = [
             "ft.onto.base_ontology.Sentence",
