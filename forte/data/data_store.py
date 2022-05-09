@@ -440,7 +440,23 @@ class DataStore(BaseStore):
         type_name: str,
         entry: List[Any],
     ):
+        """
+        This function add raw entry in DataStore object
+        based on corresponding type name
+         and sort them based on entry type.
 
+        Args:
+            entry_type: entry's type which decides the sorting of entry.
+            type_name: the fully qualified type name of the new Annotation.
+            entry: raw entry data in the list format.
+
+        Raises:
+            ValueError: raised when the entry type's sorting function is not
+            implemented.
+
+        Returns:
+            ``tid`` of the entry.
+        """
         if entry_type == Annotation:
             sorting_fn = lambda s: (
                 s[constants.BEGIN_INDEX],
