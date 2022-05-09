@@ -21,6 +21,7 @@ from sortedcontainers import SortedList
 from forte.utils import get_class
 from forte.data.base_store import BaseStore
 from forte.data.ontology.top import Annotation, AudioAnnotation, Group, Link
+from forte.data.ontology.core import Entry
 from forte.common import constants
 from forte.utils.utils import get_full_module_name
 
@@ -436,7 +437,7 @@ class DataStore(BaseStore):
 
     def _add_entry_raw(
         self,
-        entry_type: Union[Type[Annotation], Type[Link], Type[Group]],
+        entry_type: Type[Entry],
         type_name: str,
         entry: List[Any],
     ):
