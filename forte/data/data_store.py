@@ -11,8 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tkinter import Entry
-from typing import Dict, List, Iterator, Tuple, Optional, Any
+
+from typing import Dict, List, Iterator, Tuple, Optional, Any, Union, Type
 import uuid
 from bisect import bisect_left
 from heapq import heappush, heappop
@@ -436,9 +436,9 @@ class DataStore(BaseStore):
 
     def _add_entry_raw(
         self,
-        entry_type: str,
+        entry_type: Union[Type[Annotation], Type[Link], Type[Group]],
         type_name: str,
-        entry: Entry,
+        entry: List[Any],
     ):
 
         if entry_type == Annotation:
