@@ -447,7 +447,7 @@ class DataStore(BaseStore):
 
         Args:
             entry_type: entry's type which decides the sorting of entry.
-            type_name: the fully qualified type name of the new Annotation.
+            type_name: The name of type in `self.__elements`.
             entry: raw entry data in the list format.
 
         Raises:
@@ -460,19 +460,19 @@ class DataStore(BaseStore):
         if entry_type == Annotation:
             sorting_fn = lambda s: (
                 s[constants.BEGIN_INDEX],
-                s[constants.BEGIN_INDEX],
+                s[constants.END_INDEX],
             )
+            try:
+                self.__elements[type_name].add(entry)
+            except KeyError:
+                self.__elements[type_name] = SortedList(key=sorting_fn)
+                self.__elements[type_name].add(entry)
         elif entry_type in [Link, Group]:
-            sorting_fn = lambda s: (s[constants.ENTRY_TYPE_INDEX])
-        else:
-            raise ValueError(
-                f"sorting function for {entry_type} is not" " implemented yet."
-            )
-        try:
-            self.__elements[type_name].add(entry)
-        except KeyError:
-            self.__elements[type_name] = SortedList(key=sorting_fn)
-            self.__elements[type_name].add(entry)
+            try:
+                self.__elements[type_name].append(entry)
+            except KeyError:
+                self.__elements[type_name] = []
+                self.__elements[type_name].append(entry)
         tid = entry[constants.TID_INDEX]
         self.__entry_dict[tid] = entry
         return tid
