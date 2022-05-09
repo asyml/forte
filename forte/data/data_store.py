@@ -491,6 +491,24 @@ class DataStore(BaseStore):
         """
         raise NotImplementedError
 
+    def add_generics_raw(
+        self, type_name: str, member_type: str
+    ) -> Tuple[int, int]:
+        r"""This function adds a group entry with ``member_type`` to the
+        current data store object. Returns the ``tid`` and the ``index_id``
+        for the inserted entry in the list. This ``index_id`` is the index
+        of the entry in the ``type_name`` list.
+
+        Args:
+            type_name: The fully qualified type name of the new Group.
+            member_type: Fully qualified name of its members.
+
+        Returns:
+            ``tid`` of the entry and its index in the (``type_id``)th list.
+
+        """
+        raise NotImplementedError
+
     def set_attribute(self, tid: int, attr_name: str, attr_value: Any):
         r"""This function locates the entry data with ``tid`` and sets its
         ``attr_name`` with `attr_value`. It first finds ``attr_id``  according
