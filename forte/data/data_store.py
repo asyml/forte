@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from tkinter import Entry
 from typing import Dict, List, Iterator, Tuple, Optional, Any
 import uuid
 from bisect import bisect_left
@@ -19,7 +20,7 @@ from sortedcontainers import SortedList
 
 from forte.utils import get_class
 from forte.data.base_store import BaseStore
-from forte.data.ontology.top import Annotation, AudioAnnotation
+from forte.data.ontology.top import Annotation, AudioAnnotation, Group, Link
 from forte.common import constants
 from forte.utils.utils import get_full_module_name
 
@@ -433,6 +434,33 @@ class DataStore(BaseStore):
         entry_class = get_class(type_name)
         return issubclass(entry_class, (Annotation, AudioAnnotation))
 
+    def _add_entry_raw(
+        self,
+        entry_type: str,
+        type_name: str,
+        entry: Entry,
+    ):
+
+        if entry_type == Annotation:
+            sorting_fn = lambda s: (
+                s[constants.BEGIN_INDEX],
+                s[constants.BEGIN_INDEX],
+            )
+        elif entry_type in [Link, Group]:
+            sorting_fn = lambda s: (s[constants.ENTRY_TYPE_INDEX])
+        else:
+            raise ValueError(
+                f"sorting function for {entry_type} is not" " implemented yet."
+            )
+        try:
+            self.__elements[type_name].add(entry)
+        except KeyError:
+            self.__elements[type_name] = SortedList(key=sorting_fn)
+            self.__elements[type_name].add(entry)
+        tid = entry[constants.TID_INDEX]
+        self.__entry_dict[tid] = entry
+        return tid
+
     def add_annotation_raw(
         self, type_name: str, begin: int, end: int, tid: Optional[int] = None
     ) -> int:
@@ -455,14 +483,7 @@ class DataStore(BaseStore):
         # A reference to the entry should be store in both self.__elements and
         # self.__entry_dict.
         entry = self._new_annotation(type_name, begin, end, tid)
-        try:
-            self.__elements[type_name].add(entry)
-        except KeyError:
-            self.__elements[type_name] = SortedList(key=lambda s: (s[0], s[1]))
-            self.__elements[type_name].add(entry)
-        tid = entry[constants.TID_INDEX]
-        self.__entry_dict[tid] = entry
-        return tid
+        return self._add_entry_raw(Annotation, type_name, entry)
 
     def add_link_raw(
         self,
@@ -486,14 +507,7 @@ class DataStore(BaseStore):
 
         """
         entry = self._new_link(type_name, parent_tid, child_tid, tid)
-        try:
-            self.__elements[type_name].add(entry)
-        except KeyError:
-            self.__elements[type_name] = SortedList(key=lambda s: (s[0], s[1]))
-            self.__elements[type_name].add(entry)
-        tid = entry[constants.TID_INDEX]
-        self.__entry_dict[tid] = entry
-        return tid
+        return self._add_entry_raw(Link, type_name, entry)
 
     def add_group_raw(
         self, type_name: str, member_type: str, tid: Optional[int] = None
@@ -512,14 +526,7 @@ class DataStore(BaseStore):
 
         """
         entry = self._new_group(type_name, member_type, tid)
-        try:
-            self.__elements[type_name].add(entry)
-        except KeyError:
-            self.__elements[type_name] = SortedList(key=lambda s: (s[0], s[1]))
-            self.__elements[type_name].add(entry)
-        tid = entry[constants.TID_INDEX]
-        self.__entry_dict[tid] = entry
-        return tid
+        return self._add_entry_raw(Group, type_name, entry)
 
     def set_attribute(self, tid: int, attr_name: str, attr_value: Any):
         r"""This function locates the entry data with ``tid`` and sets its
