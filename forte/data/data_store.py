@@ -922,15 +922,13 @@ class DataStore(BaseStore):
                 f"Index id ({index_id})) is out of bounds of the entry list."
             )
 
-        while index_id < len(entry_list):
+        while index_id < len(entry_list) - 1:
             # skip none in group/link lists
-            if index_id == len(entry_list) - 1:
-                return None
-            elif entry_list[index_id + 1] is None:
+            if entry_list[index_id + 1] is None:
                 index_id += 1
             else:
                 return entry_list[index_id + 1]
-        return
+        return None
 
     def prev_entry(self, tid: int) -> Optional[List]:
         r"""Get the previous entry of the same type as the ``tid`` entry.
@@ -958,15 +956,13 @@ class DataStore(BaseStore):
                 f"Index id ({index_id})) is out of bounds of the entry list."
             )
 
-        while index_id >= 0:
+        while index_id > 0:
             # skip none in group/link lists
-            if index_id == 0:
-                return None
-            elif entry_list[index_id - 1] is None:
+            if entry_list[index_id - 1] is None:
                 index_id -= 1
             else:
                 return entry_list[index_id - 1]
-        return
+        return None
 
     def _parse_onto_file(self):
         r"""This function will populate the types and attributes used in the data_store
