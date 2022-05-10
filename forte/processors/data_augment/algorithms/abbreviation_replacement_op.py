@@ -91,8 +91,8 @@ class AbbreviationReplacementOp(SingleAnnotationAugmentOp):
               abbreviation json file. The key is a word / phrase we want
               to replace. The value is an abbreviated word of the
               corresponding key. Default dictionary is from a web-scraped
-              slang dictionary ("https://github.com/abbeyyyy/JsonFiles/
-              blob/main/abbreviate.json").
+              slang dictionary
+              ("https://github.com/abbeyyyy/JsonFiles/blob/main/abbreviate.json").
 
         """
         return {
