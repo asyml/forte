@@ -58,7 +58,7 @@ class EmbeddingSimilarityReplacementOp(SingleAnnotationAugmentOp):
             from texar.torch.data import (
                 Vocab,
                 Embedding,
-            )
+            )  # pylint:disable=import-outside-toplevel
         except ImportError as e:
             raise ImportError(
                 create_import_error_msg(
