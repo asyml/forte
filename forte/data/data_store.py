@@ -12,7 +12,7 @@
 # limitations under the License.
 
 
-from typing import Dict, List, Iterator, Tuple, Optional, Any, Union, Type
+from typing import Dict, List, Iterator, Tuple, Optional, Any, Type
 import uuid
 from bisect import bisect_left
 from heapq import heappush, heappop
