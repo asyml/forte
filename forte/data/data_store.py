@@ -136,6 +136,12 @@ class DataStore(BaseStore):
         self._dynamically_add_type = dynamically_add_type
 
         """
+        ``_is_annotation_cache`` is a dictionary for cacheing the result of function
+        ``_is_annotation``.
+        """
+        self._is_annotation_cache: dict = {}
+
+        """
         The ``_type_attributes`` is a private dictionary that provides
         ``type_name``, their parent entry, and the order of corresponding attributes.
         The keys are fully qualified names of every type; The value is a dictionary with
@@ -422,8 +428,13 @@ class DataStore(BaseStore):
             type or not.
         """
         # TODO: use is_subclass() in DataStore to replace this
-        entry_class = get_class(type_name)
-        return issubclass(entry_class, (Annotation, AudioAnnotation))
+        try:
+            return self._is_annotation_cache[type_name]
+        except KeyError:
+            entry_class = get_class(type_name)
+            res = issubclass(entry_class, (Annotation, AudioAnnotation))
+            self._is_annotation_cache[type_name] = res
+            return res
 
     def add_annotation_raw(self, type_name: str, begin: int, end: int) -> int:
         r"""This function adds an annotation entry with ``begin`` and ``end``
