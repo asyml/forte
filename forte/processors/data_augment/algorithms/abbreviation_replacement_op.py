@@ -36,16 +36,6 @@ class AbbreviationReplacementOp(SingleAnnotationAugmentOp):
     with an abbreviation. The abbreviation dictionary can
     be user-defined, we also provide a default dictionary.
     `prob` indicates the probability of replacement.
-
-    Args:
-        configs:
-            - prob: The probability of replacement,
-              should fall in [0, 1].
-
-            - dict_path: the `url` or the path to the pre-defined
-             abbreviation json file. The key is a word / phrase we want to
-             replace. The value is an abbreviated word of the corresponding key.
-
     """
 
     def __init__(self, configs: Config):
@@ -76,6 +66,7 @@ class AbbreviationReplacementOp(SingleAnnotationAugmentOp):
             A tuple, where the first element is a boolean value indicating
             whether the replacement happens, and the second element is the
             replaced string.
+
         """
         # If the replacement does not happen, return False.
         if random.random() > self.configs.prob:
