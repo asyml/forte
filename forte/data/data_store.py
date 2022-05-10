@@ -972,7 +972,7 @@ class DataStore(BaseStore):
         if DataStore.enable_cache:
             try:
                 return DataStore._get_subtype_cache[type_name]
-            except:
+            except KeyError:
                 pass
 
         cls = DataStore.get_class(type_name)
