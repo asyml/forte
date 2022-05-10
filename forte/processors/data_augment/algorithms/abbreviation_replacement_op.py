@@ -41,9 +41,11 @@ class AbbreviationReplacementOp(SingleAnnotationAugmentOp):
         configs:
             - prob: The probability of replacement,
               should fall in [0, 1].
+
             - dict_path: the `url` or the path to the pre-defined
-             abbreviation json file. The key is a word / phrase we want to replace.
-             The value is an abbreviated word of the corresponding key.
+             abbreviation json file. The key is a word / phrase we want to
+             replace. The value is an abbreviated word of the corresponding key.
+
     """
 
     def __init__(self, configs: Config):
@@ -69,6 +71,7 @@ class AbbreviationReplacementOp(SingleAnnotationAugmentOp):
 
         Args:
             input_anno: The input annotation, could be a word or phrase.
+
         Returns:
             A tuple, where the first element is a boolean value indicating
             whether the replacement happens, and the second element is the
@@ -89,14 +92,17 @@ class AbbreviationReplacementOp(SingleAnnotationAugmentOp):
         Returns:
             A dictionary with the default config for this processor.
         Following are the keys for this dictionary:
+
             - prob: The probability of replacement,
               should fall in [0, 1]. Default value is 0.5.
+
             - dict_path: the `url` or the path to the pre-defined
               abbreviation json file. The key is a word / phrase we want
               to replace. The value is an abbreviated word of the
               corresponding key. Default dictionary is from a web-scraped
               slang dictionary ("https://github.com/abbeyyyy/JsonFiles/
               blob/main/abbreviate.json").
+
         """
         return {
             "augment_entry": "ft.onto.base_ontology.Phrase",
