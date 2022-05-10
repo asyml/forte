@@ -1,0 +1,48 @@
+{
+    "name": "test_onto",
+    "additional_prefixes": [
+        "ft.onto.test"
+    ],
+    "definitions": [
+      {
+        "entry_name": "ft.onto.test.Description",
+        "parent_entry": "forte.data.ontology.top.Annotation",
+        "attributes": [
+          {
+            "name": "passage_id",
+            "type": "str"
+          },
+          {
+            "name": "author",
+            "type": "str"
+          }
+        ]
+      },
+      {
+        "entry_name": "ft.onto.test.EntityMention",
+        "parent_entry": "forte.data.ontology.top.Annotation",
+        "description": "A span based annotation `EntityMention`, normally used to represent an Entity Mention in a piece of text.",
+        "attributes": [
+          {
+            "name": "ner_type",
+            "type": "str"
+          }
+        ]
+      },
+      {
+        "entry_name": "ft.onto.test.MedicalEntityMention",
+        "parent_entry": "ft.onto.test.EntityMention",
+        "description": "A span based annotation class MedicalEntityMention, used to represent an Entity Mention in medical domain",
+        "attributes": [
+          {
+              "name": "umls_link",
+              "type": "str"
+          },
+          {
+              "name": "umls_entities",
+              "type": "int"
+          }
+        ]
+      }
+    ]
+}
