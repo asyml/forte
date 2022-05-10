@@ -930,6 +930,7 @@ class DataStore(BaseStore):
                 index_id += 1
             else:
                 return entry_list[index_id + 1]
+        return
 
     def prev_entry(self, tid: int) -> Optional[List]:
         r"""Get the previous entry of the same type as the ``tid`` entry.
@@ -965,6 +966,7 @@ class DataStore(BaseStore):
                 index_id -= 1
             else:
                 return entry_list[index_id - 1]
+        return
 
     def _parse_onto_file(self):
         r"""This function will populate the types and attributes used in the data_store
