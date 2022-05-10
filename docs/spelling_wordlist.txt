@@ -135,6 +135,7 @@ docstrings
 numpy
 crowdworkers
 subtype
+subtypes
 subword
 wikipedia
 stopword

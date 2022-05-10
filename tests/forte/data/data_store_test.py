@@ -794,8 +794,16 @@ class DataStoreTest(unittest.TestCase):
             DataStore.get_subtypes("ft.onto.base_ontology.EntityMention")
         entry_subtypes = DataStore.get_subtypes("forte.data.ontology.core.Entry")
         self.assertEqual(len(entry_subtypes), 4)
-        self.assertListEqual(entry_subtypes, ['ft.onto.base_ontology.Document', 'ft.onto.base_ontology.Sentence', 'ft.onto.base_ontology.Phrase', 'forte.data.ontology.core.Entry'])
-
+        self.assertListEqual(entry_subtypes, ['forte.data.ontology.core.Entry', 'ft.onto.base_ontology.Document', 'ft.onto.base_ontology.Phrase', 'ft.onto.base_ontology.Sentence'])
+        entry_subtypes = DataStore.get_subtypes("ft.onto.base_ontology.Document")
+        self.assertListEqual(entry_subtypes, ['ft.onto.base_ontology.Document'])
+        # test cache
+        entry_subtypes = DataStore.get_subtypes("forte.data.ontology.core.Entry")
+        self.assertListEqual(entry_subtypes, ['forte.data.ontology.core.Entry', 'ft.onto.base_ontology.Document', 'ft.onto.base_ontology.Phrase', 'ft.onto.base_ontology.Sentence'])
+        # test cache change
+        self.data_store._get_type_info("ft.onto.base_ontology.Subword")
+        entry_subtypes = DataStore.get_subtypes("forte.data.ontology.core.Entry")
+        self.assertListEqual(entry_subtypes, ['forte.data.ontology.core.Entry', 'ft.onto.base_ontology.Document', 'ft.onto.base_ontology.Phrase', 'ft.onto.base_ontology.Sentence', 'ft.onto.base_ontology.Subword'])
 
 if __name__ == "__main__":
     unittest.main()

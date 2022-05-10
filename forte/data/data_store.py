@@ -30,6 +30,7 @@ class DataStore(BaseStore):
     # TODO: temporarily disable this for development purposes.
     # pylint: disable=pointless-string-statement
     _type_attributes: dict = {}
+    _get_subtype_cache: dict = {}
     enable_cache = True
 
     def __init__(
@@ -259,6 +260,7 @@ class DataStore(BaseStore):
             "parent_class": set(),
         }
         DataStore._type_attributes[type_name] = new_entry_info
+        DataStore.enable_cache = False
 
         return new_entry_info
 
@@ -967,11 +969,21 @@ class DataStore(BaseStore):
         Returns:
             A list of subtypes.
         """
+        if DataStore.enable_cache:
+            try:
+                return DataStore._get_subtype_cache[type_name]
+            except:
+                pass
+
         cls = DataStore.get_class(type_name)
         subtypes = []
         for subtype in DataStore._type_attributes:
             if DataStore._is_subclass(subtype, cls):
                 subtypes.append(subtype)
+        subtypes.sort()
+        DataStore.enable_cache = True
+        DataStore._get_subtype_cache[type_name] = subtypes
+
         return subtypes
 
     @staticmethod
