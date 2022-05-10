@@ -161,7 +161,7 @@ Data Augmentation Ops
 
 :hidden:`AbbreviationReplacementOp`
 ------------------------------------------
-.. autoclass:: forte.processors.data_augment.algorithms.AbbreviationReplacementOp
+.. autoclass:: forte.processors.data_augment.algorithms.abbreviation_replacement_op.AbbreviationReplacementOp
     :members:
 
 Data Augmentation Models
