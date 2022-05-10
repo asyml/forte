@@ -35,21 +35,6 @@ class EmbeddingSimilarityReplacementOp(SingleAnnotationAugmentOp):
     word with another word with similar word embedding.
     By default, the replacement word is randomly chosen from the
     top k words with the most similar embeddings.
-
-    Args:
-        configs:
-            The config should contain the following key-value pairs:
-
-            - vocab_path (str):
-                The absolute path to the vocabulary file for
-                the pretrained embeddings
-
-            - embed_hparams (dict):
-                The hparams to initialize the
-                texar.torch.data.Embedding object.
-
-            - top_k (int):
-                the number of k most similar words to choose from
     """
 
     def __init__(self, configs: Config):
@@ -109,6 +94,21 @@ class EmbeddingSimilarityReplacementOp(SingleAnnotationAugmentOp):
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
+        r"""
+        returns:
+            A dictionary with the default config for this processor.
+        Following are the keys for this dictionary:
+            `"vocab_path"`: str
+                The absolute path to the vocabulary file for
+                the pretrained embeddings
+
+            `"embed_hparams"`: dict
+                The hyper-parameters to initialize the
+                texar.torch.data.Embedding object.
+
+            `"top_k"`: int
+                the number of k most similar words to choose from
+        """
         return {
             "vocab_path": "",
             "embed_hparams": {
