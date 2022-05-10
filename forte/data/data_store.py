@@ -74,10 +74,10 @@ class DataStore(BaseStore):
         <attr_n>].
         A group type entry has the following format:
         [<member_type>, <[members_tid_list]>, <tid>, <type_name>, <attr_1>,
-            <attr_2>, ..., <attr_n>, index_id].
+            <attr_2>, ..., <attr_n>].
         A link type entry has the following format:
         [<parent_tid>, <child_tid>, <tid>, <type_name>, <attr_1>, <attr_2>,
-        ..., <attr_n>, index_id].
+        ..., <attr_n>].
 
         The first four fields are compulsory for every ``entry data``. The third
         and fourth fields are always ``tid`` and ``type_name``, but the first and
@@ -87,12 +87,6 @@ class DataStore(BaseStore):
         ``begin``, ``end``, ``tid`` and ``type_name``. ``begin`` and ``end``, which are
         compulsory for annotations entries, represent the begin and end
         character indices of entries in the payload.
-
-        The last field is always ``index_id`` for entries that are not
-        Annotation-like. It is an extra field to record the location of the
-        entry in the list. When the user add a new entry to the data store,
-        the ``index_id`` will be created and appended to the end of the original
-        ``entry data`` list.
 
         Here, ``type_name`` is the fully qualifie name of this type represented
         by ``entry list``. It must be a valid ontology defined as a class.
@@ -190,11 +184,15 @@ class DataStore(BaseStore):
 
         """
         A dictionary that keeps record of all entries with their tid.
-        It is a key-value map of {tid: entry data in list format}.
+        For annotation-like entries, it is a key-value map of
+        {tid: entry data in list format}.
+        For non-annotation-like entries, it is a key-value map of
+        {tid: [type_name, index_id]}.
+        The `index_id` records the location of the entry in the ``type_name``
+        list in the `__elements`.
 
         e.g., {1423543453: [begin, end, tid, type_name, attr_1, ..., attr_n],
-        4345314235: [parent_tid, child_tid, tid, type_name, attr_1, ...,
-                    attr_n, index_id]}
+        4345314235: ['forte.data.ontology.top.Link', 0]}
         """
         self.__entry_dict: dict = {}
 
@@ -507,7 +505,15 @@ class DataStore(BaseStore):
         """
         try:
             entry = self.__entry_dict[tid]
-            entry_type = entry[constants.ENTRY_TYPE_INDEX]
+            if len(entry) > 3:
+                # annotation like
+                entry_type = entry[constants.ENTRY_TYPE_INDEX]
+            else:
+                # non-annotation like
+                entry_type = entry[0]
+                idx = entry[constants.ENTRY_INDEX_INDEX]
+                entry = self.__elements[entry_type][idx]
+
         except KeyError as e:
             raise KeyError(f"Entry with tid {tid} not found.") from e
 
@@ -549,7 +555,15 @@ class DataStore(BaseStore):
         """
         try:
             entry = self.__entry_dict[tid]
-            entry_type = entry[constants.ENTRY_TYPE_INDEX]
+            if len(entry) > 3:
+                # annotation like entries
+                entry_type = entry[constants.ENTRY_TYPE_INDEX]
+            else:
+                # non-annotation like entries
+                entry_type = entry[0]
+                idx = entry[constants.ENTRY_INDEX_INDEX]
+                entry = self.__elements[entry_type][idx]
+
         except KeyError as e:
             raise KeyError(f"Entry with tid {tid} not found.") from e
 
@@ -594,7 +608,13 @@ class DataStore(BaseStore):
                 f"does not correspond to an existing entry data "
             ) from e
 
-        _, _, tid, type_name = entry_data[:4]
+        if len(entry_data) > 3:
+            # annotation like entries
+            _, _, tid, type_name = entry_data[:4]
+        else:
+            # non-annotation like entries
+            type_name = entry_data[0]
+
         try:
             target_list = self.__elements[type_name]
         except KeyError as e:
@@ -609,9 +629,8 @@ class DataStore(BaseStore):
         else:  # if it's group or link, use the index in entry_list
             entry_index = entry_data[constants.ENTRY_INDEX_INDEX]
 
-        if (
-            entry_index >= len(target_list)
-            or target_list[entry_index] != entry_data
+        if entry_index >= len(target_list) or (
+            len(entry_data) > 3 and target_list[entry_index] != entry_data
         ):
             raise RuntimeError(
                 f"When deleting entry [{tid}], entry data is not found in"
@@ -644,9 +663,15 @@ class DataStore(BaseStore):
                 f"The specified index_id [{index_id}] of type [{type_name}]"
                 f"is out of boundary for entry list of length {len(target_list)}."
             )
-        target_list.pop(index_id)
-        if not target_list:
-            self.__elements.pop(type_name)
+
+        if self._is_annotation(type_name):
+            target_list.pop(index_id)
+            if not target_list:
+                self.__elements.pop(type_name)
+        else:
+            target_list[index_id] = None
+            if len(target_list) - target_list.count(None) == 0:
+                self.__elements.pop(type_name)
 
     def get_entry(self, tid: int) -> Tuple[List, str]:
         r"""This function finds the entry with ``tid``. It returns the entry
@@ -665,7 +690,12 @@ class DataStore(BaseStore):
         if tid not in self.__entry_dict:
             raise ValueError(f"Entry with tid {tid} not found.")
         entry = self.__entry_dict[tid]
-        entry_type = entry[constants.ENTRY_TYPE_INDEX]
+        if len(entry) > 3:
+            entry_type = entry[constants.ENTRY_TYPE_INDEX]
+        else:
+            entry_type = entry[0]
+            idx = entry[constants.ENTRY_INDEX_INDEX]
+            entry = self.__elements[entry_type][idx]
         if entry_type not in self.__elements:
             raise KeyError(f"Entry of type {entry_type} is not found.")
         return entry, entry_type
@@ -698,7 +728,7 @@ class DataStore(BaseStore):
             ):
                 raise ValueError(f"Entry {entry} not found in entry list.")
         else:
-            index_id = entry[constants.ENTRY_INDEX_INDEX]
+            index_id = self.__entry_dict[tid][constants.ENTRY_INDEX_INDEX]
         return index_id
 
     def co_iterator_annotation_like(
@@ -853,15 +883,18 @@ class DataStore(BaseStore):
                 if issubclass(get_class(type), entry_class):
                     all_types.append(type)
             for type in all_types:
-                for entry in self.__elements[type]:
-                    yield entry
+                yield from self.skip_none_iterator(self.__elements[type])
         else:
             try:
                 entries = self.__elements[type_name]
             except KeyError as e:
                 raise KeyError(f"type {type_name} does not exist") from e
-            for entry in entries:
-                yield entry
+            yield from self.skip_none_iterator(entries)
+
+    def skip_none_iterator(self, entry: list) -> Iterator[List]:
+        for e in entry:
+            if e is not None:
+                yield e
 
     def next_entry(self, tid: int) -> Optional[List]:
         r"""Get the next entry of the same type as the ``tid`` entry.
@@ -888,9 +921,15 @@ class DataStore(BaseStore):
             raise IndexError(
                 f"Index id ({index_id})) is out of bounds of the entry list."
             )
-        elif index_id == len(entry_list) - 1:
-            return None
-        return entry_list[index_id + 1]
+
+        while index_id < len(entry_list):
+            # skip none in group/link lists
+            if index_id == len(entry_list) - 1:
+                return None
+            elif entry_list[index_id + 1] is None:
+                index_id += 1
+            else:
+                return entry_list[index_id + 1]
 
     def prev_entry(self, tid: int) -> Optional[List]:
         r"""Get the previous entry of the same type as the ``tid`` entry.
@@ -917,9 +956,15 @@ class DataStore(BaseStore):
             raise IndexError(
                 f"Index id ({index_id})) is out of bounds of the entry list."
             )
-        elif index_id == 0:
-            return None
-        return entry_list[index_id - 1]
+
+        while index_id >= 0:
+            # skip none in group/link lists
+            if index_id == 0:
+                return None
+            elif entry_list[index_id - 1] is None:
+                index_id -= 1
+            else:
+                return entry_list[index_id - 1]
 
     def _parse_onto_file(self):
         r"""This function will populate the types and attributes used in the data_store

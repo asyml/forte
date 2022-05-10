@@ -13,7 +13,7 @@ ENTRY_TYPE_INDEX = 3
 
 # The index storing entry index (specific to Link and Group type) in the internal
 # entry data of DataStore.
-ENTRY_INDEX_INDEX = -1
+ENTRY_INDEX_INDEX = 1
 
 # The index where the first attribute appears in the internal entry data of DataStore.
 ATTR_BEGIN_INDEX = 4
