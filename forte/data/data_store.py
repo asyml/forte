@@ -314,6 +314,7 @@ class DataStore(BaseStore):
             type_name: The fully qualified type name of the new entry.
             begin: Begin index of the entry.
             end: End index of the entry.
+            tid: ``tid`` of the ``Annotation``.
 
         Returns:
             A list representing a new annotation type entry data.
@@ -343,6 +344,7 @@ class DataStore(BaseStore):
             type_name: The fully qualified type name of the new entry.
             parent_tid: ``tid`` of the parent entry.
             child_tid: ``tid`` of the child entry.
+            tid: ``tid`` of the ``Link`` entry.
 
         Returns:
             A list representing a new link type entry data.
@@ -367,6 +369,7 @@ class DataStore(BaseStore):
         Args:
             type_name: The fully qualified type name of the new entry.
             member_type: Fully qualified name of its members.
+            tid: ``tid`` of the ``Group`` entry.
 
         Returns:
             A list representing a new group type entry data.
@@ -384,7 +387,7 @@ class DataStore(BaseStore):
     ) -> bool:
         r"""This function takes a fully qualified ``type_name`` class name,
         ``cls`` class and returns whether ``type_name``  class is the``cls``
-        subclass or not. This function accpect two types of class: the class defined
+        subclass or not. This function accepts two types of class: the class defined
         in forte, or the classes in user provided ontology file.
 
         Args:
