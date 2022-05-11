@@ -19,7 +19,7 @@ from sortedcontainers import SortedList
 
 from forte.utils import get_class
 from forte.data.base_store import BaseStore
-from forte.data.ontology.top import Annotation, AudioAnnotation
+from forte.data.ontology.top import Annotation, AudioAnnotation, Generics
 from forte.common import constants
 from forte.utils.utils import get_full_module_name
 
@@ -369,6 +369,11 @@ class DataStore(BaseStore):
 
         return entry
 
+    def _new_generics(self, type_name: str, tid: Optional[int] = None):
+        tid: int = self._new_tid() if tid is None else tid
+        entry = [tid, type_name]
+        return entry
+
     def _is_subclass(
         self, type_name: str, cls, no_dynamic_subclass: bool = False
     ) -> bool:
@@ -492,7 +497,7 @@ class DataStore(BaseStore):
         raise NotImplementedError
 
     def add_generics_raw(
-        self, type_name: str, member_type: str
+        self, type_name: str, tid: Optional[int] = None
     ) -> Tuple[int, int]:
         r"""This function adds a group entry with ``member_type`` to the
         current data store object. Returns the ``tid`` and the ``index_id``
@@ -501,13 +506,14 @@ class DataStore(BaseStore):
 
         Args:
             type_name: The fully qualified type name of the new Group.
-            member_type: Fully qualified name of its members.
+            tid: ``tid`` of generics entry.
 
         Returns:
             ``tid`` of the entry and its index in the (``type_id``)th list.
 
         """
-        raise NotImplementedError
+        entry = self._new_generics(type_name, tid)
+        return self._add_entry_raw(Generics, type_name, entry)
 
     def set_attribute(self, tid: int, attr_name: str, attr_value: Any):
         r"""This function locates the entry data with ``tid`` and sets its
