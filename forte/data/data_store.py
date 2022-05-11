@@ -370,6 +370,18 @@ class DataStore(BaseStore):
         return entry
 
     def _new_generics(self, type_name: str, tid: Optional[int] = None):
+        r"""This function generates a new generics with default fields. All
+        default fields are filled with None.
+        Called by add_generics_raw() to create a new generics with
+        ``type_name``.
+
+        Args:
+            type_name: The fully qualified type name of the new entry.
+            tid: ``tid`` of the generics entry.
+
+        Returns:
+            A list representing a new generics type entry data.
+        """
         tid: int = self._new_tid() if tid is None else tid
         entry = [tid, type_name]
         return entry
