@@ -191,9 +191,7 @@ class Entry(Generic[ContainerType]):
         self._embedding: np.ndarray = np.empty(0)
         self.pack._validate(self)
         self.pack.on_entry_creation(self)
-
-    def regret_creation(self):
-        self.__pack.regret_creation(self)
+        self._entry_ref: List = self.pack._data_store.get_entry(tid=self.tid)
 
     def __getstate__(self):
         r"""In serialization, the pack is not serialize, and it will be set
@@ -471,13 +469,11 @@ class FList(Generic[ParentEntryType], MutableSequence):
     def __init__(
         self,
         parent_entry: ParentEntryType,
-        data: Optional[Iterable[EntryType]] = None,
+        data: Optional[List[int]] = None,
     ):
         super().__init__()
         self.__parent_entry = parent_entry
-        self.__data: List[BasePointer] = []
-        if data is not None:
-            self.__data = [d.as_pointer(self.__parent_entry) for d in data]
+        self.__data: Optional[List[int]] = data
 
     def __eq__(self, other):
         return self.__data == other._FList__data
@@ -505,7 +501,10 @@ class FList(Generic[ParentEntryType], MutableSequence):
         self.__parent_entry = parent_entry
 
     def insert(self, index: int, entry: EntryType):
-        self.__data.insert(index, entry.as_pointer(self.__parent_entry))
+        self.__data.insert(index, entry.tid)
+
+    def is_initialized(self):
+        return self.__data is None
 
     @overload
     @abstractmethod
@@ -522,11 +521,11 @@ class FList(Generic[ParentEntryType], MutableSequence):
     ) -> Union[EntryType, MutableSequence]:
         if isinstance(index, slice):
             return [
-                self.__parent_entry._resolve_pointer(d)
-                for d in self.__data[index]
+                self.__parent_entry.pack.get_entry(tid)
+                for tid in self.__data[index]
             ]
         else:
-            return self.__parent_entry._resolve_pointer(self.__data[index])
+            return self.__parent_entry.pack.get_entry(self.__data[index])
 
     def __setitem__(
         self,
@@ -534,13 +533,9 @@ class FList(Generic[ParentEntryType], MutableSequence):
         value: Union[EntryType, Iterable[EntryType]],
     ) -> None:
         if isinstance(index, int):
-            self.__data[index] = value.as_pointer(  # type: ignore
-                self.__parent_entry
-            )
+            self.__data[index] = value.tid
         else:
-            self.__data[index] = [
-                v.as_pointer(self.__parent_entry) for v in value  # type: ignore
-            ]
+            self.__data[index] = [v.tid for v in value]  # type: ignore
 
     def __delitem__(self, index: Union[int, slice]) -> None:
         del self.__data[index]
@@ -568,15 +563,13 @@ class FDict(Generic[KeyType, ValueType], MutableMapping):
         super().__init__()
 
         self.__parent_entry = parent_entry
-        self.__data: Dict[KeyType, BasePointer] = {}
-
-        if data is not None:
-            self.__data = {
-                k: v.as_pointer(self.__parent_entry) for k, v in data.items()
-            }
+        self.__data: Dict[KeyType, int] = data
 
     def _set_parent(self, parent_entry: ParentEntryType):
         self.__parent_entry = parent_entry
+
+    def is_initialized(self):
+        return self.__data is None
 
     def __eq__(self, other):
         return self.__data == other._FDict__data
@@ -602,7 +595,7 @@ class FDict(Generic[KeyType, ValueType], MutableMapping):
 
     def __setitem__(self, k: KeyType, v: ValueType) -> None:
         try:
-            self.__data[k] = v.as_pointer(self.__parent_entry)
+            self.__data[k] = v.tid
         except AttributeError as e:
             raise AttributeError(
                 f"Item of the FDict must be of type entry, "
@@ -613,7 +606,7 @@ class FDict(Generic[KeyType, ValueType], MutableMapping):
         del self.__data[k]
 
     def __getitem__(self, k: KeyType) -> ValueType:
-        return self.__parent_entry._resolve_pointer(self.__data[k])
+        return self.__parent_entry.pack.get_entry(self.__data[k])
 
     def __len__(self) -> int:
         return len(self.__data)

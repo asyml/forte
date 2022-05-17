@@ -129,6 +129,9 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
     def _init_meta(self, pack_name: Optional[str] = None) -> BaseMeta:
         raise NotImplementedError
 
+    def get_control_component(self):
+        return self.__control_component
+
     def set_meta(self, **kwargs):
         for k, v in kwargs.items():
             if not hasattr(self._meta, k):
@@ -362,7 +365,9 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         """
         self.__control_component = component
 
-    def record_entry(self, entry: Entry, component_name: Optional[str] = None):
+    def record_entry(
+        self, entry: Union[Entry, int], component_name: Optional[str] = None
+    ):
         c = component_name
 
         if c is None:
@@ -370,10 +375,11 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             c = self.__control_component
 
         if c is not None:
+            tid: int = entry.tid if isinstance(entry, Entry) else entry
             try:
-                self._creation_records[c].add(entry.tid)
+                self._creation_records[c].add(tid)
             except KeyError:
-                self._creation_records[c] = {entry.tid}
+                self._creation_records[c] = {tid}
 
     def record_field(self, entry_id: int, field_name: str):
         """
@@ -419,19 +425,6 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
         # Record that this entry hasn't been added to the index yet.
         self._pending_entries[entry.tid] = entry, c
-
-    def regret_creation(self, entry: EntryType):
-        """
-        Will remove the entry from the pending entries internal state of the
-        pack.
-
-        Args:
-            entry: The entry that we would not add the the pack anymore.
-
-        Returns:
-
-        """
-        self._pending_entries.pop(entry.tid)
 
     # TODO: how to make this return the precise type here?
     def get_entry(self, tid: int) -> EntryType:

@@ -26,7 +26,10 @@ from typing import (
     Set,
     Callable,
     Tuple,
+    get_origin,
 )
+from functools import partial
+from matplotlib.pyplot import get
 from packaging.version import Version
 import numpy as np
 from sortedcontainers import SortedList
@@ -35,12 +38,12 @@ from forte.common.exception import (
     ProcessExecutionException,
     UnknownOntologyClassException,
 )
-from forte.common.constants import TID_INDEX
+from forte.common.constants import TID_INDEX, BEGIN_INDEX, END_INDEX
 from forte.data import data_utils_io
 from forte.data.data_store import DataStore
 from forte.data.base_pack import BaseMeta, BasePack
 from forte.data.index import BaseIndex
-from forte.data.ontology.core import Entry
+from forte.data.ontology.core import Entry, FList, FDict, Pointer
 from forte.data.ontology.core import EntryType
 from forte.data.ontology.top import (
     Annotation,
@@ -164,6 +167,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         self._audio: Optional[np.ndarray] = None
 
         self._data_store: DataStore = DataStore()
+        self._entry_converter: EntryConverter = EntryConverter()
 
         self.__replace_back_operations: ReplaceOperationsType = []
         self.__processed_original_spans: List[Tuple[Span, Span]] = []
@@ -611,7 +615,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         return self.__add_entry_with_check(entry, True)
 
     def __add_entry_with_check(
-        self, entry: EntryType, allow_duplicate: bool = True
+        self, entry: Union[EntryType, int], allow_duplicate: bool = True
     ) -> EntryType:
         r"""Internal method to add an :class:`~forte.data.ontology.core.Entry`
         object to the :class:`~forte.data.DataPack` object.
@@ -624,83 +628,10 @@ class DataPack(BasePack[Entry, Link, Group]):
         Returns:
             The input entry itself
         """
-        if isinstance(entry, Annotation):
-            begin, end = entry.begin, entry.end
-
-            if begin < 0:
-                raise ValueError(
-                    f"The begin {begin} is smaller than 0, this"
-                    f"is not a valid begin."
-                )
-
-            if end > len(self.text):
-                if len(self.text) == 0:
-                    raise ValueError(
-                        f"The end {end} of span is greater than the text "
-                        f"length {len(self.text)}, which is invalid. The text "
-                        f"length is 0, so it may be the case the you haven't "
-                        f"set text for the data pack. Please set the text "
-                        f"before calling `add_entry` on the annotations."
-                    )
-                else:
-                    pack_ref = entry.pack.pack_id
-                    raise ValueError(
-                        f"The end {end} of span is greater than the text "
-                        f"length {len(self.text)}, which is invalid. The "
-                        f"problematic entry is of type {entry.__class__} "
-                        f"at [{begin}:{end}], in pack {pack_ref}."
-                    )
-
-            # TODO: Add `tid` and `allow_duplicate` to DataStore.add_annotation_raw()
-            self._data_store.add_annotation_raw(
-                type_name=entry.entry_type(),
-                begin=entry.begin,
-                end=entry.end,
-                tid=entry.tid,
-                allow_duplicate=allow_duplicate,
-            )
-
-        elif isinstance(entry, Link):
-            # TODO: Add `tid` and `allow_duplicate` to DataStore.add_link_raw()
-            self._data_store.add_link_raw(
-                type_name=entry.entry_type(),
-                parent_tid=entry.parent,
-                child_tid=entry.child,
-                tid=entry.tid,
-                allow_duplicate=allow_duplicate,
-            )
-        elif isinstance(entry, Group):
-            # TODO: Add `tid` and `allow_duplicate` to DataStore.add_group_raw()
-            self._data_store.add_group_raw(
-                type_name=entry.entry_type(),
-                member_type=entry.MemberType,
-                tid=entry.tid,
-                allow_duplicate=allow_duplicate,
-            )
-        elif isinstance(entry, Generics):
-            # TODO: Implement add_generics_raw in DataStore
-            self._data_store.add_generics_raw(
-                type_name=entry.entry_type(),
-                tid=entry.tid,
-                allow_duplicate=allow_duplicate,
-            )
-        elif isinstance(entry, AudioAnnotation):
-            # TODO: Implement add_audio_annotation_raw in DataStore
-            self._data_store.add_audio_annotation_raw(
-                type_name=entry.entry_type(),
-                begin=entry.begin,
-                end=entry.end,
-                tid=entry.tid,
-                allow_duplicate=allow_duplicate,
-            )
-        else:
-            raise ValueError(
-                f"Invalid entry type {type(entry)}. A valid entry "
-                f"should be an instance of Annotation, Link, Group, Generics "
-                "or AudioAnnotation."
-            )
-
         # update the data pack index if needed
+        # TODO: The DataIndex will be deprecated in future
+        if isinstance(entry, int):
+            entry = self._entry_converter.get_entry_object(tid=entry, pack=self)
         self._index.update_basic_index([entry])
         if self._index.link_index_on and isinstance(entry, Link):
             self._index.update_link_index([entry])
@@ -1410,6 +1341,105 @@ class DataPack(BasePack[Entry, Link, Group]):
         #   better solution.
         self.__dict__.update(datapack.__dict__)
 
+    def get_entry(self, tid: int) -> EntryType:
+        r"""Look up the entry_index with key ``ptr``. Specific implementation
+        depends on the actual class."""
+        entry: EntryType = self._index.get_entry(tid)
+        if entry is None:
+            entry = self._entry_converter.get_entry_object(tid, self)
+        if entry is None:
+            raise KeyError(
+                f"There is no entry with tid '{tid}'' in this datapack"
+            )
+        return entry
+
+    def on_entry_creation(
+        self, entry: Entry, component_name: Optional[str] = None
+    ):
+        """
+        Call this when adding a new entry, will be called
+        in :class:`~forte.data.ontology.core.Entry` when
+        its `__init__` function is called.
+
+        Args:
+            entry: The entry to be added.
+            component_name: A name to record that the entry is created by
+             this component.
+
+        Returns:
+
+        """
+        c = component_name
+
+        if c is None:
+            # Use the auto-inferred control component.
+            c = self.get_control_component()
+
+        def entry_fget(cls: Entry, attr_name: str, is_tid: bool):
+            attr_val = cls.pack._data_store.get_attribute(
+                tid=entry.tid, attr_name=attr_name
+            )
+            return cls.pack.get_entry(tid=attr_val) if is_tid else attr_val
+
+        def entry_fset(cls: Entry, attr_name: str, value: Any):
+            if isinstance(value, Entry):
+                value = value.tid
+            cls.pack._data_store.set_attribute(
+                tid=entry.tid, attr_name=attr_name, attr_value=value
+            )
+
+        def fdata_fset(cls: Entry, value, ftype, ref_name: str, ref_data):
+            if isinstance(value, ftype) and not value.is_initialized():
+                value = ftype(parent_entry=cls, data=ref_data)
+            setattr(cls, ref_name, value)
+
+        self._entry_converter.save_entry_object(entry=entry, pack=self)
+        for name, field in entry.__dataclass_fields__:
+            field_type = get_origin(field.type)
+            if issubclass(field_type, (FList, FDict)):
+                ref_name: str = "_fdata_" + name
+                ref_data = self._data_store.get_attribute(
+                    tid=entry.tid, attr_name=name
+                )
+                setattr(entry, ref_name, getattr(entry, name))
+                setattr(
+                    type(entry),
+                    name,
+                    property(
+                        fget=lambda cls, ref_name=ref_name: getattr(
+                            cls, ref_name
+                        ),
+                        fset=partial(
+                            fdata_fset,
+                            ftype=field_type,
+                            ref_name=ref_name,
+                            ref_data=ref_data,
+                        ),
+                    ),
+                )
+            else:
+                setattr(
+                    type(entry),
+                    name,
+                    property(
+                        fget=partial(
+                            entry_fget,
+                            attr_name=name,
+                            is_tid=issubclass(field_type, Entry),
+                        ),
+                        fset=partial(entry_fset, attr_name=name),
+                    ),
+                )
+        # Record that this entry hasn't been added to the index yet.
+        self._pending_entries[entry.tid] = entry.tid, c
+
+    def __del__(self):
+        super().__del__()
+        tids: List = list(self._pending_entries.keys())
+        for tid in tids:
+            self._pending_entries.pop(tid)
+            self._data_store.delete_entry(tid=tid)
+
 
 class DataIndex(BaseIndex):
     r"""A set of indexes used in :class:`~forte.data.data_pack.DataPack`, note that this class is
@@ -1774,3 +1804,176 @@ class DataIndex(BaseIndex):
             # check here.
             return False
         return inner_begin >= span.begin and inner_end <= span.end
+
+
+class EntryConverter:
+    r"""
+    Facilitate the conversion from DataStore entries to DataPack entries.
+    """
+
+    def __init__(self) -> None:
+        # Mapping from entry's tid to the entries.
+        self._entry_dict: Dict[int, EntryType] = {}
+
+    def save_entry_object(
+        self, entry: Entry, pack: DataPack, allow_duplicate: bool = True
+    ):
+        if isinstance(entry, Annotation):
+            begin, end = entry.begin, entry.end
+
+            if begin < 0:
+                raise ValueError(
+                    f"The begin {begin} is smaller than 0, this"
+                    f"is not a valid begin."
+                )
+
+            if end > len(pack.text):
+                if len(pack.text) == 0:
+                    raise ValueError(
+                        f"The end {end} of span is greater than the text "
+                        f"length {len(pack.text)}, which is invalid. The text "
+                        f"length is 0, so it may be the case the you haven't "
+                        f"set text for the data pack. Please set the text "
+                        f"before calling `add_entry` on the annotations."
+                    )
+                else:
+                    pack_ref = entry.pack.pack_id
+                    raise ValueError(
+                        f"The end {end} of span is greater than the text "
+                        f"length {len(pack.text)}, which is invalid. The "
+                        f"problematic entry is of type {entry.__class__} "
+                        f"at [{begin}:{end}], in pack {pack_ref}."
+                    )
+
+            # TODO: Add `tid` and `allow_duplicate` to DataStore.add_annotation_raw()
+            pack._data_store.add_annotation_raw(
+                type_name=entry.entry_type(),
+                begin=entry.begin,
+                end=entry.end,
+                tid=entry.tid,
+                allow_duplicate=allow_duplicate,
+            )
+
+        elif isinstance(entry, Link):
+            # TODO: Add `tid` and `allow_duplicate` to DataStore.add_link_raw()
+            pack._data_store.add_link_raw(
+                type_name=entry.entry_type(),
+                parent_tid=entry.parent,
+                child_tid=entry.child,
+                tid=entry.tid,
+                allow_duplicate=allow_duplicate,
+            )
+        elif isinstance(entry, Group):
+            # TODO: Add `tid` and `allow_duplicate` to DataStore.add_group_raw()
+            pack._data_store.add_group_raw(
+                type_name=entry.entry_type(),
+                member_type=entry.MemberType,
+                tid=entry.tid,
+                allow_duplicate=allow_duplicate,
+            )
+        elif isinstance(entry, Generics):
+            # TODO: Implement add_generics_raw in DataStore
+            pack._data_store.add_generics_raw(
+                type_name=entry.entry_type(),
+                tid=entry.tid,
+                allow_duplicate=allow_duplicate,
+            )
+        elif isinstance(entry, AudioAnnotation):
+            # TODO: Implement add_audio_annotation_raw in DataStore
+            pack._data_store.add_audio_annotation_raw(
+                type_name=entry.entry_type(),
+                begin=entry.begin,
+                end=entry.end,
+                tid=entry.tid,
+                allow_duplicate=allow_duplicate,
+            )
+        else:
+            raise ValueError(
+                f"Invalid entry type {type(entry)}. A valid entry "
+                f"should be an instance of Annotation, Link, Group, Generics "
+                "or AudioAnnotation."
+            )
+
+        # Store all the attributes to DataStore
+        for attribute in pack._data_store._get_entry_attributes_by_class(
+            input_entry_class_name=entry.entry_type()
+        ):
+            # TODO: Might need type conversion for FList and FDict
+            value = getattr(entry, attribute, None)
+            if isinstance(value, Entry):
+                value = value.tid
+            pack._data_store.set_attribute(
+                tid=entry.tid, attr_name=attribute, attr_value=value
+            )
+
+        self._entry_dict[entry.tid] = entry
+
+    def get_entry_object(self, tid: int, pack: DataPack) -> Entry:
+        if tid in self._entry_dict:
+            return self._entry_dict[tid]
+
+        entry_data, entry_type = pack._data_store.get_entry(tid=tid)
+        entry_class = get_class(entry_type)
+        entry: Entry
+        if issubclass(entry_class, (Annotation, AudioAnnotation)):
+            entry = entry_class(
+                pack=pack,
+                begin=entry_data[BEGIN_INDEX],
+                end=entry_data[END_INDEX],
+            )
+        elif issubclass(entry_class, Link):
+            entry = entry_class(
+                pack=pack,
+                parent=Pointer(tid=entry_data[0]),
+                child=Pointer(tid=entry_data[1]),
+            )
+        elif issubclass(entry_class, Group):
+            entry = entry_class(
+                pack=pack,
+                members=(Pointer(member_tid) for member_tid in entry_data[1]),
+            )
+        elif issubclass(entry_class, Generics):
+            entry = entry_class(pack=pack)
+        else:
+            raise ValueError(
+                f"Invalid entry type {type(entry_class)}. A valid entry "
+                f"should be an instance of Annotation, Link, Group, Generics "
+                "or AudioAnnotation."
+            )
+
+        entry._tid = entry_data[TID_INDEX]
+        # Store all the attributes to Entry class
+        for attribute in pack._data_store._get_entry_attributes_by_class(
+            input_entry_class_name=entry.entry_type()
+        ):
+            if hasattr(entry, attribute):
+                # TODO: Might need type conversion for FList and FDict
+                value = pack._data_store.get_attribute(tid, attribute)
+                if isinstance(value, Entry):
+                    value = Pointer(tid=value.tid)
+                setattr(entry, attribute, value)
+
+        # Register property functions to resolve pointers
+        def pointer_getter(cls: Entry, ref_field: str):
+            ref_val = getattr(cls, ref_field)
+            if isinstance(ref_val, Pointer):
+                return cls._resolve_pointer(ref_val)
+            return ref_val
+
+        for field, value in vars(entry).items():
+            if isinstance(value, Pointer):
+                ref_field: str = "_pointer_" + field
+                setattr(entry, ref_field, value)
+                setattr(
+                    entry_class,
+                    field,
+                    property(
+                        fget=partial(pointer_getter, ref_field=ref_field),
+                        fset=lambda cls, value, ref_field=ref_field: setattr(
+                            cls, ref_field, value
+                        ),
+                    ),
+                )
+
+        self._entry_dict[tid] = entry
+        return entry

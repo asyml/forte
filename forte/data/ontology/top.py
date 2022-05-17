@@ -26,6 +26,8 @@ from forte.data.ontology.core import (
     EntryType,
 )
 from forte.data.span import Span
+from forte.common.constants import BEGIN_INDEX, END_INDEX
+from forte.utils.utils import get_class
 
 __all__ = [
     "Generics",
@@ -67,6 +69,16 @@ class Annotation(Entry):
         self._begin: int = begin
         self._end: int = end
         super().__init__(pack)
+
+        # Register property functions for self._begin and self._end
+        type(self)._begin = property(
+            fget=lambda cls: cls._entry_ref[BEGIN_INDEX],
+            fset=lambda cls, val: cls._entry_ref.__setitem__(BEGIN_INDEX, val),
+        )
+        type(self)._end = property(
+            fget=lambda cls: cls._entry_ref[END_INDEX],
+            fset=lambda cls, val: cls._entry_ref.__setitem__(END_INDEX, val),
+        )
 
     def __getstate__(self):
         r"""For serializing Annotation, we should create Span annotations for
@@ -216,6 +228,18 @@ class Link(BaseLink):
         self._child: Optional[int] = None
         super().__init__(pack, parent, child)
 
+        # Register property functions for self._parent and self._child
+        tmp_parent, tmp_child = self._parent, self._child
+        type(self)._parent = property(
+            fget=lambda cls: cls._entry_ref[0],
+            fset=lambda cls, val: cls._entry_ref.__setitem__(0, val),
+        )
+        type(self)._child = property(
+            fget=lambda cls: cls._entry_ref[1],
+            fset=lambda cls, val: cls._entry_ref.__setitem__(1, val),
+        )
+        self._parent, self._child = tmp_parent, tmp_child
+
     # TODO: Can we get better type hint here?
     def set_parent(self, parent: Entry):
         r"""This will set the `parent` of the current instance with given Entry
@@ -303,8 +327,22 @@ class Group(BaseGroup[Entry]):
         pack: PackType,
         members: Optional[Iterable[Entry]] = None,
     ):  # pylint: disable=useless-super-delegation
-        self._members: Set[int] = set()
+        self._members: List[int] = []
         super().__init__(pack, members)
+
+        # Register property functions for self.MemberType and self._members
+        tmp_members = self._members
+        type(self).MemberType = property(
+            fget=lambda cls: get_class(cls._entry_ref[0]),
+            fset=lambda cls, val: cls._entry_ref.__setitem__(
+                0, val.entry_type()
+            ),
+        )
+        type(self)._members = property(
+            fget=lambda cls: cls._entry_ref[1],
+            fset=lambda cls, val: cls._entry_ref.__setitem__(1, val),
+        )
+        self._members = tmp_members
 
     def add_member(self, member: Entry):
         r"""Add one entry to the group.
@@ -317,7 +355,7 @@ class Group(BaseGroup[Entry]):
                 f"The members of {type(self)} should be "
                 f"instances of {self.MemberType}, but got {type(member)}"
             )
-        self._members.add(member.tid)
+        self._members.append(member.tid)
 
     def get_members(self) -> List[Entry]:
         r"""Get the member entries in the group.

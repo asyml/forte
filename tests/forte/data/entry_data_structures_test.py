@@ -352,9 +352,7 @@ class NotHashingTest(unittest.TestCase):
         anno: Annotation = Annotation(self.pack, 0, 5)
         with self.assertRaises(TypeError):
             hash(anno)
-        anno.regret_creation()
 
         anno1: EntityMention = EntityMention(self.pack, 0, 2)
         with self.assertRaises(TypeError):
             hash(anno1)
-        anno1.regret_creation()
