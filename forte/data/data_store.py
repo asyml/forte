@@ -196,6 +196,23 @@ class DataStore(BaseStore):
         """
         self.__entry_dict: dict = {}
 
+        """
+        A dictionary that records how many non-annotation-like entries are
+        deleted for each type. Since we replace non-annotation-like deleted
+        entries with None placeholders to maintain the order and indices, the
+        length of the list is not meaningful. We need to know how many entries
+        are placeholders in order to know the exact count of entries. During
+        the serialization/deserialization, None placeholders will be dropped
+        and the `__deletion_count` should be reset.
+        This dictionary is a key-value map of
+        {type_name: number of None in the list}.
+
+        Example:
+            {"forte.data.ontology.top.Group": 0,
+            "forte.data.ontology.top.Link": 3}
+        """
+        self.__deletion_count: dict = {}
+
     def _new_tid(self) -> int:
         r"""This function generates a new ``tid`` for an entry."""
         return uuid.uuid4().int
@@ -261,7 +278,7 @@ class DataStore(BaseStore):
 
     def _get_type_attribute_dict(self, type_name: str) -> Dict[str, int]:
         """Get the attribute dict of an entry type. The attribute dict maps
-        attribute names to a list of consecutive integers as indicies. For example:
+        attribute names to a list of consecutive integers as indices. For example:
         .. code-block:: python
 
             "attributes": {
@@ -505,13 +522,13 @@ class DataStore(BaseStore):
         """
         try:
             entry = self.__entry_dict[tid]
-            if len(entry) > 3:
+            try:
                 # annotation like
                 entry_type = entry[constants.ENTRY_TYPE_INDEX]
-            else:
+            except IndexError:
                 # non-annotation like
-                entry_type = entry[0]
-                idx = entry[constants.ENTRY_INDEX_INDEX]
+                entry_type = entry[constants.ENTRY_DICT_TYPE_INDEX]
+                idx = entry[constants.ENTRY_DICT_ENTRY_INDEX]
                 entry = self.__elements[entry_type][idx]
 
         except KeyError as e:
@@ -555,13 +572,13 @@ class DataStore(BaseStore):
         """
         try:
             entry = self.__entry_dict[tid]
-            if len(entry) > 3:
+            try:
                 # annotation like entries
                 entry_type = entry[constants.ENTRY_TYPE_INDEX]
-            else:
+            except IndexError:
                 # non-annotation like entries
-                entry_type = entry[0]
-                idx = entry[constants.ENTRY_INDEX_INDEX]
+                entry_type = entry[constants.ENTRY_DICT_TYPE_INDEX]
+                idx = entry[constants.ENTRY_DICT_ENTRY_INDEX]
                 entry = self.__elements[entry_type][idx]
 
         except KeyError as e:
@@ -590,7 +607,11 @@ class DataStore(BaseStore):
 
     def delete_entry(self, tid: int):
         r"""This function locates the entry data with ``tid`` and removes it
-        from the data store. This function first removes it from `__entry_dict`.
+        from the data store. This function removes it from `__entry_dict` and
+        finds its index in the list. If it is an annotation-like entry, we
+        retrieve the entry from `__entry_dict` and bisect the list to find its
+        index. If it is an non-annotation-like entry, we get the `type_name`
+        and its index in the list directly from `__entry_dict`.
 
         Args:
             tid: Unique id of the entry.
@@ -608,12 +629,12 @@ class DataStore(BaseStore):
                 f"does not correspond to an existing entry data "
             ) from e
 
-        if len(entry_data) > 3:
+        try:
             # annotation like entries
             _, _, tid, type_name = entry_data[:4]
-        else:
+        except ValueError:
             # non-annotation like entries
-            type_name = entry_data[0]
+            type_name = entry_data[constants.ENTRY_DICT_TYPE_INDEX]
 
         try:
             target_list = self.__elements[type_name]
@@ -627,10 +648,11 @@ class DataStore(BaseStore):
         if self._is_annotation(type_name):
             entry_index = bisect_left(target_list, entry_data)
         else:  # if it's group or link, use the index in entry_list
-            entry_index = entry_data[constants.ENTRY_INDEX_INDEX]
+            entry_index = entry_data[constants.ENTRY_DICT_ENTRY_INDEX]
 
         if entry_index >= len(target_list) or (
-            len(entry_data) > 3 and target_list[entry_index] != entry_data
+            self._is_annotation(type_name)
+            and target_list[entry_index] != entry_data
         ):
             raise RuntimeError(
                 f"When deleting entry [{tid}], entry data is not found in"
@@ -670,7 +692,11 @@ class DataStore(BaseStore):
                 self.__elements.pop(type_name)
         else:
             target_list[index_id] = None
-            if len(target_list) - target_list.count(None) == 0:
+            if type_name in self.__deletion_count:
+                self.__deletion_count[type_name] += 1
+            else:
+                self.__deletion_count[type_name] = 1
+            if len(target_list) - self.__deletion_count[type_name] == 0:
                 self.__elements.pop(type_name)
 
     def get_entry(self, tid: int) -> Tuple[List, str]:
@@ -690,11 +716,11 @@ class DataStore(BaseStore):
         if tid not in self.__entry_dict:
             raise ValueError(f"Entry with tid {tid} not found.")
         entry = self.__entry_dict[tid]
-        if len(entry) > 3:
+        try:
             entry_type = entry[constants.ENTRY_TYPE_INDEX]
-        else:
-            entry_type = entry[0]
-            idx = entry[constants.ENTRY_INDEX_INDEX]
+        except IndexError:
+            entry_type = entry[constants.ENTRY_DICT_TYPE_INDEX]
+            idx = entry[constants.ENTRY_DICT_ENTRY_INDEX]
             entry = self.__elements[entry_type][idx]
         if entry_type not in self.__elements:
             raise KeyError(f"Entry of type {entry_type} is not found.")
@@ -728,7 +754,7 @@ class DataStore(BaseStore):
             ):
                 raise ValueError(f"Entry {entry} not found in entry list.")
         else:
-            index_id = self.__entry_dict[tid][constants.ENTRY_INDEX_INDEX]
+            index_id = self.__entry_dict[tid][constants.ENTRY_DICT_ENTRY_INDEX]
         return index_id
 
     def co_iterator_annotation_like(
@@ -892,6 +918,15 @@ class DataStore(BaseStore):
             yield from self.skip_none_iterator(entries)
 
     def skip_none_iterator(self, entry: list) -> Iterator[List]:
+        r"""This function iterates all entries in the list. It skips None
+        placeholders that appear in non-annotation-like entry lists.
+
+        Args:
+            entry: The list of entries and potential placeholders.
+
+        Returns:
+            An iterator of the entries.
+        """
         for e in entry:
             if e is not None:
                 yield e
