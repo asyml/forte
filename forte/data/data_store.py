@@ -206,8 +206,8 @@ class DataStore(BaseStore):
         r"""
         In serialization,
             1) will serialize the annotation sorted list as a normal list;
-            2) will remove `_onto_file_path`, `_dynamically_add_type`, and
-                `entry_dict` to save space.
+            2) will remove `_onto_file_path`, `_dynamically_add_type`,
+                `entry_dict`, and `deletion_count` to save space.
         """
         state = super().__getstate__()
         for k in state["_DataStore__elements"]:
@@ -219,6 +219,7 @@ class DataStore(BaseStore):
         state.pop("_onto_file_path")
         state.pop("_dynamically_add_type")
         state.pop("_DataStore__entry_dict")
+        state.pop("_DataStore__deletion_count")
         state["entries"] = state.pop("_DataStore__elements")
         state["fields"] = self._type_attributes
         for _, v in state["fields"].items():
@@ -230,19 +231,37 @@ class DataStore(BaseStore):
         In deserialization, we
             1) transform the annotation list back to a sorted list;
             2) recreate the `entry_dict` from `__elements`;
+            3) reset the `deletion_count`.
         """
         self.__dict__.update(state)
 
         self.__elements = self.__dict__.pop("entries")
         self._type_attributes = self.__dict__.pop("fields", {})
         self._DataStore__entry_dict = {}
+        self._DataStore__deletion_count = {}
 
+        reset_index = {}
         for k in self.__elements:
             if self._is_annotation(k):
                 self.__elements[k] = SortedList(self.__elements[k])
             for e in self.__elements[k]:
                 # retrieve tid for every entry
-                self._DataStore__entry_dict[e[2]] = e
+                if e is None:
+                    if k in self._DataStore__deletion_count:
+                        self._DataStore__deletion_count[k] += 1
+                    else:
+                        self._DataStore__deletion_count[k] = 1
+                else:
+                    try:
+                        # annotation-like
+                        self._DataStore__entry_dict[e[2]] = e
+                    except IndexError:
+                        # non-annotation-like
+                        if e[3] in reset_index:
+                            reset_index[e[3]] += 1
+                        else:
+                            reset_index[e[3]] = 1
+                        self._DataStore__entry_dict[e[2]] = [e[3],reset_index[e[3]]]
 
     @classmethod
     def deserialize(
