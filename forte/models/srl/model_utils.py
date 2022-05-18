@@ -16,18 +16,24 @@ from contextlib import contextmanager
 from typing import Any, Dict, List, Optional, Tuple, Union, overload
 
 import numpy as np
-import torch
-from torch import nn
-from torch.nn import functional as F
+from forte.utils import create_import_error_msg
+
+try:
+    import torch
+    from torch import nn
+    from torch.nn import functional as F
+except ImportError as e:
+    raise ImportError(
+        create_import_error_msg("torch", "models", "models")
+    ) from e
 
 try:
     import texar.torch as tx
 except ImportError as e:
     raise ImportError(
-        " `texar-pytorch` is not installed correctly."
-        " Consider install texar via `pip install texar-pytorch`."
-        " Or refer to [extra requirement for Texar model support](pip install forte[models])"
-        " for more information."
+        create_import_error_msg(
+            "texar-pytorch", "models", "Texar model support"
+        )
     ) from e
 
 

@@ -21,16 +21,21 @@ and performs memory-efficient parameter updates locally.
 
 import copy
 from typing import Dict
-import torch
-from torch import nn
+from forte.utils import create_import_error_msg
+
+try:
+    import torch
+    from torch import nn
+except ImportError as e:
+    raise ImportError(
+        create_import_error_msg("torch", "models", "magic models")
+    ) from e
 
 try:
     import texar.torch as tx
 except ImportError as e:
     raise ImportError(
-        " `texar-pytorch` is not installed correctly."
-        " Please refer to [extra requirement for aug wrapper](pip install forte[models])"
-        " for more information. "
+        create_import_error_msg("texar-pytorch", "models", "magic models")
     ) from e
 
 __all__ = ["MetaModule", "TexarBertMetaModule"]
