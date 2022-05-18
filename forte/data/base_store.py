@@ -154,8 +154,8 @@ class BaseStore:
 
     @abstractmethod
     def get_entry(self, tid: int) -> Tuple[List, str]:
-        r"""Look up the entry_dict with key ``tid``. Return the entry and its
-        ``type_name``.
+        r"""Look up the `tid_ref_dict` or `tid_idx_dict` with key ``tid``.
+        Return the entry and its ``type_name``.
 
         Args:
             tid: Unique id of the entry.
@@ -168,8 +168,8 @@ class BaseStore:
 
     @abstractmethod
     def get_entry_index(self, tid: int) -> int:
-        r"""Look up the entry_dict with key ``tid``. Return the ``index_id`` of
-        the entry.
+        r"""Look up the `tid_ref_dict` or `tid_idx_dict` with key ``tid``.
+        Return the ``index_id`` of the entry.
 
         Args:
             tid: Unique id of the entry.
