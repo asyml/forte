@@ -155,7 +155,7 @@ class DataStoreTest(unittest.TestCase):
             ),
         }
 
-        self.data_store._DataStore__entry_dict = {
+        self.data_store._DataStore__tid_ref_dict = {
             1234: self.data_store._DataStore__elements[
                 "ft.onto.base_ontology.Document"
             ][0],
@@ -327,7 +327,7 @@ class DataStoreTest(unittest.TestCase):
                 },
             )
             self.assertEqual(
-                temp._DataStore__entry_dict,
+                temp._DataStore__tid_ref_dict,
                 {
                     1234: temp._DataStore__elements[
                         "ft.onto.base_ontology.Document"
@@ -465,7 +465,7 @@ class DataStoreTest(unittest.TestCase):
                 },
             )
             self.assertEqual(
-                temp._DataStore__entry_dict,
+                temp._DataStore__tid_ref_dict,
                 {
                     1234: temp._DataStore__elements[
                         "ft.onto.base_ontology.Document"
@@ -544,7 +544,7 @@ class DataStoreTest(unittest.TestCase):
             )
             self.assertEqual(temp._type_attributes, DataStore._type_attributes)
             self.assertEqual(
-                temp._DataStore__entry_dict,
+                temp._DataStore__tid_ref_dict,
                 {
                     1234: temp._DataStore__elements[
                         "ft.onto.base_ontology.Document"

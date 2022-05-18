@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from ast import Constant
 from typing import Dict, List, Iterator, Tuple, Optional, Any
 import uuid
 import logging
@@ -232,7 +233,7 @@ class DataStore(BaseStore):
         In serialization,
             1) will serialize the annotation sorted list as a normal list;
             2) will remove `_onto_file_path`, `_dynamically_add_type`,
-                `entry_dict`, and `deletion_count` to save space.
+                `tid_ref_dict`, `tid_idx_dict` and `deletion_count` to save space.
         """
         state = super().__getstate__()
         for k in state["_DataStore__elements"]:
@@ -243,7 +244,8 @@ class DataStore(BaseStore):
             )
         state.pop("_onto_file_path")
         state.pop("_dynamically_add_type")
-        state.pop("_DataStore__entry_dict")
+        state.pop("_DataStore__tid_ref_dict")
+        state.pop("_DataStore__tid_idx_dict")
         state.pop("_DataStore__deletion_count")
         state["entries"] = state.pop("_DataStore__elements")
         state["fields"] = self._type_attributes
@@ -255,14 +257,15 @@ class DataStore(BaseStore):
         r"""
         In deserialization, we
             1) transform the annotation list back to a sorted list;
-            2) recreate the `entry_dict` from `__elements`;
+            2) recreate the `tid_ref_dict` and `tid_idx_dict` from `__elements`;
             3) reset the `deletion_count`.
         """
         self.__dict__.update(state)
 
         self.__elements = self.__dict__.pop("entries")
         self._type_attributes = self.__dict__.pop("fields", {})
-        self._DataStore__entry_dict = {}
+        self._DataStore__tid_ref_dict = {}
+        self._DataStore__tid_idx_dict = {}
         self._DataStore__deletion_count = {}
 
         reset_index = {}
@@ -270,23 +273,23 @@ class DataStore(BaseStore):
             if self._is_annotation(k):
                 self.__elements[k] = SortedList(self.__elements[k])
             for e in self.__elements[k]:
-                # retrieve tid for every entry
                 if e is None:
                     if k in self._DataStore__deletion_count:
                         self._DataStore__deletion_count[k] += 1
                     else:
                         self._DataStore__deletion_count[k] = 1
                 else:
-                    try:
+                    if self._is_annotation(k):
                         # annotation-like
-                        self._DataStore__entry_dict[e[2]] = e
-                    except IndexError:
+                        self._DataStore__tid_ref_dict[e[constants.TID_INDEX]] = e
+                    else:
                         # non-annotation-like
-                        if e[3] in reset_index:
-                            reset_index[e[3]] += 1
+                        type_name = e[constants.ENTRY_TYPE_INDEX]
+                        if type_name in reset_index:
+                            reset_index[type_name] += 1
                         else:
-                            reset_index[e[3]] = 1
-                        self._DataStore__entry_dict[e[2]] = [e[3],reset_index[e[3]]]
+                            reset_index[type_name] = 1
+                        self._DataStore__tid_idx_dict[type_name] = [type_name, reset_index[type_name]]
 
     @classmethod
     def deserialize(
