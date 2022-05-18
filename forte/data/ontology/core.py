@@ -191,7 +191,6 @@ class Entry(Generic[ContainerType]):
         self._embedding: np.ndarray = np.empty(0)
         self.pack._validate(self)
         self.pack.on_entry_creation(self)
-        self._entry_ref: List = self.pack._data_store.get_entry(tid=self.tid)
 
     def __getstate__(self):
         r"""In serialization, the pack is not serialize, and it will be set

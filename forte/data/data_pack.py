@@ -1375,61 +1375,58 @@ class DataPack(BasePack[Entry, Link, Group]):
             # Use the auto-inferred control component.
             c = self.get_control_component()
 
-        def entry_fget(cls: Entry, attr_name: str, is_tid: bool):
+        def entry_getter(cls: Entry, attr_name: str, field_type):
             attr_val = cls.pack._data_store.get_attribute(
-                tid=entry.tid, attr_name=attr_name
+                tid=cls.tid, attr_name=attr_name
             )
-            return cls.pack.get_entry(tid=attr_val) if is_tid else attr_val
+            if issubclass(field_type, (FList, FDict)):
+                return field_type(parent_entry=cls, data=attr_val)
+            elif issubclass(field_type, Entry):
+                return cls.pack.get_entry(tid=attr_val)
+            else:
+                return attr_val
 
-        def entry_fset(cls: Entry, attr_name: str, value: Any):
-            if isinstance(value, Entry):
-                value = value.tid
-            cls.pack._data_store.set_attribute(
-                tid=entry.tid, attr_name=attr_name, attr_value=value
-            )
-
-        def fdata_fset(cls: Entry, value, ftype, ref_name: str, ref_data):
-            if isinstance(value, ftype) and not value.is_initialized():
-                value = ftype(parent_entry=cls, data=ref_data)
-            setattr(cls, ref_name, value)
+        def entry_setter(cls: Entry, attr_name: str, value: Any, field_type):
+            if issubclass(field_type, (FList, FDict)):
+                ref_data: Union[
+                    List, Dict
+                ] = cls.pack._data_store.get_attribute(
+                    tid=cls.tid, attr_name=attr_name
+                )
+                ref_data.clear()
+                if isinstance(ref_data, list):
+                    for entry in value:
+                        ref_data.append(
+                            entry.tid if isinstance(entry, Entry) else entry
+                        )
+                elif isinstance(ref_data, dict):
+                    for key, entry in value.items():
+                        ref_data[key] = (
+                            entry.tid if isinstance(entry, Entry) else entry
+                        )
+            else:
+                if isinstance(value, Entry):
+                    value = value.tid
+                cls.pack._data_store.set_attribute(
+                    tid=cls.tid, attr_name=attr_name, attr_value=value
+                )
 
         self._entry_converter.save_entry_object(entry=entry, pack=self)
         for name, field in entry.__dataclass_fields__:
             field_type = get_origin(field.type)
-            if issubclass(field_type, (FList, FDict)):
-                ref_name: str = "_fdata_" + name
-                ref_data = self._data_store.get_attribute(
-                    tid=entry.tid, attr_name=name
-                )
-                setattr(entry, ref_name, getattr(entry, name))
-                setattr(
-                    type(entry),
-                    name,
-                    property(
-                        fget=lambda cls, ref_name=ref_name: getattr(
-                            cls, ref_name
-                        ),
-                        fset=partial(
-                            fdata_fset,
-                            ftype=field_type,
-                            ref_name=ref_name,
-                            ref_data=ref_data,
-                        ),
+            setattr(
+                type(entry),
+                name,
+                property(
+                    fget=partial(
+                        entry_getter, attr_name=name, field_type=field_type
                     ),
-                )
-            else:
-                setattr(
-                    type(entry),
-                    name,
-                    property(
-                        fget=partial(
-                            entry_fget,
-                            attr_name=name,
-                            is_tid=issubclass(field_type, Entry),
-                        ),
-                        fset=partial(entry_fset, attr_name=name),
+                    fset=partial(
+                        entry_setter, attr_name=name, field_type=field_type
                     ),
-                )
+                ),
+            )
+
         # Record that this entry hasn't been added to the index yet.
         self._pending_entries[entry.tid] = entry.tid, c
 
@@ -1818,6 +1815,17 @@ class EntryConverter:
     def save_entry_object(
         self, entry: Entry, pack: DataPack, allow_duplicate: bool = True
     ):
+        # Check if the entry is already stored
+        try:
+            pack._data_store.get_entry(tid=entry.tid)
+            logger.info(
+                "The entry with tid=%d is already saved into DataStore",
+                entry.tid,
+            )
+            return
+        except ValueError:
+            pass
+
         if isinstance(entry, Annotation):
             begin, end = entry.begin, entry.end
 
@@ -1898,10 +1906,15 @@ class EntryConverter:
         for attribute in pack._data_store._get_entry_attributes_by_class(
             input_entry_class_name=entry.entry_type()
         ):
-            # TODO: Might need type conversion for FList and FDict
             value = getattr(entry, attribute, None)
-            if isinstance(value, Entry):
+            if not value:
+                continue
+            elif isinstance(value, Entry):
                 value = value.tid
+            elif isinstance(value, FDict):
+                value = {key: val.tid for key, val in value.items()}
+            elif isinstance(value, FList):
+                value = [val.tid for val in value]
             pack._data_store.set_attribute(
                 tid=entry.tid, attr_name=attribute, attr_value=value
             )
@@ -1915,24 +1928,11 @@ class EntryConverter:
         entry_data, entry_type = pack._data_store.get_entry(tid=tid)
         entry_class = get_class(entry_type)
         entry: Entry
+        # Here the entry arguments are optional (begin, end, parent, ...) since
+        # the they will all be routed to DataStore.
         if issubclass(entry_class, (Annotation, AudioAnnotation)):
-            entry = entry_class(
-                pack=pack,
-                begin=entry_data[BEGIN_INDEX],
-                end=entry_data[END_INDEX],
-            )
-        elif issubclass(entry_class, Link):
-            entry = entry_class(
-                pack=pack,
-                parent=Pointer(tid=entry_data[0]),
-                child=Pointer(tid=entry_data[1]),
-            )
-        elif issubclass(entry_class, Group):
-            entry = entry_class(
-                pack=pack,
-                members=(Pointer(member_tid) for member_tid in entry_data[1]),
-            )
-        elif issubclass(entry_class, Generics):
+            entry = entry_class(pack=pack, begin=0, end=0)
+        elif issubclass(entry_class, (Link, Group, Generics)):
             entry = entry_class(pack=pack)
         else:
             raise ValueError(
@@ -1941,39 +1941,11 @@ class EntryConverter:
                 "or AudioAnnotation."
             )
 
+        # TODO: Direct the new entry clsss to the correct tid. The
+        # implementation here is a little bit hacky. Will need a stable
+        # solution in future.
+        pack._data_store.delete_entry(tid=entry.tid)
         entry._tid = entry_data[TID_INDEX]
-        # Store all the attributes to Entry class
-        for attribute in pack._data_store._get_entry_attributes_by_class(
-            input_entry_class_name=entry.entry_type()
-        ):
-            if hasattr(entry, attribute):
-                # TODO: Might need type conversion for FList and FDict
-                value = pack._data_store.get_attribute(tid, attribute)
-                if isinstance(value, Entry):
-                    value = Pointer(tid=value.tid)
-                setattr(entry, attribute, value)
-
-        # Register property functions to resolve pointers
-        def pointer_getter(cls: Entry, ref_field: str):
-            ref_val = getattr(cls, ref_field)
-            if isinstance(ref_val, Pointer):
-                return cls._resolve_pointer(ref_val)
-            return ref_val
-
-        for field, value in vars(entry).items():
-            if isinstance(value, Pointer):
-                ref_field: str = "_pointer_" + field
-                setattr(entry, ref_field, value)
-                setattr(
-                    entry_class,
-                    field,
-                    property(
-                        fget=partial(pointer_getter, ref_field=ref_field),
-                        fset=lambda cls, value, ref_field=ref_field: setattr(
-                            cls, ref_field, value
-                        ),
-                    ),
-                )
 
         self._entry_dict[tid] = entry
         return entry

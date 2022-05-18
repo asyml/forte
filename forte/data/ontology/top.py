@@ -72,12 +72,18 @@ class Annotation(Entry):
 
         # Register property functions for self._begin and self._end
         type(self)._begin = property(
-            fget=lambda cls: cls._entry_ref[BEGIN_INDEX],
-            fset=lambda cls, val: cls._entry_ref.__setitem__(BEGIN_INDEX, val),
+            fget=lambda cls: cls.pack._data_store.get_entry(cls.tid)[
+                BEGIN_INDEX
+            ],
+            fset=lambda cls, val: cls.pack._data_store.get_entry(
+                cls.tid
+            ).__setitem__(BEGIN_INDEX, val),
         )
         type(self)._end = property(
-            fget=lambda cls: cls._entry_ref[END_INDEX],
-            fset=lambda cls, val: cls._entry_ref.__setitem__(END_INDEX, val),
+            fget=lambda cls: cls.pack._data_store.get_entry(cls.tid)[END_INDEX],
+            fset=lambda cls, val: cls.pack._data_store.get_entry(
+                cls.tid
+            ).__setitem__(END_INDEX, val),
         )
 
     def __getstate__(self):
@@ -231,12 +237,16 @@ class Link(BaseLink):
         # Register property functions for self._parent and self._child
         tmp_parent, tmp_child = self._parent, self._child
         type(self)._parent = property(
-            fget=lambda cls: cls._entry_ref[0],
-            fset=lambda cls, val: cls._entry_ref.__setitem__(0, val),
+            fget=lambda cls: cls.pack._data_store.get_entry(cls.tid)[0],
+            fset=lambda cls, val: cls.pack._data_store.get_entry(
+                cls.tid
+            ).__setitem__(0, val),
         )
         type(self)._child = property(
-            fget=lambda cls: cls._entry_ref[1],
-            fset=lambda cls, val: cls._entry_ref.__setitem__(1, val),
+            fget=lambda cls: cls.pack._data_store.get_entry(cls.tid)[1],
+            fset=lambda cls, val: cls.pack._data_store.get_entry(
+                cls.tid
+            ).__setitem__(1, val),
         )
         self._parent, self._child = tmp_parent, tmp_child
 
@@ -333,14 +343,18 @@ class Group(BaseGroup[Entry]):
         # Register property functions for self.MemberType and self._members
         tmp_members = self._members
         type(self).MemberType = property(
-            fget=lambda cls: get_class(cls._entry_ref[0]),
-            fset=lambda cls, val: cls._entry_ref.__setitem__(
-                0, val.entry_type()
+            fget=lambda cls: get_class(
+                cls.pack._data_store.get_entry(cls.tid)[0]
             ),
+            fset=lambda cls, val: cls.pack._data_store.get_entry(
+                cls.tid
+            ).__setitem__(0, val.entry_type()),
         )
         type(self)._members = property(
-            fget=lambda cls: cls._entry_ref[1],
-            fset=lambda cls, val: cls._entry_ref.__setitem__(1, val),
+            fget=lambda cls: cls.pack._data_store.get_entry(cls.tid)[1],
+            fset=lambda cls, val: cls.pack._data_store.get_entry(
+                cls.tid
+            ).__setitem__(1, val),
         )
         self._members = tmp_members
 
@@ -615,6 +629,22 @@ class AudioAnnotation(Entry):
         self._begin: int = begin
         self._end: int = end
         super().__init__(pack)
+
+        # Register property functions for self._begin and self._end
+        type(self)._begin = property(
+            fget=lambda cls: cls.pack._data_store.get_entry(cls.tid)[
+                BEGIN_INDEX
+            ],
+            fset=lambda cls, val: cls.pack._data_store.get_entry(
+                cls.tid
+            ).__setitem__(BEGIN_INDEX, val),
+        )
+        type(self)._end = property(
+            fget=lambda cls: cls.pack._data_store.get_entry(cls.tid)[END_INDEX],
+            fset=lambda cls, val: cls.pack._data_store.get_entry(
+                cls.tid
+            ).__setitem__(END_INDEX, val),
+        )
 
     @property
     def audio(self):
