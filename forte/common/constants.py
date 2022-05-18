@@ -12,11 +12,11 @@ TID_INDEX = 2
 ENTRY_TYPE_INDEX = 3
 
 # The index storing entry type (specific to Link and Group type). It is saved
-# in the `entry_dict` in DataStore.
+# in the `tid_idx_dict` in DataStore.
 ENTRY_DICT_TYPE_INDEX = 0
 
 # The index storing entry index (specific to Link and Group type). It is saved
-# in the `entry_dict` in DataStore.
+# in the `tid_idx_dict` in DataStore.
 ENTRY_DICT_ENTRY_INDEX = 1
 
 # The index where the first attribute appears in the internal entry data of DataStore.

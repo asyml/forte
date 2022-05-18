@@ -240,12 +240,13 @@ class DataStoreTest(unittest.TestCase):
                 ],
             ],
         }
-        self.data_store._DataStore__entry_dict = {
+        self.data_store._DataStore__tid_ref_dict = {
             1234: ref1,
             3456: ref2,
             9999: ref3,
             1234567: ref4,
-            7654: ref5,
+            7654: ref5}
+        self.data_store._DataStore__tid_idx_dict = {
             10123: ["forte.data.ontology.top.Group", 0],
             23456: ["forte.data.ontology.top.Group", 1],
             34567: ["forte.data.ontology.top.Group", 2],
@@ -500,7 +501,7 @@ class DataStoreTest(unittest.TestCase):
 
         self.assertEqual(num_doc, 3)
         self.assertEqual(num_sent, 3)
-        self.assertEqual(len(self.data_store._DataStore__entry_dict), 11)
+        self.assertEqual(len(self.data_store._DataStore__tid_ref_dict), 7)
 
         # test add new annotation type
         self.data_store.add_annotation_raw(
@@ -513,7 +514,7 @@ class DataStoreTest(unittest.TestCase):
         )
         self.assertEqual(num_phrase, 1)
         self.assertEqual(len(DataStore._type_attributes), 3)
-        self.assertEqual(len(self.data_store._DataStore__entry_dict), 12)
+        self.assertEqual(len(self.data_store._DataStore__tid_ref_dict), 8)
 
     def test_get_attribute(self):
         speaker = self.data_store.get_attribute(9999, "speaker")
@@ -574,7 +575,7 @@ class DataStoreTest(unittest.TestCase):
         )
 
         # Entry with such tid does not exist
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             for doc in self.data_store.get_entry(1111):
                 print(doc)
 
@@ -582,7 +583,7 @@ class DataStoreTest(unittest.TestCase):
         self.assertEqual(self.data_store.get_entry_index(1234567), 1)
 
         # Entry with such tid does not exist
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             self.data_store.get_entry_index(1111)
 
     def test_get(self):
@@ -609,6 +610,7 @@ class DataStoreTest(unittest.TestCase):
     def test_delete_entry(self):
         # delete annotation
         # has a total of 5 entries
+        self.assertEqual(len(self.data_store._DataStore__tid_ref_dict), 5)
         self.data_store.delete_entry(1234567)
         self.data_store.delete_entry(1234)
         self.data_store.delete_entry(9999)
@@ -625,13 +627,13 @@ class DataStoreTest(unittest.TestCase):
         #     ]
         # )
 
-        self.assertEqual(len(self.data_store._DataStore__entry_dict), 6)
+        self.assertEqual(len(self.data_store._DataStore__tid_ref_dict), 2)
         self.assertEqual(num_doc, 1)
         # self.assertEqual(num_sent, 0)
 
         # delete group
         self.data_store.delete_entry(10123)
-        self.assertEqual(len(self.data_store._DataStore__entry_dict), 5)
+        self.assertEqual(len(self.data_store._DataStore__tid_idx_dict), 3)
         self.data_store.delete_entry(23456)
         self.data_store.delete_entry(34567)
         self.assertTrue(
@@ -661,7 +663,7 @@ class DataStoreTest(unittest.TestCase):
             "ft.onto.base_ontology.Document", 1
         )
         # dict entry is not deleted; only delete entry in element list
-        self.assertEqual(len(self.data_store._DataStore__entry_dict), 9)
+        self.assertEqual(len(self.data_store._DataStore__tid_ref_dict), 5)
         self.assertEqual(
             len(
                 self.data_store._DataStore__elements[
@@ -709,7 +711,7 @@ class DataStoreTest(unittest.TestCase):
         # Last entry in list does not have a next entry.
         self.assertIsNone(self.data_store.next_entry(3456))
         # Raise exception when tid does not exist
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             self.data_store.next_entry(1111)
 
         prev_ent = self.data_store.prev_entry(3456)
@@ -728,7 +730,7 @@ class DataStoreTest(unittest.TestCase):
         # First entry in list does not have a previous entry.
         self.assertIsNone(self.data_store.prev_entry(1234))
         # Raise exception when tid does not exist
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             self.data_store.prev_entry(1111)
 
         # test next/prev with delete on group entries
