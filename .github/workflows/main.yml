@@ -73,7 +73,7 @@ jobs:
 
       - name: Install Forte
         run: |
-          pip install --use-feature=in-tree-build --progress-bar off .[data_aug,ir,remote,audio_ext,stave,models,test,wikipedia,nlp,extractor]
+          pip install --progress-bar off .[data_aug,ir,remote,audio_ext,stave,models,test,wikipedia,nlp,extractor]
       - name: Install deep learning frameworks
         run: |
           pip install --progress-bar off torch==${{ matrix.torch-version }}
@@ -108,7 +108,7 @@ jobs:
             cd forte-wrappers
             for d in ${{ matrix.notebook-details.dep }}; do pip install "src/"$d; done
             cd ..
-            pip install --use-feature=in-tree-build --progress-bar off .[data_aug,ir,remote,audio_ext,stave,models,test,wikipedia,nlp,extractor]
+            pip install --progress-bar off .[data_aug,ir,remote,audio_ext,stave,models,test,wikipedia,nlp,extractor]
             coverage run -m pytest tests/forte/notebooks
           fi
   test_backbone:
@@ -132,7 +132,7 @@ jobs:
       - name: Test backbone Forte import test
         run: |
           # Try to install Forte backbone only and test basic imports.
-          pip install --use-feature=in-tree-build --progress-bar off .
+          pip install --progress-bar off .
           python tests/forte/forte_backbone_test.py
 
   test_modules:
@@ -168,7 +168,7 @@ jobs:
             ${{ runner.os }}-
       - name: install forte
         run: |
-          pip install --use-feature=in-tree-build --progress-bar off .
+          pip install --progress-bar off .
       - name: install dependencies
         run: |
           sudo apt-get install -y libsndfile1-dev
@@ -186,8 +186,8 @@ jobs:
           rm -rf stave
       - name: Test modules need extra packages
         run: |
-          pip install --use-feature=in-tree-build --progress-bar off .[test]
-          pip install --use-feature=in-tree-build --progress-bar off .[${{ matrix.modules.module }}]
+          pip install --progress-bar off .[test]
+          pip install --progress-bar off .[${{ matrix.modules.module }}]
           pip install --progress-bar off torch==${{ matrix.torch-version }}
           pip install --progress-bar off pytest==5.1.3
           pytest ${{ matrix.modules.test_file }}
