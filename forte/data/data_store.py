@@ -758,6 +758,27 @@ class DataStore(BaseStore):
             ]
         return index_id
 
+    def get_length(self, type_name: str) -> int:
+        r"""This function find the length of the `type_name` entry list.
+        It should not count None placeholders that appear in
+        non-annotation-like entry lists.
+        This function does not consider any subtypes.
+
+        Args:
+            type_name (str): The fully qualified type name of a type.
+
+        Returns:
+            The count of not None entries.
+        """
+        if self._is_annotation(type_name):
+            return len(self.__elements[type_name])
+        else:
+            try:
+                delete_count = self.__deletion_count[type_name]
+            except KeyError:
+                delete_count = 0
+            return len(self.__elements[type_name]) - delete_count
+
     def co_iterator_annotation_like(
         self, type_names: List[str]
     ) -> Iterator[List]:
@@ -933,7 +954,6 @@ class DataStore(BaseStore):
             all_types.add(type_name)
         all_types = list(all_types)
         all_types.sort()
-
         if self._is_annotation(type_name):
             if range_annotation is None:
                 yield from self.co_iterator_annotation_like(all_types)
@@ -944,18 +964,41 @@ class DataStore(BaseStore):
         elif issubclass(entry_class, Link):
             for type in all_types:
                 if range_annotation is None:
-                    yield from self.__elements[type]
+                    yield from self.iter(type)
                 else:
                     for entry in self.__elements[type]:
-                        parent = self.__entry_dict[entry[constants.BEGIN_INDEX]]
-                        child = self.__entry_dict[entry[constants.END_INDEX]]
-                        if within_range(
-                            parent, range_annotation
-                        ) and within_range(child, range_annotation):
-                            yield entry
+                        if (
+                            entry[constants.BEGIN_INDEX] in self.__tid_ref_dict
+                        ) and (
+                            entry[constants.END_INDEX] in self.__tid_ref_dict
+                        ):
+                            parent = self.__tid_ref_dict[
+                                entry[constants.BEGIN_INDEX]
+                            ]
+                            child = self.__tid_ref_dict[
+                                entry[constants.END_INDEX]
+                            ]
+                            if within_range(
+                                parent, range_annotation
+                            ) and within_range(child, range_annotation):
+                                yield entry
         elif issubclass(entry_class, Group):
             for type in all_types:
-                yield from self.iter(type)
+                if range_annotation is None:
+                    yield from self.iter(type)
+                else:
+                    for entry in self.__elements[type]:
+                        member_type = entry[constants.BEGIN_INDEX]
+                        if self._is_annotation(member_type):
+                            members = entry[constants.END_INDEX]
+                            within = True
+                            for m in members:
+                                e = self.__tid_ref_dict[m]
+                                if not within_range(e, range_annotation):
+                                    within = False
+                                    break
+                            if within:
+                                yield entry
         else:
             if type_name not in self.__elements:
                 raise KeyError(f"type {type_name} does not exist")
