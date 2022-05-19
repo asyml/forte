@@ -455,8 +455,7 @@ class DataStore(BaseStore):
             entry: raw entry data in the list format.
 
         Raises:
-            ValueError: raised when the entry type's sorting function is not
-            implemented.
+            KeyError: raised when the entry type name is not in `self.__elements`.
 
         Returns:
             ``tid`` of the entry.
