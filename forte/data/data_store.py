@@ -466,7 +466,6 @@ class DataStore(BaseStore):
         entry_class = get_class(type_name)
         return issubclass(entry_class, (Annotation, AudioAnnotation))
 
-
     def _add_entry_raw(
         self,
         entry_type: Type[Entry],
@@ -551,7 +550,6 @@ class DataStore(BaseStore):
         # self.__entry_dict.
         entry = self._new_annotation(type_name, begin, end, tid)
         return self._add_entry_raw(Annotation, type_name, entry)
-
 
     def add_link_raw(
         self,
