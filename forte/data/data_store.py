@@ -762,7 +762,6 @@ class DataStore(BaseStore):
         r"""This function find the length of the `type_name` entry list.
         It should not count None placeholders that appear in
         non-annotation-like entry lists.
-        This function does not consider any subtypes.
 
         Args:
             type_name (str): The fully qualified type name of a type.
