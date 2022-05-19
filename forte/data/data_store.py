@@ -505,7 +505,7 @@ class DataStore(BaseStore):
                 self.__elements[type_name] = []
                 self.__elements[type_name].append(entry)
         tid = entry[constants.TID_INDEX]
-        self.__entry_dict[tid] = entry
+        self.__tid_ref_dict[tid] = entry
         return tid
 
     def _is_annotation_tid(self, tid: int) -> bool:
@@ -547,7 +547,7 @@ class DataStore(BaseStore):
         # A helper function _new_annotation() can be used to generate a
         # annotation type entry data with default fields.
         # A reference to the entry should be store in both self.__elements and
-        # self.__entry_dict.
+        # self.__tid_ref_dict.
         entry = self._new_annotation(type_name, begin, end, tid)
         return self._add_entry_raw(Annotation, type_name, entry)
 
