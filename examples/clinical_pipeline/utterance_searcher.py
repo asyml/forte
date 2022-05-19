@@ -84,8 +84,9 @@ class LastUtteranceSearcher(PackProcessor):
                 }
                 
                 db_id = -1
-                '''
+                
                 with StaveSession(url="http://localhost:8899") as session:
+                    print("login.. ")
                     session.login(
                         username="admin",
                         password="admin"
@@ -93,8 +94,8 @@ class LastUtteranceSearcher(PackProcessor):
                     print ("1")
                     db_id = session.create_document(item)
                     print ("1")
-                '''
-                db_id = sqlite_insert(conn, "stave_backend_document", item)
+                
+                #db_id = sqlite_insert(conn, "stave_backend_document", item)
                 answers += [db_id]
                 print(pack_id, db_id)
 

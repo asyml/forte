@@ -29,11 +29,6 @@ from fortex.huggingface.bio_ner_predictor import BioBERTNERPredictor
 from fortex.huggingface.transformers_processor import BERTTokenizer
 from fortex.nltk import NLTKSentenceSegmenter
 
-from ftx.medical.clinical_ontology import NegationContext, MedicalEntityMention
-from forte_medical.processors.negation_context_analyzer import (
-    NegationContextAnalyzer,
-)
-
 def get_json(path: str):
     file_obj = open(path)
     data = json.load(file_obj)
@@ -64,7 +59,7 @@ def update_stave_db(default_project_json, chat_project_json, chat_doc_json, conf
         project_id_chat = json.loads(resp2.text)["id"]
         
         chat_doc_json['project_id'] = project_id_chat
-        print ("****\n\n***project Id", chat_doc_json['project_id'])
+        print ("project Id", chat_doc_json['project_id'])
         doc_id = session.create_document(chat_doc_json)
         print("Doc ID: ", doc_id.text)
         project_list = session.get_project_list().json()
@@ -74,59 +69,51 @@ def update_stave_db(default_project_json, chat_project_json, chat_doc_json, conf
     return project_id_base
 
 
-def main(input_path: str, output_path: str, max_packs: int = -1, run_ner_pipeline = 0):
-    print("Starting demo pipeline example..")
+def main(input_path: str, output_path: str, max_packs: int = -1):
+    pl = Pipeline[DataPack]()
+    pl.set_reader(
+        Mimic3DischargeNoteReader(), config={"max_num_notes": max_packs}
+    )
+    pl.add(NLTKSentenceSegmenter())
+
     config = yaml.safe_load(open("clinical_config.yml", "r"))
     config = Config(config, default_hparams=None)
+
+    #pl.add(BERTTokenizer(), config=config.BERTTokenizer)
+    #pl.add(BioBERTNERPredictor(), config=config.BioBERTNERPredictor)
     
-    if run_ner_pipeline == 1:
-        print("Running NER pipeline...")
-        pl = Pipeline[DataPack]()
-        pl.set_reader(
-            Mimic3DischargeNoteReader(), config={"max_num_notes": max_packs}
-        )
-        pl.add(NLTKSentenceSegmenter())
+    #pl.add(NLTKWordTokenizer())
+    #pl.add(NLTKPOSTagger())
+    #pl.add(NLTKNER())
 
+    pl.add(SpacyProcessor(), config.Spacy)
 
-        #pl.add(BERTTokenizer(), config=config.BERTTokenizer)
-        #pl.add(BioBERTNERPredictor(), config=config.BioBERTNERPredictor)
-        
-        #pl.add(NLTKWordTokenizer())
-        #pl.add(NLTKPOSTagger())
-        #pl.add(NLTKNER())
+    pl.add(ElasticSearchPackIndexProcessor())
+   #  pl.add(
+   #      PackIdJsonPackWriter(),
+   #      {
+   #          "output_dir": output_path,
+   #          "indent": 2,
+   #          "overwrite": True,
+   #          "drop_record": True,
+   #          "zip_pack": False,
+   #      },
+   #  )
+    pl.initialize()
+    #print(entities_text)
+   #  for idx, pack in enumerate(pl.process_dataset(input_path)):
+   #      for sentence in pack.get(Sentence):
+   #          sent_text = sentence.text
+   #          #print(colored("Sentence:", "red"), sent_text, "\n")
 
-        pl.add(SpacyProcessor(), config.Spacy)
-        pl.add(NegationContextAnalyzer())
+   #          entities = [
+   #              (entity.text, entity.ner_type)
+   #              for entity in pack.get(EntityMention, sentence)
+   #          ]
+   #          print(entities)
 
-        pl.add(ElasticSearchPackIndexProcessor(),
-                {"indexer":{
-                    "other_kwargs": {"refresh": True},
-                    }})
-        pl.add(
-            PackIdJsonPackWriter(),
-            {
-             "output_dir": output_path,
-             "indent": 2,   
-             "overwrite": True,
-             "drop_record": True,
-             "zip_pack": False,
-            },
-        )
-        pl.initialize()
-#        print(entities_text)
-        for idx, pack in enumerate(pl.process_dataset(input_path)):
-##            for sentence in pack.get(Sentence):
-#                 sent_text = sentence.text
-#                 #print(colored("Sentence:", "red"), sent_text, "\n")
-#
-#                 entities = [
-#                     (entity.text, entity.ner_type)
-#                     for entity in pack.get(EntityMention, sentence)
-#                 ]
-#                 print(entities)
-
-             if (idx + 1) % 50 == 0:
-                 print(f"{time.strftime('%m-%d %H:%M')}: Processed {idx + 1} packs")
+   #      if (idx + 1) % 50 == 0:
+   #          print(f"{time.strftime('%m-%d %H:%M')}: Processed {idx + 1} packs")
 
     default_project_json = get_json('default_onto_project.json')
     chat_project_json = get_json('chat_project.json')
@@ -140,4 +127,4 @@ def main(input_path: str, output_path: str, max_packs: int = -1, run_ner_pipelin
     remote_pl.add(LastUtteranceSearcher(), config={"query_result_project_id": base_project_id, "stave_db_path": config.LastUtteranceSearcher.stave_db_path, "url_stub": config.LastUtteranceSearcher.url})
     remote_pl.serve(port=config.Remote.port, input_format=config.Remote.input_format, service_name=config.Remote.service_name)
 
-main(sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4]))
+main(sys.argv[1], sys.argv[2], int(sys.argv[3]))
