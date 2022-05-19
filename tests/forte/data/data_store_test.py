@@ -245,7 +245,8 @@ class DataStoreTest(unittest.TestCase):
             3456: ref2,
             9999: ref3,
             1234567: ref4,
-            7654: ref5}
+            7654: ref5,
+        }
         self.data_store._DataStore__tid_idx_dict = {
             10123: ["forte.data.ontology.top.Group", 0],
             23456: ["forte.data.ontology.top.Group", 1],
@@ -523,7 +524,7 @@ class DataStoreTest(unittest.TestCase):
         num_link = len(
             self.data_store._DataStore__elements["forte.data.ontology.top.Link"]
         )
-        self.assertEqual(num_link, 1)
+        self.assertEqual(num_link, 2)
 
     def test_add_group_raw(self):
         self.data_store.add_group_raw(
@@ -534,7 +535,7 @@ class DataStoreTest(unittest.TestCase):
                 "forte.data.ontology.top.Group"
             ]
         )
-        self.assertEqual(num_group, 1)
+        self.assertEqual(num_group, 4)
 
     def test_get_attribute(self):
         speaker = self.data_store.get_attribute(9999, "speaker")
