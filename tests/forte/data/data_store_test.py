@@ -158,119 +158,99 @@ class DataStoreTest(unittest.TestCase):
         # Sentence entries have tid 9999, 1234567.
         # The type id for Document is 0, Sentence is 1.
 
+        ref1 = [
+            0,
+            5,
+            1234,
+            "ft.onto.base_ontology.Document",
+            None,
+            "Postive",
+            None,
+        ]
+        ref2 = [
+            10,
+            25,
+            3456,
+            "ft.onto.base_ontology.Document",
+            "Doc class A",
+            "Negative",
+            "Class B",
+        ]
+        ref3 = [
+            6,
+            9,
+            9999,
+            "ft.onto.base_ontology.Sentence",
+            "teacher",
+            1,
+            "Postive",
+            None,
+            None,
+        ]
+        ref4 = [
+            55,
+            70,
+            1234567,
+            "ft.onto.base_ontology.Sentence",
+            None,
+            None,
+            "Negative",
+            "Class C",
+            "Class D",
+        ]
+        ref5 = [
+            10,
+            20,
+            7654,
+            "forte.data.ontology.top.Annotation",
+        ]
+
         self.data_store._DataStore__elements = {
-            "ft.onto.base_ontology.Document": SortedList(
-                [
-                    [
-                        0,
-                        5,
-                        1234,
-                        "ft.onto.base_ontology.Document",
-                        None,
-                        "Postive",
-                        None,
-                    ],
-                    [
-                        10,
-                        25,
-                        3456,
-                        "ft.onto.base_ontology.Document",
-                        "Doc class A",
-                        "Negative",
-                        "Class B",
-                    ],
-                ]
-            ),
-            "ft.onto.base_ontology.Sentence": SortedList(
-                [
-                    [
-                        6,
-                        9,
-                        9999,
-                        "ft.onto.base_ontology.Sentence",
-                        "teacher",
-                        1,
-                        "Postive",
-                        None,
-                        None,
-                    ],
-                    [
-                        55,
-                        70,
-                        1234567,
-                        "ft.onto.base_ontology.Sentence",
-                        None,
-                        None,
-                        "Negative",
-                        "Class C",
-                        "Class D",
-                    ],
-                ]
-            ),
+            "ft.onto.base_ontology.Document": SortedList([ref1, ref2]),
+            "ft.onto.base_ontology.Sentence": SortedList([ref3, ref4]),
             # empty list corresponds to Entry, test only
             "forte.data.ontology.core.Entry": SortedList([]),
-            "ft.onto.base_ontology.Phrase": SortedList(
+            "forte.data.ontology.top.Annotation": SortedList([ref5]),
+            "forte.data.ontology.top.Group": [
                 [
-                    [
-                        1,
-                        [9999, 1234567],
-                        10123,
-                        "ft.onto.base_ontology.Phrase",
-                        "Sentence",
-                        0,
-                    ]
-                ]
-            ),
+                    "ft.onto.base_ontology.Sentence",
+                    [9999, 1234567],
+                    10123,
+                    "forte.data.ontology.top.Group",
+                ],
+                [
+                    "ft.onto.base_ontology.Document",
+                    [1234, 3456],
+                    23456,
+                    "forte.data.ontology.top.Group",
+                ],
+                [
+                    "forte.data.ontology.top.Annotation",
+                    [1234, 7654],
+                    34567,
+                    "forte.data.ontology.top.Group",
+                ],
+            ],
+            "forte.data.ontology.top.Link": [
+                [
+                    9999,
+                    1234,
+                    88888,
+                    "forte.data.ontology.top.Link",
+                ],
+            ],
         }
-        self.data_store._DataStore__entry_dict = {
-            1234: [
-                0,
-                5,
-                1234,
-                "ft.onto.base_ontology.Document",
-                None,
-                "Postive",
-                None,
-            ],
-            3456: [
-                10,
-                25,
-                3456,
-                "ft.onto.base_ontology.Document",
-                "Doc class A",
-                "Negative",
-                "Class B",
-            ],
-            9999: [
-                6,
-                9,
-                9999,
-                "ft.onto.base_ontology.Sentence",
-                "teacher",
-                1,
-                "Postive",
-                None,
-                None,
-            ],
-            1234567: [
-                55,
-                70,
-                1234567,
-                "ft.onto.base_ontology.Sentence",
-                None,
-                None,
-                "Negative",
-                "Class C",
-                "Class D",
-            ],
-            10123: [
-                1,
-                [9999, 1234567],
-                10123,
-                "ft.onto.base_ontology.Phrase",
-                "Sentence",
-                0,
-            ],
+        self.data_store._DataStore__tid_ref_dict = {
+            1234: ref1,
+            3456: ref2,
+            9999: ref3,
+            1234567: ref4,
+            7654: ref5}
+        self.data_store._DataStore__tid_idx_dict = {
+            10123: ["forte.data.ontology.top.Group", 0],
+            23456: ["forte.data.ontology.top.Group", 1],
+            34567: ["forte.data.ontology.top.Group", 2],
+            88888: ["forte.data.ontology.top.Link", 0],
         }
 
     def test_get_type_info(self):
@@ -278,15 +258,24 @@ class DataStoreTest(unittest.TestCase):
         empty_data_store = DataStore()
         DataStore._type_attributes = {}
         # test get new type
-        doc_attr_dict = empty_data_store._get_type_info("ft.onto.base_ontology.Document")
+        doc_attr_dict = empty_data_store._get_type_info(
+            "ft.onto.base_ontology.Document"
+        )
         empty_data_store._get_type_info("ft.onto.base_ontology.Sentence")
         self.assertEqual(len(empty_data_store._DataStore__elements), 0)
-        self.assertEqual(DataStore._type_attributes["ft.onto.base_ontology.Sentence"],
-                        self.reference_type_attributes["ft.onto.base_ontology.Sentence"])
-        self.assertEqual(DataStore._type_attributes["ft.onto.base_ontology.Document"],
-                        self.reference_type_attributes["ft.onto.base_ontology.Document"])
+        self.assertEqual(
+            DataStore._type_attributes["ft.onto.base_ontology.Sentence"],
+            self.reference_type_attributes["ft.onto.base_ontology.Sentence"],
+        )
+        self.assertEqual(
+            DataStore._type_attributes["ft.onto.base_ontology.Document"],
+            self.reference_type_attributes["ft.onto.base_ontology.Document"],
+        )
         # test the return value
-        self.assertEqual(doc_attr_dict, DataStore._type_attributes["ft.onto.base_ontology.Document"])
+        self.assertEqual(
+            doc_attr_dict,
+            DataStore._type_attributes["ft.onto.base_ontology.Document"],
+        )
 
         # test get invalid type
         with self.assertRaisesRegex(
@@ -296,15 +285,21 @@ class DataStoreTest(unittest.TestCase):
         self.assertTrue("invalid.Type" not in DataStore._type_attributes)
 
         # test get existing type
-        doc_attr_dict = empty_data_store._get_type_info("ft.onto.base_ontology.Document")
+        doc_attr_dict = empty_data_store._get_type_info(
+            "ft.onto.base_ontology.Document"
+        )
         self.assertEqual(len(DataStore._type_attributes), 2)
-        self.assertEqual(doc_attr_dict, DataStore._type_attributes["ft.onto.base_ontology.Document"])
+        self.assertEqual(
+            doc_attr_dict,
+            DataStore._type_attributes["ft.onto.base_ontology.Document"],
+        )
 
         # test get type info with ontology file input
         with self.assertRaisesRegex(
-            RuntimeError, "DataStore is initialized with no existing types. Setting"
-                "dynamically_add_type to False without providing onto_file_path"
-                "will lead to no usable type in DataStore."
+            RuntimeError,
+            "DataStore is initialized with no existing types. Setting"
+            "dynamically_add_type to False without providing onto_file_path"
+            "will lead to no usable type in DataStore.",
         ):
             DataStore(dynamically_add_type=False)
 
@@ -470,7 +465,7 @@ class DataStoreTest(unittest.TestCase):
 
         token_tn = "ft.onto.base_ontology.Token"
         # include Token to test non-exist list
-        
+
         def value_err_fn():
             type_names.append(token_tn)
             list(self.data_store.co_iterator_annotation_like(type_names))
@@ -486,22 +481,40 @@ class DataStoreTest(unittest.TestCase):
 
     def test_add_annotation_raw(self):
         # test add Document entry
-        self.data_store.add_annotation_raw("ft.onto.base_ontology.Document", 1, 5)
+        self.data_store.add_annotation_raw(
+            "ft.onto.base_ontology.Document", 1, 5
+        )
         # test add Sentence entry
-        self.data_store.add_annotation_raw("ft.onto.base_ontology.Sentence", 5, 8)
-        num_doc = len(self.data_store._DataStore__elements["ft.onto.base_ontology.Document"])
-        num_sent = len(self.data_store._DataStore__elements["ft.onto.base_ontology.Sentence"])
+        self.data_store.add_annotation_raw(
+            "ft.onto.base_ontology.Sentence", 5, 8
+        )
+        num_doc = len(
+            self.data_store._DataStore__elements[
+                "ft.onto.base_ontology.Document"
+            ]
+        )
+        num_sent = len(
+            self.data_store._DataStore__elements[
+                "ft.onto.base_ontology.Sentence"
+            ]
+        )
 
         self.assertEqual(num_doc, 3)
         self.assertEqual(num_sent, 3)
-        self.assertEqual(len(self.data_store._DataStore__entry_dict), 7)
+        self.assertEqual(len(self.data_store._DataStore__tid_ref_dict), 7)
 
         # test add new annotation type
-        self.data_store.add_annotation_raw("ft.onto.base_ontology.EntityMention", 10, 12)
-        num_phrase = len(self.data_store._DataStore__elements["ft.onto.base_ontology.EntityMention"])
+        self.data_store.add_annotation_raw(
+            "ft.onto.base_ontology.EntityMention", 10, 12
+        )
+        num_phrase = len(
+            self.data_store._DataStore__elements[
+                "ft.onto.base_ontology.EntityMention"
+            ]
+        )
         self.assertEqual(num_phrase, 1)
         self.assertEqual(len(DataStore._type_attributes), 3)
-        self.assertEqual(len(self.data_store._DataStore__entry_dict), 8)
+        self.assertEqual(len(self.data_store._DataStore__tid_ref_dict), 8)
 
     def test_get_attribute(self):
         speaker = self.data_store.get_attribute(9999, "speaker")
@@ -545,21 +558,24 @@ class DataStoreTest(unittest.TestCase):
         sent = self.data_store.get_entry(1234567)
         self.assertEqual(
             sent,
-            ([
-                55,
-                70,
-                1234567,
+            (
+                [
+                    55,
+                    70,
+                    1234567,
+                    "ft.onto.base_ontology.Sentence",
+                    None,
+                    None,
+                    "Negative",
+                    "Class C",
+                    "Class D",
+                ],
                 "ft.onto.base_ontology.Sentence",
-                None,
-                None,
-                "Negative",
-                "Class C",
-                "Class D",
-            ], "ft.onto.base_ontology.Sentence")
+            ),
         )
 
         # Entry with such tid does not exist
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             for doc in self.data_store.get_entry(1111):
                 print(doc)
 
@@ -567,12 +583,13 @@ class DataStoreTest(unittest.TestCase):
         self.assertEqual(self.data_store.get_entry_index(1234567), 1)
 
         # Entry with such tid does not exist
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             self.data_store.get_entry_index(1111)
 
     def test_get(self):
         # get document entries
         instances = list(self.data_store.get("ft.onto.base_ontology.Document"))
+        # print(instances)
         self.assertEqual(len(instances), 2)
         # check tid
         self.assertEqual(instances[0][2], 1234)
@@ -580,7 +597,7 @@ class DataStoreTest(unittest.TestCase):
 
         # get all entries
         instances = list(self.data_store.get("forte.data.ontology.core.Entry"))
-        self.assertEqual(len(instances), 5)
+        self.assertEqual(len(instances), 9)
 
         # get entries without subclasses
         instances = list(
@@ -593,6 +610,7 @@ class DataStoreTest(unittest.TestCase):
     def test_delete_entry(self):
         # delete annotation
         # has a total of 5 entries
+        self.assertEqual(len(self.data_store._DataStore__tid_ref_dict), 5)
         self.data_store.delete_entry(1234567)
         self.data_store.delete_entry(1234)
         self.data_store.delete_entry(9999)
@@ -609,15 +627,29 @@ class DataStoreTest(unittest.TestCase):
         #     ]
         # )
 
-        self.assertEqual(len(self.data_store._DataStore__entry_dict), 2)
+        self.assertEqual(len(self.data_store._DataStore__tid_ref_dict), 2)
         self.assertEqual(num_doc, 1)
         # self.assertEqual(num_sent, 0)
 
         # delete group
         self.data_store.delete_entry(10123)
-        self.assertEqual(len(self.data_store._DataStore__entry_dict), 1)
+        self.assertEqual(len(self.data_store._DataStore__tid_idx_dict), 3)
+        self.data_store.delete_entry(23456)
+        self.data_store.delete_entry(34567)
         self.assertTrue(
-            "ft.onto.base_ontology.Phrase"
+            "forte.data.ontology.top.Group"
+            not in self.data_store._DataStore__elements
+        )
+
+        # delete link
+        self.assertTrue(
+            "forte.data.ontology.top.Link"
+            in self.data_store._DataStore__elements
+        )
+
+        self.data_store.delete_entry(88888)
+        self.assertTrue(
+            "forte.data.ontology.top.Link"
             not in self.data_store._DataStore__elements
         )
 
@@ -631,7 +663,7 @@ class DataStoreTest(unittest.TestCase):
             "ft.onto.base_ontology.Document", 1
         )
         # dict entry is not deleted; only delete entry in element list
-        self.assertEqual(len(self.data_store._DataStore__entry_dict), 5)
+        self.assertEqual(len(self.data_store._DataStore__tid_ref_dict), 5)
         self.assertEqual(
             len(
                 self.data_store._DataStore__elements[
@@ -679,7 +711,7 @@ class DataStoreTest(unittest.TestCase):
         # Last entry in list does not have a next entry.
         self.assertIsNone(self.data_store.next_entry(3456))
         # Raise exception when tid does not exist
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             self.data_store.next_entry(1111)
 
         prev_ent = self.data_store.prev_entry(3456)
@@ -698,8 +730,40 @@ class DataStoreTest(unittest.TestCase):
         # First entry in list does not have a previous entry.
         self.assertIsNone(self.data_store.prev_entry(1234))
         # Raise exception when tid does not exist
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             self.data_store.prev_entry(1111)
+
+        # test next/prev with delete on group entries
+        self.assertIsNone(self.data_store.prev_entry(10123))
+        self.assertIsNone(self.data_store.next_entry(34567))
+        self.assertIsNone(self.data_store.prev_entry(88888))
+        self.assertIsNone(self.data_store.next_entry(88888))
+
+        self.data_store.delete_entry(23456)
+        next_ent = self.data_store.next_entry(10123)
+        self.assertEqual(
+            next_ent,
+            [
+                "forte.data.ontology.top.Annotation",
+                [1234, 7654],
+                34567,
+                "forte.data.ontology.top.Group",
+            ],
+        )
+
+        prev_ent = self.data_store.prev_entry(34567)
+        self.assertEqual(
+            prev_ent,
+            [
+                "ft.onto.base_ontology.Sentence",
+                [9999, 1234567],
+                10123,
+                "forte.data.ontology.top.Group",
+            ],
+        )
+
+        self.data_store.delete_entry(34567)
+        self.assertIsNone(self.data_store.next_entry(10123))
 
     def test_get_entry_attribute_by_class(self):
         entry_name_attributes_dict = {
@@ -732,12 +796,17 @@ class DataStoreTest(unittest.TestCase):
 
         import forte
 
-        self.assertEqual(DataStore._type_attributes["ft.onto.base_ontology.Document"]["parent_class"],
-                         set())
+        self.assertEqual(
+            DataStore._type_attributes["ft.onto.base_ontology.Document"][
+                "parent_class"
+            ],
+            set(),
+        )
 
         self.assertTrue(
             self.data_store._is_subclass(
-                'ft.onto.base_ontology.Document', forte.data.ontology.top.Annotation
+                "ft.onto.base_ontology.Document",
+                forte.data.ontology.top.Annotation,
             )
         )
 
@@ -753,24 +822,38 @@ class DataStoreTest(unittest.TestCase):
             )
         )
 
-        self.assertEqual(DataStore._type_attributes["ft.onto.base_ontology.Document"]["parent_class"],
-                         {"forte.data.ontology.top.Annotation", "forte.data.ontology.core.Entry"})
+        self.assertEqual(
+            DataStore._type_attributes["ft.onto.base_ontology.Document"][
+                "parent_class"
+            ],
+            {
+                "forte.data.ontology.top.Annotation",
+                "forte.data.ontology.core.Entry",
+            },
+        )
 
         self.assertFalse(
             self.data_store._is_subclass(
-                "ft.onto.base_ontology.Title", forte.data.ontology.top.Annotation, no_dynamic_subclass=True
+                "ft.onto.base_ontology.Title",
+                forte.data.ontology.top.Annotation,
+                no_dynamic_subclass=True,
             )
         )
 
-        DataStore._type_attributes["ft.onto.base_ontology.Title"]["parent_class"].add(
-            "forte.data.ontology.top.Annotation")
+        DataStore._type_attributes["ft.onto.base_ontology.Title"][
+            "parent_class"
+        ].add("forte.data.ontology.top.Annotation")
 
         self.assertTrue(
             self.data_store._is_subclass(
-                "ft.onto.base_ontology.Title", forte.data.ontology.top.Annotation, no_dynamic_subclass=True
+                "ft.onto.base_ontology.Title",
+                forte.data.ontology.top.Annotation,
+                no_dynamic_subclass=True,
             )
         )
-        DataStore._type_attributes["ft.onto.base_ontology.Title"]["parent_class"].add("forte.data.ontology.top.Link")
+        DataStore._type_attributes["ft.onto.base_ontology.Title"][
+            "parent_class"
+        ].add("forte.data.ontology.top.Link")
         self.assertTrue(
             self.data_store._is_subclass(
                 "ft.onto.base_ontology.Title", forte.data.ontology.top.Link
