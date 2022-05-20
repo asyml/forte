@@ -690,7 +690,7 @@ class AudioAnnotation(Entry):
 class Sketch(Entry):
     def __init__(self, pack: PackType, array: np.ndarray):
         """
-        Sketch type entries, such as "recording" and "audio utterance".
+        Sketch type entries, such as "edge" and "bounding box".
         Each sketch has a ``array`` corresponding to its representation in the
         image. It's common to use binary numpy array to represent a ``Sketch``
          as it's computationally efficient and can be converted into compressed
@@ -727,12 +727,16 @@ class Sketch(Entry):
         return self.tid
 
 
-class Grids(Sketch):
+class Grids(Entry):
     """
-    Regular grids. Array can be image or
+    Regular grids with a grid configuration.
 
     Args:
-        Entry (_type_): _description_
+        pack: The container that this audio annotation
+            will be added to.
+        array: A numpy array that represents ``Grids``.
+        grid_config: A tuple represents the number of grid cell per column and 
+            the number of grid cell per row.
     """
 
     def __init__(self, pack: PackType, array: np.ndarray, grid_config: Tuple):
@@ -769,6 +773,22 @@ class Grids(Sketch):
     def grid_cell_area(self):
         return self.c_h * self.c_w
 
+
+class OnesGrids(Grids):
+    """
+    A binary Grids with array of ones.
+    It's commonly used for checking overlapping of query ``Sketch`` by
+     comparing a grid cell and the query ``Sketch``.
+
+    Args:
+        Grids (_type_): _description_
+    """
+    def __init__(self,
+                 pack: PackType,
+                 shape: Tuple[int, int],
+                 grid_config: Tuple):
+        array = np.ones(shape)
+        super().__init__(pack, array, grid_config)
 
 SinglePackEntries = (Link, Group, Annotation, Generics, AudioAnnotation)
 MultiPackEntries = (MultiPackLink, MultiPackGroup, MultiPackGeneric)
