@@ -722,6 +722,10 @@ class Sketch(Entry):
         hash_arr = tuple([tuple(arr) for arr in self._array])
         return hash((hash_arr, self._tid))
 
+    @property
+    def index_key(self) -> int:
+        return self.tid
+
 
 SinglePackEntries = (Link, Group, Annotation, Generics, AudioAnnotation)
 MultiPackEntries = (MultiPackLink, MultiPackGroup, MultiPackGeneric)
