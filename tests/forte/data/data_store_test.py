@@ -481,11 +481,11 @@ class DataStoreTest(unittest.TestCase):
 
     def test_add_annotation_raw(self):
         # test add Document entry
-        self.data_store.add_annotation_raw(
+        tid_doc: int = self.data_store.add_annotation_raw(
             "ft.onto.base_ontology.Document", 1, 5
         )
         # test add Sentence entry
-        self.data_store.add_annotation_raw(
+        tid_sent: int = self.data_store.add_annotation_raw(
             "ft.onto.base_ontology.Sentence", 5, 8
         )
         num_doc = len(
@@ -502,9 +502,16 @@ class DataStoreTest(unittest.TestCase):
         self.assertEqual(num_doc, 3)
         self.assertEqual(num_sent, 3)
         self.assertEqual(len(self.data_store._DataStore__tid_ref_dict), 7)
+        self.assertEqual(self.data_store.get_entry(tid=tid_doc)[0], [
+            1, 5, tid_doc, "ft.onto.base_ontology.Document", [], {}, {}
+        ])
+        self.assertEqual(self.data_store.get_entry(tid=tid_sent)[0], [
+            5, 8, tid_sent, "ft.onto.base_ontology.Sentence",
+            None, None, {}, {}, {}
+        ])
 
         # test add new annotation type
-        self.data_store.add_annotation_raw(
+        tid_em: int = self.data_store.add_annotation_raw(
             "ft.onto.base_ontology.EntityMention", 10, 12
         )
         num_phrase = len(
@@ -515,6 +522,9 @@ class DataStoreTest(unittest.TestCase):
         self.assertEqual(num_phrase, 1)
         self.assertEqual(len(DataStore._type_attributes), 3)
         self.assertEqual(len(self.data_store._DataStore__tid_ref_dict), 8)
+        self.assertEqual(self.data_store.get_entry(tid=tid_em)[0], [
+            10, 12, tid_em, "ft.onto.base_ontology.EntityMention", None
+        ])
 
     def test_get_attribute(self):
         speaker = self.data_store.get_attribute(9999, "speaker")
@@ -785,8 +795,8 @@ class DataStoreTest(unittest.TestCase):
             ],
         }
         for entry_name in entry_name_attributes_dict.keys():
-            attribute_result = self.data_store._get_entry_attributes_by_class(
-                entry_name
+            attribute_result = list(
+                self.data_store._get_entry_attributes_by_class(entry_name)
             )
             self.assertEqual(
                 attribute_result, entry_name_attributes_dict[entry_name]
