@@ -9,13 +9,6 @@ from fortex.spacy import SpacyProcessor
 from mimic3_note_reader import Mimic3DischargeNoteReader
 from utterance_searcher import LastUtteranceSearcher
 from stave_backend.lib.stave_session import StaveSession
-from fortex.nltk import (
-    NLTKSentenceSegmenter,
-    NLTKWordTokenizer,
-    NLTKPOSTagger,
-    NLTKNER,
-)
-from forte.processors.writers import PackIdJsonPackWriter
 
 from forte.data.readers import RawDataDeserializeReader
 from forte.common.configuration import Config
@@ -25,8 +18,7 @@ from fortex.elastic import ElasticSearchPackIndexProcessor
 
 from forte.processors.writers import PackIdJsonPackWriter
 from ft.onto.base_ontology import Sentence, EntityMention
-from fortex.huggingface.bio_ner_predictor import BioBERTNERPredictor
-from fortex.huggingface.transformers_processor import BERTTokenizer
+#from fortex.huggingface.bio_ner_predictor import BioBERTNERPredictor
 from fortex.nltk import NLTKSentenceSegmenter
 
 from ftx.medical.clinical_ontology import NegationContext, MedicalEntityMention
@@ -43,7 +35,6 @@ def get_json(path: str):
 def update_stave_db(default_project_json, chat_project_json, chat_doc_json, config):
     project_id_base = 0
     with StaveSession(url=config.Stave.url) as session:
-        print(config.Stave.url)
         session.login(
             username=config.Stave.username,
             password=config.Stave.pw
@@ -65,12 +56,8 @@ def update_stave_db(default_project_json, chat_project_json, chat_doc_json, conf
         project_id_chat = json.loads(resp2.text)["id"]
         
         chat_doc_json['project_id'] = project_id_chat
-        print ("****\n\n***project Id", chat_doc_json['project_id'])
         doc_id = session.create_document(chat_doc_json)
-        print("Doc ID: ", doc_id.text)
         project_list = session.get_project_list().json()
-        
-        print(project_id_base, project_id_chat, project_list)
 
     return project_id_base
 
@@ -88,44 +75,18 @@ def main(input_path: str, output_path: str, max_packs: int = -1, run_ner_pipelin
         )
         pl.add(NLTKSentenceSegmenter())
 
-
-        #pl.add(BERTTokenizer(), config=config.BERTTokenizer)
         #pl.add(BioBERTNERPredictor(), config=config.BioBERTNERPredictor)
-        
-        #pl.add(NLTKWordTokenizer())
-        #pl.add(NLTKPOSTagger())
-        #pl.add(NLTKNER())
-
         pl.add(SpacyProcessor(), config.Spacy)
         pl.add(NegationContextAnalyzer())
 
         pl.add(ElasticSearchPackIndexProcessor(),
                 {"indexer":{
                     "other_kwargs": {"refresh": True},
-                    }})
-        pl.add(
-            PackIdJsonPackWriter(),
-            {
-             "output_dir": output_path,
-             "indent": 2,   
-             "overwrite": True,
-             "drop_record": True,
-             "zip_pack": False,
-            },
-        )
+                }})
+        
         pl.initialize()
-#        print(entities_text)
-        for idx, pack in enumerate(pl.process_dataset(input_path)):
-##            for sentence in pack.get(Sentence):
-#                 sent_text = sentence.text
-#                 #print(colored("Sentence:", "red"), sent_text, "\n")
-#
-#                 entities = [
-#                     (entity.text, entity.ner_type)
-#                     for entity in pack.get(EntityMention, sentence)
-#                 ]
-#                 print(entities)
 
+        for idx, pack in enumerate(pl.process_dataset(input_path)):
              if (idx + 1) % 50 == 0:
                  print(f"{time.strftime('%m-%d %H:%M')}: Processed {idx + 1} packs")
 
