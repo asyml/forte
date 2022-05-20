@@ -39,6 +39,7 @@ __all__ = [
     "SinglePackEntries",
     "MultiPackEntries",
     "AudioAnnotation",
+    "Sketch"
 ]
 
 QueryType = Union[Dict[str, Any], np.ndarray]
