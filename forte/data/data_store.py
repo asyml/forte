@@ -12,11 +12,11 @@
 # limitations under the License.
 
 from typing import Dict, List, Iterator, Tuple, Optional, Any
-from typing_inspect import get_origin
 import uuid
 from bisect import bisect_left
 from heapq import heappush, heappop
 from sortedcontainers import SortedList
+from typing_inspect import get_origin
 
 from forte.utils import get_class
 from forte.data.base_store import BaseStore
