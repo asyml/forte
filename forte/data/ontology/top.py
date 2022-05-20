@@ -686,5 +686,27 @@ class AudioAnnotation(Entry):
         yield from self.pack.get(entry_type, self, components, include_sub_type)
 
 
+class Sketch(Entry):
+    def __init__(self, pack: PackType, array: np.ndarray):
+        self._array: Optional[Span] = array
+        super().__init__(pack)
+
+    @property
+    def array(self) -> np.ndarray:
+        return self._array
+
+    def __eq__(self, other):
+        if other is None:
+            return False
+        return np.array_equal(self.array, other.array)
+
+    def __hash__(self) -> int:
+        r"""The hash function for :class:`~forte.data.ontology.core.Entry` objects.
+        To be implemented in each subclass.
+        """
+        hash_arr = tuple([tuple(arr) for arr in self._array])
+        return hash((hash_arr, self._tid))
+
+
 SinglePackEntries = (Link, Group, Annotation, Generics, AudioAnnotation)
 MultiPackEntries = (MultiPackLink, MultiPackGroup, MultiPackGeneric)
