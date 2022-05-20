@@ -701,8 +701,9 @@ class Sketch(Entry):
         return np.array_equal(self.array, other.array)
 
     def __hash__(self) -> int:
-        r"""The hash function for :class:`~forte.data.ontology.core.Entry` objects.
-        To be implemented in each subclass.
+        r"""
+        The hash function for ``Sketch`` class with a numpy array as a class
+        attribute.
         """
         hash_arr = tuple([tuple(arr) for arr in self._array])
         return hash((hash_arr, self._tid))
