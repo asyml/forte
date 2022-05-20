@@ -338,9 +338,9 @@ class DataStore(BaseStore):
         attr_list: List = [None] * len(attr_dict)
         for attr_name, attr_id in attr_dict.items():
             attr_class = get_origin(attr_fields[attr_name].type)
-            if attr_class in (FList, list):
+            if attr_class in (FList, list, List):
                 attr_list[attr_id - constants.ATTR_BEGIN_INDEX] = []
-            elif attr_class in (FDict, dict):
+            elif attr_class in (FDict, dict, Dict):
                 attr_list[attr_id - constants.ATTR_BEGIN_INDEX] = {}
         return attr_list
 
