@@ -686,5 +686,41 @@ class AudioAnnotation(Entry):
         yield from self.pack.get(entry_type, self, components, include_sub_type)
 
 
+class Payload(Entry):
+    def __init__(self, uri: Union[str, int, None] = None):
+        """
+        An entry class that loads and holds data.
+
+        Args:
+            uri (Union[str, int, None], optional): Universal Resource Identifier that helps identify and retrieve files efficiently.
+            Defaults to None.
+        """
+        self.uri = uri
+        self.cache = (
+            {}
+        )  # keys are operations on images, values are the images after operations
+        if self.uri:
+            self.read(uri)
+
+    def read(self, reading_fn, image_path = None):
+        # read image data into cache
+        self.cache["image"] = reading_fn(image_path)
+    
+    def set_image_array(self, image_array):
+        # read image data into cache
+        self.cache["image"] = image_array
+
+    def cache_img(self, transform_name, transform_method):
+        # cache images after transformations on the original image
+        transformed_img = transform_method(self.cache["image"])
+        self.cache[transform_name] = transformed_img
+    
+    
+    def offload_cache(self, cache_key, offload_fn):
+        if cache_key in self.cache:
+            item = self.cache.pop(cache_key)
+            offload_fn(item)
+
+
 SinglePackEntries = (Link, Group, Annotation, Generics, AudioAnnotation)
 MultiPackEntries = (MultiPackLink, MultiPackGroup, MultiPackGeneric)
