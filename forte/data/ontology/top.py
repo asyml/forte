@@ -689,6 +689,19 @@ class AudioAnnotation(Entry):
 
 class Sketch(Entry):
     def __init__(self, pack: PackType, array: np.ndarray):
+        """
+        Sketch type entries, such as "recording" and "audio utterance".
+        Each sketch has a ``array`` corresponding to its representation in the
+        image. It's common to use binary numpy array to represent a ``Sketch``
+         as it's computationally efficient and can be converted into compressed
+         sparse matrix. 
+        
+
+        Args:
+            pack (PackType): The container that this audio annotation
+                will be added to.
+            array (np.ndarray): A numpy array that represents ``Sketch``.
+        """
         self._array: Optional[Span] = array
         super().__init__(pack)
 
