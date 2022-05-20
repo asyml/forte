@@ -694,8 +694,8 @@ class Sketch(Entry):
         Each sketch has a ``array`` corresponding to its representation in the
         image. It's common to use binary numpy array to represent a ``Sketch``
          as it's computationally efficient and can be converted into compressed
-         sparse matrix. 
-        
+         sparse matrix.
+
 
         Args:
             pack (PackType): The container that this audio annotation
@@ -725,6 +725,49 @@ class Sketch(Entry):
     @property
     def index_key(self) -> int:
         return self.tid
+
+
+class Grids(Sketch):
+    """
+    Regular grids. Array can be image or
+
+    Args:
+        Entry (_type_): _description_
+    """
+
+    def __init__(self, pack: PackType, array: np.ndarray, grid_config: Tuple):
+        super().__init__(array)
+        self.grid_config = grid_config
+        self.h, self.w = array.shape
+        self.c_h, self.c_w = (
+            self.h // self.grid_config[0],
+            self.w // self.grid_config[1],
+        )
+        self.num_cell_per_row = self.grid_config[1]
+
+    def get_grid_cell(self, grid_cell_idx: int):
+        if 0 <= grid_cell_idx < self.num_grid_cells:
+            w_idx = (grid_cell_idx) % self.num_cell_per_row
+            h_idx = (grid_cell_idx) // self.num_cell_per_row
+            array = np.zeros((self.h, self.w))
+            array[
+                h_idx * self.c_h : (h_idx + 1) * self.c_h,
+                w_idx * self.c_w : (w_idx + 1) * self.c_w,
+            ] = self._array[
+                h_idx * self.c_h : (h_idx + 1) * self.c_h,
+                w_idx * self.c_w : (w_idx + 1) * self.c_w,
+            ]
+            return array
+        else:
+            raise ValueError("")
+
+    @property
+    def num_grid_cells(self):
+        return self.grid_config[0] * self.grid_config[1]
+
+    @property
+    def grid_cell_area(self):
+        return self.c_h * self.c_w
 
 
 SinglePackEntries = (Link, Group, Annotation, Generics, AudioAnnotation)
