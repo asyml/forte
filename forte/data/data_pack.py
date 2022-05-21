@@ -42,6 +42,7 @@ from forte.data.ontology.core import Entry
 from forte.data.ontology.core import EntryType
 from forte.data.ontology.top import (
     Annotation,
+    ImageAnnotation,
     Link,
     Group,
     SinglePackEntries,
@@ -165,7 +166,9 @@ class DataPack(BasePack[Entry, Link, Group]):
         self.groups: SortedList[Group] = SortedList()
         self.generics: SortedList[Generics] = SortedList()
         self.audio_annotations: SortedList[AudioAnnotation] = SortedList()
+        self.image_annotations: SortedList[ImageAnnotation] = SortedList()
 
+        self.image_payloads = []
         self.__replace_back_operations: ReplaceOperationsType = []
         self.__processed_original_spans: List[Tuple[Span, Span]] = []
 

@@ -39,7 +39,7 @@ __all__ = [
     "SinglePackEntries",
     "MultiPackEntries",
     "AudioAnnotation",
-    "Sketch",
+    "ImageAnnotation",
 ]
 
 QueryType = Union[Dict[str, Any], np.ndarray]
@@ -687,27 +687,28 @@ class AudioAnnotation(Entry):
         yield from self.pack.get(entry_type, self, components, include_sub_type)
 
 
-class Sketch(Entry):
-    def __init__(self, pack: PackType, array: np.ndarray):
+class ImageAnnotation(Entry):
+    def __init__(self, pack: PackType, image_ann_idx: int):
         """
-        Sketch type entries, such as "edge" and "bounding box".
-        Each sketch has a ``array`` corresponding to its representation in the
-        image. It's common to use binary numpy array to represent a ``Sketch``
+        ImageAnnotation type entries, such as "edge" and "bounding box".
+        Each ImageAnnotation has a ``array`` corresponding to its representation in the image.
+        It's common to use binary numpy array to represent a ``ImageAnnotation``
          as it's computationally efficient and can be converted into compressed
          sparse matrix.
 
 
         Args:
-            pack (PackType): The container that this audio annotation
+            pack: The container that this audio annotation
                 will be added to.
-            array (np.ndarray): A numpy array that represents ``Sketch``.
+            array: A numpy array that represents ``Sketch``.
         """
-        self._array: Optional[Span] = array
+        # self._array: Optional[Span] = array
+        self.image_ann_idx = image_ann_idx
         super().__init__(pack)
 
     @property
-    def array(self) -> np.ndarray:
-        return self._array
+    def image_ann_idx(self) -> np.ndarray:
+        return self.image_ann_idx
 
     def __eq__(self, other):
         if other is None:
@@ -753,15 +754,18 @@ class Grids(Entry):
         if 0 <= grid_cell_idx < self.num_grid_cells:
             w_idx = (grid_cell_idx) % self.num_cell_per_row
             h_idx = (grid_cell_idx) // self.num_cell_per_row
-            array = np.zeros((self.h, self.w))
-            array[
-                h_idx * self.c_h : (h_idx + 1) * self.c_h,
-                w_idx * self.c_w : (w_idx + 1) * self.c_w,
-            ] = self._array[
-                h_idx * self.c_h : (h_idx + 1) * self.c_h,
-                w_idx * self.c_w : (w_idx + 1) * self.c_w,
-            ]
-            return array
+            # array = np.zeros((self.h, self.w))
+            # array[
+            #     h_idx * self.c_h : (h_idx + 1) * self.c_h,
+            #     w_idx * self.c_w : (w_idx + 1) * self.c_w,
+            # ] = self._array[
+            #     h_idx * self.c_h : (h_idx + 1) * self.c_h,
+            #     w_idx * self.c_w : (w_idx + 1) * self.c_w,
+            # ]
+            return (
+                range(h_idx * self.c_h, (h_idx + 1) * self.c_h),
+                range(w_idx * self.c_w, (w_idx + 1) * self.c_w)
+            )
         else:
             raise ValueError("")
 
