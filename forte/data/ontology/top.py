@@ -741,47 +741,56 @@ class Grids(Entry):
     Args:
         pack: The container that this grids
             will be added to.
-        grid_config: A tuple represents the number of grid cell per column and 
+        height_n_width: A tuple represents the number of grid cell per column and 
             the number of grid cell per row.
     """
 
-    def __init__(self, pack: PackType, grid_config: Tuple):
+    def __init__(self, pack: PackType, height_n_width: Tuple[int, int],
+                 image_payload_idx: int):
         super().__init__(pack)
-        if grid_config[0] <= 0 or grid_config[0] <= 0:
-            raise ValueError("grid_config values must be larger than 0")
-        self.grid_config = grid_config
+        if height_n_width[0] <= 0 or height_n_width[0] <= 0:
+            raise ValueError("height_n_width values must be larger than 0")
+        self.height_n_width = height_n_width
+        self._image_payload_idx = image_payload_idx
 
-    def get_grid_cell(self, h_idx: int, w_idx: int, image_payload_idx: int):
+    def get_grid_cell(self, h_idx: int, w_idx: int,
+                      image_payload_idx: int = None):
         """
+        Get the array data of a grid cell from image of the image payload index.
+        The array is the same size of the image. The array entries that are not
+        within the grid cell will be zeros, and the array entries that are within the grid cell will be preserved.
         
 
         Args:
-            h_idx (int): the index of the grid cell of the first dimension.
-            w_idx (int): the index of the grid cell of the second dimension.
-            image_payload_idx (int): A integer that represents the index of
-                the image in the payloads.
+            h_idx: the index of the grid cell of the first dimension.
+            w_idx: the index of the grid cell of the second dimension.
+            image_payload_idx: An integer that represents the index of
+                the image in the payloads. If it's not None, it will use the image from the corresponding payload. Otherwise,
+                it will use the image
+                from the payload of ``self._image_payload_idx``.
 
         Raises:
-            ValueError: ``h_idx`` is out of the range specified by ``grid_config``.
-            ValueError: ``w_idx`` is out of the range specified by ``grid_config``.
+            ValueError: ``h_idx`` is out of the range specified by ``height_n_width``.
+            ValueError: ``w_idx`` is out of the range specified by ``height_n_width``.
 
         Returns:
             numpy array that represents the grid cell.
         """
-        if not (0 <= h_idx < self.grid_config[0]):
+        if not (0 <= h_idx < self.height_n_width[0]):
             raise ValueError(f"input parameter h_idx ({h_idx}) is"
                              "out of scope of h_idx range"
-                             f" {(0, self.grid_config[0])}")
-        if not (0 <= w_idx < self.grid_config[1]):
+                             f" {(0, self.height_n_width[0])}")
+        if not (0 <= w_idx < self.height_n_width[1]):
             raise ValueError(f"input parameter w_idx ({w_idx}) is"
                              "out of scope of w_idx range"
-                             f" {(0, self.grid_config[1])}")
+                             f" {(0, self.height_n_width[1])}")
+        if not image_payload_idx:
+            image_payload_idx = self._image_payload_idx
         img_arr = self.pack.get_image_array(image_payload_idx)
         c_h, c_w = (
-             img_arr.shape[0] // self.grid_config[0],
-             img_arr.shape[1] // self.grid_config[1],
-         )
-        
+             img_arr.shape[0] // self.height_n_width[0],
+             img_arr.shape[1] // self.height_n_width[1],
+        )
         array = np.zeros(img_arr.shape)
         array[h_idx * c_h: (h_idx + 1) * c_h,
                 w_idx * c_w: (w_idx + 1) * c_w] =\
@@ -791,7 +800,7 @@ class Grids(Entry):
 
     @property
     def num_grid_cells(self):
-        return self.grid_config[0] * self.grid_config[1]
+        return self.height_n_width[0] * self.height_n_width[1]
 
 
 
