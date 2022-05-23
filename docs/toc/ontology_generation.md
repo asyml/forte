@@ -8,7 +8,7 @@ The ontology can be specified via a JSON format. And
 tools are provided to convert the ontology into production code (Python).
 Make sure Forte is installed before following this tutorial.
 
-## A simple ontology config
+## A first glimpse of ontology generation
 Imagine you need to develop an NLP system for a pet shop, first thing first,
 you need to understand what are the needed output from the documents. Let's
 say you need to develop a system to assets such as `Pet` and `Revenue` ,
@@ -288,7 +288,8 @@ following -
      ```
     usage: generate_ontology create [-h] -i SPEC [-r] [-o DEST_PATH]
                                     [-s [SPEC_PATHS [SPEC_PATHS ...]]]
-                                    [-m MERGED_PATH] [-d] [-a]
+                                    [-m MERGED_PATH] [-e] [-a] [-l]
+                                    [-n NAMESPACE_DEPTH]
 
     optional arguments:
       -h, --help            show this help message and exit
@@ -304,16 +305,21 @@ following -
                             be searched.
       -m MERGED_PATH, --merged_path MERGED_PATH
                             The destination file path for the mergedfile path.
-      -d, --namespace_depth
-                            Set an integer argument to allow customized number of
-                            levels of namespace packaging.
-                            The generation of __init__.py for all the directory
-                            levels above namespace_depth will be disabled.
-                            When namespace_depth<=0, namespace packaging will be disabled
-                            and __init__.py will be included in all directory levels.
-                            Default value is set to 0 to disable namespace packaging.
+      -e, --exclude_init    Excludes generation of `__init__.py` files in the
+                            already existing directories, if`__init__.py` not
+                            already present.
       -a, --gen_all         If True, will generate all the ontology,including the
                             existing ones shipped with Forte.
+      -l, --lenient_prefix  If True, will not enforce prefix check.
+      -n NAMESPACE_DEPTH, --namespace_depth NAMESPACE_DEPTH
+                            set an integer argument namespace_depth to allow
+                            customized number of levels of namespace packaging.The
+                            generation of __init__.py for all the directory levels
+                            above namespace_depth will be disabled.Default value
+                            is set to 0 to disable namespace packaging. When
+                            namespace_depth<=0, namespace packaging will be
+                            disabled and __init__.py will be included in all
+                            directory levels
 
      ```
 
@@ -342,6 +348,7 @@ following -
         ├── com.py
         └── __init__.py
     ```
+    Note that in this case we automatically generate a `__init__.py` file in each level. With the `-n` option, we allow users to split the ontology definitions across multiple directories at customized level using namespace packaging. For example, if you wish to define another set of ontologies with prefix called `awesome.toy.com` at a different project folder but still want to access the entries defined in `awesome.pet.com`. In this case you can generate the ontology file structure using `generate_ontology create -n 1` which makes `awesome` a namespace package.
  * Our ontology generation is complete!
 
 ### Cleaning the generated ontology
