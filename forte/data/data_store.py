@@ -337,6 +337,8 @@ class DataStore(BaseStore):
         attr_fields: Dict = self._get_entry_attributes_by_class(type_name)
         attr_list: List = [None] * len(attr_dict)
         for attr_name, attr_id in attr_dict.items():
+            # TODO: We should keep a record of the attribute class instead of
+            # inspecting the class on the fly.
             attr_class = get_origin(attr_fields[attr_name].type)
             if attr_class in (FList, list, List):
                 attr_list[attr_id - constants.ATTR_BEGIN_INDEX] = []
