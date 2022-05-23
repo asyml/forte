@@ -245,7 +245,8 @@ class DataStoreTest(unittest.TestCase):
             3456: ref2,
             9999: ref3,
             1234567: ref4,
-            7654: ref5}
+            7654: ref5,
+        }
         self.data_store._DataStore__tid_idx_dict = {
             10123: ["forte.data.ontology.top.Group", 0],
             23456: ["forte.data.ontology.top.Group", 1],
@@ -310,29 +311,27 @@ class DataStoreTest(unittest.TestCase):
         sent_type = "ft.onto.base_ontology.Sentence"
         doc_type = "ft.onto.base_ontology.Document"
         ann_type = "forte.data.ontology.top.Annotation"
-        sent_list = [
-            entry
-            for entry in list(self.data_store._DataStore__entry_dict.values())
-            if entry[3] == "ft.onto.base_ontology.Sentence"
-        ]
-        doc_list = [
-            entry
-            for entry in list(self.data_store._DataStore__entry_dict.values())
-            if entry[3] == "ft.onto.base_ontology.Document"
-        ]
-        ann_list = list(self.data_store._DataStore__entry_dict.values())
+        group_type = "forte.data.ontology.top.Group"
+        sent_list = list(self.data_store._DataStore__elements[sent_type])
+        doc_list = list(self.data_store._DataStore__elements[doc_type])
+        ann_list = (
+            doc_list
+            + sent_list
+            + list(self.data_store._DataStore__elements[ann_type])
+        )
+        group_list = list(self.data_store._DataStore__elements[group_type])
         sent_entries = list(self.data_store.all_entries(sent_type))
         doc_entries = list(self.data_store.all_entries(doc_type))
         ann_entries = list(self.data_store.all_entries(ann_type))
 
         self.assertEqual(sent_list, sent_entries)
         self.assertEqual(doc_list, doc_entries)
-
         self.assertEqual(ann_list, ann_entries)
 
         num_sent_entries = self.data_store.num_entries(sent_type)
         num_doc_entry = self.data_store.num_entries(doc_type)
         num_ann_entry = self.data_store.num_entries(ann_type)
+
         self.assertEqual(num_sent_entries, len(sent_list))
         self.assertEqual(num_doc_entry, len(doc_list))
         self.assertEqual(num_ann_entry, len(ann_entries))
@@ -342,6 +341,11 @@ class DataStoreTest(unittest.TestCase):
         num_sent_entries = self.data_store.num_entries(sent_type)
 
         self.assertEqual(num_sent_entries, len(sent_list) - 1)
+
+        # remove a group
+        self.data_store.delete_entry(23456)
+        num_group_entries = self.data_store.num_entries(group_type)
+        self.assertEqual(num_group_entries, len(group_list) - 1)
 
     def test_co_iterator_annotation_like(self):
         type_names = [
@@ -552,6 +556,26 @@ class DataStoreTest(unittest.TestCase):
         self.assertEqual(num_phrase, 1)
         self.assertEqual(len(DataStore._type_attributes), 3)
         self.assertEqual(len(self.data_store._DataStore__tid_ref_dict), 8)
+
+    # def test_add_link_raw(self):
+    #     self.data_store.add_link_raw(
+    #         "forte.data.ontology.top.Link", 9999, 1234567
+    #     )
+    #     num_link = len(
+    #         self.data_store._DataStore__elements["forte.data.ontology.top.Link"]
+    #     )
+    #     self.assertEqual(num_link, 2)
+
+    # def test_add_group_raw(self):
+    #     self.data_store.add_group_raw(
+    #         "forte.data.ontology.top.Group", 9999, 1234567
+    #     )
+    #     num_group = len(
+    #         self.data_store._DataStore__elements[
+    #             "forte.data.ontology.top.Group"
+    #         ]
+    #     )
+    #     self.assertEqual(num_group, 4)
 
     def test_get_attribute(self):
         speaker = self.data_store.get_attribute(9999, "speaker")
