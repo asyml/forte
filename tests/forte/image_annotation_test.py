@@ -20,9 +20,7 @@ import numpy as np
 from typing import Dict
 
 from numpy import array_equal
-from forte.data.ontology.top import (
-    ImageAnnotation
-)
+from forte.data.ontology.top import ImageAnnotation
 from forte.data.data_pack import DataPack
 
 
@@ -34,16 +32,16 @@ class ImageAnnotationTest(unittest.TestCase):
     def setUp(self):
         self.datapack = DataPack("image")
         self.line = np.zeros((6, 12))
-        self.line[2,2] = 1
-        self.line[3,3] = 1
-        self.line[4,4] = 1
+        self.line[2, 2] = 1
+        self.line[3, 3] = 1
+        self.line[4, 4] = 1
         self.datapack.payloads.append(self.line)
         self.datapack.image_annotations.add(ImageAnnotation(self.datapack, 0))
 
-
     def test_image_annotation(self):
-        self.assertEqual(self.datapack.image_annotations[0].image_payload_idx,
-                        0)
+        self.assertEqual(
+            self.datapack.image_annotations[0].image_payload_idx, 0
+        )
 
         self.assertTrue(
             array_equal(self.datapack.image_annotations[0].image, self.line)

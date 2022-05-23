@@ -48,7 +48,7 @@ from forte.data.ontology.top import (
     Generics,
     AudioAnnotation,
     ImageAnnotation,
-    Grids
+    Grids,
 )
 from forte.data.span import Span
 from forte.data.types import ReplaceOperationsType, DataRequest
@@ -247,14 +247,12 @@ class DataPack(BasePack[Entry, Link, Group]):
         for a in self.audio_annotations:
             a.set_pack(self)
 
-
     def __iter__(self):
         yield from self.annotations
         yield from self.links
         yield from self.groups
         yield from self.generics
         yield from self.audio_annotations
-
 
     def _init_meta(self, pack_name: Optional[str] = None) -> Meta:
         return Meta(pack_name)
@@ -271,7 +269,6 @@ class DataPack(BasePack[Entry, Link, Group]):
     def audio(self) -> Optional[np.ndarray]:
         r"""Return the audio of the data pack"""
         return self._audio
-
 
     @property
     def sample_rate(self) -> Optional[int]:
@@ -381,7 +378,6 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         """
         return len(self.audio_annotations)
-    
 
     def get_span_text(self, begin: int, end: int) -> str:
         r"""Get the text in the data pack contained in the span.
@@ -414,6 +410,9 @@ class DataPack(BasePack[Entry, Link, Group]):
                 " method `set_audio` before running `get_span_audio`."
             )
         return self._audio[begin:end]
+
+    def get_image_array(self, image_payload_idx: int):
+        return self.payloads[image_payload_idx]
 
     def set_text(
         self,
