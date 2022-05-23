@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from importlib.metadata import entry_points
 from typing import Dict, List, Iterator, Tuple, Optional, Any
 import uuid
 from bisect import bisect_left
@@ -452,7 +453,6 @@ class DataStore(BaseStore):
         entry_class = get_class(type_name)
         return issubclass(entry_class, (Annotation, AudioAnnotation))
 
-
     def all_entries(self, entry_type_name: str) -> Iterator[List]:
         """
         Retrieve all entry data of given ``entry_type_name``.
@@ -463,18 +463,13 @@ class DataStore(BaseStore):
         Yields:
             Iterator of raw entry data in list format.
         """
-        excluded_entry_types = [
-            "forte.data.ontology.top.Link",
-            "forte.data.ontology.top.Group",
-        ]
         for entry in self.__entry_dict.values():
-            if (
-                entry[constants.ENTRY_TYPE_INDEX] == entry_type_name
-                or self._is_subclass(
-                    entry[constants.ENTRY_TYPE_INDEX],
-                    get_class(entry_type_name),
-                )
-            ) and entry_type_name not in excluded_entry_types:
+            if entry[
+                constants.ENTRY_TYPE_INDEX
+            ] == entry_type_name or self._is_subclass(
+                entry[constants.ENTRY_TYPE_INDEX],
+                get_class(entry_type_name),
+            ):
                 yield entry
 
     def num_entries(self, entry_type_name: str) -> int:
@@ -487,20 +482,19 @@ class DataStore(BaseStore):
         Returns:
             The number of entries of given ``entry_type_name``.
         """
-        excluded_entry_types = [
-            "forte.data.ontology.top.Link",
-            "forte.data.ontology.top.Group",
-        ]
         count = 0
         for entry in self.__entry_dict.values():
-            if (
-                entry[constants.ENTRY_TYPE_INDEX] == entry_type_name
-                or self._is_subclass(
-                    entry[constants.ENTRY_TYPE_INDEX],
-                    get_class(entry_type_name),
-                )
-            ) and entry_type_name not in excluded_entry_types:
+            if entry[
+                constants.ENTRY_TYPE_INDEX
+            ] == entry_type_name or self._is_subclass(
+                entry[constants.ENTRY_TYPE_INDEX],
+                get_class(entry_type_name),
+            ):
                 count += 1
+        # if non-annotation-like entries_type_name
+        # we need to minus the corresponding delete count
+        if entry_type_name in self.__deletion_count:
+            count -= self.__deletion_count[entry_type_name]
         return count
 
     def _is_annotation_tid(self, tid: int) -> bool:
