@@ -11,7 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from importlib.metadata import entry_points
 from typing import Dict, List, Iterator, Tuple, Optional, Any
 import uuid
 from bisect import bisect_left
@@ -455,7 +454,8 @@ class DataStore(BaseStore):
 
     def all_entries(self, entry_type_name: str) -> Iterator[List]:
         """
-        Retrieve all entry data of given ``entry_type_name``.
+        Retrieve all entry data of entry type ``entry_type_name`` and
+        entries of subclasses of entry type ``entry_type_name``.
 
         Args:
             entry_type_name (str): the type name of entries that the User wants to retrieve.
@@ -463,18 +463,17 @@ class DataStore(BaseStore):
         Yields:
             Iterator of raw entry data in list format.
         """
-        for entry in self.__entry_dict.values():
-            if entry[
-                constants.ENTRY_TYPE_INDEX
-            ] == entry_type_name or self._is_subclass(
-                entry[constants.ENTRY_TYPE_INDEX],
+        for entry_type_key in self.__elements:
+            if entry_type_key == entry_type_name or self._is_subclass(
+                entry_type_key,
                 get_class(entry_type_name),
             ):
-                yield entry
+                yield from self.__elements[entry_type_key]
 
     def num_entries(self, entry_type_name: str) -> int:
         """
-        Compute the number of entries of given ``entry_type_name``.
+        Compute the number of entries of given ``entry_type_name`` and
+        entries of subclasses of entry type ``entry_type_name``.
 
         Args:
             entry_type_name (str): the type name of entries that the User wants to get its count.
@@ -483,14 +482,12 @@ class DataStore(BaseStore):
             The number of entries of given ``entry_type_name``.
         """
         count = 0
-        for entry in self.__entry_dict.values():
-            if entry[
-                constants.ENTRY_TYPE_INDEX
-            ] == entry_type_name or self._is_subclass(
-                entry[constants.ENTRY_TYPE_INDEX],
+        for entry_type_key in self.__elements:
+            if entry_type_key == entry_type_name or self._is_subclass(
+                entry_type_key,
                 get_class(entry_type_name),
             ):
-                count += 1
+                count += len(self.__elements[entry_type_key])
         # if non-annotation-like entries_type_name
         # we need to minus the corresponding delete count
         if entry_type_name in self.__deletion_count:
