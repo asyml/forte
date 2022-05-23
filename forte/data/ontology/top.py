@@ -692,16 +692,13 @@ class ImageAnnotation(Entry):
     def __init__(self, pack: PackType, image_payload_idx: int):
         """
         ImageAnnotation type entries, such as "edge" and "bounding box".
-        Each ImageAnnotation has a ``array`` corresponding to its representation in the image.
-        It's common to use binary numpy array to represent a ``ImageAnnotation``
-         as it's computationally efficient and can be converted into compressed
-         sparse matrix.
-
+        Each ImageAnnotation has a ``image_payload_idx`` corresponding to its image representation in the payload array.
 
         Args:
-            pack: The container that this audio annotation
+            pack: The container that this image annoatation
                 will be added to.
-            array: A numpy array that represents ``Sketch``.
+            image_payload_idx: A integer that represents the index of
+                the image in the payloads.
         """
         # self._array: Optional[Span] = array
         self._image_payload_idx = image_payload_idx
@@ -742,9 +739,8 @@ class Grids(Entry):
     Regular grids with a grid configuration.
 
     Args:
-        pack: The container that this audio annotation
+        pack: The container that this grids
             will be added to.
-        array: A numpy array that represents ``Grids``.
         grid_config: A tuple represents the number of grid cell per column and 
             the number of grid cell per row.
     """
@@ -755,7 +751,23 @@ class Grids(Entry):
             raise ValueError("grid_config values must be larger than 0")
         self.grid_config = grid_config
 
-    def get_grid_cell(self, h_idx: int, w_idx: int, image_payload_idx):
+    def get_grid_cell(self, h_idx: int, w_idx: int, image_payload_idx: int):
+        """
+        
+
+        Args:
+            h_idx (int): the index of the grid cell of the first dimension.
+            w_idx (int): the index of the grid cell of the second dimension.
+            image_payload_idx (int): A integer that represents the index of
+                the image in the payloads.
+
+        Raises:
+            ValueError: ``h_idx`` is out of the range specified by ``grid_config``.
+            ValueError: ``w_idx`` is out of the range specified by ``grid_config``.
+
+        Returns:
+            numpy array that represents the grid cell.
+        """
         if not (0 <= h_idx < self.grid_config[0]):
             raise ValueError(f"input parameter h_idx ({h_idx}) is"
                              "out of scope of h_idx range"
@@ -769,10 +781,13 @@ class Grids(Entry):
              img_arr.shape[0] // self.grid_config[0],
              img_arr.shape[1] // self.grid_config[1],
          )
-        return img_arr[
-                h_idx * c_h: (h_idx + 1) * c_h,
-                w_idx * c_w: (w_idx + 1) * c_w
-        ]
+        
+        array = np.zeros(img_arr.shape)
+        array[h_idx * c_h: (h_idx + 1) * c_h,
+                w_idx * c_w: (w_idx + 1) * c_w] =\
+            img_arr[h_idx * c_h: (h_idx + 1) * c_h,
+                w_idx * c_w: (w_idx + 1) * c_w]
+        return array
 
     @property
     def num_grid_cells(self):
