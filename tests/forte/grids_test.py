@@ -44,14 +44,14 @@ class ImageAnnotationTest(unittest.TestCase):
         self.datapack.grids.add(grids)
 
     def test_image_annotation(self):
-        ref_arr = np.zeros((2,3))
-        ref_arr[0,2] = 1
+        ref_arr = np.zeros((6,12))
+        ref_arr[2,2] = 1
         self.assertTrue(
             array_equal(self.datapack.grids[0].get_grid_cell(1,0,0), ref_arr)
         )
 
-        ref_arr2 = np.zeros((2,3))
-        ref_arr2[1, 0] = 1
+        ref_arr2 = np.zeros((6,12))
+        ref_arr2[3, 3] = 1
         self.assertTrue(
             array_equal(self.datapack.grids[0].get_grid_cell(1,1,0), ref_arr2)
         )
