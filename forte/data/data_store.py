@@ -471,6 +471,7 @@ class DataStore(BaseStore):
         entry_type: Type[Entry],
         type_name: str,
         entry: List[Any],
+        is_annotation: bool,
     ):
         """
         This function add raw entry in DataStore object
@@ -481,6 +482,7 @@ class DataStore(BaseStore):
             entry_type: entry's type which decides the sorting of entry.
             type_name: The name of type in `self.__elements`.
             entry: raw entry data in the list format.
+            is_annotation: whether the entry is an annotation entry.
 
         Raises:
             KeyError: raised when the entry type name is not in `self.__elements`.
@@ -505,7 +507,10 @@ class DataStore(BaseStore):
                 self.__elements[type_name] = []
                 self.__elements[type_name].append(entry)
         tid = entry[constants.TID_INDEX]
-        self.__tid_ref_dict[tid] = entry
+        if is_annotation:
+            self.__tid_ref_dict[tid] = entry
+        else:
+            self.__tid_idx_dict[tid] = entry
         return tid
 
     def _is_annotation_tid(self, tid: int) -> bool:
