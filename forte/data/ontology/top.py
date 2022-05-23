@@ -13,6 +13,7 @@
 # limitations under the License.
 from dataclasses import dataclass
 from functools import total_ordering
+from multiprocessing.sharedctypes import Value
 from typing import Optional, Set, Tuple, Type, Any, Dict, Union, Iterable, List
 
 import numpy as np
@@ -688,7 +689,7 @@ class AudioAnnotation(Entry):
 
 
 class ImageAnnotation(Entry):
-    def __init__(self, pack: PackType, image_ann_idx: int):
+    def __init__(self, pack: PackType, image_payload_idx: int):
         """
         ImageAnnotation type entries, such as "edge" and "bounding box".
         Each ImageAnnotation has a ``array`` corresponding to its representation in the image.
@@ -703,25 +704,33 @@ class ImageAnnotation(Entry):
             array: A numpy array that represents ``Sketch``.
         """
         # self._array: Optional[Span] = array
-        self.image_ann_idx = image_ann_idx
+        self._image_payload_idx = image_payload_idx
         super().__init__(pack)
 
     @property
-    def image_ann_idx(self) -> np.ndarray:
-        return self.image_ann_idx
+    def image_payload_idx(self) -> int:
+        return self._image_payload_idx
+
+    @property
+    def image(self):
+        if self.pack is None:
+            raise ValueError(
+                "Cannot get image because image annotation is not "
+                "attached to any data pack."
+            )
+        return self.pack.get_image_array(self._image_payload_idx)
 
     def __eq__(self, other):
         if other is None:
             return False
-        return np.array_equal(self.array, other.array)
+        return self.image_payload_idx == other.image_payload_idx
 
     def __hash__(self) -> int:
         r"""
         The hash function for ``Sketch`` class with a numpy array as a class
         attribute.
         """
-        hash_arr = tuple([tuple(arr) for arr in self._array])
-        return hash((hash_arr, self._tid))
+        return hash((self._image_payload_idx, self._tid))
 
     @property
     def index_key(self) -> int:
@@ -740,34 +749,31 @@ class Grids(Entry):
             the number of grid cell per row.
     """
 
-    def __init__(self, pack: PackType, array: np.ndarray, grid_config: Tuple):
-        super().__init__(array)
+    def __init__(self, pack: PackType, grid_config: Tuple):
+        super().__init__(pack)
+        self.grid_config  = grid_config
+        if self.grid_config[0] <= 0 or self.grid_config[0] <= 0:
+            raise ValueError("grid_config values must be larger than 0")
         self.grid_config = grid_config
-        self.h, self.w = array.shape
-        self.c_h, self.c_w = (
-            self.h // self.grid_config[0],
-            self.w // self.grid_config[1],
-        )
-        self.num_cell_per_row = self.grid_config[1]
 
-    def get_grid_cell(self, grid_cell_idx: int):
-        if 0 <= grid_cell_idx < self.num_grid_cells:
-            w_idx = (grid_cell_idx) % self.num_cell_per_row
-            h_idx = (grid_cell_idx) // self.num_cell_per_row
-            # array = np.zeros((self.h, self.w))
-            # array[
-            #     h_idx * self.c_h : (h_idx + 1) * self.c_h,
-            #     w_idx * self.c_w : (w_idx + 1) * self.c_w,
-            # ] = self._array[
-            #     h_idx * self.c_h : (h_idx + 1) * self.c_h,
-            #     w_idx * self.c_w : (w_idx + 1) * self.c_w,
-            # ]
-            return (
-                range(h_idx * self.c_h, (h_idx + 1) * self.c_h),
-                range(w_idx * self.c_w, (w_idx + 1) * self.c_w)
-            )
-        else:
-            raise ValueError("")
+    def get_grid_cell(self, h_idx: int, w_idx: int, image_payload_idx):
+        if not (0 <= h_idx < self.grid_config[0]):
+            raise ValueError(f"input parameter h_idx ({h_idx}) is"
+                             "out of scope of h_idx range"
+                             f" {(0, self.grid_config[0])}")
+        if not (0 <= w_idx < self.grid_config[1]):
+            raise ValueError(f"input parameter w_idx ({w_idx}) is"
+                             "out of scope of w_idx range"
+                             f" {(0, self.grid_config[1])}")
+        img_arr = self.pack.get_image_array(image_payload_idx)
+        self.c_h, self.c_w = (
+             img_arr.shape[0] // self.grid_config[0],
+             img_arr.shape[1] // self.grid_config[1],
+         )
+        return img_arr[
+                h_idx * self.c_h: (h_idx + 1) * self.c_h,
+                w_idx * self.c_w: (w_idx + 1) * self.c_w
+        ]
 
     @property
     def num_grid_cells(self):
@@ -778,21 +784,6 @@ class Grids(Entry):
         return self.c_h * self.c_w
 
 
-class OnesGrids(Grids):
-    """
-    A binary Grids with array of ones.
-    It's commonly used for checking overlapping of query ``Sketch`` by
-     comparing a grid cell and the query ``Sketch``.
-
-    Args:
-        Grids (_type_): _description_
-    """
-    def __init__(self,
-                 pack: PackType,
-                 shape: Tuple[int, int],
-                 grid_config: Tuple):
-        array = np.ones(shape)
-        super().__init__(pack, array, grid_config)
 
 SinglePackEntries = (Link, Group, Annotation, Generics, AudioAnnotation)
 MultiPackEntries = (MultiPackLink, MultiPackGroup, MultiPackGeneric)
