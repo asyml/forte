@@ -751,8 +751,7 @@ class Grids(Entry):
 
     def __init__(self, pack: PackType, grid_config: Tuple):
         super().__init__(pack)
-        self.grid_config  = grid_config
-        if self.grid_config[0] <= 0 or self.grid_config[0] <= 0:
+        if grid_config[0] <= 0 or grid_config[0] <= 0:
             raise ValueError("grid_config values must be larger than 0")
         self.grid_config = grid_config
 
@@ -766,22 +765,19 @@ class Grids(Entry):
                              "out of scope of w_idx range"
                              f" {(0, self.grid_config[1])}")
         img_arr = self.pack.get_image_array(image_payload_idx)
-        self.c_h, self.c_w = (
+        c_h, c_w = (
              img_arr.shape[0] // self.grid_config[0],
              img_arr.shape[1] // self.grid_config[1],
          )
         return img_arr[
-                h_idx * self.c_h: (h_idx + 1) * self.c_h,
-                w_idx * self.c_w: (w_idx + 1) * self.c_w
+                h_idx * c_h: (h_idx + 1) * c_h,
+                w_idx * c_w: (w_idx + 1) * c_w
         ]
 
     @property
     def num_grid_cells(self):
         return self.grid_config[0] * self.grid_config[1]
 
-    @property
-    def grid_cell_area(self):
-        return self.c_h * self.c_w
 
 
 
