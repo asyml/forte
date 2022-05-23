@@ -752,8 +752,11 @@ class Grids(Entry):
         image_payload_idx: int,
     ):
         super().__init__(pack)
-        if height_n_width[0] <= 0 or height_n_width[0] <= 0:
-            raise ValueError("height_n_width values must be larger than 0")
+        if height_n_width[0] <= 0 or height_n_width[1] <= 0:
+            raise ValueError(
+                f"height({height_n_width[0]}) and "
+                f"width({height_n_width[1]}) both must be larger than 0"
+            )
         self.height_n_width = height_n_width
         self._image_payload_idx = image_payload_idx
 
