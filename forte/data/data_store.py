@@ -420,22 +420,26 @@ class DataStore(BaseStore):
                         )
             return store
 
-        store = cls._deserialize(data_source, serialize_method)
+        state = cls._deserialize(data_source, serialize_method)
         # The following part is for customized json method only.
-        if isinstance(store, dict):
+        if isinstance(state, dict):
             obj = DataStore()
-            obj.__setstate__(store)
-            store = obj
+            obj.__setstate__(state)
+        else:
+            raise ValueError(
+                "The serialized object that you want to"
+                " deserialize does not support json deserialization."
+            )
         if check_attribute:
-            if len(store._type_attributes) == 0:
+            if len(obj._type_attributes) == 0:
                 raise ValueError(
                     "The serialized object that you want to deserialize does"
                     " not support check_attribute."
                 )
-            if cls._type_attributes != store._type_attributes:
-                store = check_fields(store)
-        delattr(store, "_type_attributes")
-        return store
+            if cls._type_attributes != obj._type_attributes:
+                obj = check_fields(obj)
+        delattr(obj, "_type_attributes")
+        return obj
 
     def _new_tid(self) -> int:
         r"""This function generates a new ``tid`` for an entry."""

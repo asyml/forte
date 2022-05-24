@@ -115,8 +115,8 @@ class BaseStore:
         """
         if serialize_method == "json":
             with open(data_source, mode="rt", encoding="utf8") as f:
-                store = json.loads(f.read())
-            return store
+                state = json.loads(f.read())
+            return state
         else:
             raise NotImplementedError(
                 f"Unsupported deserialization method {serialize_method}"
