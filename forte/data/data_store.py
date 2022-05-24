@@ -826,7 +826,6 @@ class DataStore(BaseStore):
             type_names: a list of string type names
 
         Returns:
-
             An iterator of entry elements.
 
         """
