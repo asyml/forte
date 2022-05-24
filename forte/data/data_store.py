@@ -485,7 +485,6 @@ class DataStore(BaseStore):
         entry_class = get_class(type_name)
         return issubclass(entry_class, (Annotation, AudioAnnotation))
 
-
     def all_entries(self, entry_type_name: str) -> Iterator[List]:
         """
         Retrieve all entry data of entry type ``entry_type_name`` and
@@ -923,9 +922,7 @@ class DataStore(BaseStore):
             type_names: a list of string type names
 
         Returns:
-
             An iterator of entry elements.
-
         """
 
         n = len(type_names)
