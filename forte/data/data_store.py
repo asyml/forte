@@ -379,6 +379,31 @@ class DataStore(BaseStore):
 
         return entry
 
+    def _new_audio_annotation(
+        self, type_name: str, begin: int, end: int, tid: int
+    ) -> List:
+        r"""This function generates a new audio annotation with default fields.
+        All default fields are filled with None.
+        Called by add_audio_annotation_raw() to create a new audio annotation with
+        ``type_name``, ``begin``, and ``end``.
+
+        Args:
+            type_name: The fully qualified type name of the new entry.
+            begin: Begin index of the entry.
+            end: End index of the entry.
+
+        Returns:
+            A list representing a new audio annotation type entry data.
+        """
+
+        tid: int = self._new_tid() if tid is None else tid
+        entry: List[Any]
+
+        entry = [begin, end, tid, type_name]
+        entry += self._default_attributes_for_type(type_name)
+
+        return entry
+
     def _new_link(
         self,
         type_name: str,
@@ -530,7 +555,7 @@ class DataStore(BaseStore):
         Returns:
             ``tid`` of the entry.
         """
-        if entry_type == Annotation:
+        if entry_type in (Annotation, AudioAnnotation):
             sorting_fn = lambda s: (
                 s[constants.BEGIN_INDEX],
                 s[constants.END_INDEX],
@@ -598,6 +623,35 @@ class DataStore(BaseStore):
         # self.__tid_ref_dict.
         entry = self._new_annotation(type_name, begin, end, tid)
         return self._add_entry_raw(Annotation, type_name, entry)
+
+    def add_audio_annotation_raw(
+        self, type_name: str, begin: int, end: int, tid: Optional[int] = None
+    ) -> int:
+
+        r"""This function adds an audio annotation entry with ``begin`` and
+        ``end``
+        indices to current data store object. Returns the ``tid`` for the
+        inserted entry.
+
+        Args:
+            type_name: The fully qualified type name of the new AudioAnnotation.
+            begin: Begin index of the entry.
+            end: End index of the entry.
+            tid: ``tid`` of the Annotation entry that is being added.
+                It's optional, and it will be
+                auto-assigned if not given.
+
+        Returns:
+            ``tid`` of the entry.
+        """
+        # We should create the `entry data` with the format
+        # [begin, end, tid, type_id, None, ...].
+        # A helper function _new_annotation() can be used to generate a
+        # annotation type entry data with default fields.
+        # A reference to the entry should be store in both self.__elements and
+        # self.__tid_ref_dict.
+        entry = self._new_audio_annotation(type_name, begin, end, tid)
+        return self._add_entry_raw(AudioAnnotation, type_name, entry)
 
     def add_link_raw(
         self,

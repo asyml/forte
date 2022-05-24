@@ -558,6 +558,45 @@ class DataStoreTest(unittest.TestCase):
             ],
         )
 
+    def test_add_audio_annotation_raw(self):
+        # test add Document entry
+        tid_recording: int = self.data_store.add_audio_annotation_raw(
+            "ft.onto.base_ontology.Recording", 1, 5
+        )
+        # test add Sentence entry
+        tid_audio_utterance: int = self.data_store.add_audio_annotation_raw(
+            "ft.onto.base_ontology.AudioUtterance", 5, 8
+        )
+        tid_utterance: int = self.data_store.add_audio_annotation_raw(
+            "ft.onto.base_ontology.Utterance", 5, 8
+        )
+        num_doc = len(
+            self.data_store._DataStore__elements[
+                "ft.onto.base_ontology.Recording"
+            ]
+        )
+        num_sent = len(
+            self.data_store._DataStore__elements[
+                "ft.onto.base_ontology.AudioUtterance"
+            ]
+        )
+        num_utterance = len(
+            self.data_store._DataStore__elements[
+                "ft.onto.base_ontology.Utterance"
+            ]
+        )
+        self.assertEqual(num_doc, 1)
+        self.assertEqual(num_sent, 1)
+        self.assertEqual(num_utterance, 1)
+        tid = 77
+        self.data_store.add_annotation_raw(
+            "ft.onto.base_ontology.Recording", 0, 1, tid
+        )
+        self.assertEqual(
+            self.data_store.get_entry(tid=77)[0],
+            [0, 1, tid, "ft.onto.base_ontology.Recording", []],
+        )
+
     def test_add_link_raw(self):
         self.data_store.add_link_raw(
             "forte.data.ontology.top.Link", 9999, 1234567
