@@ -578,7 +578,8 @@ class DataStoreTest(unittest.TestCase):
 
             # test check_attribute without save_attribute
             with self.assertRaisesRegex(
-                ValueError, "Saved object does not support check_attribute."
+                ValueError,
+                "The serialized object that you want to deserialize does not support check_attribute.",
             ):
                 DataStore.deserialize(
                     tmpfilepath, serialize_method="json", check_attribute=True

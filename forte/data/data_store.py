@@ -146,7 +146,7 @@ class DataStore(BaseStore):
         ancestors of this type.
 
         This structure is supposed to be built dynamically. When a user adds
-        new entries, data_store will check unknown types and add them to
+        new entries, `DataStore` will check unknown types and add them to
         ``_type_attributes``.
 
         Example:
@@ -283,7 +283,9 @@ class DataStore(BaseStore):
                 else:
                     if self._is_annotation(k):
                         # annotation-like
-                        self._DataStore__tid_ref_dict[e[constants.TID_INDEX]] = e
+                        self._DataStore__tid_ref_dict[
+                            e[constants.TID_INDEX]
+                        ] = e
                     else:
                         # non-annotation-like
                         type_name = e[constants.ENTRY_TYPE_INDEX]
@@ -291,7 +293,10 @@ class DataStore(BaseStore):
                             reset_index[type_name] += 1
                         else:
                             reset_index[type_name] = 1
-                        self._DataStore__tid_idx_dict[type_name] = [type_name, reset_index[type_name]]
+                        self._DataStore__tid_idx_dict[type_name] = [
+                            type_name,
+                            reset_index[type_name],
+                        ]
 
     @classmethod
     def deserialize(
@@ -299,13 +304,11 @@ class DataStore(BaseStore):
         data_source: str,
         serialize_method: str = "json",
         check_attribute: bool = True,
-        silent_mode: bool = True,
+        suppress_warning: bool = True,
         accept_none: bool = True,
     ) -> "DataStore":
         """
-        Deserialize a data_store from a string. This internally calls the
-        internal :meth:`~forte.data.base_store.BaseStore._deserialize` function
-        from :class:`~forte.data.base_store.BaseStore`.
+        Deserialize a `DataStore` from serialized data in `data_source`.
 
         Args:
             data_source: The path storing data source.
@@ -313,18 +316,110 @@ class DataStore(BaseStore):
                 should be the same as how serialization is done. The current
                 option is `json`.
             check_attribute: Boolean value indicating whether users want to
-                check compatibility of attributes. Only applicable when
-                `save_attribute` is set to True in BaseStore.serialize.
-            silent_mode: Boolean value indicating whether users want to
-                see warnings when it checks attributes.
+                check compatibility of attributes. Only applicable when the
+                data being serialized is done with `save_attribute` set to
+                True in BaseStore.serialize. If true, it will compare fields
+                of the serialized object and the current `DataStore` class.
+                If there are fields that have different orders in the current
+                class and the serialized object, it switches the order of
+                fields to match the current class.
+                If there are fields that appear in the current class, but not in
+                the serialized object, it handles those fields with
+                `accept_none`.
+                If there are fields that appear in the serialized object, but
+                not in the current class, it drops those fields.
+            suppress_warning: Boolean value indicating whether users want to
+                see warnings when it checks attributes. Only applicable when
+                `check_attribute` is set to True. If true, it will
+                log warnings when there are mismatched fields.
             accept_none: Boolean value indicating whether users want to
-                fill contradictory fields with none. Only applicable when
+                fill fields that appear in the current class, but not in
+                the serialized object with none. Only applicable when
                 `check_attribute` is set to True. If false, it will raise
-                an ValueError if there are any contradictions in fields.
+                an `ValueError` if there are any contradictions in fields.
 
         Returns:
             An data store object deserialized from the string.
         """
+
+        def check_fields(store):
+            """
+            A helper function that compares fields of the serialized object and
+            the current `DataStore` class.
+
+            Args:
+                store: The serialized object we want to check and process.
+
+            Returns:
+                The data store object after we process its fields.
+            """
+            for t, v in cls._type_attributes.items():
+                change_map = {}
+                contradict_loc = []
+                # find fields that appear in the current class, but not in
+                # the serialized objects,
+                # or fields that have different orders in the current class
+                # and the serialized objects.
+                diff = set(v["attributes"].items()) - set(
+                    store._type_attributes[t]["attributes"].items()
+                )
+                for f in diff:
+                    # if fields appear in both the current class and the
+                    # serialized objects but have different orders, switch
+                    # fields to match the order of the current class.
+                    if f[0] in store._type_attributes[t]["attributes"]:
+                        # record indices of the same field in the class and
+                        # objects. Save different indices to a dictionary.
+                        change_map[f[1]] = store._type_attributes[t][
+                            "attributes"
+                        ][f[0]]
+                    # record indices of fields that only appear in the
+                    # current class. We want to fill them with None.
+                    else:
+                        contradict_loc.append(f[1])
+
+                if len(change_map) > 0:
+                    if not suppress_warning:
+                        logger.warning(
+                            "Saved %s objects have %s different orders of "
+                            "attribute fields to the current datastore. "
+                            "They are reordered to match the fields in "
+                            "the current datastore class.",
+                            t,
+                            len(change_map),
+                        )
+                    # switch the order of fields for the serialized objects
+                    for d in store._DataStore__elements[t]:
+                        d[:] = [
+                            d[change_map[i]] if i in change_map else d[i]
+                            # throw fields that are redundant
+                            for i in range(max(v["attributes"].values()) + 1)
+                        ]
+                if len(contradict_loc) > 0:
+                    if not suppress_warning:
+                        logger.warning(
+                            "Saved %s objects have %s attribute fields "
+                            "that could not be identified. "
+                            "These fields are filled with `None`. This may "
+                            "due to user's modifications of fields.",
+                            t,
+                            len(contradict_loc),
+                        )
+                    if accept_none:
+                        # fill fields that only appear in the current class
+                        # but not in the serialized objects with None.
+                        for d in store._DataStore__elements[t]:
+                            for idx in contradict_loc:
+                                d[idx] = None
+                    else:
+                        raise ValueError(
+                            f"Saved {t} objects have unidentified fields "
+                            "at indices "
+                            f"{', '.join(str(v) for v in contradict_loc)}, "
+                            "which raise an error."
+                        )
+            return store
+
         store = cls._deserialize(data_source, serialize_method)
         # The following part is for customized json method only.
         if isinstance(store, dict):
@@ -334,76 +429,11 @@ class DataStore(BaseStore):
         if check_attribute:
             if len(store._type_attributes) == 0:
                 raise ValueError(
-                    "Saved object does not support check_attribute."
+                    "The serialized object that you want to deserialize does"
+                    " not support check_attribute."
                 )
             if cls._type_attributes != store._type_attributes:
-                for t, v in cls._type_attributes.items():
-                    change_map = {}
-                    contradict_loc = []
-                    # find fields that appear in the current class, but not in
-                    # the serialized objects,
-                    # or fields that have different orders in the current class
-                    # and the serialized objects.
-                    diff = set(v["attributes"].items()) - set(
-                        store._type_attributes[t]["attributes"].items()
-                    )
-                    for f in diff:
-                        # if fields appear in both the current class and the
-                        # serialized objects but have different orders, switch
-                        # fields to match the order of the current class.
-                        if f[0] in store._type_attributes[t]["attributes"]:
-                            # record indices of the same field in the class and
-                            # objects. Save different indices to a dictionary.
-                            change_map[f[1]] = store._type_attributes[t][
-                                "attributes"
-                            ][f[0]]
-                        # record indices of fields that only appear in the
-                        # current class. We want to fill them with None.
-                        else:
-                            contradict_loc.append(f[1])
-
-                    if len(change_map) > 0:
-                        if not silent_mode:
-                            logger.warning(
-                                "Saved %s objects have %s different orders of "
-                                "attribute fields to the current datastore. "
-                                "They are reordered to match the fields in "
-                                "the current datastore class.",
-                                t,
-                                len(change_map),
-                            )
-                        # switch the order of fields for the serialized objects
-                        for d in store._DataStore__elements[t]:
-                            d[:] = [
-                                d[change_map[i]] if i in change_map else d[i]
-                                # throw fields that are redundant
-                                for i in range(
-                                    max(v["attributes"].values()) + 1
-                                )
-                            ]
-                    if len(contradict_loc) > 0:
-                        if not silent_mode:
-                            logger.warning(
-                                "Saved %s objects have %s attribute fields "
-                                "that could not be identified. "
-                                "These fields are filled with `None`. This may "
-                                "due to user's modifications of fields.",
-                                t,
-                                len(contradict_loc),
-                            )
-                        if accept_none:
-                            # fill fields that only appear in the current class
-                            # but not in the serialized objects with None.
-                            for d in store._DataStore__elements[t]:
-                                for idx in contradict_loc:
-                                    d[idx] = None
-                        else:
-                            raise ValueError(
-                                f"Saved {t} objects have unidentified fields "
-                                "at indices "
-                                f"{', '.join(str(v) for v in contradict_loc)}, "
-                                "which raise an error."
-                            )
+                store = check_fields(store)
         delattr(store, "_type_attributes")
         return store
 
@@ -1272,7 +1302,7 @@ class DataStore(BaseStore):
         return None
 
     def _parse_onto_file(self):
-        r"""This function will populate the types and attributes used in the data_store
+        r"""This function will populate the types and attributes used in `DataStore`
         with an ontology specification file. If a user provides a customized ontology
         specification file, forte will parse this file and set the internal dictionary
         ``DataStore._type_attributes`` to store type name, parent entry, and its attribute

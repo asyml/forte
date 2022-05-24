@@ -13,10 +13,10 @@
 # limitations under the License.
 
 from abc import abstractmethod
-from typing import List, Iterator, Tuple, Any, Optional
+from typing import List, Iterator, Tuple, Any, Optional, TypeVar
 import json
 
-__all__ = ["BaseStore"]
+__all__ = ["BaseStore", "StoreType"]
 
 
 class BaseStore:
@@ -98,13 +98,12 @@ class BaseStore:
         cls,
         data_source: str,
         serialize_method: str = "json",
-    ):
+    ) -> "StoreType":
         """
-        This function should deserialize a data store from a string. The
-        implementation should decide the specific data store type.
+        This function should deserialize a data store from a string.
 
         Args:
-            data_source: The data path containing pack data. The content
+            data_source: The data path containing data store. The content
                 of the data could be string or bytes depending on the method of
                 serialization.
             serialize_method: The method used to serialize the data, this
@@ -116,8 +115,8 @@ class BaseStore:
         """
         if serialize_method == "json":
             with open(data_source, mode="rt", encoding="utf8") as f:
-                pack = json.loads(f.read())
-            return pack
+                store = json.loads(f.read())
+            return store
         else:
             raise NotImplementedError(
                 f"Unsupported deserialization method {serialize_method}"
@@ -316,3 +315,6 @@ class BaseStore:
         """
 
         raise NotImplementedError
+
+
+StoreType = TypeVar("StoreType", bound=BaseStore)
