@@ -1006,7 +1006,7 @@ class DataStore(BaseStore):
         r"""This function fetches entries from the data store of
         type ``type_name``. If `include_sub_type` is set to True and
         ``type_name`` is in [Annotation, Group, List], this function also
-        fetches entries of subtypes of ``type_name``. Otherwise, it only
+        fetches entries of subtype of ``type_name``. Otherwise, it only
         fetches entries of type ``type_name``.
 
         Args:
