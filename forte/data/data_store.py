@@ -16,9 +16,11 @@ import uuid
 from bisect import bisect_left
 from heapq import heappush, heappop
 from sortedcontainers import SortedList
+from typing_inspect import get_origin
 
 from forte.utils import get_class
 from forte.data.base_store import BaseStore
+from forte.data.ontology.core import FList, FDict
 from forte.data.ontology.top import Annotation, AudioAnnotation
 from forte.common import constants
 from forte.utils.utils import get_full_module_name
@@ -318,18 +320,34 @@ class DataStore(BaseStore):
         """
         return self._get_type_info(type_name)["parent_class"]
 
-    def _num_attributes_for_type(self, type_name: str) -> int:
-        """Get the length of the attribute dict of an entry type.
+    def _default_attributes_for_type(self, type_name: str) -> List:
+        """Get a list of attributes of an entry type with their default values.
+        If an attribute is annotated with `FList` or `List`, then the default
+        value is an empty list `[]`. When an attribute is annotated with `FDict`
+        or `Dict` then the default value will be an empty dictionary `{}`. For
+        all other cases (including primitive types, Union, NoneType, etc.) the
+        default value will be set to `None`.
+
         Args:
             type_name (str): The fully qualified type name of the new entry.
         Returns:
-            attr_dict (dict): The attributes-to-index dict of an entry.
+            attr_dict (list): A list of attributes with default values.
         """
-        return len(self._get_type_attribute_dict(type_name))
+        attr_dict: Dict = self._get_type_attribute_dict(type_name)
+        attr_fields: Dict = self._get_entry_attributes_by_class(type_name)
+        attr_list: List = [None] * len(attr_dict)
+        for attr_name, attr_id in attr_dict.items():
+            # TODO: We should keep a record of the attribute class instead of
+            # inspecting the class on the fly.
+            attr_class = get_origin(attr_fields[attr_name].type)
+            if attr_class in (FList, list, List):
+                attr_list[attr_id - constants.ATTR_BEGIN_INDEX] = []
+            elif attr_class in (FDict, dict, Dict):
+                attr_list[attr_id - constants.ATTR_BEGIN_INDEX] = {}
+        return attr_list
 
     def _new_annotation(self, type_name: str, begin: int, end: int) -> List:
         r"""This function generates a new annotation with default fields.
-        All default fields are filled with None.
         Called by add_annotation_raw() to create a new annotation with
         ``type_name``, ``begin``, and ``end``.
 
@@ -346,15 +364,14 @@ class DataStore(BaseStore):
         entry: List[Any]
 
         entry = [begin, end, tid, type_name]
-        entry += self._num_attributes_for_type(type_name) * [None]
+        entry += self._default_attributes_for_type(type_name)
 
         return entry
 
     def _new_link(
         self, type_name: str, parent_tid: int, child_tid: int
     ) -> List:
-        r"""This function generates a new link with default fields. All
-        default fields are filled with None.
+        r"""This function generates a new link with default fields.
         Called by add_link_raw() to create a new link with ``type_name``,
         ``parent_tid``, and ``child_tid``.
 
@@ -371,13 +388,12 @@ class DataStore(BaseStore):
         entry: List[Any]
 
         entry = [parent_tid, child_tid, tid, type_name]
-        entry += self._num_attributes_for_type(type_name) * [None]
+        entry += self._default_attributes_for_type(type_name)
 
         return entry
 
     def _new_group(self, type_name: str, member_type: str) -> List:
-        r"""This function generates a new group with default fields. All
-        default fields are filled with None.
+        r"""This function generates a new group with default fields.
         Called by add_group_raw() to create a new group with
         ``type_name`` and ``member_type``.
 
@@ -392,7 +408,7 @@ class DataStore(BaseStore):
         tid: int = self._new_tid()
 
         entry = [member_type, [], tid, type_name]
-        entry += self._num_attributes_for_type(type_name) * [None]
+        entry += self._default_attributes_for_type(type_name)
 
         return entry
 
@@ -1019,7 +1035,7 @@ class DataStore(BaseStore):
         raise NotImplementedError
 
     @staticmethod
-    def _get_entry_attributes_by_class(input_entry_class_name: str) -> List:
+    def _get_entry_attributes_by_class(input_entry_class_name: str) -> Dict:
         """Get type attributes by class name. `input_entry_class_name` should be
         a fully qualified name of an entry class.
 
@@ -1038,7 +1054,8 @@ class DataStore(BaseStore):
             input_entry_class_name: A fully qualified name of an entry class.
 
         Returns:
-            A list of attributes corresponding to the input class.
+            A dictionary of attributes with their field information
+            corresponding to the input class.
 
         For example, for Sentence we want to get a list of
         ["speaker", "part_id", "sentiment", "classification", "classifications"].
@@ -1050,7 +1067,7 @@ class DataStore(BaseStore):
             entry_name = "ft.onto.base_ontology.Sentence"
 
             # function signature
-            get_entry_attributes_by_class(entry_name)
+            list(get_entry_attributes_by_class(entry_name))
 
             # return
             # ["speaker", "part_id", "sentiment", "classification", "classifications"]
@@ -1058,6 +1075,6 @@ class DataStore(BaseStore):
         """
         class_ = get_class(input_entry_class_name)
         try:
-            return list(class_.__dataclass_fields__.keys())
+            return class_.__dataclass_fields__
         except AttributeError:
-            return []
+            return {}
