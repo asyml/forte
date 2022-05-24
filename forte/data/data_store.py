@@ -14,7 +14,6 @@
 
 from typing import Dict, List, Iterator, Tuple, Optional, Any, Type
 import uuid
-from bisect import bisect_left
 from heapq import heappush, heappop
 from sortedcontainers import SortedList
 from typing_inspect import get_origin
@@ -549,7 +548,12 @@ class DataStore(BaseStore):
             raise KeyError(f"Entry with tid {tid} not found.")
 
     def add_annotation_raw(
-        self, type_name: str, begin: int, end: int, tid: Optional[int] = None
+        self,
+        type_name: str,
+        begin: int,
+        end: int,
+        tid: Optional[int] = None,
+        allow_duplicate: bool = True,
     ) -> int:
 
         r"""This function adds an annotation entry with ``begin`` and ``end``
@@ -563,6 +567,9 @@ class DataStore(BaseStore):
             tid: ``tid`` of the Annotation entry that is being added.
                 It's optional, and it will be
                 auto-assigned if not given.
+            allow_duplicate: Whether we allow duplicate in the DataStore. When
+                it's set to False, the function will return the ``tid`` of
+                existing entry if a duplicate is found. Default value is True.
 
         Returns:
             ``tid`` of the entry.
@@ -574,6 +581,16 @@ class DataStore(BaseStore):
         # A reference to the entry should be store in both self.__elements and
         # self.__tid_ref_dict.
         entry = self._new_annotation(type_name, begin, end, tid)
+        if not allow_duplicate and type_name in self.__elements:
+            # Return the tid of existing entry if duplicate is not allowed
+            index = self.__elements[type_name].bisect_left(entry)
+            target_entry = self.__elements[type_name][index]
+            if (
+                target_entry[constants.BEGIN_INDEX] == begin
+                and target_entry[constants.END_INDEX] == end
+            ):
+                return target_entry[constants.TID_INDEX]
+
         return self._add_entry_raw(Annotation, type_name, entry)
 
     def add_link_raw(
@@ -735,7 +752,13 @@ class DataStore(BaseStore):
         # complexity: O(lgn)
         # if it's annotation type, use bisect to find the index
         if self._is_annotation(type_name):
-            entry_index = bisect_left(target_list, entry_data)
+            try:
+                entry_index = target_list.index(entry_data)
+            except ValueError as e:
+                raise RuntimeError(
+                    f"When deleting entry [{tid}], entry data is not found in"
+                    f"the target list of [{type_name}]."
+                ) from e
         else:  # if it's group or link, use the index in entry_list
             entry_index = entry_data[constants.ENTRY_DICT_ENTRY_INDEX]
 
@@ -837,7 +860,12 @@ class DataStore(BaseStore):
         index_id = -1
         if self._is_annotation_tid(tid):
             entry_list = self.__elements[entry_type]
-            index_id = entry_list.bisect_left(entry)
+            try:
+                index_id = entry_list.index(entry)
+            except ValueError as e:
+                raise ValueError(
+                    f"Entry {entry} not found in entry list."
+                ) from e
             if (not 0 <= index_id < len(entry_list)) or (
                 entry_list[index_id][constants.TID_INDEX]
                 != entry[constants.TID_INDEX]
