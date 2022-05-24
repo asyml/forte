@@ -24,6 +24,7 @@ from dataclasses import dataclass
 from forte.data.data_store import DataStore
 from forte.data.ontology.top import Annotation, Generics
 from forte.data.data_pack import DataPack
+from forte.common import constants
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -163,18 +164,18 @@ class DataStoreTest(unittest.TestCase):
             5,
             1234,
             "ft.onto.base_ontology.Document",
-            None,
-            "Postive",
-            None,
+            [],
+            {"Postive": 0},
+            {},
         ]
         ref2 = [
             10,
             25,
             3456,
             "ft.onto.base_ontology.Document",
-            "Doc class A",
-            "Negative",
-            "Class B",
+            ["Doc class A"],
+            {"Negative": 0},
+            {},
         ]
         ref3 = [
             6,
@@ -183,9 +184,9 @@ class DataStoreTest(unittest.TestCase):
             "ft.onto.base_ontology.Sentence",
             "teacher",
             1,
-            "Postive",
-            None,
-            None,
+            {"Postive": 0},
+            {},
+            {},
         ]
         ref4 = [
             55,
@@ -194,9 +195,9 @@ class DataStoreTest(unittest.TestCase):
             "ft.onto.base_ontology.Sentence",
             None,
             None,
-            "Negative",
-            "Class C",
-            "Class D",
+            {"Negative": 0},
+            {"Class C": 0},
+            {},
         ]
         ref5 = [
             10,
@@ -205,12 +206,21 @@ class DataStoreTest(unittest.TestCase):
             "forte.data.ontology.top.Annotation",
         ]
 
+        sorting_fn = lambda s: (
+            s[constants.BEGIN_INDEX], s[constants.END_INDEX],
+        )
         self.data_store._DataStore__elements = {
-            "ft.onto.base_ontology.Document": SortedList([ref1, ref2]),
-            "ft.onto.base_ontology.Sentence": SortedList([ref3, ref4]),
+            "ft.onto.base_ontology.Document": SortedList(
+                [ref1, ref2], key=sorting_fn
+            ),
+            "ft.onto.base_ontology.Sentence": SortedList(
+                [ref3, ref4], key=sorting_fn
+            ),
             # empty list corresponds to Entry, test only
             "forte.data.ontology.core.Entry": SortedList([]),
-            "forte.data.ontology.top.Annotation": SortedList([ref5]),
+            "forte.data.ontology.top.Annotation": SortedList(
+                [ref5], key=sorting_fn
+            ),
             "forte.data.ontology.top.Group": [
                 [
                     "ft.onto.base_ontology.Sentence",
@@ -320,9 +330,9 @@ class DataStoreTest(unittest.TestCase):
                 5,
                 1234,
                 "ft.onto.base_ontology.Document",
-                None,
-                "Postive",
-                None,
+                [],
+                {"Postive": 0},
+                {},
             ],
             [
                 6,
@@ -331,18 +341,18 @@ class DataStoreTest(unittest.TestCase):
                 "ft.onto.base_ontology.Sentence",
                 "teacher",
                 1,
-                "Postive",
-                None,
-                None,
+                {"Postive": 0},
+                {},
+                {},
             ],
             [
                 10,
                 25,
                 3456,
                 "ft.onto.base_ontology.Document",
-                "Doc class A",
-                "Negative",
-                "Class B",
+                ["Doc class A"],
+                {"Negative": 0},
+                {},
             ],
             [
                 55,
@@ -351,9 +361,9 @@ class DataStoreTest(unittest.TestCase):
                 "ft.onto.base_ontology.Sentence",
                 None,
                 None,
-                "Negative",
-                "Class C",
-                "Class D",
+                {"Negative": 0},
+                {"Class C": 0},
+                {},
             ],
         ]
 
@@ -367,18 +377,18 @@ class DataStoreTest(unittest.TestCase):
                 5,
                 1234,
                 "ft.onto.base_ontology.Document",
-                None,
-                "Postive",
-                None,
+                [],
+                {"Postive": 0},
+                {},
             ],
             [
                 0,
                 25,
                 3456,
                 "ft.onto.base_ontology.Document",
-                "Doc class A",
-                "Negative",
-                "Class B",
+                ["Doc class A"],
+                {"Negative": 0},
+                {},
             ],
             [
                 6,
@@ -387,9 +397,9 @@ class DataStoreTest(unittest.TestCase):
                 "ft.onto.base_ontology.Sentence",
                 "teacher",
                 1,
-                "Postive",
-                None,
-                None,
+                {"Postive": 0},
+                {},
+                {},
             ],
             [
                 55,
@@ -398,9 +408,9 @@ class DataStoreTest(unittest.TestCase):
                 "ft.onto.base_ontology.Sentence",
                 None,
                 None,
-                "Negative",
-                "Class C",
-                "Class D",
+                {"Negative": 0},
+                {"Class C": 0},
+                {},
             ],
         ]
         doc_tn = "ft.onto.base_ontology.Document"
@@ -419,27 +429,27 @@ class DataStoreTest(unittest.TestCase):
                 "ft.onto.base_ontology.Sentence",
                 "teacher",
                 1,
-                "Postive",
-                None,
-                None,
+                {"Postive": 0},
+                {},
+                {},
             ],
             [
                 0,
                 5,
                 1234,
                 "ft.onto.base_ontology.Document",
-                None,
-                "Postive",
-                None,
+                [],
+                {"Postive": 0},
+                {},
             ],
             [
                 0,
                 25,
                 3456,
                 "ft.onto.base_ontology.Document",
-                "Doc class A",
-                "Negative",
-                "Class B",
+                ["Doc class A"],
+                {"Negative": 0},
+                {},
             ],
             [
                 55,
@@ -448,9 +458,9 @@ class DataStoreTest(unittest.TestCase):
                 "ft.onto.base_ontology.Sentence",
                 None,
                 None,
-                "Negative",
-                "Class C",
-                "Class D",
+                {"Negative": 0},
+                {"Class C": 0},
+                {},
             ],
         ]
         ordered_elements2 = copy.deepcopy(ordered_elements1)
@@ -538,6 +548,22 @@ class DataStoreTest(unittest.TestCase):
             self.data_store.get_entry(tid=tid_em)[0],
             [10, 12, tid_em, "ft.onto.base_ontology.EntityMention", None],
         )
+
+        # test add duplicate Sentence entry
+        tid_sent_duplicate: int = self.data_store.add_annotation_raw(
+            "ft.onto.base_ontology.Sentence", 5, 8, allow_duplicate=False
+        )
+        self.assertEqual(len(self.data_store._DataStore__elements[
+            "ft.onto.base_ontology.Sentence"
+        ]), num_sent)
+        self.assertEqual(tid_sent, tid_sent_duplicate)
+        self.data_store.add_annotation_raw(
+            "ft.onto.base_ontology.Sentence", 5, 9, allow_duplicate=False
+        )
+        self.assertEqual(len(self.data_store._DataStore__elements[
+            "ft.onto.base_ontology.Sentence"
+        ]), num_sent + 1)
+
         # check add annotation raw with tid
         tid = 77
         self.data_store.add_annotation_raw(
@@ -601,7 +627,7 @@ class DataStoreTest(unittest.TestCase):
         classifications = self.data_store.get_attribute(3456, "classifications")
 
         self.assertEqual(speaker, "teacher")
-        self.assertEqual(classifications, "Class B")
+        self.assertEqual(classifications, {})
 
         # Entry with such tid does not exist
         with self.assertRaisesRegex(KeyError, "Entry with tid 1111 not found."):
@@ -646,9 +672,9 @@ class DataStoreTest(unittest.TestCase):
                     "ft.onto.base_ontology.Sentence",
                     None,
                     None,
-                    "Negative",
-                    "Class C",
-                    "Class D",
+                    {"Negative": 0},
+                    {"Class C": 0},
+                    {},
                 ],
                 "ft.onto.base_ontology.Sentence",
             ),
@@ -783,9 +809,9 @@ class DataStoreTest(unittest.TestCase):
                 25,
                 3456,
                 "ft.onto.base_ontology.Document",
-                "Doc class A",
-                "Negative",
-                "Class B",
+                ["Doc class A"],
+                {"Negative": 0},
+                {},
             ],
         )
         # Last entry in list does not have a next entry.
@@ -802,9 +828,9 @@ class DataStoreTest(unittest.TestCase):
                 5,
                 1234,
                 "ft.onto.base_ontology.Document",
-                None,
-                "Postive",
-                None,
+                [],
+                {"Postive": 0},
+                {},
             ],
         )
         # First entry in list does not have a previous entry.
