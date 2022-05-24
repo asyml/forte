@@ -13,7 +13,6 @@
 # limitations under the License.
 from dataclasses import dataclass
 from functools import total_ordering
-from multiprocessing.sharedctypes import Value
 from typing import Optional, Set, Tuple, Type, Any, Dict, Union, Iterable, List
 
 import numpy as np
@@ -695,7 +694,7 @@ class ImageAnnotation(Entry):
         Each ImageAnnotation has a ``image_payload_idx`` corresponding to its image representation in the payload array.
 
         Args:
-            pack: The container that this image annoatation
+            pack: The container that this image annotation
                 will be added to.
             image_payload_idx: A integer that represents the index of
                 the image in the payloads.
