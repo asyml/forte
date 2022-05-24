@@ -245,7 +245,8 @@ class DataStoreTest(unittest.TestCase):
             3456: ref2,
             9999: ref3,
             1234567: ref4,
-            7654: ref5}
+            7654: ref5,
+        }
         self.data_store._DataStore__tid_idx_dict = {
             10123: ["forte.data.ontology.top.Group", 0],
             23456: ["forte.data.ontology.top.Group", 1],
@@ -502,13 +503,24 @@ class DataStoreTest(unittest.TestCase):
         self.assertEqual(num_doc, 3)
         self.assertEqual(num_sent, 3)
         self.assertEqual(len(self.data_store._DataStore__tid_ref_dict), 7)
-        self.assertEqual(self.data_store.get_entry(tid=tid_doc)[0], [
-            1, 5, tid_doc, "ft.onto.base_ontology.Document", [], {}, {}
-        ])
-        self.assertEqual(self.data_store.get_entry(tid=tid_sent)[0], [
-            5, 8, tid_sent, "ft.onto.base_ontology.Sentence",
-            None, None, {}, {}, {}
-        ])
+        self.assertEqual(
+            self.data_store.get_entry(tid=tid_doc)[0],
+            [1, 5, tid_doc, "ft.onto.base_ontology.Document", [], {}, {}],
+        )
+        self.assertEqual(
+            self.data_store.get_entry(tid=tid_sent)[0],
+            [
+                5,
+                8,
+                tid_sent,
+                "ft.onto.base_ontology.Sentence",
+                None,
+                None,
+                {},
+                {},
+                {},
+            ],
+        )
 
         # test add new annotation type
         tid_em: int = self.data_store.add_annotation_raw(
@@ -522,9 +534,67 @@ class DataStoreTest(unittest.TestCase):
         self.assertEqual(num_phrase, 1)
         self.assertEqual(len(DataStore._type_attributes), 3)
         self.assertEqual(len(self.data_store._DataStore__tid_ref_dict), 8)
-        self.assertEqual(self.data_store.get_entry(tid=tid_em)[0], [
-            10, 12, tid_em, "ft.onto.base_ontology.EntityMention", None
-        ])
+        self.assertEqual(
+            self.data_store.get_entry(tid=tid_em)[0],
+            [10, 12, tid_em, "ft.onto.base_ontology.EntityMention", None],
+        )
+        # check add annotation raw with tid
+        tid = 77
+        self.data_store.add_annotation_raw(
+            "ft.onto.base_ontology.Sentence", 0, 1, tid
+        )
+        self.assertEqual(
+            self.data_store.get_entry(tid=77)[0],
+            [
+                0,
+                1,
+                tid,
+                "ft.onto.base_ontology.Sentence",
+                None,
+                None,
+                {},
+                {},
+                {},
+            ],
+        )
+
+    def test_add_link_raw(self):
+        self.data_store.add_link_raw(
+            "forte.data.ontology.top.Link", 9999, 1234567
+        )
+        num_link = len(
+            self.data_store._DataStore__elements["forte.data.ontology.top.Link"]
+        )
+        self.assertEqual(num_link, 2)
+
+        # check add link with tid
+        tid = 77
+        self.data_store.add_link_raw("forte.data.ontology.top.Link", 0, 1, tid)
+        self.assertEqual(
+            self.data_store.get_entry(tid=77)[0],
+            [0, 1, tid, "forte.data.ontology.top.Link"],
+        )
+
+    def test_add_group_raw(self):
+        self.data_store.add_group_raw(
+            "forte.data.ontology.top.Group", 9999, 1234567
+        )
+        num_group = len(
+            self.data_store._DataStore__elements[
+                "forte.data.ontology.top.Group"
+            ]
+        )
+        self.assertEqual(num_group, 4)
+
+        # check add group with tid
+        tid = 77
+        self.data_store.add_group_raw(
+            "forte.data.ontology.top.Group", "test_group", tid
+        )
+        self.assertEqual(
+            self.data_store.get_entry(tid=77)[0],
+            ["test_group", [], tid, "forte.data.ontology.top.Group"],
+        )
 
     def test_get_attribute(self):
         speaker = self.data_store.get_attribute(9999, "speaker")

@@ -11,7 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Dict, List, Iterator, Tuple, Optional, Any
+
+from typing import Dict, List, Iterator, Tuple, Optional, Any, Type
 import uuid
 from bisect import bisect_left
 from heapq import heappush, heappop
@@ -20,8 +21,8 @@ from typing_inspect import get_origin
 
 from forte.utils import get_class
 from forte.data.base_store import BaseStore
-from forte.data.ontology.core import FList, FDict
-from forte.data.ontology.top import Annotation, AudioAnnotation
+from forte.data.ontology.top import Annotation, AudioAnnotation, Group, Link
+from forte.data.ontology.core import Entry, FList, FDict
 from forte.common import constants
 from forte.utils.utils import get_full_module_name
 
@@ -346,7 +347,9 @@ class DataStore(BaseStore):
                 attr_list[attr_id - constants.ATTR_BEGIN_INDEX] = {}
         return attr_list
 
-    def _new_annotation(self, type_name: str, begin: int, end: int) -> List:
+    def _new_annotation(
+        self, type_name: str, begin: int, end: int, tid: Optional[int] = None
+    ) -> List:
         r"""This function generates a new annotation with default fields.
         Called by add_annotation_raw() to create a new annotation with
         ``type_name``, ``begin``, and ``end``.
@@ -355,12 +358,14 @@ class DataStore(BaseStore):
             type_name: The fully qualified type name of the new entry.
             begin: Begin index of the entry.
             end: End index of the entry.
+            tid: ``tid`` of the ``Annotation``. It's optional, and it will be
+                auto-assigned if not given.
 
         Returns:
             A list representing a new annotation type entry data.
         """
 
-        tid: int = self._new_tid()
+        tid: int = self._new_tid() if tid is None else tid
         entry: List[Any]
 
         entry = [begin, end, tid, type_name]
@@ -369,7 +374,11 @@ class DataStore(BaseStore):
         return entry
 
     def _new_link(
-        self, type_name: str, parent_tid: int, child_tid: int
+        self,
+        type_name: str,
+        parent_tid: int,
+        child_tid: int,
+        tid: Optional[int] = None,
     ) -> List:
         r"""This function generates a new link with default fields.
         Called by add_link_raw() to create a new link with ``type_name``,
@@ -379,12 +388,14 @@ class DataStore(BaseStore):
             type_name: The fully qualified type name of the new entry.
             parent_tid: ``tid`` of the parent entry.
             child_tid: ``tid`` of the child entry.
+            tid: ``tid`` of the ``Link`` entry. It's optional, and it will be
+                auto-assigned if not given.
 
         Returns:
             A list representing a new link type entry data.
         """
 
-        tid: int = self._new_tid()
+        tid: int = self._new_tid() if tid is None else tid
         entry: List[Any]
 
         entry = [parent_tid, child_tid, tid, type_name]
@@ -392,20 +403,25 @@ class DataStore(BaseStore):
 
         return entry
 
-    def _new_group(self, type_name: str, member_type: str) -> List:
-        r"""This function generates a new group with default fields.
+    def _new_group(
+        self, type_name: str, member_type: str, tid: Optional[int] = None
+    ) -> List:
+        r"""This function generates a new group with default fields. All
+        default fields are filled with None.
         Called by add_group_raw() to create a new group with
         ``type_name`` and ``member_type``.
 
         Args:
             type_name: The fully qualified type name of the new entry.
             member_type: Fully qualified name of its members.
+            tid: ``tid`` of the ``Group`` entry. It's optional, and it will be
+                auto-assigned if not given.
 
         Returns:
             A list representing a new group type entry data.
         """
 
-        tid: int = self._new_tid()
+        tid: int = self._new_tid() if tid is None else tid
 
         entry = [member_type, [], tid, type_name]
         entry += self._default_attributes_for_type(type_name)
@@ -417,8 +433,9 @@ class DataStore(BaseStore):
     ) -> bool:
         r"""This function takes a fully qualified ``type_name`` class name,
         ``cls`` class and returns whether ``type_name``  class is the``cls``
-        subclass or not. This function accept two types of class: the class
-        defined in forte, or the classes in user provided ontology file.
+        subclass or not. This function accepts two types of class: the class defined
+        in forte, or the classes in user provided ontology file.
+
 
         Args:
             type_name: A fully qualified name of an entry class.
@@ -468,6 +485,52 @@ class DataStore(BaseStore):
         entry_class = get_class(type_name)
         return issubclass(entry_class, (Annotation, AudioAnnotation))
 
+    def _add_entry_raw(
+        self,
+        entry_type: Type[Entry],
+        type_name: str,
+        entry: List[Any],
+    ):
+        """
+        This function add raw entry in DataStore object
+        based on corresponding type name
+         and sort them based on entry type.
+
+        Args:
+            entry_type: entry's type which decides the sorting of entry.
+            type_name: The name of type in `self.__elements`.
+            entry: raw entry data in the list format.
+
+        Raises:
+            KeyError: raised when the entry type name is not in `self.__elements`.
+
+        Returns:
+            ``tid`` of the entry.
+        """
+        if entry_type == Annotation:
+            sorting_fn = lambda s: (
+                s[constants.BEGIN_INDEX],
+                s[constants.END_INDEX],
+            )
+            try:
+                self.__elements[type_name].add(entry)
+            except KeyError:
+                self.__elements[type_name] = SortedList(key=sorting_fn)
+                self.__elements[type_name].add(entry)
+        elif entry_type in [Link, Group]:
+            try:
+                self.__elements[type_name].append(entry)
+            except KeyError:
+                self.__elements[type_name] = []
+                self.__elements[type_name].append(entry)
+        tid = entry[constants.TID_INDEX]
+        if self._is_annotation(type_name):
+            self.__tid_ref_dict[tid] = entry
+        else:
+            index_id = len(self.__elements[type_name]) - 1  # last one
+            self.__tid_idx_dict[tid] = [type_name, index_id]
+        return tid
+
     def _is_annotation_tid(self, tid: int) -> bool:
         r"""This function takes a tid and returns whether an entry is an
         annotation or not.
@@ -485,7 +548,10 @@ class DataStore(BaseStore):
         else:
             raise KeyError(f"Entry with tid {tid} not found.")
 
-    def add_annotation_raw(self, type_name: str, begin: int, end: int) -> int:
+    def add_annotation_raw(
+        self, type_name: str, begin: int, end: int, tid: Optional[int] = None
+    ) -> int:
+
         r"""This function adds an annotation entry with ``begin`` and ``end``
         indices to current data store object. Returns the ``tid`` for the
         inserted entry.
@@ -494,6 +560,9 @@ class DataStore(BaseStore):
             type_name: The fully qualified type name of the new Annotation.
             begin: Begin index of the entry.
             end: End index of the entry.
+            tid: ``tid`` of the Annotation entry that is being added.
+                It's optional, and it will be
+                auto-assigned if not given.
 
         Returns:
             ``tid`` of the entry.
@@ -504,18 +573,15 @@ class DataStore(BaseStore):
         # annotation type entry data with default fields.
         # A reference to the entry should be store in both self.__elements and
         # self.__tid_ref_dict.
-        entry = self._new_annotation(type_name, begin, end)
-        try:
-            self.__elements[type_name].add(entry)
-        except KeyError:
-            self.__elements[type_name] = SortedList(key=lambda s: (s[0], s[1]))
-            self.__elements[type_name].add(entry)
-        tid = entry[constants.TID_INDEX]
-        self.__tid_ref_dict[tid] = entry
-        return tid
+        entry = self._new_annotation(type_name, begin, end, tid)
+        return self._add_entry_raw(Annotation, type_name, entry)
 
     def add_link_raw(
-        self, type_name: str, parent_tid: int, child_tid: int
+        self,
+        type_name: str,
+        parent_tid: int,
+        child_tid: int,
+        tid: Optional[int] = None,
     ) -> Tuple[int, int]:
         r"""This function adds a link entry with ``parent_tid`` and
         ``child_tid`` to current data store object. Returns the ``tid`` and
@@ -526,15 +592,19 @@ class DataStore(BaseStore):
             type_name:  The fully qualified type name of the new Link.
             parent_tid: ``tid`` of the parent entry.
             child_tid: ``tid`` of the child entry.
+            tid: ``tid`` of the Link entry that is being added.
+                It's optional, and it will be
+                auto-assigned if not given.
 
         Returns:
             ``tid`` of the entry and its index in the ``type_name`` list.
 
         """
-        raise NotImplementedError
+        entry = self._new_link(type_name, parent_tid, child_tid, tid)
+        return self._add_entry_raw(Link, type_name, entry)
 
     def add_group_raw(
-        self, type_name: str, member_type: str
+        self, type_name: str, member_type: str, tid: Optional[int] = None
     ) -> Tuple[int, int]:
         r"""This function adds a group entry with ``member_type`` to the
         current data store object. Returns the ``tid`` and the ``index_id``
@@ -544,12 +614,16 @@ class DataStore(BaseStore):
         Args:
             type_name: The fully qualified type name of the new Group.
             member_type: Fully qualified name of its members.
+            tid: ``tid`` of the Group entry that is being added.
+                It's optional, and it will be
+                auto-assigned if not given.
 
         Returns:
             ``tid`` of the entry and its index in the (``type_id``)th list.
 
         """
-        raise NotImplementedError
+        entry = self._new_group(type_name, member_type, tid)
+        return self._add_entry_raw(Group, type_name, entry)
 
     def set_attribute(self, tid: int, attr_name: str, attr_value: Any):
         r"""This function locates the entry data with ``tid`` and sets its
