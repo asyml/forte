@@ -473,7 +473,7 @@ class DataStore(BaseStore):
             A list representing a new generics type entry data.
         """
         tid: int = self._new_tid() if tid is None else tid
-        entry = [tid, type_name]
+        entry = [None, None, tid, type_name]
         return entry
 
     def _is_subclass(
@@ -565,12 +565,17 @@ class DataStore(BaseStore):
             except KeyError:
                 self.__elements[type_name] = SortedList(key=sorting_fn)
                 self.__elements[type_name].add(entry)
-        elif entry_type in [Link, Group]:
+        elif entry_type in [Link, Group, Generics]:
             try:
                 self.__elements[type_name].append(entry)
             except KeyError:
                 self.__elements[type_name] = []
                 self.__elements[type_name].append(entry)
+        else:
+            raise NotImplementedError(
+                "_add_entry_raw() is not implemented "
+                f"for entry type {entry_type}."
+            )
         tid = entry[constants.TID_INDEX]
         if self._is_annotation(type_name):
             self.__tid_ref_dict[tid] = entry
@@ -705,13 +710,13 @@ class DataStore(BaseStore):
     def add_generics_raw(
         self, type_name: str, tid: Optional[int] = None
     ) -> Tuple[int, int]:
-        r"""This function adds a group entry with ``member_type`` to the
+        r"""This function adds a generics entry with ``type_name`` to the
         current data store object. Returns the ``tid`` and the ``index_id``
         for the inserted entry in the list. This ``index_id`` is the index
         of the entry in the ``type_name`` list.
 
         Args:
-            type_name: The fully qualified type name of the new Group.
+            type_name: The fully qualified type name of the new Generics.
             tid: ``tid`` of generics entry.
 
         Returns:

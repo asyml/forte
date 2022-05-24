@@ -597,6 +597,27 @@ class DataStoreTest(unittest.TestCase):
             [0, 1, tid, "ft.onto.base_ontology.Recording", []],
         )
 
+    def test_add_generics_raw(self):
+
+        # test add Document entry
+        tid_generics: int = self.data_store.add_generics_raw(
+            "forte.data.ontology.top.Generics"
+        )
+        num_generics = len(
+            self.data_store._DataStore__elements[
+                "forte.data.ontology.top.Generics"
+            ]
+        )
+        self.assertEqual(num_generics, 1)
+        tid = 77
+        self.data_store.add_generics_raw(
+            "forte.data.ontology.top.Generics", tid
+        )
+        self.assertEqual(
+            self.data_store.get_entry(tid=77)[0],
+            [None, None, tid, "forte.data.ontology.top.Generics"],
+        )
+
     def test_add_link_raw(self):
         self.data_store.add_link_raw(
             "forte.data.ontology.top.Link", 9999, 1234567
