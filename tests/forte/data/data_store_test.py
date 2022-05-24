@@ -946,7 +946,7 @@ class DataStoreTest(unittest.TestCase):
         data_pack.set_text(
             "Forte is a data-centric framework designed to engineer complex ML workflows. Forte allows practitioners to build ML components in a composable and modular way. Behind the scene, it introduces DataPack, a standardized data structure for unstructured data, distilling good software engineering practices such as reusability, extensibility, and flexibility into ML solutions."
         )
-        for tid in self.data_store._DataStore__entry_dict:
+        for tid in self.data_store._DataStore__tid_ref_dict:
             entry = data_pack._entry_converter.get_entry_object(
                 tid=tid, pack=data_pack
             )

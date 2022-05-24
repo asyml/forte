@@ -1386,33 +1386,28 @@ class DataPack(BasePack[Entry, Link, Group]):
             else:
                 return attr_val
 
-        def entry_setter(cls: Entry, attr_name: str, value: Any, field_type):
-            if issubclass(field_type, (FList, FDict)):
-                ref_data: Union[
-                    List, Dict
-                ] = cls.pack._data_store.get_attribute(
-                    tid=cls.tid, attr_name=attr_name
-                )
-                ref_data.clear()
-                if isinstance(ref_data, list):
-                    for entry in value:
-                        ref_data.append(
-                            entry.tid if isinstance(entry, Entry) else entry
-                        )
-                elif isinstance(ref_data, dict):
-                    for key, entry in value.items():
-                        ref_data[key] = (
-                            entry.tid if isinstance(entry, Entry) else entry
-                        )
+        def entry_setter(cls: Entry, value: Any, attr_name: str, field_type):
+            attr_value: Any
+            if issubclass(field_type, FList):
+                attr_value = [
+                    entry.tid if isinstance(entry, Entry) else entry
+                    for entry in value
+                ]
+            elif issubclass(field_type, FDict):
+                attr_value = {
+                    key: entry.tid if isinstance(entry, Entry) else entry
+                    for key, entry in value.items()
+                }
+            elif isinstance(value, Entry):
+                attr_value = value.tid
             else:
-                if isinstance(value, Entry):
-                    value = value.tid
-                cls.pack._data_store.set_attribute(
-                    tid=cls.tid, attr_name=attr_name, attr_value=value
-                )
+                attr_value = value
+            cls.pack._data_store.set_attribute(
+                tid=cls.tid, attr_name=attr_name, attr_value=attr_value
+            )
 
         self._entry_converter.save_entry_object(entry=entry, pack=self)
-        for name, field in entry.__dataclass_fields__:
+        for name, field in entry.__dataclass_fields__.items():
             field_type = get_origin(field.type)
             setattr(
                 type(entry),
@@ -1823,7 +1818,7 @@ class EntryConverter:
                 entry.tid,
             )
             return
-        except ValueError:
+        except KeyError:
             pass
 
         if isinstance(entry, Annotation):
@@ -1869,7 +1864,6 @@ class EntryConverter:
                 parent_tid=entry.parent,
                 child_tid=entry.child,
                 tid=entry.tid,
-                allow_duplicate=allow_duplicate,
             )
         elif isinstance(entry, Group):
             # TODO: Add `tid` and `allow_duplicate` to DataStore.add_group_raw()
@@ -1884,7 +1878,6 @@ class EntryConverter:
             pack._data_store.add_generics_raw(
                 type_name=entry.entry_type(),
                 tid=entry.tid,
-                allow_duplicate=allow_duplicate,
             )
         elif isinstance(entry, AudioAnnotation):
             # TODO: Implement add_audio_annotation_raw in DataStore
