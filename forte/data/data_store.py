@@ -21,7 +21,13 @@ from typing_inspect import get_origin
 
 from forte.utils import get_class
 from forte.data.base_store import BaseStore
-from forte.data.ontology.top import Annotation, AudioAnnotation, Group, Link,  Generics
+from forte.data.ontology.top import (
+    Annotation,
+    AudioAnnotation,
+    Group,
+    Link,
+    Generics,
+)
 from forte.data.ontology.core import Entry, FList, FDict
 from forte.common import constants
 from forte.utils.utils import get_full_module_name
@@ -917,7 +923,6 @@ class DataStore(BaseStore):
 
         Returns:
             An iterator of entry elements.
-
         """
 
         n = len(type_names)
