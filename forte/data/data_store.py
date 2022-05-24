@@ -772,10 +772,7 @@ class DataStore(BaseStore):
         if self._is_annotation(type_name):
             return len(self.__elements[type_name])
         else:
-            try:
-                delete_count = self.__deletion_count[type_name]
-            except KeyError:
-                delete_count = 0
+            delete_count = self.__deletion_count.get(type_name, 0)
             return len(self.__elements[type_name]) - delete_count
 
     def co_iterator_annotation_like(
@@ -914,22 +911,27 @@ class DataStore(BaseStore):
         self,
         type_name: str,
         include_sub_type: bool = True,
-        range_annotation: Optional[List[int]] = None,
+        range_annotation: Optional[Tuple[int]] = None,
     ) -> Iterator[List]:
         r"""This function fetches entries from the data store of
-        type ``type_name``.
+        type ``type_name``. If `include_sub_type` is set to True and
+        ``type_name`` is in [Annotation, Group, List], this function also
+        fetches entries of subtypes of ``type_name``. Otherwise, it only
+        fetches entries of type ``type_name``.
 
         Args:
             type_name: The fully qualified name of the entry.
             include_sub_type: A boolean to indicate whether get its subclass.
-            range_annotation: A list that contains the begin and end indices
+            range_annotation: A tuple that contains the begin and end indices
                 of the searching range of entries.
 
         Returns:
             An iterator of the entries matching the provided arguments.
         """
 
-        def within_range(entry: List[Any], range_annotation: List[int]) -> bool:
+        def within_range(
+            entry: List[Any], range_annotation: Tuple[int]
+        ) -> bool:
             """
             A helper function for deciding whether an annotation entry is
             inside the `range_annotation`.
@@ -943,6 +945,8 @@ class DataStore(BaseStore):
                 <= range_annotation[constants.END_INDEX]
             )
 
+        if type_name not in self.__elements:
+            raise ValueError(f"type {type_name} does not exist")
         entry_class = get_class(type_name)
         all_types = set()
         if include_sub_type:
@@ -999,8 +1003,6 @@ class DataStore(BaseStore):
                             if within:
                                 yield entry
         else:
-            if type_name not in self.__elements:
-                raise KeyError(f"type {type_name} does not exist")
             yield from self.iter(type_name)
 
     def iter(self, type_name: str) -> Iterator[List]:
