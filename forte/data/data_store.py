@@ -1061,15 +1061,17 @@ class DataStore(BaseStore):
                 else:
                     for entry in self.__elements[type]:
                         if (
-                            entry[constants.BEGIN_INDEX] in self.__tid_ref_dict
+                            entry[constants.PARENT_TID_INDEX]
+                            in self.__tid_ref_dict
                         ) and (
-                            entry[constants.END_INDEX] in self.__tid_ref_dict
+                            entry[constants.CHILD_TID_INDEX]
+                            in self.__tid_ref_dict
                         ):
                             parent = self.__tid_ref_dict[
-                                entry[constants.BEGIN_INDEX]
+                                entry[constants.PARENT_TID_INDEX]
                             ]
                             child = self.__tid_ref_dict[
-                                entry[constants.END_INDEX]
+                                entry[constants.CHILD_TID_INDEX]
                             ]
                             if within_range(
                                 parent, range_annotation
@@ -1081,9 +1083,9 @@ class DataStore(BaseStore):
                     yield from self.iter(type)
                 else:
                     for entry in self.__elements[type]:
-                        member_type = entry[constants.BEGIN_INDEX]
+                        member_type = entry[constants.MEMBER_TYPE_INDEX]
                         if self._is_annotation(member_type):
-                            members = entry[constants.END_INDEX]
+                            members = entry[constants.MEMBER_TID_INDEX]
                             within = True
                             for m in members:
                                 e = self.__tid_ref_dict[m]
