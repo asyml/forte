@@ -187,7 +187,7 @@ class DataStoreTest(unittest.TestCase):
 
     def test_save_attribute_pickle(self):
         # test serialize with save_attribute and deserialize with/without
-        # check_attribute and accept_none
+        # check_attribute and accept_unknown_attribute
         with tempfile.TemporaryDirectory() as tempdir:
             # tempdir = 'temp/'
             tmpfilepath = os.path.join(tempdir, "temp.txt")
@@ -497,7 +497,7 @@ class DataStoreTest(unittest.TestCase):
                 },
             )
 
-            # test check_attribute with accept_none = False
+            # test check_attribute with accept_unknown_attribute = False
             with self.assertRaisesRegex(
                 ValueError,
                 "Saved ft.onto.base_ontology.Document objects have unidentified"
@@ -507,12 +507,12 @@ class DataStoreTest(unittest.TestCase):
                     tmpfilepath,
                     serialize_method="json",
                     check_attribute=True,
-                    accept_none=False,
+                    accept_unknown_attribute=False,
                 )
 
     def test_fast_pickle(self):
         # test serialize without save_attribute and deserialize with/without
-        # check_attribute and accept_none
+        # check_attribute and accept_unknown_attribute
         with tempfile.TemporaryDirectory() as tempdir:
             # tempdir = 'temp/'
             tmpfilepath = os.path.join(tempdir, "temp2.txt")

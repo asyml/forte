@@ -275,12 +275,7 @@ class DataStore(BaseStore):
             if self._is_annotation(k):
                 self.__elements[k] = SortedList(self.__elements[k])
             for e in self.__elements[k]:
-                if e is None:
-                    if k in self._DataStore__deletion_count:
-                        self._DataStore__deletion_count[k] += 1
-                    else:
-                        self._DataStore__deletion_count[k] = 1
-                else:
+                if e is not None:
                     if self._is_annotation(k):
                         # annotation-like
                         self._DataStore__tid_ref_dict[
@@ -288,6 +283,7 @@ class DataStore(BaseStore):
                         ] = e
                     else:
                         # non-annotation-like
+                        # use `reset_index` to recalculate indices
                         type_name = e[constants.ENTRY_TYPE_INDEX]
                         if type_name in reset_index:
                             reset_index[type_name] += 1
@@ -305,7 +301,7 @@ class DataStore(BaseStore):
         serialize_method: str = "json",
         check_attribute: bool = True,
         suppress_warning: bool = True,
-        accept_none: bool = True,
+        accept_unknown_attribute: bool = True,
     ) -> "DataStore":
         """
         Deserialize a `DataStore` from serialized data in `data_source`.
@@ -325,18 +321,28 @@ class DataStore(BaseStore):
                 fields to match the current class.
                 If there are fields that appear in the current class, but not in
                 the serialized object, it handles those fields with
-                `accept_none`.
+                `accept_unknown_attribute`.
                 If there are fields that appear in the serialized object, but
                 not in the current class, it drops those fields.
             suppress_warning: Boolean value indicating whether users want to
                 see warnings when it checks attributes. Only applicable when
                 `check_attribute` is set to True. If true, it will
                 log warnings when there are mismatched fields.
-            accept_none: Boolean value indicating whether users want to
-                fill fields that appear in the current class, but not in
-                the serialized object with none. Only applicable when
+            accept_unknown_attribute: Boolean value indicating whether users
+                want to fill fields that appear in the current class, but not
+                in the serialized object with none. Only applicable when
                 `check_attribute` is set to True. If false, it will raise
                 an `ValueError` if there are any contradictions in fields.
+
+        Raises:
+            ValueError: raised when
+                1. the serialized object has unknown fields, but
+                    `accept_unknown_attribute` is False.
+                2. the serialized object does not store attributes, but
+                    `check_attribute` is True.
+                3. the serialized object does not support json deserialization.
+                    We may change this error when we have other options for
+                    deserialization.
 
         Returns:
             An data store object deserialized from the string.
@@ -405,7 +411,7 @@ class DataStore(BaseStore):
                             t,
                             len(contradict_loc),
                         )
-                    if accept_none:
+                    if accept_unknown_attribute:
                         # fill fields that only appear in the current class
                         # but not in the serialized objects with None.
                         for d in store._DataStore__elements[t]:
