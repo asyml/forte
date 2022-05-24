@@ -568,7 +568,7 @@ class DataStore(BaseStore):
                 It's optional, and it will be
                 auto-assigned if not given.
             allow_duplicate: Whether we allow duplicate in the DataStore. When
-                it's set to True, the function will return the tid of existing
+                it's set to False, the function will return the tid of existing
                 entry if a duplicate is found. Default value is True.
 
         Returns:
