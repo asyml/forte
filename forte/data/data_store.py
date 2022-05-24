@@ -358,7 +358,8 @@ class DataStore(BaseStore):
             type_name: The fully qualified type name of the new entry.
             begin: Begin index of the entry.
             end: End index of the entry.
-            tid: ``tid`` of the ``Annotation``.
+            tid: ``tid`` of the ``Annotation``. It's optional, and it will be
+                auto-assigned if not given.
 
         Returns:
             A list representing a new annotation type entry data.
@@ -387,7 +388,8 @@ class DataStore(BaseStore):
             type_name: The fully qualified type name of the new entry.
             parent_tid: ``tid`` of the parent entry.
             child_tid: ``tid`` of the child entry.
-            tid: ``tid`` of the ``Link`` entry.
+            tid: ``tid`` of the ``Link`` entry. It's optional, and it will be
+                auto-assigned if not given.
 
         Returns:
             A list representing a new link type entry data.
@@ -401,7 +403,6 @@ class DataStore(BaseStore):
 
         return entry
 
-
     def _new_group(
         self, type_name: str, member_type: str, tid: Optional[int] = None
     ) -> List:
@@ -413,7 +414,8 @@ class DataStore(BaseStore):
         Args:
             type_name: The fully qualified type name of the new entry.
             member_type: Fully qualified name of its members.
-            tid: ``tid`` of the ``Group`` entry.
+            tid: ``tid`` of the ``Group`` entry. It's optional, and it will be
+                auto-assigned if not given.
 
         Returns:
             A list representing a new group type entry data.
@@ -559,6 +561,8 @@ class DataStore(BaseStore):
             begin: Begin index of the entry.
             end: End index of the entry.
             tid: ``tid`` of the Annotation entry that is being added.
+                It's optional, and it will be
+                auto-assigned if not given.
 
         Returns:
             ``tid`` of the entry.
@@ -589,6 +593,8 @@ class DataStore(BaseStore):
             parent_tid: ``tid`` of the parent entry.
             child_tid: ``tid`` of the child entry.
             tid: ``tid`` of the Link entry that is being added.
+                It's optional, and it will be
+                auto-assigned if not given.
 
         Returns:
             ``tid`` of the entry and its index in the ``type_name`` list.
@@ -609,6 +615,8 @@ class DataStore(BaseStore):
             type_name: The fully qualified type name of the new Group.
             member_type: Fully qualified name of its members.
             tid: ``tid`` of the Group entry that is being added.
+                It's optional, and it will be
+                auto-assigned if not given.
 
         Returns:
             ``tid`` of the entry and its index in the (``type_id``)th list.
