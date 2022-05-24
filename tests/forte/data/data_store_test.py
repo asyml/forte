@@ -558,7 +558,7 @@ class DataStoreTest(unittest.TestCase):
         ]), num_sent)
         self.assertEqual(tid_sent, tid_sent_duplicate)
         self.data_store.add_annotation_raw(
-            "ft.onto.base_ontology.Sentence", 5, 9,  allow_duplicate=False
+            "ft.onto.base_ontology.Sentence", 5, 9, allow_duplicate=False
         )
         self.assertEqual(len(self.data_store._DataStore__elements[
             "ft.onto.base_ontology.Sentence"

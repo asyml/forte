@@ -567,8 +567,9 @@ class DataStore(BaseStore):
             tid: ``tid`` of the Annotation entry that is being added.
                 It's optional, and it will be
                 auto-assigned if not given.
-            allow_duplicate: Whether we allow duplicate in the DataStore.
-                Default value is True.
+            allow_duplicate: Whether we allow duplicate in the DataStore. When
+                it's set to True, the function will return the tid of existing
+                entry if a duplicate is found. Default value is True.
 
         Returns:
             ``tid`` of the entry.
