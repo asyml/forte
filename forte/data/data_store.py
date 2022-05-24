@@ -380,7 +380,7 @@ class DataStore(BaseStore):
         return entry
 
     def _new_audio_annotation(
-        self, type_name: str, begin: int, end: int, tid: int
+        self, type_name: str, begin: int, end: int, tid: Optional[int] = None
     ) -> List:
         r"""This function generates a new audio annotation with default fields.
         All default fields are filled with None.
