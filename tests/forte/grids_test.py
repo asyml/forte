@@ -20,9 +20,7 @@ import numpy as np
 from numpy import array_equal
 from forte.data.ontology.top import Grids
 from forte.data.data_pack import DataPack
-from forte.data.ontology.top import (
-    ImageAnnotation
-)
+from forte.data.ontology.top import ImageAnnotation
 
 
 class ImageAnnotationTest(unittest.TestCase):
@@ -33,25 +31,30 @@ class ImageAnnotationTest(unittest.TestCase):
     def setUp(self):
         self.datapack = DataPack("image")
         line = np.zeros((6, 12))
-        line[2,2] = 1
-        line[3,3] = 1
-        line[4,4] = 1
+        line[2, 2] = 1
+        line[3, 3] = 1
+        line[4, 4] = 1
         self.datapack.payloads.append(line)
         self.datapack.image_annotations.add(ImageAnnotation(self.datapack, 0))
-        
-        grids = Grids(self.datapack, (3,4))
+
+        grids = Grids(self.datapack, 3, 4)
 
         self.datapack.grids.add(grids)
+        self.zeros = np.zeros((6, 12))
+        self.ref_arr = np.zeros((6, 12))
+        self.ref_arr[2, 2] = 1
+        self.datapack.payloads.append(self.ref_arr)
 
     def test_image_annotation(self):
-        ref_arr = np.zeros((6,12))
-        ref_arr[2,2] = 1
+
         self.assertTrue(
-            array_equal(self.datapack.grids[0].get_grid_cell(1,0,0), ref_arr)
+            array_equal(
+                self.datapack.grids[0].get_grid_cell(0, 0, 0), self.zeros
+            )
         )
 
-        ref_arr2 = np.zeros((6,12))
-        ref_arr2[3, 3] = 1
         self.assertTrue(
-            array_equal(self.datapack.grids[0].get_grid_cell(1,1,0), ref_arr2)
+            array_equal(
+                self.datapack.grids[0].get_grid_cell(1, 0, 0), self.ref_arr
+            )
         )
