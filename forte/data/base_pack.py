@@ -109,7 +109,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         # This Dict maintains a mapping from entry's tid to the Entry object
         # itself and the component name associated with the entry.
         # The component name is used for tracking the "creator" of this entry.
-        self._pending_entries: Dict[int, Tuple[Entry, Optional[str]]] = {}
+        self._pending_entries: Dict[int, Tuple[int, Optional[str]]] = {}
 
     def __getstate__(self):
         state = self.__dict__.copy()

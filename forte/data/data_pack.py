@@ -54,7 +54,7 @@ from forte.data.ontology.top import (
 )
 from forte.data.span import Span
 from forte.data.types import ReplaceOperationsType, DataRequest
-from forte.utils import get_class
+from forte.utils import get_class, get_full_module_name
 from forte.version import PACK_ID_COMPATIBLE_VERSION, DEFAULT_PACK_VERSION
 
 logger = logging.getLogger(__name__)
@@ -174,6 +174,9 @@ class DataPack(BasePack[Entry, Link, Group]):
         self.__orig_text_len: int = 0
 
         self._index: DataIndex = DataIndex()
+
+    def __getstate__(self):
+        return super().__getstate__()
 
     def __setstate__(self, state):
         pack_version: str = (
@@ -664,7 +667,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             self._index.update_group_index([entry])
         self._index.deactivate_coverage_index()
         self._pending_entries.pop(entry.tid)
-        return entry
+        return entry  # type: ignore
 
     def delete_entry(self, entry: EntryType):
         r"""Delete an :class:`~forte.data.ontology.core.Entry` object from the
@@ -1178,40 +1181,6 @@ class DataPack(BasePack[Entry, Link, Group]):
             self, context_entry, covered_entry.__class__
         )
 
-    def iter_in_range(
-        self,
-        entry_type: Type[EntryType],
-        range_annotation: Union[Annotation, AudioAnnotation],
-    ) -> Iterator[EntryType]:
-        """
-        Iterate the entries of the provided type within or fulfill the
-        constraints of the `range_annotation`. The constraint is True if
-        an entry is :meth:`~forte.data.data_pack.DataIndex.in_span` or
-        :meth:`~forte.data.data_pack.DataIndex.in_audio_span` of the provided
-        `range_annotation`.
-
-        Internally, if the coverage index between the entry type and the
-        type of the `range_annotation` is built, then this will create the
-        iterator from the index. Otherwise, the function will iterate them
-        from scratch (which is slower). If there are frequent usage of this
-        function, it is suggested to build the coverage index.
-
-        Only when `range_annotation` is an instance of `AudioAnnotation` will
-        the searching be performed on the list of audio annotations. In other
-        cases (i.e., when `range_annotation` is None or Annotation), it defaults
-        to a searching process on the list of text annotations.
-
-        Args:
-            entry_type: The type of entry to iterate over.
-            range_annotation: The range annotation that serve as the constraint.
-
-        Returns:
-            An iterator of the entries with in the `range_annotation`.
-
-        """
-        # TODO: This can be implemented in DataStore or DataPack
-        self._data_store.iter_in_range(entry_type, range_annotation)
-
     def get(  # type: ignore
         self,
         entry_type: Union[str, Type[EntryType]],
@@ -1304,7 +1273,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                     entry_type_.ParentType, entry_class
                 ) and issubclass(entry_type_.ChildType, entry_class)
             if issubclass(entry_type_, Group):
-                return issubclass(entry_type_.MemberType, entry_class)
+                return issubclass(entry_type_.MemberType, entry_class)  # type: ignore
             return False
 
         # If we don't have any annotations but the items to check requires them,
@@ -1341,18 +1310,22 @@ class DataPack(BasePack[Entry, Link, Group]):
             yield from []
             return
 
-        for entry_data in self._data_store.get(
-            type_name=entry_type_.entry_type(),
-            range_annotation=range_annotation
-            and (range_annotation.begin, range_annotation.end),
-            include_sub_type=include_sub_type,
-        ):
-            entry = self.get_entry(tid=entry_data[TID_INDEX])
-            # Filter by components
-            if components is not None:
-                if not self.is_created_by(entry, components):
-                    continue
-            yield entry  # type: ignore
+        try:
+            for entry_data in self._data_store.get(
+                type_name=get_full_module_name(entry_type_),
+                include_sub_type=include_sub_type,
+                range_annotation=range_annotation  # type: ignore
+                and (range_annotation.begin, range_annotation.end),
+            ):
+                entry: EntryType = self.get_entry(tid=entry_data[TID_INDEX])
+                # Filter by components
+                if components is not None:
+                    if not self.is_created_by(entry, components):
+                        continue
+                yield entry
+        except ValueError:
+            # type_name does not exist in DataStore
+            yield from []
 
     def update(self, datapack: "DataPack"):
         r"""Update the attributes and properties of the current DataPack with
@@ -1840,7 +1813,7 @@ class EntryConverter:
 
     def __init__(self) -> None:
         # Mapping from entry's tid to the entries.
-        self._entry_dict: Dict[int, EntryType] = {}
+        self._entry_dict: Dict[int, Entry] = {}
 
     def save_entry_object(
         self, entry: Entry, pack: DataPack, allow_duplicate: bool = True
@@ -1875,7 +1848,7 @@ class EntryConverter:
         elif isinstance(entry, Group):
             data_store_ref.add_group_raw(
                 type_name=entry.entry_type(),
-                member_type=entry.MemberType,
+                member_type=get_full_module_name(entry.MemberType),
                 tid=entry.tid,
             )
         elif isinstance(entry, Generics):
@@ -1917,9 +1890,9 @@ class EntryConverter:
 
         self._entry_dict[entry.tid] = entry
 
-    def get_entry_object(self, tid: int, pack: DataPack) -> Entry:
+    def get_entry_object(self, tid: int, pack: DataPack) -> EntryType:
         if tid in self._entry_dict:
-            return self._entry_dict[tid]
+            return self._entry_dict[tid]  # type: ignore
 
         data_store_ref = pack._data_store  # pylint: disable=protected-access
         entry_data, entry_type = data_store_ref.get_entry(tid=tid)
@@ -1945,4 +1918,4 @@ class EntryConverter:
         entry._tid = entry_data[TID_INDEX]  # pylint: disable=protected-access
 
         self._entry_dict[tid] = entry
-        return entry
+        return entry  # type: ignore

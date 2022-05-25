@@ -34,7 +34,7 @@ from forte.common.constants import (
     MEMBER_TID_INDEX,
     MEMBER_TYPE_INDEX,
 )
-from forte.utils.utils import get_class
+from forte.utils.utils import get_class, get_full_module_name
 
 __all__ = [
     "Generics",
@@ -380,7 +380,7 @@ class Group(BaseGroup[Entry]):
             member_entries.append(self.pack.get_entry(m))
         return member_entries
 
-    @property
+    @property  # type: ignore
     def MemberType(self):
         try:
             self._member_type = get_class(
@@ -393,7 +393,9 @@ class Group(BaseGroup[Entry]):
     @MemberType.setter
     def MemberType(self, val: Type[Entry]):
         self._member_type = val
-        self.pack.get_entry_raw(self.tid)[MEMBER_TYPE_INDEX] = val.entry_type()
+        self.pack.get_entry_raw(self.tid)[
+            MEMBER_TYPE_INDEX
+        ] = get_full_module_name(val)
 
 
 class MultiPackGeneric(MultiEntry, Entry):
