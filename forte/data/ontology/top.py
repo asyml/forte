@@ -769,7 +769,8 @@ class Grids(Entry):
         """
         Get the array data of a grid cell from image of the image payload index.
         The array is the same size of the image. The array entries that are not
-        within the grid cell will be zeros, and the array entries that are within the grid cell will be preserved.
+        within the grid cell will be zeros, and the array entries that are
+        within the grid cell will be preserved.
 
 
         Args:
