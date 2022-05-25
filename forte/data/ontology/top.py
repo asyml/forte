@@ -701,8 +701,8 @@ class ImageAnnotation(Entry):
             image_payload_idx: A integer that represents the index of
                 the image in the payloads.
         """
-        self._image_payload_idx = image_payload_idx
         super().__init__(pack)
+        self._image_payload_idx = image_payload_idx
 
     @property
     def image_payload_idx(self) -> int:
@@ -729,10 +729,6 @@ class ImageAnnotation(Entry):
         """
         return hash((self._image_payload_idx, self._tid))
 
-    @property
-    def index_key(self) -> int:
-        return self.tid
-
 
 class Grids(Entry):
     """
@@ -752,7 +748,7 @@ class Grids(Entry):
         width: int,
         image_payload_idx: Optional[int] = None,
     ):
-
+        super().__init__(pack)
         if height <= 0 or width <= 0:
             raise ValueError(
                 f"height({height}) and "
@@ -761,7 +757,6 @@ class Grids(Entry):
         self.height = height
         self.width = width
         self._image_payload_idx = image_payload_idx
-        super().__init__(pack)
 
     def get_grid_cell(
         self, h_idx: int, w_idx: int, image_payload_idx: Optional[int] = None
