@@ -382,9 +382,8 @@ class DataStore(BaseStore):
         self, type_name: str, begin: int, end: int, tid: Optional[int] = None
     ) -> List:
         r"""This function generates a new audio annotation with default fields.
-        All default fields are filled with None.
-        Called by add_audio_annotation_raw() to create a new audio annotation with
-        ``type_name``, ``begin``, and ``end``.
+        Called by add_audio_annotation_raw() to create a new audio annotation with ``type_name``, ``begin``, ``end`` and optional ``tid``.
+
 
         Args:
             type_name: The fully qualified type name of the new entry.
@@ -436,8 +435,7 @@ class DataStore(BaseStore):
     def _new_group(
         self, type_name: str, member_type: str, tid: Optional[int] = None
     ) -> List:
-        r"""This function generates a new group with default fields. All
-        default fields are filled with None.
+        r"""This function generates a new group with default fields.
         Called by add_group_raw() to create a new group with
         ``type_name`` and ``member_type``.
 
@@ -459,8 +457,7 @@ class DataStore(BaseStore):
         return entry
 
     def _new_generics(self, type_name: str, tid: Optional[int] = None):
-        r"""This function generates a new generics with default fields. All
-        default fields are filled with None.
+        r"""This function generates a new generics with default fields.
         Called by add_generics_raw() to create a new generics with
         ``type_name``.
 
@@ -635,20 +632,21 @@ class DataStore(BaseStore):
         # A reference to the entry should be store in both self.__elements and
         # self.__tid_ref_dict.
         entry = self._new_annotation(type_name, begin, end, tid)
-        if not allow_duplicate and type_name in self.__elements:
-            # Return the tid of existing entry if duplicate is not allowed
-            index = self.__elements[type_name].bisect_left(entry)
-            target_entry = self.__elements[type_name][index]
-            if (
-                target_entry[constants.BEGIN_INDEX] == begin
-                and target_entry[constants.END_INDEX] == end
-            ):
-                return target_entry[constants.TID_INDEX]
+        if not allow_duplicate:
+            tid_search_result = self._get_existing_entry_tid(entry)
+            # if found existing entry
+            if tid_search_result != -1:
+                return tid_search_result
 
         return self._add_entry_raw(Annotation, type_name, entry)
 
     def add_audio_annotation_raw(
-        self, type_name: str, begin: int, end: int, tid: Optional[int] = None
+        self,
+        type_name: str,
+        begin: int,
+        end: int,
+        tid: Optional[int] = None,
+        allow_duplicate=True,
     ) -> int:
 
         r"""This function adds an audio annotation entry with ``begin`` and
@@ -674,7 +672,50 @@ class DataStore(BaseStore):
         # A reference to the entry should be store in both self.__elements and
         # self.__tid_ref_dict.
         entry = self._new_audio_annotation(type_name, begin, end, tid)
+
+        if not allow_duplicate:
+            tid_search_result = self._get_existing_entry_tid(entry)
+            # if found existing entry
+            if tid_search_result != -1:
+                return tid_search_result
         return self._add_entry_raw(AudioAnnotation, type_name, entry)
+
+    def _get_existing_entry_tid(self, entry: Entry):
+        r"""
+        This function searches for tid for existing entry tid. It return tid
+        if the entry is found. Otherwise, it returns -1.
+
+        Args:
+            entry (Entry): entry to search for.
+
+        Raises:
+            NotImplementedError: raised when given entry is not implemented.
+
+        Returns:
+            tid for parameter ``entry`` is found. Otherwise -1.
+        """
+
+        type_name = entry[constants.ENTRY_TYPE_INDEX]
+        begin = entry[constants.BEGIN_INDEX]
+        end = entry[constants.END_INDEX]
+        if type_name not in self.__elements:
+            return -1
+        if self._is_annotation(type_name):
+            # Return the tid of existing entry if duplicate is not allowed
+            index = self.__elements[type_name].bisect_left(entry)
+            target_entry = self.__elements[type_name][index]
+            if (
+                target_entry[constants.BEGIN_INDEX] == begin
+                and target_entry[constants.END_INDEX] == end
+            ):
+                return target_entry[constants.TID_INDEX]
+            else:
+                return -1
+        else:
+            raise NotImplementedError(
+                f"Get existing entry id for {type_name}"
+                " is not supported currently."
+            )
 
     def add_link_raw(
         self,
