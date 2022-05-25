@@ -15,7 +15,6 @@
 from typing import Dict, List, Iterator, Tuple, Optional, Any, Type
 import uuid
 import logging
-from bisect import bisect_left
 from heapq import heappush, heappop
 from sortedcontainers import SortedList
 from typing_inspect import get_origin
