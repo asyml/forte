@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests for ImageAnnotation.
+Unit tests for Grids.
 """
 import unittest
 import numpy as np
@@ -23,9 +23,9 @@ from forte.data.data_pack import DataPack
 from forte.data.ontology.top import ImageAnnotation
 
 
-class ImageAnnotationTest(unittest.TestCase):
+class GridsTest(unittest.TestCase):
     """
-    Test ImageAnnotation related ontologies like Edge and BoundingBox.
+    Test Grids related ontologies and operations.
     """
 
     def setUp(self):
@@ -45,7 +45,7 @@ class ImageAnnotationTest(unittest.TestCase):
         self.ref_arr[2, 2] = 1
         self.datapack.payloads.append(self.ref_arr)
 
-    def test_image_annotation(self):
+    def test_grids(self):
 
         self.assertTrue(
             array_equal(
@@ -58,3 +58,24 @@ class ImageAnnotationTest(unittest.TestCase):
                 self.datapack.grids[0].get_grid_cell(1, 0, 0), self.ref_arr
             )
         )
+
+    def test_get_grid_cell_value_error(self):
+        def fn1():
+            self.datapack.grids[0].get_grid_cell(3, 0, 0)
+
+        self.assertRaises(ValueError, fn1)
+
+        def fn2():
+            self.datapack.grids[0].get_grid_cell(0, 4, 0)
+
+        self.assertRaises(ValueError, fn2)
+
+        def fn3():
+            self.datapack.grids[0].get_grid_cell(-1, 0, 0)
+
+        self.assertRaises(ValueError, fn3)
+
+        def fn4():
+            self.datapack.grids[0].get_grid_cell(0, -1, 0)
+
+        self.assertRaises(ValueError, fn4)
