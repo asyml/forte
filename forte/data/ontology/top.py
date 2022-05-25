@@ -692,7 +692,8 @@ class ImageAnnotation(Entry):
     def __init__(self, pack: PackType, image_payload_idx: int):
         """
         ImageAnnotation type entries, such as "edge" and "bounding box".
-        Each ImageAnnotation has a ``image_payload_idx`` corresponding to its image representation in the payload array.
+        Each ImageAnnotation has a ``image_payload_idx`` corresponding to its
+        image representation in the payload array.
 
         Args:
             pack: The container that this image annotation
@@ -775,7 +776,8 @@ class Grids(Entry):
             h_idx: the index of the grid cell of the first dimension.
             w_idx: the index of the grid cell of the second dimension.
             image_payload_idx: An integer that represents the index of
-                the image in the payloads. If it's not None, it will use the image from the corresponding payload. Otherwise,
+                the image in the payloads. If it's not None, it will use the
+                image from the corresponding payload. Otherwise,
                 it will use the image
                 from the payload of ``self._image_payload_idx``.
 
@@ -786,21 +788,21 @@ class Grids(Entry):
         Returns:
             numpy array that represents the grid cell.
         """
-        if not (0 <= h_idx < self.height):
+        if not 0 <= h_idx < self.height:
             raise ValueError(
                 f"input parameter h_idx ({h_idx}) is"
                 "out of scope of h_idx range"
                 f" {(0, self.height)}"
             )
-        if not (0 <= w_idx < self.width):
+        if not 0 <= w_idx < self.width:
             raise ValueError(
                 f"input parameter w_idx ({w_idx}) is"
                 "out of scope of w_idx range"
                 f" {(0, self.width)}"
             )
 
-        if image_payload_idx == None:
-            if self._image_payload_idx == None:
+        if image_payload_idx is None:
+            if self._image_payload_idx is None:
                 raise ValueError(
                     "There is not image_payload_idx associate "
                     "with the Grids instance neither"
