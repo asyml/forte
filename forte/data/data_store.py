@@ -470,6 +470,29 @@ class DataStore(BaseStore):
                 else:
                     return False
 
+    def _get_all_subclass(self, entry_type_name: str, inclusive: bool = True):
+        """
+        Get all subclasses of ``entry_type_name``.
+
+        Args:
+            entry_type_name (str): subclasses of entry of ``entry_type_name``
+                will be yielded if it's in ``DataStore`` storage.
+            inclusive: if it's True, then ``entry_type_name`` itself will be
+                yielded. False otherwise.
+
+
+        Yields:
+            subclass entry type name of ``entry_type_name``
+        """
+        for entry_type_key in self.__elements.keys():
+            if (
+                entry_type_key == entry_type_name and inclusive
+            ) or self._is_subclass(
+                entry_type_key,
+                get_class(entry_type_name),
+            ):
+                yield entry_type_key
+
     def _is_annotation(self, type_name: str) -> bool:
         r"""This function takes a type_name and returns whether a type
         is an annotation type or not.
@@ -495,12 +518,7 @@ class DataStore(BaseStore):
         Yields:
             Iterator of raw entry data in list format.
         """
-        for entry_type_key in self.__elements:
-            if entry_type_key == entry_type_name or self._is_subclass(
-                entry_type_key,
-                get_class(entry_type_name),
-            ):
-                yield from self.__elements[entry_type_key]
+        yield from self._get_all_subclass(entry_type_name)
 
     def num_entries(self, entry_type_name: str) -> int:
         """
@@ -514,16 +532,16 @@ class DataStore(BaseStore):
             The number of entries of given ``entry_type_name``.
         """
         count = 0
-        for entry_type_key in self.__elements:
+        for entry_type_key in self.__elements.keys():
             if entry_type_key == entry_type_name or self._is_subclass(
                 entry_type_key,
                 get_class(entry_type_name),
             ):
                 count += len(self.__elements[entry_type_key])
-        # if non-annotation-like entries_type_name
-        # we need to minus the corresponding delete count
-        if entry_type_name in self.__deletion_count:
-            count -= self.__deletion_count[entry_type_name]
+            # if non-annotation-like entries_type_name
+            # we need to minus the corresponding delete count
+            if entry_type_key in self.__deletion_count:
+                count -= self.__deletion_count[entry_type_key]
         return count
 
     def _add_entry_raw(
