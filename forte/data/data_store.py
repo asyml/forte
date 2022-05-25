@@ -470,7 +470,7 @@ class DataStore(BaseStore):
                 else:
                     return False
 
-    def _get_all_subclass(self, entry_type_name: str, inclusive: bool = True):
+    def _get_all_subclass(self, entry_type_name: str, inclusive: bool = False):
         """
         Get all subclasses of ``entry_type_name``.
 
@@ -484,7 +484,7 @@ class DataStore(BaseStore):
         Yields:
             subclass entry type name of ``entry_type_name``
         """
-        for entry_type_key in self.__elements.keys():
+        for entry_type_key in sorted(self.__elements.keys()):
             if (
                 entry_type_key == entry_type_name and inclusive
             ) or self._is_subclass(
@@ -518,7 +518,8 @@ class DataStore(BaseStore):
         Yields:
             Iterator of raw entry data in list format.
         """
-        yield from self._get_all_subclass(entry_type_name)
+        for entry_type_key in self._get_all_subclass(entry_type_name, True):
+            yield from self.__elements[entry_type_key]
 
     def num_entries(self, entry_type_name: str) -> int:
         """
