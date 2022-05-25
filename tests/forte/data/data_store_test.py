@@ -207,7 +207,8 @@ class DataStoreTest(unittest.TestCase):
         ]
 
         sorting_fn = lambda s: (
-            s[constants.BEGIN_INDEX], s[constants.END_INDEX],
+            s[constants.BEGIN_INDEX],
+            s[constants.END_INDEX],
         )
         self.data_store._DataStore__elements = {
             "ft.onto.base_ontology.Document": SortedList(
@@ -545,16 +546,26 @@ class DataStoreTest(unittest.TestCase):
         tid_sent_duplicate: int = self.data_store.add_annotation_raw(
             "ft.onto.base_ontology.Sentence", 5, 8, allow_duplicate=False
         )
-        self.assertEqual(len(self.data_store._DataStore__elements[
-            "ft.onto.base_ontology.Sentence"
-        ]), num_sent)
+        self.assertEqual(
+            len(
+                self.data_store._DataStore__elements[
+                    "ft.onto.base_ontology.Sentence"
+                ]
+            ),
+            num_sent,
+        )
         self.assertEqual(tid_sent, tid_sent_duplicate)
         self.data_store.add_annotation_raw(
             "ft.onto.base_ontology.Sentence", 5, 9, allow_duplicate=False
         )
-        self.assertEqual(len(self.data_store._DataStore__elements[
-            "ft.onto.base_ontology.Sentence"
-        ]), num_sent + 1)
+        self.assertEqual(
+            len(
+                self.data_store._DataStore__elements[
+                    "ft.onto.base_ontology.Sentence"
+                ]
+            ),
+            num_sent + 1,
+        )
 
         # check add annotation raw with tid
         tid = 77
@@ -585,7 +596,7 @@ class DataStoreTest(unittest.TestCase):
         tid_audio_utterance: int = self.data_store.add_audio_annotation_raw(
             "ft.onto.base_ontology.AudioUtterance", 5, 8
         )
-        tid_utterance: int = self.data_store.add_audio_annotation_raw(
+        tid_utterance: int = self.data_store.add_annotation_raw(
             "ft.onto.base_ontology.Utterance", 5, 8
         )
         num_doc = len(
@@ -607,7 +618,7 @@ class DataStoreTest(unittest.TestCase):
         self.assertEqual(num_sent, 1)
         self.assertEqual(num_utterance, 1)
         tid = 77
-        self.data_store.add_annotation_raw(
+        self.data_store.add_audio_annotation_raw(
             "ft.onto.base_ontology.Recording", 0, 1, tid
         )
         self.assertEqual(

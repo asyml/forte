@@ -550,6 +550,7 @@ class DataStore(BaseStore):
 
         Raises:
             KeyError: raised when the entry type name is not in `self.__elements`.
+            NotImplementedError: raised when add the entry is not implemented.
 
         Returns:
             ``tid`` of the entry.
