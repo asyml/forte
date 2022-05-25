@@ -499,16 +499,9 @@ class DataStoreTest(unittest.TestCase):
         tid_sent: int = self.data_store.add_annotation_raw(
             "ft.onto.base_ontology.Sentence", 5, 8
         )
-        num_doc = len(
-            self.data_store._DataStore__elements[
-                "ft.onto.base_ontology.Document"
-            ]
-        )
-        num_sent = len(
-            self.data_store._DataStore__elements[
-                "ft.onto.base_ontology.Sentence"
-            ]
-        )
+        num_doc = self.data_store.get_length("ft.onto.base_ontology.Document")
+
+        num_sent = self.data_store.get_length("ft.onto.base_ontology.Sentence")
 
         self.assertEqual(num_doc, 3)
         self.assertEqual(num_sent, 3)
@@ -536,11 +529,10 @@ class DataStoreTest(unittest.TestCase):
         tid_em: int = self.data_store.add_annotation_raw(
             "ft.onto.base_ontology.EntityMention", 10, 12
         )
-        num_phrase = len(
-            self.data_store._DataStore__elements[
-                "ft.onto.base_ontology.EntityMention"
-            ]
+        num_phrase = self.data_store.get_length(
+            "ft.onto.base_ontology.EntityMention"
         )
+
         self.assertEqual(num_phrase, 1)
         self.assertEqual(len(DataStore._type_attributes), 3)
         self.assertEqual(len(self.data_store._DataStore__tid_ref_dict), 8)
@@ -701,14 +693,50 @@ class DataStoreTest(unittest.TestCase):
         self.assertEqual(instances[0][2], 1234)
         self.assertEqual(instances[1][2], 3456)
 
-        # get all entries
+        # For types other than annotation, group or link, not support include_subtype
         instances = list(self.data_store.get("forte.data.ontology.core.Entry"))
-        self.assertEqual(len(instances), 9)
+        self.assertEqual(len(instances), 0)
 
-        # get entries without subclasses
+        self.assertEqual(
+            self.data_store.get_length("forte.data.ontology.core.Entry"), 0
+        )
+
+        # get annotations with subclasses and range annotation
         instances = list(
             self.data_store.get(
-                "forte.data.ontology.core.Entry", include_sub_type=False
+                "forte.data.ontology.top.Annotation", range_annotation=(1, 20)
+            )
+        )
+        self.assertEqual(len(instances), 2)
+
+        # get groups with subclasses
+        instances = list(self.data_store.get("forte.data.ontology.top.Group"))
+        self.assertEqual(len(instances), 3)
+
+        # get groups with subclasses and range annotation
+        instances = list(
+            self.data_store.get(
+                "forte.data.ontology.top.Group", range_annotation=(1, 20)
+            )
+        )
+        self.assertEqual(len(instances), 0)
+
+        # get links with subclasses
+        instances = list(self.data_store.get("forte.data.ontology.top.Link"))
+        self.assertEqual(len(instances), 1)
+
+        # get links with subclasses and range annotation
+        instances = list(
+            self.data_store.get(
+                "forte.data.ontology.top.Link", range_annotation=(0, 9)
+            )
+        )
+        self.assertEqual(len(instances), 1)
+
+        # get links with subclasses and range annotation
+        instances = list(
+            self.data_store.get(
+                "forte.data.ontology.top.Link", range_annotation=(4, 11)
             )
         )
         self.assertEqual(len(instances), 0)
@@ -720,22 +748,13 @@ class DataStoreTest(unittest.TestCase):
         self.data_store.delete_entry(1234567)
         self.data_store.delete_entry(1234)
         self.data_store.delete_entry(9999)
-        # After 3 deletion. 2 left. (2 documents, 1 sentence, 1 group)
-        num_doc = len(
-            self.data_store._DataStore__elements[
-                "ft.onto.base_ontology.Document"
-            ]
-        )
-
-        # num_sent = len(
-        #     self.data_store._DataStore__elements[
-        #         "ft.onto.base_ontology.Sentence"
-        #     ]
-        # )
+        # After 3 deletion. 5 left. (1 document, 1 annotation, 2 groups, 1 link)
+        num_doc = self.data_store.get_length("ft.onto.base_ontology.Document")
+        num_group = self.data_store.get_length("forte.data.ontology.top.Group")
 
         self.assertEqual(len(self.data_store._DataStore__tid_ref_dict), 2)
         self.assertEqual(num_doc, 1)
-        # self.assertEqual(num_sent, 0)
+        self.assertEqual(num_group, 3)
 
         # delete group
         self.data_store.delete_entry(10123)
@@ -771,11 +790,7 @@ class DataStoreTest(unittest.TestCase):
         # dict entry is not deleted; only delete entry in element list
         self.assertEqual(len(self.data_store._DataStore__tid_ref_dict), 5)
         self.assertEqual(
-            len(
-                self.data_store._DataStore__elements[
-                    "ft.onto.base_ontology.Document"
-                ]
-            ),
+            self.data_store.get_length("ft.onto.base_ontology.Document"),
             1,
         )
 
