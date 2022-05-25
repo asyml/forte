@@ -828,6 +828,11 @@ class Grids(Entry):
 
     @property
     def image_payload_idx(self) -> int:
+        if self._image_payload_idx is None:
+            raise ValueError(
+                "This Grids instance is not associated with "
+                "any image payload yet."
+            )
         return self._image_payload_idx
 
     @property
