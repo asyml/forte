@@ -533,12 +533,8 @@ class DataStore(BaseStore):
             The number of entries of given ``entry_type_name``.
         """
         count = 0
-        for entry_type_key in self.__elements.keys():
-            if entry_type_key == entry_type_name or self._is_subclass(
-                entry_type_key,
-                get_class(entry_type_name),
-            ):
-                count += len(self.__elements[entry_type_key])
+        for entry_type_key in self._get_all_subclass(entry_type_name, True):
+            count += len(self.__elements[entry_type_key])
             # if non-annotation-like entries_type_name
             # we need to minus the corresponding delete count
             if entry_type_key in self.__deletion_count:
