@@ -382,7 +382,8 @@ class DataStore(BaseStore):
         self, type_name: str, begin: int, end: int, tid: Optional[int] = None
     ) -> List:
         r"""This function generates a new audio annotation with default fields.
-        Called by add_audio_annotation_raw() to create a new audio annotation with ``type_name``, ``begin``, ``end`` and optional ``tid``.
+        Called by add_audio_annotation_raw() to create a new audio annotation
+        with ``type_name``, ``begin``, ``end`` and optional ``tid``.
 
 
         Args:
