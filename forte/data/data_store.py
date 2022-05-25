@@ -681,7 +681,7 @@ class DataStore(BaseStore):
                 return tid_search_result
         return self._add_entry_raw(AudioAnnotation, type_name, entry)
 
-    def _get_existing_entry_tid(self, entry: Entry):
+    def _get_existing_entry_tid(self, entry: List[Any]):
         r"""
         This function searches for tid for existing entry tid. It return tid
         if the entry is found. Otherwise, it returns -1.
