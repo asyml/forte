@@ -26,7 +26,14 @@ from forte.data.ontology.core import (
     EntryType,
 )
 from forte.data.span import Span
-from forte.common.constants import BEGIN_INDEX, END_INDEX
+from forte.common.constants import (
+    BEGIN_INDEX,
+    END_INDEX,
+    PARENT_TID_INDEX,
+    CHILD_TID_INDEX,
+    MEMBER_TID_INDEX,
+    MEMBER_TYPE_INDEX,
+)
 from forte.utils.utils import get_class
 
 __all__ = [
@@ -271,7 +278,7 @@ class Link(BaseLink):
         node, call :meth:`get_parent`.
         """
         try:
-            self._parent = self.pack.get_entry_raw(self.tid)[0]
+            self._parent = self.pack.get_entry_raw(self.tid)[PARENT_TID_INDEX]
         except KeyError:
             pass
         return self._parent
@@ -279,7 +286,7 @@ class Link(BaseLink):
     @parent.setter
     def parent(self, val: int):
         self._parent = val
-        self.pack.get_entry_raw(self.tid)[0] = val
+        self.pack.get_entry_raw(self.tid)[PARENT_TID_INDEX] = val
 
     @property
     def child(self):
@@ -287,7 +294,7 @@ class Link(BaseLink):
         call :meth:`get_child`.
         """
         try:
-            self._child = self.pack.get_entry_raw(self.tid)[1]
+            self._child = self.pack.get_entry_raw(self.tid)[CHILD_TID_INDEX]
         except KeyError:
             pass
         return self._child
@@ -295,7 +302,7 @@ class Link(BaseLink):
     @child.setter
     def child(self, val: int):
         self._child = val
-        self.pack.get_entry_raw(self.tid)[1] = val
+        self.pack.get_entry_raw(self.tid)[CHILD_TID_INDEX] = val
 
     def get_parent(self) -> Entry:
         r"""Get the parent entry of the link.
@@ -354,7 +361,7 @@ class Group(BaseGroup[Entry]):
                 f"The members of {type(self)} should be "
                 f"instances of {self.MemberType}, but got {type(member)}"
             )
-        self.pack.get_entry_raw(self.tid)[1].append(member.tid)
+        self.pack.get_entry_raw(self.tid)[MEMBER_TID_INDEX].append(member.tid)
 
     def get_members(self) -> List[Entry]:
         r"""Get the member entries in the group.
@@ -369,14 +376,16 @@ class Group(BaseGroup[Entry]):
                 "attached to any data pack."
             )
         member_entries = []
-        for m in self.pack.get_entry_raw(self.tid)[1]:
+        for m in self.pack.get_entry_raw(self.tid)[MEMBER_TID_INDEX]:
             member_entries.append(self.pack.get_entry(m))
         return member_entries
 
     @property
     def MemberType(self):
         try:
-            self._member_type = get_class(self.pack.get_entry_raw(self.tid)[0])
+            self._member_type = get_class(
+                self.pack.get_entry_raw(self.tid)[MEMBER_TYPE_INDEX]
+            )
         except KeyError:
             pass
         return self._member_type
@@ -384,7 +393,7 @@ class Group(BaseGroup[Entry]):
     @MemberType.setter
     def MemberType(self, val: Type[Entry]):
         self._member_type = val
-        self.pack.get_entry_raw(self.tid)[0] = val.entry_type()
+        self.pack.get_entry_raw(self.tid)[MEMBER_TYPE_INDEX] = val.entry_type()
 
 
 class MultiPackGeneric(MultiEntry, Entry):

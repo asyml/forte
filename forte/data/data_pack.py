@@ -629,6 +629,34 @@ class DataPack(BasePack[Entry, Link, Group]):
         # TODO: The DataIndex will be deprecated in future
         if isinstance(entry, int):
             entry = self._entry_converter.get_entry_object(tid=entry, pack=self)
+
+        if isinstance(entry, Annotation):
+            begin, end = entry.begin, entry.end
+
+            if begin < 0:
+                raise ValueError(
+                    f"The begin {begin} is smaller than 0, this"
+                    f"is not a valid begin."
+                )
+
+            if end > len(self.text):
+                if len(self.text) == 0:
+                    raise ValueError(
+                        f"The end {end} of span is greater than the text "
+                        f"length {len(self.text)}, which is invalid. The text "
+                        f"length is 0, so it may be the case the you haven't "
+                        f"set text for the data pack. Please set the text "
+                        f"before calling `add_entry` on the annotations."
+                    )
+                else:
+                    pack_ref = entry.pack.pack_id
+                    raise ValueError(
+                        f"The end {end} of span is greater than the text "
+                        f"length {len(self.text)}, which is invalid. The "
+                        f"problematic entry is of type {entry.__class__} "
+                        f"at [{begin}:{end}], in pack {pack_ref}."
+                    )
+
         self._index.update_basic_index([entry])
         if self._index.link_index_on and isinstance(entry, Link):
             self._index.update_link_index([entry])
@@ -1313,11 +1341,10 @@ class DataPack(BasePack[Entry, Link, Group]):
             yield from []
             return
 
-        # TODO: Add range_annotation in DataStore.get()
-        # refer to https://github.com/asyml/forte/pull/769
         for entry_data in self._data_store.get(
             type_name=entry_type_.entry_type(),
-            range_annotation=range_annotation,
+            range_annotation=range_annotation
+            and (range_annotation.begin, range_annotation.end),
             include_sub_type=include_sub_type,
         ):
             entry = self.get_entry(tid=entry_data[TID_INDEX])
@@ -1831,33 +1858,6 @@ class EntryConverter:
             pass
 
         if isinstance(entry, Annotation):
-            begin, end = entry.begin, entry.end
-
-            if begin < 0:
-                raise ValueError(
-                    f"The begin {begin} is smaller than 0, this"
-                    f"is not a valid begin."
-                )
-
-            if end > len(pack.text):
-                if len(pack.text) == 0:
-                    raise ValueError(
-                        f"The end {end} of span is greater than the text "
-                        f"length {len(pack.text)}, which is invalid. The text "
-                        f"length is 0, so it may be the case the you haven't "
-                        f"set text for the data pack. Please set the text "
-                        f"before calling `add_entry` on the annotations."
-                    )
-                else:
-                    pack_ref = entry.pack.pack_id
-                    raise ValueError(
-                        f"The end {end} of span is greater than the text "
-                        f"length {len(pack.text)}, which is invalid. The "
-                        f"problematic entry is of type {entry.__class__} "
-                        f"at [{begin}:{end}], in pack {pack_ref}."
-                    )
-
-            # TODO: Add `tid` and `allow_duplicate` to DataStore.add_annotation_raw()
             data_store_ref.add_annotation_raw(
                 type_name=entry.entry_type(),
                 begin=entry.begin,
@@ -1865,9 +1865,7 @@ class EntryConverter:
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,
             )
-
         elif isinstance(entry, Link):
-            # TODO: Add `tid` and `allow_duplicate` to DataStore.add_link_raw()
             data_store_ref.add_link_raw(
                 type_name=entry.entry_type(),
                 parent_tid=entry.parent,
@@ -1875,12 +1873,10 @@ class EntryConverter:
                 tid=entry.tid,
             )
         elif isinstance(entry, Group):
-            # TODO: Add `tid` and `allow_duplicate` to DataStore.add_group_raw()
             data_store_ref.add_group_raw(
                 type_name=entry.entry_type(),
                 member_type=entry.MemberType,
                 tid=entry.tid,
-                allow_duplicate=allow_duplicate,
             )
         elif isinstance(entry, Generics):
             # TODO: Implement add_generics_raw in DataStore

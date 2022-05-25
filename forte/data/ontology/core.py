@@ -529,7 +529,7 @@ class FList(Generic[ParentEntryType], MutableSequence):
         value: Union[EntryType, Iterable[EntryType]],
     ) -> None:
         if isinstance(index, int):
-            self.__data[index] = value.tid
+            self.__data[index] = value.tid  # type: ignore
         else:
             self.__data[index] = [v.tid for v in value]  # type: ignore
 
@@ -554,7 +554,7 @@ class FDict(Generic[KeyType, ValueType], MutableMapping):
     def __init__(
         self,
         parent_entry: ParentEntryType,
-        data: Optional[Dict[KeyType, ValueType]] = None,
+        data: Optional[Dict[KeyType, int]] = None,
     ):
         super().__init__()
 
