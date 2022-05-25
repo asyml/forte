@@ -519,7 +519,7 @@ class DataStore(BaseStore):
             Iterator of raw entry data in list format.
         """
         for entry_type_key in self._get_all_subclass(entry_type_name, True):
-            yield from self.__elements[entry_type_key]
+            yield from self.iter(entry_type_key)
 
     def num_entries(self, entry_type_name: str) -> int:
         """
