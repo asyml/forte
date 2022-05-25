@@ -169,7 +169,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         self.audio_annotations: SortedList[AudioAnnotation] = SortedList()
         self.image_annotations: SortedList[ImageAnnotation] = SortedList()
         self.grids: SortedList[Grids] = SortedList()
-        self.payloads = []
+        self.payloads: List[np.ndarray] = []
 
         self.__replace_back_operations: ReplaceOperationsType = []
         self.__processed_original_spans: List[Tuple[Span, Span]] = []

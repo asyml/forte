@@ -750,7 +750,7 @@ class Grids(Entry):
         pack: PackType,
         height: int,
         width: int,
-        image_payload_idx: int = None,
+        image_payload_idx: Optional[int] = None,
     ):
 
         if height <= 0 or width <= 0:
@@ -764,7 +764,7 @@ class Grids(Entry):
         super().__init__(pack)
 
     def get_grid_cell(
-        self, h_idx: int, w_idx: int, image_payload_idx: int = None
+        self, h_idx: int, w_idx: int, image_payload_idx: Optional[int] = None
     ):
         """
         Get the array data of a grid cell from image of the image payload index.
