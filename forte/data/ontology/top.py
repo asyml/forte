@@ -700,7 +700,6 @@ class ImageAnnotation(Entry):
             image_payload_idx: A integer that represents the index of
                 the image in the payloads.
         """
-        # self._array: Optional[Span] = array
         self._image_payload_idx = image_payload_idx
         super().__init__(pack)
 
@@ -748,17 +747,20 @@ class Grids(Entry):
     def __init__(
         self,
         pack: PackType,
-        height_n_width: Tuple[int, int],
-        image_payload_idx: int,
+        height: int,
+        width: int,
+        image_payload_idx: int = None,
     ):
-        super().__init__(pack)
-        if height_n_width[0] <= 0 or height_n_width[1] <= 0:
+
+        if height <= 0 or width <= 0:
             raise ValueError(
-                f"height({height_n_width[0]}) and "
-                f"width({height_n_width[1]}) both must be larger than 0"
+                f"height({height}) and "
+                f"width({width}) both must be larger than 0"
             )
-        self.height_n_width = height_n_width
+        self.height = height
+        self.width = width
         self._image_payload_idx = image_payload_idx
+        super().__init__(pack)
 
     def get_grid_cell(
         self, h_idx: int, w_idx: int, image_payload_idx: int = None
@@ -784,24 +786,34 @@ class Grids(Entry):
         Returns:
             numpy array that represents the grid cell.
         """
-        if not (0 <= h_idx < self.height_n_width[0]):
+        if not (0 <= h_idx < self.height):
             raise ValueError(
                 f"input parameter h_idx ({h_idx}) is"
                 "out of scope of h_idx range"
-                f" {(0, self.height_n_width[0])}"
+                f" {(0, self.height)}"
             )
-        if not (0 <= w_idx < self.height_n_width[1]):
+        if not (0 <= w_idx < self.width):
             raise ValueError(
                 f"input parameter w_idx ({w_idx}) is"
                 "out of scope of w_idx range"
-                f" {(0, self.height_n_width[1])}"
+                f" {(0, self.width)}"
             )
-        if not image_payload_idx:
+
+        if image_payload_idx == None:
+            if self._image_payload_idx == None:
+                raise ValueError(
+                    "There is not image_payload_idx associate "
+                    "with the Grids instance neither"
+                    " image_payload_idx in the ``get_grid_cell`` "
+                    "function parameters. Please make sure either "
+                    "one of them is valid."
+                )
             image_payload_idx = self._image_payload_idx
+
         img_arr = self.pack.get_image_array(image_payload_idx)
         c_h, c_w = (
-            img_arr.shape[0] // self.height_n_width[0],
-            img_arr.shape[1] // self.height_n_width[1],
+            img_arr.shape[0] // self.height,
+            img_arr.shape[1] // self.width,
         )
         array = np.zeros(img_arr.shape)
         array[
@@ -812,8 +824,24 @@ class Grids(Entry):
         return array
 
     @property
+    def image_payload_idx(self) -> int:
+        return self._image_payload_idx
+
+    @property
     def num_grid_cells(self):
-        return self.height_n_width[0] * self.height_n_width[1]
+        return self.height * self.width
+
+    def __eq__(self, other):
+        if other is None:
+            return False
+        return self.image_payload_idx == other.image_payload_idx
+
+    def __hash__(self) -> int:
+        r"""
+        The hash function for ``Sketch`` class with a numpy array as a class
+        attribute.
+        """
+        return hash((self._image_payload_idx, self._tid))
 
 
 SinglePackEntries = (Link, Group, Annotation, Generics, AudioAnnotation)
