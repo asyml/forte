@@ -13,7 +13,7 @@
 # limitations under the License.
 from dataclasses import dataclass
 from functools import total_ordering
-from typing import Optional, Set, Tuple, Type, Any, Dict, Union, Iterable, List
+from typing import Optional, Tuple, Type, Any, Dict, Union, Iterable, List
 
 import numpy as np
 
@@ -70,27 +70,11 @@ class Annotation(Entry):
         self._end: int = end
         super().__init__(pack)
 
-        # Register property functions for self._begin and self._end
-        type(self)._begin = property(
-            fget=lambda cls: cls.pack._data_store.get_entry(cls.tid)[
-                BEGIN_INDEX
-            ],
-            fset=lambda cls, val: cls.pack._data_store.get_entry(
-                cls.tid
-            ).__setitem__(BEGIN_INDEX, val),
-        )
-        type(self)._end = property(
-            fget=lambda cls: cls.pack._data_store.get_entry(cls.tid)[END_INDEX],
-            fset=lambda cls, val: cls.pack._data_store.get_entry(
-                cls.tid
-            ).__setitem__(END_INDEX, val),
-        )
-
     def __getstate__(self):
         r"""For serializing Annotation, we should create Span annotations for
         compatibility purposes.
         """
-        self._span = Span(self._begin, self._end)
+        self._span = Span(self.begin, self.end)
         state = super().__getstate__()
         state.pop("_begin")
         state.pop("_end")
@@ -109,16 +93,34 @@ class Annotation(Entry):
     def span(self) -> Span:
         # Delay span creation at usage.
         if self._span is None:
-            self._span = Span(self._begin, self._end)
+            self._span = Span(self.begin, self.end)
         return self._span
 
     @property
     def begin(self):
+        try:
+            self._begin = self.pack.get_entry_raw(self.tid)[BEGIN_INDEX]
+        except KeyError:
+            pass
         return self._begin
+
+    @begin.setter
+    def begin(self, val: int):
+        self._begin = val
+        self.pack.get_entry_raw(self.tid)[BEGIN_INDEX] = val
 
     @property
     def end(self):
+        try:
+            self._end = self.pack.get_entry_raw(self.tid)[END_INDEX]
+        except KeyError:
+            pass
         return self._end
+
+    @end.setter
+    def end(self, val: int):
+        self._end = val
+        self.pack.get_entry_raw(self.tid)[END_INDEX] = val
 
     def __eq__(self, other):
         r"""The eq function of :class:`Annotation`.
@@ -234,22 +236,6 @@ class Link(BaseLink):
         self._child: Optional[int] = None
         super().__init__(pack, parent, child)
 
-        # Register property functions for self._parent and self._child
-        tmp_parent, tmp_child = self._parent, self._child
-        type(self)._parent = property(
-            fget=lambda cls: cls.pack._data_store.get_entry(cls.tid)[0],
-            fset=lambda cls, val: cls.pack._data_store.get_entry(
-                cls.tid
-            ).__setitem__(0, val),
-        )
-        type(self)._child = property(
-            fget=lambda cls: cls.pack._data_store.get_entry(cls.tid)[1],
-            fset=lambda cls, val: cls.pack._data_store.get_entry(
-                cls.tid
-            ).__setitem__(1, val),
-        )
-        self._parent, self._child = tmp_parent, tmp_child
-
     # TODO: Can we get better type hint here?
     def set_parent(self, parent: Entry):
         r"""This will set the `parent` of the current instance with given Entry
@@ -263,7 +249,7 @@ class Link(BaseLink):
                 f"The parent of {type(self)} should be an "
                 f"instance of {self.ParentType}, but get {type(parent)}"
             )
-        self._parent = parent.tid
+        self.parent = parent.tid
 
     def set_child(self, child: Entry):
         r"""This will set the `child` of the current instance with given Entry.
@@ -277,21 +263,39 @@ class Link(BaseLink):
                 f"The parent of {type(self)} should be an "
                 f"instance of {self.ParentType}, but get {type(child)}"
             )
-        self._child = child.tid
+        self.child = child.tid
 
     @property
     def parent(self):
         r"""Get ``tid`` of the parent node. To get the object of the parent
         node, call :meth:`get_parent`.
         """
+        try:
+            self._parent = self.pack.get_entry_raw(self.tid)[0]
+        except KeyError:
+            pass
         return self._parent
+
+    @parent.setter
+    def parent(self, val: int):
+        self._parent = val
+        self.pack.get_entry_raw(self.tid)[0] = val
 
     @property
     def child(self):
         r"""Get ``tid`` of the child node. To get the object of the child node,
         call :meth:`get_child`.
         """
+        try:
+            self._child = self.pack.get_entry_raw(self.tid)[1]
+        except KeyError:
+            pass
         return self._child
+
+    @child.setter
+    def child(self, val: int):
+        self._child = val
+        self.pack.get_entry_raw(self.tid)[1] = val
 
     def get_parent(self) -> Entry:
         r"""Get the parent entry of the link.
@@ -304,9 +308,9 @@ class Link(BaseLink):
                 "Cannot get parent because link is not "
                 "attached to any data pack."
             )
-        if self._parent is None:
+        if self.parent is None:
             raise ValueError("The parent of this entry is not set.")
-        return self.pack.get_entry(self._parent)
+        return self.pack.get_entry(self.parent)
 
     def get_child(self) -> Entry:
         r"""Get the child entry of the link.
@@ -319,9 +323,9 @@ class Link(BaseLink):
                 "Cannot get child because link is not"
                 " attached to any data pack."
             )
-        if self._child is None:
+        if self.child is None:
             raise ValueError("The child of this entry is not set.")
-        return self.pack.get_entry(self._child)
+        return self.pack.get_entry(self.child)
 
 
 # pylint: disable=duplicate-bases
@@ -330,33 +334,14 @@ class Group(BaseGroup[Entry]):
     a "coreference group" is a group of coreferential entities. Each group will
     store a set of members, no duplications allowed.
     """
-    MemberType: Type[Entry] = Entry
 
     def __init__(
         self,
         pack: PackType,
         members: Optional[Iterable[Entry]] = None,
     ):  # pylint: disable=useless-super-delegation
-        self._members: List[int] = []
+        self._member_type: Type[Entry] = Entry
         super().__init__(pack, members)
-
-        # Register property functions for self.MemberType and self._members
-        tmp_members = self._members
-        type(self).MemberType = property(
-            fget=lambda cls: get_class(
-                cls.pack._data_store.get_entry(cls.tid)[0]
-            ),
-            fset=lambda cls, val: cls.pack._data_store.get_entry(
-                cls.tid
-            ).__setitem__(0, val.entry_type()),
-        )
-        type(self)._members = property(
-            fget=lambda cls: cls.pack._data_store.get_entry(cls.tid)[1],
-            fset=lambda cls, val: cls.pack._data_store.get_entry(
-                cls.tid
-            ).__setitem__(1, val),
-        )
-        self._members = tmp_members
 
     def add_member(self, member: Entry):
         r"""Add one entry to the group.
@@ -369,7 +354,7 @@ class Group(BaseGroup[Entry]):
                 f"The members of {type(self)} should be "
                 f"instances of {self.MemberType}, but got {type(member)}"
             )
-        self._members.append(member.tid)
+        self.pack.get_entry_raw(self.tid)[1].append(member.tid)
 
     def get_members(self) -> List[Entry]:
         r"""Get the member entries in the group.
@@ -384,9 +369,22 @@ class Group(BaseGroup[Entry]):
                 "attached to any data pack."
             )
         member_entries = []
-        for m in self._members:
+        for m in self.pack.get_entry_raw(self.tid)[1]:
             member_entries.append(self.pack.get_entry(m))
         return member_entries
+
+    @property
+    def MemberType(self):
+        try:
+            self._member_type = get_class(self.pack.get_entry_raw(self.tid)[0])
+        except KeyError:
+            pass
+        return self._member_type
+
+    @MemberType.setter
+    def MemberType(self, val: Type[Entry]):
+        self._member_type = val
+        self.pack.get_entry_raw(self.tid)[0] = val.entry_type()
 
 
 class MultiPackGeneric(MultiEntry, Entry):
@@ -630,22 +628,6 @@ class AudioAnnotation(Entry):
         self._end: int = end
         super().__init__(pack)
 
-        # Register property functions for self._begin and self._end
-        type(self)._begin = property(
-            fget=lambda cls: cls.pack._data_store.get_entry(cls.tid)[
-                BEGIN_INDEX
-            ],
-            fset=lambda cls, val: cls.pack._data_store.get_entry(
-                cls.tid
-            ).__setitem__(BEGIN_INDEX, val),
-        )
-        type(self)._end = property(
-            fget=lambda cls: cls.pack._data_store.get_entry(cls.tid)[END_INDEX],
-            fset=lambda cls, val: cls.pack._data_store.get_entry(
-                cls.tid
-            ).__setitem__(END_INDEX, val),
-        )
-
     @property
     def audio(self):
         if self.pack is None:
@@ -659,7 +641,7 @@ class AudioAnnotation(Entry):
         r"""For serializing AudioAnnotation, we should create Span annotations
         for compatibility purposes.
         """
-        self._span = Span(self._begin, self._end)
+        self._span = Span(self.begin, self.end)
         state = super().__getstate__()
         state.pop("_begin")
         state.pop("_end")
@@ -678,16 +660,34 @@ class AudioAnnotation(Entry):
     def span(self) -> Span:
         # Delay span creation at usage.
         if self._span is None:
-            self._span = Span(self._begin, self._end)
+            self._span = Span(self.begin, self.end)
         return self._span
 
     @property
     def begin(self):
+        try:
+            self._begin = self.pack.get_entry_raw(self.tid)[BEGIN_INDEX]
+        except KeyError:
+            pass
         return self._begin
+
+    @begin.setter
+    def begin(self, val: int):
+        self._begin = val
+        self.pack.get_entry_raw(self.tid)[BEGIN_INDEX] = val
 
     @property
     def end(self):
+        try:
+            self.pack.get_entry_raw(self.tid)[END_INDEX]
+        except KeyError:
+            pass
         return self._end
+
+    @end.setter
+    def end(self, val: int):
+        self._end = val
+        self.pack.get_entry_raw(self.tid)[END_INDEX] = val
 
     def __eq__(self, other):
         r"""The eq function of :class:`AudioAnnotation`.

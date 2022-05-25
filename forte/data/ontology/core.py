@@ -468,11 +468,11 @@ class FList(Generic[ParentEntryType], MutableSequence):
     def __init__(
         self,
         parent_entry: ParentEntryType,
-        data: List[int] = [],
+        data: Optional[List[int]] = None,
     ):
         super().__init__()
         self.__parent_entry = parent_entry
-        self.__data: List[int] = data
+        self.__data: List[int] = data or []
 
     def __eq__(self, other):
         return self.__data == other._FList__data
@@ -554,12 +554,12 @@ class FDict(Generic[KeyType, ValueType], MutableMapping):
     def __init__(
         self,
         parent_entry: ParentEntryType,
-        data: Dict[KeyType, ValueType] = {},
+        data: Optional[Dict[KeyType, ValueType]] = None,
     ):
         super().__init__()
 
         self.__parent_entry = parent_entry
-        self.__data: Dict[KeyType, int] = data
+        self.__data: Dict[KeyType, int] = data or {}
 
     def _set_parent(self, parent_entry: ParentEntryType):
         self.__parent_entry = parent_entry

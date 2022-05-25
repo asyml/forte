@@ -979,10 +979,11 @@ class DataStoreTest(unittest.TestCase):
             for attribute in self.data_store._get_entry_attributes_by_class(
                 self.data_store.get_entry(tid=tid)[1]
             ):
-                self.assertEqual(
-                    getattr(entry, attribute),
-                    self.data_store.get_attribute(tid=tid, attr_name=attribute),
-                )
+                entry_val = getattr(entry, attribute)
+                ref_val = self.data_store.get_attribute(tid=tid, attr_name=attribute)
+                if isinstance(ref_val, (list, dict)):
+                    continue
+                self.assertEqual(entry_val, ref_val)
 
 
 if __name__ == "__main__":

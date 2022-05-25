@@ -26,10 +26,9 @@ from typing import (
     Set,
     Callable,
     Tuple,
-    get_origin,
 )
 from functools import partial
-from matplotlib.pyplot import get
+from typing_inspect import get_origin
 from packaging.version import Version
 import numpy as np
 from sortedcontainers import SortedList
@@ -38,12 +37,12 @@ from forte.common.exception import (
     ProcessExecutionException,
     UnknownOntologyClassException,
 )
-from forte.common.constants import TID_INDEX, BEGIN_INDEX, END_INDEX
+from forte.common.constants import TID_INDEX
 from forte.data import data_utils_io
 from forte.data.data_store import DataStore
 from forte.data.base_pack import BaseMeta, BasePack
 from forte.data.index import BaseIndex
-from forte.data.ontology.core import Entry, FList, FDict, Pointer
+from forte.data.ontology.core import Entry, FList, FDict
 from forte.data.ontology.core import EntryType
 from forte.data.ontology.top import (
     Annotation,
@@ -612,11 +611,9 @@ class DataPack(BasePack[Entry, Link, Group]):
         Returns:
             The input entry itself
         """
-        return self.__add_entry_with_check(entry, True)
+        return self.__add_entry_with_check(entry)
 
-    def __add_entry_with_check(
-        self, entry: Union[EntryType, int], allow_duplicate: bool = True
-    ) -> EntryType:
+    def __add_entry_with_check(self, entry: Union[EntryType, int]) -> EntryType:
         r"""Internal method to add an :class:`~forte.data.ontology.core.Entry`
         object to the :class:`~forte.data.DataPack` object.
 
@@ -1353,6 +1350,9 @@ class DataPack(BasePack[Entry, Link, Group]):
             )
         return entry
 
+    def get_entry_raw(self, tid: int) -> List:
+        return self._data_store.get_entry(tid=tid)[0]
+
     def on_entry_creation(
         self, entry: Entry, component_name: Optional[str] = None
     ):
@@ -1376,24 +1376,32 @@ class DataPack(BasePack[Entry, Link, Group]):
             c = self.get_control_component()
 
         def entry_getter(cls: Entry, attr_name: str, field_type):
-            attr_val = cls.pack._data_store.get_attribute(
+            data_store_ref = (
+                cls.pack._data_store  # pylint: disable=protected-access
+            )
+            attr_val = data_store_ref.get_attribute(
                 tid=cls.tid, attr_name=attr_name
             )
-            if issubclass(field_type, (FList, FDict)):
+            if field_type in (FList, FDict):
                 return field_type(parent_entry=cls, data=attr_val)
-            elif issubclass(field_type, Entry):
-                return cls.pack.get_entry(tid=attr_val)
-            else:
-                return attr_val
+            try:
+                if issubclass(field_type, Entry):
+                    return cls.pack.get_entry(tid=attr_val)
+            except TypeError:
+                pass
+            return attr_val
 
         def entry_setter(cls: Entry, value: Any, attr_name: str, field_type):
             attr_value: Any
-            if issubclass(field_type, FList):
+            data_store_ref = (
+                cls.pack._data_store  # pylint: disable=protected-access
+            )
+            if field_type is FList:
                 attr_value = [
                     entry.tid if isinstance(entry, Entry) else entry
                     for entry in value
                 ]
-            elif issubclass(field_type, FDict):
+            elif field_type is FDict:
                 attr_value = {
                     key: entry.tid if isinstance(entry, Entry) else entry
                     for key, entry in value.items()
@@ -1402,7 +1410,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                 attr_value = value.tid
             else:
                 attr_value = value
-            cls.pack._data_store.set_attribute(
+            data_store_ref.set_attribute(
                 tid=cls.tid, attr_name=attr_name, attr_value=attr_value
             )
 
@@ -1811,8 +1819,9 @@ class EntryConverter:
         self, entry: Entry, pack: DataPack, allow_duplicate: bool = True
     ):
         # Check if the entry is already stored
+        data_store_ref = pack._data_store  # pylint: disable=protected-access
         try:
-            pack._data_store.get_entry(tid=entry.tid)
+            data_store_ref.get_entry(tid=entry.tid)
             logger.info(
                 "The entry with tid=%d is already saved into DataStore",
                 entry.tid,
@@ -1849,7 +1858,7 @@ class EntryConverter:
                     )
 
             # TODO: Add `tid` and `allow_duplicate` to DataStore.add_annotation_raw()
-            pack._data_store.add_annotation_raw(
+            data_store_ref.add_annotation_raw(
                 type_name=entry.entry_type(),
                 begin=entry.begin,
                 end=entry.end,
@@ -1859,7 +1868,7 @@ class EntryConverter:
 
         elif isinstance(entry, Link):
             # TODO: Add `tid` and `allow_duplicate` to DataStore.add_link_raw()
-            pack._data_store.add_link_raw(
+            data_store_ref.add_link_raw(
                 type_name=entry.entry_type(),
                 parent_tid=entry.parent,
                 child_tid=entry.child,
@@ -1867,7 +1876,7 @@ class EntryConverter:
             )
         elif isinstance(entry, Group):
             # TODO: Add `tid` and `allow_duplicate` to DataStore.add_group_raw()
-            pack._data_store.add_group_raw(
+            data_store_ref.add_group_raw(
                 type_name=entry.entry_type(),
                 member_type=entry.MemberType,
                 tid=entry.tid,
@@ -1875,13 +1884,13 @@ class EntryConverter:
             )
         elif isinstance(entry, Generics):
             # TODO: Implement add_generics_raw in DataStore
-            pack._data_store.add_generics_raw(
+            data_store_ref.add_generics_raw(
                 type_name=entry.entry_type(),
                 tid=entry.tid,
             )
         elif isinstance(entry, AudioAnnotation):
             # TODO: Implement add_audio_annotation_raw in DataStore
-            pack._data_store.add_audio_annotation_raw(
+            data_store_ref.add_audio_annotation_raw(
                 type_name=entry.entry_type(),
                 begin=entry.begin,
                 end=entry.end,
@@ -1896,19 +1905,17 @@ class EntryConverter:
             )
 
         # Store all the attributes to DataStore
-        for attribute in pack._data_store._get_entry_attributes_by_class(
-            input_entry_class_name=entry.entry_type()
-        ):
+        for attribute in entry.__dataclass_fields__:
             value = getattr(entry, attribute, None)
             if not value:
                 continue
-            elif isinstance(value, Entry):
+            if isinstance(value, Entry):
                 value = value.tid
             elif isinstance(value, FDict):
                 value = {key: val.tid for key, val in value.items()}
             elif isinstance(value, FList):
                 value = [val.tid for val in value]
-            pack._data_store.set_attribute(
+            data_store_ref.set_attribute(
                 tid=entry.tid, attr_name=attribute, attr_value=value
             )
 
@@ -1918,7 +1925,8 @@ class EntryConverter:
         if tid in self._entry_dict:
             return self._entry_dict[tid]
 
-        entry_data, entry_type = pack._data_store.get_entry(tid=tid)
+        data_store_ref = pack._data_store  # pylint: disable=protected-access
+        entry_data, entry_type = data_store_ref.get_entry(tid=tid)
         entry_class = get_class(entry_type)
         entry: Entry
         # Here the entry arguments are optional (begin, end, parent, ...) since
@@ -1937,8 +1945,8 @@ class EntryConverter:
         # TODO: Direct the new entry clsss to the correct tid. The
         # implementation here is a little bit hacky. Will need a stable
         # solution in future.
-        pack._data_store.delete_entry(tid=entry.tid)
-        entry._tid = entry_data[TID_INDEX]
+        data_store_ref.delete_entry(tid=entry.tid)
+        entry._tid = entry_data[TID_INDEX]  # pylint: disable=protected-access
 
         self._entry_dict[tid] = entry
         return entry
