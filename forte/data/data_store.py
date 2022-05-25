@@ -797,7 +797,6 @@ class DataStore(BaseStore):
                 f"The specified index_id [{index_id}] of type [{type_name}]"
                 f"is out of boundary for entry list of length {len(target_list)}."
             )
-
         if self._is_annotation(type_name):
             target_list.pop(index_id)
             if not target_list:
@@ -877,6 +876,23 @@ class DataStore(BaseStore):
             ]
         return index_id
 
+    def get_length(self, type_name: str) -> int:
+        r"""This function find the length of the `type_name` entry list.
+        It should not count None placeholders that appear in
+        non-annotation-like entry lists.
+
+        Args:
+            type_name (str): The fully qualified type name of a type.
+
+        Returns:
+            The count of not None entries.
+        """
+        if self._is_annotation(type_name):
+            return len(self.__elements[type_name])
+        else:
+            delete_count = self.__deletion_count.get(type_name, 0)
+            return len(self.__elements[type_name]) - delete_count
+
     def co_iterator_annotation_like(
         self, type_names: List[str]
     ) -> Iterator[List]:
@@ -935,9 +951,9 @@ class DataStore(BaseStore):
                 ) from e
             except IndexError as e:  # self.__elements[tn][0] will be caught here.
                 raise ValueError(
-                    f"Entry list of type name, {tn} which is "
+                    f"Entry list of type name, {tn} which is"
                     " one list item of input argument `type_names`,"
-                    " is empty. Please check data in this DataStore). "
+                    " is empty. Please check data in this DataStore"
                     " to see if empty lists are expected"
                     f" or remove {tn} from input parameter type_names"
                 ) from e
@@ -1010,30 +1026,103 @@ class DataStore(BaseStore):
             yield entry
 
     def get(
-        self, type_name: str, include_sub_type: bool = True
+        self,
+        type_name: str,
+        include_sub_type: bool = True,
+        range_annotation: Optional[Tuple[int]] = None,
     ) -> Iterator[List]:
         r"""This function fetches entries from the data store of
-        type ``type_name``.
+        type ``type_name``. If `include_sub_type` is set to True and
+        ``type_name`` is in [Annotation, Group, List], this function also
+        fetches entries of subtype of ``type_name``. Otherwise, it only
+        fetches entries of type ``type_name``.
 
         Args:
             type_name: The fully qualified name of the entry.
             include_sub_type: A boolean to indicate whether get its subclass.
+            range_annotation: A tuple that contains the begin and end indices
+                of the searching range of entries.
 
         Returns:
             An iterator of the entries matching the provided arguments.
         """
+
+        def within_range(
+            entry: List[Any], range_annotation: Tuple[int]
+        ) -> bool:
+            """
+            A helper function for deciding whether an annotation entry is
+            inside the `range_annotation`.
+            """
+            if not self._is_annotation(entry[constants.ENTRY_TYPE_INDEX]):
+                return False
+            return (
+                entry[constants.BEGIN_INDEX]
+                >= range_annotation[constants.BEGIN_INDEX]
+                and entry[constants.END_INDEX]
+                <= range_annotation[constants.END_INDEX]
+            )
+
+        if type_name not in self.__elements:
+            raise ValueError(f"type {type_name} does not exist")
+        entry_class = get_class(type_name)
+        all_types = set()
         if include_sub_type:
-            entry_class = get_class(type_name)
-            all_types = []
-            # iterate all classes to find subclasses
             for type in self.__elements:
                 if issubclass(get_class(type), entry_class):
-                    all_types.append(type)
-            for type in all_types:
-                yield from self.iter(type)
+                    all_types.add(type)
         else:
-            if type_name not in self.__elements:
-                raise KeyError(f"type {type_name} does not exist")
+            all_types.add(type_name)
+        all_types = list(all_types)
+        all_types.sort()
+        if self._is_annotation(type_name):
+            if range_annotation is None:
+                yield from self.co_iterator_annotation_like(all_types)
+            else:
+                for entry in self.co_iterator_annotation_like(all_types):
+                    if within_range(entry, range_annotation):
+                        yield entry
+        elif issubclass(entry_class, Link):
+            for type in all_types:
+                if range_annotation is None:
+                    yield from self.iter(type)
+                else:
+                    for entry in self.__elements[type]:
+                        if (
+                            entry[constants.PARENT_TID_INDEX]
+                            in self.__tid_ref_dict
+                        ) and (
+                            entry[constants.CHILD_TID_INDEX]
+                            in self.__tid_ref_dict
+                        ):
+                            parent = self.__tid_ref_dict[
+                                entry[constants.PARENT_TID_INDEX]
+                            ]
+                            child = self.__tid_ref_dict[
+                                entry[constants.CHILD_TID_INDEX]
+                            ]
+                            if within_range(
+                                parent, range_annotation
+                            ) and within_range(child, range_annotation):
+                                yield entry
+        elif issubclass(entry_class, Group):
+            for type in all_types:
+                if range_annotation is None:
+                    yield from self.iter(type)
+                else:
+                    for entry in self.__elements[type]:
+                        member_type = entry[constants.MEMBER_TYPE_INDEX]
+                        if self._is_annotation(member_type):
+                            members = entry[constants.MEMBER_TID_INDEX]
+                            within = True
+                            for m in members:
+                                e = self.__tid_ref_dict[m]
+                                if not within_range(e, range_annotation):
+                                    within = False
+                                    break
+                            if within:
+                                yield entry
+        else:
             yield from self.iter(type_name)
 
     def iter(self, type_name: str) -> Iterator[List]:

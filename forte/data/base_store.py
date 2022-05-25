@@ -182,13 +182,20 @@ class BaseStore:
         raise NotImplementedError
 
     @abstractmethod
-    def get(self, type_name: str, include_sub_type: bool) -> Iterator[List]:
+    def get(
+        self,
+        type_name: str,
+        include_sub_type: bool,
+        range_annotation: Optional[Tuple[int]] = None,
+    ) -> Iterator[List]:
         r"""This function fetches entries from the data store of
         type ``type_name``.
 
         Args:
             type_name: The index of the list in ``self.__elements``.
             include_sub_type: A boolean to indicate whether get its subclass.
+            range_annotation: A tuple that contains the begin and end indices
+                of the searching range of annotation-like entries.
 
         Returns:
             An iterator of the entries matching the provided arguments.

@@ -19,5 +19,17 @@ ENTRY_DICT_TYPE_INDEX = 0
 # in the `tid_idx_dict` in DataStore.
 ENTRY_DICT_ENTRY_INDEX = 1
 
+# The index storing parent entry tid in Link entries
+PARENT_TID_INDEX = 0
+
+# The index storing child entry tid in Link entries
+CHILD_TID_INDEX = 1
+
+# The index storing member entry type in Group entries
+MEMBER_TYPE_INDEX = 0
+
+# The index storing the list of member entries tid in Group entries
+MEMBER_TID_INDEX = 1
+
 # The index where the first attribute appears in the internal entry data of DataStore.
 ATTR_BEGIN_INDEX = 4
