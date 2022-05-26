@@ -52,6 +52,14 @@ class DataStoreTest(unittest.TestCase):
                 },
                 "parent_entry": "forte.data.ontology.top.Annotation",
             },
+            "forte.data.ontology.top.Group": {
+                "attributes": {},
+                "parent_entry": "forte.data.ontology.core.BaseGroup",
+            },
+            "forte.data.ontology.top.Link": {
+                "attributes": {},
+                "parent_entry": "forte.data.ontology.core.BaseLink",
+            },
         }
 
         # Document entries have tid 1234, 3456, 4567, 5678, 7890.
@@ -153,6 +161,28 @@ class DataStoreTest(unittest.TestCase):
                     ],
                 ],
             ),
+            "forte.data.ontology.top.Group": [
+                [
+                    "ft.onto.base_ontology.Sentence",
+                    [9999, 1234567],
+                    10123,
+                    "forte.data.ontology.top.Group",
+                ],
+                [
+                    "ft.onto.base_ontology.Document",
+                    [1234, 3456],
+                    23456,
+                    "forte.data.ontology.top.Group",
+                ],
+            ],
+            "forte.data.ontology.top.Link": [
+                [
+                    9999,
+                    1234,
+                    88888,
+                    "forte.data.ontology.top.Link",
+                ],
+            ],
         }
 
         self.data_store._DataStore__tid_ref_dict = {
@@ -185,11 +215,16 @@ class DataStoreTest(unittest.TestCase):
             ][3],
         }
 
+        self.data_store._DataStore__tid_idx_dict = {
+            10123: ["forte.data.ontology.top.Group", 0],
+            23456: ["forte.data.ontology.top.Group", 1],
+            88888: ["forte.data.ontology.top.Link", 0],
+        }
+
     def test_save_attribute_pickle(self):
         # test serialize with save_attribute and deserialize with/without
         # check_attribute and accept_unknown_attribute
         with tempfile.TemporaryDirectory() as tempdir:
-            # tempdir = 'temp/'
             tmpfilepath = os.path.join(tempdir, "temp.txt")
             self.data_store.serialize(
                 tmpfilepath,
@@ -216,6 +251,14 @@ class DataStoreTest(unittest.TestCase):
                         "classifications": 8,
                     },
                     "parent_entry": "forte.data.ontology.top.Annotation",
+                },
+                "forte.data.ontology.top.Group": {
+                    "attributes": {},
+                    "parent_entry": "forte.data.ontology.core.BaseGroup",
+                },
+                "forte.data.ontology.top.Link": {
+                    "attributes": {},
+                    "parent_entry": "forte.data.ontology.core.BaseLink",
                 },
             }
 
@@ -324,6 +367,28 @@ class DataStoreTest(unittest.TestCase):
                             ],
                         ],
                     ),
+                    "forte.data.ontology.top.Group": [
+                        [
+                            "ft.onto.base_ontology.Sentence",
+                            [9999, 1234567],
+                            10123,
+                            "forte.data.ontology.top.Group",
+                        ],
+                        [
+                            "ft.onto.base_ontology.Document",
+                            [1234, 3456],
+                            23456,
+                            "forte.data.ontology.top.Group",
+                        ],
+                    ],
+                    "forte.data.ontology.top.Link": [
+                        [
+                            9999,
+                            1234,
+                            88888,
+                            "forte.data.ontology.top.Link",
+                        ],
+                    ],
                 },
             )
             self.assertEqual(
@@ -357,6 +422,15 @@ class DataStoreTest(unittest.TestCase):
                         "ft.onto.base_ontology.Sentence"
                     ][3],
                 },
+            )
+            
+            self.assertEqual(
+                temp._DataStore__tid_idx_dict,
+                {
+                    10123: ["forte.data.ontology.top.Group", 0],
+                    23456: ["forte.data.ontology.top.Group", 1],
+                    88888: ["forte.data.ontology.top.Link", 0],
+                }
             )
 
             temp = DataStore.deserialize(
@@ -462,6 +536,28 @@ class DataStoreTest(unittest.TestCase):
                             ],
                         ]
                     ),
+                    "forte.data.ontology.top.Group": [
+                        [
+                            "ft.onto.base_ontology.Sentence",
+                            [9999, 1234567],
+                            10123,
+                            "forte.data.ontology.top.Group",
+                        ],
+                        [
+                            "ft.onto.base_ontology.Document",
+                            [1234, 3456],
+                            23456,
+                            "forte.data.ontology.top.Group",
+                        ],
+                    ],
+                    "forte.data.ontology.top.Link": [
+                        [
+                            9999,
+                            1234,
+                            88888,
+                            "forte.data.ontology.top.Link",
+                        ],
+                    ],                
                 },
             )
             self.assertEqual(
@@ -497,6 +593,15 @@ class DataStoreTest(unittest.TestCase):
                 },
             )
 
+            self.assertEqual(
+                temp._DataStore__tid_idx_dict,
+                {
+                    10123: ["forte.data.ontology.top.Group", 0],
+                    23456: ["forte.data.ontology.top.Group", 1],
+                    88888: ["forte.data.ontology.top.Link", 0],
+                }
+            )
+
             # test check_attribute with accept_unknown_attribute = False
             with self.assertRaisesRegex(
                 ValueError,
@@ -514,8 +619,7 @@ class DataStoreTest(unittest.TestCase):
         # test serialize without save_attribute and deserialize with/without
         # check_attribute and accept_unknown_attribute
         with tempfile.TemporaryDirectory() as tempdir:
-            # tempdir = 'temp/'
-            tmpfilepath = os.path.join(tempdir, "temp2.txt")
+            tmpfilepath = os.path.join(tempdir, "temp.txt")
             self.data_store.serialize(
                 tmpfilepath, serialize_method="json", save_attribute=False
             )
@@ -537,6 +641,14 @@ class DataStoreTest(unittest.TestCase):
                         "classifications": 8,
                     },
                     "parent_entry": "forte.data.ontology.top.Annotation",
+                },
+                "forte.data.ontology.top.Group": {
+                    "attributes": {},
+                    "parent_entry": "forte.data.ontology.core.BaseGroup",
+                },
+                "forte.data.ontology.top.Link": {
+                    "attributes": {},
+                    "parent_entry": "forte.data.ontology.core.BaseLink",
                 },
             }
             temp = DataStore.deserialize(
@@ -584,6 +696,196 @@ class DataStoreTest(unittest.TestCase):
                 DataStore.deserialize(
                     tmpfilepath, serialize_method="json", check_attribute=True
                 )
+
+    def test_delete_serialize(self):
+        self.data_store.delete_entry(4567)
+        self.data_store.delete_entry(10123)
+        with tempfile.TemporaryDirectory() as tempdir:
+            tmpfilepath = os.path.join(tempdir, "temp.txt")
+            self.data_store.serialize(
+                tmpfilepath,
+                serialize_method="json",
+                save_attribute=True,
+                indent=2,
+            )
+            DataStore._type_attributes = {
+                "ft.onto.base_ontology.Document": {
+                    "attributes": {
+                        "document_class": 4,
+                        "sentiment": 5,
+                        "classifications": 6,
+                    },
+                    "parent_entry": "forte.data.ontology.top.Annotation",
+                },
+                "ft.onto.base_ontology.Sentence": {
+                    "attributes": {
+                        "speaker": 4,
+                        "part_id": 5,
+                        "sentiment": 6,
+                        "classification": 7,
+                        "classifications": 8,
+                    },
+                    "parent_entry": "forte.data.ontology.top.Annotation",
+                },
+                "forte.data.ontology.top.Group": {
+                    "attributes": {},
+                    "parent_entry": "forte.data.ontology.core.BaseGroup",
+                },
+                "forte.data.ontology.top.Link": {
+                    "attributes": {},
+                    "parent_entry": "forte.data.ontology.core.BaseLink",
+                },
+            }
+            temp = DataStore.deserialize(
+                tmpfilepath, serialize_method="json", check_attribute=True
+            )
+            self.assertEqual(temp._type_attributes, DataStore._type_attributes)
+            self.assertEqual(
+                temp._DataStore__elements,
+                {
+                    "ft.onto.base_ontology.Document": SortedList(
+                        [
+                            [
+                                0,
+                                5,
+                                1234,
+                                "ft.onto.base_ontology.Document",
+                                None,
+                                "Positive",
+                                None,
+                            ],
+                            [
+                                10,
+                                25,
+                                3456,
+                                "ft.onto.base_ontology.Document",
+                                None,
+                                "Negative",
+                                "Class B",
+                            ],
+                            [
+                                20,
+                                25,
+                                5678,
+                                "ft.onto.base_ontology.Document",
+                                None,
+                                "Neutral",
+                                "Class D",
+                            ],
+                            [
+                                40,
+                                55,
+                                7890,
+                                "ft.onto.base_ontology.Document",
+                                None,
+                                "Very Positive",
+                                "Class E",
+                            ],
+                        ],
+                    ),
+                    "ft.onto.base_ontology.Sentence": SortedList(
+                        [
+                            [
+                                6,
+                                9,
+                                9999,
+                                "ft.onto.base_ontology.Sentence",
+                                "teacher",
+                                1,
+                                "Positive",
+                                None,
+                                None,
+                            ],
+                            [
+                                55,
+                                70,
+                                1234567,
+                                "ft.onto.base_ontology.Sentence",
+                                None,
+                                None,
+                                "Negative",
+                                None,
+                                "Class D",
+                            ],
+                            [
+                                60,
+                                90,
+                                100,
+                                "ft.onto.base_ontology.Sentence",
+                                "student",
+                                2,
+                                "Positive",
+                                None,
+                                "class1",
+                            ],
+                            [
+                                65,
+                                90,
+                                5000,
+                                "ft.onto.base_ontology.Sentence",
+                                "TA",
+                                3,
+                                "Positive",
+                                None,
+                                "class2",
+                            ],
+                        ],
+                    ),
+                    "forte.data.ontology.top.Group": [
+                        [
+                            "ft.onto.base_ontology.Document",
+                            [1234, 3456],
+                            23456,
+                            "forte.data.ontology.top.Group",
+                        ],
+                    ],
+                    "forte.data.ontology.top.Link": [
+                        [
+                            9999,
+                            1234,
+                            88888,
+                            "forte.data.ontology.top.Link",
+                        ],
+                    ],
+                },
+            )
+            self.assertEqual(
+                temp._DataStore__tid_ref_dict,
+                {
+                    1234: temp._DataStore__elements[
+                        "ft.onto.base_ontology.Document"
+                    ][0],
+                    3456: temp._DataStore__elements[
+                        "ft.onto.base_ontology.Document"
+                    ][1],
+                    5678: temp._DataStore__elements[
+                        "ft.onto.base_ontology.Document"
+                    ][2],
+                    7890: temp._DataStore__elements[
+                        "ft.onto.base_ontology.Document"
+                    ][3],
+                    9999: temp._DataStore__elements[
+                        "ft.onto.base_ontology.Sentence"
+                    ][0],
+                    1234567: temp._DataStore__elements[
+                        "ft.onto.base_ontology.Sentence"
+                    ][1],
+                    100: temp._DataStore__elements[
+                        "ft.onto.base_ontology.Sentence"
+                    ][2],
+                    5000: temp._DataStore__elements[
+                        "ft.onto.base_ontology.Sentence"
+                    ][3],
+                },
+            )
+            
+            self.assertEqual(
+                temp._DataStore__tid_idx_dict,
+                {
+                    23456: ["forte.data.ontology.top.Group", 0],
+                    88888: ["forte.data.ontology.top.Link", 0],
+                }
+            )
 
 
 if __name__ == "__main__":

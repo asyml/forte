@@ -263,7 +263,6 @@ class DataStore(BaseStore):
             3) reset the `deletion_count`.
         """
         self.__dict__.update(state)
-
         self.__elements = self.__dict__.pop("entries")
         self._type_attributes = self.__dict__.pop("fields", {})
         self._DataStore__tid_ref_dict = {}
@@ -273,26 +272,34 @@ class DataStore(BaseStore):
         reset_index = {}
         for k in self.__elements:
             if self._is_annotation(k):
+                # convert list back to sorted list
                 self.__elements[k] = SortedList(self.__elements[k])
+            else:
+                # remove None placeholders in non-annotation-like entry lists
+                self.__elements[k][:] = [
+                    x for x in self.__elements[k] if x is not None
+                ]
             for e in self.__elements[k]:
-                if e is not None:
-                    if self._is_annotation(k):
-                        # annotation-like
-                        self._DataStore__tid_ref_dict[
-                            e[constants.TID_INDEX]
-                        ] = e
+                if self._is_annotation(k):
+                    # annotation-like
+                    # recreate `tid_ref_dict`
+                    self._DataStore__tid_ref_dict[e[constants.TID_INDEX]] = e
+                else:
+                    # non-annotation-like
+                    # use `reset_index` to recalculate indices
+                    type_name = e[constants.ENTRY_TYPE_INDEX]
+                    # Count how many times each type occurs to know the number
+                    # of existing entries of each type. Assign the count of
+                    # `type_name` to the index of this entry.
+                    if type_name in reset_index:
+                        reset_index[type_name] += 1
                     else:
-                        # non-annotation-like
-                        # use `reset_index` to recalculate indices
-                        type_name = e[constants.ENTRY_TYPE_INDEX]
-                        if type_name in reset_index:
-                            reset_index[type_name] += 1
-                        else:
-                            reset_index[type_name] = 1
-                        self._DataStore__tid_idx_dict[type_name] = [
-                            type_name,
-                            reset_index[type_name],
-                        ]
+                        reset_index[type_name] = 0
+                    # record tid and its corresponding type name and index
+                    self._DataStore__tid_idx_dict[e[constants.TID_INDEX]] = [
+                        type_name,
+                        reset_index[type_name],
+                    ]
 
     @classmethod
     def deserialize(
@@ -362,10 +369,14 @@ class DataStore(BaseStore):
             for t, v in cls._type_attributes.items():
                 change_map = {}
                 contradict_loc = []
-                # find fields that appear in the current class, but not in
-                # the serialized objects,
+                # attribute.items() contains attribute names and attribute indices.
+                # The difference in two sets could find fields that appear in the
+                # current class, but not in the serialized objects,
                 # or fields that have different orders in the current class
                 # and the serialized objects.
+                # If a field only occurs in the serialized object but not in
+                # the current class, it will not be detected.
+                # Instead, it will be dropped later.
                 diff = set(v["attributes"].items()) - set(
                     store._type_attributes[t]["attributes"].items()
                 )
@@ -398,7 +409,8 @@ class DataStore(BaseStore):
                     for d in store._DataStore__elements[t]:
                         d[:] = [
                             d[change_map[i]] if i in change_map else d[i]
-                            # throw fields that are redundant
+                            # throw fields that are redundant/only appear in
+                            # the serialized object
                             for i in range(max(v["attributes"].values()) + 1)
                         ]
                 if len(contradict_loc) > 0:
@@ -1113,7 +1125,7 @@ class DataStore(BaseStore):
         # is O(M*log(N))
 
         # Initialize the first entry of all entry lists
-        # it avoids empty entry lists or non-existant entry list
+        # it avoids empty entry lists or non-existent entry list
         first_entries = []
 
         for tn in type_names:
