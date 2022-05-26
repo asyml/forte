@@ -748,16 +748,17 @@ class Grids(Entry):
             )
         self._height = height
         self._width = width
-        self._image_payload_idx = image_payload_idx
+        if image_payload_idx is None:
+            self._image_payload_idx = 0
+        else:
+            self._image_payload_idx = image_payload_idx
 
-    def get_grid_cell(
-        self, h_idx: int, w_idx: int, image_payload_idx: Optional[int] = None
-    ):
+    def get_grid_cell(self, h_idx: int, w_idx: int):
         """
         Get the array data of a grid cell from image of the image payload index.
         The array is the same size of the image. The array entries that are not
-        within the grid cell will be zeros, and the array entries that are
-        within the grid cell will be preserved.
+        within the grid cell will masked as zeros. The array entries that are
+        within the grid cell will be copied to the zeros numpy array.
 
 
         Args:
@@ -791,18 +792,7 @@ class Grids(Entry):
                 f" {(0, self._width)}"
             )
 
-        if image_payload_idx is None:
-            if self._image_payload_idx is None:
-                raise ValueError(
-                    "There is not image_payload_idx associate "
-                    "with the Grids instance neither"
-                    " image_payload_idx in the ``get_grid_cell`` "
-                    "function parameters. Please make sure either "
-                    "one of them is valid."
-                )
-            image_payload_idx = self._image_payload_idx
-
-        img_arr = self.pack.get_image_array(image_payload_idx)
+        img_arr = self.pack.get_image_array(self._image_payload_idx)
         c_h, c_w = (
             img_arr.shape[0] // self._height,
             img_arr.shape[1] // self._width,
@@ -824,11 +814,6 @@ class Grids(Entry):
 
     @property
     def image_payload_idx(self) -> int:
-        if self._image_payload_idx is None:
-            raise ValueError(
-                "This Grids instance is not associated with "
-                "any image payload yet."
-            )
         return self._image_payload_idx
 
     @property
