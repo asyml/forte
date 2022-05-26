@@ -656,9 +656,11 @@ class DataStoreTest(unittest.TestCase):
         )
         # check number of Recording
         self.assertEqual(
-            self.data_store._DataStore__elements[
-                "ft.onto.base_ontology.Recording"
-            ],
+            len(
+                self.data_store._DataStore__elements[
+                    "ft.onto.base_ontology.Recording"
+                ]
+            ),
             1,
         )
         # check number of AudioUtterance
