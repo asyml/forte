@@ -36,16 +36,16 @@ Functions
 
             - To implement a new processor, User should check the appropriate
               processor to inherit from. One consideration is whether User
-              wants to process a data pack or a data pack batch for
+              wants to process a ``DataPack`` or a ``DataPack`` batch for
               each processing iteration. If it's the
-              data pack, then User should inherit from
+              ``DataPack``, then User should inherit from
               :class:`~forte.processors.base.pack_processor.PackProcessor`.
-              If it's the data pack batch, then User should inherit from
+              If it's the ``DataPack`` batch, then User should inherit from
               :class:`~forte.processors.base.batch_processor.BaseBatchProcessor`
               For example, in the implementation of
               :class:`~forte.processors.misc.vocabulary_processor.VocabularyProcessor`, it inherits
               from :class:`~forte.processors.base.pack_processor.PackProcessor`
-              because it builds vocabulary from data pack. Then User can
+              because it builds vocabulary from ``DataPack``. Then User can
               consider adding a new configuration field in
               ``default_configs()`` based on the needs
               or overwrite the configuration field from its parent class.

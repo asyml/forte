@@ -31,6 +31,7 @@ __all__ = [
     "create_class_with_kwargs",
     "check_type",
     "DiffAligner",
+    "create_import_error_msg",
 ]
 
 
@@ -111,12 +112,12 @@ def get_class(class_name: str, module_paths: Optional[List[str]] = None):
     return class_
 
 
-def get_qual_name(o, lower: bool = False) -> str:
+def get_qual_name(o: object, lower: bool = False) -> str:
     r"""Returns the qualified name of an object ``o``.
 
     Args:
-        o (object): An object class.
-        lower (bool): Whether to lowercase the qualified class name.
+        o: An object class.
+        lower: Whether to lowercase the qualified class name.
 
     Returns:
          The qualified class name.
@@ -133,8 +134,8 @@ def create_class_with_kwargs(class_name: str, class_args: Dict):
     r"""Create class with the given arguments.
 
     Args:
-        class_name (str): Class name.
-        class_args (Dict): Class arguments.
+        class_name: Class name.
+        class_args: Class arguments.
 
     Returns:
         An object with class of type `class_name`.
@@ -242,8 +243,8 @@ class DiffAligner:
         [(0, 2), (3, 5), (6, 10)]
 
         Args:
-            text (str): The original text.
-            segments (str): The list of segments to be mapped.
+            text: The original text.
+            segments: The list of segments to be mapped.
 
         Returns:
             The list of mapped offsets for each segment.
@@ -303,3 +304,39 @@ class DiffAligner:
 
     def _get_opcodes(self):
         yield from self.__matcher.get_opcodes()
+
+
+def create_import_error_msg(
+    extra_module: str,
+    forte_module: str,
+    component_name: str,
+    pip_installable: bool = True,
+):
+    """
+    Create an error message for importing package extra required by a forte
+    module.
+
+
+    Args:
+        extra_module: module name should be installed by pip.
+        forte_module: forte module User should install by
+            ``pip install forte[`forte_module`]`` to install all
+            extra packages for using the forte module.
+        component_name: the forte component that needs the module.
+
+    """
+    install_msg = (
+        f" `{extra_module}` is not installed correctly."
+        + f" Consider install {extra_module}"
+    )
+    pip_msg = f" via `pip install {extra_module}` "
+    refer_msg = (
+        f" or refer to extra requirement for {component_name}"
+        + " at https://github.com/asyml/forte#installation"
+        + f" for more information about installing {forte_module}. "
+    )
+    if pip_installable:
+        error_msg = install_msg + pip_msg + refer_msg
+    else:
+        error_msg = install_msg + refer_msg
+    return error_msg

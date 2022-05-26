@@ -23,7 +23,7 @@ from reader import EvalReader
 from forte.common.configuration import Config
 from forte.data.multi_pack import MultiPack
 from forte.pipeline import Pipeline
-from forte.processors.ir import BertRerankingProcessor
+from forte.processors.ir.bert import BertRerankingProcessor
 
 
 if __name__ == "__main__":

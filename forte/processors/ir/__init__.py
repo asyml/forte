@@ -15,6 +15,5 @@
 # This package contains Information Retrieval Processors, to use processor in
 # this package, run the 'ir' option in setup.py
 
-from forte.processors.ir.bert_based_query_creator import *
-from forte.processors.ir.bert_reranking_processor import *
+
 from forte.processors.ir.search_processor import *

@@ -44,7 +44,7 @@ class Resources:
         r"""Save the resources specified by :attr:`keys` in binary format.
 
         Args:
-            keys (Optional) list or dict:
+            keys: list or dict:
 
                 - If :attr:`keys` is a list, the objects corresponding to those keys
                   are saved
@@ -53,7 +53,7 @@ class Resources:
                   the object corresponding to that key
                 - If :attr:`keys` is None, all objects in this resource will be
                   saved.
-            output_dir (Optional): str
+            output_dir:
                 A directory specifying the location to save the resources.
         """
 
@@ -104,14 +104,14 @@ class Resources:
         r"""Load the resources specified by :attr:`keys`.
 
         Args:
-            keys (Union[List[str], DeserializeDict]) list or dict:
+            keys list or dict:
 
                 - If :attr:`keys` is a list, the objects corresponding to those keys
                   are loaded
                 - If :attr:`keys` is a dict mapping from a key to a deserialize
                   function, then the deserialize function will be used to load
                   the object corresponding to that key
-            path (Optional): str
+            path: str
                 A directory specifying the location to load the resources from.
         """
 

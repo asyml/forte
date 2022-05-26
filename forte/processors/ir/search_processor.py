@@ -59,8 +59,9 @@ class SearchProcessor(MultiPackProcessor):
     def default_configs(cls) -> Dict[str, Any]:
         return {
             "model_dir": None,
+            "query_pack_name": "query",
             "response_pack_name_prefix": "doc",
-            "indexer_class": "forte.faiss.embedding_based_indexer"
+            "indexer_class": "fortex.faiss.embedding_based_indexer"
             ".EmbeddingBasedIndexer",
             "indexer_configs": {
                 "index_type": "GpuIndexFlatIP",

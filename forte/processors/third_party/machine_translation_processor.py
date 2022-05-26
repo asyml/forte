@@ -17,15 +17,26 @@ from os import getenv
 from typing import Dict, Any
 from urllib.parse import urlencode
 import os
-import requests
-from transformers import T5Tokenizer, T5ForConditionalGeneration
+
 from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.processors.base import MultiPackProcessor, PackProcessor
+from forte.utils import create_import_error_msg
 from ft.onto.base_ontology import Document, Utterance
 
+try:
+    from transformers import (  # pylint:disable=import-outside-toplevel
+        T5Tokenizer,
+        T5ForConditionalGeneration,
+    )
+except ImportError as err:
+    raise ImportError(
+        create_import_error_msg(
+            "transformers", "data_aug", "Machine Translator"
+        )
+    ) from err
 
 __all__ = ["MicrosoftBingTranslator", "MachineTranslationProcessor"]
 
@@ -80,6 +91,14 @@ class MicrosoftBingTranslator(MultiPackProcessor):
             self.out_pack_name = configs.out_pack_name
 
     def _process(self, input_pack: MultiPack):
+        try:
+            import requests  # pylint: disable=import-outside-toplevel
+        except ImportError as e:
+            raise ImportError(
+                create_import_error_msg(
+                    "requests", "data_aug", "data augment support"
+                )
+            ) from e
         query = input_pack.get_pack(self.in_pack_name).text
         params = "?" + urlencode(
             {

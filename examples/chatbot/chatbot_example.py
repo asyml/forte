@@ -14,6 +14,7 @@
 import yaml
 from termcolor import colored
 import torch
+
 from fortex.nltk import NLTKSentenceSegmenter, NLTKWordTokenizer, NLTKPOSTagger
 from forte.common.configuration import Config
 from forte.data.multi_pack import MultiPack
@@ -21,7 +22,7 @@ from forte.data.readers import MultiPackTerminalReader
 from forte.common.resources import Resources
 from forte.pipeline import Pipeline
 from forte.processors.third_party import MicrosoftBingTranslator
-from forte.processors.nlp import SRLPredictor
+from forte.processors.nlp.srl_predictor import SRLPredictor
 from forte.processors.ir import SearchProcessor, BertBasedQueryCreator
 from forte.data.selector import NameMatchSelector
 from ft.onto.base_ontology import PredicateLink, Sentence
@@ -122,6 +123,7 @@ def main(config: Config):
             print()
 
             input(colored("Press ENTER to continue...\n", "green"))
+
 
 if __name__ == "__main__":
     all_config = Config(yaml.safe_load(open("config.yml", "r")), None)

@@ -21,8 +21,17 @@ import re
 import sys
 from typing import List, Dict, Tuple, Optional
 from urllib.parse import urlparse, parse_qs
+from forte.utils import create_import_error_msg
 
-import rdflib
+try:
+    import rdflib
+except ImportError as e:
+    raise ImportError(
+        create_import_error_msg(
+            "rbflib", "wikipedia", "DBpedia dataset supports"
+        )
+    ) from e
+
 
 dbpedia_prefix = "http://dbpedia.org/resource/"
 state_type = Tuple[rdflib.term.Node, rdflib.term.Node, rdflib.term.Node]
@@ -35,7 +44,7 @@ def load_redirects(redirect_path: str) -> Dict[str, str]:
     directed from, and the value is the page being directed to.
 
     Args:
-        redirect_path (str): A path pointing to a file that contains the NIF
+        redirect_path: A path pointing to a file that contains the NIF
           formatted statements of redirect. A file like this can be obtained
           here: http://wiki.dbpedia.org/services-resources/documentation/datasets#Redirects
 
@@ -73,8 +82,8 @@ def get_resource_attribute(url: str, param_name: str) -> Optional[str]:
     'context'
 
     Args:
-        url (str): A NIF URL.
-        param_name (str): The attribute name to extract.
+        url: A NIF URL.
+        param_name: The attribute name to extract.
 
     Returns (str):
         The extracted parameter value.

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from abc import abstractmethod
-from typing import List, Iterator, Tuple, Any
+from typing import List, Iterator, Tuple, Any, Optional
 
 __all__ = ["BaseStore"]
 
@@ -34,13 +34,13 @@ class BaseStore:
     @abstractmethod
     def add_annotation_raw(self, type_name: str, begin: int, end: int) -> int:
         r"""This function adds an annotation entry with ``begin`` and ``end``
-        indices to the ``type_name`` sortedlist in ``self.__elements``,
+        indices to the ``type_name`` sorted list in ``self.__elements``,
         returns the ``tid`` for the inserted entry.
 
         Args:
-            type_name (str): The index of Annotation sortedlist in ``self.__elements``.
-            begin (int): Begin index of the entry.
-            end (int): End index of the entry.
+            type_name: The index of Annotation sorted list in ``self.__elements``.
+            begin: Begin index of the entry.
+            end: End index of the entry.
         Returns:
             ``tid`` of the entry.
         """
@@ -56,9 +56,9 @@ class BaseStore:
         index of the entry in the ``type_name`` list.
 
         Args:
-            type_name (str): The index of Link list in ``self.__elements``.
-            parent_tid (int): ``tid`` of the parent entry.
-            child_tid (int): ``tid`` of the child entry.
+            type_name: The index of Link list in ``self.__elements``.
+            parent_tid: ``tid`` of the parent entry.
+            child_tid: ``tid`` of the child entry.
 
         Returns:
             ``tid`` of the entry and its index in the ``type_name`` list.
@@ -76,8 +76,8 @@ class BaseStore:
         index of the entry in the ``type_name`` list.
 
         Args:
-            type_name (str): The index of Group list in ``self.__elements``.
-            member_type (str): Fully qualified name of its members.
+            type_name: The index of Group list in ``self.__elements``.
+            member_type: Fully qualified name of its members.
 
         Returns:
             ``tid`` of the entry and its index in the ``type_name`` list.
@@ -91,9 +91,9 @@ class BaseStore:
         ``attr_name`` with ``attr_value``.
 
         Args:
-            tid (int): Unique Id of the entry.
-            attr_name (str): Name of the attribute.
-            attr_value (any): Value of the attribute.
+            tid: Unique Id of the entry.
+            attr_name: Name of the attribute.
+            attr_value: Value of the attribute.
         """
         raise NotImplementedError
 
@@ -104,8 +104,8 @@ class BaseStore:
         Called by `set_attribute()`.
 
         Args:
-            tid (int): Unique id of the entry.
-            attr_id (int): Id of the attribute.
+            tid: Unique id of the entry.
+            attr_id: Id of the attribute.
             attr_value: value of the attribute.
 
         """
@@ -118,8 +118,8 @@ class BaseStore:
         ``tid``.
 
         Args:
-            tid (int): Unique id of the entry.
-            attr_name (str): Name of the attribute.
+            tid: Unique id of the entry.
+            attr_name: Name of the attribute.
 
         Returns:
             The value of ``attr_name`` for the entry with ``tid``.
@@ -132,8 +132,8 @@ class BaseStore:
         of ``attr_id``  of this entry. Called by `get_attribute()`.
 
         Args:
-            tid (int): Unique id of the entry.
-            attr_id (int): Id of the attribute.
+            tid: Unique id of the entry.
+            attr_id: Id of the attribute.
 
         Returns:
             The value of ``attr_id``  for the entry with ``tid``.
@@ -146,35 +146,56 @@ class BaseStore:
         r"""This function removes the entry with ``tid`` from the data store.
 
         Args:
-            tid (int): Unique id of the entry.
+            tid: Unique id of the entry.
 
         """
 
         raise NotImplementedError
 
     @abstractmethod
-    def get_entry(self, tid: int) -> Tuple[List, int, int]:
-        r"""Look up the entry_dict with key ``tid``. Return the entry,
-        its ``type_name``, and its ``index_id`` in the ``entry_type`` list.
+    def get_entry(self, tid: int) -> Tuple[List, str]:
+        r"""Look up the `tid_ref_dict` or `tid_idx_dict` with key ``tid``.
+        Return the entry and its ``type_name``.
 
         Args:
-            tid (int): Unique id of the entry.
+            tid: Unique id of the entry.
 
         Returns:
-            The entry which ``tid`` corresponds to, its ``type_name`` and its index
-            in the ``entry_type`` list.
+            The entry which ``tid`` corresponds to and its ``type_name``.
 
         """
         raise NotImplementedError
 
     @abstractmethod
-    def get(self, type_name: str, include_sub_type: bool) -> Iterator[List]:
+    def get_entry_index(self, tid: int) -> int:
+        r"""Look up the `tid_ref_dict` or `tid_idx_dict` with key ``tid``.
+        Return the ``index_id`` of the entry.
+
+        Args:
+            tid: Unique id of the entry.
+
+        Returns:
+            Index of the entry which ``tid`` corresponds to in the
+            ``entry_type`` list.
+
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def get(
+        self,
+        type_name: str,
+        include_sub_type: bool,
+        range_annotation: Optional[Tuple[int]] = None,
+    ) -> Iterator[List]:
         r"""This function fetches entries from the data store of
         type ``type_name``.
 
         Args:
-            type_name (str): The index of the list in ``self.__elements``.
+            type_name: The index of the list in ``self.__elements``.
             include_sub_type: A boolean to indicate whether get its subclass.
+            range_annotation: A tuple that contains the begin and end indices
+                of the searching range of annotation-like entries.
 
         Returns:
             An iterator of the entries matching the provided arguments.
@@ -184,11 +205,11 @@ class BaseStore:
         raise NotImplementedError
 
     @abstractmethod
-    def next_entry(self, tid: int) -> List:
+    def next_entry(self, tid: int) -> Optional[List]:
         r"""Get the next entry of the same type as the ``tid`` entry.
 
         Args:
-            tid (int): Unique id of the entry.
+            tid: Unique id of the entry.
 
         Returns:
             The next entry of the same type as the ``tid`` entry.
@@ -198,11 +219,11 @@ class BaseStore:
         raise NotImplementedError
 
     @abstractmethod
-    def prev_entry(self, tid: int) -> List:
+    def prev_entry(self, tid: int) -> Optional[List]:
         r"""Get the previous entry of the same type as the ``tid`` entry.
 
         Args:
-            tid (int): Unique id of the entry.
+            tid: Unique id of the entry.
 
         Returns:
             The previous entry of the same type as the ``tid`` entry.

@@ -13,9 +13,7 @@
 # limitations under the License.
 
 from typing import List
-import nltk
-from nltk.corpus import wordnet
-
+from forte.utils import create_import_error_msg
 
 __all__ = ["Dictionary", "WordnetDictionary"]
 
@@ -33,9 +31,9 @@ class Dictionary:
     ) -> List[str]:
         r"""
         Args:
-            word (str): The input string.
-            pos_tag (str): The Part-of-Speech tag for substitution.
-            lang (str): The language of the input string.
+            word: The input string.
+            pos_tag: The Part-of-Speech tag for substitution.
+            lang: The language of the input string.
         Returns:
             synonyms of the word.
         """
@@ -46,9 +44,9 @@ class Dictionary:
     ) -> List[str]:
         r"""
         Args:
-            word (str): The input string.
-            pos_tag (str): The Part-of-Speech tag for substitution.
-            lang (str): The language of the input string.
+            word: The input string.
+            pos_tag: The Part-of-Speech tag for substitution.
+            lang: The language of the input string.
         Returns:
             Antonyms of the word.
         """
@@ -59,9 +57,9 @@ class Dictionary:
     ) -> List[str]:
         r"""
         Args:
-            word (str): The input string.
-            pos_tag (str): The Part-of-Speech tag for substitution.
-            lang (str): The language of the input string.
+            word: The input string.
+            pos_tag: The Part-of-Speech tag for substitution.
+            lang: The language of the input string.
         Returns:
             Hypernyms of the word.
         """
@@ -72,9 +70,9 @@ class Dictionary:
     ) -> List[str]:
         r"""
         Args:
-            word (str): The input string.
-            pos_tag (str): The Part-of-Speech tag for substitution.
-            lang (str): The language of the input string.
+            word: The input string.
+            pos_tag: The Part-of-Speech tag for substitution.
+            lang: The language of the input string.
         Returns:
             Hyponyms of the word.
         """
@@ -90,6 +88,18 @@ class WordnetDictionary(Dictionary):
     """
 
     def __init__(self):
+        try:
+            import nltk  # pylint: disable=import-outside-toplevel
+            from nltk.corpus import (  # pylint:disable=import-outside-toplevel
+                wordnet,
+            )
+        except ImportError as err:
+            raise ImportError(
+                create_import_error_msg(
+                    "nltk", "data_aug", "dictionary based data augmentation"
+                )
+            ) from err
+
         try:
             # Check if the wordnet package and
             # pos_tag package are downloaded.
@@ -127,10 +137,10 @@ class WordnetDictionary(Dictionary):
         from a WORDNET dictionary.
 
         Args:
-            word (str): The input token.
-            pos_tag (str): The NLTK POS tag.
-            lang (str): The input language.
-            lemma_type (str): The type of words to replace, must be
+            word: The input token.
+            pos_tag: The NLTK POS tag.
+            lang: The input language.
+            lemma_type: The type of words to replace, must be
                 one of the following:
 
                 - ``'SYNONYM'``

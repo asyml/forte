@@ -18,13 +18,28 @@ A wrapper adding data augmentation to a Bert model with arbitrary tasks.
 import random
 import math
 from typing import Tuple, Dict, Generator
-import texar.torch as tx
-import torch
-from torch import nn
-from torch.nn import functional as F
-from torch.optim import Optimizer
-
+from forte.utils import create_import_error_msg
 from forte.models.da_rl.magic_model import MetaModule
+
+try:
+    import torch
+    from torch import nn
+    from torch.nn import functional as F
+    from torch.optim import Optimizer
+except ImportError as e:
+    raise ImportError(
+        create_import_error_msg("torch", "models", "Augmentation Wrapper")
+    ) from e
+
+
+try:
+    import texar.torch as tx
+except ImportError as e:
+    raise ImportError(
+        create_import_error_msg(
+            "texar-pytorch", "models", "Augmentation Wrapper"
+        )
+    ) from e
 
 __all__ = ["MetaAugmentationWrapper"]
 

@@ -58,7 +58,11 @@ from forte.process_job import ProcessJob
 from forte.process_manager import ProcessManager, ProcessJobStatus
 from forte.processors.base import BaseProcessor
 from forte.processors.base.batch_processor import BaseBatchProcessor
-from forte.utils import create_class_with_kwargs, get_full_module_name
+from forte.utils import (
+    create_class_with_kwargs,
+    get_full_module_name,
+    create_import_error_msg,
+)
 from forte.utils.utils_processor import record_types_and_attributes_check
 from forte.version import FORTE_IR_VERSION
 
@@ -545,10 +549,9 @@ class Pipeline(Generic[PackType]):
             from pydantic import BaseModel
         except ImportError as e:
             raise ImportError(
-                "'fastapi' must be installed to get a service app of "
-                "pipeline. You can run 'pip install forte[remote]' to "
-                "install all the requirements needed to start a pipeline "
-                "service."
+                create_import_error_msg(
+                    "fastapi", "remote", "the pipeline service"
+                )
             ) from e
 
         app = FastAPI()
@@ -630,10 +633,9 @@ class Pipeline(Generic[PackType]):
                 import uvicorn  # pylint: disable=import-outside-toplevel
             except ImportError as e:
                 raise ImportError(
-                    "'uvicorn' must be installed to start a service of "
-                    "pipeline. You can run 'pip install forte[remote]' to "
-                    "install all the requirements needed to start a pipeline "
-                    "service."
+                    create_import_error_msg(
+                        "uvicorn", "remote", "the pipeline service"
+                    )
                 ) from e
 
         self.initialize()
@@ -866,12 +868,12 @@ class Pipeline(Generic[PackType]):
         different instance should be used.
 
         Args:
-            component (PipelineComponent): The component to be inserted next
+            component: The component to be inserted next
               to the pipeline.
-            config (Union[Config, Dict[str, Any]): The custom configuration
+            config: The custom configuration
               to be used for the added component. Default None, which means
               the `default_configs()` of the component will be used.
-            selector (Selector): The selector used to pick the corresponding
+            selector: The selector used to pick the corresponding
               data pack to be consumed by the component. Default None, which
               means the whole pack will be used.
 
@@ -939,7 +941,7 @@ class Pipeline(Generic[PackType]):
         `consume_next(...)`
 
         Args:
-            pack (Dict): A key, value pair containing job.id -> gold_pack
+            pack: A key, value pair containing job.id -> gold_pack
                 mapping
         """
         self._predict_to_gold.update(pack)
@@ -1115,7 +1117,7 @@ class Pipeline(Generic[PackType]):
         the pipeline.
 
         Args:
-             data_iter (iterator): Iterator yielding jobs that contain packs
+             data_iter: Iterator yielding jobs that contain packs
 
         Returns:
             Yields packs that are processed by the pipeline.
@@ -1442,7 +1444,7 @@ class Pipeline(Generic[PackType]):
         Call the evaluator in the pipeline by the reference name to get a component.
 
         Args:
-            ref_name(str): the reference name of a component
+            ref_name: the reference name of a component
         """
         p = self.components[self.ref_names[ref_name]]
         return p

@@ -13,15 +13,19 @@
 # limitations under the License.
 
 from typing import Dict
-import torch
-import torch.nn.functional as F
-import torch.nn.utils.rnn as rnn_utils
-from torch import nn
-import texar.torch as texar
-from texar.torch.modules.embedders import WordEmbedder
-
+from forte.utils import create_import_error_msg
 from forte.common.configuration import Config
 from forte.models.ner.conditional_random_field import ConditionalRandomField
+
+try:
+    import torch
+    import torch.nn.functional as F
+    import torch.nn.utils.rnn as rnn_utils
+    from torch import nn
+except ImportError as e1:
+    raise ImportError(
+        create_import_error_msg("torch", "models", "model factory")
+    ) from e1
 
 
 class BiRecurrentConvCRF(nn.Module):
@@ -33,7 +37,17 @@ class BiRecurrentConvCRF(nn.Module):
         config_model: Config,
     ):
         super().__init__()
-
+        try:
+            import texar.torch as texar  # pylint: disable=import-outside-toplevel
+            from texar.torch.modules.embedders import (  # pylint: disable=import-outside-toplevel
+                WordEmbedder,
+            )
+        except ImportError as e2:
+            raise ImportError(
+                create_import_error_msg(
+                    "texar-pytorch", "models", "BiRecurrentConvCRF"
+                )
+            ) from e2
         self.word_embedder = WordEmbedder(
             init_value=texar.data.Embedding(
                 vocab=word_vocab,
@@ -140,6 +154,15 @@ class BiRecurrentConvCRF(nn.Module):
         best_paths = self.crf.viterbi_tags(logits, mask.long())
         predicted_tags = [x for x, y in best_paths]
         predicted_tags = [torch.tensor(x).unsqueeze(0) for x in predicted_tags]
+        try:
+            import texar.torch as texar  # pylint: disable=import-outside-toplevel
+        except ImportError as e3:
+            raise ImportError(
+                create_import_error_msg(
+                    "texar-pytorch", "models", "BiRecurrentConvCRF"
+                )
+            ) from e3
+
         predicted_tags = texar.utils.pad_and_concat(
             predicted_tags, axis=0, pad_constant_values=0
         )

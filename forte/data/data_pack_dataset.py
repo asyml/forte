@@ -20,9 +20,8 @@ an extracted feature corresponding to an input data point.
 """
 from typing import Dict, Iterator, Type, Optional, List, Tuple, Union, Any
 
-import torch
-from texar.torch import HParams
-from texar.torch.data import IterDataSource, DatasetBase, Batch
+from asyml_utilities.hyperparams import HParams
+
 
 from forte.data.converter import Converter
 from forte.data.converter import Feature
@@ -31,6 +30,24 @@ from forte.data.base_extractor import BaseExtractor
 from forte.data.ontology.core import EntryType
 from forte.data.ontology.top import Annotation
 from forte.data.types import DataRequest
+from forte.utils import create_import_error_msg
+
+try:
+    import torch
+except ImportError as e:
+    raise ImportError(
+        create_import_error_msg("torch", "extractor", "data pack dataset")
+    ) from e
+
+try:
+    from texar.torch.data import IterDataSource, DatasetBase, Batch
+except ImportError as e:
+    raise ImportError(
+        create_import_error_msg(
+            "texar-pytorch", "extractor", "data pack dataset"
+        )
+    ) from e
+
 
 __all__ = [
     "DataPackIterator",
@@ -49,7 +66,7 @@ class DataPackIterator(IterDataSource):
     An iterator generating data example from a stream of data packs.
 
     Args:
-        pack_iterator (Iterator[DataPack]): An iterator of
+        pack_iterator: An iterator of
             :class:`~forte.data.data_pack.DataPack`.
         context_type: The granularity of a single example which
             could be any :class:`~forte.data.ontology.top.Annotation` type. For example, it can be
@@ -58,7 +75,7 @@ class DataPackIterator(IterDataSource):
         request: The request of type `Dict` sent to
             :class:`~forte.data.data_pack.DataPack` to query
             specific data.
-        skip_k (int): Will skip the first `skip_k` instances and generate
+        skip_k: Will skip the first `skip_k` instances and generate
             data from the (`skip_k` + 1)th instance.
 
     Returns:
@@ -149,7 +166,7 @@ class DataPackDataset(DatasetBase):
     Args:
         data_source: A data source of type
             :class:`~forte.data.data_pack_dataset.DataPackIterator`.
-        feature_schemes (dict): A `Dict` containing all the information to do
+        feature_schemes: A `Dict` containing all the information to do
             data pre-processing. This is exactly the same as the `schemes` in
             :meth:`~forte.train_preprocessor.TrainPreprocessor.request`.
         hparams: A `dict` or instance of

@@ -15,8 +15,8 @@ import logging
 from typing import List, Tuple, Any, Optional, Union, Dict, Sequence
 
 import numpy as np
-import torch
 
+from forte.utils import create_import_error_msg
 from forte.common.configuration import Config
 from forte.common import ValidationError
 from forte.data.converter.feature import Feature
@@ -130,7 +130,7 @@ class Converter:
         `torch.tensor`.
 
         Args:
-            features (List[Feature]):
+            features:
                 A list of :class:`forte.data.converter.Feature`
 
         Returns:
@@ -241,6 +241,13 @@ class Converter:
             #                  dtype=np.bool)
             # ]
         """
+        if self.to_torch:
+            try:
+                import torch  # pylint: disable=import-outside-toplevel
+            except ImportError as e:
+                raise ImportError(
+                    create_import_error_msg("torch", "extractor", "data module")
+                ) from e
         dtype: Optional[np.dtype] = None
         need_pad: bool = features[0].need_pad
 
@@ -302,7 +309,15 @@ class Converter:
         raise RuntimeError("Invalid converter internal state")
 
     @staticmethod
-    def _padding(features: List[Feature]) -> Optional[torch.dtype]:
+    def _padding(features: List[Feature]):
+        try:
+            import torch  # pylint: disable=import-outside-toplevel
+        except ImportError as e:
+            raise ImportError(
+                create_import_error_msg(
+                    "torch", "extractor", "the extractor system"
+                )
+            ) from e
         # BFS to pad each dimension
         queue: List[Feature] = []
         curr_max_len: int = -1
@@ -345,5 +360,11 @@ class Converter:
         return np.array(data, dtype=dtype)
 
     @staticmethod
-    def _to_tensor_type(data: List[Any], dtype) -> torch.Tensor:
+    def _to_tensor_type(data: List[Any], dtype):
+        try:
+            import torch  # pylint: disable=import-outside-toplevel
+        except ImportError as e:
+            raise ImportError(
+                create_import_error_msg("torch", "extractor", "data module")
+            ) from e
         return torch.tensor(data, dtype=dtype)
