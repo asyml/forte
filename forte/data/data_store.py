@@ -710,8 +710,8 @@ class DataStore(BaseStore):
         allow_duplicate=True,
     ) -> int:
 
-        r"""This function adds an audio annotation entry with ``begin`` and
-        ``end``
+        r"""
+        This function adds an audio annotation entry with ``begin`` and ``end``
         indices to current data store object. Returns the ``tid`` for the
         inserted entry.
 
