@@ -600,7 +600,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         """
         return cls._deserialize(data_source, serialize_method, zip_pack)
 
-    def _add_entry(self, entry: EntryType) -> EntryType:
+    def _add_entry(self, entry: Union[EntryType, int]) -> EntryType:
         r"""Force add an :class:`~forte.data.ontology.core.Entry` object to the
         :class:`~forte.data.data_pack.DataPack` object. Allow duplicate entries in a pack.
 
@@ -1338,8 +1338,9 @@ class DataPack(BasePack[Entry, Link, Group]):
     def get_entry(self, tid: int) -> EntryType:
         r"""Look up the entry_index with key ``ptr``. Specific implementation
         depends on the actual class."""
-        entry: EntryType = self._index.get_entry(tid)
-        if entry is None:
+        try:
+            entry: EntryType = self._index.get_entry(tid)
+        except KeyError:
             entry = self._entry_converter.get_entry_object(tid, self)
         if entry is None:
             raise KeyError(

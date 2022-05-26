@@ -109,7 +109,9 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         # This Dict maintains a mapping from entry's tid to the Entry object
         # itself and the component name associated with the entry.
         # The component name is used for tracking the "creator" of this entry.
-        self._pending_entries: Dict[int, Tuple[int, Optional[str]]] = {}
+        self._pending_entries: Dict[
+            int, Tuple[Union[int, Entry], Optional[str]]
+        ] = {}
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -230,7 +232,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         raise NotImplementedError
 
     def add_entry(
-        self, entry: Entry, component_name: Optional[str] = None
+        self, entry: Union[Entry, int], component_name: Optional[str] = None
     ) -> EntryType:
         r"""Add an :class:`~forte.data.ontology.core.Entry` object to the
         :class:`~forte.data.base_pack.BasePack` object. Allow duplicate entries in a pack.
@@ -250,7 +252,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         return self._add_entry(entry)
 
     @abstractmethod
-    def _add_entry(self, entry: Entry) -> EntryType:
+    def _add_entry(self, entry: Union[Entry, int]) -> EntryType:
         r"""Add an :class:`~forte.data.ontology.core.Entry` object to the
         :class:`~forte.data.base_pack.BasePack` object. Allow duplicate entries in a pack.
 
