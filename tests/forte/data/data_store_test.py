@@ -642,14 +642,90 @@ class DataStoreTest(unittest.TestCase):
             ],
         )
 
+    def test_add_audio_annotation_raw(self):
+        # test add Document entry
+        tid_recording: int = self.data_store.add_audio_annotation_raw(
+            "ft.onto.base_ontology.Recording", 1, 5
+        )
+        # test add Sentence entry
+        tid_audio_utterance: int = self.data_store.add_audio_annotation_raw(
+            "ft.onto.base_ontology.AudioUtterance", 5, 8
+        )
+        tid_utterance: int = self.data_store.add_annotation_raw(
+            "ft.onto.base_ontology.Utterance", 5, 8
+        )
+        # check number of Recording
+        self.assertEqual(
+            len(
+                self.data_store._DataStore__elements[
+                    "ft.onto.base_ontology.Recording"
+                ]
+            ),
+            1,
+        )
+        # check number of AudioUtterance
+        self.assertEqual(
+            len(
+                self.data_store._DataStore__elements[
+                    "ft.onto.base_ontology.AudioUtterance"
+                ]
+            ),
+            1,
+        )
+        # check number of Utterance
+        self.assertEqual(
+            len(
+                self.data_store._DataStore__elements[
+                    "ft.onto.base_ontology.Utterance"
+                ]
+            ),
+            1,
+        )
+        tid = 77
+        self.data_store.add_audio_annotation_raw(
+            "ft.onto.base_ontology.Recording", 0, 1, tid
+        )
+        self.assertEqual(
+            self.data_store.get_entry(tid=77)[0],
+            [0, 1, tid, "ft.onto.base_ontology.Recording", []],
+        )
+
+    def test_add_generics_raw(self):
+        # test add Document entry
+        tid_generics: int = self.data_store.add_generics_raw(
+            "forte.data.ontology.top.Generics"
+        )
+        # check number of Generics
+        self.assertEqual(
+            len(
+                self.data_store._DataStore__elements[
+                    "forte.data.ontology.top.Generics"
+                ]
+            ),
+            1,
+        )
+        tid = 77
+        self.data_store.add_generics_raw(
+            "forte.data.ontology.top.Generics", tid
+        )
+        self.assertEqual(
+            self.data_store.get_entry(tid=77)[0],
+            [None, None, tid, "forte.data.ontology.top.Generics"],
+        )
+
     def test_add_link_raw(self):
         self.data_store.add_link_raw(
             "forte.data.ontology.top.Link", 9999, 1234567
         )
-        num_link = len(
-            self.data_store._DataStore__elements["forte.data.ontology.top.Link"]
+        # check number of Link
+        self.assertEqual(
+            len(
+                self.data_store._DataStore__elements[
+                    "forte.data.ontology.top.Link"
+                ]
+            ),
+            2,
         )
-        self.assertEqual(num_link, 2)
 
         # check add link with tid
         tid = 77
@@ -663,12 +739,15 @@ class DataStoreTest(unittest.TestCase):
         self.data_store.add_group_raw(
             "forte.data.ontology.top.Group", 9999, 1234567
         )
-        num_group = len(
-            self.data_store._DataStore__elements[
-                "forte.data.ontology.top.Group"
-            ]
+        # check number of Group
+        self.assertEqual(
+            len(
+                self.data_store._DataStore__elements[
+                    "forte.data.ontology.top.Group"
+                ]
+            ),
+            4,
         )
-        self.assertEqual(num_group, 4)
 
         # check add group with tid
         tid = 77
