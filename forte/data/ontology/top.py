@@ -731,6 +731,7 @@ class Grids(Entry):
         pack: The container that this grids will be added to.
         height: the number of grid cell per column.
         width: the number of grid cell per row.
+        image_payload_idx: the index of image in the datapack payloads.
     """
 
     def __init__(
@@ -753,10 +754,17 @@ class Grids(Entry):
         else:
             self._image_payload_idx = image_payload_idx
 
+        self.img_arr = self.pack.get_image_array(self._image_payload_idx)
+        self.c_h, self.c_w = (
+            self.img_arr.shape[0] // self._height,
+            self.img_arr.shape[1] // self._width,
+        )  # compute the height and width of grid cells
+
     def get_grid_cell(self, h_idx: int, w_idx: int):
         """
         Get the array data of a grid cell from image of the image payload index.
-        The array is the same size of the image. The array entries that are not
+        The array is a masked version of the original image, and it has
+        the same size of the image. The array entries that are not
         within the grid cell will masked as zeros. The array entries that are
         within the grid cell will be copied to the zeros numpy array.
 
@@ -766,11 +774,6 @@ class Grids(Entry):
                 dimension.
             w_idx: the zero-based index of the grid cell of the second
                 dimension.
-            image_payload_idx: An integer that represents the index of
-                the image in the payloads. If it's not None, it will use the
-                image from the corresponding payload. Otherwise,
-                it will use the image
-                from the payload of ``self._image_payload_idx``.
 
         Raises:
             ValueError: ``h_idx`` is out of the range specified by ``height``.
@@ -792,23 +795,19 @@ class Grids(Entry):
                 f" {(0, self._width)}"
             )
 
-        img_arr = self.pack.get_image_array(self._image_payload_idx)
-        c_h, c_w = (
-            img_arr.shape[0] // self._height,
-            img_arr.shape[1] // self._width,
-        )  # compute the height and width of grid cells
-
         # initialize a numpy zeros array
-        array = np.zeros(img_arr.shape)
+        array = np.zeros(self.img_arr.shape)
         # set grid cell entry values to the values of the original image array
         # (entry values outside of grid cell remain zeros)
         # An example of computing grid height index range is
         # index * cell height : (index + 1) * cell height.
         # It's similar for computing cell width index range
         array[
-            h_idx * c_h : (h_idx + 1) * c_h, w_idx * c_w : (w_idx + 1) * c_w
-        ] = img_arr[
-            h_idx * c_h : (h_idx + 1) * c_h, w_idx * c_w : (w_idx + 1) * c_w
+            h_idx * self.c_h : (h_idx + 1) * self.c_h,
+            w_idx * self.c_w : (w_idx + 1) * self.c_w,
+        ] = self.img_arr[
+            h_idx * self.c_h : (h_idx + 1) * self.c_h,
+            w_idx * self.c_w : (w_idx + 1) * self.c_w,
         ]
         return array
 
