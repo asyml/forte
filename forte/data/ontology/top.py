@@ -722,13 +722,6 @@ class ImageAnnotation(Entry):
             return False
         return self.image_payload_idx == other.image_payload_idx
 
-    def __hash__(self) -> int:
-        r"""
-        The hash function for ``Sketch`` class with a numpy array as a class
-        attribute.
-        """
-        return hash((self._image_payload_idx, self._tid))
-
 
 class Grids(Entry):
     """
@@ -858,13 +851,6 @@ class Grids(Entry):
             self._height,
             self._width,
         )
-
-    def __hash__(self) -> int:
-        r"""
-        The hash function for ``ImageAnnotation`` class with a numpy array as a class
-        attribute.
-        """
-        return hash(self._tid)
 
 
 SinglePackEntries = (Link, Group, Annotation, Generics, AudioAnnotation)
