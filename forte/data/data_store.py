@@ -746,11 +746,11 @@ class DataStore(BaseStore):
 
     def _get_existing_ann_entry_tid(self, entry: List[Any]):
         r"""
-        This function searches for tid for existing entry tid. It return tid
-        if the entry is found. Otherwise, it returns -1.
+        This function searches for tid for existing annotation-like entry tid.
+        It return the tid if the entry is found. Otherwise, it returns -1.
 
         Args:
-            entry (Entry): entry to search for.
+            entry (Entry): annotation-like entry to search for.
 
         Raises:
             ValueError: raised when the entry type being searched is
