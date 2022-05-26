@@ -694,7 +694,7 @@ class DataStore(BaseStore):
         # self.__tid_ref_dict.
         entry = self._new_annotation(type_name, begin, end, tid)
         if not allow_duplicate:
-            tid_search_result = self._get_existing_entry_tid(entry)
+            tid_search_result = self._get_existing_ann_entry_tid(entry)
             # if found existing entry
             if tid_search_result != -1:
                 return tid_search_result
@@ -738,13 +738,13 @@ class DataStore(BaseStore):
         entry = self._new_audio_annotation(type_name, begin, end, tid)
 
         if not allow_duplicate:
-            tid_search_result = self._get_existing_entry_tid(entry)
+            tid_search_result = self._get_existing_ann_entry_tid(entry)
             # if found existing entry
             if tid_search_result != -1:
                 return tid_search_result
         return self._add_entry_raw(AudioAnnotation, type_name, entry)
 
-    def _get_existing_entry_tid(self, entry: List[Any]):
+    def _get_existing_ann_entry_tid(self, entry: List[Any]):
         r"""
         This function searches for tid for existing entry tid. It return tid
         if the entry is found. Otherwise, it returns -1.
@@ -753,7 +753,7 @@ class DataStore(BaseStore):
             entry (Entry): entry to search for.
 
         Raises:
-            NotImplementedError: raised when the entry type being searched is
+            ValueError: raised when the entry type being searched is
                 not supported, currently supporting `Annotation`,
                 `AudioAnnotation`.
 
@@ -778,9 +778,10 @@ class DataStore(BaseStore):
             else:
                 return -1
         else:
-            raise NotImplementedError(
+            raise ValueError(
                 f"Get existing entry id for {type_name}"
-                " is not supported currently."
+                " is not supported. This function only supports "
+                "getting entry id for annotation-like entry."
             )
 
     def add_link_raw(
