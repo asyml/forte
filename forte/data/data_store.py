@@ -604,8 +604,11 @@ class DataStore(BaseStore):
             entry: raw entry data in the list format.
 
         Raises:
-            KeyError: raised when the entry type name is not in `self.__elements`.
-            NotImplementedError: raised when add the entry is not implemented.
+            KeyError: raised when the entry type name is not in
+                `self.__elements`.
+            NotImplementedError: raised when the entry type being added is not
+                supported, currently supporting `Annotation`,
+                `AudioAnnotation`, `Link`, `Group`, `Generics`.
 
         Returns:
             ``tid`` of the entry.
@@ -750,7 +753,9 @@ class DataStore(BaseStore):
             entry (Entry): entry to search for.
 
         Raises:
-            NotImplementedError: raised when given entry is not implemented.
+            NotImplementedError: raised when the entry type being searched is
+                not supported, currently supporting `Annotation`,
+                `AudioAnnotation`.
 
         Returns:
             tid for parameter ``entry`` is found. Otherwise -1.
