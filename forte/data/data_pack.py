@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import logging
+from multiprocessing.sharedctypes import Value
 from pathlib import Path
 from typing import (
     Dict,
@@ -412,6 +413,11 @@ class DataPack(BasePack[Entry, Link, Group]):
         return self._audio[begin:end]
 
     def get_image_array(self, image_payload_idx: int):
+        if image_payload_idx >= len(self.payloads):
+            raise ValueError(
+                f"The input image payload index{(image_payload_idx)}"
+                f" out of range. It should be less than {len(self.payloads)}"
+            )
         return self.payloads[image_payload_idx]
 
     def set_text(
