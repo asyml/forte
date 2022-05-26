@@ -768,8 +768,10 @@ class Grids(Entry):
 
 
         Args:
-            h_idx: the index of the grid cell of the first dimension.
-            w_idx: the index of the grid cell of the second dimension.
+            h_idx: the zero-based index of the grid cell of the first
+                dimension.
+            w_idx: the zero-based index of the grid cell of the second
+                dimension.
             image_payload_idx: An integer that represents the index of
                 the image in the payloads. If it's not None, it will use the
                 image from the corresponding payload. Otherwise,
@@ -777,8 +779,8 @@ class Grids(Entry):
                 from the payload of ``self._image_payload_idx``.
 
         Raises:
-            ValueError: ``h_idx`` is out of the range specified by ``height_n_width``.
-            ValueError: ``w_idx`` is out of the range specified by ``height_n_width``.
+            ValueError: ``h_idx`` is out of the range specified by ``height``.
+            ValueError: ``w_idx`` is out of the range specified by ``width``.
 
         Returns:
             numpy array that represents the grid cell.
@@ -811,8 +813,15 @@ class Grids(Entry):
         c_h, c_w = (
             img_arr.shape[0] // self._height,
             img_arr.shape[1] // self._width,
-        )
+        )  # compute the height and width of grid cells
+
+        # initialize a numpy zeros array
         array = np.zeros(img_arr.shape)
+        # set grid cell entry values to the values of the original image array
+        # (entry values outside of grid cell remain zeros)
+        # An example of computing grid height index range is
+        # index * cell height : (index + 1) * cell height.
+        # It's similar for computing cell width index range
         array[
             h_idx * c_h : (h_idx + 1) * c_h, w_idx * c_w : (w_idx + 1) * c_w
         ] = img_arr[
@@ -844,14 +853,18 @@ class Grids(Entry):
     def __eq__(self, other):
         if other is None:
             return False
-        return self.image_payload_idx == other.image_payload_idx
+        return (self.image_payload_idx, self._height, self._width) == (
+            other.image_payload_idx,
+            self._height,
+            self._width,
+        )
 
     def __hash__(self) -> int:
         r"""
-        The hash function for ``Sketch`` class with a numpy array as a class
+        The hash function for ``ImageAnnotation`` class with a numpy array as a class
         attribute.
         """
-        return hash((self._image_payload_idx, self._tid))
+        return hash(self._tid)
 
 
 SinglePackEntries = (Link, Group, Annotation, Generics, AudioAnnotation)
