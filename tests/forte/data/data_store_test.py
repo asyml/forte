@@ -165,7 +165,7 @@ class DataStoreTest(unittest.TestCase):
             1234,
             "ft.onto.base_ontology.Document",
             [],
-            {"Postive": 0},
+            {"Positive": 0},
             {},
         ]
         ref2 = [
@@ -184,7 +184,7 @@ class DataStoreTest(unittest.TestCase):
             "ft.onto.base_ontology.Sentence",
             "teacher",
             1,
-            {"Postive": 0},
+            {"Positive": 0},
             {},
             {},
         ]
@@ -387,7 +387,7 @@ class DataStoreTest(unittest.TestCase):
                 1234,
                 "ft.onto.base_ontology.Document",
                 [],
-                {"Postive": 0},
+                {"Positive": 0},
                 {},
             ],
             [
@@ -397,7 +397,7 @@ class DataStoreTest(unittest.TestCase):
                 "ft.onto.base_ontology.Sentence",
                 "teacher",
                 1,
-                {"Postive": 0},
+                {"Positive": 0},
                 {},
                 {},
             ],
@@ -434,7 +434,7 @@ class DataStoreTest(unittest.TestCase):
                 1234,
                 "ft.onto.base_ontology.Document",
                 [],
-                {"Postive": 0},
+                {"Positive": 0},
                 {},
             ],
             [
@@ -453,7 +453,7 @@ class DataStoreTest(unittest.TestCase):
                 "ft.onto.base_ontology.Sentence",
                 "teacher",
                 1,
-                {"Postive": 0},
+                {"Positive": 0},
                 {},
                 {},
             ],
@@ -485,7 +485,7 @@ class DataStoreTest(unittest.TestCase):
                 "ft.onto.base_ontology.Sentence",
                 "teacher",
                 1,
-                {"Postive": 0},
+                {"Positive": 0},
                 {},
                 {},
             ],
@@ -495,7 +495,7 @@ class DataStoreTest(unittest.TestCase):
                 1234,
                 "ft.onto.base_ontology.Document",
                 [],
-                {"Postive": 0},
+                {"Positive": 0},
                 {},
             ],
             [
@@ -989,7 +989,7 @@ class DataStoreTest(unittest.TestCase):
                 1234,
                 "ft.onto.base_ontology.Document",
                 [],
-                {"Postive": 0},
+                {"Positive": 0},
                 {},
             ],
         )
