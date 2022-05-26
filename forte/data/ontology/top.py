@@ -735,10 +735,9 @@ class Grids(Entry):
     Regular grids with a grid configuration.
 
     Args:
-        pack: The container that this grids
-            will be added to.
-        height_n_width: A tuple represents the number of grid cell per column and
-            the number of grid cell per row.
+        pack: The container that this grids will be added to.
+        height: the number of grid cell per column.
+        width: the number of grid cell per row.
     """
 
     def __init__(
@@ -754,8 +753,8 @@ class Grids(Entry):
                 f"height({height}) and "
                 f"width({width}) both must be larger than 0"
             )
-        self.height = height
-        self.width = width
+        self._height = height
+        self._width = width
         self._image_payload_idx = image_payload_idx
 
     def get_grid_cell(
@@ -784,17 +783,17 @@ class Grids(Entry):
         Returns:
             numpy array that represents the grid cell.
         """
-        if not 0 <= h_idx < self.height:
+        if not 0 <= h_idx < self._height:
             raise ValueError(
                 f"input parameter h_idx ({h_idx}) is"
                 "out of scope of h_idx range"
-                f" {(0, self.height)}"
+                f" {(0, self._height)}"
             )
-        if not 0 <= w_idx < self.width:
+        if not 0 <= w_idx < self._width:
             raise ValueError(
                 f"input parameter w_idx ({w_idx}) is"
                 "out of scope of w_idx range"
-                f" {(0, self.width)}"
+                f" {(0, self._width)}"
             )
 
         if image_payload_idx is None:
@@ -810,8 +809,8 @@ class Grids(Entry):
 
         img_arr = self.pack.get_image_array(image_payload_idx)
         c_h, c_w = (
-            img_arr.shape[0] // self.height,
-            img_arr.shape[1] // self.width,
+            img_arr.shape[0] // self._height,
+            img_arr.shape[1] // self._width,
         )
         array = np.zeros(img_arr.shape)
         array[
@@ -832,7 +831,15 @@ class Grids(Entry):
 
     @property
     def num_grid_cells(self):
-        return self.height * self.width
+        return self._height * self._width
+
+    @property
+    def height(self):
+        return self._height
+
+    @property
+    def width(self):
+        return self._width
 
     def __eq__(self, other):
         if other is None:
