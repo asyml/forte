@@ -96,8 +96,8 @@ def test_import_base_data_aug():
         BaseDataAugmentProcessor,
         ReplacementDataAugmentProcessor,
     )
-    from forte.processors.data_augment.base_op_processor import (
-        BaseOpProcessor,
+    from forte.processors.data_augment.data_aug_processor import (
+        DataAugProcessor,
     )
 
     from forte.processors.data_augment.algorithms.back_translation_op import (
