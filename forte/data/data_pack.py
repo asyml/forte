@@ -175,9 +175,6 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         self._index: DataIndex = DataIndex()
 
-    def __getstate__(self):
-        return super().__getstate__()
-
     def __setstate__(self, state):
         pack_version: str = (
             state["pack_version"]
@@ -1852,13 +1849,11 @@ class EntryConverter:
                 tid=entry.tid,
             )
         elif isinstance(entry, Generics):
-            # TODO: Implement add_generics_raw in DataStore
             data_store_ref.add_generics_raw(
                 type_name=entry.entry_type(),
                 tid=entry.tid,
             )
         elif isinstance(entry, AudioAnnotation):
-            # TODO: Implement add_audio_annotation_raw in DataStore
             data_store_ref.add_audio_annotation_raw(
                 type_name=entry.entry_type(),
                 begin=entry.begin,
