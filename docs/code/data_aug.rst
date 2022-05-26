@@ -13,9 +13,9 @@ Data Augmentation Processors
 ---------------------------------------------
 .. autoclass:: forte.processors.data_augment.base_data_augment_processor.BaseDataAugmentProcessor
 
-:hidden:`BaseOpProcessor`
+:hidden:`DataAugProcessor`
 ---------------------------------------------
-.. autoclass:: forte.processors.data_augment.base_op_processor.BaseOpProcessor
+.. autoclass:: forte.processors.data_augment.data_aug_processor.DataAugProcessor
 
 :hidden:`ReplacementDataAugmentProcessor`
 ---------------------------------------------
