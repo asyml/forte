@@ -470,7 +470,10 @@ class DataStore(BaseStore):
             A list representing a new generics type entry data.
         """
         tid: int = self._new_tid() if tid is None else tid
+
         entry = [None, None, tid, type_name]
+        entry += self._default_attributes_for_type(type_name)
+
         return entry
 
     def _is_subclass(
