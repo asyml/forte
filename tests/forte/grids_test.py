@@ -48,34 +48,32 @@ class GridsTest(unittest.TestCase):
     def test_grids(self):
 
         self.assertTrue(
-            array_equal(
-                self.datapack.grids[0].get_grid_cell(0, 0, 0), self.zeros
-            )
+            array_equal(self.datapack.grids[0].get_grid_cell(0, 0), self.zeros)
         )
 
         self.assertTrue(
             array_equal(
-                self.datapack.grids[0].get_grid_cell(1, 0, 0), self.ref_arr
+                self.datapack.grids[0].get_grid_cell(1, 0), self.ref_arr
             )
         )
 
     def test_get_grid_cell_value_error(self):
         def fn1():
-            self.datapack.grids[0].get_grid_cell(3, 0, 0)
+            self.datapack.grids[0].get_grid_cell(3, 0)
 
         self.assertRaises(ValueError, fn1)
 
         def fn2():
-            self.datapack.grids[0].get_grid_cell(0, 4, 0)
+            self.datapack.grids[0].get_grid_cell(0, 4)
 
         self.assertRaises(ValueError, fn2)
 
         def fn3():
-            self.datapack.grids[0].get_grid_cell(-1, 0, 0)
+            self.datapack.grids[0].get_grid_cell(-1, 0)
 
         self.assertRaises(ValueError, fn3)
 
         def fn4():
-            self.datapack.grids[0].get_grid_cell(0, -1, 0)
+            self.datapack.grids[0].get_grid_cell(0, -1)
 
         self.assertRaises(ValueError, fn4)
