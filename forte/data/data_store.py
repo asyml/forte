@@ -20,7 +20,13 @@ from typing_inspect import get_origin
 
 from forte.utils import get_class
 from forte.data.base_store import BaseStore
-from forte.data.ontology.top import Annotation, AudioAnnotation, Group, Link
+from forte.data.ontology.top import (
+    Annotation,
+    AudioAnnotation,
+    Group,
+    Link,
+    Generics,
+)
 from forte.data.ontology.core import Entry, FList, FDict
 from forte.common import constants
 from forte.utils.utils import get_full_module_name
@@ -372,6 +378,31 @@ class DataStore(BaseStore):
 
         return entry
 
+    def _new_audio_annotation(
+        self, type_name: str, begin: int, end: int, tid: Optional[int] = None
+    ) -> List:
+        r"""This function generates a new audio annotation with default fields.
+        Called by add_audio_annotation_raw() to create a new audio annotation
+        with ``type_name``, ``begin``, ``end`` and optional ``tid``.
+
+
+        Args:
+            type_name: The fully qualified type name of the new entry.
+            begin: Begin index of the entry.
+            end: End index of the entry.
+
+        Returns:
+            A list representing a new audio annotation type entry data.
+        """
+
+        tid: int = self._new_tid() if tid is None else tid
+        entry: List[Any]
+
+        entry = [begin, end, tid, type_name]
+        entry += self._default_attributes_for_type(type_name)
+
+        return entry
+
     def _new_link(
         self,
         type_name: str,
@@ -405,8 +436,7 @@ class DataStore(BaseStore):
     def _new_group(
         self, type_name: str, member_type: str, tid: Optional[int] = None
     ) -> List:
-        r"""This function generates a new group with default fields. All
-        default fields are filled with None.
+        r"""This function generates a new group with default fields.
         Called by add_group_raw() to create a new group with
         ``type_name`` and ``member_type``.
 
@@ -425,6 +455,22 @@ class DataStore(BaseStore):
         entry = [member_type, [], tid, type_name]
         entry += self._default_attributes_for_type(type_name)
 
+        return entry
+
+    def _new_generics(self, type_name: str, tid: Optional[int] = None):
+        r"""This function generates a new generics with default fields.
+        Called by add_generics_raw() to create a new generics with
+        ``type_name``.
+
+        Args:
+            type_name: The fully qualified type name of the new entry.
+            tid: ``tid`` of the generics entry.
+
+        Returns:
+            A list representing a new generics type entry data.
+        """
+        tid: int = self._new_tid() if tid is None else tid
+        entry = [None, None, tid, type_name]
         return entry
 
     def _is_subclass(
@@ -558,12 +604,16 @@ class DataStore(BaseStore):
             entry: raw entry data in the list format.
 
         Raises:
-            KeyError: raised when the entry type name is not in `self.__elements`.
+            KeyError: raised when the entry type name is not in
+                `self.__elements`.
+            NotImplementedError: raised when the entry type being added is not
+                supported, currently supporting `Annotation`,
+                `AudioAnnotation`, `Link`, `Group`, `Generics`.
 
         Returns:
             ``tid`` of the entry.
         """
-        if entry_type == Annotation:
+        if entry_type in (Annotation, AudioAnnotation):
             sorting_fn = lambda s: (
                 s[constants.BEGIN_INDEX],
                 s[constants.END_INDEX],
@@ -573,12 +623,17 @@ class DataStore(BaseStore):
             except KeyError:
                 self.__elements[type_name] = SortedList(key=sorting_fn)
                 self.__elements[type_name].add(entry)
-        elif entry_type in [Link, Group]:
+        elif entry_type in [Link, Group, Generics]:
             try:
                 self.__elements[type_name].append(entry)
             except KeyError:
                 self.__elements[type_name] = []
                 self.__elements[type_name].append(entry)
+        else:
+            raise NotImplementedError(
+                "_add_entry_raw() is not implemented "
+                f"for entry type {entry_type}."
+            )
         tid = entry[constants.TID_INDEX]
         if self._is_annotation(type_name):
             self.__tid_ref_dict[tid] = entry
@@ -638,7 +693,80 @@ class DataStore(BaseStore):
         # A reference to the entry should be store in both self.__elements and
         # self.__tid_ref_dict.
         entry = self._new_annotation(type_name, begin, end, tid)
-        if not allow_duplicate and type_name in self.__elements:
+        if not allow_duplicate:
+            tid_search_result = self._get_existing_ann_entry_tid(entry)
+            # if found existing entry
+            if tid_search_result != -1:
+                return tid_search_result
+
+        return self._add_entry_raw(Annotation, type_name, entry)
+
+    def add_audio_annotation_raw(
+        self,
+        type_name: str,
+        begin: int,
+        end: int,
+        tid: Optional[int] = None,
+        allow_duplicate=True,
+    ) -> int:
+
+        r"""
+        This function adds an audio annotation entry with ``begin`` and ``end``
+        indices to current data store object. Returns the ``tid`` for the
+        inserted entry.
+
+        Args:
+            type_name: The fully qualified type name of the new AudioAnnotation.
+            begin: Begin index of the entry.
+            end: End index of the entry.
+            tid: ``tid`` of the Annotation entry that is being added.
+                It's optional, and it will be
+                auto-assigned if not given.
+            allow_duplicate: Whether we allow duplicate in the DataStore. When
+                it's set to False, the function will return the ``tid`` of
+                existing entry if a duplicate is found. Default value is True.
+
+        Returns:
+            ``tid`` of the entry.
+        """
+        # We should create the `entry data` with the format
+        # [begin, end, tid, type_id, None, ...].
+        # A helper function _new_annotation() can be used to generate a
+        # annotation type entry data with default fields.
+        # A reference to the entry should be store in both self.__elements and
+        # self.__tid_ref_dict.
+        entry = self._new_audio_annotation(type_name, begin, end, tid)
+
+        if not allow_duplicate:
+            tid_search_result = self._get_existing_ann_entry_tid(entry)
+            # if found existing entry
+            if tid_search_result != -1:
+                return tid_search_result
+        return self._add_entry_raw(AudioAnnotation, type_name, entry)
+
+    def _get_existing_ann_entry_tid(self, entry: List[Any]):
+        r"""
+        This function searches for tid for existing annotation-like entry tid.
+        It return the tid if the entry is found. Otherwise, it returns -1.
+
+        Args:
+            entry (Entry): annotation-like entry to search for.
+
+        Raises:
+            ValueError: raised when the entry type being searched is
+                not supported, currently supporting `Annotation`,
+                `AudioAnnotation`.
+
+        Returns:
+            tid for parameter ``entry`` is found. Otherwise -1.
+        """
+
+        type_name = entry[constants.ENTRY_TYPE_INDEX]
+        begin = entry[constants.BEGIN_INDEX]
+        end = entry[constants.END_INDEX]
+        if type_name not in self.__elements:
+            return -1
+        if self._is_annotation(type_name):
             # Return the tid of existing entry if duplicate is not allowed
             index = self.__elements[type_name].bisect_left(entry)
             target_entry = self.__elements[type_name][index]
@@ -647,8 +775,14 @@ class DataStore(BaseStore):
                 and target_entry[constants.END_INDEX] == end
             ):
                 return target_entry[constants.TID_INDEX]
-
-        return self._add_entry_raw(Annotation, type_name, entry)
+            else:
+                return -1
+        else:
+            raise ValueError(
+                f"Get existing entry id for {type_name}"
+                " is not supported. This function only supports "
+                "getting entry id for annotation-like entry."
+            )
 
     def add_link_raw(
         self,
@@ -698,6 +832,25 @@ class DataStore(BaseStore):
         """
         entry = self._new_group(type_name, member_type, tid)
         return self._add_entry_raw(Group, type_name, entry)
+
+    def add_generics_raw(
+        self, type_name: str, tid: Optional[int] = None
+    ) -> Tuple[int, int]:
+        r"""This function adds a generics entry with ``type_name`` to the
+        current data store object. Returns the ``tid`` and the ``index_id``
+        for the inserted entry in the list. This ``index_id`` is the index
+        of the entry in the ``type_name`` list.
+
+        Args:
+            type_name: The fully qualified type name of the new Generics.
+            tid: ``tid`` of generics entry.
+
+        Returns:
+            ``tid`` of the entry and its index in the (``type_id``)th list.
+
+        """
+        entry = self._new_generics(type_name, tid)
+        return self._add_entry_raw(Generics, type_name, entry)
 
     def set_attribute(self, tid: int, attr_name: str, attr_value: Any):
         r"""This function locates the entry data with ``tid`` and sets its
