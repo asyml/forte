@@ -15,7 +15,6 @@
 from typing import Dict, List, Iterator, Tuple, Optional, Any, Type
 import uuid
 import logging
-from bisect import bisect_left
 from heapq import heappush, heappop
 from sortedcontainers import SortedList
 from typing_inspect import get_origin
@@ -782,7 +781,12 @@ class DataStore(BaseStore):
             raise KeyError(f"Entry with tid {tid} not found.")
 
     def add_annotation_raw(
-        self, type_name: str, begin: int, end: int, tid: Optional[int] = None
+        self,
+        type_name: str,
+        begin: int,
+        end: int,
+        tid: Optional[int] = None,
+        allow_duplicate: bool = True,
     ) -> int:
 
         r"""This function adds an annotation entry with ``begin`` and ``end``
@@ -796,6 +800,9 @@ class DataStore(BaseStore):
             tid: ``tid`` of the Annotation entry that is being added.
                 It's optional, and it will be
                 auto-assigned if not given.
+            allow_duplicate: Whether we allow duplicate in the DataStore. When
+                it's set to False, the function will return the ``tid`` of
+                existing entry if a duplicate is found. Default value is True.
 
         Returns:
             ``tid`` of the entry.
@@ -807,6 +814,16 @@ class DataStore(BaseStore):
         # A reference to the entry should be store in both self.__elements and
         # self.__tid_ref_dict.
         entry = self._new_annotation(type_name, begin, end, tid)
+        if not allow_duplicate and type_name in self.__elements:
+            # Return the tid of existing entry if duplicate is not allowed
+            index = self.__elements[type_name].bisect_left(entry)
+            target_entry = self.__elements[type_name][index]
+            if (
+                target_entry[constants.BEGIN_INDEX] == begin
+                and target_entry[constants.END_INDEX] == end
+            ):
+                return target_entry[constants.TID_INDEX]
+
         return self._add_entry_raw(Annotation, type_name, entry)
 
     def add_link_raw(
@@ -968,7 +985,13 @@ class DataStore(BaseStore):
         # complexity: O(lgn)
         # if it's annotation type, use bisect to find the index
         if self._is_annotation(type_name):
-            entry_index = bisect_left(target_list, entry_data)
+            try:
+                entry_index = target_list.index(entry_data)
+            except ValueError as e:
+                raise RuntimeError(
+                    f"When deleting entry [{tid}], entry data is not found in"
+                    f"the target list of [{type_name}]."
+                ) from e
         else:  # if it's group or link, use the index in entry_list
             entry_index = entry_data[constants.ENTRY_DICT_ENTRY_INDEX]
 
@@ -1007,7 +1030,6 @@ class DataStore(BaseStore):
                 f"The specified index_id [{index_id}] of type [{type_name}]"
                 f"is out of boundary for entry list of length {len(target_list)}."
             )
-
         if self._is_annotation(type_name):
             target_list.pop(index_id)
             if not target_list:
@@ -1070,7 +1092,12 @@ class DataStore(BaseStore):
         index_id = -1
         if self._is_annotation_tid(tid):
             entry_list = self.__elements[entry_type]
-            index_id = entry_list.bisect_left(entry)
+            try:
+                index_id = entry_list.index(entry)
+            except ValueError as e:
+                raise ValueError(
+                    f"Entry {entry} not found in entry list."
+                ) from e
             if (not 0 <= index_id < len(entry_list)) or (
                 entry_list[index_id][constants.TID_INDEX]
                 != entry[constants.TID_INDEX]
@@ -1081,6 +1108,23 @@ class DataStore(BaseStore):
                 constants.ENTRY_DICT_ENTRY_INDEX
             ]
         return index_id
+
+    def get_length(self, type_name: str) -> int:
+        r"""This function find the length of the `type_name` entry list.
+        It should not count None placeholders that appear in
+        non-annotation-like entry lists.
+
+        Args:
+            type_name (str): The fully qualified type name of a type.
+
+        Returns:
+            The count of not None entries.
+        """
+        if self._is_annotation(type_name):
+            return len(self.__elements[type_name])
+        else:
+            delete_count = self.__deletion_count.get(type_name, 0)
+            return len(self.__elements[type_name]) - delete_count
 
     def co_iterator_annotation_like(
         self, type_names: List[str]
@@ -1140,9 +1184,9 @@ class DataStore(BaseStore):
                 ) from e
             except IndexError as e:  # self.__elements[tn][0] will be caught here.
                 raise ValueError(
-                    f"Entry list of type name, {tn} which is "
+                    f"Entry list of type name, {tn} which is"
                     " one list item of input argument `type_names`,"
-                    " is empty. Please check data in this DataStore). "
+                    " is empty. Please check data in this DataStore"
                     " to see if empty lists are expected"
                     f" or remove {tn} from input parameter type_names"
                 ) from e
@@ -1215,30 +1259,103 @@ class DataStore(BaseStore):
             yield entry
 
     def get(
-        self, type_name: str, include_sub_type: bool = True
+        self,
+        type_name: str,
+        include_sub_type: bool = True,
+        range_annotation: Optional[Tuple[int]] = None,
     ) -> Iterator[List]:
         r"""This function fetches entries from the data store of
-        type ``type_name``.
+        type ``type_name``. If `include_sub_type` is set to True and
+        ``type_name`` is in [Annotation, Group, List], this function also
+        fetches entries of subtype of ``type_name``. Otherwise, it only
+        fetches entries of type ``type_name``.
 
         Args:
             type_name: The fully qualified name of the entry.
             include_sub_type: A boolean to indicate whether get its subclass.
+            range_annotation: A tuple that contains the begin and end indices
+                of the searching range of entries.
 
         Returns:
             An iterator of the entries matching the provided arguments.
         """
+
+        def within_range(
+            entry: List[Any], range_annotation: Tuple[int]
+        ) -> bool:
+            """
+            A helper function for deciding whether an annotation entry is
+            inside the `range_annotation`.
+            """
+            if not self._is_annotation(entry[constants.ENTRY_TYPE_INDEX]):
+                return False
+            return (
+                entry[constants.BEGIN_INDEX]
+                >= range_annotation[constants.BEGIN_INDEX]
+                and entry[constants.END_INDEX]
+                <= range_annotation[constants.END_INDEX]
+            )
+
+        if type_name not in self.__elements:
+            raise ValueError(f"type {type_name} does not exist")
+        entry_class = get_class(type_name)
+        all_types = set()
         if include_sub_type:
-            entry_class = get_class(type_name)
-            all_types = []
-            # iterate all classes to find subclasses
             for type in self.__elements:
                 if issubclass(get_class(type), entry_class):
-                    all_types.append(type)
-            for type in all_types:
-                yield from self.iter(type)
+                    all_types.add(type)
         else:
-            if type_name not in self.__elements:
-                raise KeyError(f"type {type_name} does not exist")
+            all_types.add(type_name)
+        all_types = list(all_types)
+        all_types.sort()
+        if self._is_annotation(type_name):
+            if range_annotation is None:
+                yield from self.co_iterator_annotation_like(all_types)
+            else:
+                for entry in self.co_iterator_annotation_like(all_types):
+                    if within_range(entry, range_annotation):
+                        yield entry
+        elif issubclass(entry_class, Link):
+            for type in all_types:
+                if range_annotation is None:
+                    yield from self.iter(type)
+                else:
+                    for entry in self.__elements[type]:
+                        if (
+                            entry[constants.PARENT_TID_INDEX]
+                            in self.__tid_ref_dict
+                        ) and (
+                            entry[constants.CHILD_TID_INDEX]
+                            in self.__tid_ref_dict
+                        ):
+                            parent = self.__tid_ref_dict[
+                                entry[constants.PARENT_TID_INDEX]
+                            ]
+                            child = self.__tid_ref_dict[
+                                entry[constants.CHILD_TID_INDEX]
+                            ]
+                            if within_range(
+                                parent, range_annotation
+                            ) and within_range(child, range_annotation):
+                                yield entry
+        elif issubclass(entry_class, Group):
+            for type in all_types:
+                if range_annotation is None:
+                    yield from self.iter(type)
+                else:
+                    for entry in self.__elements[type]:
+                        member_type = entry[constants.MEMBER_TYPE_INDEX]
+                        if self._is_annotation(member_type):
+                            members = entry[constants.MEMBER_TID_INDEX]
+                            within = True
+                            for m in members:
+                                e = self.__tid_ref_dict[m]
+                                if not within_range(e, range_annotation):
+                                    within = False
+                                    break
+                            if within:
+                                yield entry
+        else:
             yield from self.iter(type_name)
 
     def iter(self, type_name: str) -> Iterator[List]:
