@@ -13,7 +13,7 @@
 # limitations under the License.
 from dataclasses import dataclass
 from functools import total_ordering
-from typing import Optional, Set, Tuple, Type, Any, Dict, Union, Iterable, List
+from typing import Optional, Tuple, Type, Any, Dict, Union, Iterable, List
 
 import numpy as np
 
@@ -26,6 +26,13 @@ from forte.data.ontology.core import (
     EntryType,
 )
 from forte.data.span import Span
+from forte.common.constants import (
+    BEGIN_INDEX,
+    END_INDEX,
+    PARENT_TID_INDEX,
+    CHILD_TID_INDEX,
+    MEMBER_TID_INDEX,
+)
 
 __all__ = [
     "Generics",
@@ -72,7 +79,7 @@ class Annotation(Entry):
         r"""For serializing Annotation, we should create Span annotations for
         compatibility purposes.
         """
-        self._span = Span(self._begin, self._end)
+        self._span = Span(self.begin, self.end)
         state = super().__getstate__()
         state.pop("_begin")
         state.pop("_end")
@@ -91,16 +98,50 @@ class Annotation(Entry):
     def span(self) -> Span:
         # Delay span creation at usage.
         if self._span is None:
-            self._span = Span(self._begin, self._end)
+            self._span = Span(self.begin, self.end)
         return self._span
 
     @property
     def begin(self):
+        r"""Getter function of ``begin``. The function will first try to
+        retrieve the begin index from ``DataStore`` in ``self.pack``. If
+        this attempt fails, it will directly return the value in ``_begin``.
+        """
+        try:
+            self._begin = self.pack.get_entry_raw(self.tid)[BEGIN_INDEX]
+        except KeyError:
+            # self.tid not found in DataStore
+            pass
         return self._begin
+
+    @begin.setter
+    def begin(self, val: int):
+        r"""Setter function of ``begin``. The update will also be populated
+        into ``DataStore`` in ``self.pack``.
+        """
+        self._begin = val
+        self.pack.get_entry_raw(self.tid)[BEGIN_INDEX] = val
 
     @property
     def end(self):
+        r"""Getter function of ``end``. The function will first try to
+        retrieve the end index from ``DataStore`` in ``self.pack``. If
+        this attempt fails, it will directly return the value in ``_end``.
+        """
+        try:
+            self._end = self.pack.get_entry_raw(self.tid)[END_INDEX]
+        except KeyError:
+            # self.tid not found in DataStore
+            pass
         return self._end
+
+    @end.setter
+    def end(self, val: int):
+        r"""Setter function of ``end``. The update will also be populated
+        into ``DataStore`` in ``self.pack``.
+        """
+        self._end = val
+        self.pack.get_entry_raw(self.tid)[END_INDEX] = val
 
     def __eq__(self, other):
         r"""The eq function of :class:`Annotation`.
@@ -229,7 +270,7 @@ class Link(BaseLink):
                 f"The parent of {type(self)} should be an "
                 f"instance of {self.ParentType}, but get {type(parent)}"
             )
-        self._parent = parent.tid
+        self.parent = parent.tid
 
     def set_child(self, child: Entry):
         r"""This will set the `child` of the current instance with given Entry.
@@ -243,21 +284,51 @@ class Link(BaseLink):
                 f"The parent of {type(self)} should be an "
                 f"instance of {self.ParentType}, but get {type(child)}"
             )
-        self._child = child.tid
+        self.child = child.tid
 
     @property
     def parent(self):
         r"""Get ``tid`` of the parent node. To get the object of the parent
-        node, call :meth:`get_parent`.
+        node, call :meth:`get_parent`. The function will first try to
+        retrieve the parent ``tid`` from ``DataStore`` in ``self.pack``. If
+        this attempt fails, it will directly return the value in ``_parent``.
         """
+        try:
+            self._parent = self.pack.get_entry_raw(self.tid)[PARENT_TID_INDEX]
+        except KeyError:
+            # self.tid not found in DataStore
+            pass
         return self._parent
+
+    @parent.setter
+    def parent(self, val: int):
+        r"""Setter function of ``parent``. The update will also be populated
+        into ``DataStore`` in ``self.pack``.
+        """
+        self._parent = val
+        self.pack.get_entry_raw(self.tid)[PARENT_TID_INDEX] = val
 
     @property
     def child(self):
         r"""Get ``tid`` of the child node. To get the object of the child node,
-        call :meth:`get_child`.
+        call :meth:`get_child`. The function will first try to
+        retrieve the child ``tid`` from ``DataStore`` in ``self.pack``. If
+        this attempt fails, it will directly return the value in ``_child``.
         """
+        try:
+            self._child = self.pack.get_entry_raw(self.tid)[CHILD_TID_INDEX]
+        except KeyError:
+            # self.tid not found in DataStore
+            pass
         return self._child
+
+    @child.setter
+    def child(self, val: int):
+        r"""Setter function of ``child``. The update will also be populated
+        into ``DataStore`` in ``self.pack``.
+        """
+        self._child = val
+        self.pack.get_entry_raw(self.tid)[CHILD_TID_INDEX] = val
 
     def get_parent(self) -> Entry:
         r"""Get the parent entry of the link.
@@ -270,9 +341,9 @@ class Link(BaseLink):
                 "Cannot get parent because link is not "
                 "attached to any data pack."
             )
-        if self._parent is None:
+        if self.parent is None:
             raise ValueError("The parent of this entry is not set.")
-        return self.pack.get_entry(self._parent)
+        return self.pack.get_entry(self.parent)
 
     def get_child(self) -> Entry:
         r"""Get the child entry of the link.
@@ -285,9 +356,9 @@ class Link(BaseLink):
                 "Cannot get child because link is not"
                 " attached to any data pack."
             )
-        if self._child is None:
+        if self.child is None:
             raise ValueError("The child of this entry is not set.")
-        return self.pack.get_entry(self._child)
+        return self.pack.get_entry(self.child)
 
 
 # pylint: disable=duplicate-bases
@@ -303,11 +374,12 @@ class Group(BaseGroup[Entry]):
         pack: PackType,
         members: Optional[Iterable[Entry]] = None,
     ):  # pylint: disable=useless-super-delegation
-        self._members: Set[int] = set()
+        self._member_type: Type[Entry] = Entry
         super().__init__(pack, members)
 
     def add_member(self, member: Entry):
-        r"""Add one entry to the group.
+        r"""Add one entry to the group. The update will be populated to the
+        corresponding list in ``DataStore`` of ``self.pack``.
 
         Args:
             member: One member to be added to the group.
@@ -317,10 +389,12 @@ class Group(BaseGroup[Entry]):
                 f"The members of {type(self)} should be "
                 f"instances of {self.MemberType}, but got {type(member)}"
             )
-        self._members.add(member.tid)
+        self.pack.get_entry_raw(self.tid)[MEMBER_TID_INDEX].append(member.tid)
 
     def get_members(self) -> List[Entry]:
-        r"""Get the member entries in the group.
+        r"""Get the member entries in the group. The function will retrieve
+        a list of member entries's ``tid``s from ``DataStore`` and convert them
+        to entry object on the fly.
 
         Returns:
              A set of instances of :class:`~forte.data.ontology.core.Entry`
@@ -332,7 +406,7 @@ class Group(BaseGroup[Entry]):
                 "attached to any data pack."
             )
         member_entries = []
-        for m in self._members:
+        for m in self.pack.get_entry_raw(self.tid)[MEMBER_TID_INDEX]:
             member_entries.append(self.pack.get_entry(m))
         return member_entries
 
@@ -591,7 +665,7 @@ class AudioAnnotation(Entry):
         r"""For serializing AudioAnnotation, we should create Span annotations
         for compatibility purposes.
         """
-        self._span = Span(self._begin, self._end)
+        self._span = Span(self.begin, self.end)
         state = super().__getstate__()
         state.pop("_begin")
         state.pop("_end")
@@ -610,16 +684,50 @@ class AudioAnnotation(Entry):
     def span(self) -> Span:
         # Delay span creation at usage.
         if self._span is None:
-            self._span = Span(self._begin, self._end)
+            self._span = Span(self.begin, self.end)
         return self._span
 
     @property
     def begin(self):
+        r"""Getter function of ``begin``. The function will first try to
+        retrieve the begin index from ``DataStore`` in ``self.pack``. If
+        this attempt fails, it will directly return the value in ``_begin``.
+        """
+        try:
+            self._begin = self.pack.get_entry_raw(self.tid)[BEGIN_INDEX]
+        except KeyError:
+            # self.tid not found in DataStore
+            pass
         return self._begin
+
+    @begin.setter
+    def begin(self, val: int):
+        r"""Setter function of ``begin``. The update will also be populated
+        into ``DataStore`` in ``self.pack``.
+        """
+        self._begin = val
+        self.pack.get_entry_raw(self.tid)[BEGIN_INDEX] = val
 
     @property
     def end(self):
+        r"""Getter function of ``end``. The function will first try to
+        retrieve the end index from ``DataStore`` in ``self.pack``. If
+        this attempt fails, it will directly return the value in ``_end``.
+        """
+        try:
+            self._end = self.pack.get_entry_raw(self.tid)[END_INDEX]
+        except KeyError:
+            # self.tid not found in DataStore
+            pass
         return self._end
+
+    @end.setter
+    def end(self, val: int):
+        r"""Setter function of ``end``. The update will also be populated
+        into ``DataStore`` in ``self.pack``.
+        """
+        self._end = val
+        self.pack.get_entry_raw(self.tid)[END_INDEX] = val
 
     def __eq__(self, other):
         r"""The eq function of :class:`AudioAnnotation`.
