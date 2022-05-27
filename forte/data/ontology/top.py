@@ -41,6 +41,8 @@ __all__ = [
     "AudioAnnotation",
     "ImageAnnotation",
     "Grids",
+    "Region" "Box",
+    "BoundingBox",
 ]
 
 QueryType = Union[Dict[str, Any], np.ndarray]
