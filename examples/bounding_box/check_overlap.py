@@ -14,11 +14,11 @@ datapack.payloads.append(line)
 # grid config: 3 x 4
 # grid cell indices: (0, 0)
 bb1 = BoundingBox(datapack, 0, 2, 2, 3, 4, 0, 0)
-datapack.image_annotations.add(bb1)
+datapack.image_annotations.append(bb1)
 # grid config: 3 x 4
 # grid cell indices: (1, 0)
 bb2 = BoundingBox(datapack, 0, 2, 2, 3, 4, 1, 0)
-datapack.image_annotations.add(bb2)
+datapack.image_annotations.append(bb2)
 # grid config: 4 x 4
 # grid cell indices: (1, 0)
 bb3 = BoundingBox(datapack, 0, 2, 2, 4, 4, 0, 0)
