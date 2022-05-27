@@ -28,7 +28,7 @@ from typing import (
     Tuple,
 )
 from functools import partial
-from typing_inspect import get_origin, get_args, ForwardRef
+from typing_inspect import get_origin
 from packaging.version import Version
 import numpy as np
 from sortedcontainers import SortedList
@@ -1400,9 +1400,10 @@ class DataPack(BasePack[Entry, Link, Group]):
             if field_type in (FList, FDict):
                 return field_type(parent_entry=cls, data=attr_val)
             try:
-                if issubclass(field_type, Entry) and isinstance(attr_val, int):
+                # TODO: Find a better solution to determine if a field is Entry
+                if isinstance(attr_val, int):
                     return cls.pack.get_entry(tid=attr_val)
-            except TypeError:
+            except KeyError:
                 pass
             return attr_val
 
@@ -1432,12 +1433,6 @@ class DataPack(BasePack[Entry, Link, Group]):
         self._entry_converter.save_entry_object(entry=entry, pack=self)
         for name, field in entry.__dataclass_fields__.items():
             field_type = get_origin(field.type)
-            if field_type is Union and any(
-                isinstance(arg_type, ForwardRef)
-                or (isinstance(arg_type, type) and issubclass(arg_type, Entry))
-                for arg_type in get_args(field.type)
-            ):
-                field_type = Entry
             setattr(
                 type(entry),
                 name,
