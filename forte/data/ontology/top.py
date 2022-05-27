@@ -959,6 +959,10 @@ class Box(Region):
         A function checks whether two boxes are overlapped(two box area have
         intersections).
 
+        Note: in edges cases where two bounding boxes' boundaries share the
+        same line segment/corner in the image array, it won't be considered
+        overlapped.
+
         Args:
             other: the other ``Box`` object to compared to.
 
