@@ -12,9 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from dataclasses import dataclass
-from email.mime import image
 from functools import total_ordering
-from multiprocessing.sharedctypes import Value
 from typing import Optional, Set, Tuple, Type, Any, Dict, Union, Iterable, List
 
 import numpy as np
@@ -986,11 +984,11 @@ class BoundingBox(Box):
 
         """
 
-        self.grids = Grids(pack, grid_height, grid_width, image_payload_idx)
         cy, cx = self.grids.get_grid_cell_center(
             grid_cell_h_idx, grid_cell_w_idx
         )
         super().__init__(pack, image_payload_idx, cy, cx, height, width)
+        self.grids = Grids(pack, grid_height, grid_width, image_payload_idx)
 
 
 SinglePackEntries = (Link, Group, Annotation, Generics, AudioAnnotation)
