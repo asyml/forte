@@ -239,8 +239,8 @@ class DataStore(BaseStore):
         r"""
         In serialization,
             1) will serialize the annotation sorted list as a normal list;
-            2) will remove `_onto_file_path`, `_dynamically_add_type`,
-                `tid_ref_dict`, `tid_idx_dict` and `deletion_count` to save space.
+            2) will remove `tid_ref_dict`, `tid_idx_dict` and `deletion_count`
+                to save space.
         """
         state = super().__getstate__()
         for k in state["_DataStore__elements"]:
@@ -249,15 +249,14 @@ class DataStore(BaseStore):
             state["_DataStore__elements"][k] = list(
                 state["_DataStore__elements"][k]
             )
-        state.pop("_onto_file_path")
-        state.pop("_dynamically_add_type")
         state.pop("_DataStore__tid_ref_dict")
         state.pop("_DataStore__tid_idx_dict")
         state.pop("_DataStore__deletion_count")
         state["entries"] = state.pop("_DataStore__elements")
         state["fields"] = self._type_attributes
         for _, v in state["fields"].items():
-            v.pop("parent_entry")
+            if "parent_class" in v:
+                v.pop("parent_class")
         return state
 
     def __setstate__(self, state):
@@ -703,7 +702,10 @@ class DataStore(BaseStore):
             A list representing a new generics type entry data.
         """
         tid: int = self._new_tid() if tid is None else tid
+
         entry = [None, None, tid, type_name]
+        entry += self._default_attributes_for_type(type_name)
+
         return entry
 
     def _is_subclass(
@@ -797,8 +799,16 @@ class DataStore(BaseStore):
         Yields:
             Iterator of raw entry data in list format.
         """
-        for entry_type_key in self._get_all_subclass(entry_type_name, True):
-            yield from self.iter(entry_type_key)
+        all_subclass = self._get_all_subclass(entry_type_name, True)
+        if self._is_annotation(type_name=entry_type_name):
+            # When the input type is an annotation-like entry, we use
+            # `co_iterator_annotation_like` to maintain the correct order.
+            yield from self.co_iterator_annotation_like(
+                type_names=list(all_subclass)
+            )
+        else:
+            for entry_type_key in all_subclass:
+                yield from self.iter(entry_type_key)
 
     def num_entries(self, entry_type_name: str) -> int:
         """
@@ -1504,8 +1514,6 @@ class DataStore(BaseStore):
                 <= range_annotation[constants.END_INDEX]
             )
 
-        if type_name not in self.__elements:
-            raise ValueError(f"type {type_name} does not exist")
         entry_class = get_class(type_name)
         all_types = set()
         if include_sub_type:
@@ -1564,6 +1572,10 @@ class DataStore(BaseStore):
                             if within:
                                 yield entry
         else:
+            # Only fetches entries of type ``type_name`` when it's not in
+            # [Annotation, Group, List].
+            if type_name not in self.__elements:
+                raise ValueError(f"type {type_name} does not exist")
             yield from self.iter(type_name)
 
     def iter(self, type_name: str) -> Iterator[List]:
