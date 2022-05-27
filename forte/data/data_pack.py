@@ -176,11 +176,25 @@ class DataPack(BasePack[Entry, Link, Group]):
         self._index: DataIndex = DataIndex()
 
     def __getstate__(self):
+        r"""
+        In serialization,
+            1) will remove ``_entry_converter`` to save space.
+        """
         state = super().__getstate__()
         state.pop("_entry_converter")
         return state
 
     def __setstate__(self, state):
+        r"""
+        In deserialization, we
+            1) Perform pack version compatibility checking;
+            2) initialize the entry converter
+            3) initialize the indexes.
+            4) Obtain the pack ids.
+        """
+        # Pack version checking. We will no longer provide support for
+        # serialized DataPack whose "pack_version" is less than
+        # PACK_ID_COMPATIBLE_VERSION.
         pack_version: str = (
             state["pack_version"]
             if "pack_version" in state
@@ -364,18 +378,48 @@ class DataPack(BasePack[Entry, Link, Group]):
 
     @property
     def annotations(self):
+        """
+        A SortedList container of all annotations in this data pack.
+
+        Returns: SortedList of all annotations, of
+        type :class:`~forte.data.ontology.top.Annotation`.
+
+        """
         return SortedList(self.all_annotations)
 
     @property
     def generics(self):
+        """
+        A SortedList container of all generic entries in this data pack.
+
+        Returns: SortedList of generics
+
+        """
         return SortedList(self.all_generic_entries)
 
     @property
     def audio_annotations(self):
+        """
+        A SortedList container of all audio annotations in this data pack.
+
+        Returns: SortedList of all audio annotations, of
+        type :class:`~forte.data.ontology.top.AudioAnnotation`.
+
+        """
         return SortedList(self.all_audio_annotations)
 
     @property  # type: ignore
     def links(self):
+        """
+        A List container of all links in this data pack.
+
+        Returns: List of all links, of
+        type :class:`~forte.data.ontology.top.Link`.
+
+        """
+        # TODO: Right now we create a new variable `_links` here to avoid
+        # conflicts from BasePack and MultiPack. After DataStore is fully
+        # integrated with MultiPack, we should reconsider the design here.
         if isinstance(self, DataPack):
             self._links = SortedList(self.all_links)
         return self._links
@@ -386,6 +430,16 @@ class DataPack(BasePack[Entry, Link, Group]):
 
     @property  # type: ignore
     def groups(self):
+        """
+        A List container of all groups in this data pack.
+
+        Returns: List of all groups, of
+        type :class:`~forte.data.ontology.top.Group`.
+
+        """
+        # TODO: Right now we create a new variable `_groups` here to avoid
+        # conflicts from BasePack and MultiPack. After DataStore is fully
+        # integrated with MultiPack, we should reconsider the design here.
         if isinstance(self, DataPack):
             self._groups = SortedList(self.all_links)
         return self._groups
@@ -663,9 +717,8 @@ class DataPack(BasePack[Entry, Link, Group]):
         Returns:
             The input entry itself
         """
-        # update the data pack index if needed
-        # TODO: The DataIndex will be deprecated in future
         if isinstance(entry, int):
+            # If entry is a TID, convert it to the class object.
             entry = self._entry_converter.get_entry_object(tid=entry, pack=self)
 
         if isinstance(entry, Annotation):
@@ -695,6 +748,8 @@ class DataPack(BasePack[Entry, Link, Group]):
                         f"at [{begin}:{end}], in pack {pack_ref}."
                     )
 
+        # update the data pack index if needed
+        # TODO: DataIndex will be deprecated in future
         self._index.update_basic_index([entry])
         if self._index.link_index_on and isinstance(entry, Link):
             self._index.update_link_index([entry])
@@ -1358,7 +1413,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                     if not self.is_created_by(entry, components):
                         continue
 
-                # Filter out incompatible span computation for Links and Groups
+                # Filter out incompatible audio span comparison for Links and Groups
                 if (
                     issubclass(entry_type_, (Link, Group))
                     and isinstance(range_annotation, AudioAnnotation)
@@ -1385,11 +1440,13 @@ class DataPack(BasePack[Entry, Link, Group]):
         self.__dict__.update(datapack.__dict__)
 
     def get_entry(self, tid: int) -> EntryType:
-        r"""Look up the entry_index with key ``ptr``. Specific implementation
+        r"""Look up the entry_index with ``tid``. Specific implementation
         depends on the actual class."""
         try:
+            # Try to find entry in DataIndex
             entry: EntryType = self._index.get_entry(tid)
         except KeyError:
+            # Find entry in DataStore
             entry = self._entry_converter.get_entry_object(tid, self)
         if entry is None:
             raise KeyError(
@@ -1398,6 +1455,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         return entry
 
     def get_entry_raw(self, tid: int) -> List:
+        r"""Retrieve the raw entry data in list format from DataStore."""
         return self._data_store.get_entry(tid=tid)[0]
 
     def on_entry_creation(
@@ -1407,6 +1465,9 @@ class DataPack(BasePack[Entry, Link, Group]):
         Call this when adding a new entry, will be called
         in :class:`~forte.data.ontology.core.Entry` when
         its `__init__` function is called.
+
+        Here we override BasePack.on_entry_creation() to make sure each new
+        entry is stored into ``DataStore`` on creation.
 
         Args:
             entry: The entry to be added.
@@ -1423,6 +1484,10 @@ class DataPack(BasePack[Entry, Link, Group]):
             c = self.get_control_component()
 
         def entry_getter(cls: Entry, attr_name: str, field_type):
+            """A getter function for dataclass fields of entry object.
+            When the field contains ``tid``s, we will convert them to entry
+            object on the fly.
+            """
             data_store_ref = (
                 cls.pack._data_store  # pylint: disable=protected-access
             )
@@ -1430,16 +1495,22 @@ class DataPack(BasePack[Entry, Link, Group]):
                 tid=cls.tid, attr_name=attr_name
             )
             if field_type in (FList, FDict):
+                # Generate FList/FDict object on the fly
                 return field_type(parent_entry=cls, data=attr_val)
             try:
                 # TODO: Find a better solution to determine if a field is Entry
                 if isinstance(attr_val, int):
+                    # Convert tid to entry object on the fly
                     return cls.pack.get_entry(tid=attr_val)
             except KeyError:
                 pass
             return attr_val
 
         def entry_setter(cls: Entry, value: Any, attr_name: str, field_type):
+            """A setter function for dataclass fields of entry object.
+            When the value contains entry objects, we will convert them into
+            ``tid``s before storing to ``DataStore``.
+            """
             attr_value: Any
             data_store_ref = (
                 cls.pack._data_store  # pylint: disable=protected-access
@@ -1462,7 +1533,10 @@ class DataPack(BasePack[Entry, Link, Group]):
                 tid=cls.tid, attr_name=attr_name, attr_value=attr_value
             )
 
+        # Save the input entry object in DataStore
         self._entry_converter.save_entry_object(entry=entry, pack=self)
+
+        # Register property functions for all dataclass fields.
         for name, field in entry.__dataclass_fields__.items():
             field_type = get_origin(field.type)
             setattr(
@@ -1483,6 +1557,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
     def __del__(self):
         super().__del__()
+        # Remove all the remaining tids in _pending_entries.
         tids: List = list(self._pending_entries.keys())
         for tid in tids:
             self._pending_entries.pop(tid)
@@ -1856,16 +1931,20 @@ class DataIndex(BaseIndex):
 
 class EntryConverter:
     r"""
-    Facilitate the conversion from DataStore entries to DataPack entries.
+    Facilitate the conversion between entry data in list format from
+    ``DataStore`` and entry class object.
     """
 
     def __init__(self) -> None:
-        # Mapping from entry's tid to the entries.
+        # Mapping from entry's tid to the entry objects for caching
         self._entry_dict: Dict[int, Entry] = {}
 
     def save_entry_object(
         self, entry: Entry, pack: DataPack, allow_duplicate: bool = True
     ):
+        """
+        Save an existing entry object into DataStore.
+        """
         # Check if the entry is already stored
         data_store_ref = pack._data_store  # pylint: disable=protected-access
         try:
@@ -1876,8 +1955,10 @@ class EntryConverter:
             )
             return
         except KeyError:
+            # The entry is not found in DataStore
             pass
 
+        # Create a new registry in DataStore based on entry's type
         if isinstance(entry, Annotation):
             data_store_ref.add_annotation_raw(
                 type_name=entry.entry_type(),
@@ -1919,7 +2000,7 @@ class EntryConverter:
                 "or AudioAnnotation."
             )
 
-        # Store all the attributes to DataStore
+        # Store all the dataclass attributes to DataStore
         for attribute in entry.__dataclass_fields__:
             value = getattr(entry, attribute, None)
             if not value:
@@ -1934,9 +2015,15 @@ class EntryConverter:
                 tid=entry.tid, attr_name=attribute, attr_value=value
             )
 
+        # Cache the stored entry and its tid
         self._entry_dict[entry.tid] = entry
 
     def get_entry_object(self, tid: int, pack: DataPack) -> EntryType:
+        """
+        Convert a tid to its corresponding entry object.
+        """
+
+        # Check if the tid is cached
         if tid in self._entry_dict:
             return self._entry_dict[tid]  # type: ignore
 
@@ -1944,8 +2031,8 @@ class EntryConverter:
         entry_data, entry_type = data_store_ref.get_entry(tid=tid)
         entry_class = get_class(entry_type)
         entry: Entry
-        # Here the entry arguments are optional (begin, end, parent, ...) since
-        # the they will all be routed to DataStore.
+        # Here the entry arguments are optional (begin, end, parent, ...) and
+        # the value can be arbitrary since they will all be routed to DataStore.
         if issubclass(entry_class, (Annotation, AudioAnnotation)):
             entry = entry_class(pack=pack, begin=0, end=0)
         elif issubclass(entry_class, (Link, Group, Generics)):
@@ -1957,8 +2044,8 @@ class EntryConverter:
                 "or AudioAnnotation."
             )
 
-        # TODO: Direct the new entry clsss to the correct tid. The
-        # implementation here is a little bit hacky. Will need a stable
+        # TODO: Remove the new tid and direct the entry object to the correct
+        # tid. The implementation here is a little bit hacky. Will need a stable
         # solution in future.
         # pylint: disable=protected-access
         if entry.tid in self._entry_dict:

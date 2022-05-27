@@ -801,6 +801,8 @@ class DataStore(BaseStore):
         """
         all_subclass = self._get_all_subclass(entry_type_name, True)
         if self._is_annotation(type_name=entry_type_name):
+            # When the input type is an annotation-like entry, we use
+            # `co_iterator_annotation_like` to maintain the correct order.
             yield from self.co_iterator_annotation_like(
                 type_names=list(all_subclass)
             )
@@ -1570,6 +1572,8 @@ class DataStore(BaseStore):
                             if within:
                                 yield entry
         else:
+            # Only fetches entries of type ``type_name`` when it's not in
+            # [Annotation, Group, List].
             if type_name not in self.__elements:
                 raise ValueError(f"type {type_name} does not exist")
             yield from self.iter(type_name)

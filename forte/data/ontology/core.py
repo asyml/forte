@@ -462,7 +462,8 @@ ParentEntryType = TypeVar("ParentEntryType", bound=Entry)
 class FList(Generic[ParentEntryType], MutableSequence):
     """
     FList allows the elements to be Forte entries. FList will internally
-    stores the entry as their tid to avoid nesting.
+    deal with a refernce list from DataStore which stores the entry as their
+    tid to avoid nesting.
     """
 
     def __init__(
@@ -547,8 +548,8 @@ ValueType = TypeVar("ValueType", bound=Entry)
 class FDict(Generic[KeyType, ValueType], MutableMapping):
     """
     FDict allows the values to be Forte entries. FDict will internally
-    stores the entry as their tid to avoid nesting. Note that key is not
-    supported to be entries now.
+    deal with a refernce dict from DataStore which stores the entry as their
+    tid to avoid nesting. Note that key is not supported to be entries now.
     """
 
     def __init__(

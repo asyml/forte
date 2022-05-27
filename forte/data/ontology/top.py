@@ -103,27 +103,43 @@ class Annotation(Entry):
 
     @property
     def begin(self):
+        r"""Getter function of ``begin``. The function will first try to
+        retrieve the begin index from ``DataStore`` in ``self.pack``. If
+        this attempt fails, it will directly return the value in ``_begin``.
+        """
         try:
             self._begin = self.pack.get_entry_raw(self.tid)[BEGIN_INDEX]
         except KeyError:
+            # self.tid not found in DataStore
             pass
         return self._begin
 
     @begin.setter
     def begin(self, val: int):
+        r"""Setter function of ``begin``. The update will also be populated
+        into ``DataStore`` in ``self.pack``.
+        """
         self._begin = val
         self.pack.get_entry_raw(self.tid)[BEGIN_INDEX] = val
 
     @property
     def end(self):
+        r"""Getter function of ``end``. The function will first try to
+        retrieve the end index from ``DataStore`` in ``self.pack``. If
+        this attempt fails, it will directly return the value in ``_end``.
+        """
         try:
             self._end = self.pack.get_entry_raw(self.tid)[END_INDEX]
         except KeyError:
+            # self.tid not found in DataStore
             pass
         return self._end
 
     @end.setter
     def end(self, val: int):
+        r"""Setter function of ``end``. The update will also be populated
+        into ``DataStore`` in ``self.pack``.
+        """
         self._end = val
         self.pack.get_entry_raw(self.tid)[END_INDEX] = val
 
@@ -273,32 +289,44 @@ class Link(BaseLink):
     @property
     def parent(self):
         r"""Get ``tid`` of the parent node. To get the object of the parent
-        node, call :meth:`get_parent`.
+        node, call :meth:`get_parent`. The function will first try to
+        retrieve the parent tid from ``DataStore`` in ``self.pack``. If
+        this attempt fails, it will directly return the value in ``_parent``.
         """
         try:
             self._parent = self.pack.get_entry_raw(self.tid)[PARENT_TID_INDEX]
         except KeyError:
+            # self.tid not found in DataStore
             pass
         return self._parent
 
     @parent.setter
     def parent(self, val: int):
+        r"""Setter function of ``parent``. The update will also be populated
+        into ``DataStore`` in ``self.pack``.
+        """
         self._parent = val
         self.pack.get_entry_raw(self.tid)[PARENT_TID_INDEX] = val
 
     @property
     def child(self):
         r"""Get ``tid`` of the child node. To get the object of the child node,
-        call :meth:`get_child`.
+        call :meth:`get_child`. The function will first try to
+        retrieve the child tid from ``DataStore`` in ``self.pack``. If
+        this attempt fails, it will directly return the value in ``_child``.
         """
         try:
             self._child = self.pack.get_entry_raw(self.tid)[CHILD_TID_INDEX]
         except KeyError:
+            # self.tid not found in DataStore
             pass
         return self._child
 
     @child.setter
     def child(self, val: int):
+        r"""Setter function of ``child``. The update will also be populated
+        into ``DataStore`` in ``self.pack``.
+        """
         self._child = val
         self.pack.get_entry_raw(self.tid)[CHILD_TID_INDEX] = val
 
@@ -350,7 +378,8 @@ class Group(BaseGroup[Entry]):
         super().__init__(pack, members)
 
     def add_member(self, member: Entry):
-        r"""Add one entry to the group.
+        r"""Add one entry to the group. The update will be populated to the
+        corresponding list in ``DataStore`` of ``self.pack``.
 
         Args:
             member: One member to be added to the group.
@@ -363,7 +392,9 @@ class Group(BaseGroup[Entry]):
         self.pack.get_entry_raw(self.tid)[MEMBER_TID_INDEX].append(member.tid)
 
     def get_members(self) -> List[Entry]:
-        r"""Get the member entries in the group.
+        r"""Get the member entries in the group. The function will retrieve
+        a list of member entries's tids from ``DataStore`` and convert them to
+        entry object on the fly.
 
         Returns:
              A set of instances of :class:`~forte.data.ontology.core.Entry`
@@ -658,27 +689,43 @@ class AudioAnnotation(Entry):
 
     @property
     def begin(self):
+        r"""Getter function of ``begin``. The function will first try to
+        retrieve the begin index from ``DataStore`` in ``self.pack``. If
+        this attempt fails, it will directly return the value in ``_begin``.
+        """
         try:
             self._begin = self.pack.get_entry_raw(self.tid)[BEGIN_INDEX]
         except KeyError:
+            # self.tid not found in DataStore
             pass
         return self._begin
 
     @begin.setter
     def begin(self, val: int):
+        r"""Setter function of ``begin``. The update will also be populated
+        into ``DataStore`` in ``self.pack``.
+        """
         self._begin = val
         self.pack.get_entry_raw(self.tid)[BEGIN_INDEX] = val
 
     @property
     def end(self):
+        r"""Getter function of ``end``. The function will first try to
+        retrieve the end index from ``DataStore`` in ``self.pack``. If
+        this attempt fails, it will directly return the value in ``_end``.
+        """
         try:
-            self.pack.get_entry_raw(self.tid)[END_INDEX]
+            self._end = self.pack.get_entry_raw(self.tid)[END_INDEX]
         except KeyError:
+            # self.tid not found in DataStore
             pass
         return self._end
 
     @end.setter
     def end(self, val: int):
+        r"""Setter function of ``end``. The update will also be populated
+        into ``DataStore`` in ``self.pack``.
+        """
         self._end = val
         self.pack.get_entry_raw(self.tid)[END_INDEX] = val
 

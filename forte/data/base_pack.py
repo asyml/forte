@@ -107,8 +107,13 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         self.__control_component: Optional[str] = None
 
         # This Dict maintains a mapping from entry's tid to the Entry object
-        # itself and the component name associated with the entry.
+        # itself (for MultiPack) or entry's tid (for DataPack) and the component
+        # name associated with the entry.
         # The component name is used for tracking the "creator" of this entry.
+        # TODO: Will need to unify the format for MultiPack and DataPack after
+        #   DataStore is integrated with MultiPack and MultiPack entries. In
+        #   future we should only maintain a mapping from entry's tid to the
+        #   corresponding component, i.e., Dict[int, Optional[str]].
         self._pending_entries: Dict[
             int, Tuple[Union[int, Entry], Optional[str]]
         ] = {}
