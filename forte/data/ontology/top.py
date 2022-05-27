@@ -32,9 +32,7 @@ from forte.common.constants import (
     PARENT_TID_INDEX,
     CHILD_TID_INDEX,
     MEMBER_TID_INDEX,
-    MEMBER_TYPE_INDEX,
 )
-from forte.utils.utils import get_class, get_full_module_name
 
 __all__ = [
     "Generics",
@@ -341,6 +339,7 @@ class Group(BaseGroup[Entry]):
     a "coreference group" is a group of coreferential entities. Each group will
     store a set of members, no duplications allowed.
     """
+    MemberType: Type[Entry] = Entry
 
     def __init__(
         self,
@@ -379,23 +378,6 @@ class Group(BaseGroup[Entry]):
         for m in self.pack.get_entry_raw(self.tid)[MEMBER_TID_INDEX]:
             member_entries.append(self.pack.get_entry(m))
         return member_entries
-
-    @property  # type: ignore
-    def MemberType(self):
-        try:
-            self._member_type = get_class(
-                self.pack.get_entry_raw(self.tid)[MEMBER_TYPE_INDEX]
-            )
-        except KeyError:
-            pass
-        return self._member_type
-
-    @MemberType.setter
-    def MemberType(self, val: Type[Entry]):
-        self._member_type = val
-        self.pack.get_entry_raw(self.tid)[
-            MEMBER_TYPE_INDEX
-        ] = get_full_module_name(val)
 
 
 class MultiPackGeneric(MultiEntry, Entry):

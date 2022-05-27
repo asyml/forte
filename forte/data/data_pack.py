@@ -26,9 +26,10 @@ from typing import (
     Set,
     Callable,
     Tuple,
+    ForwardRef,
 )
 from functools import partial
-from typing_inspect import get_origin
+from typing_inspect import get_origin, get_args
 from packaging.version import Version
 import numpy as np
 from sortedcontainers import SortedList
@@ -175,6 +176,11 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         self._index: DataIndex = DataIndex()
 
+    def __getstate__(self):
+        state = super().__getstate__()
+        state.pop("_entry_converter")
+        return state
+
     def __setstate__(self, state):
         pack_version: str = (
             state["pack_version"]
@@ -188,6 +194,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                 f"version greater or equal to {PACK_ID_COMPATIBLE_VERSION}"
             )
 
+        self._entry_converter = EntryConverter()
         super().__setstate__(state)
 
         # For backward compatibility.
@@ -1270,7 +1277,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                     entry_type_.ParentType, entry_class
                 ) and issubclass(entry_type_.ChildType, entry_class)
             if issubclass(entry_type_, Group):
-                return issubclass(entry_type_.MemberType, entry_class)  # type: ignore
+                return issubclass(entry_type_.MemberType, entry_class)
             return False
 
         # If we don't have any annotations but the items to check requires them,
@@ -1319,6 +1326,17 @@ class DataPack(BasePack[Entry, Link, Group]):
                 if components is not None:
                     if not self.is_created_by(entry, components):
                         continue
+
+                # Filter out incompatible span computation for Links and Groups
+                if (
+                    issubclass(entry_type_, (Link, Group))
+                    and isinstance(range_annotation, AudioAnnotation)
+                    and not self._index.in_audio_span(
+                        entry, range_annotation.span
+                    )
+                ):
+                    continue
+
                 yield entry
         except ValueError:
             # type_name does not exist in DataStore
@@ -1383,7 +1401,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             if field_type in (FList, FDict):
                 return field_type(parent_entry=cls, data=attr_val)
             try:
-                if issubclass(field_type, Entry):
+                if issubclass(field_type, Entry) and isinstance(attr_val, int):
                     return cls.pack.get_entry(tid=attr_val)
             except TypeError:
                 pass
@@ -1415,6 +1433,12 @@ class DataPack(BasePack[Entry, Link, Group]):
         self._entry_converter.save_entry_object(entry=entry, pack=self)
         for name, field in entry.__dataclass_fields__.items():
             field_type = get_origin(field.type)
+            if field_type is Union and any(
+                isinstance(arg_type, ForwardRef)
+                or (isinstance(arg_type, type) and issubclass(arg_type, Entry))
+                for arg_type in get_args(field.type)
+            ):
+                field_type = Entry
             setattr(
                 type(entry),
                 name,
@@ -1910,8 +1934,13 @@ class EntryConverter:
         # TODO: Direct the new entry clsss to the correct tid. The
         # implementation here is a little bit hacky. Will need a stable
         # solution in future.
+        # pylint: disable=protected-access
+        if entry.tid in self._entry_dict:
+            self._entry_dict.pop(entry.tid)
+        if entry.tid in pack._pending_entries:
+            pack._pending_entries.pop(entry.tid)
         data_store_ref.delete_entry(tid=entry.tid)
-        entry._tid = entry_data[TID_INDEX]  # pylint: disable=protected-access
+        entry._tid = entry_data[TID_INDEX]
 
         self._entry_dict[tid] = entry
         return entry  # type: ignore

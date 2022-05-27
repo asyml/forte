@@ -325,11 +325,10 @@ class DataStoreTest(unittest.TestCase):
         group_type = "forte.data.ontology.top.Group"
         sent_list = list(self.data_store._DataStore__elements[sent_type])
         doc_list = list(self.data_store._DataStore__elements[doc_type])
-        ann_list = (
-            list(self.data_store._DataStore__elements[ann_type])
-            + doc_list
-            + sent_list
-        )
+        ann_list = list(self.data_store.co_iterator_annotation_like(
+            list(self.data_store._get_all_subclass(ann_type, True))
+        ))
+
         group_list = list(self.data_store._DataStore__elements[group_type])
         sent_entries = list(self.data_store.all_entries(sent_type))
         doc_entries = list(self.data_store.all_entries(doc_type))
