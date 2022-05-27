@@ -1055,5 +1055,12 @@ class BoundingBox(Box):
         )
 
 
-SinglePackEntries = (Link, Group, Annotation, Generics, AudioAnnotation)
+SinglePackEntries = (
+    Link,
+    Group,
+    Annotation,
+    Generics,
+    AudioAnnotation,
+    ImageAnnotation,
+)
 MultiPackEntries = (MultiPackLink, MultiPackGroup, MultiPackGeneric)
