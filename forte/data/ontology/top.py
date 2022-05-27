@@ -872,15 +872,16 @@ class Grids(Entry):
 
 
 class Region(ImageAnnotation):
-    def __init__(self, pack: PackType, image_payload_idx: int = 0):
-        """
-        A region class associated with an image payload.
+    """
+    A region class associated with an image payload.
 
-        Args:
-            pack: the container that this ``Region`` will be added to.
-            image_payload_idx: the index of the image payload. If it's not set,
-                it defaults to 0 which meaning it will load the first image payload.
-        """
+    Args:
+        pack: the container that this ``Region`` will be added to.
+        image_payload_idx: the index of the image payload. If it's not set,
+            it defaults to 0 which meaning it will load the first image payload.
+    """
+
+    def __init__(self, pack: PackType, image_payload_idx: int = 0):
         super().__init__(pack, image_payload_idx)
         if image_payload_idx is None:
             self._image_payload_idx = 0
@@ -894,7 +895,21 @@ class Region(ImageAnnotation):
 
 
 class Box(Region):
-    """ """
+    """
+    A box class with a center position and a box configuration.
+
+    Note: all indices are zero-based and counted from top left corner of
+    image.
+
+    Args:
+        pack: the container that this ``Box`` will be added to.
+        image_payload_idx: the index of the image payload. If it's not set,
+            it defaults to 0 which meaning it will load the first image payload.
+        cy: the row index of the box center in the image array.
+        cx: the column index of the box center in the image array.
+        height: the height of the box.
+        width: the width of the box.
+    """
 
     def __init__(
         self,
@@ -905,21 +920,6 @@ class Box(Region):
         width: int,
         image_payload_idx: int = 0,
     ):
-        """
-        A box class with a center position and a box configuration.
-
-        Note: all indices are zero-based and counted from top left corner of
-        image.
-
-        Args:
-            pack: the container that this ``Box`` will be added to.
-            image_payload_idx: the index of the image payload. If it's not set,
-                it defaults to 0 which meaning it will load the first image payload.
-            cy: the row index of the box center in the image array.
-            cx: the column index of the box center in the image array.
-            height: the height of the box.
-            width: the width of the box.
-        """
         # assume Box is associated with Grids
         super().__init__(pack, image_payload_idx)
         # center location
@@ -1014,7 +1014,29 @@ class Box(Region):
 
 
 class BoundingBox(Box):
-    # logic: grids -> grids cell center (point) -> box metrics
+    """
+    A bounding box class that associates with image payload and grids and
+    has a configuration of height and width.
+
+    Note: all indices are zero-based and counted from top left corner of
+    the image/grid.
+
+    Args:
+        pack: The container that this BoundingBox will
+            be added to.
+        image_payload_idx: the index of the image payload. If it's not set,
+            it defaults to 0 which means it will load the first image payload.
+        height: the height of the bounding box.
+        width: the width of the bounding box.
+        grid_height: the height of the associated grid.
+        grid_width: the width of the associated grid.
+        grid_cell_h_idx: the height index of the associated grid cell in
+            the grid.
+        grid_cell_w_idx: the width index of the associated grid cell in
+            the grid.
+
+    """
+
     def __init__(
         self,
         pack: PackType,
@@ -1026,28 +1048,6 @@ class BoundingBox(Box):
         grid_cell_w_idx: int,
         image_payload_idx: int = 0,
     ):
-        """
-        A bounding box class that associates with image payload and grids and
-        has a configuration of height and width.
-
-        Note: all indices are zero-based and counted from top left corner of
-        the image/grid.
-
-        Args:
-            pack: The container that this BoundingBox will
-                be added to.
-            image_payload_idx: the index of the image payload. If it's not set,
-                it defaults to 0 which means it will load the first image payload.
-            height: the height of the bounding box.
-            width: the width of the bounding box.
-            grid_height: the height of the associated grid.
-            grid_width: the width of the associated grid.
-            grid_cell_h_idx: the height index of the associated grid cell in
-                the grid.
-            grid_cell_w_idx: the width index of the associated grid cell in
-                the grid.
-
-        """
         self.grids = Grids(pack, grid_height, grid_width, image_payload_idx)
         super().__init__(
             pack,
