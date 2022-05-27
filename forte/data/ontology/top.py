@@ -41,7 +41,8 @@ __all__ = [
     "AudioAnnotation",
     "ImageAnnotation",
     "Grids",
-    "Region" "Box",
+    "Region",
+    "Box",
     "BoundingBox",
 ]
 
