@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from dataclasses import dataclass
+from email.mime import image
 from functools import total_ordering
+from multiprocessing.sharedctypes import Value
 from typing import Optional, Set, Tuple, Type, Any, Dict, Union, Iterable, List
 
 import numpy as np
@@ -717,6 +719,14 @@ class ImageAnnotation(Entry):
             )
         return self.pack.get_image_array(self._image_payload_idx)
 
+    @property
+    def max_x(self):
+        return self.image.shape[1] - 1
+
+    @property
+    def max_y(self):
+        return self.image.shape[0] - 1
+
     def __eq__(self, other):
         if other is None:
             return False
@@ -811,6 +821,12 @@ class Grids(Entry):
         ]
         return array
 
+    def get_grid_cell_center(self, h_idx: int, w_idx: int):
+        return (
+            (h_idx * self.c_h + (h_idx + 1) * self.c_h) // 2,
+            (w_idx * self.c_w + (w_idx + 1) * self.c_w) // 2,
+        )
+
     @property
     def image_payload_idx(self) -> int:
         return self._image_payload_idx
@@ -835,6 +851,114 @@ class Grids(Entry):
             self._height,
             self._width,
         )
+
+
+class Region(ImageAnnotation):
+    def __init__(self, pack: PackType, image_payload_idx: int):
+        super().__init__(pack, image_payload_idx)
+        if image_payload_idx is None:
+            self._image_payload_idx = 0
+        else:
+            self._image_payload_idx = image_payload_idx
+        self.img_arr = self.pack.get_image_array(self._image_payload_idx)
+
+
+class Box(Region):
+    """ """
+
+    def __init__(
+        self,
+        pack: PackType,
+        image_payload_idx: int,
+        cy: int,
+        cx: int,
+        height: int,
+        width: int,
+    ):
+        # assume Box is associated with Grids
+        super().__init__(pack, image_payload_idx)
+        # center location
+        self._cy = cy
+        self._cx = cx
+        self._height = height
+        self._width = width
+
+    @property
+    def center(self):
+        return (self._cy, self._cx)
+
+    @property
+    def corners(self):
+        """
+        Get corners of box.
+        """
+        return [
+            (self._cy + h_offset, self._cx + w_offset)
+            for h_offset in [-0.5 * self._height, 0.5 * self._height]
+            for w_offset in [-0.5 * self._width, 0.5 * self._width]
+        ]
+
+    @property
+    def box_min_x(self):
+        return max(self._cx - round(0.5 * self._width), 0)
+
+    @property
+    def box_max_x(self):
+        return min(self._cx + round(0.5 * self._width), self.max_x)
+
+    @property
+    def box_min_y(self):
+        return max(self._cy - round(0.5 * self._height), 0)
+
+    @property
+    def box_max_y(self):
+        return min(self._cy + round(0.5 * self._height), self.max_y)
+
+    def is_overlapped(self, other):
+        # If one box is on left side of other
+        if self.box_min_x > other.box_max_x or other.box_min_x > self.box_max_x:
+            return False
+
+        # If one box is above other
+        if self.box_min_y > other.box_max_y or other.box_min_y > self.box_max_y:
+            return False
+        return True
+
+
+class BoundingBox(Box):
+    # logic: grids -> grids cell center (point) -> box metrics
+    def __init__(
+        self,
+        pack: PackType,
+        image_payload_idx: int,
+        height: int,
+        width: int,
+        grid_height: int,
+        grid_width: int,
+        grid_cell_h_idx: int,
+        grid_cell_w_idx: int,
+    ):
+        """
+
+
+        Args:
+            pack (PackType): The container that this BoundingBox will
+                be added to.
+            image_payload_idx (int): the index of the image payload.
+            height (int): the height of the bounding box.
+            width (int): the width of the bounding box.
+            grid_height: the height of the associated grids.
+            grid_width (int): the width of the associated grids.
+            grid_cell_h_idx (int): the height index of the associated grid cell.
+            grid_cell_w_idx (int): the width index of the associated grid cell.
+
+        """
+
+        self.grids = Grids(pack, grid_height, grid_width, image_payload_idx)
+        cy, cx = self.grids.get_grid_cell_center(
+            grid_cell_h_idx, grid_cell_w_idx
+        )
+        super().__init__(pack, image_payload_idx, cy, cx, height, width)
 
 
 SinglePackEntries = (Link, Group, Annotation, Generics, AudioAnnotation)
