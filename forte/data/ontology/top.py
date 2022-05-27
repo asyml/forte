@@ -1040,11 +1040,13 @@ class BoundingBox(Box):
                 the grid.
 
         """
-        self.grids = Grids(pack, grid_height, grid_width, image_payload_idx)
-        cy, cx = self.grids.get_grid_cell_center(
-            grid_cell_h_idx, grid_cell_w_idx
+        super().__init__(
+            pack,
+            image_payload_idx,
+            *self.grids.get_grid_cell_center(grid_cell_h_idx, grid_cell_w_idx),
+            height,
+            width,
         )
-        super().__init__(pack, cy, cx, height, width, image_payload_idx)
 
 
 SinglePackEntries = (Link, Group, Annotation, Generics, AudioAnnotation)
