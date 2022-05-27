@@ -36,7 +36,9 @@ class ImageAnnotationTest(unittest.TestCase):
         self.line[3, 3] = 1
         self.line[4, 4] = 1
         self.datapack.payloads.append(self.line)
-        self.datapack.image_annotations.add(ImageAnnotation(self.datapack, 0))
+        self.datapack.image_annotations.append(
+            ImageAnnotation(self.datapack, 0)
+        )
 
     def test_image_annotation(self):
         self.assertEqual(
