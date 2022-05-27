@@ -33,3 +33,5 @@ print(bb1_descrip.text)
 link1 = Link(datapack, bb1_descrip, bb1)
 datapack.add_entry(link1)
 print(list(datapack.all_links))
+
+print(bb1.compute_iou(bb3))
