@@ -290,7 +290,7 @@ class Link(BaseLink):
     def parent(self):
         r"""Get ``tid`` of the parent node. To get the object of the parent
         node, call :meth:`get_parent`. The function will first try to
-        retrieve the parent tid from ``DataStore`` in ``self.pack``. If
+        retrieve the parent ``tid`` from ``DataStore`` in ``self.pack``. If
         this attempt fails, it will directly return the value in ``_parent``.
         """
         try:
@@ -312,7 +312,7 @@ class Link(BaseLink):
     def child(self):
         r"""Get ``tid`` of the child node. To get the object of the child node,
         call :meth:`get_child`. The function will first try to
-        retrieve the child tid from ``DataStore`` in ``self.pack``. If
+        retrieve the child ``tid`` from ``DataStore`` in ``self.pack``. If
         this attempt fails, it will directly return the value in ``_child``.
         """
         try:
@@ -393,8 +393,8 @@ class Group(BaseGroup[Entry]):
 
     def get_members(self) -> List[Entry]:
         r"""Get the member entries in the group. The function will retrieve
-        a list of member entries's tids from ``DataStore`` and convert them to
-        entry object on the fly.
+        a list of member entries's ``tid``s from ``DataStore`` and convert them
+        to entry object on the fly.
 
         Returns:
              A set of instances of :class:`~forte.data.ontology.core.Entry`
