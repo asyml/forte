@@ -212,11 +212,11 @@ class DataPack(BasePack[Entry, Link, Group]):
         self._index.update_basic_index(list(iter(self)))
 
     def __iter__(self):
-        yield from self.all_annotations
-        yield from self.all_links
-        yield from self.all_groups
-        yield from self.all_generic_entries
-        yield from self.all_audio_annotations
+        yield from self.annotations
+        yield from self.links
+        yield from self.groups
+        yield from self.generics
+        yield from self.audio_annotations
 
     def _init_meta(self, pack_name: Optional[str] = None) -> Meta:
         return Meta(pack_name)
@@ -361,6 +361,38 @@ class DataPack(BasePack[Entry, Link, Group]):
         return self._data_store.num_entries(
             "forte.data.ontology.top.AudioAnnotation"
         )
+
+    @property
+    def annotations(self):
+        return SortedList(self.all_annotations)
+
+    @property
+    def generics(self):
+        return SortedList(self.all_generic_entries)
+
+    @property
+    def audio_annotations(self):
+        return SortedList(self.all_audio_annotations)
+
+    @property  # type: ignore
+    def links(self):
+        if isinstance(self, DataPack):
+            self._links = SortedList(self.all_links)
+        return self._links
+
+    @links.setter
+    def links(self, val):
+        self._links = val
+
+    @property  # type: ignore
+    def groups(self):
+        if isinstance(self, DataPack):
+            self._groups = SortedList(self.all_links)
+        return self._groups
+
+    @groups.setter
+    def groups(self, val):
+        self._groups = val
 
     def get_span_text(self, begin: int, end: int) -> str:
         r"""Get the text in the data pack contained in the span.
@@ -861,9 +893,9 @@ class DataPack(BasePack[Entry, Link, Group]):
                     iterating through its copy.
             """
             if issubclass(c_type, Annotation):
-                return list(self.all_annotations)
+                return list(self.annotations)
             elif issubclass(c_type, AudioAnnotation):
-                return list(self.all_audio_annotations)
+                return list(self.audio_annotations)
             else:
                 raise NotImplementedError(
                     f"Context type is set to {c_type},"
@@ -1282,11 +1314,11 @@ class DataPack(BasePack[Entry, Link, Group]):
         # If we don't have any annotations but the items to check requires them,
         # then we simply yield from an empty list.
         if (
-            len(list(self.all_annotations)) == 0
+            len(list(self.annotations)) == 0
             and isinstance(range_annotation, Annotation)
             and require_annotations(Annotation)
         ) or (
-            len(list(self.all_audio_annotations)) == 0
+            len(list(self.audio_annotations)) == 0
             and isinstance(range_annotation, AudioAnnotation)
             and require_annotations(AudioAnnotation)
         ):

@@ -55,7 +55,7 @@ class MultiPackSentenceReaderTest(unittest.TestCase):
         input_pack = multipack.get_pack("input_src")
         self.assertEqual(len(multipack.packs), 2)
         self.assertEqual(multipack._pack_names, ["input_src", "output_tgt"])
-        self.assertEqual(len(list(input_pack.all_annotations)), annotation_length)
+        self.assertEqual(len(input_pack.annotations), annotation_length)
         self.assertEqual(input_pack.text, text + "\n")
 
     @data(
