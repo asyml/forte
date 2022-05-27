@@ -777,6 +777,8 @@ class Grids(Entry):
         within the grid cell will masked as zeros. The array entries that are
         within the grid cell will be copied to the zeros numpy array.
 
+        Note: all indices are zero-based and counted from top left corner of
+        the image.
 
         Args:
             h_idx: the zero-based height(row) index of the grid cell in the
@@ -823,6 +825,9 @@ class Grids(Entry):
     def get_grid_cell_center(self, h_idx: int, w_idx: int) -> Tuple[int, int]:
         """
         Get the center position of the grid cell in the ``Grids``.
+
+        Note: all indices are zero-based and counted from top left corner of
+        the grid.
 
         Args:
             h_idx: the height(row) index of the grid cell in the grid.
