@@ -26,10 +26,9 @@ from typing import (
     Set,
     Callable,
     Tuple,
-    ForwardRef,
 )
 from functools import partial
-from typing_inspect import get_origin, get_args
+from typing_inspect import get_origin, get_args, ForwardRef
 from packaging.version import Version
 import numpy as np
 from sortedcontainers import SortedList
