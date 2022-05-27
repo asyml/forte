@@ -860,7 +860,11 @@ class Region(ImageAnnotation):
             self._image_payload_idx = 0
         else:
             self._image_payload_idx = image_payload_idx
-        self.img_arr = self.pack.get_image_array(self._image_payload_idx)
+
+    def compute_iou(self, other):
+        intersection = np.sum(np.logical_and(self.image, other.image))
+        union = np.sum(np.logical_or(self.image, other.image))
+        return intersection / union
 
 
 class Box(Region):
@@ -914,6 +918,10 @@ class Box(Region):
     def box_max_y(self):
         return min(self._cy + round(0.5 * self._height), self.max_y)
 
+    @property
+    def area(self):
+        return self._height * self._width
+
     def is_overlapped(self, other):
         # If one box is on left side of other
         if self.box_min_x > other.box_max_x or other.box_min_x > self.box_max_x:
@@ -923,6 +931,30 @@ class Box(Region):
         if self.box_min_y > other.box_max_y or other.box_min_y > self.box_max_y:
             return False
         return True
+
+    def compute_iou(self, other):
+        """
+        iou: intersection over union
+
+        Args:
+            other: the other Box instance.
+
+        Returns:
+            _type_: _description_
+        """
+        if not self.is_overlapped(other):
+            return 0
+        box_x_diff = min(
+            abs(other.box_max_x - self.box_min_x),
+            abs(other.box_min_x - self.box_max_x),
+        )
+        box_y_diff = min(
+            abs(other.box_max_y - self.box_min_y),
+            abs(other.box_min_y - self.box_max_y),
+        )
+        intersection = box_x_diff * box_y_diff
+        union = self.area + other.area - intersection
+        return intersection / union
 
 
 class BoundingBox(Box):
