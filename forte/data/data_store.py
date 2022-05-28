@@ -641,7 +641,7 @@ class DataStore(BaseStore):
     def _new_image_annotation(
         self, type_name: str, image_payload_idx: int, tid: Optional[int] = None
     ) -> List:
-        r"""This function generates a new iamge annotation with default fields.
+        r"""This function generates a new image annotation with default fields.
         Called by add_image_annotation_raw() to create a new image annotation
         with ``type_name``, ``image_payload_idx`` and optional ``tid``.
 
@@ -1047,7 +1047,7 @@ class DataStore(BaseStore):
     ) -> int:
 
         r"""
-        This function adds an image annotation entry with ``begin`` and ``end``
+        This function adds an image annotation entry with ``image_payload_idx``
         indices to current data store object. Returns the ``tid`` for the
         inserted entry.
 
@@ -1088,7 +1088,7 @@ class DataStore(BaseStore):
     ) -> int:
 
         r"""
-        This function adds an image annotation entry with ``begin`` and ``end``
+        This function adds an image annotation entry with ``image_payload_idx``
         indices to current data store object. Returns the ``tid`` for the
         inserted entry.
 
