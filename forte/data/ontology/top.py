@@ -848,8 +848,8 @@ class Grids(Entry):
 
     Args:
         pack: The container that this grids will be added to.
-        height: the number of grid cell per column.
-        width: the number of grid cell per row.
+        height: the number of grid cell per column, the unit is one grid cell.
+        width: the number of grid cell per row, the unit is one grid cell.
         image_payload_idx: the index of the image payload. If it's not set,
             it defaults to 0 which meaning it will load the first image payload.
     """
@@ -892,9 +892,9 @@ class Grids(Entry):
 
         Args:
             h_idx: the zero-based height(row) index of the grid cell in the
-                grid.
+                grid, the unit is one grid cell.
             w_idx: the zero-based width(column) index of the grid cell in the
-                grid.
+                grid, the unit is one grid cell.
 
         Raises:
             ValueError: ``h_idx`` is out of the range specified by ``height``.
@@ -940,9 +940,10 @@ class Grids(Entry):
         the grid.
 
         Args:
-            h_idx: the height(row) index of the grid cell in the grid.
+            h_idx: the height(row) index of the grid cell in the grid,
+                , the unit is one image array entry.
             w_idx (int): the width(column) index of the grid cell in the
-                grid.
+                grid, the unit is one image array entry.
 
         Returns:
             A tuple of (y index, x index)
@@ -1012,10 +1013,12 @@ class Box(Region):
         pack: the container that this ``Box`` will be added to.
         image_payload_idx: the index of the image payload. If it's not set,
             it defaults to 0 which meaning it will load the first image payload.
-        cy: the row index of the box center in the image array.
-        cx: the column index of the box center in the image array.
-        height: the height of the box.
-        width: the width of the box.
+        cy: the row index of the box center in the image array,
+            the unit is one image array entry.
+        cx: the column index of the box center in the image array,
+            the unit is one image array entry.
+        height: the height of the box, the unit is one image array entry.
+        width: the width of the box, the unit is one image array entry.
     """
 
     def __init__(
@@ -1133,14 +1136,17 @@ class BoundingBox(Box):
             be added to.
         image_payload_idx: the index of the image payload. If it's not set,
             it defaults to 0 which means it will load the first image payload.
-        height: the height of the bounding box.
-        width: the width of the bounding box.
-        grid_height: the height of the associated grid.
-        grid_width: the width of the associated grid.
+        height: the height of the bounding box, the unit is one image array
+            entry.
+        width: the width of the bounding box, the unit is one image array entry.
+        grid_height: the height of the associated grid, the unit is one grid
+            cell.
+        grid_width: the width of the associated grid, the unit is one grid
+            cell.
         grid_cell_h_idx: the height index of the associated grid cell in
-            the grid.
+            the grid, the unit is one grid cell.
         grid_cell_w_idx: the width index of the associated grid cell in
-            the grid.
+            the grid, the unit is one grid cell.
 
     """
 
