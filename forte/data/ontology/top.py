@@ -46,6 +46,8 @@ __all__ = [
     "SinglePackEntries",
     "MultiPackEntries",
     "AudioAnnotation",
+    "ImageAnnotation",
+    "Grids",
 ]
 
 QueryType = Union[Dict[str, Any], np.ndarray]
@@ -792,6 +794,154 @@ class AudioAnnotation(Entry):
 
         """
         yield from self.pack.get(entry_type, self, components, include_sub_type)
+
+
+class ImageAnnotation(Entry):
+    def __init__(self, pack: PackType, image_payload_idx: int = 0):
+        """
+        ImageAnnotation type entries, such as "edge" and "bounding box".
+        Each ImageAnnotation has a ``image_payload_idx`` corresponding to its
+        image representation in the payload array.
+
+        Args:
+            pack: The container that this image annotation
+                will be added to.
+            image_payload_idx: A integer that represents the index of
+                the image in the payloads.
+        """
+        self._image_payload_idx = image_payload_idx
+        super().__init__(pack)
+
+    @property
+    def image_payload_idx(self) -> int:
+        return self._image_payload_idx
+
+    @property
+    def image(self):
+        if self.pack is None:
+            raise ValueError(
+                "Cannot get image because image annotation is not "
+                "attached to any data pack."
+            )
+        return self.pack.get_image_array(self._image_payload_idx)
+
+    def __eq__(self, other):
+        if other is None:
+            return False
+        return self.image_payload_idx == other.image_payload_idx
+
+
+class Grids(Entry):
+    """
+    Regular grids with a grid configuration.
+
+    Args:
+        pack: The container that this grids will be added to.
+        height: the number of grid cell per column.
+        width: the number of grid cell per row.
+        image_payload_idx: the index of image in the datapack payloads.
+    """
+
+    def __init__(
+        self,
+        pack: PackType,
+        height: int,
+        width: int,
+        image_payload_idx: Optional[int] = None,
+    ):
+        if height <= 0 or width <= 0:
+            raise ValueError(
+                f"height({height}) and "
+                f"width({width}) both must be larger than 0"
+            )
+        self._height = height
+        self._width = width
+        if image_payload_idx is None:
+            self._image_payload_idx = 0
+        else:
+            self._image_payload_idx = image_payload_idx
+        super().__init__(pack)
+        self.img_arr = self.pack.get_image_array(self._image_payload_idx)
+        self.c_h, self.c_w = (
+            self.img_arr.shape[0] // self._height,
+            self.img_arr.shape[1] // self._width,
+        )  # compute the height and width of grid cells
+
+    def get_grid_cell(self, h_idx: int, w_idx: int):
+        """
+        Get the array data of a grid cell from image of the image payload index.
+        The array is a masked version of the original image, and it has
+        the same size of the image. The array entries that are not
+        within the grid cell will masked as zeros. The array entries that are
+        within the grid cell will be copied to the zeros numpy array.
+
+
+        Args:
+            h_idx: the zero-based index of the grid cell of the first
+                dimension.
+            w_idx: the zero-based index of the grid cell of the second
+                dimension.
+
+        Raises:
+            ValueError: ``h_idx`` is out of the range specified by ``height``.
+            ValueError: ``w_idx`` is out of the range specified by ``width``.
+
+        Returns:
+            numpy array that represents the grid cell.
+        """
+        if not 0 <= h_idx < self._height:
+            raise ValueError(
+                f"input parameter h_idx ({h_idx}) is"
+                "out of scope of h_idx range"
+                f" {(0, self._height)}"
+            )
+        if not 0 <= w_idx < self._width:
+            raise ValueError(
+                f"input parameter w_idx ({w_idx}) is"
+                "out of scope of w_idx range"
+                f" {(0, self._width)}"
+            )
+
+        # initialize a numpy zeros array
+        array = np.zeros(self.img_arr.shape)
+        # set grid cell entry values to the values of the original image array
+        # (entry values outside of grid cell remain zeros)
+        # An example of computing grid height index range is
+        # index * cell height : (index + 1) * cell height.
+        # It's similar for computing cell width index range
+        array[
+            h_idx * self.c_h : (h_idx + 1) * self.c_h,
+            w_idx * self.c_w : (w_idx + 1) * self.c_w,
+        ] = self.img_arr[
+            h_idx * self.c_h : (h_idx + 1) * self.c_h,
+            w_idx * self.c_w : (w_idx + 1) * self.c_w,
+        ]
+        return array
+
+    @property
+    def image_payload_idx(self) -> int:
+        return self._image_payload_idx
+
+    @property
+    def num_grid_cells(self):
+        return self._height * self._width
+
+    @property
+    def height(self):
+        return self._height
+
+    @property
+    def width(self):
+        return self._width
+
+    def __eq__(self, other):
+        if other is None:
+            return False
+        return (self.image_payload_idx, self._height, self._width) == (
+            other.image_payload_idx,
+            self._height,
+            self._width,
+        )
 
 
 SinglePackEntries = (Link, Group, Annotation, Generics, AudioAnnotation)

@@ -24,7 +24,9 @@ from forte.data.base_store import BaseStore
 from forte.data.ontology.top import (
     Annotation,
     AudioAnnotation,
+    Grids,
     Group,
+    ImageAnnotation,
     Link,
     Generics,
 )
@@ -41,6 +43,7 @@ class DataStore(BaseStore):
     # TODO: temporarily disable this for development purposes.
     # pylint: disable=pointless-string-statement, protected-access
     # pylint: disable=attribute-defined-outside-init
+    # pylint: disable=too-many-public-methods
     _type_attributes: dict = {}
 
     def __init__(
@@ -635,6 +638,54 @@ class DataStore(BaseStore):
 
         return entry
 
+    def _new_image_annotation(
+        self, type_name: str, image_payload_idx: int, tid: Optional[int] = None
+    ) -> List:
+        r"""This function generates a new image annotation with default fields.
+        Called by add_image_annotation_raw() to create a new image annotation
+        with ``type_name``, ``image_payload_idx`` and optional ``tid``.
+
+
+        Args:
+            type_name: The fully qualified type name of the new entry.
+            image_payload_idx: The index of the image in payloads.
+
+        Returns:
+            A list representing a new image annotation type entry data.
+        """
+
+        tid: int = self._new_tid() if tid is None else tid
+        entry: List[Any]
+
+        entry = [image_payload_idx, None, tid, type_name]
+        entry += self._default_attributes_for_type(type_name)
+
+        return entry
+
+    def _new_grid(
+        self, type_name: str, image_payload_idx: int, tid: Optional[int] = None
+    ) -> List:
+        r"""This function generates a new grid with default fields.
+        Called by add_grid_raw() to create a new grid
+        with ``type_name``, ``image_payload_idx`` and optional ``tid``.
+
+
+        Args:
+            type_name: The fully qualified type name of the new entry.
+            image_payload_idx: The index of the image in payloads.
+
+        Returns:
+            A list representing a new grid type entry data.
+        """
+
+        tid: int = self._new_tid() if tid is None else tid
+        entry: List[Any]
+
+        entry = [image_payload_idx, None, tid, type_name]
+        entry += self._default_attributes_for_type(type_name)
+
+        return entry
+
     def _new_link(
         self,
         type_name: str,
@@ -866,7 +917,7 @@ class DataStore(BaseStore):
             except KeyError:
                 self.__elements[type_name] = SortedList(key=sorting_fn)
                 self.__elements[type_name].add(entry)
-        elif entry_type in [Link, Group, Generics]:
+        elif entry_type in [Link, Group, Generics, ImageAnnotation, Grids]:
             try:
                 self.__elements[type_name].append(entry)
             except KeyError:
@@ -986,6 +1037,88 @@ class DataStore(BaseStore):
             if tid_search_result != -1:
                 return tid_search_result
         return self._add_entry_raw(AudioAnnotation, type_name, entry)
+
+    def add_image_annotation_raw(
+        self,
+        type_name: str,
+        image_payload_idx: int,
+        tid: Optional[int] = None,
+        allow_duplicate=True,
+    ) -> int:
+
+        r"""
+        This function adds an image annotation entry with ``image_payload_idx``
+        indices to current data store object. Returns the ``tid`` for the
+        inserted entry.
+
+        Args:
+            type_name: The fully qualified type name of the new AudioAnnotation.
+            image_payload_idx: the index of the image payload.
+            tid: ``tid`` of the Annotation entry that is being added.
+                It's optional, and it will be
+                auto-assigned if not given.
+            allow_duplicate: Whether we allow duplicate in the DataStore. When
+                it's set to False, the function will return the ``tid`` of
+                existing entry if a duplicate is found. Default value is True.
+
+        Returns:
+            ``tid`` of the entry.
+        """
+        # We should create the `entry data` with the format
+        # [begin, end, tid, type_id, None, ...].
+        # A helper function _new_annotation() can be used to generate a
+        # annotation type entry data with default fields.
+        # A reference to the entry should be store in both self.__elements and
+        # self.__tid_ref_dict.
+        entry = self._new_image_annotation(type_name, image_payload_idx, tid)
+
+        if not allow_duplicate:
+            tid_search_result = self._get_existing_ann_entry_tid(entry)
+            # if found existing entry
+            if tid_search_result != -1:
+                return tid_search_result
+        return self._add_entry_raw(AudioAnnotation, type_name, entry)
+
+    def add_grid_raw(
+        self,
+        type_name: str,
+        image_payload_idx: int,
+        tid: Optional[int] = None,
+        allow_duplicate=True,
+    ) -> int:
+
+        r"""
+        This function adds an image annotation entry with ``image_payload_idx``
+        indices to current data store object. Returns the ``tid`` for the
+        inserted entry.
+
+        Args:
+            type_name: The fully qualified type name of the new grid.
+            image_payload_idx: the index of the image payload.
+            tid: ``tid`` of the Annotation entry that is being added.
+                It's optional, and it will be
+                auto-assigned if not given.
+            allow_duplicate: Whether we allow duplicate in the DataStore. When
+                it's set to False, the function will return the ``tid`` of
+                existing entry if a duplicate is found. Default value is True.
+
+        Returns:
+            ``tid`` of the entry.
+        """
+        # We should create the `entry data` with the format
+        # [begin, end, tid, type_id, None, ...].
+        # A helper function _new_annotation() can be used to generate a
+        # annotation type entry data with default fields.
+        # A reference to the entry should be store in both self.__elements and
+        # self.__tid_ref_dict.
+        entry = self._new_grid(type_name, image_payload_idx, tid)
+
+        if not allow_duplicate:
+            tid_search_result = self._get_existing_ann_entry_tid(entry)
+            # if found existing entry
+            if tid_search_result != -1:
+                return tid_search_result
+        return self._add_entry_raw(Grids, type_name, entry)
 
     def _get_existing_ann_entry_tid(self, entry: List[Any]):
         r"""
