@@ -43,6 +43,7 @@ class DataStore(BaseStore):
     # TODO: temporarily disable this for development purposes.
     # pylint: disable=pointless-string-statement, protected-access
     # pylint: disable=attribute-defined-outside-init
+    # pylint: disable=too-many-public-methods
     _type_attributes: dict = {}
 
     def __init__(
