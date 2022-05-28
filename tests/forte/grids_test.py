@@ -35,11 +35,13 @@ class GridsTest(unittest.TestCase):
         line[3, 3] = 1
         line[4, 4] = 1
         self.datapack.payloads.append(line)
-        self.datapack.image_annotations.add(ImageAnnotation(self.datapack, 0))
+        self.datapack.image_annotations.append(
+            ImageAnnotation(self.datapack, 0)
+        )
 
         grids = Grids(self.datapack, 3, 4)
 
-        self.datapack.grids.add(grids)
+        self.datapack.grids.append(grids)
         self.zeros = np.zeros((6, 12))
         self.ref_arr = np.zeros((6, 12))
         self.ref_arr[2, 2] = 1
