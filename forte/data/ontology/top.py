@@ -812,8 +812,8 @@ class ImageAnnotation(Entry):
             image_payload_idx: the index of the image payload. If it's not set,
                 it defaults to 0 which means it will load the first image payload.
         """
-        super().__init__(pack)
         self._image_payload_idx = image_payload_idx
+        super().__init__(pack)
 
     @property
     def image_payload_idx(self) -> int:
