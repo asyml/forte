@@ -325,11 +325,10 @@ class DataStoreTest(unittest.TestCase):
         group_type = "forte.data.ontology.top.Group"
         sent_list = list(self.data_store._DataStore__elements[sent_type])
         doc_list = list(self.data_store._DataStore__elements[doc_type])
-        ann_list = (
-            list(self.data_store._DataStore__elements[ann_type])
-            + doc_list
-            + sent_list
-        )
+        ann_list = list(self.data_store.co_iterator_annotation_like(
+            list(self.data_store._get_all_subclass(ann_type, True))
+        ))
+
         group_list = list(self.data_store._DataStore__elements[group_type])
         sent_entries = list(self.data_store.all_entries(sent_type))
         doc_entries = list(self.data_store.all_entries(doc_type))
@@ -1125,6 +1124,25 @@ class DataStoreTest(unittest.TestCase):
                 "ft.onto.base_ontology.Title", forte.data.ontology.top.Link
             )
         )
+
+    def test_entry_conversion(self):
+        data_pack = DataPack()
+        data_pack._data_store = self.data_store
+        data_pack.set_text(
+            "Forte is a data-centric framework designed to engineer complex ML workflows. Forte allows practitioners to build ML components in a composable and modular way. Behind the scene, it introduces DataPack, a standardized data structure for unstructured data, distilling good software engineering practices such as reusability, extensibility, and flexibility into ML solutions."
+        )
+        for tid in self.data_store._DataStore__tid_ref_dict:
+            entry = data_pack._entry_converter.get_entry_object(
+                tid=tid, pack=data_pack
+            )
+            for attribute in self.data_store._get_entry_attributes_by_class(
+                self.data_store.get_entry(tid=tid)[1]
+            ):
+                entry_val = getattr(entry, attribute)
+                ref_val = self.data_store.get_attribute(tid=tid, attr_name=attribute)
+                if isinstance(ref_val, (list, dict)):
+                    continue
+                self.assertEqual(entry_val, ref_val)
 
 
 if __name__ == "__main__":
