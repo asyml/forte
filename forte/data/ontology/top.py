@@ -797,7 +797,7 @@ class AudioAnnotation(Entry):
 
 
 class ImageAnnotation(Entry):
-    def __init__(self, pack: PackType, image_payload_idx: int):
+    def __init__(self, pack: PackType, image_payload_idx: int = 0):
         """
         ImageAnnotation type entries, such as "edge" and "bounding box".
         Each ImageAnnotation has a ``image_payload_idx`` corresponding to its
@@ -809,8 +809,8 @@ class ImageAnnotation(Entry):
             image_payload_idx: A integer that represents the index of
                 the image in the payloads.
         """
-        super().__init__(pack)
         self._image_payload_idx = image_payload_idx
+        super().__init__(pack)
 
     @property
     def image_payload_idx(self) -> int:
@@ -849,7 +849,6 @@ class Grids(Entry):
         width: int,
         image_payload_idx: Optional[int] = None,
     ):
-        super().__init__(pack)
         if height <= 0 or width <= 0:
             raise ValueError(
                 f"height({height}) and "
@@ -861,7 +860,7 @@ class Grids(Entry):
             self._image_payload_idx = 0
         else:
             self._image_payload_idx = image_payload_idx
-
+        super().__init__(pack)
         self.img_arr = self.pack.get_image_array(self._image_payload_idx)
         self.c_h, self.c_w = (
             self.img_arr.shape[0] // self._height,

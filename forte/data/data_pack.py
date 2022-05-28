@@ -169,7 +169,9 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         self._data_store: DataStore = DataStore()
         self._entry_converter: EntryConverter = EntryConverter()
-
+        self.image_annotations: SortedList[ImageAnnotation] = SortedList()
+        self.grids: SortedList[Grids] = SortedList()
+        self.payloads: List[np.ndarray] = []
 
         self.__replace_back_operations: ReplaceOperationsType = []
         self.__processed_original_spans: List[Tuple[Span, Span]] = []
@@ -2001,6 +2003,20 @@ class EntryConverter:
                 type_name=entry.entry_type(),
                 begin=entry.begin,
                 end=entry.end,
+                tid=entry.tid,
+                allow_duplicate=allow_duplicate,
+            )
+        elif isinstance(entry, ImageAnnotation):
+            data_store_ref.add_image_annotation_raw(
+                type_name=entry.entry_type(),
+                image_payload_idx=entry.image_payload_idx,
+                tid=entry.tid,
+                allow_duplicate=allow_duplicate,
+            )
+        elif isinstance(entry, Grids):
+            data_store_ref.add_grid_raw(
+                type_name=entry.entry_type(),
+                image_payload_idx=entry.image_payload_idx,
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,
             )
