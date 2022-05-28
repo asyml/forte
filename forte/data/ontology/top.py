@@ -868,10 +868,7 @@ class Grids(Entry):
             )
         self._height = height
         self._width = width
-        if image_payload_idx is None:
-            self._image_payload_idx = 0
-        else:
-            self._image_payload_idx = image_payload_idx
+        self._image_payload_idx = image_payload_idx
         super().__init__(pack)
         self.img_arr = self.pack.get_image_array(self._image_payload_idx)
         self.c_h, self.c_w = (
