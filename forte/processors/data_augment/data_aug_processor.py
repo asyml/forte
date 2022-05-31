@@ -33,10 +33,10 @@ from forte.processors.data_augment.algorithms.base_data_augmentation_op import (
     BaseDataAugmentationOp,
 )
 
-__all__ = ["BaseOpProcessor"]
+__all__ = ["DataAugProcessor"]
 
 
-class BaseOpProcessor(MultiPackProcessor):
+class DataAugProcessor(MultiPackProcessor):
     r"""
     This is a Base Data Augmentation Op Processor that instantiates
     data augmentation ops into Forte Data Structures to be used. It can

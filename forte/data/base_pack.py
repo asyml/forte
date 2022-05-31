@@ -107,9 +107,16 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         self.__control_component: Optional[str] = None
 
         # This Dict maintains a mapping from entry's tid to the Entry object
-        # itself and the component name associated with the entry.
+        # itself (for MultiPack) or entry's tid (for DataPack) and the component
+        # name associated with the entry.
         # The component name is used for tracking the "creator" of this entry.
-        self._pending_entries: Dict[int, Tuple[Entry, Optional[str]]] = {}
+        # TODO: Will need to unify the format for MultiPack and DataPack after
+        #   DataStore is integrated with MultiPack and MultiPack entries. In
+        #   future we should only maintain a mapping from entry's tid to the
+        #   corresponding component, i.e., Dict[int, Optional[str]].
+        self._pending_entries: Dict[
+            int, Tuple[Union[int, Entry], Optional[str]]
+        ] = {}
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -128,6 +135,9 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
     @abstractmethod
     def _init_meta(self, pack_name: Optional[str] = None) -> BaseMeta:
         raise NotImplementedError
+
+    def get_control_component(self):
+        return self.__control_component
 
     def set_meta(self, **kwargs):
         for k, v in kwargs.items():
@@ -227,7 +237,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         raise NotImplementedError
 
     def add_entry(
-        self, entry: Entry, component_name: Optional[str] = None
+        self, entry: Union[Entry, int], component_name: Optional[str] = None
     ) -> EntryType:
         r"""Add an :class:`~forte.data.ontology.core.Entry` object to the
         :class:`~forte.data.base_pack.BasePack` object. Allow duplicate entries in a pack.
@@ -247,7 +257,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         return self._add_entry(entry)
 
     @abstractmethod
-    def _add_entry(self, entry: Entry) -> EntryType:
+    def _add_entry(self, entry: Union[Entry, int]) -> EntryType:
         r"""Add an :class:`~forte.data.ontology.core.Entry` object to the
         :class:`~forte.data.base_pack.BasePack` object. Allow duplicate entries in a pack.
 
@@ -362,7 +372,9 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         """
         self.__control_component = component
 
-    def record_entry(self, entry: Entry, component_name: Optional[str] = None):
+    def record_entry(
+        self, entry: Union[Entry, int], component_name: Optional[str] = None
+    ):
         c = component_name
 
         if c is None:
@@ -370,10 +382,11 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             c = self.__control_component
 
         if c is not None:
+            tid: int = entry.tid if isinstance(entry, Entry) else entry
             try:
-                self._creation_records[c].add(entry.tid)
+                self._creation_records[c].add(tid)
             except KeyError:
-                self._creation_records[c] = {entry.tid}
+                self._creation_records[c] = {tid}
 
     def record_field(self, entry_id: int, field_name: str):
         """
@@ -419,19 +432,6 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
         # Record that this entry hasn't been added to the index yet.
         self._pending_entries[entry.tid] = entry, c
-
-    def regret_creation(self, entry: EntryType):
-        """
-        Will remove the entry from the pending entries internal state of the
-        pack.
-
-        Args:
-            entry: The entry that we would not add the the pack anymore.
-
-        Returns:
-
-        """
-        self._pending_entries.pop(entry.tid)
 
     # TODO: how to make this return the precise type here?
     def get_entry(self, tid: int) -> EntryType:

@@ -21,8 +21,17 @@ import re
 import sys
 from typing import List, Dict, Tuple, Optional
 from urllib.parse import urlparse, parse_qs
+from forte.utils import create_import_error_msg
 
-import rdflib
+try:
+    import rdflib
+except ImportError as e:
+    raise ImportError(
+        create_import_error_msg(
+            "rbflib", "wikipedia", "DBpedia dataset supports"
+        )
+    ) from e
+
 
 dbpedia_prefix = "http://dbpedia.org/resource/"
 state_type = Tuple[rdflib.term.Node, rdflib.term.Node, rdflib.term.Node]

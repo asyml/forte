@@ -34,11 +34,10 @@ def main():
         "</p></body>"
     )
 
-
     # Assemble the pipeline:
     # A pipeline is consisted of a set of Components (readers and processors).
-    # The data flows in the pipeline as data packs, and each component will
-    # use or add information to the data packs.
+    # The data flows in the pipeline as ``DataPack``s, and each component will
+    # use or add information to the ``DataPack``s.
     pipeline = Pipeline[DataPack]()
 
     # Set HTMLReader as pipeline reader:
@@ -50,9 +49,19 @@ def main():
     # SpacyProcessor provides functions including sentence parsing, tokenize,
     # POS tagging, lemmatization, NER, and medical entity linking. This
     # processor will do user defined tasks according to configs.
-    pipeline.add(SpacyProcessor(), config={
-        "processors": ["sentence", "tokenize", "pos", "ner", "dep", "umls_link"]
-    })
+    pipeline.add(
+        SpacyProcessor(),
+        config={
+            "processors": [
+                "sentence",
+                "tokenize",
+                "pos",
+                "ner",
+                "dep",
+                "umls_link",
+            ]
+        },
+    )
 
     # Add StaveProcessor to visualize the processing results：
     # StaveProcessor provides easy visualization for forte users. We can
