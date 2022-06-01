@@ -24,6 +24,7 @@ from forte.data.data_pack import DataPack
 from forte.data.converter.feature import Feature
 from forte.data.base_extractor import BaseExtractor
 from forte.data.ontology import Annotation
+from forte.utils import create_import_error_msg
 
 logger = logging.getLogger(__name__)
 
@@ -49,10 +50,11 @@ class SubwordExtractor(BaseExtractor):
             )
         except ImportError as e:
             raise ImportError(
-                " `texar-pytorch` is not installed correctly."
-                " Please refer to [extra requirement for aug wrapper](pip install forte[extractor])"
-                " for more information. "
+                create_import_error_msg(
+                    "texar-pytorch", "extractor", "SubwordExtractor"
+                )
             ) from e
+
         self.tokenizer = BERTTokenizer(
             pretrained_model_name=self.config.pretrained_model_name,
             cache_dir=None,

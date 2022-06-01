@@ -27,48 +27,51 @@ you are most interested and get started!
 * [Forte](github.com/asyml/forte): Decompose and abstract complex NLP problems into
   multiple modules, and standardize the interface between the sub-problems and ML
   interface.
-* [Forte Wrappers](github.com/asyml/forte-wrappers): Decompose and abstract complex NLP
-  problems into multiple modules, and standardize the interface between the sub-problems
-  and ML interface.
+* [Forte Wrappers](github.com/asyml/forte-wrappers): Create Forte native composable
+  modules by creating adapters to the great ML tools built by the commuinity.
 * [Stave](github.com/asyml/stave): Provide visualization and annotation for NLP tasks,
   by providing generic UI elements based on the abstraction.
 
 ### Forte and Forte-Wrapper Package Convention
 
-We currently adopt a non-standard namespace packaging strategy. While this may introduce
-some constraints in development, this allows us to provide a unified user experience.
-The strategy, simply put, installs all Forte packages under "forte" module, but
-currently stored in two different repositories, as different projects.
+We adopt a namespace packaging strategy to coordinate different Forte projects
 
 #### Core Packages in Forte Main
 
-* forte: The root package contains the pipeline implementations, and defines
-  the `pipeline_component`.
+* forte: The root package contains the top-level Forte implementations, such as
+  `pipeline` and `pipeline-component`.
 * forte.data: contains main data relevant components, mainly implements the data pack
   system and the ontology system.
 * forte.dataset: contains readers to popular datasets.
 * forte.processors: Processors are core components that perform NLP tasks. This module
   currently contains some base processor implementations and simple processor examples.
-  We have
+  More processor examples can be found in the [Forte Wrappers](github.com/asyml/forte-wrappers)
+  repository.
 * forte.models: Contains our in-house development of some NLP models.
 * forte.common: configuration, exceptions and other sharable code.
 
-#### The `fortex` namespace and Forte Wrappers
+#### The `fortex` namespace for other Forte based projects
+We use the namespace packaging here to make sure different `fortex` projects can be installed
+at the same folder without conflicting with each other. In general, `fortex` is the shared namespace
+for different Forte-based projects. 
 
-* `fortex.xxx`: Forte Wrapper contains adapters of third party tools. Each tool is installed
+* `fortex.xxx`: Mainly used to host adapters of third party tools. Each tool is installed
   in its own namespace to avoid dependency conflicts. Each directory contains a standalone
   project and can be installed independently. *The project will be installed as
   `fortex.xxx` and under `fortex/xxx` folder in the site-packages.* For
-  example, `fortex.nltk` will be installed under `site_packages/fortex/nltk` folder via
-  `pip isntall forte.nltk` and the tool can be imported via `import fortex.nltk` and uninstalled
-  via `pip uninstall forte.nltk`.
+  example, `fortex.nltk` will be installed under `site_packages/fortex/nltk`.
 
 ### Ontology namespaces
+We have a similar package convention for the ontology code. 
+
 * The `ft.onto` namespace contains the core/basic ontology types defined by Forte, data types
-  in this namespace are mainly generic NLP concepts, such as "Sentence", "Token".
+  in this namespace are mainly generic ML data concepts, such as "Sentence", "Token". Mainly
+  the Forte developers will use this namespace. Since no namespace packaging is used here, if
+  another `ft` package is used, it may cause conflicts. So we advise you not to.
 * The `ftx` namespace supports namespace packaging:
   * We use `ftx.onto` namespace to show extra types for demo/example purposes.
-  * We are also working one additional types in the `ftx.xxx` namespace types for certain domains.
+  * We also develop in other `ftx.xxx` namespace types for certain domains where `xxx`
+    represents that domain.
 
 ### Report Bugs
 

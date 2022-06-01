@@ -84,6 +84,14 @@ class StaveReaderTest(unittest.TestCase):
         self.assertTrue(os.path.exists(self.sql_db))
 
     @data("project-1-example", "project-2-example")
+    @unittest.skip(
+        "The test is skipped because the serialization format in Stave is "
+        "outdated. Now we only support deserialization of DataPack whose "
+        "pack_version is no less than "
+        "``forte.version.PACK_ID_COMPATIBLE_VERSION``."
+    )
+    # TODO: Regenrate a new serialization string in Stave based on the new
+    # implementation with DataStore.
     def test_stave_reader_project(self, project_name: str):
         build_ontology(self.sql_db, project_name)
 

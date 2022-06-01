@@ -20,6 +20,7 @@ Unsupervised Data Augmentation for Consistency Training
 """
 from typing import Optional, List, Tuple, Iterator
 from torch import Tensor
+from forte.utils import create_import_error_msg
 
 try:
     from texar.torch.losses.info_loss import kl_divg_loss_with_logits
@@ -27,9 +28,9 @@ try:
     from texar.torch.data.data.dataset_utils import Batch
 except ImportError as err:
     raise ImportError(
-        " `texar` is not installed correctly."
-        " Please refer to [extra requirement for uda](pip install forte[data_aug]])"
-        " for more information. "
+        create_import_error_msg(
+            "texar-pytorch", "models", "Unsupervised Data Augmentation(UDA)"
+        )
     ) from err
 
 
