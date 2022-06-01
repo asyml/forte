@@ -22,6 +22,7 @@ from smart_open import open
 from demo.clinical import Description, Body
 from forte.data.data_pack import DataPack
 from forte.data.base_reader import PackReader
+from ft.onto.base_ontology import Document
 
 
 class Mimic3DischargeNoteReader(PackReader):
@@ -68,6 +69,7 @@ class Mimic3DischargeNoteReader(PackReader):
 
             Description(pack, 0, len(description))
             Body(pack, len(description) + len(delimiter), len(full_text))
+            Document(pack, 0, len(pack.text))
             self.__note_count += 1
             yield pack
 

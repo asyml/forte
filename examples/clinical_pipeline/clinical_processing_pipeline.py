@@ -15,16 +15,22 @@ from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
 from fortex.elastic import ElasticSearchPackIndexProcessor
+from forte.processors.writers import PackIdJsonPackWriter
 
 from forte.processors.writers import PackIdJsonPackWriter
 from ft.onto.base_ontology import Sentence, EntityMention
 #from fortex.huggingface.bio_ner_predictor import BioBERTNERPredictor
 from fortex.nltk import NLTKSentenceSegmenter
 
-from ftx.medical.clinical_ontology import NegationContext, MedicalEntityMention
-from forte_medical.processors.negation_context_analyzer import (
+from ftx.medical.clinical_ontology import (
+    NegationContext,
+    MedicalEntityMention,
+    MedicalArticle,
+)
+from fortex.health.processors.negation_context_analyzer import (
     NegationContextAnalyzer,
 )
+from fortex.health.processors.icd_coding_processor import ICDCodingProcessor
 
 def get_json(path: str):
     file_obj = open(path)
@@ -78,12 +84,26 @@ def main(input_path: str, output_path: str, max_packs: int = -1, run_ner_pipelin
         #pl.add(BioBERTNERPredictor(), config=config.BioBERTNERPredictor)
         pl.add(SpacyProcessor(), config.Spacy)
         pl.add(NegationContextAnalyzer())
-
+        pl.add(ICDCodingProcessor(),
+                {
+                    "entry_type": "ft.onto.base_ontology.Sentence",    
+                })
         pl.add(ElasticSearchPackIndexProcessor(),
-                {"indexer":{
+                {
+                    "indexer":{
                     "other_kwargs": {"refresh": True},
                 }})
-        
+        pl.add(
+            PackIdJsonPackWriter(),
+            {
+                "output_dir": output_path,
+                "indent": 2,
+                "overwrite": True,
+                "drop_record": True,
+                "zip_pack": False,
+            },
+        )
+
         pl.initialize()
 
         for idx, pack in enumerate(pl.process_dataset(input_path)):

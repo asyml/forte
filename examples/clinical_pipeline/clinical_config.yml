@@ -2,7 +2,7 @@ BERTTokenizer:
   model_path: "resources/NCBI-disease"
 
 Spacy:
-  processors: ["sentence", "tokenize", "pos", "ner", "umls_link"]
+  processors: ["sentence", "tokenize", "pos", "dep", "ner", "umls_link"]
   medical_onto_type: "ftx.medical.clinical_ontology.MedicalEntityMention"
   umls_onto_type: "ftx.medical.clinical_ontology.UMLSConceptLink"
   lang: "en_ner_bc5cdr_md"
