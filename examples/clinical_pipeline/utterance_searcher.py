@@ -2,7 +2,6 @@ import os
 import logging
 import sqlite3
 from typing import Dict, Any, Optional, List
-from stave_backend.lib.stave_session import StaveSession
 from fortex.elastic import ElasticSearchIndexer
 
 from forte.common import Resources, ProcessorConfigError
