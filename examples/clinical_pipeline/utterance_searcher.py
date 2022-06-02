@@ -75,13 +75,13 @@ class LastUtteranceSearcher(PackProcessor):
                 pack_id: str = source["doc_id"]
 
                 # Now you can write the pack into the database and generate url.
-                print (self.configs.query_result_project_id)
+                print(self.configs.query_result_project_id)
                 item = {
                     "name": f"clinical_results_{idx}",
                     "textPack": raw_pack_str,
                     "project_id": self.configs.query_result_project_id,
                 }
-                
+
                 db_id = sqlite_insert(conn, "stave_backend_document", item)
                 answers += [db_id]
                 print(pack_id, db_id)
@@ -95,8 +95,8 @@ class LastUtteranceSearcher(PackProcessor):
             else:
                 links: List[str] = create_links(self.configs.url_stub, answers)
                 response_text: str = (
-                        "I found the following results: <br> -- "
-                        + "<br> -- ".join(links)
+                    "I found the following results: <br> -- "
+                    + "<br> -- ".join(links)
                 )
                 print(response_text)
 
