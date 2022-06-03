@@ -14,7 +14,6 @@
 """
 Unit tests for AudioAnnotation.
 """
-from array import array
 import os
 import unittest
 import numpy as np

@@ -48,7 +48,7 @@ class EntryWithList(Generics):
         super().__init__(pack)
         self.entries = FList[ExampleEntry](self)
 
-
+@dataclass
 class EntryWithDict(Generics):
     """
     Test whether entries are stored correctly as a Dict using FDict.
@@ -178,6 +178,12 @@ class MultiEntryStructure(unittest.TestCase):
         self.assertEqual(re_mpe.refer_entry.tid, mpe.refer_entry.tid)
         self.assertEqual(re_mpe.tid, mpe.tid)
 
+    @unittest.skip(
+        "The test is skipped because the serialization format is outdated."
+        "Now we only support deserialization of DataPack whose pack_version"
+        " is no less than ``forte.version.PACK_ID_COMPATIBLE_VERSION``."
+    )
+    # TODO: Regenrate a new serialization string based on the new implementation with DataStore
     def test_mp_pointer_with_version(self):
         old_serialized_mp = """{"py/object": "forte.data.multi_pack.MultiPack", "py/state": {"_creation_records": {}, 
         "_field_records": {}, "links": [], "groups": [], "_meta": {"py/object": "forte.data.multi_pack.MultiPackMeta",
@@ -265,7 +271,7 @@ class EntryDataStructure(unittest.TestCase):
 
         # Make sure we stored index instead of raw data in list.
         for v in list_entry.entries.__dict__["_FList__data"]:
-            self.assertIsInstance(v, Pointer)
+            self.assertIsInstance(v, int)
 
         # Make sure the recovered entry is also correct.
         pack_str = self.pack.to_string(True)
@@ -288,7 +294,7 @@ class EntryDataStructure(unittest.TestCase):
 
         # Make sure we stored index (pointers) instead of raw data in dict.
         for v in first_dict_entry.entries.__dict__["_FDict__data"].values():
-            self.assertTrue(isinstance(v, Pointer))
+            self.assertTrue(isinstance(v, int))
 
         # Make sure the recovered entry is also correct.
         pack_str = self.pack.to_string(True)
@@ -302,6 +308,11 @@ class EntryDataStructure(unittest.TestCase):
 
         self.assertEqual(recovered_first.entries, first_dict_entry.entries)
 
+    @unittest.skip(
+        "The test is skipped because the serialization/deserialization methods"
+        " of ``Entry`` is no longer invoked during ``DataPack.from_string()``."
+        " DataPack now relies on DataStore for storing entries."
+    )
     def test_entry_key_memories(self):
         pack = (
             Pipeline[MultiPack]()
@@ -352,9 +363,10 @@ class NotHashingTest(unittest.TestCase):
         anno: Annotation = Annotation(self.pack, 0, 5)
         with self.assertRaises(TypeError):
             hash(anno)
-        anno.regret_creation()
 
         anno1: EntityMention = EntityMention(self.pack, 0, 2)
         with self.assertRaises(TypeError):
             hash(anno1)
-        anno1.regret_creation()
+
+if __name__ == "__main__":
+    unittest.main()
