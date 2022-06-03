@@ -13,63 +13,46 @@
 # limitations under the License.
 
 import random
-
-from typing import Tuple
+from typing import Tuple, Dict, Any
 import numpy as np
-
 
 from ft.onto.base_ontology import Annotation
 from forte.utils import create_import_error_msg
 from forte.common.configuration import Config
-from forte.processors.data_augment.algorithms.text_replacement_op import (
-    TextReplacementOp,
+from forte.processors.data_augment.algorithms.single_annotation_op import (
+    SingleAnnotationAugmentOp,
 )
+
+try:
+    from texar.torch.data import (
+        Vocab,
+        Embedding,
+    )
+except ImportError as e:
+    raise ImportError(
+        create_import_error_msg(
+            "texar-pytorch",
+            "data_aug",
+            "EmbeddingSimilarityReplacementOp",
+        )
+    ) from e
 
 __all__ = [
     "EmbeddingSimilarityReplacementOp",
 ]
 
 
-class EmbeddingSimilarityReplacementOp(TextReplacementOp):
+class EmbeddingSimilarityReplacementOp(SingleAnnotationAugmentOp):
     r"""
     This class is a replacement op leveraging pre-trained word
     embeddings, such as `word2vec` and `glove`, to replace the input
     word with another word with similar word embedding.
     By default, the replacement word is randomly chosen from the
     top k words with the most similar embeddings.
-
-    Args:
-        configs:
-            The config should contain the following key-value pairs:
-
-            - `vocab_path` (str):
-                The absolute path to the vocabulary file for
-                the pretrained embeddings
-
-            - `embed_hparams` (dict):
-                The hyper-parameters to initialize the
-                texar.torch.data.Embedding object.
-
-            - `top_k` (int):
-                the number of k most similar words to choose from
     """
 
     def __init__(self, configs: Config):
         super().__init__(configs)
-        try:
-            from texar.torch.data import (  # pylint:disable=import-outside-toplevel
-                Vocab,
-                Embedding,
-            )
-        except ImportError as e:
-            raise ImportError(
-                create_import_error_msg(
-                    "texar-pytorch",
-                    "data_aug",
-                    "EmbeddingSimilarityReplacementOp",
-                )
-            ) from e
-
         self.vocab = Vocab(self.configs["vocab_path"])
         embed_hparams = self.configs["embed_hparams"]
         embedding = Embedding(self.vocab.token_to_id_map_py, embed_hparams)
@@ -78,13 +61,15 @@ class EmbeddingSimilarityReplacementOp(TextReplacementOp):
             / np.sqrt((embedding.word_vecs**2).sum(axis=1))[:, np.newaxis]
         )
 
-    def replace(self, input_anno: Annotation) -> Tuple[bool, str]:
+    def single_annotation_augment(
+        self, input_anno: Annotation
+    ) -> Tuple[bool, str]:
         r"""
         This function replaces a word words with similar
         pretrained embeddings.
 
         Args:
-            input_anno: The input annotation.
+            input_anno (Annotation): The input annotation.
         Returns:
             A tuple of two values, where the first element is a boolean value
             indicating whether the replacement happens, and the second
@@ -107,3 +92,26 @@ class EmbeddingSimilarityReplacementOp(TextReplacementOp):
             and self.vocab.id_to_token_map_py[idx].lower() != word.lower()
         ]
         return True, random.choice(target_words)
+
+    @classmethod
+    def default_configs(cls) -> Dict[str, Any]:
+        r"""
+        returns:
+            A dictionary with the default config for this processor.
+        Following are the keys for this dictionary:
+            `"vocab_path"`: str
+                The absolute path to the vocabulary file for
+                the pretrained embeddings
+
+            `"embed_hparams"`: dict
+                The hyper-parameters to initialize the
+                texar.torch.data.Embedding object.
+
+            `"top_k"`: int
+                the number of k most similar words to choose from
+        """
+        return {
+            "vocab_path": "",
+            "embed_hparams": Embedding.default_hparams(),
+            "top_k": 0,
+        }
