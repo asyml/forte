@@ -26,7 +26,9 @@ from forte.data.multi_pack import MultiPack
 from forte.data.readers import StringReader
 from forte.data.selector import AllPackSelector
 from forte.pipeline import Pipeline
-from forte.processors.data_augment import ReplacementDataAugmentProcessor
+from forte.processors.data_augment.data_aug_processor import (
+    DataAugProcessor,
+)
 from forte.processors.data_augment.algorithms.embedding_similarity_replacement_op import (
     EmbeddingSimilarityReplacementOp,
 )
@@ -70,10 +72,13 @@ class TestEmbeddingSimilarityReplacementOp(unittest.TestCase):
         data_pack.set_text("google")
         token_1 = Token(data_pack, 0, 6)
         data_pack.add_entry(token_1)
-        is_replace, replaced_token = self.esa.replace(token_1)
-        self.assertTrue(is_replace)
+        augmented_data_pack = self.esa.perform_augmentation(data_pack)
+        augmented_token = list(
+            augmented_data_pack.get("ft.onto.base_ontology.Token")
+        )[0]
         self.assertIn(
-            replaced_token, ["yahoo", "aol", "microsoft", "web", "internet"]
+            augmented_token.text,
+            ["yahoo", "aol", "microsoft", "web", "internet"]
         )
 
     @data(
@@ -93,16 +98,15 @@ class TestEmbeddingSimilarityReplacementOp(unittest.TestCase):
         nlp.add(component=WhiteSpaceTokenizer(), selector=AllPackSelector())
 
         processor_config = {
-            "augment_entry": "ft.onto.base_ontology.Token",
-            "other_entry_policy": {
-                "ft.onto.base_ontology.Document": "auto_align",
-                "ft.onto.base_ontology.Sentence": "auto_align",
-            },
-            "type": "data_augmentation_op",
             "data_aug_op": "forte.processors.data_augment.algorithms"
             ".embedding_similarity_replacement_op."
             "EmbeddingSimilarityReplacementOp",
             "data_aug_op_config": {
+                "other_entry_policy": {
+                    "ft.onto.base_ontology.Document": "auto_align",
+                    "ft.onto.base_ontology.Sentence": "auto_align",
+                },
+                "augment_entry": "ft.onto.base_ontology.Token",
                 "vocab_path": self.abs_vocab_path,
                 "embed_hparams": self.embed_hparams,
                 "top_k": 1,
@@ -110,7 +114,7 @@ class TestEmbeddingSimilarityReplacementOp(unittest.TestCase):
             "augment_pack_names": {"input": "augmented_input"},
         }
         nlp.add(
-            component=ReplacementDataAugmentProcessor(), config=processor_config
+            component=(DataAugProcessor()), config=processor_config
         )
         nlp.initialize()
 
