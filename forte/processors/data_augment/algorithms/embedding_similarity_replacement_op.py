@@ -23,6 +23,20 @@ from forte.processors.data_augment.algorithms.single_annotation_op import (
     SingleAnnotationAugmentOp,
 )
 
+try:
+    from texar.torch.data import (
+        Vocab,
+        Embedding,
+    )
+except ImportError as e:
+    raise ImportError(
+        create_import_error_msg(
+            "texar-pytorch",
+            "data_aug",
+            "EmbeddingSimilarityReplacementOp",
+        )
+    ) from e
+
 __all__ = [
     "EmbeddingSimilarityReplacementOp",
 ]
@@ -39,19 +53,6 @@ class EmbeddingSimilarityReplacementOp(SingleAnnotationAugmentOp):
 
     def __init__(self, configs: Config):
         super().__init__(configs)
-        try:
-            from texar.torch.data import (  # pylint:disable=import-outside-toplevel
-                Vocab,
-                Embedding,
-            )
-        except ImportError as e:
-            raise ImportError(
-                create_import_error_msg(
-                    "texar-pytorch",
-                    "data_aug",
-                    "EmbeddingSimilarityReplacementOp",
-                )
-            ) from e
         self.vocab = Vocab(self.configs["vocab_path"])
         embed_hparams = self.configs["embed_hparams"]
         embedding = Embedding(self.vocab.token_to_id_map_py, embed_hparams)
@@ -111,18 +112,6 @@ class EmbeddingSimilarityReplacementOp(SingleAnnotationAugmentOp):
         """
         return {
             "vocab_path": "",
-            "embed_hparams": {
-                "file": "",
-                "dim": 50,
-                "read_fn": "load_word2vec",
-                "init_fn": {
-                    "type": "numpy.random.uniform",
-                    "kwargs": {
-                        "low": -0.1,
-                        "high": 0.1,
-                    },
-                },
-                "@no_typecheck": ["read_fn", "init_fn"],
-            },
+            "embed_hparams": Embedding.default_hparams(),
             "top_k": 0,
         }

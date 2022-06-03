@@ -26,8 +26,8 @@ from forte.data.multi_pack import MultiPack
 from forte.data.readers import StringReader
 from forte.data.selector import AllPackSelector
 from forte.pipeline import Pipeline
-from forte.processors.data_augment.base_op_processor import (
-    BaseOpProcessor,
+from forte.processors.data_augment.data_aug_processor import (
+    DataAugProcessor,
 )
 from forte.processors.data_augment.algorithms.embedding_similarity_replacement_op import (
     EmbeddingSimilarityReplacementOp,
@@ -114,7 +114,7 @@ class TestEmbeddingSimilarityReplacementOp(unittest.TestCase):
             "augment_pack_names": {"input": "augmented_input"},
         }
         nlp.add(
-            component=(BaseOpProcessor()), config=processor_config
+            component=(DataAugProcessor()), config=processor_config
         )
         nlp.initialize()
 
