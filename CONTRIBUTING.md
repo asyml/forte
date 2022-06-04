@@ -150,15 +150,15 @@ We also recommend using tools `pre-commit` that automates the checking process b
 
 
 
-
-
-
 You should take special care of the indentations in your documentation. Make sure the indents are consistent and follow the Google Style guide. All sections other than the heading should maintain a hanging indent of two or four spaces. Refer to the examples [here](https://google.github.io/styleguide/pyguide.html#383-functions-and-methods) for what is expected and what are the requirements for different sections like `args`, `lists`, `returns`, etc. Invalid indentations might trigger errors in `sphinx-build` and will cause confusing rendering of the documentation. You can run `sphinx-build` locally to see whether the generated docs look reasonable.
 
 Another aspect that should be noted is the format of links or cross-references of python objects. Make sure to follow the [sphinx cross-referencing syntax](https://www.sphinx-doc.org/en/master/usage/restructuredtext/roles.html#xref-syntax). ~~The references will be checked by [sphinx-build nit-picky mode](https://www.sphinx-doc.org/en/master/man/sphinx-build.html#cmdoption-sphinx-build-n) which raises warnings for all the missing and unresolvable links.~~
 
-### Jupyter Notebook
+### Tutorials and Jupyter Notebook
+We plan to deliver high quality tutorials via Jupyter notebooks.
 Notebooks are written under `docs/notebook_tutorial` folder, and we keep notebooks there for several reasons. First, it's friendly for new users to learn forte with a runnable notebook. Second, it can be rendered directly by the sphinx documentation pacakge by including the relative path to notebook in `docs/index_toc.rst`. It is straightforward for users to make references on how to use forte with the context of application. Third, we write notebook testing under `tests/forte/notebook` to ensure the notebook is runnable as API changes.
+
+Tutorials may use large assets like screenshots and illustrations. To keep them away from the main branch that may make a regular clone too slow, we now organize these assets in a separated "assets" [branch](https://github.com/asyml/forte/tree/assets) to host the assets.
 
 #### Notebook Rendering
 Jupyter notebook written under `docs/notebook_tutorial` will be rendered in the sphinx documentation using package `nbsphinx`. You need to make sure notebook can be rendered normally in sphinx documentation. After writing notebook under , run this [command](https://github.com/asyml/forte/blob/ae3d46884c26bac95893cbbecfaf86168a039bdc/.github/workflows/main.yml#L135) under docs folder. It might give you some sphinx warnings and you need to fix them.
