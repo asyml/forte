@@ -105,7 +105,8 @@ class NLTKPOSTagger(PackProcessor):
     def _process(self, input_pack: DataPack):
         # get a list of token data entries from `input_pack`
         # using `DataPack.get()`` method
-        token_texts = [token.text for token in input_pack.get(Token)]
+        token_entries = input_pack.get(Token)
+        token_texts = [token.text for token in token_entries]
 
         # use nltk pos tagging module to tag token texts
         taggings = nltk.pos_tag(token_texts)
