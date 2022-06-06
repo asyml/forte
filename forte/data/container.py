@@ -71,10 +71,6 @@ class EntryContainer(Generic[E, L, G]):
         raise NotImplementedError
 
     @abstractmethod
-    def regret_creation(self, entry: E):
-        raise NotImplementedError
-
-    @abstractmethod
     def record_field(self, entry_id: int, field_name: str):
         raise NotImplementedError
 
