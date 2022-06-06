@@ -26,7 +26,7 @@ from forte.data.multi_pack import MultiPack, DataPack
 from forte.data.readers import StringReader
 from forte.data.caster import MultiPackBoxer
 from forte.processors.misc import PeriodSentenceSplitter
-from forte.processors.data_augment.base_op_processor import BaseOpProcessor
+from forte.processors.data_augment.data_aug_processor import DataAugProcessor
 from forte.processors.base import PackProcessor
 from forte.processors.misc import WhiteSpaceTokenizer
 
@@ -145,7 +145,7 @@ class TestWordSplittingProcessor(unittest.TestCase):
             },
         }
         self.nlp.add(
-            component=BaseOpProcessor(),
+            component=DataAugProcessor(),
             config=entity_config,
         )
         self.nlp.initialize()

@@ -192,9 +192,6 @@ class Entry(Generic[ContainerType]):
         self.pack._validate(self)
         self.pack.on_entry_creation(self)
 
-    def regret_creation(self):
-        self.__pack.regret_creation(self)
-
     def __getstate__(self):
         r"""In serialization, the pack is not serialize, and it will be set
         by the container.
@@ -465,19 +462,18 @@ ParentEntryType = TypeVar("ParentEntryType", bound=Entry)
 class FList(Generic[ParentEntryType], MutableSequence):
     """
     FList allows the elements to be Forte entries. FList will internally
-    stores the entry as their tid to avoid nesting.
+    deal with a refernce list from DataStore which stores the entry as their
+    tid to avoid nesting.
     """
 
     def __init__(
         self,
         parent_entry: ParentEntryType,
-        data: Optional[Iterable[EntryType]] = None,
+        data: Optional[List[int]] = None,
     ):
         super().__init__()
         self.__parent_entry = parent_entry
-        self.__data: List[BasePointer] = []
-        if data is not None:
-            self.__data = [d.as_pointer(self.__parent_entry) for d in data]
+        self.__data: List[int] = [] if data is None else data
 
     def __eq__(self, other):
         return self.__data == other._FList__data
@@ -505,7 +501,7 @@ class FList(Generic[ParentEntryType], MutableSequence):
         self.__parent_entry = parent_entry
 
     def insert(self, index: int, entry: EntryType):
-        self.__data.insert(index, entry.as_pointer(self.__parent_entry))
+        self.__data.insert(index, entry.tid)
 
     @overload
     @abstractmethod
@@ -522,11 +518,11 @@ class FList(Generic[ParentEntryType], MutableSequence):
     ) -> Union[EntryType, MutableSequence]:
         if isinstance(index, slice):
             return [
-                self.__parent_entry._resolve_pointer(d)
-                for d in self.__data[index]
+                self.__parent_entry.pack.get_entry(tid)
+                for tid in self.__data[index]
             ]
         else:
-            return self.__parent_entry._resolve_pointer(self.__data[index])
+            return self.__parent_entry.pack.get_entry(self.__data[index])
 
     def __setitem__(
         self,
@@ -534,13 +530,9 @@ class FList(Generic[ParentEntryType], MutableSequence):
         value: Union[EntryType, Iterable[EntryType]],
     ) -> None:
         if isinstance(index, int):
-            self.__data[index] = value.as_pointer(  # type: ignore
-                self.__parent_entry
-            )
+            self.__data[index] = value.tid  # type: ignore
         else:
-            self.__data[index] = [
-                v.as_pointer(self.__parent_entry) for v in value  # type: ignore
-            ]
+            self.__data[index] = [v.tid for v in value]  # type: ignore
 
     def __delitem__(self, index: Union[int, slice]) -> None:
         del self.__data[index]
@@ -556,24 +548,19 @@ ValueType = TypeVar("ValueType", bound=Entry)
 class FDict(Generic[KeyType, ValueType], MutableMapping):
     """
     FDict allows the values to be Forte entries. FDict will internally
-    stores the entry as their tid to avoid nesting. Note that key is not
-    supported to be entries now.
+    deal with a refernce dict from DataStore which stores the entry as their
+    tid to avoid nesting. Note that key is not supported to be entries now.
     """
 
     def __init__(
         self,
         parent_entry: ParentEntryType,
-        data: Optional[Dict[KeyType, ValueType]] = None,
+        data: Optional[Dict[KeyType, int]] = None,
     ):
         super().__init__()
 
         self.__parent_entry = parent_entry
-        self.__data: Dict[KeyType, BasePointer] = {}
-
-        if data is not None:
-            self.__data = {
-                k: v.as_pointer(self.__parent_entry) for k, v in data.items()
-            }
+        self.__data: Dict[KeyType, int] = {} if data is None else data
 
     def _set_parent(self, parent_entry: ParentEntryType):
         self.__parent_entry = parent_entry
@@ -602,7 +589,7 @@ class FDict(Generic[KeyType, ValueType], MutableMapping):
 
     def __setitem__(self, k: KeyType, v: ValueType) -> None:
         try:
-            self.__data[k] = v.as_pointer(self.__parent_entry)
+            self.__data[k] = v.tid
         except AttributeError as e:
             raise AttributeError(
                 f"Item of the FDict must be of type entry, "
@@ -613,7 +600,7 @@ class FDict(Generic[KeyType, ValueType], MutableMapping):
         del self.__data[k]
 
     def __getitem__(self, k: KeyType) -> ValueType:
-        return self.__parent_entry._resolve_pointer(self.__data[k])
+        return self.__parent_entry.pack.get_entry(self.__data[k])
 
     def __len__(self) -> int:
         return len(self.__data)

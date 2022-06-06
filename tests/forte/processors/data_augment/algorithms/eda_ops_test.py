@@ -23,7 +23,7 @@ from forte.pipeline import Pipeline
 from forte.data.multi_pack import MultiPack
 from forte.data.readers import StringReader
 from forte.data.caster import MultiPackBoxer
-from forte.processors.data_augment.base_op_processor import BaseOpProcessor
+from forte.processors.data_augment.data_aug_processor import DataAugProcessor
 from forte.processors.misc import WhiteSpaceTokenizer
 from ft.onto.base_ontology import Token
 
@@ -84,7 +84,7 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
             "data_aug_op": "forte.processors.data_augment.algorithms.eda_ops.RandomSwapDataAugmentOp"
         }
 
-        self.nlp.add(component=BaseOpProcessor(), config=swap_config)
+        self.nlp.add(component=DataAugProcessor(), config=swap_config)
         self.nlp.initialize()
 
         for idx, m_pack in enumerate(self.nlp.process_dataset(texts)):
@@ -136,7 +136,7 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
             "data_aug_op": "forte.processors.data_augment.algorithms.eda_ops.RandomInsertionDataAugmentOp"
         }
 
-        self.nlp.add(component=BaseOpProcessor(), config=insert_config)
+        self.nlp.add(component=DataAugProcessor(), config=insert_config)
         self.nlp.initialize()
 
         for idx, m_pack in enumerate(self.nlp.process_dataset(texts)):
@@ -179,7 +179,7 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
         }
 
         self.nlp.add(
-            component=BaseOpProcessor(),
+            component=DataAugProcessor(),
             config=insert_config,
         )
         self.nlp.initialize()
