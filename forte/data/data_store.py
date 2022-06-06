@@ -11,24 +11,39 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Dict, List, Iterator, Tuple, Optional, Any
+
+from typing import Dict, List, Iterator, Tuple, Optional, Any, Type
 import uuid
-from bisect import bisect_left
+import logging
 from heapq import heappush, heappop
 from sortedcontainers import SortedList
+from typing_inspect import get_origin
 
 from forte.utils import get_class
 from forte.data.base_store import BaseStore
-from forte.data.ontology.top import Annotation, AudioAnnotation
+from forte.data.ontology.top import (
+    Annotation,
+    AudioAnnotation,
+    Grids,
+    Group,
+    ImageAnnotation,
+    Link,
+    Generics,
+)
+from forte.data.ontology.core import Entry, FList, FDict
 from forte.common import constants
 from forte.utils.utils import get_full_module_name
+
+logger = logging.getLogger(__name__)
 
 __all__ = ["DataStore"]
 
 
 class DataStore(BaseStore):
     # TODO: temporarily disable this for development purposes.
-    # pylint: disable=pointless-string-statement
+    # pylint: disable=pointless-string-statement, protected-access
+    # pylint: disable=attribute-defined-outside-init
+    # pylint: disable=too-many-public-methods
     _type_attributes: dict = {}
 
     def __init__(
@@ -139,7 +154,7 @@ class DataStore(BaseStore):
         ancestors of this type.
 
         This structure is supposed to be built dynamically. When a user adds
-        new entries, data_store will check unknown types and add them to
+        new entries, `DataStore` will check unknown types and add them to
         ``_type_attributes``.
 
         Example:
@@ -222,6 +237,234 @@ class DataStore(BaseStore):
             "forte.data.ontology.top.Link": 3}
         """
         self.__deletion_count: dict = {}
+
+    def __getstate__(self):
+        r"""
+        In serialization,
+            1) will serialize the annotation sorted list as a normal list;
+            2) will remove `tid_ref_dict`, `tid_idx_dict` and `deletion_count`
+                to save space.
+        """
+        state = super().__getstate__()
+        for k in state["_DataStore__elements"]:
+            # build the full `_type_attributes`
+            self._get_type_info(k)
+            state["_DataStore__elements"][k] = list(
+                state["_DataStore__elements"][k]
+            )
+        state.pop("_DataStore__tid_ref_dict")
+        state.pop("_DataStore__tid_idx_dict")
+        state.pop("_DataStore__deletion_count")
+        state["entries"] = state.pop("_DataStore__elements")
+        state["fields"] = self._type_attributes
+        for _, v in state["fields"].items():
+            if "parent_class" in v:
+                v.pop("parent_class")
+        return state
+
+    def __setstate__(self, state):
+        r"""
+        In deserialization, we
+            1) transform the annotation list back to a sorted list;
+            2) recreate the `tid_ref_dict` and `tid_idx_dict` from `__elements`;
+            3) reset the `deletion_count`.
+        """
+        self.__dict__.update(state)
+        self.__elements = self.__dict__.pop("entries")
+        self._type_attributes = self.__dict__.pop("fields", {})
+        self._DataStore__tid_ref_dict = {}
+        self._DataStore__tid_idx_dict = {}
+        self._DataStore__deletion_count = {}
+
+        reset_index = {}
+        for k in self.__elements:
+            if self._is_annotation(k):
+                # convert list back to sorted list
+                self.__elements[k] = SortedList(self.__elements[k])
+            else:
+                # remove None placeholders in non-annotation-like entry lists
+                self.__elements[k][:] = [
+                    x for x in self.__elements[k] if x is not None
+                ]
+            for e in self.__elements[k]:
+                if self._is_annotation(k):
+                    # annotation-like
+                    # recreate `tid_ref_dict`
+                    self._DataStore__tid_ref_dict[e[constants.TID_INDEX]] = e
+                else:
+                    # non-annotation-like
+                    # use `reset_index` to recalculate indices
+                    type_name = e[constants.ENTRY_TYPE_INDEX]
+                    # Count how many times each type occurs to know the number
+                    # of existing entries of each type. Assign the count of
+                    # `type_name` to the index of this entry.
+                    if type_name in reset_index:
+                        reset_index[type_name] += 1
+                    else:
+                        reset_index[type_name] = 0
+                    # record tid and its corresponding type name and index
+                    self._DataStore__tid_idx_dict[e[constants.TID_INDEX]] = [
+                        type_name,
+                        reset_index[type_name],
+                    ]
+
+    @classmethod
+    def deserialize(
+        cls,
+        data_source: str,
+        serialize_method: str = "json",
+        check_attribute: bool = True,
+        suppress_warning: bool = True,
+        accept_unknown_attribute: bool = True,
+    ) -> "DataStore":
+        """
+        Deserialize a `DataStore` from serialized data in `data_source`.
+
+        Args:
+            data_source: The path storing data source.
+            serialize_method: The method used to serialize the data, this
+                should be the same as how serialization is done. The current
+                option is `json`.
+            check_attribute: Boolean value indicating whether users want to
+                check compatibility of attributes. Only applicable when the
+                data being serialized is done with `save_attribute` set to
+                True in BaseStore.serialize. If true, it will compare fields
+                of the serialized object and the current `DataStore` class.
+                If there are fields that have different orders in the current
+                class and the serialized object, it switches the order of
+                fields to match the current class.
+                If there are fields that appear in the current class, but not in
+                the serialized object, it handles those fields with
+                `accept_unknown_attribute`.
+                If there are fields that appear in the serialized object, but
+                not in the current class, it drops those fields.
+            suppress_warning: Boolean value indicating whether users want to
+                see warnings when it checks attributes. Only applicable when
+                `check_attribute` is set to True. If true, it will
+                log warnings when there are mismatched fields.
+            accept_unknown_attribute: Boolean value indicating whether users
+                want to fill fields that appear in the current class, but not
+                in the serialized object with none. Only applicable when
+                `check_attribute` is set to True. If false, it will raise
+                an `ValueError` if there are any contradictions in fields.
+
+        Raises:
+            ValueError: raised when
+                1. the serialized object has unknown fields, but
+                    `accept_unknown_attribute` is False.
+                2. the serialized object does not store attributes, but
+                    `check_attribute` is True.
+                3. the serialized object does not support json deserialization.
+                    We may change this error when we have other options for
+                    deserialization.
+
+        Returns:
+            An data store object deserialized from the string.
+        """
+
+        def check_fields(store):
+            """
+            A helper function that compares fields of the serialized object and
+            the current `DataStore` class.
+
+            Args:
+                store: The serialized object we want to check and process.
+
+            Returns:
+                The data store object after we process its fields.
+            """
+            for t, v in cls._type_attributes.items():
+                change_map = {}
+                contradict_loc = []
+                # attribute.items() contains attribute names and attribute indices.
+                # The difference in two sets could find fields that appear in the
+                # current class, but not in the serialized objects,
+                # or fields that have different orders in the current class
+                # and the serialized objects.
+                # If a field only occurs in the serialized object but not in
+                # the current class, it will not be detected.
+                # Instead, it will be dropped later.
+                diff = set(v["attributes"].items()) - set(
+                    store._type_attributes[t]["attributes"].items()
+                )
+                for f in diff:
+                    # if fields appear in both the current class and the
+                    # serialized objects but have different orders, switch
+                    # fields to match the order of the current class.
+                    if f[0] in store._type_attributes[t]["attributes"]:
+                        # record indices of the same field in the class and
+                        # objects. Save different indices to a dictionary.
+                        change_map[f[1]] = store._type_attributes[t][
+                            "attributes"
+                        ][f[0]]
+                    # record indices of fields that only appear in the
+                    # current class. We want to fill them with None.
+                    else:
+                        contradict_loc.append(f[1])
+
+                if len(change_map) > 0:
+                    if not suppress_warning:
+                        logger.warning(
+                            "Saved %s objects have %s different orders of "
+                            "attribute fields to the current datastore. "
+                            "They are reordered to match the fields in "
+                            "the current datastore class.",
+                            t,
+                            len(change_map),
+                        )
+                    # switch the order of fields for the serialized objects
+                    for d in store._DataStore__elements[t]:
+                        d[:] = [
+                            d[change_map[i]] if i in change_map else d[i]
+                            # throw fields that are redundant/only appear in
+                            # the serialized object
+                            for i in range(max(v["attributes"].values()) + 1)
+                        ]
+                if len(contradict_loc) > 0:
+                    if not suppress_warning:
+                        logger.warning(
+                            "Saved %s objects have %s attribute fields "
+                            "that could not be identified. "
+                            "These fields are filled with `None`. This may "
+                            "due to user's modifications of fields.",
+                            t,
+                            len(contradict_loc),
+                        )
+                    if accept_unknown_attribute:
+                        # fill fields that only appear in the current class
+                        # but not in the serialized objects with None.
+                        for d in store._DataStore__elements[t]:
+                            for idx in contradict_loc:
+                                d[idx] = None
+                    else:
+                        raise ValueError(
+                            f"Saved {t} objects have unidentified fields "
+                            "at indices "
+                            f"{', '.join(str(v) for v in contradict_loc)}, "
+                            "which raise an error."
+                        )
+            return store
+
+        state = cls._deserialize(data_source, serialize_method)
+        # The following part is for customized json method only.
+        if isinstance(state, dict):
+            obj = DataStore()
+            obj.__setstate__(state)
+        else:
+            raise ValueError(
+                "The serialized object that you want to"
+                " deserialize does not support json deserialization."
+            )
+        if check_attribute:
+            if len(obj._type_attributes) == 0:
+                raise ValueError(
+                    "The serialized object that you want to deserialize does"
+                    " not support check_attribute."
+                )
+            if cls._type_attributes != obj._type_attributes:
+                obj = check_fields(obj)
+        delattr(obj, "_type_attributes")
+        return obj
 
     def _new_tid(self) -> int:
         r"""This function generates a new ``tid`` for an entry."""
@@ -318,18 +561,36 @@ class DataStore(BaseStore):
         """
         return self._get_type_info(type_name)["parent_class"]
 
-    def _num_attributes_for_type(self, type_name: str) -> int:
-        """Get the length of the attribute dict of an entry type.
+    def _default_attributes_for_type(self, type_name: str) -> List:
+        """Get a list of attributes of an entry type with their default values.
+        If an attribute is annotated with `FList` or `List`, then the default
+        value is an empty list `[]`. When an attribute is annotated with `FDict`
+        or `Dict` then the default value will be an empty dictionary `{}`. For
+        all other cases (including primitive types, Union, NoneType, etc.) the
+        default value will be set to `None`.
+
         Args:
             type_name (str): The fully qualified type name of the new entry.
         Returns:
-            attr_dict (dict): The attributes-to-index dict of an entry.
+            attr_dict (list): A list of attributes with default values.
         """
-        return len(self._get_type_attribute_dict(type_name))
+        attr_dict: Dict = self._get_type_attribute_dict(type_name)
+        attr_fields: Dict = self._get_entry_attributes_by_class(type_name)
+        attr_list: List = [None] * len(attr_dict)
+        for attr_name, attr_id in attr_dict.items():
+            # TODO: We should keep a record of the attribute class instead of
+            # inspecting the class on the fly.
+            attr_class = get_origin(attr_fields[attr_name].type)
+            if attr_class in (FList, list, List):
+                attr_list[attr_id - constants.ATTR_BEGIN_INDEX] = []
+            elif attr_class in (FDict, dict, Dict):
+                attr_list[attr_id - constants.ATTR_BEGIN_INDEX] = {}
+        return attr_list
 
-    def _new_annotation(self, type_name: str, begin: int, end: int) -> List:
+    def _new_annotation(
+        self, type_name: str, begin: int, end: int, tid: Optional[int] = None
+    ) -> List:
         r"""This function generates a new annotation with default fields.
-        All default fields are filled with None.
         Called by add_annotation_raw() to create a new annotation with
         ``type_name``, ``begin``, and ``end``.
 
@@ -337,24 +598,102 @@ class DataStore(BaseStore):
             type_name: The fully qualified type name of the new entry.
             begin: Begin index of the entry.
             end: End index of the entry.
+            tid: ``tid`` of the ``Annotation``. It's optional, and it will be
+                auto-assigned if not given.
 
         Returns:
             A list representing a new annotation type entry data.
         """
 
-        tid: int = self._new_tid()
+        tid: int = self._new_tid() if tid is None else tid
         entry: List[Any]
 
         entry = [begin, end, tid, type_name]
-        entry += self._num_attributes_for_type(type_name) * [None]
+        entry += self._default_attributes_for_type(type_name)
+
+        return entry
+
+    def _new_audio_annotation(
+        self, type_name: str, begin: int, end: int, tid: Optional[int] = None
+    ) -> List:
+        r"""This function generates a new audio annotation with default fields.
+        Called by add_audio_annotation_raw() to create a new audio annotation
+        with ``type_name``, ``begin``, ``end`` and optional ``tid``.
+
+
+        Args:
+            type_name: The fully qualified type name of the new entry.
+            begin: Begin index of the entry.
+            end: End index of the entry.
+
+        Returns:
+            A list representing a new audio annotation type entry data.
+        """
+
+        tid: int = self._new_tid() if tid is None else tid
+        entry: List[Any]
+
+        entry = [begin, end, tid, type_name]
+        entry += self._default_attributes_for_type(type_name)
+
+        return entry
+
+    def _new_image_annotation(
+        self, type_name: str, image_payload_idx: int, tid: Optional[int] = None
+    ) -> List:
+        r"""This function generates a new image annotation with default fields.
+        Called by add_image_annotation_raw() to create a new image annotation
+        with ``type_name``, ``image_payload_idx`` and optional ``tid``.
+
+
+        Args:
+            type_name: The fully qualified type name of the new entry.
+            image_payload_idx: The index of the image in payloads.
+
+        Returns:
+            A list representing a new image annotation type entry data.
+        """
+
+        tid: int = self._new_tid() if tid is None else tid
+        entry: List[Any]
+
+        entry = [image_payload_idx, None, tid, type_name]
+        entry += self._default_attributes_for_type(type_name)
+
+        return entry
+
+    def _new_grid(
+        self, type_name: str, image_payload_idx: int, tid: Optional[int] = None
+    ) -> List:
+        r"""This function generates a new grid with default fields.
+        Called by add_grid_raw() to create a new grid
+        with ``type_name``, ``image_payload_idx`` and optional ``tid``.
+
+
+        Args:
+            type_name: The fully qualified type name of the new entry.
+            image_payload_idx: The index of the image in payloads.
+
+        Returns:
+            A list representing a new grid type entry data.
+        """
+
+        tid: int = self._new_tid() if tid is None else tid
+        entry: List[Any]
+
+        entry = [image_payload_idx, None, tid, type_name]
+        entry += self._default_attributes_for_type(type_name)
 
         return entry
 
     def _new_link(
-        self, type_name: str, parent_tid: int, child_tid: int
+        self,
+        type_name: str,
+        parent_tid: int,
+        child_tid: int,
+        tid: Optional[int] = None,
     ) -> List:
-        r"""This function generates a new link with default fields. All
-        default fields are filled with None.
+        r"""This function generates a new link with default fields.
         Called by add_link_raw() to create a new link with ``type_name``,
         ``parent_tid``, and ``child_tid``.
 
@@ -362,37 +701,61 @@ class DataStore(BaseStore):
             type_name: The fully qualified type name of the new entry.
             parent_tid: ``tid`` of the parent entry.
             child_tid: ``tid`` of the child entry.
+            tid: ``tid`` of the ``Link`` entry. It's optional, and it will be
+                auto-assigned if not given.
 
         Returns:
             A list representing a new link type entry data.
         """
 
-        tid: int = self._new_tid()
+        tid: int = self._new_tid() if tid is None else tid
         entry: List[Any]
 
         entry = [parent_tid, child_tid, tid, type_name]
-        entry += self._num_attributes_for_type(type_name) * [None]
+        entry += self._default_attributes_for_type(type_name)
 
         return entry
 
-    def _new_group(self, type_name: str, member_type: str) -> List:
-        r"""This function generates a new group with default fields. All
-        default fields are filled with None.
+    def _new_group(
+        self, type_name: str, member_type: str, tid: Optional[int] = None
+    ) -> List:
+        r"""This function generates a new group with default fields.
         Called by add_group_raw() to create a new group with
         ``type_name`` and ``member_type``.
 
         Args:
             type_name: The fully qualified type name of the new entry.
             member_type: Fully qualified name of its members.
+            tid: ``tid`` of the ``Group`` entry. It's optional, and it will be
+                auto-assigned if not given.
 
         Returns:
             A list representing a new group type entry data.
         """
 
-        tid: int = self._new_tid()
+        tid: int = self._new_tid() if tid is None else tid
 
         entry = [member_type, [], tid, type_name]
-        entry += self._num_attributes_for_type(type_name) * [None]
+        entry += self._default_attributes_for_type(type_name)
+
+        return entry
+
+    def _new_generics(self, type_name: str, tid: Optional[int] = None):
+        r"""This function generates a new generics with default fields.
+        Called by add_generics_raw() to create a new generics with
+        ``type_name``.
+
+        Args:
+            type_name: The fully qualified type name of the new entry.
+            tid: ``tid`` of the generics entry.
+
+        Returns:
+            A list representing a new generics type entry data.
+        """
+        tid: int = self._new_tid() if tid is None else tid
+
+        entry = [None, None, tid, type_name]
+        entry += self._default_attributes_for_type(type_name)
 
         return entry
 
@@ -401,8 +764,9 @@ class DataStore(BaseStore):
     ) -> bool:
         r"""This function takes a fully qualified ``type_name`` class name,
         ``cls`` class and returns whether ``type_name``  class is the``cls``
-        subclass or not. This function accept two types of class: the class
-        defined in forte, or the classes in user provided ontology file.
+        subclass or not. This function accepts two types of class: the class defined
+        in forte, or the classes in user provided ontology file.
+
 
         Args:
             type_name: A fully qualified name of an entry class.
@@ -438,6 +802,29 @@ class DataStore(BaseStore):
                 else:
                     return False
 
+    def _get_all_subclass(self, entry_type_name: str, inclusive: bool = False):
+        """
+        Get all subclasses of ``entry_type_name``.
+
+        Args:
+            entry_type_name (str): subclasses of entry of ``entry_type_name``
+                will be yielded if it's in ``DataStore`` storage.
+            inclusive: if it's True, then ``entry_type_name`` itself will be
+                yielded. False otherwise.
+
+
+        Yields:
+            subclass entry type name of ``entry_type_name``
+        """
+        for entry_type_key in sorted(self.__elements.keys()):
+            if (
+                entry_type_key == entry_type_name and inclusive
+            ) or self._is_subclass(
+                entry_type_key,
+                get_class(entry_type_name),
+            ):
+                yield entry_type_key
+
     def _is_annotation(self, type_name: str) -> bool:
         r"""This function takes a type_name and returns whether a type
         is an annotation type or not.
@@ -451,6 +838,103 @@ class DataStore(BaseStore):
         # TODO: use is_subclass() in DataStore to replace this
         entry_class = get_class(type_name)
         return issubclass(entry_class, (Annotation, AudioAnnotation))
+
+    def all_entries(self, entry_type_name: str) -> Iterator[List]:
+        """
+        Retrieve all entry data of entry type ``entry_type_name`` and
+        entries of subclasses of entry type ``entry_type_name``.
+
+        Args:
+            entry_type_name (str): the type name of entries that the User wants to retrieve.
+
+        Yields:
+            Iterator of raw entry data in list format.
+        """
+        all_subclass = self._get_all_subclass(entry_type_name, True)
+        if self._is_annotation(type_name=entry_type_name):
+            # When the input type is an annotation-like entry, we use
+            # `co_iterator_annotation_like` to maintain the correct order.
+            yield from self.co_iterator_annotation_like(
+                type_names=list(all_subclass)
+            )
+        else:
+            for entry_type_key in all_subclass:
+                yield from self.iter(entry_type_key)
+
+    def num_entries(self, entry_type_name: str) -> int:
+        """
+        Compute the number of entries of given ``entry_type_name`` and
+        entries of subclasses of entry type ``entry_type_name``.
+
+        Args:
+            entry_type_name (str): the type name of entries that the User wants to get its count.
+
+        Returns:
+            The number of entries of given ``entry_type_name``.
+        """
+        count = 0
+        for entry_type_key in self._get_all_subclass(entry_type_name, True):
+            count += len(self.__elements[entry_type_key])
+            # if non-annotation-like entries_type_name
+            # we need to minus the corresponding delete count
+            if entry_type_key in self.__deletion_count:
+                count -= self.__deletion_count[entry_type_key]
+        return count
+
+    def _add_entry_raw(
+        self,
+        entry_type: Type[Entry],
+        type_name: str,
+        entry: List[Any],
+    ):
+        """
+        This function add raw entry in DataStore object
+        based on corresponding type name
+         and sort them based on entry type.
+
+        Args:
+            entry_type: entry's type which decides the sorting of entry.
+            type_name: The name of type in `self.__elements`.
+            entry: raw entry data in the list format.
+
+        Raises:
+            KeyError: raised when the entry type name is not in
+                `self.__elements`.
+            NotImplementedError: raised when the entry type being added is not
+                supported, currently supporting `Annotation`,
+                `AudioAnnotation`, `Link`, `Group`, `Generics`.
+
+        Returns:
+            ``tid`` of the entry.
+        """
+        if entry_type in (Annotation, AudioAnnotation):
+            sorting_fn = lambda s: (
+                s[constants.BEGIN_INDEX],
+                s[constants.END_INDEX],
+            )
+            try:
+                self.__elements[type_name].add(entry)
+            except KeyError:
+                self.__elements[type_name] = SortedList(key=sorting_fn)
+                self.__elements[type_name].add(entry)
+        elif entry_type in [Link, Group, Generics, ImageAnnotation, Grids]:
+            try:
+                self.__elements[type_name].append(entry)
+            except KeyError:
+                self.__elements[type_name] = []
+                self.__elements[type_name].append(entry)
+        else:
+            raise NotImplementedError(
+                "_add_entry_raw() is not implemented "
+                f"for entry type {entry_type}."
+            )
+        tid = entry[constants.TID_INDEX]
+        if self._is_annotation(type_name):
+            self.__tid_ref_dict[tid] = entry
+        else:
+            index_id = len(self.__elements[type_name]) - 1  # last one
+            self.__tid_idx_dict[tid] = [type_name, index_id]
+        return tid
 
     def _is_annotation_tid(self, tid: int) -> bool:
         r"""This function takes a tid and returns whether an entry is an
@@ -469,7 +953,15 @@ class DataStore(BaseStore):
         else:
             raise KeyError(f"Entry with tid {tid} not found.")
 
-    def add_annotation_raw(self, type_name: str, begin: int, end: int) -> int:
+    def add_annotation_raw(
+        self,
+        type_name: str,
+        begin: int,
+        end: int,
+        tid: Optional[int] = None,
+        allow_duplicate: bool = True,
+    ) -> int:
+
         r"""This function adds an annotation entry with ``begin`` and ``end``
         indices to current data store object. Returns the ``tid`` for the
         inserted entry.
@@ -478,6 +970,12 @@ class DataStore(BaseStore):
             type_name: The fully qualified type name of the new Annotation.
             begin: Begin index of the entry.
             end: End index of the entry.
+            tid: ``tid`` of the Annotation entry that is being added.
+                It's optional, and it will be
+                auto-assigned if not given.
+            allow_duplicate: Whether we allow duplicate in the DataStore. When
+                it's set to False, the function will return the ``tid`` of
+                existing entry if a duplicate is found. Default value is True.
 
         Returns:
             ``tid`` of the entry.
@@ -488,18 +986,186 @@ class DataStore(BaseStore):
         # annotation type entry data with default fields.
         # A reference to the entry should be store in both self.__elements and
         # self.__tid_ref_dict.
-        entry = self._new_annotation(type_name, begin, end)
-        try:
-            self.__elements[type_name].add(entry)
-        except KeyError:
-            self.__elements[type_name] = SortedList(key=lambda s: (s[0], s[1]))
-            self.__elements[type_name].add(entry)
-        tid = entry[constants.TID_INDEX]
-        self.__tid_ref_dict[tid] = entry
-        return tid
+        entry = self._new_annotation(type_name, begin, end, tid)
+        if not allow_duplicate:
+            tid_search_result = self._get_existing_ann_entry_tid(entry)
+            # if found existing entry
+            if tid_search_result != -1:
+                return tid_search_result
+
+        return self._add_entry_raw(Annotation, type_name, entry)
+
+    def add_audio_annotation_raw(
+        self,
+        type_name: str,
+        begin: int,
+        end: int,
+        tid: Optional[int] = None,
+        allow_duplicate=True,
+    ) -> int:
+
+        r"""
+        This function adds an audio annotation entry with ``begin`` and ``end``
+        indices to current data store object. Returns the ``tid`` for the
+        inserted entry.
+
+        Args:
+            type_name: The fully qualified type name of the new AudioAnnotation.
+            begin: Begin index of the entry.
+            end: End index of the entry.
+            tid: ``tid`` of the Annotation entry that is being added.
+                It's optional, and it will be
+                auto-assigned if not given.
+            allow_duplicate: Whether we allow duplicate in the DataStore. When
+                it's set to False, the function will return the ``tid`` of
+                existing entry if a duplicate is found. Default value is True.
+
+        Returns:
+            ``tid`` of the entry.
+        """
+        # We should create the `entry data` with the format
+        # [begin, end, tid, type_id, None, ...].
+        # A helper function _new_annotation() can be used to generate a
+        # annotation type entry data with default fields.
+        # A reference to the entry should be store in both self.__elements and
+        # self.__tid_ref_dict.
+        entry = self._new_audio_annotation(type_name, begin, end, tid)
+
+        if not allow_duplicate:
+            tid_search_result = self._get_existing_ann_entry_tid(entry)
+            # if found existing entry
+            if tid_search_result != -1:
+                return tid_search_result
+        return self._add_entry_raw(AudioAnnotation, type_name, entry)
+
+    def add_image_annotation_raw(
+        self,
+        type_name: str,
+        image_payload_idx: int,
+        tid: Optional[int] = None,
+        allow_duplicate=True,
+    ) -> int:
+
+        r"""
+        This function adds an image annotation entry with ``image_payload_idx``
+        indices to current data store object. Returns the ``tid`` for the
+        inserted entry.
+
+        Args:
+            type_name: The fully qualified type name of the new AudioAnnotation.
+            image_payload_idx: the index of the image payload.
+            tid: ``tid`` of the Annotation entry that is being added.
+                It's optional, and it will be
+                auto-assigned if not given.
+            allow_duplicate: Whether we allow duplicate in the DataStore. When
+                it's set to False, the function will return the ``tid`` of
+                existing entry if a duplicate is found. Default value is True.
+
+        Returns:
+            ``tid`` of the entry.
+        """
+        # We should create the `entry data` with the format
+        # [begin, end, tid, type_id, None, ...].
+        # A helper function _new_annotation() can be used to generate a
+        # annotation type entry data with default fields.
+        # A reference to the entry should be store in both self.__elements and
+        # self.__tid_ref_dict.
+        entry = self._new_image_annotation(type_name, image_payload_idx, tid)
+
+        if not allow_duplicate:
+            tid_search_result = self._get_existing_ann_entry_tid(entry)
+            # if found existing entry
+            if tid_search_result != -1:
+                return tid_search_result
+        return self._add_entry_raw(AudioAnnotation, type_name, entry)
+
+    def add_grid_raw(
+        self,
+        type_name: str,
+        image_payload_idx: int,
+        tid: Optional[int] = None,
+        allow_duplicate=True,
+    ) -> int:
+
+        r"""
+        This function adds an image annotation entry with ``image_payload_idx``
+        indices to current data store object. Returns the ``tid`` for the
+        inserted entry.
+
+        Args:
+            type_name: The fully qualified type name of the new grid.
+            image_payload_idx: the index of the image payload.
+            tid: ``tid`` of the Annotation entry that is being added.
+                It's optional, and it will be
+                auto-assigned if not given.
+            allow_duplicate: Whether we allow duplicate in the DataStore. When
+                it's set to False, the function will return the ``tid`` of
+                existing entry if a duplicate is found. Default value is True.
+
+        Returns:
+            ``tid`` of the entry.
+        """
+        # We should create the `entry data` with the format
+        # [begin, end, tid, type_id, None, ...].
+        # A helper function _new_annotation() can be used to generate a
+        # annotation type entry data with default fields.
+        # A reference to the entry should be store in both self.__elements and
+        # self.__tid_ref_dict.
+        entry = self._new_grid(type_name, image_payload_idx, tid)
+
+        if not allow_duplicate:
+            tid_search_result = self._get_existing_ann_entry_tid(entry)
+            # if found existing entry
+            if tid_search_result != -1:
+                return tid_search_result
+        return self._add_entry_raw(Grids, type_name, entry)
+
+    def _get_existing_ann_entry_tid(self, entry: List[Any]):
+        r"""
+        This function searches for tid for existing annotation-like entry tid.
+        It return the tid if the entry is found. Otherwise, it returns -1.
+
+        Args:
+            entry (Entry): annotation-like entry to search for.
+
+        Raises:
+            ValueError: raised when the entry type being searched is
+                not supported, currently supporting `Annotation`,
+                `AudioAnnotation`.
+
+        Returns:
+            tid for parameter ``entry`` is found. Otherwise -1.
+        """
+
+        type_name = entry[constants.ENTRY_TYPE_INDEX]
+        begin = entry[constants.BEGIN_INDEX]
+        end = entry[constants.END_INDEX]
+        if type_name not in self.__elements:
+            return -1
+        if self._is_annotation(type_name):
+            # Return the tid of existing entry if duplicate is not allowed
+            index = self.__elements[type_name].bisect_left(entry)
+            target_entry = self.__elements[type_name][index]
+            if (
+                target_entry[constants.BEGIN_INDEX] == begin
+                and target_entry[constants.END_INDEX] == end
+            ):
+                return target_entry[constants.TID_INDEX]
+            else:
+                return -1
+        else:
+            raise ValueError(
+                f"Get existing entry id for {type_name}"
+                " is not supported. This function only supports "
+                "getting entry id for annotation-like entry."
+            )
 
     def add_link_raw(
-        self, type_name: str, parent_tid: int, child_tid: int
+        self,
+        type_name: str,
+        parent_tid: int,
+        child_tid: int,
+        tid: Optional[int] = None,
     ) -> Tuple[int, int]:
         r"""This function adds a link entry with ``parent_tid`` and
         ``child_tid`` to current data store object. Returns the ``tid`` and
@@ -510,15 +1176,19 @@ class DataStore(BaseStore):
             type_name:  The fully qualified type name of the new Link.
             parent_tid: ``tid`` of the parent entry.
             child_tid: ``tid`` of the child entry.
+            tid: ``tid`` of the Link entry that is being added.
+                It's optional, and it will be
+                auto-assigned if not given.
 
         Returns:
             ``tid`` of the entry and its index in the ``type_name`` list.
 
         """
-        raise NotImplementedError
+        entry = self._new_link(type_name, parent_tid, child_tid, tid)
+        return self._add_entry_raw(Link, type_name, entry)
 
     def add_group_raw(
-        self, type_name: str, member_type: str
+        self, type_name: str, member_type: str, tid: Optional[int] = None
     ) -> Tuple[int, int]:
         r"""This function adds a group entry with ``member_type`` to the
         current data store object. Returns the ``tid`` and the ``index_id``
@@ -528,12 +1198,35 @@ class DataStore(BaseStore):
         Args:
             type_name: The fully qualified type name of the new Group.
             member_type: Fully qualified name of its members.
+            tid: ``tid`` of the Group entry that is being added.
+                It's optional, and it will be
+                auto-assigned if not given.
 
         Returns:
             ``tid`` of the entry and its index in the (``type_id``)th list.
 
         """
-        raise NotImplementedError
+        entry = self._new_group(type_name, member_type, tid)
+        return self._add_entry_raw(Group, type_name, entry)
+
+    def add_generics_raw(
+        self, type_name: str, tid: Optional[int] = None
+    ) -> Tuple[int, int]:
+        r"""This function adds a generics entry with ``type_name`` to the
+        current data store object. Returns the ``tid`` and the ``index_id``
+        for the inserted entry in the list. This ``index_id`` is the index
+        of the entry in the ``type_name`` list.
+
+        Args:
+            type_name: The fully qualified type name of the new Generics.
+            tid: ``tid`` of generics entry.
+
+        Returns:
+            ``tid`` of the entry and its index in the (``type_id``)th list.
+
+        """
+        entry = self._new_generics(type_name, tid)
+        return self._add_entry_raw(Generics, type_name, entry)
 
     def set_attribute(self, tid: int, attr_name: str, attr_value: Any):
         r"""This function locates the entry data with ``tid`` and sets its
@@ -645,7 +1338,13 @@ class DataStore(BaseStore):
         # complexity: O(lgn)
         # if it's annotation type, use bisect to find the index
         if self._is_annotation(type_name):
-            entry_index = bisect_left(target_list, entry_data)
+            try:
+                entry_index = target_list.index(entry_data)
+            except ValueError as e:
+                raise RuntimeError(
+                    f"When deleting entry [{tid}], entry data is not found in"
+                    f"the target list of [{type_name}]."
+                ) from e
         else:  # if it's group or link, use the index in entry_list
             entry_index = entry_data[constants.ENTRY_DICT_ENTRY_INDEX]
 
@@ -684,7 +1383,6 @@ class DataStore(BaseStore):
                 f"The specified index_id [{index_id}] of type [{type_name}]"
                 f"is out of boundary for entry list of length {len(target_list)}."
             )
-
         if self._is_annotation(type_name):
             target_list.pop(index_id)
             if not target_list:
@@ -747,7 +1445,12 @@ class DataStore(BaseStore):
         index_id = -1
         if self._is_annotation_tid(tid):
             entry_list = self.__elements[entry_type]
-            index_id = entry_list.bisect_left(entry)
+            try:
+                index_id = entry_list.index(entry)
+            except ValueError as e:
+                raise ValueError(
+                    f"Entry {entry} not found in entry list."
+                ) from e
             if (not 0 <= index_id < len(entry_list)) or (
                 entry_list[index_id][constants.TID_INDEX]
                 != entry[constants.TID_INDEX]
@@ -758,6 +1461,23 @@ class DataStore(BaseStore):
                 constants.ENTRY_DICT_ENTRY_INDEX
             ]
         return index_id
+
+    def get_length(self, type_name: str) -> int:
+        r"""This function find the length of the `type_name` entry list.
+        It should not count None placeholders that appear in
+        non-annotation-like entry lists.
+
+        Args:
+            type_name (str): The fully qualified type name of a type.
+
+        Returns:
+            The count of not None entries.
+        """
+        if self._is_annotation(type_name):
+            return len(self.__elements[type_name])
+        else:
+            delete_count = self.__deletion_count.get(type_name, 0)
+            return len(self.__elements[type_name]) - delete_count
 
     def co_iterator_annotation_like(
         self, type_names: List[str]
@@ -790,9 +1510,7 @@ class DataStore(BaseStore):
             type_names: a list of string type names
 
         Returns:
-
             An iterator of entry elements.
-
         """
 
         n = len(type_names)
@@ -802,7 +1520,7 @@ class DataStore(BaseStore):
         # is O(M*log(N))
 
         # Initialize the first entry of all entry lists
-        # it avoids empty entry lists or non-existant entry list
+        # it avoids empty entry lists or non-existent entry list
         first_entries = []
 
         for tn in type_names:
@@ -817,9 +1535,9 @@ class DataStore(BaseStore):
                 ) from e
             except IndexError as e:  # self.__elements[tn][0] will be caught here.
                 raise ValueError(
-                    f"Entry list of type name, {tn} which is "
+                    f"Entry list of type name, {tn} which is"
                     " one list item of input argument `type_names`,"
-                    " is empty. Please check data in this DataStore). "
+                    " is empty. Please check data in this DataStore"
                     " to see if empty lists are expected"
                     f" or remove {tn} from input parameter type_names"
                 ) from e
@@ -892,30 +1610,105 @@ class DataStore(BaseStore):
             yield entry
 
     def get(
-        self, type_name: str, include_sub_type: bool = True
+        self,
+        type_name: str,
+        include_sub_type: bool = True,
+        range_annotation: Optional[Tuple[int]] = None,
     ) -> Iterator[List]:
         r"""This function fetches entries from the data store of
-        type ``type_name``.
+        type ``type_name``. If `include_sub_type` is set to True and
+        ``type_name`` is in [Annotation, Group, List], this function also
+        fetches entries of subtype of ``type_name``. Otherwise, it only
+        fetches entries of type ``type_name``.
 
         Args:
             type_name: The fully qualified name of the entry.
             include_sub_type: A boolean to indicate whether get its subclass.
+            range_annotation: A tuple that contains the begin and end indices
+                of the searching range of entries.
 
         Returns:
             An iterator of the entries matching the provided arguments.
         """
+
+        def within_range(
+            entry: List[Any], range_annotation: Tuple[int]
+        ) -> bool:
+            """
+            A helper function for deciding whether an annotation entry is
+            inside the `range_annotation`.
+            """
+            if not self._is_annotation(entry[constants.ENTRY_TYPE_INDEX]):
+                return False
+            return (
+                entry[constants.BEGIN_INDEX]
+                >= range_annotation[constants.BEGIN_INDEX]
+                and entry[constants.END_INDEX]
+                <= range_annotation[constants.END_INDEX]
+            )
+
+        entry_class = get_class(type_name)
+        all_types = set()
         if include_sub_type:
-            entry_class = get_class(type_name)
-            all_types = []
-            # iterate all classes to find subclasses
             for type in self.__elements:
                 if issubclass(get_class(type), entry_class):
-                    all_types.append(type)
-            for type in all_types:
-                yield from self.iter(type)
+                    all_types.add(type)
         else:
+            all_types.add(type_name)
+        all_types = list(all_types)
+        all_types.sort()
+        if self._is_annotation(type_name):
+            if range_annotation is None:
+                yield from self.co_iterator_annotation_like(all_types)
+            else:
+                for entry in self.co_iterator_annotation_like(all_types):
+                    if within_range(entry, range_annotation):
+                        yield entry
+        elif issubclass(entry_class, Link):
+            for type in all_types:
+                if range_annotation is None:
+                    yield from self.iter(type)
+                else:
+                    for entry in self.__elements[type]:
+                        if (
+                            entry[constants.PARENT_TID_INDEX]
+                            in self.__tid_ref_dict
+                        ) and (
+                            entry[constants.CHILD_TID_INDEX]
+                            in self.__tid_ref_dict
+                        ):
+                            parent = self.__tid_ref_dict[
+                                entry[constants.PARENT_TID_INDEX]
+                            ]
+                            child = self.__tid_ref_dict[
+                                entry[constants.CHILD_TID_INDEX]
+                            ]
+                            if within_range(
+                                parent, range_annotation
+                            ) and within_range(child, range_annotation):
+                                yield entry
+        elif issubclass(entry_class, Group):
+            for type in all_types:
+                if range_annotation is None:
+                    yield from self.iter(type)
+                else:
+                    for entry in self.__elements[type]:
+                        member_type = entry[constants.MEMBER_TYPE_INDEX]
+                        if self._is_annotation(member_type):
+                            members = entry[constants.MEMBER_TID_INDEX]
+                            within = True
+                            for m in members:
+                                e = self.__tid_ref_dict[m]
+                                if not within_range(e, range_annotation):
+                                    within = False
+                                    break
+                            if within:
+                                yield entry
+        else:
+            # Only fetches entries of type ``type_name`` when it's not in
+            # [Annotation, Group, List].
             if type_name not in self.__elements:
-                raise KeyError(f"type {type_name} does not exist")
+                raise ValueError(f"type {type_name} does not exist")
             yield from self.iter(type_name)
 
     def iter(self, type_name: str) -> Iterator[List]:
@@ -1001,7 +1794,7 @@ class DataStore(BaseStore):
         return None
 
     def _parse_onto_file(self):
-        r"""This function will populate the types and attributes used in the data_store
+        r"""This function will populate the types and attributes used in `DataStore`
         with an ontology specification file. If a user provides a customized ontology
         specification file, forte will parse this file and set the internal dictionary
         ``DataStore._type_attributes`` to store type name, parent entry, and its attribute
@@ -1019,7 +1812,7 @@ class DataStore(BaseStore):
         raise NotImplementedError
 
     @staticmethod
-    def _get_entry_attributes_by_class(input_entry_class_name: str) -> List:
+    def _get_entry_attributes_by_class(input_entry_class_name: str) -> Dict:
         """Get type attributes by class name. `input_entry_class_name` should be
         a fully qualified name of an entry class.
 
@@ -1038,7 +1831,8 @@ class DataStore(BaseStore):
             input_entry_class_name: A fully qualified name of an entry class.
 
         Returns:
-            A list of attributes corresponding to the input class.
+            A dictionary of attributes with their field information
+            corresponding to the input class.
 
         For example, for Sentence we want to get a list of
         ["speaker", "part_id", "sentiment", "classification", "classifications"].
@@ -1050,7 +1844,7 @@ class DataStore(BaseStore):
             entry_name = "ft.onto.base_ontology.Sentence"
 
             # function signature
-            get_entry_attributes_by_class(entry_name)
+            list(get_entry_attributes_by_class(entry_name))
 
             # return
             # ["speaker", "part_id", "sentiment", "classification", "classifications"]
@@ -1058,6 +1852,6 @@ class DataStore(BaseStore):
         """
         class_ = get_class(input_entry_class_name)
         try:
-            return list(class_.__dataclass_fields__.keys())
+            return class_.__dataclass_fields__
         except AttributeError:
-            return []
+            return {}
