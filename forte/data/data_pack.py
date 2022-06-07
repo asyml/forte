@@ -52,7 +52,7 @@ from forte.data.ontology.top import (
     Generics,
     AudioAnnotation,
     ImageAnnotation,
-    Grids,
+    Grid,
 )
 from forte.data.span import Span
 from forte.data.types import ReplaceOperationsType, DataRequest
@@ -170,7 +170,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         self._data_store: DataStore = DataStore()
         self._entry_converter: EntryConverter = EntryConverter()
         self.image_annotations: List[ImageAnnotation] = []
-        self.grids: List[Grids] = []
+        self.grids: List[Grid] = []
         self.payloads: List[np.ndarray] = []
 
         self.__replace_back_operations: ReplaceOperationsType = []
@@ -2013,7 +2013,7 @@ class EntryConverter:
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,
             )
-        elif isinstance(entry, Grids):
+        elif isinstance(entry, Grid):
             data_store_ref.add_grid_raw(
                 type_name=entry.entry_type(),
                 image_payload_idx=entry.image_payload_idx,

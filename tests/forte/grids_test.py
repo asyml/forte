@@ -12,20 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests for Grids.
+Unit tests for Grid.
 """
 import unittest
 import numpy as np
 
 from numpy import array_equal
-from forte.data.ontology.top import Grids
+from forte.data.ontology.top import Grid
 from forte.data.data_pack import DataPack
 from forte.data.ontology.top import ImageAnnotation
 
 
-class GridsTest(unittest.TestCase):
+class GridTest(unittest.TestCase):
     """
-    Test Grids related ontologies and operations.
+    Test Grid related ontologies and operations.
     """
 
     def setUp(self):
@@ -39,9 +39,9 @@ class GridsTest(unittest.TestCase):
             ImageAnnotation(self.datapack, 0)
         )
 
-        grids = Grids(self.datapack, 3, 4)
+        grids = Grid(self.datapack, 3, 4)
 
-        self.datapack.grids.append(grids)
+        self.datapack.grids.append(grid)
         self.zeros = np.zeros((6, 12))
         self.ref_arr = np.zeros((6, 12))
         self.ref_arr[2, 2] = 1

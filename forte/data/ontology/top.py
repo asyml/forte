@@ -47,7 +47,7 @@ __all__ = [
     "MultiPackEntries",
     "AudioAnnotation",
     "ImageAnnotation",
-    "Grids",
+    "Grid",
     "Region",
     "Box",
     "BoundingBox",
@@ -842,12 +842,12 @@ class ImageAnnotation(Entry):
         return self.image_payload_idx == other.image_payload_idx
 
 
-class Grids(Entry):
+class Grid(Entry):
     """
-    Regular grids with a grid configuration.
+    Regular grid with a grid configuration.
 
     Args:
-        pack: The container that this grids will be added to.
+        pack: The container that this grid will be added to.
         height: the number of grid cell per column, the unit is one grid cell.
         width: the number of grid cell per row, the unit is one grid cell.
         image_payload_idx: the index of the image payload. If it's not set,
@@ -931,7 +931,7 @@ class Grids(Entry):
 
     def get_grid_cell_center(self, h_idx: int, w_idx: int) -> Tuple[int, int]:
         """
-        Get the center position of the grid cell in the ``Grids``.
+        Get the center position of the grid cell in the ``Grid``.
 
         Note: all indices are zero-based and counted from top left corner of
         the grid.
@@ -1027,7 +1027,7 @@ class Box(Region):
         width: int,
         image_payload_idx: int = 0,
     ):
-        # assume Box is associated with Grids
+        # assume Box is associated with Grid
         super().__init__(pack, image_payload_idx)
         # center location
         self._cy = cy
@@ -1122,7 +1122,7 @@ class Box(Region):
 
 class BoundingBox(Box):
     """
-    A bounding box class that associates with image payload and grids and
+    A bounding box class that associates with image payload and grid and
     has a configuration of height and width.
 
     Note: all indices are zero-based and counted from top left corner of
@@ -1158,10 +1158,10 @@ class BoundingBox(Box):
         grid_cell_w_idx: int,
         image_payload_idx: int = 0,
     ):
-        self.grids = Grids(pack, grid_height, grid_width, image_payload_idx)
+        self.grid = Grid(pack, grid_height, grid_width, image_payload_idx)
         super().__init__(
             pack,
-            *self.grids.get_grid_cell_center(grid_cell_h_idx, grid_cell_w_idx),
+            *self.grid.get_grid_cell_center(grid_cell_h_idx, grid_cell_w_idx),
             height,
             width,
             image_payload_idx,

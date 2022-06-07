@@ -24,7 +24,7 @@ from forte.data.base_store import BaseStore
 from forte.data.ontology.top import (
     Annotation,
     AudioAnnotation,
-    Grids,
+    Grid,
     Group,
     ImageAnnotation,
     Link,
@@ -917,7 +917,7 @@ class DataStore(BaseStore):
             except KeyError:
                 self.__elements[type_name] = SortedList(key=sorting_fn)
                 self.__elements[type_name].add(entry)
-        elif entry_type in [Link, Group, Generics, ImageAnnotation, Grids]:
+        elif entry_type in [Link, Group, Generics, ImageAnnotation, Grid]:
             try:
                 self.__elements[type_name].append(entry)
             except KeyError:
@@ -1118,7 +1118,7 @@ class DataStore(BaseStore):
             # if found existing entry
             if tid_search_result != -1:
                 return tid_search_result
-        return self._add_entry_raw(Grids, type_name, entry)
+        return self._add_entry_raw(Grid, type_name, entry)
 
     def _get_existing_ann_entry_tid(self, entry: List[Any]):
         r"""
