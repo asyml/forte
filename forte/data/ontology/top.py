@@ -16,7 +16,7 @@ from functools import total_ordering
 from typing import Optional, Tuple, Type, Any, Dict, Union, Iterable, List
 
 import numpy as np
-
+import logging
 from forte.data.base_pack import PackType
 from forte.data.ontology.core import (
     Entry,
@@ -1010,33 +1010,64 @@ class Box(Region):
         pack: the container that this ``Box`` will be added to.
         image_payload_idx: the index of the image payload. If it's not set,
             it defaults to 0 which meaning it will load the first image payload.
-        cy: the row index of the box center in the image array,
-            the unit is one image array entry.
-        cx: the column index of the box center in the image array,
-            the unit is one image array entry.
         height: the height of the box, the unit is one image array entry.
+        cy: the row index of the box center in the image array,
+            the unit is one image array entry. If not set, the box center
+            will be set to center of image (half height of the image).
+        cx: the column index of the box center in the image array,
+            the unit is one image array entry. If not set, the box center
+            will be set to center of image (half width of the image).
         width: the width of the box, the unit is one image array entry.
     """
 
     def __init__(
         self,
         pack: PackType,
-        cy: int,
-        cx: int,
         height: int,
         width: int,
+        cy: Optional[int] = None,
+        cx: Optional[int] = None,
         image_payload_idx: int = 0,
     ):
         # assume Box is associated with Grid
         super().__init__(pack, image_payload_idx)
+        self.is_default_box_center = True
+        self.is_grid_associated = False
         # center location
-        self._cy = cy
-        self._cx = cx
+        if cy is None or cx is None:
+            self._check_default_box_center()
+            h, w = self.pack.get_image_array(image_payload_idx).shape
+            self._cy = h // 2
+            self._cx = w // 2
+        else:
+            self.is_default_box_center = False
+            self._cy = cy
+            self._cx = cx
         self._height = height
         self._width = width
 
+    def _check_default_box_center(self):
+        if not self.is_grid_associated and isinstance(self, BoundingBox):
+            raise ValueError(
+                "The box center is set to the center of" "image by default."
+            )
+
+        if self.is_default_box_center:
+            logging.warn(
+                "The box center is set to the center of" "image by default."
+            )
+
+    def set_center(self, cy, cx):
+        self._cy = cy
+        self._cx = cx
+
+    def set_center(self, grid: Grid, grid_h_idx: int, grid_w_idx: int):
+        # given a grid cell
+        self._cy, self._cx = grid.get_grid_cell_center(grid_h_idx, grid_w_idx)
+
     @property
     def center(self):
+        self._check_default_box_center()
         return (self._cy, self._cx)
 
     @property
@@ -1044,6 +1075,7 @@ class Box(Region):
         """
         Get corners of box.
         """
+        self._check_default_box_center()
         return [
             (self._cy + h_offset, self._cx + w_offset)
             for h_offset in [-0.5 * self._height, 0.5 * self._height]
@@ -1052,18 +1084,22 @@ class Box(Region):
 
     @property
     def box_min_x(self):
+        self._check_default_box_center()
         return max(self._cx - round(0.5 * self._width), 0)
 
     @property
     def box_max_x(self):
+        self._check_default_box_center()
         return min(self._cx + round(0.5 * self._width), self.max_x)
 
     @property
     def box_min_y(self):
+        self._check_default_box_center()
         return max(self._cy - round(0.5 * self._height), 0)
 
     @property
     def box_max_y(self):
+        self._check_default_box_center()
         return min(self._cy + round(0.5 * self._height), self.max_y)
 
     @property
@@ -1144,7 +1180,6 @@ class BoundingBox(Box):
             the grid, the unit is one grid cell.
         grid_cell_w_idx: the width index of the associated grid cell in
             the grid, the unit is one grid cell.
-
     """
 
     def __init__(
@@ -1152,16 +1187,12 @@ class BoundingBox(Box):
         pack: PackType,
         height: int,
         width: int,
-        grid_height: int,
-        grid_width: int,
-        grid_cell_h_idx: int,
-        grid_cell_w_idx: int,
         image_payload_idx: int = 0,
     ):
-        self.grid = Grid(pack, grid_height, grid_width, image_payload_idx)
+
+        self.is_grid_associated = False
         super().__init__(
             pack,
-            *self.grid.get_grid_cell_center(grid_cell_h_idx, grid_cell_w_idx),
             height,
             width,
             image_payload_idx,
