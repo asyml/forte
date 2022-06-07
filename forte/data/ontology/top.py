@@ -1035,7 +1035,7 @@ class Box(Region):
         self.is_grid_associated = False
         # center location
         if cy is None or cx is None:
-            self._check_default_box_center()
+            self._check_box_center_status()
             h, w = self.pack.get_image_array(image_payload_idx).shape
             self._cy = h // 2
             self._cx = w // 2
@@ -1046,7 +1046,7 @@ class Box(Region):
         self._height = height
         self._width = width
 
-    def _check_default_box_center(self):
+    def _check_box_center_status(self):
         if not self.is_grid_associated and isinstance(self, BoundingBox):
             raise ValueError(
                 "The box center is set to the center of" "image by default."
@@ -1067,7 +1067,7 @@ class Box(Region):
 
     @property
     def center(self):
-        self._check_default_box_center()
+        self._check_box_center_status()
         return (self._cy, self._cx)
 
     @property
@@ -1075,7 +1075,7 @@ class Box(Region):
         """
         Get corners of box.
         """
-        self._check_default_box_center()
+        self._check_box_center_status()
         return [
             (self._cy + h_offset, self._cx + w_offset)
             for h_offset in [-0.5 * self._height, 0.5 * self._height]
@@ -1084,22 +1084,22 @@ class Box(Region):
 
     @property
     def box_min_x(self):
-        self._check_default_box_center()
+        self._check_box_center_status()
         return max(self._cx - round(0.5 * self._width), 0)
 
     @property
     def box_max_x(self):
-        self._check_default_box_center()
+        self._check_box_center_status()
         return min(self._cx + round(0.5 * self._width), self.max_x)
 
     @property
     def box_min_y(self):
-        self._check_default_box_center()
+        self._check_box_center_status()
         return max(self._cy - round(0.5 * self._height), 0)
 
     @property
     def box_max_y(self):
-        self._check_default_box_center()
+        self._check_box_center_status()
         return min(self._cy + round(0.5 * self._height), self.max_y)
 
     @property
