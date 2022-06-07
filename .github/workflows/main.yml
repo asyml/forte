@@ -111,6 +111,8 @@ jobs:
             pip install --progress-bar off .[data_aug,ir,remote,audio_ext,stave,models,test,wikipedia,nlp,extractor]
             coverage run -m pytest tests/forte/notebooks
           fi
+        env:
+          API_KEY: ${{ secrets.BING_API_KEY }
   test_backbone:
     runs-on: ubuntu-latest
     env:
