@@ -15,8 +15,8 @@ from dataclasses import dataclass
 from functools import total_ordering
 from typing import Optional, Tuple, Type, Any, Dict, Union, Iterable, List
 
-import numpy as np
 import logging
+import numpy as np
 from forte.data.base_pack import PackType
 from forte.data.ontology.core import (
     Entry,
@@ -1053,15 +1053,20 @@ class Box(Region):
             )
 
         if self.is_default_box_center:
-            logging.warn(
+            logging.warning(
                 "The box center is set to the center of" "image by default."
             )
 
     def set_center(self, cy, cx):
+        self.is_default_box_center = False
         self._cy = cy
         self._cx = cx
 
-    def set_center(self, grid: Grid, grid_h_idx: int, grid_w_idx: int):
+    def set_grid_cell_center(
+        self, grid: Grid, grid_h_idx: int, grid_w_idx: int
+    ):
+        self.is_default_box_center = False
+        self.is_grid_associated = True
         # given a grid cell
         self._cy, self._cx = grid.get_grid_cell_center(grid_h_idx, grid_w_idx)
 
