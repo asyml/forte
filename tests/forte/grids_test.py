@@ -39,7 +39,7 @@ class GridTest(unittest.TestCase):
             ImageAnnotation(self.datapack, 0)
         )
 
-        grids = Grid(self.datapack, 3, 4)
+        grid = Grid(self.datapack, 3, 4)
 
         self.datapack.grids.append(grid)
         self.zeros = np.zeros((6, 12))
