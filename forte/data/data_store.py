@@ -29,6 +29,7 @@ from forte.data.ontology.top import (
     ImageAnnotation,
     Link,
     Generics,
+    Payload,
 )
 from forte.data.ontology.core import Entry, FList, FDict
 from forte.common import constants
@@ -686,6 +687,21 @@ class DataStore(BaseStore):
 
         return entry
 
+    def _new_payload(
+        self,
+        type_name: str,
+        payload_idx: int,
+        modality: str,
+        tid: Optional[int] = None,
+    ) -> List:
+        tid: int = self._new_tid() if tid is None else tid
+        entry: List[Any]
+
+        entry = [payload_idx, modality, tid, type_name]
+        entry += self._default_attributes_for_type(type_name)
+
+        return entry
+
     def _new_link(
         self,
         type_name: str,
@@ -917,7 +933,14 @@ class DataStore(BaseStore):
             except KeyError:
                 self.__elements[type_name] = SortedList(key=sorting_fn)
                 self.__elements[type_name].add(entry)
-        elif entry_type in [Link, Group, Generics, ImageAnnotation, Grids]:
+        elif entry_type in [
+            Link,
+            Group,
+            Generics,
+            ImageAnnotation,
+            Grids,
+            Payload,
+        ]:
             try:
                 self.__elements[type_name].append(entry)
             except KeyError:
@@ -1078,6 +1101,48 @@ class DataStore(BaseStore):
             if tid_search_result != -1:
                 return tid_search_result
         return self._add_entry_raw(AudioAnnotation, type_name, entry)
+
+    def add_payload_raw(
+        self,
+        type_name: str,
+        payload_idx: int,
+        modality: str,
+        tid: Optional[int] = None,
+        allow_duplicate=True,
+    ) -> int:
+
+        r"""
+        This function adds an payload entry with ``payload_idx``
+        and modality to current data store object. Returns the ``tid`` for the
+        inserted entry.
+
+        Args:
+            type_name: The fully qualified type name of the new Payload.
+            payload_idx: the index of the payload.
+            modality: the payload modality which can be text, audio, image.
+            tid: ``tid`` of the Payload entry that is being added.
+                It's optional, and it will be auto-assigned if not given.
+            allow_duplicate: Whether we allow duplicate in the DataStore. When
+                it's set to False, the function will return the ``tid`` of
+                existing entry if a duplicate is found. Default value is True.
+
+        Returns:
+            ``tid`` of the entry.
+        """
+        # We should create the `entry data` with the format
+        # [begin, end, tid, type_id, None, ...].
+        # A helper function _new_annotation() can be used to generate a
+        # annotation type entry data with default fields.
+        # A reference to the entry should be store in both self.__elements and
+        # self.__tid_ref_dict.
+        entry = self._new_payload(type_name, payload_idx, modality, tid)
+
+        if not allow_duplicate:
+            tid_search_result = self._get_existing_ann_entry_tid(entry)
+            # if found existing entry
+            if tid_search_result != -1:
+                return tid_search_result
+        return self._add_entry_raw(Payload, type_name, entry)
 
     def add_grid_raw(
         self,

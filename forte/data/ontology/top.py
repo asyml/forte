@@ -1168,6 +1168,41 @@ class BoundingBox(Box):
         )
 
 
+class Payload(Entry):
+    def __init__(
+        self,
+        pack: PackType,
+        modality: str,
+    ):
+        super().__init__(pack, modality)
+        self.modality = modality
+        self.cache = []
+
+
+class TextPayload(Payload):
+    def __init__(
+        self,
+        pack: PackType,
+    ):
+        super().__init__(pack, "text")
+
+
+class AudioPayload(Payload):
+    def __init__(
+        self,
+        pack: PackType,
+    ):
+        super().__init__(pack, "audio")
+
+
+class ImagePayload(Payload):
+    def __init__(
+        self,
+        pack: PackType,
+    ):
+        super().__init__(pack, "image")
+
+
 SinglePackEntries = (
     Link,
     Group,
@@ -1175,5 +1210,6 @@ SinglePackEntries = (
     Generics,
     AudioAnnotation,
     ImageAnnotation,
+    Payload,
 )
 MultiPackEntries = (MultiPackLink, MultiPackGroup, MultiPackGeneric)

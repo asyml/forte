@@ -53,6 +53,7 @@ from forte.data.ontology.top import (
     AudioAnnotation,
     ImageAnnotation,
     Grids,
+    Payload,
 )
 from forte.data.span import Span
 from forte.data.types import ReplaceOperationsType, DataRequest
@@ -2010,6 +2011,14 @@ class EntryConverter:
             data_store_ref.add_image_annotation_raw(
                 type_name=entry.entry_type(),
                 image_payload_idx=entry.image_payload_idx,
+                tid=entry.tid,
+                allow_duplicate=allow_duplicate,
+            )
+        elif isinstance(entry, Payload):
+            data_store_ref.add_payload_raw(
+                type_name=entry.entry_type(),
+                payload_idx=entry.payload_idx,
+                modality=entry.modality,
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,
             )
