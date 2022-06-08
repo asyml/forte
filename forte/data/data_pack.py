@@ -2017,7 +2017,7 @@ class EntryConverter:
         elif isinstance(entry, Payload):
             data_store_ref.add_payload_raw(
                 type_name=entry.entry_type(),
-                payload_idx=entry.payload_idx,
+                payload_idx=entry.payload_index,
                 modality=entry.modality,
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,

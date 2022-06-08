@@ -15,6 +15,7 @@ from abc import abstractmethod
 from dataclasses import dataclass
 from functools import total_ordering
 from typing import Optional, Tuple, Type, Any, Dict, Union, Iterable, List
+from abc import ABC, abstractmethod
 
 import numpy as np
 
@@ -1169,10 +1170,7 @@ class BoundingBox(Box):
         )
 
 
-from abc import ABC, abstractmethod
-
-
-class Payload(Entry, ABC):
+class Payload(Entry):
     def __init__(
         self,
         pack: PackType,
