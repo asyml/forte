@@ -256,5 +256,5 @@ jobs:
         run: |
           pip install mkcodes pytest==5.1.3
           mkcodes --github --output tests/temp_readme_test.py README.md
-          pytest tests/temp_test.py
+          pytest tests/temp_readme_test.py
           rm tests/temp_readme_test.py
