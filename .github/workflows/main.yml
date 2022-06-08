@@ -97,6 +97,13 @@ jobs:
         run: |
           coverage run -m pytest tests  --ignore=tests/forte/notebooks --ignore=tests/forte/forte_backbone_test.py
           coverage run --append -m pytest --doctest-modules forte
+      - name: Test README.md when python version is 3.9
+        if:  ${{ matrix.python-version }} == "3.9"
+        run: |
+          pip install mkcodes
+          mkcodes --github --output tests/temp_readme_test.py README.md
+          coverage run --append -m pytest temp_test.py
+          rm tests/temp_readme_test.py
       - name: Upload coverage
         run: |
           codecov
