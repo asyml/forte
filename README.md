@@ -153,7 +153,9 @@ for pack in pipeline.initialize().process_dataset(input_string):
 ```
 It gives us output as follows:
 
- Forte[NNP]  is[VBZ]  a[DT]  data[NN]  -[:]  centric[JJ]  ML[NNP]  framework[NN]  .[.]
+```
+Forte[NNP]  is[VBZ]  a[DT]  data[NN]  -[:]  centric[JJ]  ML[NNP]  framework[NN]  .[.]
+```
 
 We have successfully created a simple pipeline. In the nutshell, the `DataPack`s are
 the standard packages "flowing" on the pipeline. They are created by the reader, and
