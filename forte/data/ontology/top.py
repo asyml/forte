@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from abc import abstractmethod
 from dataclasses import dataclass
 from functools import total_ordering
 from typing import Optional, Tuple, Type, Any, Dict, Union, Iterable, List
@@ -1168,39 +1169,68 @@ class BoundingBox(Box):
         )
 
 
-class Payload(Entry):
+from abc import ABC, abstractmethod
+
+
+class Payload(Entry, ABC):
     def __init__(
         self,
         pack: PackType,
         modality: str,
+        payload_idx: int,
     ):
-        super().__init__(pack, modality)
+        self.payload_idx = payload_idx
         self.modality = modality
+        super().__init__(pack)
         self.cache = []
+        self.meta = {}
+
+    def load(self, path):
+        data, data_meta = self.loading_method(path)
+        self.cache.append(data)
+        self.meta = {**self.meta, **data_meta}
+        self.pack.pack_name = path
+
+    def offload_cache(self, cache_idx):
+        self.cache.pop(cache_idx)
+
+    def offload_all_cache(self):
+        self.cache.clear()
+
+    @property
+    def payload_index(self):
+        return self.payload_idx
+
+    @abstractmethod
+    def loading_method(self, path):
+        pass
 
 
 class TextPayload(Payload):
     def __init__(
         self,
         pack: PackType,
+        payload_idx: int,
     ):
-        super().__init__(pack, "text")
+        super().__init__(pack, "text", payload_idx)
 
 
 class AudioPayload(Payload):
     def __init__(
         self,
         pack: PackType,
+        payload_idx: int,
     ):
-        super().__init__(pack, "audio")
+        super().__init__(pack, "audio", payload_idx)
 
 
 class ImagePayload(Payload):
     def __init__(
         self,
         pack: PackType,
+        payload_idx: int,
     ):
-        super().__init__(pack, "image")
+        super().__init__(pack, "image", payload_idx)
 
 
 SinglePackEntries = (
