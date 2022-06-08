@@ -24,6 +24,24 @@ from forte.data.ontology.top import Payload, AudioPayload
 from forte.data.data_pack import DataPack
 
 
+class SoundfileAudioPayload(AudioPayload):
+    def loading_method(self, path):
+        try:
+            import soundfile  # pylint: disable=import-outside-toplevel
+        except ModuleNotFoundError as e:
+            raise ModuleNotFoundError(
+                "AudioReader requires 'soundfile' package to be installed."
+                " You can refer to [extra modules to install]('pip install"
+                " forte['audio_ext']) or 'pip install forte"
+                ". Note that additional steps might apply to Linux"
+                " users (refer to "
+                "https://pysoundfile.readthedocs.io/en/latest/#installation)."
+            ) from e
+        audio, sample_rate = soundfile.read(file=path)
+        audio_data_meta = {"sample_rate": sample_rate}
+        return audio, audio_data_meta
+
+
 class PayloadTest(unittest.TestCase):
     """
     Test Payload related ontologies like audio.
@@ -33,22 +51,6 @@ class PayloadTest(unittest.TestCase):
         self.datapack = DataPack("payload test")
 
     def test_audio_payload(self):
-        class SoundfileAudioPayload(AudioPayload):
-            def loading_method(self, path):
-                try:
-                    import soundfile  # pylint: disable=import-outside-toplevel
-                except ModuleNotFoundError as e:
-                    raise ModuleNotFoundError(
-                        "AudioReader requires 'soundfile' package to be installed."
-                        " You can refer to [extra modules to install]('pip install"
-                        " forte['audio_ext']) or 'pip install forte"
-                        ". Note that additional steps might apply to Linux"
-                        " users (refer to "
-                        "https://pysoundfile.readthedocs.io/en/latest/#installation)."
-                    ) from e
-                audio, sample_rate = soundfile.read(file=path)
-                audio_data_meta = {"sample_rate": sample_rate}
-                return audio, audio_data_meta
 
         self.datapack.add_entry(
             SoundfileAudioPayload(self.datapack, payload_idx=0)
