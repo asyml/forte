@@ -1088,8 +1088,8 @@ class DataStore(BaseStore):
             ``tid`` of the entry.
         """
         # We should create the `entry data` with the format
-        # [begin, end, tid, type_id, None, ...].
-        # A helper function _new_annotation() can be used to generate a
+        # [image_payload_idx, None, tid, type_id, None, ...].
+        # A helper function _new_image_annotation() can be used to generate a
         # annotation type entry data with default fields.
         # A reference to the entry should be store in both self.__elements and
         # self.__tid_ref_dict.
@@ -1130,9 +1130,9 @@ class DataStore(BaseStore):
             ``tid`` of the entry.
         """
         # We should create the `entry data` with the format
-        # [begin, end, tid, type_id, None, ...].
-        # A helper function _new_annotation() can be used to generate a
-        # annotation type entry data with default fields.
+        # [payload_idx, modality, tid, type_id, None, ...].
+        # A helper function _new_payload() can be used to generate a
+        # payload type entry data with default fields.
         # A reference to the entry should be store in both self.__elements and
         # self.__tid_ref_dict.
         entry = self._new_payload(type_name, payload_idx, modality, tid)
