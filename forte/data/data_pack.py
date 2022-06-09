@@ -54,6 +54,7 @@ from forte.data.ontology.top import (
     ImageAnnotation,
     Grids,
     Payload,
+    Meta,
 )
 from forte.data.span import Span
 from forte.data.types import ReplaceOperationsType, DataRequest
@@ -2026,6 +2027,13 @@ class EntryConverter:
             data_store_ref.add_grid_raw(
                 type_name=entry.entry_type(),
                 image_payload_idx=entry.image_payload_idx,
+                tid=entry.tid,
+                allow_duplicate=allow_duplicate,
+            )
+        elif isinstance(entry, Meta):
+            data_store_ref.add_meta_raw(
+                type_name=entry.entry_type(),
+                image_payload_idx=entry.meta_name,
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,
             )

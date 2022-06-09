@@ -30,6 +30,7 @@ from forte.data.ontology.top import (
     Link,
     Generics,
     Payload,
+    Meta,
 )
 from forte.data.ontology.core import Entry, FList, FDict
 from forte.common import constants
@@ -940,6 +941,7 @@ class DataStore(BaseStore):
             ImageAnnotation,
             Grids,
             Payload,
+            Meta,
         ]:
             try:
                 self.__elements[type_name].append(entry)
