@@ -254,9 +254,9 @@ jobs:
 
       - name: Test README.md when python version is 3.9
         run: |
-          pip install mkcodes pytest==5.1.3
+          pip install mkcodes
           pip install --progress-bar off .
           pip install --progress-bar off forte.spacy nltk
           mkcodes --github --output tests/temp_readme_test.py README.md
-          pytest tests/temp_readme_test.py
+          python tests/temp_readme_test.py
           rm tests/temp_readme_test.py
