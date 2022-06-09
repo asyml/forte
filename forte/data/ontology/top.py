@@ -1231,6 +1231,11 @@ class ImagePayload(Payload):
         super().__init__(pack, "image", payload_idx)
 
 
+class Meta(Entry):
+    def __init__(self, pack: PackType):
+        super().__init__(pack)
+
+
 SinglePackEntries = (
     Link,
     Group,
