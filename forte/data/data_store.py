@@ -688,6 +688,30 @@ class DataStore(BaseStore):
 
         return entry
 
+    def _new_meta(
+        self, type_name: str, meta_name: str, tid: Optional[int] = None
+    ) -> List:
+        r"""This function generates a new grid with default fields.
+        Called by add_grid_raw() to create a new grid
+        with ``type_name``, ``meta_name`` and optional ``tid``.
+
+
+        Args:
+            type_name: The fully qualified type name of the new entry.
+            meta_name: The name of the Meta entry.
+
+        Returns:
+            A list representing a new grid type entry data.
+        """
+
+        tid: int = self._new_tid() if tid is None else tid
+        entry: List[Any]
+
+        entry = [meta_name, None, tid, type_name]
+        entry += self._default_attributes_for_type(type_name)
+
+        return entry
+
     def _new_payload(
         self,
         type_name: str,
@@ -1155,7 +1179,7 @@ class DataStore(BaseStore):
     ) -> int:
 
         r"""
-        This function adds an image annotation entry with ``image_payload_idx``
+        This function adds a grid entry with ``image_payload_idx``
         indices to current data store object. Returns the ``tid`` for the
         inserted entry.
 
@@ -1186,6 +1210,47 @@ class DataStore(BaseStore):
             if tid_search_result != -1:
                 return tid_search_result
         return self._add_entry_raw(Grids, type_name, entry)
+
+    def add_meta_raw(
+        self,
+        type_name: str,
+        meta_name: str,
+        tid: Optional[int] = None,
+        allow_duplicate=True,
+    ) -> int:
+
+        r"""
+        This function adds an image annotation entry with ``image_payload_idx``
+        indices to current data store object. Returns the ``tid`` for the
+        inserted entry.
+
+        Args:
+            type_name: The fully qualified type name of the new grid.
+            image_payload_idx: the index of the image payload.
+            tid: ``tid`` of the Annotation entry that is being added.
+                It's optional, and it will be
+                auto-assigned if not given.
+            allow_duplicate: Whether we allow duplicate in the DataStore. When
+                it's set to False, the function will return the ``tid`` of
+                existing entry if a duplicate is found. Default value is True.
+
+        Returns:
+            ``tid`` of the entry.
+        """
+        # We should create the `entry data` with the format
+        # [begin, end, tid, type_id, None, ...].
+        # A helper function _new_annotation() can be used to generate a
+        # annotation type entry data with default fields.
+        # A reference to the entry should be store in both self.__elements and
+        # self.__tid_ref_dict.
+        entry = self._new_meta(type_name, meta_name, tid)
+
+        if not allow_duplicate:
+            tid_search_result = self._get_existing_ann_entry_tid(entry)
+            # if found existing entry
+            if tid_search_result != -1:
+                return tid_search_result
+        return self._add_entry_raw(Meta, type_name, entry)
 
     def _get_existing_ann_entry_tid(self, entry: List[Any]):
         r"""
