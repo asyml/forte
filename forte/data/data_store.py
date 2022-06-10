@@ -1244,7 +1244,6 @@ class DataStore(BaseStore):
         # A reference to the entry should be store in both self.__elements and
         # self.__tid_ref_dict.
         entry = self._new_meta(type_name, meta_name, tid)
-
         if not allow_duplicate:
             tid_search_result = self._get_existing_ann_entry_tid(entry)
             # if found existing entry
