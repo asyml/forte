@@ -11,12 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from abc import abstractmethod
 from dataclasses import dataclass
 from functools import total_ordering
-from typing import Optional, Set, Tuple, Type, Any, Dict, Union, Iterable, List
-from abc import ABC, abstractmethod
-import uuid
+from typing import Optional, Tuple, Type, Any, Dict, Union, Iterable, List
 
 import numpy as np
 
