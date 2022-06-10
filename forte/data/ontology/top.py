@@ -1183,22 +1183,26 @@ class Payload(Entry):
         path: str,
         payload_idx: int,
     ):
-        self.payload_idx = payload_idx
-        self.modality = modality
+        self._payload_idx = payload_idx
+        self._modality = modality
         self._path = path
         super().__init__(pack)
-        self.cache = []
-        self.meta = {}
+        self._cache = []
+        self._meta = {}
         self._loading_method = None
 
     def set_loading_method(self, fn):
         self._loading_method = fn
 
     def offload_cache(self, cache_idx):
-        self.cache.pop(cache_idx)
+        self._cache.pop(cache_idx)
 
     def offload_all_cache(self):
-        self.cache.clear()
+        self._cache.clear()
+
+    @property
+    def modality(self):
+        return self.modality
 
     @property
     def payload_index(self):
