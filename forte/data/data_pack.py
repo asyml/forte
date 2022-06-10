@@ -54,7 +54,6 @@ from forte.data.ontology.top import (
     ImageAnnotation,
     Grids,
     Payload,
-    Meta,
 )
 from forte.data.span import Span
 from forte.data.types import ReplaceOperationsType, DataRequest
