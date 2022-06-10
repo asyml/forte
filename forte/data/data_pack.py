@@ -1972,6 +1972,7 @@ class EntryConverter:
         except KeyError:
             # The entry is not found in DataStore
             pass
+        from forte.data.ontology.top import Meta
 
         # Create a new registry in DataStore based on entry's type
         if isinstance(entry, Annotation):
@@ -2033,7 +2034,7 @@ class EntryConverter:
         elif isinstance(entry, Meta):
             data_store_ref.add_meta_raw(
                 type_name=entry.entry_type(),
-                image_payload_idx=entry.meta_name,
+                meta_name=entry.meta_name,
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,
             )
@@ -2041,7 +2042,8 @@ class EntryConverter:
             raise ValueError(
                 f"Invalid entry type {type(entry)}. A valid entry "
                 f"should be an instance of Annotation, Link, Group, Generics "
-                "or AudioAnnotation."
+                "AudioAnnotation, ImageAnnotation, Payload, Grids, Meta"
+                " or AudioAnnotation."
             )
 
         # Store all the dataclass attributes to DataStore
