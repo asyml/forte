@@ -88,7 +88,7 @@ class AudioReaderPipelineTest(unittest.TestCase):
             )
         )
         datapack = DataPack("payload test")
-        audio_processing_meta = AudioProcessingMeta(datapack, meta_name="audio")
+        audio_processing_meta = AudioProcessingMeta(None, meta_name="audio")
         audio_processing_meta.audio_path = self._test_audio_path
         # Define and config the Pipeline
         self._pipeline = Pipeline[DataPack]()
