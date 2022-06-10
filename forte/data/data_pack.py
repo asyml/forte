@@ -1972,7 +1972,6 @@ class EntryConverter:
         except KeyError:
             # The entry is not found in DataStore
             pass
-        from forte.data.ontology.top import Meta
 
         # Create a new registry in DataStore based on entry's type
         if isinstance(entry, Annotation):
