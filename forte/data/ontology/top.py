@@ -14,8 +14,9 @@
 from abc import abstractmethod
 from dataclasses import dataclass
 from functools import total_ordering
-from typing import Optional, Tuple, Type, Any, Dict, Union, Iterable, List
+from typing import Optional, Set, Tuple, Type, Any, Dict, Union, Iterable, List
 from abc import ABC, abstractmethod
+import uuid
 
 import numpy as np
 
@@ -53,6 +54,13 @@ __all__ = [
     "Region",
     "Box",
     "BoundingBox",
+    "Payload",
+    "TextPayload",
+    "ImagePayload",
+    "AudioPayload",
+    "Meta",
+    "ImageProcessingMeta",
+    "AudioProcessingMeta",
 ]
 
 QueryType = Union[Dict[str, Any], np.ndarray]
@@ -1175,19 +1183,19 @@ class Payload(Entry):
         self,
         pack: PackType,
         modality: str,
+        path: str,
         payload_idx: int,
     ):
         self.payload_idx = payload_idx
         self.modality = modality
+        self._path = path
         super().__init__(pack)
         self.cache = []
         self.meta = {}
+        self._loading_method = None
 
-    def load(self, path):
-        data, data_meta = self.loading_method(path)
-        self.cache.append(data)
-        self.meta = {**self.meta, **data_meta}
-        self.pack.pack_name = path
+    def set_loading_method(self, fn):
+        self._loading_method = fn
 
     def offload_cache(self, cache_idx):
         self.cache.pop(cache_idx)
@@ -1199,41 +1207,107 @@ class Payload(Entry):
     def payload_index(self):
         return self.payload_idx
 
-    @abstractmethod
-    def loading_method(self, path):
-        pass
+    @property
+    def loading_path(self):
+        return self._path
+
+    @property
+    def load(self):
+        return self._loading_method
 
 
 class TextPayload(Payload):
     def __init__(
         self,
         pack: PackType,
+        path: str,
         payload_idx: int,
     ):
-        super().__init__(pack, "text", payload_idx)
+        super().__init__(pack, "text", path, payload_idx)
 
 
 class AudioPayload(Payload):
     def __init__(
         self,
         pack: PackType,
+        path: str,
         payload_idx: int,
     ):
-        super().__init__(pack, "audio", payload_idx)
+        super().__init__(pack, "audio", path, payload_idx=payload_idx)
 
 
 class ImagePayload(Payload):
     def __init__(
         self,
         pack: PackType,
+        path: str,
         payload_idx: int,
     ):
-        super().__init__(pack, "image", payload_idx)
+        super().__init__(pack, "image", path, payload_idx)
 
 
 class Meta(Entry):
-    def __init__(self, pack: PackType):
+    """
+    a Meta entry defines metadata related to data processing
+    about reading from data source, loading data to cache, and writing to
+    a target file.
+
+    Args:
+        Entry (_type_): _description_
+    """
+
+    def __init__(self, pack: PackType, meta_name):
+        self._meta_name: Optional[str] = meta_name
         super().__init__(pack)
+
+    @property
+    def meta_name(self):
+        return self._meta_name
+
+
+class ImageProcessingMeta(Meta):
+    def __init__(self, pack: PackType, meta_name: Optional[str] = None):
+        if meta_name is None:
+            meta_name = "jpg"
+        super().__init__(pack, meta_name)
+        self.data_source_type = "disk"
+        self.pipeline_data_type = "nparray"
+        self.save_format = None
+        self.type_code = "jpg"
+
+
+class AudioProcessingMeta(Meta):
+    """
+    an AudioProcessingMeta entry defines metadata related to audio processing
+    about reading from data source, loading data to cache, and writing to
+    a target file.
+
+    Args:
+        pack (PackType): The container that this AudioProcessingMeta will
+            be added to.
+        meta_name (Optional[str], optional): the name for the audio metadata.
+            Defaults to "flac".
+    """
+
+    # a Meta data entry object that define metadata related to image processing
+    # both reading from data source, loaded format and writing format
+    # for example, we might want to read a high resolution png image
+    # and load it as a numpy array and write it into jpg format.
+
+    # it determines what third-party packages to use to convert image to target
+    # data format
+
+    # payload meta defines data source and user need to write a
+    # reader for the data source.
+    # def __init__(self, pack: PackType, meta_name: Optional[str] = None):
+    def __init__(self, pack: PackType, meta_name: Optional[str] = None):
+        if meta_name is None:
+            meta_name = "flac"
+        super().__init__(pack, meta_name=meta_name)
+        self.data_source_type = "disk"
+        self.pipeline_data_type = "nparray"
+        self.save_format = None
+        self.file_ext = "flac"
 
 
 SinglePackEntries = (
@@ -1244,5 +1318,6 @@ SinglePackEntries = (
     AudioAnnotation,
     ImageAnnotation,
     Payload,
+    Meta,
 )
 MultiPackEntries = (MultiPackLink, MultiPackGroup, MultiPackGeneric)
