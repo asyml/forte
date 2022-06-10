@@ -27,12 +27,14 @@ from forte.data.data_pack import DataPack
 from forte.data.readers import AudioReader
 from forte.pipeline import Pipeline
 from forte.processors.base.pack_processor import PackProcessor
+from forte.data.ontology.top import AudioProcessingMeta, AudioPayload
 
 
 class TestASRProcessor(PackProcessor):
     """
     An audio processor for automatic speech recognition.
     """
+
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
 
@@ -42,8 +44,15 @@ class TestASRProcessor(PackProcessor):
         self._model = Wav2Vec2ForCTC.from_pretrained(pretrained_model)
 
     def _process(self, input_pack: DataPack):
+        # it follows the logic of loaidng while using
+        # load audio using AudioPayload
+        for audio_payload in input_pack.get(AudioPayload):
+            audio_data, sample_rate = audio_payload.load(
+                audio_payload.loading_path
+            )
+
         required_sample_rate: int = 16000
-        if input_pack.sample_rate != required_sample_rate:
+        if sample_rate != required_sample_rate:
             raise ProcessFlowException(
                 f"A sample rate of {required_sample_rate} Hz is requied by the"
                 " pretrained model."
@@ -51,7 +60,7 @@ class TestASRProcessor(PackProcessor):
 
         # tokenize
         input_values = self._tokenizer(
-            input_pack.audio, return_tensors="pt", padding="longest"
+            audio_data, return_tensors="pt", padding="longest"
         ).input_values  # Batch size 1
 
         # take argmax and decode
@@ -75,28 +84,31 @@ class AudioReaderPipelineTest(unittest.TestCase):
                 os.pardir,
                 os.pardir,
                 os.pardir,
-                "data_samples/audio_reader_test"
+                "data_samples/audio_reader_test",
             )
         )
-
+        datapack = DataPack("payload test")
+        audio_processing_meta = AudioProcessingMeta(datapack, meta_name="audio")
+        audio_processing_meta.audio_path = self._test_audio_path
         # Define and config the Pipeline
         self._pipeline = Pipeline[DataPack]()
-        self._pipeline.set_reader(AudioReader())
+        self._pipeline.set_reader(AudioReader(audio_processing_meta))
         self._pipeline.add(TestASRProcessor())
         self._pipeline.initialize()
 
     def test_asr_pipeline(self):
         target_transcription: Dict[str, str] = {
-            self._test_audio_path + "/test_audio_0.flac":
-                "A MAN SAID TO THE UNIVERSE SIR I EXIST",
-            self._test_audio_path + "/test_audio_1.flac": (
+            self._test_audio_path
+            + "/test_audio_0.flac": "A MAN SAID TO THE UNIVERSE SIR I EXIST",
+            self._test_audio_path
+            + "/test_audio_1.flac": (
                 "NOR IS MISTER QUILTER'S MANNER LESS INTERESTING "
                 "THAN HIS MATTER"
-            )
+            ),
         }
 
         # Verify the ASR result of each datapack
-        for pack in self._pipeline.process_dataset(self._test_audio_path):
+        for pack in self._pipeline.process_dataset():
             self.assertEqual(pack.text, target_transcription[pack.pack_name])
 
 

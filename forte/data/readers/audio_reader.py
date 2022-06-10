@@ -20,6 +20,7 @@ from typing import Any, Iterator
 from forte.data.data_pack import DataPack
 from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.base_reader import PackReader
+from forte.data.ontology.top import AudioPayload
 
 __all__ = [
     "AudioReader",
@@ -29,7 +30,7 @@ __all__ = [
 class AudioReader(PackReader):
     r""":class:`AudioReader` is designed to read in audio files."""
 
-    def __init__(self):
+    def __init__(self, audio_processing_meta):
         super().__init__()
         try:
             import soundfile  # pylint: disable=import-outside-toplevel
@@ -43,8 +44,9 @@ class AudioReader(PackReader):
                 "https://pysoundfile.readthedocs.io/en/latest/#installation)."
             ) from e
         self.soundfile = soundfile
+        self.audio_processing_meta = audio_processing_meta
 
-    def _collect(self, audio_directory) -> Iterator[Any]:  # type: ignore
+    def _collect(self) -> Iterator[Any]:  # type: ignore
         r"""Should be called with param ``audio_directory`` which is a path to a
         folder containing audio files.
 
@@ -53,7 +55,10 @@ class AudioReader(PackReader):
 
         Returns: Iterator over paths to audio files
         """
-        return dataset_path_iterator(audio_directory, self.configs.file_ext)
+        return dataset_path_iterator(
+            self.audio_processing_meta.audio_path,
+            self.audio_processing_meta.file_ext,
+        )
 
     def _cache_key_function(self, audio_file: str) -> str:
         return os.path.basename(audio_file)
@@ -62,12 +67,10 @@ class AudioReader(PackReader):
         pack: DataPack = DataPack()
 
         # Read in audio data and store in DataPack
-        audio, sample_rate = self.soundfile.read(
-            file=file_path, **(self.configs.read_kwargs or {})
-        )
-        pack.set_audio(audio=audio, sample_rate=sample_rate)
+        # add audio payload into DataPack.payloads
+        ap = AudioPayload(pack, file_path, 0)
+        ap.set_loading_method(self.soundfile.read)
         pack.pack_name = file_path
-
         yield pack
 
     @classmethod
