@@ -75,7 +75,6 @@ class LastUtteranceSearcher(PackProcessor):
                 pack_id: str = source["doc_id"]
 
                 # Now you can write the pack into the database and generate url.
-                print(self.configs.query_result_project_id)
                 item = {
                     "name": f"clinical_results_{idx}",
                     "textPack": raw_pack_str,
