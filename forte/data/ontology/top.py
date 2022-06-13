@@ -1186,35 +1186,46 @@ class Payload(Entry):
         self._payload_idx = payload_idx
         self._modality = modality
         self._path = path
+
         super().__init__(pack)
-        self._cache = []
+        self._cache = None
         self._meta = {}
-        self._loading_method = None
 
-    def set_loading_method(self, fn):
-        self._loading_method = fn
+    def get_data(self):
+        return self.offload_cache()
 
-    def offload_cache(self, cache_idx):
-        self._cache.pop(cache_idx)
-
-    def offload_all_cache(self):
-        self._cache.clear()
+    def offload_cache(self, f_name=None):
+        cache = self._cache
+        self._cache = None
+        if f_name is not None:
+            with open(f_name, "wb") as f:
+                np.save(f, cache)
+        return cache
 
     @property
     def modality(self):
-        return self.modality
+        return self._modality
 
     @property
     def payload_index(self):
-        return self.payload_idx
+        return self._payload_idx
 
     @property
     def loading_path(self):
         return self._path
 
-    @property
-    def load(self):
-        return self._loading_method
+    def set_cache(self, data):
+        self._cache = data
+
+    def load_cache(self, f_name):
+        with open(f_name, "rb") as f:
+            self.cache = np.load(f)
+
+    def set_meta(self, key, value):
+        self._meta[key] = value
+
+    def get_meta(self, key):
+        return self._meta[key]
 
 
 class TextPayload(Payload):
