@@ -14,6 +14,7 @@
 """
 Unit tests for AudioReader.
 """
+from email.mime import audio
 import os
 import unittest
 from typing import Dict
@@ -47,9 +48,8 @@ class TestASRProcessor(PackProcessor):
         # it follows the logic of loaidng while using
         # load audio using AudioPayload
         for audio_payload in input_pack.get(AudioPayload):
-            audio_data, sample_rate = audio_payload.load(
-                audio_payload.loading_path
-            )
+            sample_rate = audio_payload.get_meta("sample_rate")
+            audio_data = audio_payload.offload_cache()
 
         required_sample_rate: int = 16000
         if sample_rate != required_sample_rate:
