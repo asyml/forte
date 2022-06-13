@@ -20,7 +20,7 @@ from typing import Any, Iterator
 from forte.data.data_pack import DataPack
 from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.base_reader import PackReader
-from forte.data.ontology.top import AudioPayload
+from forte.data.ontology.top import AudioPayload, AudioReadingMeta
 
 __all__ = [
     "AudioReader",
@@ -30,7 +30,7 @@ __all__ = [
 class AudioReader(PackReader):
     r""":class:`AudioReader` is designed to read in audio files."""
 
-    def __init__(self, audio_processing_meta):
+    def __init__(self):
         super().__init__()
         try:
             import soundfile  # pylint: disable=import-outside-toplevel
@@ -44,9 +44,8 @@ class AudioReader(PackReader):
                 "https://pysoundfile.readthedocs.io/en/latest/#installation)."
             ) from e
         self.soundfile = soundfile
-        self.audio_processing_meta = audio_processing_meta
 
-    def _collect(self) -> Iterator[Any]:  # type: ignore
+    def _collect(self, audio_directory) -> Iterator[Any]:  # type: ignore
         r"""Should be called with param ``audio_directory`` which is a path to a
         folder containing audio files.
 
@@ -55,9 +54,10 @@ class AudioReader(PackReader):
 
         Returns: Iterator over paths to audio files
         """
+        # construct ImageMeta and store it in DataPack
         return dataset_path_iterator(
-            self.audio_processing_meta.audio_path,
-            self.audio_processing_meta.file_ext,
+            audio_directory,
+            self.configs.file_ext,
         )
 
     def _cache_key_function(self, audio_file: str) -> str:
@@ -66,10 +66,18 @@ class AudioReader(PackReader):
     def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
         pack: DataPack = DataPack()
 
+        payload_idx = 0
         # Read in audio data and store in DataPack
         # add audio payload into DataPack.payloads
-        ap = AudioPayload(pack, file_path, 0)
-        ap.set_loading_method(self.soundfile.read)
+        ap = AudioPayload(pack, file_path, payload_idx)
+        # audio_data, sample_rate = self.soundfile.read(file_path)
+        # ap.set_cache(audio_data)
+        # ap.set_meta("sample_rate", sample_rate)
+        for k, v in self.configs:
+            ap.set_meta(k, v)
+        meta = AudioReadingMeta(pack, payload_idx)
+        meta._module = self.configs.read_kwargs.module
+        meta._reading_method = self.configs.read_kwargs.method
         pack.pack_name = file_path
         yield pack
 
