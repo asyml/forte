@@ -55,9 +55,9 @@ __all__ = [
     "TextPayload",
     "ImagePayload",
     "AudioPayload",
-    "Meta",
-    "ImageProcessingMeta",
-    "AudioProcessingMeta",
+    "ReadingMeta",
+    "ImageReadingMeta",
+    "AudioReadingMeta",
 ]
 
 QueryType = Union[Dict[str, Any], np.ndarray]
@@ -1211,7 +1211,7 @@ class Payload(Entry):
         return self._payload_idx
 
     @property
-    def loading_path(self):
+    def reading_path(self):
         return self._path
 
     def set_cache(self, data):
@@ -1258,7 +1258,7 @@ class ImagePayload(Payload):
         super().__init__(pack, "image", path, payload_idx)
 
 
-class Meta(Entry):
+class ReadingMeta(Entry):
     """
     a Meta entry defines metadata related to data processing
     about reading from data source, loading data to cache, and writing to
@@ -1268,16 +1268,31 @@ class Meta(Entry):
         Entry (_type_): _description_
     """
 
-    def __init__(self, pack: PackType, meta_name):
+    def __init__(self, pack: PackType, payload_index: int, meta_name):
         self._meta_name: Optional[str] = meta_name
+        self._payload_index = payload_index
         super().__init__(pack)
+        self._module = None
+        self._reading_method = None
+
+    @property
+    def payload_index(self):
+        return self._payload_index
 
     @property
     def meta_name(self):
         return self._meta_name
 
+    @property
+    def module(self):
+        return self._module
 
-class ImageProcessingMeta(Meta):
+    @property
+    def reading_method(self):
+        return self._reading_method
+
+
+class ImageReadingMeta(ReadingMeta):
     def __init__(self, pack: PackType, meta_name: Optional[str] = None):
         if meta_name is None:
             meta_name = "jpg"
@@ -1288,14 +1303,15 @@ class ImageProcessingMeta(Meta):
         self.type_code = "jpg"
 
 
-class AudioProcessingMeta(Meta):
+class AudioReadingMeta(ReadingMeta):
     """
-    an AudioProcessingMeta entry defines metadata related to audio processing
-    about reading from data source, loading data to cache, and writing to
-    a target file.
+    An AudioReadingMeta entry defines metadata related to reading raw audio
+     from data source. It can be efficiently serialized and deserialized within
+    DataPack, and it can be further converted to loading method by using
+    loading method registry. It's bound to one payload.
 
     Args:
-        pack (PackType): The container that this AudioProcessingMeta will
+        pack (PackType): The container that this AudioReadingMeta will
             be added to.
         meta_name (Optional[str], optional): the name for the audio metadata.
             Defaults to "flac".
@@ -1312,14 +1328,19 @@ class AudioProcessingMeta(Meta):
     # payload meta defines data source and user need to write a
     # reader for the data source.
     # def __init__(self, pack: PackType, meta_name: Optional[str] = None):
-    def __init__(self, pack: PackType, meta_name: Optional[str] = None):
-        if meta_name is None:
-            meta_name = "flac"
-        super().__init__(pack, meta_name=meta_name)
-        self.data_source_type = "disk"
-        self.pipeline_data_type = "nparray"
-        self.save_format = None
-        self.file_ext = "flac"
+    def __init__(
+        self,
+        pack: PackType,
+        payload_index: int,
+        meta_name: Optional[str] = "audio",
+    ):
+
+        super().__init__(pack, payload_index, meta_name=meta_name)
+        # self.data_source_type = "disk"
+        # self.save_format = None
+        # self.file_ext = "flac"
+        self._module = None
+        self._reading_method = None
 
 
 SinglePackEntries = (
@@ -1330,6 +1351,6 @@ SinglePackEntries = (
     AudioAnnotation,
     ImageAnnotation,
     Payload,
-    Meta,
+    ReadingMeta,
 )
 MultiPackEntries = (MultiPackLink, MultiPackGroup, MultiPackGeneric)
