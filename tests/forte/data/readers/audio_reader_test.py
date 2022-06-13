@@ -15,6 +15,7 @@
 Unit tests for AudioReader.
 """
 from email.mime import audio
+import importlib
 import os
 import unittest
 from typing import Dict
@@ -28,7 +29,7 @@ from forte.data.data_pack import DataPack
 from forte.data.readers import AudioReader
 from forte.pipeline import Pipeline
 from forte.processors.base.pack_processor import PackProcessor
-from forte.data.ontology.top import AudioProcessingMeta, AudioPayload
+from forte.data.ontology.top import AudioReadingMeta, AudioPayload
 
 
 class TestASRProcessor(PackProcessor):
@@ -45,11 +46,18 @@ class TestASRProcessor(PackProcessor):
         self._model = Wav2Vec2ForCTC.from_pretrained(pretrained_model)
 
     def _process(self, input_pack: DataPack):
+
         # it follows the logic of loaidng while using
         # load audio using AudioPayload
-        for audio_payload in input_pack.get(AudioPayload):
-            sample_rate = audio_payload.get_meta("sample_rate")
-            audio_data = audio_payload.offload_cache()
+        for audio_payload, audio_reading_meta in zip(
+            input_pack.get(AudioPayload), input_pack.get(AudioReadingMeta)
+        ):
+            audio_reading_meta
+            module = importlib.import_module(audio_reading_meta.module)
+            reading_method = getattr(module, audio_reading_meta.reading_method)
+            audio_data, sample_rate = reading_method(audio_payload.reading_path)
+            # sample_rate = audio_payload.get_meta("sample_rate")
+            # audio_data = audio_payload.offload_cache()
 
         required_sample_rate: int = 16000
         if sample_rate != required_sample_rate:
@@ -87,11 +95,12 @@ class AudioReaderPipelineTest(unittest.TestCase):
                 "data_samples/audio_reader_test",
             )
         )
-        audio_processing_meta = AudioProcessingMeta(None, meta_name="audio")
-        audio_processing_meta.audio_path = self._test_audio_path
         # Define and config the Pipeline
         self._pipeline = Pipeline[DataPack]()
-        self._pipeline.set_reader(AudioReader(audio_processing_meta))
+        self._pipeline.set_reader(
+            AudioReader(),
+            config={"read_kwargs": {"module": "soundfile", "method": "read"}},
+        )
         self._pipeline.add(TestASRProcessor())
         self._pipeline.initialize()
 
@@ -107,7 +116,7 @@ class AudioReaderPipelineTest(unittest.TestCase):
         }
 
         # Verify the ASR result of each datapack
-        for pack in self._pipeline.process_dataset():
+        for pack in self._pipeline.process_dataset(self._test_audio_path):
             self.assertEqual(pack.text, target_transcription[pack.pack_name])
 
 
