@@ -30,7 +30,7 @@ from forte.data.ontology.top import (
     Link,
     Generics,
     Payload,
-    Meta,
+    ReadingMeta,
 )
 from forte.data.ontology.core import Entry, FList, FDict
 from forte.common import constants
@@ -688,17 +688,13 @@ class DataStore(BaseStore):
 
         return entry
 
-    def _new_meta(
-        self, type_name: str, meta_name: str, tid: Optional[int] = None
-    ) -> List:
+    def _new_meta(self, type_name: str, tid: Optional[int] = None) -> List:
         r"""This function generates a new grid with default fields.
         Called by add_grid_raw() to create a new grid
-        with ``type_name``, ``meta_name`` and optional ``tid``.
-
+        with ``type_name``, and optional ``tid``.
 
         Args:
             type_name: The fully qualified type name of the new entry.
-            meta_name: The name of the Meta entry.
 
         Returns:
             A list representing a new grid type entry data.
@@ -707,7 +703,7 @@ class DataStore(BaseStore):
         tid: int = self._new_tid() if tid is None else tid
         entry: List[Any]
 
-        entry = [meta_name, None, tid, type_name]
+        entry = [None, None, tid, type_name]
         entry += self._default_attributes_for_type(type_name)
 
         return entry
@@ -965,7 +961,7 @@ class DataStore(BaseStore):
             ImageAnnotation,
             Grids,
             Payload,
-            Meta,
+            ReadingMeta,
         ]:
             try:
                 self.__elements[type_name].append(entry)
@@ -1211,10 +1207,9 @@ class DataStore(BaseStore):
                 return tid_search_result
         return self._add_entry_raw(Grids, type_name, entry)
 
-    def add_meta_raw(
+    def add_reading_meta_raw(
         self,
         type_name: str,
-        meta_name: str,
         tid: Optional[int] = None,
         allow_duplicate=True,
     ) -> int:
@@ -1243,13 +1238,13 @@ class DataStore(BaseStore):
         # annotation type entry data with default fields.
         # A reference to the entry should be store in both self.__elements and
         # self.__tid_ref_dict.
-        entry = self._new_meta(type_name, meta_name, tid)
+        entry = self._new_meta(type_name, tid)
         if not allow_duplicate:
             tid_search_result = self._get_existing_ann_entry_tid(entry)
             # if found existing entry
             if tid_search_result != -1:
                 return tid_search_result
-        return self._add_entry_raw(Meta, type_name, entry)
+        return self._add_entry_raw(ReadingMeta, type_name, entry)
 
     def _get_existing_ann_entry_tid(self, entry: List[Any]):
         r"""
