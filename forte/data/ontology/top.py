@@ -58,6 +58,7 @@ __all__ = [
     "ReadingMeta",
     "ImageReadingMeta",
     "AudioReadingMeta",
+    "TextReadingMeta",
 ]
 
 QueryType = Union[Dict[str, Any], np.ndarray]
@@ -1180,27 +1181,32 @@ class Payload(Entry):
         self,
         pack: PackType,
         modality: str,
-        path: str,
         payload_idx: int,
+        uri: str = None,
     ):
+        supported_modality = ("text", "audio", "image")
+        if modality not in supported_modality:
+            raise ValueError(
+                f"The given modality {modality} is not supported. "
+                f"Currently we only support {supported_modality}"
+            )
         self._payload_idx = payload_idx
         self._modality = modality
-        self._path = path
+        self._uri = uri
 
         super().__init__(pack)
         self._cache = None
-        self._meta = {}
+        self.meta = None
 
-    def get_data(self):
-        return self.offload_cache()
-
-    def offload_cache(self, f_name=None):
-        cache = self._cache
-        self._cache = None
-        if f_name is not None:
-            with open(f_name, "wb") as f:
-                np.save(f, cache)
-        return cache
+    @property
+    def cache(self):
+        if self._cache is None:
+            raise ValueError(
+                "Payload doesn't have a cache."
+                "Please set the reader config `lazy_read` to False"
+                "or manually load it by set_cache()  "
+            )
+        return self._cache
 
     @property
     def modality(self):
@@ -1211,41 +1217,36 @@ class Payload(Entry):
         return self._payload_idx
 
     @property
-    def reading_path(self):
-        return self._path
+    def uri(self):
+        return self._uri
 
     def set_cache(self, data):
         self._cache = data
-
-    def load_cache(self, f_name):
-        with open(f_name, "rb") as f:
-            self.cache = np.load(f)
-
-    def set_meta(self, key, value):
-        self._meta[key] = value
-
-    def get_meta(self, key):
-        return self._meta[key]
 
 
 class TextPayload(Payload):
     def __init__(
         self,
         pack: PackType,
-        path: str,
         payload_idx: int,
+        path: str = None,
     ):
-        super().__init__(pack, "text", path, payload_idx)
+
+        super().__init__(pack, "text", payload_idx, path)
 
 
 class AudioPayload(Payload):
     def __init__(
         self,
         pack: PackType,
-        path: str,
         payload_idx: int,
+        path: str = None,
     ):
-        super().__init__(pack, "audio", path, payload_idx=payload_idx)
+
+        super().__init__(pack, "audio", payload_idx, path)
+
+    def audio_len(self):
+        return len(self._cache)
 
 
 class ImagePayload(Payload):
@@ -1255,7 +1256,7 @@ class ImagePayload(Payload):
         path: str,
         payload_idx: int,
     ):
-        super().__init__(pack, "image", path, payload_idx)
+        super().__init__(pack, "image", payload_idx, path)
 
 
 class ReadingMeta(Entry):
@@ -1268,28 +1269,32 @@ class ReadingMeta(Entry):
         Entry (_type_): _description_
     """
 
-    def __init__(self, pack: PackType, payload_index: int, meta_name):
+    def __init__(self, pack: PackType, meta_name):
         self._meta_name: Optional[str] = meta_name
-        self._payload_index = payload_index
         super().__init__(pack)
-        self._module = None
-        self._reading_method = None
-
-    @property
-    def payload_index(self):
-        return self._payload_index
 
     @property
     def meta_name(self):
         return self._meta_name
 
-    @property
-    def module(self):
-        return self._module
 
-    @property
-    def reading_method(self):
-        return self._reading_method
+class TextReadingMeta(ReadingMeta):
+    """
+    a text meta entry defines metadata related to text data reading from
+    data source.
+
+    Args:
+        Entry (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
+
+    def __init__(self, pack: PackType, meta_name: Optional[str] = None):
+        super().__init__(pack, meta_name=meta_name)
+        self.replace_back_operations = None
+        self.processed_original_spans = None
+        self.orig_text_len = None
 
 
 class ImageReadingMeta(ReadingMeta):
@@ -1331,16 +1336,15 @@ class AudioReadingMeta(ReadingMeta):
     def __init__(
         self,
         pack: PackType,
-        payload_index: int,
+        sample_rate: Optional[int] = None,
         meta_name: Optional[str] = "audio",
     ):
+        super().__init__(pack, meta_name=meta_name)
+        self._sample_rate = sample_rate
 
-        super().__init__(pack, payload_index, meta_name=meta_name)
-        # self.data_source_type = "disk"
-        # self.save_format = None
-        # self.file_ext = "flac"
-        self._module = None
-        self._reading_method = None
+    @property
+    def sample_rate(self):
+        return self._sample_rate
 
 
 SinglePackEntries = (
