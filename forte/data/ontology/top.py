@@ -1177,6 +1177,20 @@ class BoundingBox(Box):
 
 
 class Payload(Entry):
+    """
+    A payload class that holds data cache of one modality and its data source uri.
+
+    Args:
+        pack: The container that this `Payload` will
+            be added to.
+        modality: modality of the payload such as text, audio and image.
+        payload_idx: the index of the payload.
+        uri: universal resource identifier of the data source. Defaults to None.
+
+    Raises:
+        ValueError: raised when the modality is not supported.
+    """
+
     def __init__(
         self,
         pack: PackType,
@@ -1229,9 +1243,8 @@ class TextPayload(Payload):
         self,
         pack: PackType,
         payload_idx: int,
-        path: str = None,
+        path: Optional[str] = None,
     ):
-
         super().__init__(pack, "text", payload_idx, path)
 
 
@@ -1240,9 +1253,8 @@ class AudioPayload(Payload):
         self,
         pack: PackType,
         payload_idx: int,
-        path: str = None,
+        path: Optional[str] = None,
     ):
-
         super().__init__(pack, "audio", payload_idx, path)
 
     def audio_len(self):
@@ -1253,8 +1265,8 @@ class ImagePayload(Payload):
     def __init__(
         self,
         pack: PackType,
-        path: str,
         payload_idx: int,
+        path: Optional[str] = None,
     ):
         super().__init__(pack, "image", payload_idx, path)
 
@@ -1266,16 +1278,12 @@ class ReadingMeta(Entry):
     a target file.
 
     Args:
-        Entry (_type_): _description_
+        pack: The container that this `ReadingMeta` will
+            be added to.
     """
 
-    def __init__(self, pack: PackType, meta_name):
-        self._meta_name: Optional[str] = meta_name
+    def __init__(self, pack: PackType):
         super().__init__(pack)
-
-    @property
-    def meta_name(self):
-        return self._meta_name
 
 
 class TextReadingMeta(ReadingMeta):
@@ -1290,18 +1298,16 @@ class TextReadingMeta(ReadingMeta):
         _type_: _description_
     """
 
-    def __init__(self, pack: PackType, meta_name: Optional[str] = None):
-        super().__init__(pack, meta_name=meta_name)
+    def __init__(self, pack: PackType):
+        super().__init__(pack)
         self.replace_back_operations = None
         self.processed_original_spans = None
         self.orig_text_len = None
 
 
 class ImageReadingMeta(ReadingMeta):
-    def __init__(self, pack: PackType, meta_name: Optional[str] = None):
-        if meta_name is None:
-            meta_name = "jpg"
-        super().__init__(pack, meta_name)
+    def __init__(self, pack: PackType):
+        super().__init__(pack)
         self.data_source_type = "disk"
         self.pipeline_data_type = "nparray"
         self.save_format = None
@@ -1318,28 +1324,14 @@ class AudioReadingMeta(ReadingMeta):
     Args:
         pack (PackType): The container that this AudioReadingMeta will
             be added to.
-        meta_name (Optional[str], optional): the name for the audio metadata.
-            Defaults to "flac".
     """
 
-    # a Meta data entry object that define metadata related to image processing
-    # both reading from data source, loaded format and writing format
-    # for example, we might want to read a high resolution png image
-    # and load it as a numpy array and write it into jpg format.
-
-    # it determines what third-party packages to use to convert image to target
-    # data format
-
-    # payload meta defines data source and user need to write a
-    # reader for the data source.
-    # def __init__(self, pack: PackType, meta_name: Optional[str] = None):
     def __init__(
         self,
         pack: PackType,
         sample_rate: Optional[int] = None,
-        meta_name: Optional[str] = "audio",
     ):
-        super().__init__(pack, meta_name=meta_name)
+        super().__init__(pack)
         self._sample_rate = sample_rate
 
     @property
