@@ -20,3 +20,4 @@ from forte.data.base_extractor import *
 from forte.data.data_store import *
 from forte.data.selector import *
 from forte.data.index import *
+from forte.data.entry_converter import *

@@ -27,9 +27,6 @@ from typing import (
     Callable,
     Tuple,
 )
-from functools import partial
-from typing_inspect import get_origin
-from packaging.version import Version
 import numpy as np
 from sortedcontainers import SortedList
 
@@ -40,9 +37,10 @@ from forte.common.exception import (
 from forte.common.constants import TID_INDEX
 from forte.data import data_utils_io
 from forte.data.data_store import DataStore
+from forte.data.entry_converter import EntryConverter
 from forte.data.base_pack import BaseMeta, BasePack
 from forte.data.index import BaseIndex
-from forte.data.ontology.core import Entry, FList, FDict
+from forte.data.ontology.core import Entry
 from forte.data.ontology.core import EntryType
 from forte.data.ontology.top import (
     Annotation,
@@ -57,7 +55,6 @@ from forte.data.ontology.top import (
 from forte.data.span import Span
 from forte.data.types import ReplaceOperationsType, DataRequest
 from forte.utils import get_class, get_full_module_name
-from forte.version import PACK_ID_COMPATIBLE_VERSION, DEFAULT_PACK_VERSION
 
 logger = logging.getLogger(__name__)
 
@@ -197,21 +194,6 @@ class DataPack(BasePack[Entry, Link, Group]):
             3) initialize the indexes.
             4) Obtain the pack ids.
         """
-        # Pack version checking. We will no longer provide support for
-        # serialized DataPack whose "pack_version" is less than
-        # PACK_ID_COMPATIBLE_VERSION.
-        pack_version: str = (
-            state["pack_version"]
-            if "pack_version" in state
-            else DEFAULT_PACK_VERSION
-        )
-        if Version(pack_version) < Version(PACK_ID_COMPATIBLE_VERSION):
-            raise ValueError(
-                "The DataPack cannot be deserialized because its version "
-                f"{pack_version} is outdated. We only support DataPack with "
-                f"version greater or equal to {PACK_ID_COMPATIBLE_VERSION}"
-            )
-
         self._entry_converter = EntryConverter()
         super().__setstate__(state)
 
@@ -270,7 +252,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         for entry in self._data_store.all_entries(
             "forte.data.ontology.top.Annotation"
         ):
-            yield self.get_entry(tid=entry[TID_INDEX])
+            yield self.get_entry(tid=entry[TID_INDEX])  # type: ignore
 
     @property
     def num_annotations(self) -> int:
@@ -296,7 +278,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         for entry in self._data_store.all_entries(
             "forte.data.ontology.top.Link"
         ):
-            yield self.get_entry(tid=entry[TID_INDEX])
+            yield self.get_entry(tid=entry[TID_INDEX])  # type: ignore
 
     @property
     def num_links(self) -> int:
@@ -320,7 +302,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         for entry in self._data_store.all_entries(
             "forte.data.ontology.top.Group"
         ):
-            yield self.get_entry(tid=entry[TID_INDEX])
+            yield self.get_entry(tid=entry[TID_INDEX])  # type: ignore
 
     @property
     def num_groups(self):
@@ -343,7 +325,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         for entry in self._data_store.all_entries(
             "forte.data.ontology.top.Generics"
         ):
-            yield self.get_entry(tid=entry[TID_INDEX])
+            yield self.get_entry(tid=entry[TID_INDEX])  # type: ignore
 
     @property
     def num_generics_entries(self):
@@ -367,7 +349,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         for entry in self._data_store.all_entries(
             "forte.data.ontology.top.AudioAnnotation"
         ):
-            yield self.get_entry(tid=entry[TID_INDEX])
+            yield self.get_entry(tid=entry[TID_INDEX])  # type: ignore
 
     @property
     def num_audio_annotations(self):
@@ -413,7 +395,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         """
         return SortedList(self.all_audio_annotations)
 
-    @property  # type: ignore
+    @property
     def links(self):
         """
         A List container of all links in this data pack.
@@ -422,18 +404,9 @@ class DataPack(BasePack[Entry, Link, Group]):
         type :class:`~forte.data.ontology.top.Link`.
 
         """
-        # TODO: Right now we create a new variable `_links` here to avoid
-        # conflicts from BasePack and MultiPack. After DataStore is fully
-        # integrated with MultiPack, we should reconsider the design here.
-        if isinstance(self, DataPack):
-            self._links = SortedList(self.all_links)
-        return self._links
+        return SortedList(self.all_links)
 
-    @links.setter
-    def links(self, val):
-        self._links = val
-
-    @property  # type: ignore
+    @property
     def groups(self):
         """
         A List container of all groups in this data pack.
@@ -442,12 +415,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         type :class:`~forte.data.ontology.top.Group`.
 
         """
-        # TODO: Right now we create a new variable `_groups` here to avoid
-        # conflicts from BasePack and MultiPack. After DataStore is fully
-        # integrated with MultiPack, we should reconsider the design here.
-        if isinstance(self, DataPack):
-            self._groups = SortedList(self.all_links)
-        return self._groups
+        return SortedList(self.all_groups)
 
     @groups.setter
     def groups(self, val):
@@ -786,14 +754,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                 object to be deleted from the pack.
 
         """
-        self._data_store.delete_entry(tid=entry.tid)
-
-        # update basic index
-        self._index.remove_entry(entry)
-
-        # set other index invalid
-        self._index.turn_link_index_switch(on=False)
-        self._index.turn_group_index_switch(on=False)
+        super().delete_entry(entry=entry)
         self._index.deactivate_coverage_index()
 
     @classmethod
@@ -1420,7 +1381,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                 range_annotation=range_annotation  # type: ignore
                 and (range_annotation.begin, range_annotation.end),
             ):
-                entry: EntryType = self.get_entry(tid=entry_data[TID_INDEX])
+                entry: Entry = self.get_entry(tid=entry_data[TID_INDEX])
                 # Filter by components
                 if components is not None:
                     if not self.is_created_by(entry, components):
@@ -1436,7 +1397,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                 ):
                     continue
 
-                yield entry
+                yield entry  # type: ignore
         except ValueError:
             # type_name does not exist in DataStore
             yield from []
@@ -1452,129 +1413,13 @@ class DataPack(BasePack[Entry, Link, Group]):
         #   better solution.
         self.__dict__.update(datapack.__dict__)
 
-    def get_entry(self, tid: int) -> EntryType:
-        r"""Look up the entry_index with ``tid``. Specific implementation
-        depends on the actual class."""
-        try:
-            # Try to find entry in DataIndex
-            entry: EntryType = self._index.get_entry(tid)
-        except KeyError:
-            # Find entry in DataStore
-            entry = self._entry_converter.get_entry_object(tid, self)
-        if entry is None:
-            raise KeyError(
-                f"There is no entry with tid '{tid}'' in this datapack"
-            )
-        return entry
-
-    def get_entry_raw(self, tid: int) -> List:
-        r"""Retrieve the raw entry data in list format from DataStore."""
-        return self._data_store.get_entry(tid=tid)[0]
-
-    def on_entry_creation(
-        self, entry: Entry, component_name: Optional[str] = None
-    ):
-        """
-        Call this when adding a new entry, will be called
-        in :class:`~forte.data.ontology.core.Entry` when
-        its `__init__` function is called.
-
-        Here we override BasePack.on_entry_creation() to make sure each new
-        entry is stored into ``DataStore`` on creation.
-
-        Args:
-            entry: The entry to be added.
-            component_name: A name to record that the entry is created by
-             this component.
-
-        Returns:
-
-        """
-        c = component_name
-
-        if c is None:
-            # Use the auto-inferred control component.
-            c = self.get_control_component()
-
-        def entry_getter(cls: Entry, attr_name: str, field_type):
-            """A getter function for dataclass fields of entry object.
-            When the field contains ``tid``s, we will convert them to entry
-            object on the fly.
-            """
-            data_store_ref = (
-                cls.pack._data_store  # pylint: disable=protected-access
-            )
-            attr_val = data_store_ref.get_attribute(
-                tid=cls.tid, attr_name=attr_name
-            )
-            if field_type in (FList, FDict):
-                # Generate FList/FDict object on the fly
-                return field_type(parent_entry=cls, data=attr_val)
-            try:
-                # TODO: Find a better solution to determine if a field is Entry
-                if isinstance(attr_val, int):
-                    # Convert tid to entry object on the fly
-                    return cls.pack.get_entry(tid=attr_val)
-            except KeyError:
-                pass
-            return attr_val
-
-        def entry_setter(cls: Entry, value: Any, attr_name: str, field_type):
-            """A setter function for dataclass fields of entry object.
-            When the value contains entry objects, we will convert them into
-            ``tid``s before storing to ``DataStore``.
-            """
-            attr_value: Any
-            data_store_ref = (
-                cls.pack._data_store  # pylint: disable=protected-access
-            )
-            if field_type is FList:
-                attr_value = [
-                    entry.tid if isinstance(entry, Entry) else entry
-                    for entry in value
-                ]
-            elif field_type is FDict:
-                attr_value = {
-                    key: entry.tid if isinstance(entry, Entry) else entry
-                    for key, entry in value.items()
-                }
-            elif isinstance(value, Entry):
-                attr_value = value.tid
-            else:
-                attr_value = value
-            data_store_ref.set_attribute(
-                tid=cls.tid, attr_name=attr_name, attr_value=attr_value
-            )
-
-        # Save the input entry object in DataStore
+    def _save_entry_to_data_store(self, entry: Entry):
+        r"""Save an existing entry object into DataStore"""
         self._entry_converter.save_entry_object(entry=entry, pack=self)
 
-        # Register property functions for all dataclass fields.
-        for name, field in entry.__dataclass_fields__.items():
-            field_type = get_origin(field.type)
-            setattr(
-                type(entry),
-                name,
-                property(
-                    fget=partial(
-                        entry_getter, attr_name=name, field_type=field_type
-                    ),
-                    fset=partial(
-                        entry_setter, attr_name=name, field_type=field_type
-                    ),
-                ),
-            )
-
-        # Record that this entry hasn't been added to the index yet.
-        self._pending_entries[entry.tid] = entry.tid, c
-
-    def __del__(self):
-        super().__del__()
-        # Remove all the remaining tids in _pending_entries.
-        tids: List = list(self._pending_entries.keys())
-        for tid in tids:
-            self._pending_entries.pop(tid)
-            self._data_store.delete_entry(tid=tid)
+    def _get_entry_from_data_store(self, tid: int) -> EntryType:
+        r"""Generate a class object from entry data in DataStore"""
+        return self._entry_converter.get_entry_object(tid=tid, pack=self)
 
 
 class DataIndex(BaseIndex):
@@ -1940,147 +1785,3 @@ class DataIndex(BaseIndex):
             # check here.
             return False
         return inner_begin >= span.begin and inner_end <= span.end
-
-
-class EntryConverter:
-    r"""
-    Facilitate the conversion between entry data in list format from
-    ``DataStore`` and entry class object.
-    """
-
-    def __init__(self) -> None:
-        # Mapping from entry's tid to the entry objects for caching
-        self._entry_dict: Dict[int, Entry] = {}
-
-    def save_entry_object(
-        self, entry: Entry, pack: DataPack, allow_duplicate: bool = True
-    ):
-        """
-        Save an existing entry object into DataStore.
-        """
-        # Check if the entry is already stored
-        data_store_ref = pack._data_store  # pylint: disable=protected-access
-        try:
-            data_store_ref.get_entry(tid=entry.tid)
-            logger.info(
-                "The entry with tid=%d is already saved into DataStore",
-                entry.tid,
-            )
-            return
-        except KeyError:
-            # The entry is not found in DataStore
-            pass
-
-        # Create a new registry in DataStore based on entry's type
-        if isinstance(entry, Annotation):
-            data_store_ref.add_annotation_raw(
-                type_name=entry.entry_type(),
-                begin=entry.begin,
-                end=entry.end,
-                tid=entry.tid,
-                allow_duplicate=allow_duplicate,
-            )
-        elif isinstance(entry, Link):
-            data_store_ref.add_link_raw(
-                type_name=entry.entry_type(),
-                parent_tid=entry.parent,
-                child_tid=entry.child,
-                tid=entry.tid,
-            )
-        elif isinstance(entry, Group):
-            data_store_ref.add_group_raw(
-                type_name=entry.entry_type(),
-                member_type=get_full_module_name(entry.MemberType),
-                tid=entry.tid,
-            )
-        elif isinstance(entry, Generics):
-            data_store_ref.add_generics_raw(
-                type_name=entry.entry_type(),
-                tid=entry.tid,
-            )
-        elif isinstance(entry, AudioAnnotation):
-            data_store_ref.add_audio_annotation_raw(
-                type_name=entry.entry_type(),
-                begin=entry.begin,
-                end=entry.end,
-                tid=entry.tid,
-                allow_duplicate=allow_duplicate,
-            )
-        elif isinstance(entry, ImageAnnotation):
-            data_store_ref.add_image_annotation_raw(
-                type_name=entry.entry_type(),
-                image_payload_idx=entry.image_payload_idx,
-                tid=entry.tid,
-                allow_duplicate=allow_duplicate,
-            )
-        elif isinstance(entry, Grids):
-            data_store_ref.add_grid_raw(
-                type_name=entry.entry_type(),
-                image_payload_idx=entry.image_payload_idx,
-                tid=entry.tid,
-                allow_duplicate=allow_duplicate,
-            )
-        else:
-            raise ValueError(
-                f"Invalid entry type {type(entry)}. A valid entry "
-                f"should be an instance of Annotation, Link, Group, Generics "
-                "or AudioAnnotation."
-            )
-
-        # Store all the dataclass attributes to DataStore
-        for attribute in entry.__dataclass_fields__:
-            value = getattr(entry, attribute, None)
-            if not value:
-                continue
-            if isinstance(value, Entry):
-                value = value.tid
-            elif isinstance(value, FDict):
-                value = {key: val.tid for key, val in value.items()}
-            elif isinstance(value, FList):
-                value = [val.tid for val in value]
-            data_store_ref.set_attribute(
-                tid=entry.tid, attr_name=attribute, attr_value=value
-            )
-
-        # Cache the stored entry and its tid
-        self._entry_dict[entry.tid] = entry
-
-    def get_entry_object(self, tid: int, pack: DataPack) -> EntryType:
-        """
-        Convert a tid to its corresponding entry object.
-        """
-
-        # Check if the tid is cached
-        if tid in self._entry_dict:
-            return self._entry_dict[tid]  # type: ignore
-
-        data_store_ref = pack._data_store  # pylint: disable=protected-access
-        entry_data, entry_type = data_store_ref.get_entry(tid=tid)
-        entry_class = get_class(entry_type)
-        entry: Entry
-        # Here the entry arguments are optional (begin, end, parent, ...) and
-        # the value can be arbitrary since they will all be routed to DataStore.
-        if issubclass(entry_class, (Annotation, AudioAnnotation)):
-            entry = entry_class(pack=pack, begin=0, end=0)
-        elif issubclass(entry_class, (Link, Group, Generics)):
-            entry = entry_class(pack=pack)
-        else:
-            raise ValueError(
-                f"Invalid entry type {type(entry_class)}. A valid entry "
-                f"should be an instance of Annotation, Link, Group, Generics "
-                "or AudioAnnotation."
-            )
-
-        # TODO: Remove the new tid and direct the entry object to the correct
-        # tid. The implementation here is a little bit hacky. Will need a stable
-        # solution in future.
-        # pylint: disable=protected-access
-        if entry.tid in self._entry_dict:
-            self._entry_dict.pop(entry.tid)
-        if entry.tid in pack._pending_entries:
-            pack._pending_entries.pop(entry.tid)
-        data_store_ref.delete_entry(tid=entry.tid)
-        entry._tid = entry_data[TID_INDEX]
-
-        self._entry_dict[tid] = entry
-        return entry  # type: ignore

@@ -163,7 +163,6 @@ class MultiEntryStructure(unittest.TestCase):
     def test_entry_attribute_mp_pointer(self):
         mpe: ExampleMPEntry = self.pack.get_single(ExampleMPEntry)
         self.assertIsInstance(mpe.refer_entry, ExampleEntry)
-        self.assertIsInstance(mpe.__dict__["refer_entry"], ExampleEntry)
 
         serialized_mp = self.pack.to_string(drop_record=True)
         recovered_mp = MultiPack.from_string(serialized_mp)
