@@ -469,7 +469,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         raise NotImplementedError
 
     def get_single(
-        self, entry_type: Union[str, Type[EntryType]], entry_index=0
+        self, entry_type: Union[str, Type[EntryType]], entry_index: int = 0
     ) -> EntryType:
         r"""Take a single entry of type
         :attr:`~forte.data.data_pack.DataPack.entry_type` from this data
@@ -478,6 +478,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
         Args:
             entry_type: The entry type to be retrieved.
+            entry_index: the index of the entry requested to get.
 
         Returns:
             A single data entry.
