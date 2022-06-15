@@ -468,7 +468,9 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         """
         raise NotImplementedError
 
-    def get_single(self, entry_type: Union[str, Type[EntryType]]) -> EntryType:
+    def get_single(
+        self, entry_type: Union[str, Type[EntryType]], payload_index=0
+    ) -> EntryType:
         r"""Take a single entry of type
         :attr:`~forte.data.data_pack.DataPack.entry_type` from this data
         pack. This is useful when the target entry type appears only one
@@ -481,9 +483,19 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         Returns:
             A single data entry.
         """
-        for a in self.get(entry_type):
-            return a
-
+        idx = -1
+        for idx, a in enumerate(self.get(entry_type)):
+            if idx == payload_index:
+                return a
+        if idx < payload_index:
+            if idx == -1:
+                raise EntryNotFoundError(
+                    f"There is no {entry_type} in the provided pack."
+                )
+            raise EntryNotFoundError(
+                f"The payload index {payload_index} is larger than maximum"
+                f" {entry_type} index {idx} in the provided pack."
+            )
         raise EntryNotFoundError(
             f"The entry {entry_type} is not found in the provided pack."
         )
