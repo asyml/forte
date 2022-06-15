@@ -65,19 +65,14 @@ class AudioReader(PackReader):
 
     def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
         pack: DataPack = DataPack()
-
         payload_idx = 0
         # Read in audio data and store in DataPack
         # add audio payload into DataPack.payloads
-        ap = AudioPayload(pack, file_path, payload_idx)
-        # audio_data, sample_rate = self.soundfile.read(file_path)
-        # ap.set_cache(audio_data)
-        # ap.set_meta("sample_rate", sample_rate)
-        for k, v in self.configs:
-            ap.set_meta(k, v)
-        meta = AudioReadingMeta(pack, payload_idx)
-        meta._module = self.configs.read_kwargs.module
-        meta._reading_method = self.configs.read_kwargs.method
+        ap = AudioPayload(pack, payload_idx, file_path)
+        if not self.configs.lazy_read:
+            audio_data, sample_rate = self.soundfile.read(file_path)
+            ap.set_cache(audio_data)
+        ap.meta = AudioReadingMeta(pack, sample_rate)
         pack.pack_name = file_path
         yield pack
 
@@ -97,4 +92,4 @@ class AudioReader(PackReader):
 
         Returns: The default configuration of audio reader.
         """
-        return {"file_ext": ".flac", "read_kwargs": None}
+        return {"file_ext": ".flac", "lazy_read": False, "read_kwargs": None}
