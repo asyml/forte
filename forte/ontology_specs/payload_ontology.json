@@ -1,0 +1,61 @@
+{
+    "name": "payload_ontology",
+    "definitions": [
+        {
+            "entry_name": "ft.onto.payload_ontology.AudioPayload",
+            "parent_entry": "forte.data.ontology.top.Payload",
+            "description": "A payload that caches audio data",
+            "attributes":[]
+        },
+        {
+            "entry_name": "ft.onto.payload_ontology.TextPayload",
+            "parent_entry": "forte.data.ontology.top.Payload",
+            "description": "A payload that caches text data",
+            "attributes": [
+              {
+                "name": "replace_back_operations",
+                "type": "List",
+                "item_type": "typing.Tuple"
+              },
+              {
+                "name": "processed_original_spans",
+                "type": "List",
+                "item_type": "typing.Tuple"
+              },
+              {
+                "name": "orig_text_len",
+                "type": "int"
+              }
+            ]
+          },
+          {
+            "entry_name": "ft.onto.payload_ontology.ImagePayload",
+            "parent_entry": "forte.data.ontology.top.Payload",
+            "description": "A payload that caches image data",
+            "attributes":[]
+          },
+          {
+            "entry_name": "ft.onto.payload_ontology.TextReadingMeta",
+            "parent_entry": "forte.data.ontology.top.ReadingMeta",
+            "description": "A reading meta entry data that records meta data related to reading text",
+            "attributes": []
+          },
+          {
+            "entry_name": "ft.onto.payload_ontology.ImageReadingMeta",
+            "parent_entry": "forte.data.ontology.top.ReadingMeta",
+            "description": "A ImageReadingMeta entry data that records meta data related to reading image from data source.",
+            "attributes":[]
+          },
+          {
+            "entry_name": "ft.onto.payload_ontology.AudioReadingMeta",
+            "parent_entry": "forte.data.ontology.top.ReadingMeta",
+            "description": "An AudioReadingMeta entry defines metadata related to reading raw audio from data source. It can be efficiently serialized and deserialized within DataPack, and it can be further converted to loading method by using loading method registry. It's bound to one payload.",
+            "attributes": [
+              {
+                "name": "sample_rate",
+                "type": "int"
+              }
+            ]
+        }
+    ]
+}
