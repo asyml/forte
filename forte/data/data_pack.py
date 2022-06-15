@@ -34,6 +34,7 @@ import numpy as np
 from sortedcontainers import SortedList
 
 from forte.common.exception import (
+    EntryNotFoundError,
     ProcessExecutionException,
     UnknownOntologyClassException,
 )
@@ -47,6 +48,8 @@ from forte.data.ontology.core import EntryType
 from forte.data.ontology.top import (
     Annotation,
     AudioPayload,
+    AudioReadingMeta,
+    ImagePayload,
     Link,
     Group,
     ReadingMeta,
@@ -57,6 +60,7 @@ from forte.data.ontology.top import (
     Grids,
     Payload,
     TextPayload,
+    TextReadingMeta,
 )
 from forte.data.span import Span
 from forte.data.types import ReplaceOperationsType, DataRequest
@@ -469,7 +473,9 @@ class DataPack(BasePack[Entry, Link, Group]):
         """
         return self.get_single(TextPayload, text_payload_index).cache[begin:end]
 
-    def get_span_audio(self, begin: int, end: int) -> np.ndarray:
+    def get_span_audio(
+        self, begin: int, end: int, audio_payload_index=0
+    ) -> np.ndarray:
         r"""Get the audio in the data pack contained in the span.
         `begin` and `end` represent the starting and ending indices of the span
         in audio payload respectively. Each index corresponds to one sample in
@@ -482,47 +488,54 @@ class DataPack(BasePack[Entry, Link, Group]):
         Returns:
             The audio within this span.
         """
-        audio_payload_entries = list(self.get(AudioPayload))
-        # if self.pack.get(AudioPayload) is None:
-        #     raise ProcessExecutionException(
-        #         "The audio payload of this DataPack is not set. Please call"
-        #         " method `set_audio` before running `get_span_audio`."
-        #     )
-        if len(audio_payload_entries) == 0:
-            raise ProcessExecutionException(
-                "The audio payload of this DataPack is not set. Please call"
-                " method `set_audio` before running `get_span_audio`."
+        try:
+            audio_payload_entry = self.get_single(
+                AudioPayload, audio_payload_index
             )
-
-        audio = audio_payload_entries[0].cache
-        return audio[begin:end]
+        except EntryNotFoundError:
+            raise ProcessExecutionException(
+                "The audio payload of this DataPack at index"
+                f"({audio_payload_index}) is not set. Please add"
+                " more AudioPayload in this DataPack"
+            )
+        return audio_payload_entry.cache[begin:end]
 
     def get_image_array(self, image_payload_idx: int):
-        if image_payload_idx >= len(self.payloads):
-            raise ValueError(
-                f"The input image payload index{(image_payload_idx)}"
-                f" out of range. It should be less than {len(self.payloads)}"
+        """
+        Get the image data in the data pack's payload with specificied image
+        payload index.
+
+        Args:
+            image_payload_idx: the index of the image payload.
+
+        Returns:
+            a numpy array representing the image.
+        """
+        try:
+            image_arr = self.get_single(ImagePayload, image_payload_idx).cache
+        except EntryNotFoundError:
+            raise ProcessExecutionException(
+                "The image payload of this DataPack at index"
+                f"({image_payload_idx}) is not set. Please add"
+                " more ImagePayload in this DataPack"
             )
-        return self.payloads[image_payload_idx]
+        return image_arr
 
     def set_text(
         self,
         text: str,
         replace_func: Optional[Callable[[str], ReplaceOperationsType]] = None,
-        text_payload_index: Optional[int] = None,
+        text_payload_index: int = 0,
     ):
-        # if len(text) < len(self._text):
-        #     raise ProcessExecutionException(
-        #         "The new text is overwriting the original one with shorter "
-        #         "length, which might cause unexpected behavior."
-        #     )
+        """
+        Set text for TextPayload at a specified index.
 
-        # if len(self._text):
-        #     logging.warning(
-        #         "Need to be cautious when changing the text of a "
-        #         "data pack, existing entries may get affected. "
-        #     )
-
+        Args:
+            text: a str text.
+            replace_func: function that replace text. Defaults to None.
+            text_payload_index (int, optional): TextPayload index in the
+                DataPack. Defaults to 0.
+        """
         span_ops = [] if replace_func is None else replace_func(text)
 
         # The spans should be mutually exclusive
@@ -532,14 +545,22 @@ class DataPack(BasePack[Entry, Link, Group]):
             processed_original_spans,
             orig_text_len,
         ) = data_utils_io.modify_text_and_track_ops(text, span_ops)
-        tp = TextPayload(self, 0)
+
+        tp = TextPayload(self, text_payload_index)
+
         tp.set_cache(text)
+        tp.meta = TextReadingMeta(self)
 
-        tp.set_meta("replace_back_operations", replace_back_operations)
-        tp.set_meta("processed_original_spans", processed_original_spans)
-        tp.set_meta("orig_text_len", orig_text_len)
+        tp.meta.replace_back_operations = replace_back_operations
+        tp.meta.processed_original_spans = processed_original_spans
+        tp.meta.orig_text_len = orig_text_len
 
-    def set_audio(self, audio: np.ndarray, sample_rate: int):
+    def set_audio(
+        self,
+        audio: np.ndarray,
+        sample_rate: int,
+        audio_payload_index: int = 0,
+    ):
         r"""Set the audio payload and sample rate of the :class:`~forte.data.data_pack.DataPack`
         object.
 
@@ -547,9 +568,10 @@ class DataPack(BasePack[Entry, Link, Group]):
             audio: A numpy array storing the audio waveform.
             sample_rate: An integer specifying the sample rate.
         """
-        ap = AudioPayload(self, 0)
+        ap = AudioPayload(self, audio_payload_index)
         ap.set_cache(audio)
-        ap.set_meta("sample_rate", sample_rate)
+        ap.meta = AudioReadingMeta(self)
+        ap.meta.sample_rate = sample_rate
 
     def get_original_text(self, text_payload_index=0):
         r"""Get original unmodified text from the :class:`~forte.data.data_pack.DataPack` object.
@@ -2058,16 +2080,10 @@ class EntryConverter:
         elif isinstance(entry, ReadingMeta):
             data_store_ref.add_reading_meta_raw(
                 type_name=entry.entry_type(),
-                meta_name=entry.meta_name,
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,
             )
         else:
-            import pdb
-
-            pdb.set_trace()
-            print("")
-
             raise ValueError(
                 f"Invalid entry type {type(entry)}. A valid entry "
                 f"should be an instance of Annotation, Link, Group, Generics "
