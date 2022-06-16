@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from dataclasses import dataclass
+from enum import Enum
 from functools import total_ordering
 from typing import Optional, Tuple, Type, Any, Dict, Union, Iterable, List
 
@@ -1190,12 +1191,12 @@ class Payload(Entry):
     def __init__(
         self,
         pack: PackType,
-        modality: str,
+        modality: Enum,
         payload_idx: int,
         uri: str = None,
     ):
         supported_modality = ("text", "audio", "image")
-        if modality not in supported_modality:
+        if modality.name not in supported_modality:
             raise ValueError(
                 f"The given modality {modality} is not supported. "
                 f"Currently we only support {supported_modality}"
@@ -1207,6 +1208,12 @@ class Payload(Entry):
         super().__init__(pack)
         self._cache = None
         self.meta = None
+
+    def get_type(self):
+        return type(self)
+
+    def get_modality(self):
+        return self._modality
 
     @property
     def cache(self):
@@ -1241,7 +1248,7 @@ class TextPayload(Payload):
         payload_idx: int,
         path: Optional[str] = None,
     ):
-        super().__init__(pack, "text", payload_idx, path)
+        super().__init__(pack, Modality.text, payload_idx, path)
 
 
 class AudioPayload(Payload):
@@ -1251,7 +1258,7 @@ class AudioPayload(Payload):
         payload_idx: int,
         path: Optional[str] = None,
     ):
-        super().__init__(pack, "audio", payload_idx, path)
+        super().__init__(pack, Modality.audio, payload_idx, path)
 
     def audio_len(self):
         return len(self._cache)
@@ -1264,8 +1271,10 @@ class ImagePayload(Payload):
         payload_idx: int,
         path: Optional[str] = None,
     ):
-        super().__init__(pack, "image", payload_idx, path)
+        super().__init__(pack, Modality.image, payload_idx, path)
 
+
+Modality = Enum("modality", "text audio image")
 
 SinglePackEntries = (
     Link,
