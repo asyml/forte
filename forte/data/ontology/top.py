@@ -55,10 +55,6 @@ __all__ = [
     "TextPayload",
     "ImagePayload",
     "AudioPayload",
-    "ReadingMeta",
-    "ImageReadingMeta",
-    "AudioReadingMeta",
-    "TextReadingMeta",
 ]
 
 QueryType = Union[Dict[str, Any], np.ndarray]
@@ -1271,74 +1267,6 @@ class ImagePayload(Payload):
         super().__init__(pack, "image", payload_idx, path)
 
 
-class ReadingMeta(Entry):
-    """
-    a Meta entry defines metadata related to data processing
-    about reading from data source, loading data to cache, and writing to
-    a target file.
-
-    Args:
-        pack: The container that this `ReadingMeta` will
-            be added to.
-    """
-
-    def __init__(self, pack: PackType):
-        super().__init__(pack)
-
-
-class TextReadingMeta(ReadingMeta):
-    """
-    a text meta entry defines metadata related to text data reading from
-    data source.
-
-    Args:
-        Entry (_type_): _description_
-
-    Returns:
-        _type_: _description_
-    """
-
-    def __init__(self, pack: PackType):
-        super().__init__(pack)
-        self.replace_back_operations = None
-        self.processed_original_spans = None
-        self.orig_text_len = None
-
-
-class ImageReadingMeta(ReadingMeta):
-    def __init__(self, pack: PackType):
-        super().__init__(pack)
-        self.data_source_type = "disk"
-        self.pipeline_data_type = "nparray"
-        self.save_format = None
-        self.type_code = "jpg"
-
-
-class AudioReadingMeta(ReadingMeta):
-    """
-    An AudioReadingMeta entry defines metadata related to reading raw audio
-     from data source. It can be efficiently serialized and deserialized within
-    DataPack, and it can be further converted to loading method by using
-    loading method registry. It's bound to one payload.
-
-    Args:
-        pack (PackType): The container that this AudioReadingMeta will
-            be added to.
-    """
-
-    def __init__(
-        self,
-        pack: PackType,
-        sample_rate: Optional[int] = None,
-    ):
-        super().__init__(pack)
-        self._sample_rate = sample_rate
-
-    @property
-    def sample_rate(self):
-        return self._sample_rate
-
-
 SinglePackEntries = (
     Link,
     Group,
@@ -1347,6 +1275,5 @@ SinglePackEntries = (
     AudioAnnotation,
     ImageAnnotation,
     Payload,
-    ReadingMeta,
 )
 MultiPackEntries = (MultiPackLink, MultiPackGroup, MultiPackGeneric)
