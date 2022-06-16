@@ -1278,9 +1278,6 @@ class AudioPayload(Payload):
     ):
         super().__init__(pack, Modality.audio, payload_idx, path)
 
-    def audio_len(self):
-        return len(self._cache)
-
 
 class ImagePayload(Payload):
     def __init__(
