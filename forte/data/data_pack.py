@@ -48,11 +48,9 @@ from forte.data.ontology.core import EntryType
 from forte.data.ontology.top import (
     Annotation,
     AudioPayload,
-    AudioReadingMeta,
     ImagePayload,
     Link,
     Group,
-    ReadingMeta,
     SinglePackEntries,
     Generics,
     AudioAnnotation,
@@ -60,8 +58,8 @@ from forte.data.ontology.top import (
     Grids,
     Payload,
     TextPayload,
-    TextReadingMeta,
 )
+
 from forte.data.span import Span
 from forte.data.types import ReplaceOperationsType, DataRequest
 from forte.utils import get_class, get_full_module_name
@@ -250,21 +248,6 @@ class DataPack(BasePack[Entry, Link, Group]):
 
     def _validate(self, entry: EntryType) -> bool:
         return isinstance(entry, SinglePackEntries)
-
-    @property
-    def text(self, text_payload_index=0) -> str:
-        r"""Return the text of the data pack"""
-        return self.get_single(TextPayload, text_payload_index).cache
-
-    @property
-    def audio(self, audio_payload_index=0) -> Optional[np.ndarray]:
-        r"""Return the audio of the data pack"""
-        return self.get_single(AudioPayload, audio_payload_index).cache
-
-    @property
-    def sample_rate(self) -> Optional[int]:
-        r"""Return the sample rate of the audio data"""
-        return getattr(self._meta, "sample_rate")
 
     @property
     def all_annotations(self) -> Iterator[Annotation]:
@@ -461,12 +444,45 @@ class DataPack(BasePack[Entry, Link, Group]):
     def groups(self, val):
         self._groups = val
 
-    def get_span_text(self, begin: int, end: int, text_payload_index=0) -> str:
+    def get_payload_at(
+        self, modality: str, payload_index: int
+    ) -> Union[str, np.ndarray]:
+        """
+        Get Payload of requested modality at the requested payload index.
+
+        Args:
+            modality: data modality among "text", "audio", "image"
+            payload_index (int): the index of the requested payload
+
+        Raises:
+            ValueError: raised when the requested modality is not supported.
+
+        Returns:
+            str data for text data or numpy array for image and audio data.
+        """
+        supported_modality = ("text", "audio", "image")
+        if modality == "text":
+            return self.get_single(TextPayload, payload_index)
+        elif modality == "audio":
+            return self.get_single(AudioPayload, payload_index)
+        elif modality == "image":
+            return self.get_single(ImagePayload, payload_index)
+        else:
+            raise ValueError(
+                f"Provided modality {modality} is not supported."
+                "Please provide one of modality among"
+                f" {supported_modality}."
+            )
+
+    def get_span_text(
+        self, begin: int, end: int, text_payload_index: int = 0
+    ) -> str:
         r"""Get the text in the data pack contained in the span.
 
         Args:
             begin: begin index to query.
             end: end index to query.
+            text_payload_index: entry index of text payload in this DataPack.
 
         Returns:
             The text within this span.
@@ -484,6 +500,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         Args:
             begin: begin index to query.
             end: end index to query.
+            audio_payload_index: entry index of audio payload in this DataPack.
 
         Returns:
             The audio within this span.
@@ -499,27 +516,6 @@ class DataPack(BasePack[Entry, Link, Group]):
                 " more AudioPayload in this DataPack"
             )
         return audio_payload_entry.cache[begin:end]
-
-    def get_image_array(self, image_payload_idx: int):
-        """
-        Get the image data in the data pack's payload with specificied image
-        payload index.
-
-        Args:
-            image_payload_idx: the index of the image payload.
-
-        Returns:
-            a numpy array representing the image.
-        """
-        try:
-            image_arr = self.get_single(ImagePayload, image_payload_idx).cache
-        except EntryNotFoundError:
-            raise ProcessExecutionException(
-                "The image payload of this DataPack at index"
-                f"({image_payload_idx}) is not set. Please add"
-                " more ImagePayload in this DataPack"
-            )
-        return image_arr
 
     def set_text(
         self,
@@ -549,11 +545,11 @@ class DataPack(BasePack[Entry, Link, Group]):
         tp = TextPayload(self, text_payload_index)
 
         tp.set_cache(text)
-        tp.meta = TextReadingMeta(self)
+        tp.meta = Generics(self)
 
-        tp.meta.replace_back_operations = replace_back_operations
-        tp.meta.processed_original_spans = processed_original_spans
-        tp.meta.orig_text_len = orig_text_len
+        tp.replace_back_operations = replace_back_operations
+        tp.processed_original_spans = processed_original_spans
+        tp.orig_text_len = orig_text_len
 
     def set_audio(
         self,
@@ -573,8 +569,11 @@ class DataPack(BasePack[Entry, Link, Group]):
         ap.meta = AudioReadingMeta(self)
         ap.meta.sample_rate = sample_rate
 
-    def get_original_text(self, text_payload_index=0):
+    def get_original_text(self, text_payload_index: int = 0):
         r"""Get original unmodified text from the :class:`~forte.data.data_pack.DataPack` object.
+
+        Args:
+            text
 
         Returns:
             Original text after applying the `replace_back_operations` of
