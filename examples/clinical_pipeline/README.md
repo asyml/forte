@@ -70,4 +70,12 @@ index the first 100 notes. Remove the `100` parameter to index all documents.
 You can go ahead and open `http://localhost:8899` on your browser to access Stave UI.
 Next, you will see 2 projects, named as `clinical_pipeline_base` and `clinical_pipeline_chat` by default.
 
+<img width="1437" alt="image" src="https://user-images.githubusercontent.com/14886942/174163073-d9c86f57-76c9-46f4-ade0-c0a81d7d71a6.png">
+
 Click on `clinical_pipeline_chat` and then the document that resides within to go to the chatbot/search UI. Enter the keywords you want to search for in the elasticsearch indices. The pipeline would then return a bunch of documents that match your keywords. Click on those document links to access the Annotation Viewer UI for those documents.
+
+<img width="1437" alt="image" src="https://user-images.githubusercontent.com/14886942/174163371-f6e56a25-7b51-48d9-969a-f8d7140c8c89.png">
+
+<img width="1431" alt="image" src="https://user-images.githubusercontent.com/14886942/174163438-eef1c877-38f5-43e8-b792-9de33a467b33.png">
+
+
