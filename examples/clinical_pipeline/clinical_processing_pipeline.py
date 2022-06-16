@@ -1,6 +1,7 @@
 import sys
 import json
 import yaml
+import time
 
 from fortex.spacy import SpacyProcessor
 
