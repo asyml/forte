@@ -133,7 +133,6 @@ def main(
         default_project_json, chat_project_json, chat_doc_json, config
     )
 
-    print("base ID: ", base_project_id)
     remote_pl = Pipeline[DataPack]()
     remote_pl.set_reader(RawDataDeserializeReader())
     remote_pl.add(
