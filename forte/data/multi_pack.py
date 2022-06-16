@@ -24,7 +24,7 @@ from packaging.version import Version
 from sortedcontainers import SortedList
 
 from forte.common import ProcessExecutionException
-from forte.common.constants import TID_INDEX
+from forte.common.constants import TID_INDEX, ENTRY_TYPE_INDEX
 from forte.data.base_pack import BaseMeta, BasePack
 from forte.data.data_pack import DataPack
 from forte.data.data_store import DataStore
@@ -860,7 +860,11 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
                 type_name=get_full_module_name(entry_type_),
                 include_sub_type=include_sub_type,
             ):
-                entry: Entry = self.get_entry(tid=entry_data[TID_INDEX])
+                entry: Entry = self._entry_converter.get_entry_object(
+                    tid=entry_data[TID_INDEX],
+                    pack=self,
+                    type_name=entry_data[ENTRY_TYPE_INDEX],
+                )
                 # Filter by components
                 if components is not None:
                     if not self.is_created_by(entry, components):

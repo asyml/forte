@@ -13,8 +13,7 @@
 # limitations under the License.
 
 import logging
-from typing import Dict
-from forte.common.constants import TID_INDEX
+from typing import Dict, Optional
 from forte.data.base_pack import PackType
 from forte.data.ontology.core import Entry, FList, FDict
 from forte.data.ontology.core import EntryType
@@ -29,6 +28,8 @@ from forte.data.ontology.top import (
     MultiPackGeneric,
     MultiPackGroup,
     MultiPackLink,
+    SinglePackEntries,
+    MultiPackEntries,
 )
 from forte.utils import get_class, get_full_module_name
 
@@ -50,11 +51,12 @@ class EntryConverter:
     def save_entry_object(
         self, entry: Entry, pack: PackType, allow_duplicate: bool = True
     ):
+        # pylint: disable=protected-access
         """
         Save an existing entry object into DataStore.
         """
         # Check if the entry is already stored
-        data_store_ref = pack._data_store  # pylint: disable=protected-access
+        data_store_ref = pack._data_store
         try:
             data_store_ref.get_entry(tid=entry.tid)
             logger.info(
@@ -67,68 +69,69 @@ class EntryConverter:
             pass
 
         # Create a new registry in DataStore based on entry's type
-        if isinstance(entry, Annotation):
+        if data_store_ref._is_subclass(entry.entry_type(), Annotation):
             data_store_ref.add_annotation_raw(
                 type_name=entry.entry_type(),
-                begin=entry.begin,
-                end=entry.end,
+                begin=entry.begin,  # type: ignore
+                end=entry.end,  # type: ignore
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,
             )
-        elif isinstance(entry, Link):
+        elif data_store_ref._is_subclass(entry.entry_type(), Link):
             data_store_ref.add_link_raw(
                 type_name=entry.entry_type(),
-                parent_tid=entry.parent,
-                child_tid=entry.child,
+                parent_tid=entry.parent,  # type: ignore
+                child_tid=entry.child,  # type: ignore
                 tid=entry.tid,
             )
-        elif isinstance(entry, Group):
+        elif data_store_ref._is_subclass(entry.entry_type(), Group):
             data_store_ref.add_group_raw(
                 type_name=entry.entry_type(),
-                member_type=get_full_module_name(entry.MemberType),
+                member_type=get_full_module_name(entry.MemberType),  # type: ignore
                 tid=entry.tid,
             )
-        elif isinstance(entry, Generics):
+        elif data_store_ref._is_subclass(entry.entry_type(), Generics):
             data_store_ref.add_generics_raw(
                 type_name=entry.entry_type(),
                 tid=entry.tid,
             )
-        elif isinstance(entry, AudioAnnotation):
+        elif data_store_ref._is_subclass(entry.entry_type(), AudioAnnotation):
             data_store_ref.add_audio_annotation_raw(
                 type_name=entry.entry_type(),
-                begin=entry.begin,
-                end=entry.end,
+                begin=entry.begin,  # type: ignore
+                end=entry.end,  # type: ignore
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,
             )
-        elif isinstance(entry, ImageAnnotation):
+        elif data_store_ref._is_subclass(entry.entry_type(), ImageAnnotation):
             data_store_ref.add_image_annotation_raw(
                 type_name=entry.entry_type(),
-                image_payload_idx=entry.image_payload_idx,
+                image_payload_idx=entry.image_payload_idx,  # type: ignore
                 tid=entry.tid,
             )
-        elif isinstance(entry, Grids):
-            data_store_ref.add_grid_raw(
+        elif data_store_ref._is_subclass(entry.entry_type(), Grids):
+            # Will be deprecated in future
+            data_store_ref.add_grid_raw(  # type: ignore
                 type_name=entry.entry_type(),
-                image_payload_idx=entry.image_payload_idx,
+                image_payload_idx=entry.image_payload_idx,  # type: ignore
                 tid=entry.tid,
             )
-        elif isinstance(entry, MultiPackLink):
+        elif data_store_ref._is_subclass(entry.entry_type(), MultiPackLink):
             data_store_ref.add_multipack_link_raw(
                 type_name=entry.entry_type(),
-                parent_pack_id=entry.parent[0],
-                parent_tid=entry.parent[1],
-                child_pack_id=entry.child[0],
-                child_tid=entry.child[1],
+                parent_pack_id=entry.parent[0],  # type: ignore
+                parent_tid=entry.parent[1],  # type: ignore
+                child_pack_id=entry.child[0],  # type: ignore
+                child_tid=entry.child[1],  # type: ignore
                 tid=entry.tid,
             )
-        elif isinstance(entry, MultiPackGroup):
+        elif data_store_ref._is_subclass(entry.entry_type(), MultiPackGroup):
             data_store_ref.add_multipack_group_raw(
                 type_name=entry.entry_type(),
-                member_type=get_full_module_name(entry.MemberType),
+                member_type=get_full_module_name(entry.MemberType),  # type: ignore
                 tid=entry.tid,
             )
-        elif isinstance(entry, MultiPackGeneric):
+        elif data_store_ref._is_subclass(entry.entry_type(), MultiPackGeneric):
             data_store_ref.add_multipack_generic_raw(
                 type_name=entry.entry_type(),
                 tid=entry.tid,
@@ -158,7 +161,9 @@ class EntryConverter:
         # Cache the stored entry and its tid
         self._entry_dict[entry.tid] = entry
 
-    def get_entry_object(self, tid: int, pack: PackType) -> EntryType:
+    def get_entry_object(
+        self, tid: int, pack: PackType, type_name: Optional[str] = None
+    ) -> EntryType:
         """
         Convert a tid to its corresponding entry object.
         """
@@ -168,42 +173,36 @@ class EntryConverter:
             return self._entry_dict[tid]  # type: ignore
 
         data_store_ref = pack._data_store  # pylint: disable=protected-access
-        entry_data, entry_type = data_store_ref.get_entry(tid=tid)
-        entry_class = get_class(entry_type)
+        if type_name is None:
+            _, type_name = data_store_ref.get_entry(tid=tid)
+        entry_class = get_class(type_name)
         entry: Entry
+        # pylint: disable=protected-access
         # Here the entry arguments are optional (begin, end, parent, ...) and
         # the value can be arbitrary since they will all be routed to DataStore.
-        if issubclass(entry_class, (Annotation, AudioAnnotation)):
+        if data_store_ref._is_annotation(type_name):
             entry = entry_class(pack=pack, begin=0, end=0)
-        elif issubclass(
-            entry_class,
-            (
-                Link,
-                Group,
-                Generics,
-                MultiPackGeneric,
-                MultiPackGroup,
-                MultiPackLink,
-            ),
+        elif any(
+            data_store_ref._is_subclass(type_name, type_class)
+            for type_class in SinglePackEntries + MultiPackEntries
         ):
             entry = entry_class(pack=pack)
         else:
+            valid_entries: str = ", ".join(
+                map(get_full_module_name, SinglePackEntries + MultiPackEntries)
+            )
             raise ValueError(
-                f"Invalid entry type {type(entry_class)}. A valid entry "
-                f"should be an instance of Annotation, Link, Group, Generics "
-                "or AudioAnnotation."
+                f"Invalid entry type {type_name}. A valid entry should be an"
+                f" instance of {valid_entries}."
             )
 
-        # TODO: Remove the new tid and direct the entry object to the correct
-        # tid. The implementation here is a little bit hacky. Will need a stable
-        # solution in future.
-        # pylint: disable=protected-access
+        # Remove the new tid and direct the entry object to the correct tid.
         if entry.tid in self._entry_dict:
             self._entry_dict.pop(entry.tid)
         if entry.tid in pack._pending_entries:
             pack._pending_entries.pop(entry.tid)
         data_store_ref.delete_entry(tid=entry.tid)
-        entry._tid = entry_data[TID_INDEX]
+        entry._tid = tid
 
         self._entry_dict[tid] = entry
         return entry  # type: ignore

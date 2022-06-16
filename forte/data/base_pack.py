@@ -477,6 +477,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                 return field_type(parent_entry=cls, data=attr_val)
             try:
                 # TODO: Find a better solution to determine if a field is Entry
+                # Will be addressed by https://github.com/asyml/forte/issues/835
                 # Convert tid to entry object on the fly
                 if isinstance(attr_val, int):
                     # Single pack entry
@@ -502,20 +503,20 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             data_store_ref = (
                 cls.pack._data_store  # pylint: disable=protected-access
             )
+            # Assumption: When users assign value to a FList/FDict field, the
+            # value's type has to be Iterator[Entry]/Dict[Any, Entry].
             if field_type is FList:
-                attr_value = [
-                    entry.tid if isinstance(entry, Entry) else entry
-                    for entry in value
-                ]
+                attr_value = [entry.tid for entry in value]
             elif field_type is FDict:
-                attr_value = {
-                    key: entry.tid if isinstance(entry, Entry) else entry
-                    for key, entry in value.items()
-                }
+                attr_value = {key: entry.tid for key, entry in value.items()}
             elif isinstance(value, Entry):
                 attr_value = (
                     value.tid
                     if value.pack.pack_id == cls.pack.pack_id
+                    # When value's pack and cls's pack are not the same, we
+                    # assume that cls.pack is a MultiPack, which will resolve
+                    # value.tid using MultiPack.get_subentry(pack_id, tid).
+                    # In this case, both pack_id and tid should be stored.
                     else (value.pack.pack_id, value.tid)
                 )
             else:
@@ -529,11 +530,17 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
         # Register property functions for all dataclass fields.
         for name, field in entry.__dataclass_fields__.items():
+            # Convert the typing annotation to the original class.
+            # This will be used to determine if a field is FList/FDict.
             field_type = get_origin(field.type)
             setattr(
                 type(entry),
                 name,
+                # property(fget, fset) will register a conversion layer
+                # that specifies how to retrieve/assign value of this field.
                 property(
+                    # We need to bound the attribute name and field type here
+                    # for the getter and setter of each field.
                     fget=partial(
                         entry_getter, attr_name=name, field_type=field_type
                     ),

@@ -271,31 +271,6 @@ class BaseStore:
         raise NotImplementedError
 
     @abstractmethod
-    def add_grid_raw(
-        self,
-        type_name: str,
-        image_payload_idx: int,
-        tid: Optional[int] = None,
-    ) -> int:
-
-        r"""
-        This function adds an image annotation entry with ``image_payload_idx``
-        indices to current data store object. Returns the ``tid`` for the
-        inserted entry.
-
-        Args:
-            type_name: The fully qualified type name of the new grid.
-            image_payload_idx: the index of the image payload.
-            tid: ``tid`` of the Annotation entry that is being added.
-                It's optional, and it will be
-                auto-assigned if not given.
-
-        Returns:
-            ``tid`` of the entry.
-        """
-        raise NotImplementedError
-
-    @abstractmethod
     def add_multipack_generic_raw(
         self, type_name: str, tid: Optional[int] = None
     ) -> Tuple[int, int]:
@@ -538,4 +513,41 @@ class BaseStore:
 
         """
 
+        raise NotImplementedError
+
+    @abstractmethod
+    def _is_subclass(
+        self, type_name: str, cls, no_dynamic_subclass: bool = False
+    ) -> bool:
+        r"""This function takes a fully qualified ``type_name`` class name,
+        ``cls`` class and returns whether ``type_name``  class is the``cls``
+        subclass or not. This function accepts two types of class: the class defined
+        in forte, or the classes in user provided ontology file.
+
+
+        Args:
+            type_name: A fully qualified name of an entry class.
+            cls: An entry class.
+            no_dynamic_subclass: A boolean value controlling where to look for
+            subclasses. If True, this function will not check the subclass
+            relations via `issubclass` but rely on pre-populated states only.
+
+        Returns:
+            A boolean value whether ``type_name``  class is the``cls``
+            subclass or not.
+
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def _is_annotation(self, type_name: str) -> bool:
+        r"""This function takes a type_name and returns whether a type
+        is an annotation type or not.
+        Args:
+            type_name: The name of type in `self.__elements`.
+
+        Returns:
+            A boolean value whether this type_name belongs to an annotation
+            type or not.
+        """
         raise NotImplementedError

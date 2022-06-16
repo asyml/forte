@@ -55,6 +55,15 @@ __all__ = [
 
 QueryType = Union[Dict[str, Any], np.ndarray]
 
+"""
+To create a new top level entry, the following steps are required to
+make sure it available across the ontology system:
+    1. Create a new top level class that inherits from `Entry` or `MultiEntry`
+    2. Add the new class to `SinglePackEntries` or `MultiPackEntries`
+    3. Register a new method in `DataStore`: `add_<new_entry>_raw()`
+    4. Insert a new conditional branch in `EntryConverter.save_entry_object()`
+"""
+
 
 class Generics(Entry):
     def __init__(self, pack: PackType):

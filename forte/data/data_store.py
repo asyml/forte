@@ -784,7 +784,7 @@ class DataStore(BaseStore):
 
         """
         if type_name not in DataStore._type_attributes:
-            DataStore._type_attributes[type_name] = {}
+            self._get_type_info(type_name=type_name)
         if "parent_class" not in DataStore._type_attributes[type_name]:
             DataStore._type_attributes[type_name]["parent_class"] = set()
         cls_qualified_name = get_full_module_name(cls)
@@ -838,9 +838,10 @@ class DataStore(BaseStore):
             A boolean value whether this type_name belongs to an annotation
             type or not.
         """
-        # TODO: use is_subclass() in DataStore to replace this
-        entry_class = get_class(type_name)
-        return issubclass(entry_class, (Annotation, AudioAnnotation))
+        return any(
+            self._is_subclass(type_name, entry_class)
+            for entry_class in (Annotation, AudioAnnotation)
+        )
 
     def all_entries(self, entry_type_name: str) -> Iterator[List]:
         """
@@ -1079,7 +1080,7 @@ class DataStore(BaseStore):
         # A reference to the entry should be store in both self.__elements and
         # self.__tid_ref_dict.
         entry = self._new_image_annotation(type_name, image_payload_idx, tid)
-        return self._add_entry_raw(AudioAnnotation, type_name, entry)
+        return self._add_entry_raw(ImageAnnotation, type_name, entry)
 
     def add_grid_raw(
         self,
