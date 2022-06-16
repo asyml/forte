@@ -482,7 +482,8 @@ class DataPack(BasePack[Entry, Link, Group]):
         Args:
             begin: begin index to query.
             end: end index to query.
-            text_payload_index: entry index of text payload in this DataPack.
+            text_payload_index: the zero-based index of the TextPayload
+                in this DataPack's TextPayload entries. Defaults to 0.
 
         Returns:
             The text within this span.
@@ -500,7 +501,8 @@ class DataPack(BasePack[Entry, Link, Group]):
         Args:
             begin: begin index to query.
             end: end index to query.
-            audio_payload_index: entry index of audio payload in this DataPack.
+            audio_payload_index: the zero-based index of the AudioPayload
+                in this DataPack's AudioPayload entries. Defaults to 0.
 
         Returns:
             The audio within this span.
@@ -529,8 +531,8 @@ class DataPack(BasePack[Entry, Link, Group]):
         Args:
             text: a str text.
             replace_func: function that replace text. Defaults to None.
-            text_payload_index (int, optional): TextPayload index in the
-                DataPack. Defaults to 0.
+            text_payload_index: the zero-based index of the TextPayload
+                in this DataPack's TextPayload entries. Defaults to 0.
         """
         span_ops = [] if replace_func is None else replace_func(text)
 
@@ -543,7 +545,6 @@ class DataPack(BasePack[Entry, Link, Group]):
         ) = data_utils_io.modify_text_and_track_ops(text, span_ops)
 
         tp = TextPayload(self, text_payload_index)
-
         tp.set_cache(text)
         tp.meta = Generics(self)
 
@@ -563,17 +564,20 @@ class DataPack(BasePack[Entry, Link, Group]):
         Args:
             audio: A numpy array storing the audio waveform.
             sample_rate: An integer specifying the sample rate.
+            audio_payload_index: the zero-based index of the AudioPayload
+                in this DataPack's AudioPayload entries. Defaults to 0.
         """
         ap = AudioPayload(self, audio_payload_index)
         ap.set_cache(audio)
-        ap.meta = AudioReadingMeta(self)
+        ap.meta = Generics(self)
         ap.meta.sample_rate = sample_rate
 
     def get_original_text(self, text_payload_index: int = 0):
         r"""Get original unmodified text from the :class:`~forte.data.data_pack.DataPack` object.
 
         Args:
-            text
+            text_payload_index: the zero-based index of the TextPayload
+                in this DataPack's TextPayload entries. Defaults to 0.
 
         Returns:
             Original text after applying the `replace_back_operations` of
@@ -784,7 +788,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                     f"is not a valid begin."
                 )
 
-            if end > len(self.text):
+            if end > len(self.get_payload_at("text", 0).cache):
                 if len(self.text) == 0:
                     raise ValueError(
                         f"The end {end} of span is greater than the text "
@@ -850,7 +854,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         context_type: Union[str, Type[Annotation], Type[AudioAnnotation]],
         request: Optional[DataRequest] = None,
         skip_k: int = 0,
-        payload_index=0,
+        payload_index: int = 0,
     ) -> Iterator[Dict[str, Any]]:
         r"""Fetch data from entries in the data_pack of type
         `context_type`. Data includes `"span"`, annotation-specific
@@ -1013,9 +1017,13 @@ class DataPack(BasePack[Entry, Link, Group]):
                     " [Annotation, AudioAnnotation]."
                 )
 
-        def get_context_data(c_type, context, payload_index):
-            r"""Get context-specific data of a given context type and
-                context.
+        def get_context_data(
+            c_type: Union[Type[Annotation], Type[AudioAnnotation]],
+            context: Union[Annotation, AudioAnnotation],
+            payload_index: int,
+        ):
+            r"""
+            Get context-specific data of a given context type and context.
 
             Args:
                 c_type:
@@ -1023,6 +1031,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                     could be any :class:`~forte.data.ontology.top.Annotation` type.
                 context: context that
                     contains data to be extracted.
+                payload_index: the index of the payload of requrested modality.
 
             Raises:
                 NotImplementedError: raised when the given context type is
@@ -2073,12 +2082,6 @@ class EntryConverter:
             data_store_ref.add_grid_raw(
                 type_name=entry.entry_type(),
                 image_payload_idx=entry.image_payload_idx,
-                tid=entry.tid,
-                allow_duplicate=allow_duplicate,
-            )
-        elif isinstance(entry, ReadingMeta):
-            data_store_ref.add_reading_meta_raw(
-                type_name=entry.entry_type(),
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,
             )
