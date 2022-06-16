@@ -23,5 +23,9 @@ Remote:
 
 Stave:
   url: "http://localhost:8899"
-  username: admin
-  pw: admin
+  username: test
+  pw: test
+
+viewer_project_json: "default_onto_project.json"
+chat_project_json: "chat_project.json"
+chat_document_json: "chat_query_document.json"

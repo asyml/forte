@@ -5,10 +5,19 @@ This project shows how we can construct projects to make Forte and Stave work
  
 ## Install extra dependencies
 
-In command line, we run
+To install the latest code directly from source,
 
 ```bash
-pip install git+https://git@github.com/asyml/forte-wrappers#egg=forte-wrappers[elastic,nltk]
+pip install git+https://git@github.com/asyml/forte-wrappers#egg=forte.elastic\&subdirectory=src/elastic
+pip install git+https://git@github.com/asyml/forte-wrappers#egg=forte.spacy\&subdirectory=src/spacy
+pip install git+https://git@github.com/asyml/forte-wrappers#egg=forte.spacy\&subdirectory=src/nltk
+```
+
+To install from PyPI,
+```bash
+pip install forte.elastic
+pip install forte.spacy
+pip install forte.nltk
 ```
 
 ## Downloading the models
@@ -30,32 +39,29 @@ You also need to set up elastic searcher by following guide below to run the pip
 https://www.elastic.co/guide/en/elasticsearch/reference/current/starting-elasticsearch.html
 
 
-## Run indexer
+## Run indexer and Stave
 First, you should start an Elastic Indexer backend.
 
-Second, you can run the following command to parse some files and index them.
+Then, we start the Stave server that our pipeline will connect to for visualization purposes.
 ```bash
-python clinical_processing_pipeline.py /path/to/mimiciii/1.4/NOTEEVENTS.csv.gz /path_to_sample_output 10000
+stave -s start -o -l -n 8008
+```
+
+## Run demo pipeline
+
+You can run the following command to parse some files and index them.
+```bash
+python clinical_processing_pipeline.py /path/to/mimiciii/1.4/NOTEEVENTS.csv.gz /path_to_sample_output 100 1
+```
+
+The last argument, `run_ner_pipeline` is whether we wish to run the NER\_pipeline or if we just need the remote pipeline connection to Stave. We set it to 1 if we want to run the NER pipeline and setup a connection with Stave, else 0 for just the connection.
+ 
+Hence, if you just wish to run the demo pipeline with existing database entries, and wish to just connect with Stave for visualization, you can run this command:
+
+```bash
+python clinical_processing_pipeline.py ./ ./ 100 0
 ```
 
 Here, we also write out the raw data pack to `/path_to_sample_output`, and only
-index the first 10k notes. Remove the `10000` parameter to index all documents.
+index the first 100 notes. Remove the `100` parameter to index all documents.
 
-After the indexing is done, we are ready with the data processing part. Let's start the GUI.
-
-## Stave 
-First, set up Stave following the instructions.
-
-Second, create an empty project with the [default ontology](https://github.com/asyml/forte/blob/master/forte/ontology_specs/base_ontology.json),
- now record the project id.
-
-Set up the following environment variables:
-```bash
-export stave_db_path=[path_to_stave]/simple_backend/db.sqlite3
-export url_stub=http://localhost:3000
-export query_result_project_id=[the project id above]
-```
-
-Now, create another project with default ontology.
-
-Upload the `query_chatbot.json` file (you can find it in the directory of the README) to the project.

@@ -1,8 +1,6 @@
 import sys
-import time
 import json
 import yaml
-from termcolor import colored
 
 from fortex.spacy import SpacyProcessor
 
@@ -20,7 +18,6 @@ from forte.processors.writers import PackIdJsonPackWriter
 from forte.processors.writers import PackIdJsonPackWriter
 from ft.onto.base_ontology import Sentence, EntityMention
 
-# from fortex.huggingface.bio_ner_predictor import BioBERTNERPredictor
 from fortex.nltk import NLTKSentenceSegmenter
 
 from ftx.medical.clinical_ontology import (
@@ -127,9 +124,9 @@ def main(
                     f"{time.strftime('%m-%d %H:%M')}: Processed {idx + 1} packs"
                 )
 
-    default_project_json = get_json("default_onto_project.json")
-    chat_project_json = get_json("chat_project.json")
-    chat_doc_json = get_json("chat_query_document.json")
+    default_project_json = get_json(config.viewer_project_json)
+    chat_project_json = get_json(config.chat_project_json)
+    chat_doc_json = get_json(config.chat_document_json)
 
     base_project_id = update_stave_db(
         default_project_json, chat_project_json, chat_doc_json, config
