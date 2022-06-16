@@ -1210,10 +1210,22 @@ class Payload(Entry):
         self.meta = None
 
     def get_type(self):
+        """
+        Get the type of the payload class.
+
+        Returns:
+            the type of the payload class.
+        """
         return type(self)
 
     def get_modality(self):
-        return self._modality
+        """
+        Get the modality of the payload class.
+
+        Returns:
+            the modality of the payload class in str format.
+        """
+        return self._modality.name
 
     @property
     def cache(self):
@@ -1237,7 +1249,13 @@ class Payload(Entry):
     def uri(self):
         return self._uri
 
-    def set_cache(self, data):
+    def set_cache(self, data: Union[str, np.ndarray]):
+        """
+        Load cache data into the payload.
+
+        Args:
+            data: data to be set in the payload.
+        """
         self._cache = data
 
 
