@@ -42,19 +42,19 @@ https://www.elastic.co/guide/en/elasticsearch/reference/current/starting-elastic
 ## Run indexer and Stave
 First, you should start an Elastic Indexer backend.
 
-Then, we start the Stave server that our pipeline will connect to for visualization purposes.
+Then, to start the Stave server that our pipeline will connect to for visualization purposes, run
 ```bash
 stave -s start -o -l -n 8008
 ```
 
 ## Run demo pipeline
 
-You can run the following command to parse some files and index them.
+Now, open a new terminal, other than the one running stave server. You can run the following command to parse some files and index them.
 ```bash
 python clinical_processing_pipeline.py /path/to/mimiciii/1.4/NOTEEVENTS.csv.gz /path_to_sample_output 100 1
 ```
 
-The last argument, `run_ner_pipeline` is whether we wish to run the NER\_pipeline or if we just need the remote pipeline connection to Stave. We set it to 1 if we want to run the NER pipeline and setup a connection with Stave, else 0 for just the connection.
+The last argument, `run_ner_pipeline` is whether we wish to run the NER pipeline or if we just need the remote pipeline connection to Stave. We set it to `1` if we want to run the NER pipeline and setup a connection with Stave, else `0` for just the connection.
  
 Hence, if you just wish to run the demo pipeline with existing database entries, and wish to just connect with Stave for visualization, you can run this command:
 
