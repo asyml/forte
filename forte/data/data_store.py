@@ -12,6 +12,7 @@
 # limitations under the License.
 
 
+from enum import Enum
 from typing import Dict, List, Iterator, Tuple, Optional, Any, Type
 import uuid
 import logging
@@ -711,13 +712,29 @@ class DataStore(BaseStore):
         self,
         type_name: str,
         payload_idx: int,
-        modality: str,
+        modality: Enum,
         tid: Optional[int] = None,
     ) -> List:
+        r"""This function generates a new payload with default fields.
+        Called by add_payload_raw() to create a new payload with ``type_name``,
+        ``payload_idx``, and ``modality``.
+
+        Args:
+            type_name: The fully qualified type name of the new entry.
+            payload_idx: the zero-based index of the TextPayload
+                in this DataPack's TextPayload entries.
+            modality (Enum): an ``Enum`` object that represents the payload
+                modality.
+            tid (Optional[int], optional): _description_. Defaults to None.
+
+        Returns:
+            A list representing new payload raw data.
+        """
+
         tid: int = self._new_tid() if tid is None else tid
         entry: List[Any]
 
-        entry = [payload_idx, modality, tid, type_name]
+        entry = [payload_idx, modality.name, tid, type_name]
         entry += self._default_attributes_for_type(type_name)
 
         return entry
@@ -1126,7 +1143,7 @@ class DataStore(BaseStore):
         self,
         type_name: str,
         payload_idx: int,
-        modality: str,
+        modality: Enum,
         tid: Optional[int] = None,
         allow_duplicate=True,
     ) -> int:
@@ -1138,7 +1155,8 @@ class DataStore(BaseStore):
 
         Args:
             type_name: The fully qualified type name of the new Payload.
-            payload_idx: the index of the payload.
+            payload_idx: the zero-based index of the Payload
+                in this DataPack's Payload entries of the requested modality.
             modality: the payload modality which can be text, audio, image.
             tid: ``tid`` of the Payload entry that is being added.
                 It's optional, and it will be auto-assigned if not given.
