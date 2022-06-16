@@ -452,7 +452,8 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         Args:
             modality: data modality among "text", "audio", "image"
-            payload_index (int): the index of the requested payload
+            payload_index (int): the zero-based index of the Payload
+                in this DataPack's Payload entries of the requested modality.
 
         Raises:
             ValueError: raised when the requested modality is not supported.
@@ -929,6 +930,9 @@ class DataPack(BasePack[Entry, Link, Group]):
                 returned by default.
             skip_k: Will skip the first `skip_k` instances and generate
                 data from the (`offset` + 1)th instance.
+            payload_index: the zero-based index of the Payload
+                in this DataPack's Payload entries of a particular modality.
+                The modality is depedent on ``context_type``. Defaults to 0.
 
         Returns:
             A data generator, which generates one piece of data (a dict
@@ -1031,7 +1035,10 @@ class DataPack(BasePack[Entry, Link, Group]):
                     could be any :class:`~forte.data.ontology.top.Annotation` type.
                 context: context that
                     contains data to be extracted.
-                payload_index: the index of the payload of requrested modality.
+                payload_index: the zero-based index of the Payload
+                    in this DataPack's Payload entries of a particular modality.
+                    The modality is depedent on ``c_type``.
+                    Defaults to 0.
 
             Raises:
                 NotImplementedError: raised when the given context type is
