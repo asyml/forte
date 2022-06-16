@@ -44,7 +44,7 @@ First, you should start an Elastic Indexer backend.
 
 Then, we start the Stave server that our pipeline will connect to for visualization purposes.
 ```bash
-stave -s start -o -l -n 8008
+stave -s start -o -l -n 8899
 ```
 
 ## Run demo pipeline
@@ -65,3 +65,9 @@ python clinical_processing_pipeline.py ./ ./ 100 0
 Here, we also write out the raw data pack to `/path_to_sample_output`, and only
 index the first 100 notes. Remove the `100` parameter to index all documents.
 
+## Visualization
+
+You can go ahead and open `http://localhost:8899` on your browser to access Stave UI.
+Next, you will see 2 projects, named as `clinical_pipeline_base` and `clinical_pipeline_chat` by default.
+
+Click on `clinical_pipeline_chat` and then the document that resides within to go to the chatbot/search UI. Enter the keywords you want to search for in the elasticsearch indices. The pipeline would then return a bunch of documents that match your keywords. Click on those document links to access the Annotation Viewer UI for those documents.
