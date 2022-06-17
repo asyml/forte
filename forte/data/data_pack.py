@@ -28,6 +28,7 @@ from typing import (
     Tuple,
 )
 from functools import partial
+
 from typing_inspect import get_origin
 from packaging.version import Version
 import numpy as np
@@ -55,6 +56,7 @@ from forte.data.ontology.top import (
     Payload,
 )
 
+from forte.data.modality import Modality
 from forte.data.span import Span
 from forte.data.types import ReplaceOperationsType, DataRequest
 from forte.utils import get_class, get_full_module_name
@@ -165,7 +167,6 @@ class DataPack(BasePack[Entry, Link, Group]):
 
     def __init__(self, pack_name: Optional[str] = None):
         super().__init__(pack_name)
-        self._text = ""
         self._audio: Optional[np.ndarray] = None
 
         self._data_store: DataStore = DataStore()
@@ -176,11 +177,6 @@ class DataPack(BasePack[Entry, Link, Group]):
         self.text_payloads: List[Payload] = []
         self.audio_payloads: List[Payload] = []
         self.image_payloads: List[Payload] = []
-
-        self.__replace_back_operations: ReplaceOperationsType = []
-        self.__processed_original_spans: List[Tuple[Span, Span]] = []
-
-        self.__orig_text_len: int = 0
 
         self._index: DataIndex = DataIndex()
 
@@ -248,7 +244,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         return isinstance(entry, SinglePackEntries)
 
     @property
-    def text(self, text_payload_index: int = 0) -> str:
+    def text(self) -> str:
         """
         Get text from a text payload at an index.
 
@@ -262,7 +258,12 @@ class DataPack(BasePack[Entry, Link, Group]):
         Returns:
             text data in the text payload.
         """
-        tp = self.get_payload_at("text", text_payload_index)
+        try:
+            tp = self.get_payload_at("text", 0)
+        except ValueError:
+            # backward compatibility, there might be case there is
+            # not payloads
+            return ""
         return tp.cache
 
     @property
@@ -537,7 +538,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         Returns:
             The text within this span.
         """
-        return self.text_payloads[text_payload_index].cache[begin:end]
+        return self.get_payload_data_at("text", text_payload_index)[begin:end]
 
     def get_span_audio(
         self, begin: int, end: int, audio_payload_index=0
@@ -556,8 +557,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         Returns:
             The audio within this span.
         """
-        audio_payload_entry = self.get_payload_at("audio", audio_payload_index)
-        return audio_payload_entry.cache[begin:end]
+        return self.get_payload_data_at("audio", audio_payload_index)[begin:end]
 
     def set_text(
         self,
@@ -574,8 +574,9 @@ class DataPack(BasePack[Entry, Link, Group]):
             text_payload_index: the zero-based index of the TextPayload
                 in this DataPack's TextPayload entries. Defaults to 0.
         """
-        span_ops = [] if replace_func is None else replace_func(text)
+        # Temporary imports
 
+        span_ops = [] if replace_func is None else replace_func(text)
         # The spans should be mutually exclusive
         (
             text,
@@ -583,7 +584,14 @@ class DataPack(BasePack[Entry, Link, Group]):
             processed_original_spans,
             orig_text_len,
         ) = data_utils_io.modify_text_and_track_ops(text, span_ops)
-        tp = self.get_payload_at("text", text_payload_index)
+        # temporary solution for backward compatibility
+        # past API use this method to add a single text in the datapack
+        if len(self.text_payloads) == 0 and text_payload_index == 0:
+            from ft.onto.base_ontology import TextPayload
+
+            tp = TextPayload(self, Modality.text)
+        else:
+            tp = self.get_payload_at("text", text_payload_index)
 
         tp.set_cache(text)
         tp.meta = Generics(self)
@@ -607,7 +615,15 @@ class DataPack(BasePack[Entry, Link, Group]):
             audio_payload_index: the zero-based index of the AudioPayload
                 in this DataPack's AudioPayload entries. Defaults to 0.
         """
-        ap = AudioPayload(self, audio_payload_index)
+        # temporary solution for backward compatibility
+        # past API use this method to add a single audio in the datapack
+        if len(self.audio_payloads) == 0 and audio_payload_index == 0:
+            from ft.onto.base_ontology import AudioPayload
+
+            ap = AudioPayload(self, Modality.audio)
+        else:
+            ap = self.get_payload_at("audio", audio_payload_index)
+
         ap.set_cache(audio)
         ap.meta = Generics(self)
         ap.meta.sample_rate = sample_rate
@@ -625,7 +641,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         """
         tp = self.get_payload_at("text", text_payload_index)
         original_text, _, _, _ = data_utils_io.modify_text_and_track_ops(
-            tp.cache, tp.get_meta("replace_back_operations")
+            tp.cache, tp.replace_back_operations
         )
         return original_text
 
@@ -705,16 +721,19 @@ class DataPack(BasePack[Entry, Link, Group]):
             Returns:
                 Original index that aligns with input_index
             """
-            if len(self.__processed_original_spans) == 0:
+            processed_original_spans = self.get_payload_at(
+                "text", 0
+            ).processed_original_spans
+            if len(processed_original_spans) == 0:
                 return input_index
 
-            len_processed_text = len(self._text)
+            len_processed_text = len(self.get_payload_data_at("text", 0))
             orig_index = None
             prev_end = 0
             for (
                 inverse_span,
                 original_span,
-            ) in self.__processed_original_spans:
+            ) in processed_original_spans:
                 # check if the input_index lies between one of the unprocessed
                 # spans
                 if prev_end <= input_index < inverse_span.begin:
@@ -743,9 +762,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             if orig_index is None:
                 # check if the input_index lies between the last unprocessed
                 # span
-                inverse_span, original_span = self.__processed_original_spans[
-                    -1
-                ]
+                inverse_span, original_span = processed_original_spans[-1]
                 if inverse_span.end <= input_index < len_processed_text:
                     increment = original_span.end - inverse_span.end
                     orig_index = input_index + increment
@@ -1673,10 +1690,13 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         if isinstance(entry, Payload):
             if entry.get_modality() == "text":
+                entry.set_payload_index(len(self.text_payloads))
                 self.text_payloads.append(entry)
             elif entry.get_modality() == "audio":
+                entry.set_payload_index(len(self.audio_payloads))
                 self.audio_payloads.append(entry)
             elif entry.get_modality() == "image":
+                entry.set_payload_index(len(self.image_payloads))
                 self.image_payloads.append(entry)
 
     def __del__(self):
