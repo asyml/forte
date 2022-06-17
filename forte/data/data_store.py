@@ -12,6 +12,7 @@
 # limitations under the License.
 
 
+from enum import IntEnum
 from typing import Dict, List, Iterator, Tuple, Optional, Any, Type
 import uuid
 import logging
@@ -29,6 +30,7 @@ from forte.data.ontology.top import (
     ImageAnnotation,
     Link,
     Generics,
+    Payload,
 )
 from forte.data.ontology.core import Entry, FList, FDict
 from forte.common import constants
@@ -759,6 +761,35 @@ class DataStore(BaseStore):
 
         return entry
 
+    def _new_payload(
+        self,
+        type_name: str,
+        payload_idx: int,
+        modality: IntEnum,
+        tid: Optional[int] = None,
+    ) -> List:
+        r"""This function generates a new payload with default fields.
+        Called by add_payload_raw() to create a new payload with ``type_name``,
+        ``payload_idx``, and ``modality``.
+        Args:
+            type_name: The fully qualified type name of the new entry.
+            payload_idx: the zero-based index of the TextPayload
+                in this DataPack's TextPayload entries.
+            modality: an ``IntEnum`` object that represents the payload
+                modality.
+            tid (Optional[int], optional): _description_. Defaults to None.
+        Returns:
+            A list representing new payload raw data.
+        """
+
+        tid: int = self._new_tid() if tid is None else tid
+        entry: List[Any]
+
+        entry = [payload_idx, modality.name, tid, type_name]
+        entry += self._default_attributes_for_type(type_name)
+
+        return entry
+
     def _is_subclass(
         self, type_name: str, cls, no_dynamic_subclass: bool = False
     ) -> bool:
@@ -1119,6 +1150,48 @@ class DataStore(BaseStore):
             if tid_search_result != -1:
                 return tid_search_result
         return self._add_entry_raw(Grids, type_name, entry)
+
+    def add_payload_raw(
+        self,
+        type_name: str,
+        payload_idx: int,
+        modality: IntEnum,
+        tid: Optional[int] = None,
+        allow_duplicate=True,
+    ) -> int:
+
+        r"""
+        This function adds an payload entry with ``payload_idx``
+        and modality to current data store object.
+        Returns the ``tid`` for the inserted entry.
+        Args:
+            type_name: The fully qualified type name of the new Payload.
+            payload_idx: the zero-based index of the Payload
+                in this DataPack's Payload entries of the requested modality.
+            modality: an ``IntEnum`` object that represents the payload
+                modality.
+            tid: ``tid`` of the Payload entry that is being added.
+                It's optional, and it will be auto-assigned if not given.
+            allow_duplicate: Whether we allow duplicate in the DataStore. When
+                it's set to False, the function will return the ``tid`` of
+                existing entry if a duplicate is found. Default value is True.
+        Returns:
+            ``tid`` of the entry.
+        """
+        # We should create the `entry data` with the format
+        # [payload_idx, modality, tid, type_id, None, ...].
+        # A helper function _new_payload() can be used to generate a
+        # payload type entry data with default fields.
+        # A reference to the entry should be store in both self.__elements and
+        # self.__tid_ref_dict.
+        entry = self._new_payload(type_name, payload_idx, modality, tid)
+
+        if not allow_duplicate:
+            tid_search_result = self._get_existing_ann_entry_tid(entry)
+            # if found existing entry
+            if tid_search_result != -1:
+                return tid_search_result
+        return self._add_entry_raw(Payload, type_name, entry)
 
     def _get_existing_ann_entry_tid(self, entry: List[Any]):
         r"""
