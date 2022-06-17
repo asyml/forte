@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from enum import IntEnum
 from functools import total_ordering
 from typing import Optional, Tuple, Type, Any, Dict, Union, Iterable, List
+from forte.data.modality import Modality
 
 import numpy as np
 
@@ -872,7 +873,9 @@ class Grids(Entry):
         self._width = width
         self._image_payload_idx = image_payload_idx
         super().__init__(pack)
-        self.img_arr = self.pack.get_image_array(self._image_payload_idx)
+        self.img_arr = self.pack.get_payload_data_at(
+            "image", self._image_payload_idx
+        )
         self.c_h, self.c_w = (
             self.img_arr.shape[0] // self._height,
             self.img_arr.shape[1] // self._width,
@@ -1189,7 +1192,7 @@ class Payload(Entry):
         self,
         pack: PackType,
         modality: IntEnum,
-        payload_idx: int,
+        payload_idx: Optional[int] = None,
         uri: str = None,
     ):
         supported_modality = ("text", "audio", "image")
@@ -1251,12 +1254,35 @@ class Payload(Entry):
         Load cache data into the payload.
 
         Args:
-            data: data to be set in the payload.
+            data: data to be set in the payload. It can be str for text data or
+                numpy array for audio or image data.
         """
         self._cache = data
 
+    def set_payload_index(self, payload_index: int):
+        """
+        Set payload index for the DataPack.
 
-Modality = IntEnum("modality", "text audio image")
+        Args:
+            payload_index: _description_
+        """
+        self._payload_idx = payload_index
+
+    def __getstate__(self):
+        r"""
+        Convert ``_modality`` ``Enum`` object to str format for serialization.
+        """
+        state = super().__getstate__()
+        state["_modality"] = self._modality.name
+        return state
+
+    def __setstate__(self, state):
+        r"""
+        Convert ``_modality`` string to ``Enum`` object for deserialization.
+        """
+        super().__setstate__(state)
+        self._modality = getattr(Modality, state["_modality"])
+
 
 SinglePackEntries = (
     Link,
