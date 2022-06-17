@@ -20,7 +20,7 @@ import os
 from sunau import AUDIO_FILE_ENCODING_ADPCM_G721
 import unittest
 from typing import Dict
-from forte.data.ontology.top import Modality
+from forte.data import Modality
 from torch import argmax
 from transformers import Wav2Vec2Processor, Wav2Vec2ForCTC
 
@@ -70,7 +70,7 @@ class TestASRProcessor(PackProcessor):
 
         tp = TextPayload(input_pack, Modality.text, 0)
         tp.set_cache(transcription[0])
-        # input_pack.set_text(text=transcription[0])
+        input_pack.set_text(text=transcription[0])
 
 
 class AudioReaderPipelineTest(unittest.TestCase):
