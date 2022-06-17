@@ -13,7 +13,8 @@
 # limitations under the License.
 
 from abc import abstractmethod
-from typing import List, Iterator, Tuple, Any, Optional
+from typing import List, Iterator, Tuple, Any, Optional, Dict
+import json
 
 __all__ = ["BaseStore"]
 
@@ -30,6 +31,96 @@ class BaseStore:
         Each entry type contains some subtypes, which could have
         various fields stored in entry lists.
         """
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        return state
+
+    def serialize(
+        self,
+        output_path: str,
+        serialize_method: str = "json",
+        save_attribute: bool = True,
+        indent: Optional[int] = None,
+    ):
+        """
+        Serializes the data store to the provided path. The output of this
+        function depends on the serialization method chosen.
+
+        Args:
+            output_path: The path to write data to.
+            serialize_method: The method used to serialize the data. Currently
+                supports `json` (outputs json dictionary).
+            save_attribute: Boolean value indicating whether users want to
+                save attributes for field checks later during deserialization.
+                Attributes and their indices for every entry type will be saved.
+            indent: Whether to indent the file if written as JSON.
+
+        Returns: Results of serialization.
+        """
+        if serialize_method == "json":
+            with open(output_path, mode="wt", encoding="utf-8") as json_out:
+                json_out.write(
+                    self.to_string(serialize_method, save_attribute, indent)
+                )
+        else:
+            raise NotImplementedError(
+                f"Unsupported serialization method {serialize_method}"
+            )
+
+    def to_string(
+        self,
+        json_method: str = "json",
+        save_attribute: bool = True,
+        indent: Optional[int] = None,
+    ) -> str:
+        """
+        Return the string representation (json encoded) of this method.
+
+        Args:
+            json_method: What method is used to convert data pack to json.
+                Only supports `json` for now. Default value is `json`.
+            save_attribute: Boolean value indicating whether users want to
+                save attributes for field checks later during deserialization.
+                Attributes and their indices for every entry type will be saved.
+        Returns: String representation of the data pack.
+        """
+        if json_method == "json":
+            state = self.__getstate__()
+            if not save_attribute:
+                state.pop("fields")
+            return json.dumps(state, indent=indent)
+        else:
+            raise ValueError(f"Unsupported JSON method {json_method}.")
+
+    @classmethod
+    def _deserialize(
+        cls,
+        data_source: str,
+        serialize_method: str = "json",
+    ) -> Dict:
+        """
+        This function should deserialize a data store from a string.
+
+        Args:
+            data_source: The data path containing data store. The content
+                of the data could be string or bytes depending on the method of
+                serialization.
+            serialize_method: The method used to serialize the data, this
+                should be the same as how serialization is done. The current
+                option is `json`。
+
+        Returns:
+            The state of the data store object deserialized from the data.
+        """
+        if serialize_method == "json":
+            with open(data_source, mode="rt", encoding="utf8") as f:
+                state = json.loads(f.read())
+            return state
+        else:
+            raise NotImplementedError(
+                f"Unsupported deserialization method {serialize_method}"
+            )
 
     @abstractmethod
     def add_annotation_raw(self, type_name: str, begin: int, end: int) -> int:
@@ -98,7 +189,7 @@ class BaseStore:
         raise NotImplementedError
 
     @abstractmethod
-    def set_attr(self, tid: int, attr_id: int, attr_value: Any):
+    def _set_attr(self, tid: int, attr_id: int, attr_value: Any):
         r"""This function locates the entry data with ``tid`` and sets its
         attribute ``attr_id``  with value ``attr_value``.
         Called by `set_attribute()`.
@@ -127,7 +218,7 @@ class BaseStore:
         raise NotImplementedError
 
     @abstractmethod
-    def get_attr(self, tid: int, attr_id: int):
+    def _get_attr(self, tid: int, attr_id: int):
         r"""This function locates the entry data with ``tid`` and gets the value
         of ``attr_id``  of this entry. Called by `get_attribute()`.
 
