@@ -450,10 +450,6 @@
       "parent_entry": "forte.data.ontology.top.Payload",
       "description": "A payload that caches audio data",
       "attributes":[
-        {
-          "name": "speaker",
-          "type": "str"
-        }
       ]
     },
     {
