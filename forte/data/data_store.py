@@ -948,7 +948,14 @@ class DataStore(BaseStore):
             except KeyError:
                 self.__elements[type_name] = SortedList(key=sorting_fn)
                 self.__elements[type_name].add(entry)
-        elif entry_type in [Link, Group, Generics, ImageAnnotation, Grids]:
+        elif entry_type in [
+            Link,
+            Group,
+            Generics,
+            ImageAnnotation,
+            Grids,
+            Payload,
+        ]:
             try:
                 self.__elements[type_name].append(entry)
             except KeyError:
