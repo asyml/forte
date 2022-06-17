@@ -14,23 +14,16 @@
 """
 Unit tests for ImageAnnotation.
 """
-import os
 import unittest
 import numpy as np
-from typing import Dict
 
 from numpy import array_equal
-from forte.data.ontology.top import (
-    ImageAnnotation,
-    ImagePayload,
-    ImageReadingMeta,
-    Payload,
-)
+from forte.data.ontology.top import ImageAnnotation, Modality
+
+from ft.onto.base_ontology import ImagePayload
+
 from forte.data.data_pack import DataPack
-import importlib
-import os
 import unittest
-from typing import Dict
 
 
 class ImageAnnotationTest(unittest.TestCase):
@@ -44,7 +37,7 @@ class ImageAnnotationTest(unittest.TestCase):
         self.line[2, 2] = 1
         self.line[3, 3] = 1
         self.line[4, 4] = 1
-        ip = ImagePayload(self.datapack, 0)
+        ip = ImagePayload(self.datapack, Modality.image, 0)
         ip.set_cache(self.line)
         ImageAnnotation(self.datapack, 0)
 
@@ -55,6 +48,11 @@ class ImageAnnotationTest(unittest.TestCase):
 
         self.assertTrue(
             array_equal(
-                self.datapack.get_single(ImagePayload, 0).cache, self.line
+                self.datapack.get_payload_at("image", 0).cache, self.line
             )
+        )
+        self.datapack.image_payloads[0]._modality = None
+        new_pack = DataPack.from_string(self.datapack.to_string())
+        self.assertEqual(
+            new_pack.audio_annotations, self.datapack.audio_annotations
         )
