@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import copy
+from enum import IntEnum
 import gzip
 import pickle
 import uuid
@@ -127,6 +128,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
     def __setstate__(self, state):
         super().__setstate__(state)
+
         if "meta" in self.__dict__:
             self._meta = self.__dict__.pop("meta")
         self.__control_component = None
