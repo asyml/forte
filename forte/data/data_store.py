@@ -137,7 +137,9 @@ class DataStore(BaseStore):
         understand and store ``entry_type`` defined in the provided file.
 
         Args:
-            onto_file_path (str, optional): the path to the ontology file.
+            onto_file_path (str, optional): The path to the input ontology
+                specification file, which should be a json file, and it should
+                have all the entries inside with no import as key.
         """
         super().__init__()
 
@@ -1808,12 +1810,9 @@ class DataStore(BaseStore):
         ``DataStore._type_attributes`` to store type name, parent entry, and its attribute
         information accordingly.
 
-        For every entry type, this function will first recursively import files specified by
-        `imports` in the ontology specification file, and then parse the ontology for the
-        current file. For example, if a type has a parent entry in ``ft.onto.base_ontology``,
-        all classes in ``ft.onto.base_ontology`` will be imported and stored in the internal
-        dictionary. A user can use typess both in the ontology specification file and their
-        parent entries's paths.
+        The ontology specification file should contain all the entry definitions users
+        wanted to use, either manually or through the `-m` option. This function will
+        take this one file and only import the types specified inside it.
         """
         if self._onto_file_path is None:
             return
