@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from dataclasses import dataclass
-from enum import Enum
+from enum import IntEnum
 from functools import total_ordering
 from typing import Optional, Tuple, Type, Any, Dict, Union, Iterable, List
 
@@ -53,9 +53,6 @@ __all__ = [
     "Box",
     "BoundingBox",
     "Payload",
-    "TextPayload",
-    "ImagePayload",
-    "AudioPayload",
 ]
 
 QueryType = Union[Dict[str, Any], np.ndarray]
@@ -1191,7 +1188,7 @@ class Payload(Entry):
     def __init__(
         self,
         pack: PackType,
-        modality: Enum,
+        modality: IntEnum,
         payload_idx: int,
         uri: str = None,
     ):
@@ -1259,37 +1256,7 @@ class Payload(Entry):
         self._cache = data
 
 
-class TextPayload(Payload):
-    def __init__(
-        self,
-        pack: PackType,
-        payload_idx: int,
-        path: Optional[str] = None,
-    ):
-        super().__init__(pack, Modality.text, payload_idx, path)
-
-
-class AudioPayload(Payload):
-    def __init__(
-        self,
-        pack: PackType,
-        payload_idx: int,
-        path: Optional[str] = None,
-    ):
-        super().__init__(pack, Modality.audio, payload_idx, path)
-
-
-class ImagePayload(Payload):
-    def __init__(
-        self,
-        pack: PackType,
-        payload_idx: int,
-        path: Optional[str] = None,
-    ):
-        super().__init__(pack, Modality.image, payload_idx, path)
-
-
-Modality = Enum("modality", "text audio image")
+Modality = IntEnum("modality", "text audio image")
 
 SinglePackEntries = (
     Link,
