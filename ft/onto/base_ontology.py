@@ -8,7 +8,7 @@ Automatically generated ontology base_ontology. Do not change manually.
 """
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import IntEnum
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology.core import Entry
@@ -603,17 +603,16 @@ class AudioUtterance(AudioAnnotation):
 class AudioPayload(Payload):
     """
     A payload that caches audio data
-    Attributes:
-        speaker (Optional[str]):
     """
 
-    speaker: Optional[str]
-
     def __init__(
-        self, pack: DataPack, modality: Enum, payload_idx: int, uri: str = None
+        self,
+        pack: DataPack,
+        modality: IntEnum,
+        payload_idx: Optional[int] = None,
+        uri: str = None,
     ):
         super().__init__(pack, modality, payload_idx, uri)
-        self.speaker: Optional[str] = None
 
 
 @dataclass
@@ -623,7 +622,11 @@ class TextPayload(Payload):
     """
 
     def __init__(
-        self, pack: DataPack, modality: Enum, payload_idx: int, uri: str = None
+        self,
+        pack: DataPack,
+        modality: IntEnum,
+        payload_idx: Optional[int] = None,
+        uri: str = None,
     ):
         super().__init__(pack, modality, payload_idx, uri)
 
@@ -635,6 +638,10 @@ class ImagePayload(Payload):
     """
 
     def __init__(
-        self, pack: DataPack, modality: Enum, payload_idx: int, uri: str = None
+        self,
+        pack: DataPack,
+        modality: IntEnum,
+        payload_idx: Optional[int] = None,
+        uri: str = None,
     ):
         super().__init__(pack, modality, payload_idx, uri)
