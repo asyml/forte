@@ -17,8 +17,10 @@ Unit tests for AudioReader.
 from email.mime import audio
 import importlib
 import os
+from sunau import AUDIO_FILE_ENCODING_ADPCM_G721
 import unittest
 from typing import Dict
+from forte.data.ontology.top import Modality
 from torch import argmax
 from transformers import Wav2Vec2Processor, Wav2Vec2ForCTC
 
@@ -29,7 +31,7 @@ from forte.data.data_pack import DataPack
 from forte.data.readers import AudioReader
 from forte.pipeline import Pipeline
 from forte.processors.base.pack_processor import PackProcessor
-from forte.data.ontology.top import AudioReadingMeta, AudioPayload
+from ft.onto.base_ontology import AudioPayload, TextPayload
 
 
 class TestASRProcessor(PackProcessor):
@@ -46,19 +48,9 @@ class TestASRProcessor(PackProcessor):
         self._model = Wav2Vec2ForCTC.from_pretrained(pretrained_model)
 
     def _process(self, input_pack: DataPack):
-
-        # it follows the logic of loaidng while using
-        # load audio using AudioPayload
-        for audio_payload, audio_reading_meta in zip(
-            input_pack.get(AudioPayload), input_pack.get(AudioReadingMeta)
-        ):
-            audio_reading_meta
-            module = importlib.import_module(audio_reading_meta.module)
-            reading_method = getattr(module, audio_reading_meta.reading_method)
-            audio_data, sample_rate = reading_method(audio_payload.reading_path)
-            # sample_rate = audio_payload.get_meta("sample_rate")
-            # audio_data = audio_payload.offload_cache()
-
+        ap = input_pack.get_payload_at("audio", 0)
+        sample_rate = ap.meta.sample_rate
+        audio_data = ap.cache
         required_sample_rate: int = 16000
         if sample_rate != required_sample_rate:
             raise ProcessFlowException(
@@ -76,7 +68,9 @@ class TestASRProcessor(PackProcessor):
             argmax(self._model(input_values).logits, dim=-1)
         )
 
-        input_pack.set_text(text=transcription[0])
+        tp = TextPayload(input_pack, Modality.text, 0)
+        tp.set_cache(transcription[0])
+        # input_pack.set_text(text=transcription[0])
 
 
 class AudioReaderPipelineTest(unittest.TestCase):
