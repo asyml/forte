@@ -16,6 +16,7 @@ Unit tests for AudioAnnotation.
 """
 import os
 import unittest
+from forte.data.modality import Modality
 import numpy as np
 from typing import Dict, List
 
@@ -32,7 +33,6 @@ from forte.data.ontology.top import (
     Generics,
     Group,
     Link,
-    Modality,
 )
 from ft.onto.base_ontology import (
     Recording,
