@@ -511,7 +511,10 @@ class DataStore(BaseStore):
             dynamic import is disabled.
         """
         # check if type is in dictionary
-        if type_name in DataStore._type_attributes and "attributes" in DataStore._type_attributes[type_name]:
+        if (
+            type_name in DataStore._type_attributes
+            and "attributes" in DataStore._type_attributes[type_name]
+        ):
             return DataStore._type_attributes[type_name]
         if not self._dynamically_add_type:
             raise ValueError(
