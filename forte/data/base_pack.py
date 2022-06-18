@@ -478,25 +478,12 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         intended to take the first one.
         Args:
             entry_type: The entry type to be retrieved.
-            entry_index: the index of the entry requested to get.
-
         Returns:
             A single data entry.
         """
-        idx = -1
-        for idx, a in enumerate(self.get(entry_type)):
-            if idx == entry_index:
-                return a
+        for a in self.get(entry_type):
+            return a
 
-        if idx == -1:
-            raise EntryNotFoundError(
-                f"There is no {entry_type} in the provided pack."
-            )
-        if idx < entry_index:
-            raise EntryNotFoundError(
-                f"The entry index {entry_index} is larger than maximum"
-                f" {entry_type} index ({idx}) in the provided pack."
-            )
         raise EntryNotFoundError(
             f"The entry {entry_type} is not found in the provided pack."
         )
