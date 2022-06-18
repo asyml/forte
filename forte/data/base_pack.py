@@ -470,14 +470,12 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         """
         raise NotImplementedError
 
-    def get_single(
-        self, entry_type: Union[str, Type[EntryType]], entry_index: int = 0
-    ) -> EntryType:
+    def get_single(self, entry_type: Union[str, Type[EntryType]]) -> EntryType:
         r"""Take a single entry of type
         :attr:`~forte.data.data_pack.DataPack.entry_type` from this data
-        pack. This is useful when you want to take an entry at a specific index or the target entry type appears only one
-        time in the :class:`~forte.data.data_pack.DataPack` for e.g., a Document entry.
-
+        pack. This is useful when the target entry type appears only one
+        time in the :class:`~forte.data.data_pack.DataPack` for e.g., a Document entry. Or you just
+        intended to take the first one.
         Args:
             entry_type: The entry type to be retrieved.
             entry_index: the index of the entry requested to get.
