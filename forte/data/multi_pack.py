@@ -925,7 +925,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
         return mp
 
-    def _add_entry(self, entry: EntryType) -> EntryType:
+    def _add_entry(self, entry: EntryType) -> EntryType:  # type: ignore
         r"""Force add an :class:`forte.data.ontology.core.Entry` object to the
         :class:`~forte.data.multi_pack.MultiPack` object.
 
