@@ -575,9 +575,9 @@ class DataPack(BasePack[Entry, Link, Group]):
         # temporary solution for backward compatibility
         # past API use this method to add a single text in the datapack
         if len(self.text_payloads) == 0 and text_payload_index == 0:
-            from ft.onto.base_ontology import (
+            from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
                 TextPayload,
-            )  # pylint: disable=import-outside-toplevel
+            )
 
             tp = TextPayload(self, Modality.text)
         else:
@@ -608,9 +608,9 @@ class DataPack(BasePack[Entry, Link, Group]):
         # temporary solution for backward compatibility
         # past API use this method to add a single audio in the datapack
         if len(self.audio_payloads) == 0 and audio_payload_index == 0:
-            from ft.onto.base_ontology import (
+            from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
                 AudioPayload,
-            )  # pylint: disable=import-outside-toplevel
+            )
 
             ap = AudioPayload(self, Modality.audio)
         else:
