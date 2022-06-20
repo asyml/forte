@@ -25,6 +25,7 @@ from typing import Dict
 from typing import Iterable
 from typing import List
 from typing import Optional
+from typing import Tuple
 
 __all__ = [
     "Token",
@@ -610,7 +611,7 @@ class AudioPayload(Payload):
         pack: DataPack,
         modality: IntEnum,
         payload_idx: Optional[int] = None,
-        uri: str = None,
+        uri: Optional[str] = None,
     ):
         super().__init__(pack, modality, payload_idx, uri)
 
@@ -619,16 +620,30 @@ class AudioPayload(Payload):
 class TextPayload(Payload):
     """
     A payload that caches text data
+    Attributes:
+        _cache (Optional[str]):
+        replace_back_operations (FList[Tuple]):
+        processed_original_spans (FList[Tuple]):
+        orig_text_len (Optional[int]):
     """
+
+    _cache: Optional[str]
+    replace_back_operations: FList[Tuple]
+    processed_original_spans: FList[Tuple]
+    orig_text_len: Optional[int]
 
     def __init__(
         self,
         pack: DataPack,
         modality: IntEnum,
         payload_idx: Optional[int] = None,
-        uri: str = None,
+        uri: Optional[str] = None,
     ):
         super().__init__(pack, modality, payload_idx, uri)
+        self._cache: Optional[str] = None
+        self.replace_back_operations: FList[Tuple] = FList(self)
+        self.processed_original_spans: FList[Tuple] = FList(self)
+        self.orig_text_len: Optional[int] = None
 
 
 @dataclass
@@ -642,6 +657,6 @@ class ImagePayload(Payload):
         pack: DataPack,
         modality: IntEnum,
         payload_idx: Optional[int] = None,
-        uri: str = None,
+        uri: Optional[str] = None,
     ):
         super().__init__(pack, modality, payload_idx, uri)

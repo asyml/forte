@@ -449,14 +449,32 @@
       "entry_name": "ft.onto.base_ontology.AudioPayload",
       "parent_entry": "forte.data.ontology.top.Payload",
       "description": "A payload that caches audio data",
-      "attributes":[
-      ]
+      "attributes":[]
     },
     {
       "entry_name": "ft.onto.base_ontology.TextPayload",
       "parent_entry": "forte.data.ontology.top.Payload",
       "description": "A payload that caches text data",
-      "attributes": []
+      "attributes": [
+        {
+          "name": "_cache",
+          "type": "str"
+        },
+        {
+          "name": "replace_back_operations",
+          "type": "List",
+          "item_type": "typing.Tuple"
+        },
+        {
+          "name": "processed_original_spans",
+          "type": "List",
+          "item_type": "typing.Tuple"
+        },
+        {
+          "name": "orig_text_len",
+          "type": "int"
+        }
+      ]
     },
     {
       "entry_name": "ft.onto.base_ontology.ImagePayload",
