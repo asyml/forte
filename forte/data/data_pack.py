@@ -496,13 +496,13 @@ class DataPack(BasePack[Entry, Link, Group]):
 
     def get_payload_data_at(
         self, modality: str, payload_index: int
-    ) -> Union[str, np.ndarray[Any, Any]]:
+    ) -> Union[str, np.ndarray]:
         """
         Get Payload of requested modality at the requested payload index.
 
         Args:
             modality: data modality among "text", "audio", "image"
-            payload_index (int): the zero-based index of the Payload
+            payload_index: the zero-based index of the Payload
                 in this DataPack's Payload entries of the requested modality.
 
         Raises:
