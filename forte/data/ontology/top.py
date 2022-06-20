@@ -1192,7 +1192,7 @@ class Payload(Entry):
         pack: PackType,
         modality: IntEnum,
         payload_idx: Optional[int] = None,
-        uri: str = None,
+        uri: Optional[str] = None,
     ):
         supported_modality = ("text", "audio", "image")
         if modality.name not in supported_modality:
@@ -1200,15 +1200,15 @@ class Payload(Entry):
                 f"The given modality {modality} is not supported. "
                 f"Currently we only support {supported_modality}"
             )
-        self._payload_idx = payload_idx
-        self._modality = modality
-        self._uri = uri
+        self._payload_idx: int = payload_idx
+        self._modality: IntEnum = modality
+        self._uri: str = uri
 
         super().__init__(pack)
-        self._cache = None
-        self.meta = None
+        self._cache: Optional[Union[str, np.ndarray]] = None
+        self.meta: Optional[Generics] = None
 
-    def get_type(self):
+    def get_type(self) -> type:
         """
         Get the type of the payload class.
 
@@ -1217,7 +1217,7 @@ class Payload(Entry):
         """
         return type(self)
 
-    def get_modality(self):
+    def get_modality(self) -> str:
         """
         Get the modality of the payload class.
 
@@ -1227,7 +1227,7 @@ class Payload(Entry):
         return self._modality.name
 
     @property
-    def cache(self):
+    def cache(self) -> Optional[Union[str, np.ndarray]]:
         if self._cache is None:
             raise ValueError(
                 "Payload doesn't have a cache."
@@ -1237,15 +1237,15 @@ class Payload(Entry):
         return self._cache
 
     @property
-    def modality(self):
+    def modality(self) -> IntEnum:
         return self._modality
 
     @property
-    def payload_index(self):
+    def payload_index(self) -> int:
         return self._payload_idx
 
     @property
-    def uri(self):
+    def uri(self) -> str:
         return self._uri
 
     def set_cache(self, data: Union[str, np.ndarray]):

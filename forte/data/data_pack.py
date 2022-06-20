@@ -449,9 +449,7 @@ class DataPack(BasePack[Entry, Link, Group]):
     def groups(self, val):
         self._groups = val
 
-    def get_payload_at(
-        self, modality: str, payload_index: int
-    ) -> Union[str, np.ndarray]:
+    def get_payload_at(self, modality: str, payload_index: int) -> Payload:
         """
         Get Payload of requested modality at the requested payload index.
 
@@ -1096,11 +1094,11 @@ class DataPack(BasePack[Entry, Link, Group]):
                 str: context data.
             """
             if issubclass(c_type, Annotation):
-                return self.get_payload_at("text", payload_index).cache[
+                return self.get_payload_data_at("text", payload_index)[
                     context.begin : context.end
                 ]
             elif issubclass(c_type, AudioAnnotation):
-                return self.get_payload_at("audio", payload_index).cache[
+                return self.get_payload_data_at("audio", payload_index)[
                     context.begin : context.end
                 ]
             else:
