@@ -1200,9 +1200,9 @@ class Payload(Entry):
                 f"The given modality {modality} is not supported. "
                 f"Currently we only support {supported_modality}"
             )
-        self._payload_idx: int = payload_idx
+        self._payload_idx: Optional[int] = payload_idx
         self._modality: IntEnum = modality
-        self._uri: str = uri
+        self._uri: Optional[str] = uri
 
         super().__init__(pack)
         self._cache: Optional[Union[str, np.ndarray]] = None
@@ -1227,7 +1227,7 @@ class Payload(Entry):
         return self._modality.name
 
     @property
-    def cache(self) -> Optional[Union[str, np.ndarray]]:
+    def cache(self) -> str:  # Union[str, np.ndarray]:
         if self._cache is None:
             raise ValueError(
                 "Payload doesn't have a cache."

@@ -63,7 +63,7 @@ class TestBertBasedQueryCreator(unittest.TestCase):
 
         for idx, m_pack in enumerate(nlp.process_dataset(self.test_dir)):
             query_pack: DataPack = m_pack.get_pack("query")
-            self.assertEqual(query_pack.num_generics_entries, 1)
-            self.assertIsInstance(query_pack.generics[0], Query)
-            query = query_pack.generics[0].value
+            self.assertEqual(query_pack.num_generics_entries, 2)
+            self.assertIsInstance(query_pack.generics[1], Query)
+            query = query_pack.generics[1].value
             self.assertEqual(query.shape, (1, 768))

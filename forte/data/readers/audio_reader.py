@@ -76,7 +76,7 @@ class AudioReader(PackReader):
             audio_data, sample_rate = self.soundfile.read(file_path)
             ap.set_cache(audio_data)
         ap.meta = Generics(pack)
-        ap.meta.sample_rate = sample_rate
+        ap.sample_rate = sample_rate
         pack.pack_name = file_path
         yield pack
 

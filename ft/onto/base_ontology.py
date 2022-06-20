@@ -603,7 +603,11 @@ class AudioUtterance(AudioAnnotation):
 class AudioPayload(Payload):
     """
     A payload that caches audio data
+    Attributes:
+        sample_rate (Optional[int]):
     """
+
+    sample_rate: Optional[int]
 
     def __init__(
         self,
@@ -613,6 +617,7 @@ class AudioPayload(Payload):
         uri: Optional[str] = None,
     ):
         super().__init__(pack, modality, payload_idx, uri)
+        self.sample_rate: Optional[int] = None
 
 
 @dataclass

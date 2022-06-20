@@ -28,6 +28,8 @@ from typing import (
     Tuple,
 )
 from functools import partial
+import typing
+
 
 from typing_inspect import get_origin
 from packaging.version import Version
@@ -232,7 +234,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         return isinstance(entry, SinglePackEntries)
 
     @property
-    def text(self) -> str:
+    def text(self) -> Union[str, Any, None]:
         """
         Get text from a text payload at an index.
 
@@ -449,7 +451,9 @@ class DataPack(BasePack[Entry, Link, Group]):
     def groups(self, val):
         self._groups = val
 
-    def get_payload_at(self, modality: str, payload_index: int) -> Payload:
+    def get_payload_at(
+        self, modality: str, payload_index: int
+    ):  # -> Union[TextPayload, AudioPayload, ImagePayload]:
         """
         Get Payload of requested modality at the requested payload index.
 
@@ -616,7 +620,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         ap.set_cache(audio)
         ap.meta = Generics(self)
-        ap.meta.sample_rate = sample_rate
+        ap.sample_rate = sample_rate
 
     def get_original_text(self, text_payload_index: int = 0):
         r"""Get original unmodified text from the :class:`~forte.data.data_pack.DataPack` object.

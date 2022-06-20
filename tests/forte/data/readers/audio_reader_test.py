@@ -49,7 +49,7 @@ class TestASRProcessor(PackProcessor):
 
     def _process(self, input_pack: DataPack):
         ap = input_pack.get_payload_at("audio", 0)
-        sample_rate = ap.meta.sample_rate
+        sample_rate = ap.sample_rate
         audio_data = ap.cache
         required_sample_rate: int = 16000
         if sample_rate != required_sample_rate:
