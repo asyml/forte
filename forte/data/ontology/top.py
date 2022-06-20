@@ -15,10 +15,9 @@ from dataclasses import dataclass
 from enum import IntEnum
 from functools import total_ordering
 from typing import Optional, Tuple, Type, Any, Dict, Union, Iterable, List
-from forte.data.modality import Modality
-
 import numpy as np
 
+from forte.data.modality import Modality
 from forte.data.base_pack import PackType
 from forte.data.ontology.core import (
     Entry,

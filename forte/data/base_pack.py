@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import copy
-from enum import IntEnum
 import gzip
 import pickle
 import uuid

@@ -215,18 +215,6 @@ class DataPack(BasePack[Entry, Link, Group]):
         self._entry_converter = EntryConverter()
         super().__setstate__(state)
 
-        # For backward compatibility.
-        if "replace_back_operations" in self.__dict__:
-            self.__replace_back_operations = self.__dict__.pop(
-                "replace_back_operations"
-            )
-        if "processed_original_spans" in self.__dict__:
-            self.__processed_original_spans = self.__dict__.pop(
-                "processed_original_spans"
-            )
-        if "orig_text_len" in self.__dict__:
-            self.__orig_text_len = self.__dict__.pop("orig_text_len")
-
         self._index = DataIndex()
         self._index.update_basic_index(list(iter(self)))
 
@@ -496,13 +484,13 @@ class DataPack(BasePack[Entry, Link, Group]):
                     "Please provide one of modality among"
                     f" {supported_modality}."
                 )
-        except IndexError:
+        except IndexError as e:
             raise ValueError(
                 f"payload index ({payload_index}) "
                 f"is larger or equal to {modality} payload list"
                 f" length ({payloads_length}). "
                 f"Please input a {modality} payload index less than it."
-            )
+            ) from e
         return payload
 
     def get_payload_data_at(
@@ -587,7 +575,9 @@ class DataPack(BasePack[Entry, Link, Group]):
         # temporary solution for backward compatibility
         # past API use this method to add a single text in the datapack
         if len(self.text_payloads) == 0 and text_payload_index == 0:
-            from ft.onto.base_ontology import TextPayload
+            from ft.onto.base_ontology import (
+                TextPayload,
+            )  # pylint: disable=import-outside-toplevel
 
             tp = TextPayload(self, Modality.text)
         else:
@@ -618,7 +608,9 @@ class DataPack(BasePack[Entry, Link, Group]):
         # temporary solution for backward compatibility
         # past API use this method to add a single audio in the datapack
         if len(self.audio_payloads) == 0 and audio_payload_index == 0:
-            from ft.onto.base_ontology import AudioPayload
+            from ft.onto.base_ontology import (
+                AudioPayload,
+            )  # pylint: disable=import-outside-toplevel
 
             ap = AudioPayload(self, Modality.audio)
         else:
