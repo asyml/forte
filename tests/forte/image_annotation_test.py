@@ -40,11 +40,11 @@ class ImageAnnotationTest(unittest.TestCase):
         self.line[4, 4] = 1
         ip = ImagePayload(self.datapack, Modality.image, 0)
         ip.set_cache(self.line)
-        ImageAnnotation(self.datapack, 0)
+        ImageAnnotation(self.datapack)
 
     def test_image_annotation(self):
         self.assertEqual(
-            self.datapack.get_single(ImageAnnotation, 0).image_payload_idx, 0
+            self.datapack.get_single(ImageAnnotation).image_payload_idx, 0
         )
 
         self.assertTrue(

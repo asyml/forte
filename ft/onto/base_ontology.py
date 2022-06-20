@@ -25,7 +25,6 @@ from typing import Dict
 from typing import Iterable
 from typing import List
 from typing import Optional
-from typing import Tuple
 
 __all__ = [
     "Token",
@@ -622,14 +621,14 @@ class TextPayload(Payload):
     A payload that caches text data
     Attributes:
         _cache (Optional[str]):
-        replace_back_operations (FList[Tuple]):
-        processed_original_spans (FList[Tuple]):
+        replace_back_operations (Optional[List]):
+        processed_original_spans (Optional[List]):
         orig_text_len (Optional[int]):
     """
 
     _cache: Optional[str]
-    replace_back_operations: FList[Tuple]
-    processed_original_spans: FList[Tuple]
+    replace_back_operations: Optional[List]
+    processed_original_spans: Optional[List]
     orig_text_len: Optional[int]
 
     def __init__(
@@ -641,8 +640,8 @@ class TextPayload(Payload):
     ):
         super().__init__(pack, modality, payload_idx, uri)
         self._cache: Optional[str] = None
-        self.replace_back_operations: FList[Tuple] = FList(self)
-        self.processed_original_spans: FList[Tuple] = FList(self)
+        self.replace_back_operations: Optional[List] = None
+        self.processed_original_spans: Optional[List] = None
         self.orig_text_len: Optional[int] = None
 
 

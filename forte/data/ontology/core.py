@@ -147,8 +147,7 @@ def get_state_func(instance):
                 _pointer_keys[key] = True
             else:
                 _pointer_keys[key] = False
-    if "_Entry__pack" in state:
-        state.pop("_Entry__pack")
+    # state.pop("_Entry__pack")
     return state
 
 

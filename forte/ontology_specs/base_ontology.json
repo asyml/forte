@@ -462,12 +462,12 @@
         },
         {
           "name": "replace_back_operations",
-          "type": "List",
+          "type": "typing.List",
           "item_type": "typing.Tuple"
         },
         {
           "name": "processed_original_spans",
-          "type": "List",
+          "type": "typing.List",
           "item_type": "typing.Tuple"
         },
         {
