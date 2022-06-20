@@ -26,6 +26,7 @@ from typing import (
     Set,
     Callable,
     Tuple,
+    cast,
 )
 from functools import partial
 
@@ -232,7 +233,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         return isinstance(entry, SinglePackEntries)
 
     @property
-    def text(self) -> Union[str, Any, None]:
+    def text(self) -> str:
         """
         Get text from a text payload at an index.
 
@@ -495,7 +496,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
     def get_payload_data_at(
         self, modality: str, payload_index: int
-    ) -> Union[str, np.ndarray]:
+    ) -> Union[str, np.ndarray[Any, Any]]:
         """
         Get Payload of requested modality at the requested payload index.
 
@@ -526,7 +527,9 @@ class DataPack(BasePack[Entry, Link, Group]):
         Returns:
             The text within this span.
         """
-        return self.get_payload_data_at("text", text_payload_index)[begin:end]
+        return cast(str, self.get_payload_data_at("text", text_payload_index))[
+            begin:end
+        ]
 
     def get_span_audio(
         self, begin: int, end: int, audio_payload_index=0
@@ -545,7 +548,10 @@ class DataPack(BasePack[Entry, Link, Group]):
         Returns:
             The audio within this span.
         """
-        return self.get_payload_data_at("audio", audio_payload_index)[begin:end]
+        return cast(
+            np.ndarray,
+            self.get_payload_data_at("audio", audio_payload_index)[begin:end],
+        )
 
     def set_text(
         self,
