@@ -28,8 +28,6 @@ from typing import (
     Tuple,
 )
 from functools import partial
-import typing
-
 
 from typing_inspect import get_origin
 from packaging.version import Version
