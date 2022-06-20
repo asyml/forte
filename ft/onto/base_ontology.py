@@ -613,7 +613,7 @@ class AudioPayload(Payload):
         self,
         pack: DataPack,
         modality: IntEnum,
-        payload_idx: Optional[int] = None,
+        payload_idx: int = 0,
         uri: Optional[str] = None,
     ):
         super().__init__(pack, modality, payload_idx, uri)
@@ -640,7 +640,7 @@ class TextPayload(Payload):
         self,
         pack: DataPack,
         modality: IntEnum,
-        payload_idx: Optional[int] = None,
+        payload_idx: int = 0,
         uri: Optional[str] = None,
     ):
         super().__init__(pack, modality, payload_idx, uri)
@@ -660,7 +660,7 @@ class ImagePayload(Payload):
         self,
         pack: DataPack,
         modality: IntEnum,
-        payload_idx: Optional[int] = None,
+        payload_idx: int = 0,
         uri: Optional[str] = None,
     ):
         super().__init__(pack, modality, payload_idx, uri)
