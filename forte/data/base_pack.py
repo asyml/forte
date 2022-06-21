@@ -465,6 +465,11 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             """A getter function for dataclass fields of entry object.
             When the field contains ``tid``s, we will convert them to entry
             object on the fly.
+
+            Args:
+                cls: An ``Entry`` class object.
+                attr_name: The name of the attribute.
+                field_type: The type of the attribute.
             """
             data_store_ref = (
                 cls.pack._data_store  # pylint: disable=protected-access
@@ -482,6 +487,10 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                 if isinstance(attr_val, int):
                     # Single pack entry
                     return cls.pack.get_entry(tid=attr_val)
+                # The condition below is to check whether the attribute's value
+                # is a pair of integers - `(pack_id, tid)`. If so we may have
+                # encountered a `tid` that can only be resolved by
+                # `MultiPack.get_subentry`.
                 elif (
                     isinstance(attr_val, tuple)
                     and len(attr_val) == 2
@@ -498,17 +507,39 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             """A setter function for dataclass fields of entry object.
             When the value contains entry objects, we will convert them into
             ``tid``s before storing to ``DataStore``.
+
+            Args:
+                cls: An ``Entry`` class object.
+                value: The value to be assigned to the attribute.
+                attr_name: The name of the attribute.
+                field_type: The type of the attribute.
             """
             attr_value: Any
             data_store_ref = (
                 cls.pack._data_store  # pylint: disable=protected-access
             )
-            # Assumption: When users assign value to a FList/FDict field, the
-            # value's type has to be Iterator[Entry]/Dict[Any, Entry].
+            # Assumption: Users will not assign value to a FList/FDict field.
+            # Only internal methods can set the FList/FDict field, and value's
+            # type has to be Iterator[Entry]/Dict[Any, Entry].
             if field_type is FList:
-                attr_value = [entry.tid for entry in value]
+                try:
+                    attr_value = [entry.tid for entry in value]
+                except AttributeError as e:
+                    raise ValueError(
+                        "You are trying to assign value to a `FList` field, "
+                        "which can only accept an iterator of `Entry` objects."
+                    ) from e
             elif field_type is FDict:
-                attr_value = {key: entry.tid for key, entry in value.items()}
+                try:
+                    attr_value = {
+                        key: entry.tid for key, entry in value.items()
+                    }
+                except AttributeError as e:
+                    raise ValueError(
+                        "You are trying to assign value to a `FDict` field, "
+                        "which can only accept a mapping whose values are "
+                        "`Entry` objects."
+                    ) from e
             elif isinstance(value, Entry):
                 attr_value = (
                     value.tid
