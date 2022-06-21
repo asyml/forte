@@ -147,7 +147,7 @@ def get_state_func(instance):
                 _pointer_keys[key] = True
             else:
                 _pointer_keys[key] = False
-    # state.pop("_Entry__pack")
+    state.pop("_Entry__pack")
     return state
 
 
@@ -188,9 +188,8 @@ class Entry(Generic[ContainerType]):
         self.__pack: ContainerType = pack
         self._tid: int = uuid.uuid4().int
         self._embedding: np.ndarray = np.empty(0)
-        if pack is not None:
-            self.pack._validate(self)
-            self.pack.on_entry_creation(self)
+        self.pack._validate(self)
+        self.pack.on_entry_creation(self)
 
     def __getstate__(self):
         r"""In serialization, the pack is not serialize, and it will be set
