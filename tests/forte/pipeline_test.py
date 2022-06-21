@@ -1055,7 +1055,7 @@ class MultiPackPipelineTest(unittest.TestCase):
             )
         ):
             # Because no packs are selected, we do not have any entries added.
-            self.assertTrue(pack.get_pack("pack").num_generics_entries == 1)
+            self.assertTrue(pack.get_pack("pack").num_generics_entries == 0)
 
     def test_caster_all_selector(self):
         """

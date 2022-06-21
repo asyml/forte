@@ -1205,9 +1205,10 @@ class Payload(Entry):
         self._uri: Optional[str] = uri
 
         super().__init__(pack)
-        # self._cache: Optional[Union[str, np.ndarray]] = None
         self._cache: Union[str, np.ndarray] = ""
-        self.meta: Optional[Generics] = None
+        self.replace_back_operations: List[Tuple] = []
+        self.processed_original_spans: List[Tuple] = []
+        self.orig_text_len: int = 0
 
     def get_type(self) -> type:
         """

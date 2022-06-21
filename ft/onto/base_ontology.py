@@ -624,17 +624,7 @@ class AudioPayload(Payload):
 class TextPayload(Payload):
     """
     A payload that caches text data
-    Attributes:
-        _cache (Optional[str]):
-        replace_back_operations (Optional[List]):
-        processed_original_spans (Optional[List]):
-        orig_text_len (Optional[int]):
     """
-
-    _cache: Optional[str]
-    replace_back_operations: Optional[List]
-    processed_original_spans: Optional[List]
-    orig_text_len: Optional[int]
 
     def __init__(
         self,
@@ -644,10 +634,6 @@ class TextPayload(Payload):
         uri: Optional[str] = None,
     ):
         super().__init__(pack, modality, payload_idx, uri)
-        self._cache: Optional[str] = None
-        self.replace_back_operations: Optional[List] = None
-        self.processed_original_spans: Optional[List] = None
-        self.orig_text_len: Optional[int] = None
 
 
 @dataclass

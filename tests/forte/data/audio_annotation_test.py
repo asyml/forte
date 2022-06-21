@@ -247,7 +247,7 @@ class AudioAnnotationTest(unittest.TestCase):
                     len(self._test_configs),
                 )
             # we have one generics meta data
-            self.assertEqual(len(list(recordings[0].get(Generics))), 1)
+            self.assertEqual(len(list(recordings[0].get(Generics))), 0)
 
             # Check operations with mixing types of entries.
             self.assertEqual(len(list(pack.get(Utterance))), 1)
