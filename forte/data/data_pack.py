@@ -986,7 +986,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                 data from the (`offset` + 1)th instance.
             payload_index: the zero-based index of the Payload
                 in this DataPack's Payload entries of a particular modality.
-                The modality is depedent on ``context_type``. Defaults to 0.
+                The modality is dependent on ``context_type``. Defaults to 0.
 
         Returns:
             A data generator, which generates one piece of data (a dict
@@ -1091,7 +1091,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                     contains data to be extracted.
                 payload_index: the zero-based index of the Payload
                     in this DataPack's Payload entries of a particular modality.
-                    The modality is depedent on ``c_type``.
+                    The modality is dependent on ``c_type``.
                     Defaults to 0.
 
             Raises:

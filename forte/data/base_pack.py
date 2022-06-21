@@ -475,6 +475,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         pack. This is useful when the target entry type appears only one
         time in the :class:`~forte.data.data_pack.DataPack` for e.g., a Document entry. Or you just
         intended to take the first one.
+
         Args:
             entry_type: The entry type to be retrieved.
         Returns:
