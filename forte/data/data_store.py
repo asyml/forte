@@ -771,6 +771,7 @@ class DataStore(BaseStore):
         r"""This function generates a new payload with default fields.
         Called by add_payload_raw() to create a new payload with ``type_name``,
         ``payload_idx``, and ``modality``.
+
         Args:
             type_name: The fully qualified type name of the new entry.
             payload_idx: the zero-based index of the TextPayload
@@ -1166,11 +1167,11 @@ class DataStore(BaseStore):
         tid: Optional[int] = None,
         allow_duplicate=True,
     ) -> int:
-
         r"""
         This function adds an payload entry with ``payload_idx``
         and modality to current data store object.
         Returns the ``tid`` for the inserted entry.
+
         Args:
             type_name: The fully qualified type name of the new Payload.
             payload_idx: the zero-based index of the Payload
