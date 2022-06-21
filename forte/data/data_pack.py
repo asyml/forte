@@ -585,12 +585,11 @@ class DataPack(BasePack[Entry, Link, Group]):
                 TextPayload,
             )
 
-            tp = TextPayload(self, Modality.text)
+            tp = TextPayload(self, Modality.text, text_payload_index)
         else:
             tp = self.get_payload_at("text", text_payload_index)
 
         tp.set_cache(text)
-        tp.meta = Generics(self)
 
         tp.replace_back_operations = replace_back_operations
         tp.processed_original_spans = processed_original_spans
@@ -623,7 +622,6 @@ class DataPack(BasePack[Entry, Link, Group]):
             ap = self.get_payload_at("audio", audio_payload_index)
 
         ap.set_cache(audio)
-        ap.meta = Generics(self)
         ap.sample_rate = sample_rate
 
     def get_original_text(self, text_payload_index: int = 0):
@@ -631,7 +629,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         Args:
             text_payload_index: the zero-based index of the TextPayload
-                in this DataPack's TextPayload entries. Defaults to 0.
+                in this DataPack's  entries. Defaults to 0.
 
         Returns:
             Original text after applying the `replace_back_operations` of
