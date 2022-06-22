@@ -215,6 +215,10 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         self._entry_converter = EntryConverter()
         super().__setstate__(state)
+        for payload in (
+            self.text_payloads + self.audio_payloads + self.image_payloads
+        ):
+            payload.set_pack(self)
 
         self._index = DataIndex()
         self._index.update_basic_index(list(iter(self)))
