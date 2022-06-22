@@ -971,7 +971,7 @@ class DataStore(BaseStore):
         """
 
         tid: int = self._new_tid() if tid is None else tid
-        entry: List[Any] = list()
+        entry: List[Any] = []
 
         for attribute in attribute_data:
             entry.append(attribute)
@@ -1015,7 +1015,7 @@ class DataStore(BaseStore):
         new_entry = self._create_new_entry(type_name, attribute_data, tid)
 
         if any(
-            [self._is_subclass(type_name, e) for e in [Link, Group, Generics]]
+            self._is_subclass(type_name, e) for e in [Link, Group, Generics]
         ):
             allow_duplicate = True
 
