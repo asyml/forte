@@ -173,15 +173,9 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         raise NotImplementedError
 
     def __del__(self):
-        num_remaning_entries: int = len(self._pending_entries)
-        if num_remaning_entries > 0:
-            # Remove all the remaining tids in _pending_entries.
-            tids: List = list(self._pending_entries.keys())
-            for tid in tids:
-                self._pending_entries.pop(tid)
-                self._data_store.delete_entry(tid=tid)
+        if len(self._pending_entries) > 0:
             raise ProcessExecutionException(
-                f"There are {num_remaning_entries} "
+                f"There are {len(self._pending_entries)} "
                 f"entries not added to the index correctly."
             )
 

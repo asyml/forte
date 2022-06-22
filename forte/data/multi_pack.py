@@ -124,14 +124,6 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             None
         """
         self._packs.extend(packs)
-        for a in self.links:
-            a.relink_pointer()
-
-        for a in self.groups:
-            a.relink_pointer()
-
-        for a in self.generics:
-            a.relink_pointer()
 
     def __getstate__(self):
         r"""
