@@ -662,9 +662,7 @@ class DataStore(BaseStore):
 
         return entry
 
-    def _new_grid(
-        self, type_name: str, image_payload_idx: int, tid: Optional[int] = None
-    ) -> List:
+    def _new_grid(self, type_name: str, tid: Optional[int] = None) -> List:
         r"""This function generates a new grid with default fields.
         Called by add_grid_raw() to create a new grid
         with ``type_name``, ``image_payload_idx`` and optional ``tid``.
