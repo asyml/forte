@@ -985,7 +985,7 @@ class DataStore(BaseStore):
         self,
         type_name: str,
         attribute_data: List,
-        base_class: Entry,
+        base_class: Type[Entry],
         tid: Optional[int] = None,
         allow_duplicate: bool = True,
     ) -> int:
@@ -1001,6 +1001,7 @@ class DataStore(BaseStore):
             attribute_data: It is a list that stores attributes relevant to
                 the entry being added. In order to keep the number of attributes
                 same for all entries, the list is populated with trailing None's.
+            base_class: The type of entry to add to the Data Store.
             tid: ``tid`` of the Entry that is being added.
                 It's optional, and it will be
                 auto-assigned if not given.
