@@ -14,11 +14,13 @@
 """
 Unit tests for Grid.
 """
+
 import unittest
+from forte.data.ontology.core import Grid
 import numpy as np
 
 from numpy import array_equal
-from forte.data.ontology.top import Grid
+
 from forte.data.data_pack import DataPack
 from forte.data.ontology.top import ImageAnnotation
 
@@ -30,18 +32,20 @@ class GridTest(unittest.TestCase):
 
     def setUp(self):
         self.datapack = DataPack("image")
-        line = np.zeros((6, 12))
-        line[2, 2] = 1
-        line[3, 3] = 1
-        line[4, 4] = 1
-        self.datapack.payloads.append(line)
+
+        self.line = np.zeros((6, 12))
+        self.line[2, 2] = 1
+        self.line[3, 3] = 1
+        self.line[4, 4] = 1
+        self.datapack.payloads.append(self.line)
         self.datapack.image_annotations.append(
             ImageAnnotation(self.datapack, 0)
         )
 
-        grid = Grid(self.datapack, 3, 4)
+        image_height, image_width = self.line.shape
+        grid = Grid(3, 4, image_height, image_width)
 
-        self.datapack.grids.append(grid)
+        self.grid = grid
         self.zeros = np.zeros((6, 12))
         self.ref_arr = np.zeros((6, 12))
         self.ref_arr[2, 2] = 1
@@ -50,32 +54,30 @@ class GridTest(unittest.TestCase):
     def test_grids(self):
 
         self.assertTrue(
-            array_equal(self.datapack.grids[0].get_grid_cell(0, 0), self.zeros)
+            array_equal(self.grid.get_grid_cell(self.line, 0, 0), self.zeros)
         )
 
         self.assertTrue(
-            array_equal(
-                self.datapack.grids[0].get_grid_cell(1, 0), self.ref_arr
-            )
+            array_equal(self.grid.get_grid_cell(self.line, 1, 0), self.ref_arr)
         )
 
     def test_get_grid_cell_value_error(self):
         def fn1():
-            self.datapack.grids[0].get_grid_cell(3, 0)
+            self.grid.get_grid_cell(self.line, 3, 0)
 
         self.assertRaises(ValueError, fn1)
 
         def fn2():
-            self.datapack.grids[0].get_grid_cell(0, 4)
+            self.grid.get_grid_cell(self.line, 0, 4)
 
         self.assertRaises(ValueError, fn2)
 
         def fn3():
-            self.datapack.grids[0].get_grid_cell(-1, 0)
+            self.grid.get_grid_cell(self.line, -1, 0)
 
         self.assertRaises(ValueError, fn3)
 
         def fn4():
-            self.datapack.grids[0].get_grid_cell(0, -1)
+            self.grid.get_grid_cell(self.line, 0, -1)
 
         self.assertRaises(ValueError, fn4)
