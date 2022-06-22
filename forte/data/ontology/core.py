@@ -23,6 +23,7 @@ from dataclasses import dataclass
 from typing import (
     Iterable,
     Optional,
+    Tuple,
     Type,
     Hashable,
     TypeVar,
@@ -53,6 +54,7 @@ __all__ = [
     "FList",
     "FNdArray",
     "MultiEntry",
+    "Grid",
 ]
 
 from forte.utils import get_full_module_name
@@ -867,22 +869,24 @@ class BaseGroup(Entry, Generic[EntryType]):
 
 class Grid:
     """
-    Regular grid with a grid configuration.
+    Regular grid with a grid configuration dependent on the image size.
+
+    We intialize and constrain the grid shape by the image shape during
+    initialization since usually there aren't many different image sizes in one dataset.
 
     Args:
-        pack: The container that this grid will be added to.
         height: the number of grid cell per column, the unit is one grid cell.
         width: the number of grid cell per row, the unit is one grid cell.
-        image_payload_idx: the index of the image payload. If it's not set,
-            it defaults to 0 which meaning it will load the first image payload.
+        image_height: the number of pixels per column in the image.
+        image_width: the number of pixels per row in the image.
     """
 
     def __init__(
         self,
-        pack: PackType,
         height: int,
         width: int,
-        image_payload_idx: int = 0,
+        image_height: int,
+        image_width: int,
     ):
         if height <= 0 or width <= 0:
             raise ValueError(
@@ -891,21 +895,21 @@ class Grid:
             )
         self._height = height
         self._width = width
-        self._image_payload_idx = image_payload_idx
-        super().__init__(pack)
-        self.img_arr = self.pack.get_image_array(self._image_payload_idx)
         self.c_h, self.c_w = (
-            self.img_arr.shape[0] // self._height,
-            self.img_arr.shape[1] // self._width,
+            image_height // self._height,
+            image_width // self._width,
         )  # compute the height and width of grid cells
+        self.image_height = image_height
+        self.image_width = image_width
 
-    def get_grid_cell(self, h_idx: int, w_idx: int):
+    def get_grid_cell(self, img_arr: np.ndarray, h_idx: int, w_idx: int):
         """
         Get the array data of a grid cell from image of the image payload index.
         The array is a masked version of the original image, and it has
         the same size of the image. The array entries that are not
         within the grid cell will masked as zeros. The array entries that are
         within the grid cell will be copied to the zeros numpy array.
+
 
         Note: all indices are zero-based and counted from top left corner of
         the image.
@@ -937,7 +941,7 @@ class Grid:
             )
 
         # initialize a numpy zeros array
-        array = np.zeros(self.img_arr.shape)
+        array = np.zeros((self.image_height, self.image_width))
         # set grid cell entry values to the values of the original image array
         # (entry values outside of grid cell remain zeros)
         # An example of computing grid height index range is
@@ -946,7 +950,7 @@ class Grid:
         array[
             h_idx * self.c_h : (h_idx + 1) * self.c_h,
             w_idx * self.c_w : (w_idx + 1) * self.c_w,
-        ] = self.img_arr[
+        ] = img_arr[
             h_idx * self.c_h : (h_idx + 1) * self.c_h,
             w_idx * self.c_w : (w_idx + 1) * self.c_w,
         ]
@@ -962,7 +966,7 @@ class Grid:
         Args:
             h_idx: the height(row) index of the grid cell in the grid,
                 , the unit is one image array entry.
-            w_idx (int): the width(column) index of the grid cell in the
+            w_idx: the width(column) index of the grid cell in the
                 grid, the unit is one image array entry.
 
         Returns:
@@ -972,10 +976,6 @@ class Grid:
             (h_idx * self.c_h + (h_idx + 1) * self.c_h) // 2,
             (w_idx * self.c_w + (w_idx + 1) * self.c_w) // 2,
         )
-
-    @property
-    def image_payload_idx(self) -> int:
-        return self._image_payload_idx
 
     @property
     def num_grid_cells(self):

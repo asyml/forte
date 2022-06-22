@@ -22,6 +22,7 @@ from forte.data.ontology.core import (
     Entry,
     BaseLink,
     BaseGroup,
+    Grid,
     MultiEntry,
     EntryType,
 )
@@ -47,7 +48,6 @@ __all__ = [
     "MultiPackEntries",
     "AudioAnnotation",
     "ImageAnnotation",
-    "Grid",
     "Region",
     "Box",
     "BoundingBox",
@@ -923,7 +923,16 @@ class Box(Region):
                 "The box center is set to the center of" "image by default."
             )
 
-    def set_center(self, cy, cx):
+    def set_center(self, cy: int, cx: int):
+        """
+        Set the center(reference point) of the Box.
+
+        Args:
+            cy: the row index of the box center in the image array,
+            the unit is one image array entry.
+            cx: the column index of the box center in the image array,
+            the unit is one image array entry.
+        """
         self.is_default_box_center = False
         self._cy = cy
         self._cx = cx
@@ -931,6 +940,10 @@ class Box(Region):
     def set_grid_cell_center(
         self, grid: Grid, grid_h_idx: int, grid_w_idx: int
     ):
+        """
+        Set the center(reference point) of the Box to be the center of a grid
+        cell.
+        """
         self.is_default_box_center = False
         self.is_grid_associated = True
         # given a grid cell
