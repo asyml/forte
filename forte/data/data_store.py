@@ -12,7 +12,7 @@
 # limitations under the License.
 
 
-from typing import Dict, List, Iterator, Tuple, Optional, Any, Type
+from typing import Dict, List, Iterator, Tuple, Optional, Any, Type, Union
 import uuid
 import logging
 from heapq import heappush, heappop
@@ -681,7 +681,7 @@ class DataStore(BaseStore):
         tid: int = self._new_tid() if tid is None else tid
         entry: List[Any]
 
-        entry = [image_payload_idx, None, tid, type_name]
+        entry = [None, None, tid, type_name]
         entry += self._default_attributes_for_type(type_name)
 
         return entry
@@ -883,7 +883,7 @@ class DataStore(BaseStore):
 
     def _add_entry_raw(
         self,
-        entry_type: Type[Entry],
+        entry_type: Union[Type[Entry], Type[Grid]],
         type_name: str,
         entry: List[Any],
     ):
@@ -1082,7 +1082,6 @@ class DataStore(BaseStore):
     def add_grid_raw(
         self,
         type_name: str,
-        image_payload_idx: int,
         tid: Optional[int] = None,
         allow_duplicate=True,
     ) -> int:
@@ -1094,7 +1093,6 @@ class DataStore(BaseStore):
 
         Args:
             type_name: The fully qualified type name of the new grid.
-            image_payload_idx: the index of the image payload.
             tid: ``tid`` of the Annotation entry that is being added.
                 It's optional, and it will be
                 auto-assigned if not given.
@@ -1111,7 +1109,7 @@ class DataStore(BaseStore):
         # annotation type entry data with default fields.
         # A reference to the entry should be store in both self.__elements and
         # self.__tid_ref_dict.
-        entry = self._new_grid(type_name, image_payload_idx, tid)
+        entry = self._new_grid(type_name, tid)
 
         if not allow_duplicate:
             tid_search_result = self._get_existing_ann_entry_tid(entry)

@@ -2015,7 +2015,6 @@ class EntryConverter:
         elif isinstance(entry, Grid):
             data_store_ref.add_grid_raw(
                 type_name=entry.entry_type(),
-                image_payload_idx=entry.image_payload_idx,
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,
             )
