@@ -89,7 +89,6 @@ pip install forte.spacy
 Let's start by writing a simple processor that analyze POS tags to tokens using the good old NLTK library.
 ```python
 import nltk
-
 from forte.processors.base import PackProcessor
 from forte.data.data_pack import DataPack
 from ft.onto.base_ontology import Token
@@ -105,14 +104,13 @@ class NLTKPOSTagger(PackProcessor):
     def _process(self, input_pack: DataPack):
         # get a list of token data entries from `input_pack`
         # using `DataPack.get()`` method
-        token_entries = input_pack.get(Token)
-        token_texts = [token.text for token in token_entries]
+        token_texts = [token.text for token in input_pack.get(Token)]
 
         # use nltk pos tagging module to tag token texts
         taggings = nltk.pos_tag(token_texts)
 
         # assign nltk taggings to token attributes
-        for token, tag in zip(token_entries, taggings):
+        for token, tag in zip(input_pack.get(Token), taggings):
             token.pos = tag[1]
 ```
 If we break it down, we will notice there are two main functions.
@@ -127,30 +125,36 @@ a full pipeline.
 ```python
 from forte import Pipeline
 
-from forte.data.readers import TerminalReader
+from forte.data.readers import StringReader
 from fortex.spacy import SpacyProcessor
 
 pipeline: Pipeline = Pipeline[DataPack]()
-pipeline.set_reader(TerminalReader())
+pipeline.set_reader(StringReader())
 pipeline.add(SpacyProcessor(), {"processors": ["sentence", "tokenize"]})
 pipeline.add(NLTKPOSTagger())
 ```
 
 Here we have successfully created a pipeline with a few components:
-* a `TerminalReader` that reads data from terminal
+* a `StringReader` that reads data from a string.
 * a `SpacyProcessor` that calls SpaCy to split the sentences and create tokenization
 * and finally the brand new `NLTKPOSTagger` we just implemented,
 
 Let's see it run in action!
 
 ```python
-for pack in pipeline.initialize().process_dataset():
+input_string = "Forte is a data-centric ML framework"
+for pack in pipeline.initialize().process_dataset(input_string):
     for sentence in pack.get("ft.onto.base_ontology.Sentence"):
         print("The sentence is: ", sentence.text)
         print("The POS tags of the tokens are:")
         for token in pack.get(Token, sentence):
-            print(f" {token.text}({token.pos})", end = " ")
+            print(f" {token.text}[{token.pos}]", end = " ")
         print()
+```
+It gives us output as follows:
+
+```
+Forte[NNP]  is[VBZ]  a[DT]  data[NN]  -[:]  centric[JJ]  ML[NNP]  framework[NN]  .[.]
 ```
 
 We have successfully created a simple pipeline. In the nutshell, the `DataPack`s are
