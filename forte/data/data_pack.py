@@ -1973,53 +1973,59 @@ class EntryConverter:
 
         # Create a new registry in DataStore based on entry's type
         if isinstance(entry, Annotation):
-            data_store_ref.add_annotation_raw(
+            data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
-                begin=entry.begin,
-                end=entry.end,
+                attribute_data=[entry.begin, entry.end],
+                base_class=Annotation,
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,
             )
         elif isinstance(entry, Link):
-            data_store_ref.add_link_raw(
+            data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
-                parent_tid=entry.parent,
-                child_tid=entry.child,
+                attribute_data=[entry.parent, entry.child],
+                base_class=Link,
                 tid=entry.tid,
             )
         elif isinstance(entry, Group):
-            data_store_ref.add_group_raw(
+            data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
-                member_type=get_full_module_name(entry.MemberType),
+                attribute_data=[get_full_module_name(entry.MemberType), []],
+                base_class=Group,
                 tid=entry.tid,
             )
         elif isinstance(entry, Generics):
-            data_store_ref.add_generics_raw(
+            data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
+                attribute_data=[None, None],
+                base_class=Generics,
                 tid=entry.tid,
             )
         elif isinstance(entry, AudioAnnotation):
-            data_store_ref.add_audio_annotation_raw(
+            data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
-                begin=entry.begin,
-                end=entry.end,
+                attribute_data=[entry.begin, entry.end],
+                base_class=AudioAnnotation,
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,
             )
         elif isinstance(entry, ImageAnnotation):
-            data_store_ref.add_image_annotation_raw(
+            data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
-                image_payload_idx=entry.image_payload_idx,
+                attribute_data=[entry.image_payload_idx, None],
+                base_class=ImageAnnotation,
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,
             )
         elif isinstance(entry, Grids):
-            data_store_ref.add_grid_raw(
+            data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
-                image_payload_idx=entry.image_payload_idx,
+                attribute_data=[entry.image_payload_idx, None],
+                base_class=Grids,
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,
             )
+
         else:
             raise ValueError(
                 f"Invalid entry type {type(entry)}. A valid entry "
