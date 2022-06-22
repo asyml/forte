@@ -883,7 +883,6 @@ class Box(Region):
         cx: the column index of the box center in the image array,
             the unit is one image array entry. If not set, the box center
             will be set to center of image (half width of the image).
-        width: the width of the box, the unit is one image array entry.
     """
 
     def __init__(
