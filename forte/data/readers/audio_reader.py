@@ -21,7 +21,6 @@ from forte.data.data_pack import DataPack
 from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.base_reader import PackReader
 from forte.data.modality import Modality
-from forte.data.ontology.top import Generics
 from ft.onto.base_ontology import AudioPayload
 
 __all__ = [
