@@ -783,7 +783,7 @@ class DataStoreTest(unittest.TestCase):
     def test_add_group_raw(self):
         self.data_store.add_entry_raw(
             type_name="forte.data.ontology.top.Group",
-            attribute_data=[9999, 1234567],
+            attribute_data=["dummy_group", []],
             base_class=Group,
         )
         # check number of Group
