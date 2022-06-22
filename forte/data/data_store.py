@@ -508,10 +508,7 @@ class DataStore(BaseStore):
             dynamic import is disabled.
         """
         # check if type is in dictionary
-        if (
-            type_name in DataStore._type_attributes
-            and "attributes" in DataStore._type_attributes[type_name]
-        ):
+        if type_name in DataStore._type_attributes:
             return DataStore._type_attributes[type_name]
         if not self._dynamically_add_type:
             raise ValueError(
@@ -787,7 +784,7 @@ class DataStore(BaseStore):
 
         """
         if type_name not in DataStore._type_attributes:
-            DataStore._type_attributes[type_name] = {}
+            self._get_type_info(type_name=type_name)
         if "parent_class" not in DataStore._type_attributes[type_name]:
             DataStore._type_attributes[type_name]["parent_class"] = set()
         cls_qualified_name = get_full_module_name(cls)

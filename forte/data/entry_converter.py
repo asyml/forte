@@ -137,10 +137,12 @@ class EntryConverter:
                 tid=entry.tid,
             )
         else:
+            valid_entries: str = ", ".join(
+                map(get_full_module_name, SinglePackEntries + MultiPackEntries)
+            )
             raise ValueError(
-                f"Invalid entry type {type(entry)}. A valid entry "
-                f"should be an instance of Annotation, Link, Group, Generics "
-                "or AudioAnnotation."
+                f"Invalid entry type {entry.entry_type()}. A valid entry should"
+                f" be an instance of {valid_entries}."
             )
 
         # Store all the dataclass attributes to DataStore
