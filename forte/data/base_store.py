@@ -13,7 +13,8 @@
 # limitations under the License.
 
 from abc import abstractmethod
-from typing import List, Iterator, Tuple, Any, Optional, Dict
+from typing import List, Iterator, Tuple, Any, Optional, Dict, Type
+from forte.data.ontology.core import Entry
 import json
 
 __all__ = ["BaseStore"]
