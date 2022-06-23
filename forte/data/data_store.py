@@ -269,8 +269,8 @@ class DataStore(BaseStore):
         state["entries"] = state.pop("_DataStore__elements")
         state["fields"] = self._type_attributes
         for _, v in state["fields"].items():
-            if "parent_class" in v:
-                v.pop("parent_class")
+            if constants.PARENT_CLASS_KEY in v:
+                v.pop(constants.PARENT_CLASS_KEY)
         return state
 
     def __setstate__(self, state):
@@ -395,18 +395,21 @@ class DataStore(BaseStore):
                 # If a field only occurs in the serialized object but not in
                 # the current class, it will not be detected.
                 # Instead, it will be dropped later.
-                diff = set(v["attributes"].items()) - set(
-                    store._type_attributes[t]["attributes"].items()
+                diff = set(v[constants.TYPE_ATTR_KEY].items()) - set(
+                    store._type_attributes[t][constants.TYPE_ATTR_KEY].items()
                 )
                 for f in diff:
                     # if fields appear in both the current class and the
                     # serialized objects but have different orders, switch
                     # fields to match the order of the current class.
-                    if f[0] in store._type_attributes[t]["attributes"]:
+                    if (
+                        f[0]
+                        in store._type_attributes[t][constants.TYPE_ATTR_KEY]
+                    ):
                         # record indices of the same field in the class and
                         # objects. Save different indices to a dictionary.
                         change_map[f[1]] = store._type_attributes[t][
-                            "attributes"
+                            constants.TYPE_ATTR_KEY
                         ][f[0]]
                     # record indices of fields that only appear in the
                     # current class. We want to fill them with None.
@@ -429,7 +432,9 @@ class DataStore(BaseStore):
                             d[change_map[i]] if i in change_map else d[i]
                             # throw fields that are redundant/only appear in
                             # the serialized object
-                            for i in range(max(v["attributes"].values()) + 1)
+                            for i in range(
+                                max(v[constants.TYPE_ATTR_KEY].values()) + 1
+                            )
                         ]
                 if len(contradict_loc) > 0:
                     if not suppress_warning:
@@ -518,7 +523,7 @@ class DataStore(BaseStore):
         # check if type is in dictionary
         if (
             type_name in DataStore._type_attributes
-            and "attributes" in DataStore._type_attributes[type_name]
+            and constants.TYPE_ATTR_KEY in DataStore._type_attributes[type_name]
         ):
             return DataStore._type_attributes[type_name]
         if not self._dynamically_add_type:
@@ -538,8 +543,8 @@ class DataStore(BaseStore):
             attr_idx += 1
 
         new_entry_info = {
-            "attributes": attr_dict,
-            "parent_class": set(),
+            constants.TYPE_ATTR_KEY: attr_dict,
+            constants.PARENT_CLASS_KEY: set(),
         }
         DataStore._type_attributes[type_name] = new_entry_info
         return new_entry_info
@@ -562,7 +567,7 @@ class DataStore(BaseStore):
         Returns:
             attr_dict (dict): The attribute-to-index dictionary of an entry.
         """
-        return self._get_type_info(type_name)["attributes"]
+        return self._get_type_info(type_name)[constants.TYPE_ATTR_KEY]
 
     def _get_type_parent(self, type_name: str) -> str:
         """Get a set of parent names of an entry type. The set is a subset of all
@@ -572,7 +577,7 @@ class DataStore(BaseStore):
         Returns:
             parent_class (str): The parent entry name of an entry.
         """
-        return self._get_type_info(type_name)["parent_class"]
+        return self._get_type_info(type_name)[constants.PARENT_CLASS_KEY]
 
     def _default_attributes_for_type(self, type_name: str) -> List:
         """Get a list of attributes of an entry type with their default values.
@@ -795,11 +800,16 @@ class DataStore(BaseStore):
         """
         if type_name not in DataStore._type_attributes:
             self._get_type_info(type_name=type_name)
-        if "parent_class" not in DataStore._type_attributes[type_name]:
-            DataStore._type_attributes[type_name]["parent_class"] = set()
+        if (
+            constants.PARENT_CLASS_KEY
+            not in DataStore._type_attributes[type_name]
+        ):
+            DataStore._type_attributes[type_name][
+                constants.PARENT_CLASS_KEY
+            ] = set()
         cls_qualified_name = get_full_module_name(cls)
         type_name_parent_class = DataStore._type_attributes[type_name][
-            "parent_class"
+            constants.PARENT_CLASS_KEY
         ]
 
         if no_dynamic_subclass:
@@ -1885,8 +1895,9 @@ class DataStore(BaseStore):
         information accordingly.
 
         The ontology specification file should contain all the entry definitions users
-        wanted to use, either manually or through the `-m` option. This function will
-        take this one file and only import the types specified inside it.
+        wanted to use, either manually or through the `-m` option of
+        `generate_ontology create` command. This function will take this one file and
+        only import the types specified inside it.
         """
         if self._onto_file_path is None:
             return
@@ -1916,9 +1927,9 @@ class DataStore(BaseStore):
                 idx += 1
 
             entry_dict = {}
-            entry_dict["parent_class"] = set()
-            entry_dict["parent_class"].add(entry_node.parent.name)
-            entry_dict["attributes"] = attr_dict
+            entry_dict[constants.PARENT_CLASS_KEY] = set()
+            entry_dict[constants.PARENT_CLASS_KEY].add(entry_node.parent.name)
+            entry_dict[constants.TYPE_ATTR_KEY] = attr_dict
 
             DataStore._type_attributes[entry_name] = entry_dict
 
@@ -1934,7 +1945,7 @@ class DataStore(BaseStore):
             parents,
         ) in DataStore.onto_gen.top_to_core_entries.items():
             entry_dict = {}
-            entry_dict["parent_class"] = set(parents)
+            entry_dict[constants.PARENT_CLASS_KEY] = set(parents)
             DataStore._type_attributes[top_entry] = entry_dict
 
         DataStore.do_init = True
