@@ -993,7 +993,7 @@ class DataStore(BaseStore):
         r"""
         This function proves a general implementation to add all
         types of entries to the data store. It can add namely
-        Annotation, AudioAnnotation, ImageAnnotation, Grids,
+        Annotation, AudioAnnotation, ImageAnnotation,
         Link, Group and Generics. Returns the ``tid`` for the
         inserted entry.
 
