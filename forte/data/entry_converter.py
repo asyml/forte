@@ -72,7 +72,7 @@ class EntryConverter:
         if data_store_ref._is_subclass(entry.entry_type(), Annotation):
             data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
-                attribute_data=[entry.begin, entry.end],  # type: ignore
+                attribute_data=[entry.begin, entry.end],
                 base_class=Annotation,
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,
@@ -80,14 +80,14 @@ class EntryConverter:
         elif data_store_ref._is_subclass(entry.entry_type(), Link):
             data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
-                attribute_data=[entry.parent, entry.child],  # type: ignore
+                attribute_data=[entry.parent, entry.child],
                 base_class=Link,
                 tid=entry.tid,
             )
         elif data_store_ref._is_subclass(entry.entry_type(), Group):
             data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
-                attribute_data=[get_full_module_name(entry.MemberType), []],  # type: ignore
+                attribute_data=[get_full_module_name(entry.MemberType), []],
                 base_class=Group,
                 tid=entry.tid,
             )
@@ -101,7 +101,7 @@ class EntryConverter:
         elif data_store_ref._is_subclass(entry.entry_type(), AudioAnnotation):
             data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
-                attribute_data=[entry.begin, entry.end],  # type: ignore
+                attribute_data=[entry.begin, entry.end],
                 base_class=AudioAnnotation,
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,
@@ -109,7 +109,7 @@ class EntryConverter:
         elif data_store_ref._is_subclass(entry.entry_type(), ImageAnnotation):
             data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
-                attribute_data=[entry.image_payload_idx, None],  # type: ignore
+                attribute_data=[entry.image_payload_idx, None],
                 base_class=ImageAnnotation,
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,
@@ -118,7 +118,7 @@ class EntryConverter:
             # Will be deprecated in future
             data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
-                attribute_data=[entry.image_payload_idx, None],  # type: ignore
+                attribute_data=[entry.image_payload_idx, None],
                 base_class=Grids,
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,
@@ -127,8 +127,8 @@ class EntryConverter:
             data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
                 attribute_data=[
-                    [entry.parent[0], entry.parent[1]],  # type: ignore
-                    [entry.child[0], entry.child[1]],  # type: ignore
+                    [entry.parent[0], entry.parent[1]], 
+                    [entry.child[0], entry.child[1]],
                 ],
                 base_class=MultiPackLink,
                 tid=entry.tid,
@@ -136,7 +136,7 @@ class EntryConverter:
         elif data_store_ref._is_subclass(entry.entry_type(), MultiPackGroup):
             data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
-                attribute_data=[get_full_module_name(entry.MemberType), []],  # type: ignore
+                attribute_data=[get_full_module_name(entry.MemberType), []],
                 base_class=MultiPackGroup,
                 tid=entry.tid,
             )
