@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import logging
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 from forte.data.base_pack import PackType
 from forte.data.ontology.core import Entry, FList, FDict
 from forte.data.ontology.core import EntryType
@@ -49,7 +49,7 @@ class EntryConverter:
         self._entry_dict: Dict[int, Entry] = {}
 
     def save_entry_object(
-        self, entry: Entry, pack: PackType, allow_duplicate: bool = True
+        self, entry: Any, pack: PackType, allow_duplicate: bool = True
     ):
         # pylint: disable=protected-access
         """
@@ -94,7 +94,7 @@ class EntryConverter:
         elif data_store_ref._is_subclass(entry.entry_type(), Generics):
             data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
-                attribute_data=[None, None],  # type: ignore
+                attribute_data=[None, None],
                 base_class=Generics,
                 tid=entry.tid,
             )
@@ -143,7 +143,7 @@ class EntryConverter:
         elif data_store_ref._is_subclass(entry.entry_type(), MultiPackGeneric):
             data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
-                attribute_data=[None, None],  # type: ignore
+                attribute_data=[None, None],
                 base_class=MultiPackGeneric,
                 tid=entry.tid,
             )
