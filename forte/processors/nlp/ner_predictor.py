@@ -199,7 +199,7 @@ class CoNLLNERPredictor(RequestPackingProcessor):
             for j in range(len(predict_results["Token"]["tid"][i])):
                 tid: int = predict_results["Token"]["tid"][i][j]  # type: ignore
 
-                orig_token: Token = pack.get_entry(tid)
+                orig_token: Token = pack.get_entry(tid)  # type: ignore
                 ner_tag: str = predict_results["Token"]["ner"][i][j]
 
                 orig_token.ner = ner_tag
