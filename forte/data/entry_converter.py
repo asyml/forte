@@ -68,62 +68,6 @@ class EntryConverter:
             # The entry is not found in DataStore
             pass
 
-        """
-        if isinstance(entry, Annotation):
-            data_store_ref.add_entry_raw(
-                type_name=entry.entry_type(),
-                attribute_data=[entry.begin, entry.end],
-                base_class=Annotation,
-                tid=entry.tid,
-                allow_duplicate=allow_duplicate,
-            )
-        elif isinstance(entry, Link):
-            data_store_ref.add_entry_raw(
-                type_name=entry.entry_type(),
-                attribute_data=[entry.parent, entry.child],
-                base_class=Link,
-                tid=entry.tid,
-            )
-        elif isinstance(entry, Group):
-            data_store_ref.add_entry_raw(
-                type_name=entry.entry_type(),
-                attribute_data=[get_full_module_name(entry.MemberType), []],
-                base_class=Group,
-                tid=entry.tid,
-            )
-        elif isinstance(entry, Generics):
-            data_store_ref.add_entry_raw(
-                type_name=entry.entry_type(),
-                attribute_data=[None, None],
-                base_class=Generics,
-                tid=entry.tid,
-            )
-        elif isinstance(entry, AudioAnnotation):
-            data_store_ref.add_entry_raw(
-                type_name=entry.entry_type(),
-                attribute_data=[entry.begin, entry.end],
-                base_class=AudioAnnotation,
-                tid=entry.tid,
-                allow_duplicate=allow_duplicate,
-            )
-        elif isinstance(entry, ImageAnnotation):
-            data_store_ref.add_entry_raw(
-                type_name=entry.entry_type(),
-                attribute_data=[entry.image_payload_idx, None],
-                base_class=ImageAnnotation,
-                tid=entry.tid,
-                allow_duplicate=allow_duplicate,
-            )
-        elif isinstance(entry, Grids):
-            data_store_ref.add_entry_raw(
-                type_name=entry.entry_type(),
-                attribute_data=[entry.image_payload_idx, None],
-                base_class=Grids,
-                tid=entry.tid,
-                allow_duplicate=allow_duplicate,
-            )
-        """
-
         # Create a new registry in DataStore based on entry's type
         if data_store_ref._is_subclass(entry.entry_type(), Annotation):
             data_store_ref.add_entry_raw(
