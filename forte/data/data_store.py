@@ -993,15 +993,19 @@ class DataStore(BaseStore):
         r"""
         This function proves a general implementation to add all
         types of entries to the data store. It can add namely
-        Annotation, AudioAnnotation, ImageAnnotation, Link, Group
-        and Generics.Returns the ``tid`` for the inserted entry.
+        Annotation, AudioAnnotation, ImageAnnotation, Grids,
+        Link, Group and Generics. Returns the ``tid`` for the
+        inserted entry.
 
         Args:
-            type_name: The fully qualified type name of the new Annotation.
+            type_name: The fully qualified type name of the new Entry.
             attribute_data: It is a list that stores attributes relevant to
                 the entry being added. In order to keep the number of attributes
                 same for all entries, the list is populated with trailing None's.
-            base_class: The type of entry to add to the Data Store.
+            base_class: The type of entry to add to the Data Store. This is
+                a reference to the class of the entry that needs to be added
+                to the DataStore. The reference can be to any of the classes
+                supported by the function.
             tid: ``tid`` of the Entry that is being added.
                 It's optional, and it will be
                 auto-assigned if not given.
@@ -1015,9 +1019,7 @@ class DataStore(BaseStore):
 
         new_entry = self._create_new_entry(type_name, attribute_data, tid)
 
-        if any(
-            self._is_subclass(type_name, e) for e in [Link, Group, Generics]
-        ):
+        if not self._is_annotation(type_name):
             allow_duplicate = True
 
         if not allow_duplicate:
