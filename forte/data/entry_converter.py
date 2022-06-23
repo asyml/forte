@@ -127,7 +127,7 @@ class EntryConverter:
             data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
                 attribute_data=[
-                    [entry.parent[0], entry.parent[1]], 
+                    [entry.parent[0], entry.parent[1]],
                     [entry.child[0], entry.child[1]],
                 ],
                 base_class=MultiPackLink,
