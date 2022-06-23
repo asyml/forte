@@ -29,6 +29,9 @@ from forte.data.ontology.top import (
     ImageAnnotation,
     Link,
     Generics,
+    MultiPackGeneric,
+    MultiPackGroup,
+    MultiPackLink,
 )
 from forte.data.ontology.core import Entry, FList, FDict
 from forte.common import constants
@@ -781,7 +784,7 @@ class DataStore(BaseStore):
 
         """
         if type_name not in DataStore._type_attributes:
-            DataStore._type_attributes[type_name] = {}
+            self._get_type_info(type_name=type_name)
         if "parent_class" not in DataStore._type_attributes[type_name]:
             DataStore._type_attributes[type_name]["parent_class"] = set()
         cls_qualified_name = get_full_module_name(cls)
@@ -835,9 +838,10 @@ class DataStore(BaseStore):
             A boolean value whether this type_name belongs to an annotation
             type or not.
         """
-        # TODO: use is_subclass() in DataStore to replace this
-        entry_class = get_class(type_name)
-        return issubclass(entry_class, (Annotation, AudioAnnotation))
+        return any(
+            self._is_subclass(type_name, entry_class)
+            for entry_class in (Annotation, AudioAnnotation)
+        )
 
     def all_entries(self, entry_type_name: str) -> Iterator[List]:
         """
@@ -917,7 +921,16 @@ class DataStore(BaseStore):
             except KeyError:
                 self.__elements[type_name] = SortedList(key=sorting_fn)
                 self.__elements[type_name].add(entry)
-        elif entry_type in [Link, Group, Generics, ImageAnnotation, Grids]:
+        elif entry_type in [
+            Link,
+            Group,
+            Generics,
+            ImageAnnotation,
+            Grids,
+            MultiPackLink,
+            MultiPackGroup,
+            MultiPackGeneric,
+        ]:
             try:
                 self.__elements[type_name].append(entry)
             except KeyError:
@@ -1025,8 +1038,8 @@ class DataStore(BaseStore):
         """
         # We should create the `entry data` with the format
         # [begin, end, tid, type_id, None, ...].
-        # A helper function _new_annotation() can be used to generate a
-        # annotation type entry data with default fields.
+        # A helper function _new_audio_annotation() can be used to generate an
+        # audio annotation type entry data with default fields.
         # A reference to the entry should be store in both self.__elements and
         # self.__tid_ref_dict.
         entry = self._new_audio_annotation(type_name, begin, end, tid)
@@ -1043,7 +1056,6 @@ class DataStore(BaseStore):
         type_name: str,
         image_payload_idx: int,
         tid: Optional[int] = None,
-        allow_duplicate=True,
     ) -> int:
 
         r"""
@@ -1057,34 +1069,24 @@ class DataStore(BaseStore):
             tid: ``tid`` of the Annotation entry that is being added.
                 It's optional, and it will be
                 auto-assigned if not given.
-            allow_duplicate: Whether we allow duplicate in the DataStore. When
-                it's set to False, the function will return the ``tid`` of
-                existing entry if a duplicate is found. Default value is True.
 
         Returns:
             ``tid`` of the entry.
         """
         # We should create the `entry data` with the format
-        # [begin, end, tid, type_id, None, ...].
-        # A helper function _new_annotation() can be used to generate a
-        # annotation type entry data with default fields.
+        # [image_payload_index, None, tid, type_name, None, ...].
+        # A helper function _new_image_annotation() can be used to generate an
+        # image annotation type entry data with default fields.
         # A reference to the entry should be store in both self.__elements and
         # self.__tid_ref_dict.
         entry = self._new_image_annotation(type_name, image_payload_idx, tid)
-
-        if not allow_duplicate:
-            tid_search_result = self._get_existing_ann_entry_tid(entry)
-            # if found existing entry
-            if tid_search_result != -1:
-                return tid_search_result
-        return self._add_entry_raw(AudioAnnotation, type_name, entry)
+        return self._add_entry_raw(ImageAnnotation, type_name, entry)
 
     def add_grid_raw(
         self,
         type_name: str,
         image_payload_idx: int,
         tid: Optional[int] = None,
-        allow_duplicate=True,
     ) -> int:
 
         r"""
@@ -1098,26 +1100,17 @@ class DataStore(BaseStore):
             tid: ``tid`` of the Annotation entry that is being added.
                 It's optional, and it will be
                 auto-assigned if not given.
-            allow_duplicate: Whether we allow duplicate in the DataStore. When
-                it's set to False, the function will return the ``tid`` of
-                existing entry if a duplicate is found. Default value is True.
 
         Returns:
             ``tid`` of the entry.
         """
         # We should create the `entry data` with the format
-        # [begin, end, tid, type_id, None, ...].
-        # A helper function _new_annotation() can be used to generate a
-        # annotation type entry data with default fields.
+        # [image_payload_index, None, tid, type_name, None, ...].
+        # A helper function _new_grid() can be used to generate a
+        # grid type entry data with default fields.
         # A reference to the entry should be store in both self.__elements and
         # self.__tid_ref_dict.
         entry = self._new_grid(type_name, image_payload_idx, tid)
-
-        if not allow_duplicate:
-            tid_search_result = self._get_existing_ann_entry_tid(entry)
-            # if found existing entry
-            if tid_search_result != -1:
-                return tid_search_result
         return self._add_entry_raw(Grids, type_name, entry)
 
     def _get_existing_ann_entry_tid(self, entry: List[Any]):
@@ -1227,6 +1220,87 @@ class DataStore(BaseStore):
         """
         entry = self._new_generics(type_name, tid)
         return self._add_entry_raw(Generics, type_name, entry)
+
+    def add_multipack_generic_raw(
+        self, type_name: str, tid: Optional[int] = None
+    ) -> Tuple[int, int]:
+        r"""This function adds a multi pack generic entry with ``type_name`` to
+        the current data store object. Returns the ``tid`` and the ``index_id``
+        for the inserted entry in the list. This ``index_id`` is the index
+        of the entry in the ``type_name`` list.
+
+        Args:
+            type_name: The fully qualified type name of the new Generics.
+            tid: ``tid`` of multi pack generic entry.
+
+        Returns:
+            ``tid`` of the entry and its index in the (``type_id``)th list.
+
+        """
+        tid: int = self._new_tid() if tid is None else tid
+        entry = [None, None, tid, type_name]
+        entry += self._default_attributes_for_type(type_name)
+        return self._add_entry_raw(MultiPackGeneric, type_name, entry)
+
+    def add_multipack_link_raw(
+        self,
+        type_name: str,
+        parent_pack_id: int,
+        parent_tid: int,
+        child_pack_id: int,
+        child_tid: int,
+        tid: Optional[int] = None,
+    ) -> Tuple[int, int]:
+        r"""This function adds a multi pack link entry with ``parent_tid`` and
+        ``child_tid`` to current data store object. Returns the ``tid`` and
+        the ``index_id`` for the inserted entry in the list. This ``index_id``
+        is the index of the entry in the ``type_name`` list.
+
+        Args:
+            type_name:  The fully qualified type name of the new
+                ``MultiPackLink``.
+            parent_pack_id: ``pack_id`` of the parent entry.
+            parent_tid: ``tid`` of the parent entry.
+            child_pack_id: ``pack_id`` of the child entry.
+            child_tid: ``tid`` of the child entry.
+            tid: ``tid`` of the ``MultiPackLink`` entry that is being added.
+                It's optional, and it will be auto-assigned if not given.
+
+        Returns:
+            ``tid`` of the entry and its index in the ``type_name`` list.
+        """
+        tid: int = self._new_tid() if tid is None else tid
+        entry: List[Any] = [
+            [parent_pack_id, parent_tid],
+            [child_pack_id, child_tid],
+            tid,
+            type_name,
+        ]
+        entry += self._default_attributes_for_type(type_name)
+        return self._add_entry_raw(MultiPackLink, type_name, entry)
+
+    def add_multipack_group_raw(
+        self, type_name: str, member_type: str, tid: Optional[int] = None
+    ) -> Tuple[int, int]:
+        r"""This function adds a multi pack group entry with ``member_type`` to
+        the current data store object. Returns the ``tid`` and the ``index_id``
+        for the inserted entry in the list. This ``index_id`` is the index
+        of the entry in the ``type_name`` list.
+
+        Args:
+            type_name: The fully qualified type name of the new
+                ``MultiPackGroup``.
+            member_type: Fully qualified name of its members.
+            tid: ``tid`` of the ``MultiPackGroup`` entry that is being added.
+                It's optional, and it will be auto-assigned if not given.
+
+        Returns:
+            ``tid`` of the entry and its index in the (``type_id``)th list.
+        """
+        tid: int = self._new_tid() if tid is None else tid
+        entry = [member_type, [], tid, type_name]
+        entry += self._default_attributes_for_type(type_name)
+        return self._add_entry_raw(MultiPackGroup, type_name, entry)
 
     def set_attribute(self, tid: int, attr_name: str, attr_value: Any):
         r"""This function locates the entry data with ``tid`` and sets its
