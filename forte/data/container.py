@@ -24,25 +24,11 @@ from typing import Dict, Generic, Set, Tuple, TypeVar, Iterator
 __all__ = [
     "EntryContainer",
     "ContainerType",
-    "BasePointer",
 ]
 
 E = TypeVar("E")
 L = TypeVar("L")
 G = TypeVar("G")
-
-
-class BasePointer:
-    """
-    Objects to point to other objects in the data pack.
-    """
-
-    def __str__(self):
-        raise NotImplementedError
-
-    def __getstate__(self):
-        state = self.__dict__.copy()
-        return state
 
 
 class EntryContainer(Generic[E, L, G]):

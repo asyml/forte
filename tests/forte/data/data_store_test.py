@@ -28,6 +28,9 @@ from forte.data.ontology.top import (
     AudioAnnotation,
     Group,
     Link,
+    MultiPackGeneric,
+    MultiPackGroup,
+    MultiPackLink
 )
 from forte.data.data_pack import DataPack
 from forte.common import constants
@@ -807,6 +810,65 @@ class DataStoreTest(unittest.TestCase):
         self.assertEqual(
             self.data_store.get_entry(tid=77)[0],
             ["test_group", [], tid, "forte.data.ontology.top.Group"],
+        )
+
+    def test_add_multientry_raw(self):
+        self.data_store.add_entry_raw(
+            type_name = "forte.data.ontology.top.MultiPackGeneric",
+            attribute_data = [None, None],
+            base_class = MultiPackGeneric
+        )
+        # check number of MultiPackGeneric
+        self.assertEqual(
+            len(
+                self.data_store._DataStore__elements[
+                    "forte.data.ontology.top.MultiPackGeneric"
+                ]
+            ),
+            1,
+        )
+
+        self.data_store.add_entry_raw(
+            type_name = "forte.data.ontology.top.MultiPackGroup", 
+            attribute_data = ["test_group", []],
+            base_class = MultiPackGroup
+        )
+        # check number of MultiPackGeneric
+        self.assertEqual(
+            len(
+                self.data_store._DataStore__elements[
+                    "forte.data.ontology.top.MultiPackGroup"
+                ]
+            ),
+            1,
+        )
+
+        self.data_store.add_entry_raw(
+            type_name = "forte.data.ontology.top.MultiPackLink", 
+            attribute_data = [[100, 1234], [20, 9999]],
+            base_class = MultiPackLink
+        )
+        # check number of MultiPackGeneric
+        self.assertEqual(
+            len(
+                self.data_store._DataStore__elements[
+                    "forte.data.ontology.top.MultiPackLink"
+                ]
+            ),
+            1,
+        )
+
+        # check add MultiPackLink with tid
+        tid = 77968
+        self.data_store.add_entry_raw(
+            type_name = "forte.data.ontology.top.MultiPackLink", 
+            attribute_data = [[100, 1234], [20, 9999]],
+            base_class = MultiPackLink,
+            tid = tid
+        )
+        self.assertEqual(
+            self.data_store.get_entry(tid=tid)[0],
+            [[100, 1234], [20, 9999], tid, "forte.data.ontology.top.MultiPackLink"],
         )
 
     def test_get_attribute(self):
