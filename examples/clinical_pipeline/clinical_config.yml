@@ -14,7 +14,7 @@ BioBERTNERPredictor:
 
 LastUtteranceSearcher:
   stave_db_path: "/home/p1yadav/.stave/db.sqlite3"
-  url: "http://localhost:8000"
+  url: "http://localhost:8899"
 
 Remote:
   port: 8008
