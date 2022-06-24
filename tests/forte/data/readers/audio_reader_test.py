@@ -48,7 +48,7 @@ class TestASRProcessor(PackProcessor):
         self._model = Wav2Vec2ForCTC.from_pretrained(pretrained_model)
 
     def _process(self, input_pack: DataPack):
-        ap = input_pack.get_payload_at("audio", 0)
+        ap = input_pack.get_payload_at(Modality.Audio, 0)
         sample_rate = ap.sample_rate
         audio_data = ap.cache
         required_sample_rate: int = 16000
@@ -68,7 +68,7 @@ class TestASRProcessor(PackProcessor):
             argmax(self._model(input_values).logits, dim=-1)
         )
 
-        tp = TextPayload(input_pack, Modality.text, 0)
+        tp = TextPayload(input_pack, Modality.Text, 0)
         tp.set_cache(transcription[0])
         input_pack.set_text(text=transcription[0])
 
