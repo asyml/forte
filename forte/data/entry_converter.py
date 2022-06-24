@@ -28,6 +28,7 @@ from forte.data.ontology.top import (
     MultiPackGeneric,
     MultiPackGroup,
     MultiPackLink,
+    Payload,
     SinglePackEntries,
     MultiPackEntries,
 )
@@ -108,6 +109,14 @@ class EntryConverter:
                 type_name=entry.entry_type(),
                 image_payload_idx=entry.image_payload_idx,  # type: ignore
                 tid=entry.tid,
+            )
+        elif data_store_ref._is_subclass(entry.entry_type(), Payload):
+            data_store_ref.add_payload_raw(
+                type_name=entry.entry_type(),
+                payload_idx=entry.payload_index,
+                modality=entry.modality,
+                tid=entry.tid,
+                allow_duplicate=allow_duplicate,
             )
         elif data_store_ref._is_subclass(entry.entry_type(), Grids):
             # Will be deprecated in future
