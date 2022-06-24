@@ -13,4 +13,4 @@
 # limitations under the License.
 from enum import IntEnum
 
-Modality = IntEnum("modality", "text audio image")
+Modality = IntEnum("modality", "Text Audio Image")
