@@ -1321,7 +1321,9 @@ class Payload(Entry):
         r"""
         Convert ``_modality`` ``Enum`` object to str format for serialization.
         """
-        state = super().__getstate__()
+        # TODO: this function will be removed since
+        # Entry store is being integrated into DataStore
+        state = self.__dict__.copy()
         state["_modality"] = self._modality.name
         return state
 
@@ -1329,7 +1331,9 @@ class Payload(Entry):
         r"""
         Convert ``_modality`` string to ``Enum`` object for deserialization.
         """
-        super().__setstate__(state)
+        # TODO: this function will be removed since
+        # Entry store is being integrated into DataStore
+        self.__dict__.update(state)
         self._modality = getattr(Modality, state["_modality"])
 
 
