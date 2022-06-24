@@ -241,6 +241,8 @@ class DataPack(BasePack[Entry, Link, Group]):
     def text(self) -> str:
         """
         Get the first text data stored in the DataPack.
+        If there is no text payload in the DataPack, it will return empty
+        string.
 
         Args:
             text_payload_index: the index of the text payload. Defaults to 0.
@@ -252,7 +254,10 @@ class DataPack(BasePack[Entry, Link, Group]):
         Returns:
             text data in the text payload.
         """
-        return self.get_payload_data_at(Modality.Text, 0)
+        if len(self.text_payloads) > 0:
+            return self.get_payload_data_at(Modality.Text, 0)
+        else:
+            return ""
 
     @property
     def all_annotations(self) -> Iterator[Annotation]:
