@@ -1210,7 +1210,9 @@ class DataStoreTest(unittest.TestCase):
             }
         }
         data_store_from_file = DataStore(onto_file_path="tests/forte/data/ontology/test_specs/test_check_onto_file.json")
-        self.assertDictContainsSubset(expected_type_attributes, data_store_from_file._type_attributes)
+        # Check whether `_type_attributes` contains all items in `expected_type_attributes`
+        union_dict: Dict = dict(data_store_from_file._type_attributes, **expected_type_attributes)
+        self.assertDictEqual(data_store_from_file._type_attributes, union_dict)
 
         # DataStores share a static type_attribute dict.
         data_store_non_file = DataStore()
