@@ -873,7 +873,7 @@ class Grids(Entry):
         self._image_payload_idx = image_payload_idx
         super().__init__(pack)
         self.img_arr = self.pack.get_payload_data_at(
-            "image", self._image_payload_idx
+            Modality.Image, self._image_payload_idx
         )
         self.c_h, self.c_w = (
             self.img_arr.shape[0] // self._height,
@@ -1194,7 +1194,7 @@ class Payload(Entry):
         payload_idx: int = 0,
         uri: Optional[str] = None,
     ):
-        supported_modality = ("text", "audio", "image")
+        supported_modality = ("Text", "Audio", "Image")
         if modality.name not in supported_modality:
             raise ValueError(
                 f"The given modality {modality} is not supported. "
@@ -1219,7 +1219,16 @@ class Payload(Entry):
         """
         return type(self)
 
-    def get_modality(self) -> str:
+    def get_modality(self) -> IntEnum:
+        """
+        Get the modality of the payload class.
+
+        Returns:
+            the modality of the payload class as an IntEnum object.
+        """
+        return self._modality
+
+    def get_modality_name(self) -> str:
         """
         Get the modality of the payload class.
 
