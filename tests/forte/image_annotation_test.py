@@ -38,7 +38,7 @@ class ImageAnnotationTest(unittest.TestCase):
         self.line[2, 2] = 1
         self.line[3, 3] = 1
         self.line[4, 4] = 1
-        ip = ImagePayload(self.datapack, Modality.image, 0)
+        ip = ImagePayload(self.datapack, Modality.Image, 0)
         ip.set_cache(self.line)
         ImageAnnotation(self.datapack)
 
@@ -49,7 +49,7 @@ class ImageAnnotationTest(unittest.TestCase):
 
         self.assertTrue(
             array_equal(
-                self.datapack.get_payload_at("image", 0).cache, self.line
+                self.datapack.get_payload_at(Modality.Image, 0).cache, self.line
             )
         )
         new_pack = DataPack.from_string(self.datapack.to_string())
