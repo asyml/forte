@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from enum import IntEnum
 import logging
 from pathlib import Path
 from typing import (
@@ -239,7 +240,7 @@ class DataPack(BasePack[Entry, Link, Group]):
     @property
     def text(self) -> str:
         """
-        Get text from a text payload at an index.
+        Get the first text data stored in the DataPack.
 
         Args:
             text_payload_index: the index of the text payload. Defaults to 0.
@@ -251,13 +252,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         Returns:
             text data in the text payload.
         """
-        try:
-            tp = self.get_payload_at("text", 0)
-        except ValueError:
-            # backward compatibility, there might be case there is
-            # not payloads
-            return ""
-        return tp.cache
+        return self.get_payload_data_at(Modality.Text, 0)
 
     @property
     def all_annotations(self) -> Iterator[Annotation]:
@@ -455,51 +450,55 @@ class DataPack(BasePack[Entry, Link, Group]):
         self._groups = val
 
     def get_payload_at(
-        self, modality: str, payload_index: int
+        self, modality: IntEnum, payload_index: int
     ):  # -> Union[TextPayload, AudioPayload, ImagePayload]:
         """
         Get Payload of requested modality at the requested payload index.
 
         Args:
             modality: data modality among "text", "audio", "image"
-            payload_index (int): the zero-based index of the Payload
+            payload_index: the zero-based index of the Payload
                 in this DataPack's Payload entries of the requested modality.
 
         Raises:
             ValueError: raised when the requested modality is not supported.
 
         Returns:
-            Payload entry containing text data or numpy array for image and
-            audio data.
+            Payload entry containing text data, image or audio data.
+
         """
-        supported_modality = ("text", "audio", "image")
+        supported_modality = ("Text", "Audio", "Image")
+
         try:
-            if modality == "text":
+            # if modality.name == "text":
+            if modality == Modality.Text:
                 payloads_length = len(self.text_payloads)
                 payload = self.text_payloads[payload_index]
-            elif modality == "audio":
+            # elif modality.name == "audio":
+            elif modality == Modality.Audio:
                 payloads_length = len(self.audio_payloads)
                 payload = self.audio_payloads[payload_index]
-            elif modality == "image":
+            # elif modality.name == "image":
+            elif modality == Modality.Image:
                 payloads_length = len(self.image_payloads)
                 payload = self.image_payloads[payload_index]
             else:
                 raise ValueError(
-                    f"Provided modality {modality} is not supported."
+                    f"Provided modality {modality.name} is not supported."
                     "Please provide one of modality among"
                     f" {supported_modality}."
                 )
         except IndexError as e:
             raise ValueError(
                 f"payload index ({payload_index}) "
-                f"is larger or equal to {modality} payload list"
+                f"is larger or equal to {modality.name} payload list"
                 f" length ({payloads_length}). "
-                f"Please input a {modality} payload index less than it."
+                f"Please input a {modality.name} payload index less than it."
             ) from e
         return payload
 
     def get_payload_data_at(
-        self, modality: str, payload_index: int
+        self, modality: IntEnum, payload_index: int
     ) -> Union[str, np.ndarray]:
         """
         Get Payload of requested modality at the requested payload index.
@@ -513,7 +512,12 @@ class DataPack(BasePack[Entry, Link, Group]):
             ValueError: raised when the requested modality is not supported.
 
         Returns:
-            str data for text data or numpy array for image and audio data.
+            different data types for different data modalities.
+
+            1. str data for text data.
+
+            2. Numpy array for image and audio data.
+
         """
         return self.get_payload_at(modality, payload_index).cache
 
@@ -531,9 +535,9 @@ class DataPack(BasePack[Entry, Link, Group]):
         Returns:
             The text within this span.
         """
-        return cast(str, self.get_payload_data_at("text", text_payload_index))[
-            begin:end
-        ]
+        return cast(
+            str, self.get_payload_data_at(Modality.Text, text_payload_index)
+        )[begin:end]
 
     def get_span_audio(
         self, begin: int, end: int, audio_payload_index=0
@@ -554,7 +558,9 @@ class DataPack(BasePack[Entry, Link, Group]):
         """
         return cast(
             np.ndarray,
-            self.get_payload_data_at("audio", audio_payload_index)[begin:end],
+            self.get_payload_data_at(Modality.Audio, audio_payload_index)[
+                begin:end
+            ],
         )
 
     def set_text(
@@ -589,9 +595,9 @@ class DataPack(BasePack[Entry, Link, Group]):
                 TextPayload,
             )
 
-            tp = TextPayload(self, Modality.text, text_payload_index)
+            tp = TextPayload(self, Modality.Text, text_payload_index)
         else:
-            tp = self.get_payload_at("text", text_payload_index)
+            tp = self.get_payload_at(Modality.Text, text_payload_index)
 
         tp.set_cache(text)
 
@@ -621,9 +627,9 @@ class DataPack(BasePack[Entry, Link, Group]):
                 AudioPayload,
             )
 
-            ap = AudioPayload(self, Modality.audio)
+            ap = AudioPayload(self, Modality.Audio)
         else:
-            ap = self.get_payload_at("audio", audio_payload_index)
+            ap = self.get_payload_at(Modality.Audio, audio_payload_index)
 
         ap.set_cache(audio)
         ap.sample_rate = sample_rate
@@ -639,7 +645,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             Original text after applying the `replace_back_operations` of
             :class:`~forte.data.data_pack.DataPack` object to the modified text
         """
-        tp = self.get_payload_at("text", text_payload_index)
+        tp = self.get_payload_at(Modality.Text, text_payload_index)
         original_text, _, _, _ = data_utils_io.modify_text_and_track_ops(
             tp.cache, tp.replace_back_operations
         )
@@ -722,12 +728,12 @@ class DataPack(BasePack[Entry, Link, Group]):
                 Original index that aligns with input_index
             """
             processed_original_spans = self.get_payload_at(
-                "text", 0
+                Modality.Text, 0
             ).processed_original_spans
             if len(processed_original_spans) == 0:
                 return input_index
 
-            len_processed_text = len(self.get_payload_data_at("text", 0))
+            len_processed_text = len(self.get_payload_data_at(Modality.Text, 0))
             orig_index = None
             prev_end = 0
             for (
@@ -845,7 +851,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                     f"is not a valid begin."
                 )
 
-            if end > len(self.get_payload_at("text", 0).cache):
+            if end > len(self.get_payload_data_at(Modality.Text, 0)):
                 if len(self.text) == 0:
                     raise ValueError(
                         f"The end {end} of span is greater than the text "
@@ -1104,11 +1110,11 @@ class DataPack(BasePack[Entry, Link, Group]):
                 str: context data.
             """
             if issubclass(c_type, Annotation):
-                return self.get_payload_data_at("text", payload_index)[
+                return self.get_payload_data_at(Modality.Text, payload_index)[
                     context.begin : context.end
                 ]
             elif issubclass(c_type, AudioAnnotation):
-                return self.get_payload_data_at("audio", payload_index)[
+                return self.get_payload_data_at(Modality.Audio, payload_index)[
                     context.begin : context.end
                 ]
             else:
@@ -1689,13 +1695,13 @@ class DataPack(BasePack[Entry, Link, Group]):
         self._pending_entries[entry.tid] = entry.tid, c
 
         if isinstance(entry, Payload):
-            if entry.get_modality() == "text":
+            if entry.get_modality() == Modality.Text:
                 entry.set_payload_index(len(self.text_payloads))
                 self.text_payloads.append(entry)
-            elif entry.get_modality() == "audio":
+            elif entry.get_modality() == Modality.Audio:
                 entry.set_payload_index(len(self.audio_payloads))
                 self.audio_payloads.append(entry)
-            elif entry.get_modality() == "image":
+            elif entry.get_modality() == Modality.Image:
                 entry.set_payload_index(len(self.image_payloads))
                 self.image_payloads.append(entry)
 
