@@ -758,6 +758,56 @@ class DataStoreTest(unittest.TestCase):
             ["test_group", [], tid, "forte.data.ontology.top.Group"],
         )
 
+    def test_add_multientry_raw(self):
+        self.data_store.add_multipack_generic_raw(
+            "forte.data.ontology.top.MultiPackGeneric"
+        )
+        # check number of MultiPackGeneric
+        self.assertEqual(
+            len(
+                self.data_store._DataStore__elements[
+                    "forte.data.ontology.top.MultiPackGeneric"
+                ]
+            ),
+            1,
+        )
+
+        self.data_store.add_multipack_group_raw(
+            "forte.data.ontology.top.MultiPackGroup", "test_group"
+        )
+        # check number of MultiPackGeneric
+        self.assertEqual(
+            len(
+                self.data_store._DataStore__elements[
+                    "forte.data.ontology.top.MultiPackGroup"
+                ]
+            ),
+            1,
+        )
+
+        self.data_store.add_multipack_link_raw(
+            "forte.data.ontology.top.MultiPackLink", 100, 1234, 20, 9999
+        )
+        # check number of MultiPackGeneric
+        self.assertEqual(
+            len(
+                self.data_store._DataStore__elements[
+                    "forte.data.ontology.top.MultiPackLink"
+                ]
+            ),
+            1,
+        )
+
+        # check add MultiPackLink with tid
+        tid = 77968
+        self.data_store.add_multipack_link_raw(
+            "forte.data.ontology.top.MultiPackLink", 100, 1234, 20, 9999, tid
+        )
+        self.assertEqual(
+            self.data_store.get_entry(tid=tid)[0],
+            [[100, 1234], [20, 9999], tid, "forte.data.ontology.top.MultiPackLink"],
+        )
+
     def test_get_attribute(self):
         speaker = self.data_store.get_attribute(9999, "speaker")
         classifications = self.data_store.get_attribute(3456, "classifications")
