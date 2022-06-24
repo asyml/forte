@@ -986,8 +986,7 @@ class DataStore(BaseStore):
         tid: int = self._new_tid() if tid is None else tid
         entry: List[Any] = []
 
-        for attribute in attribute_data:
-            entry.append(attribute)
+        entry.extend(attribute_data)
 
         entry += [tid, type_name]
         entry += self._default_attributes_for_type(type_name)
@@ -1004,7 +1003,7 @@ class DataStore(BaseStore):
     ) -> int:
 
         r"""
-        This function proves a general implementation to add all
+        This function provides a general implementation to add all
         types of entries to the data store. It can add namely
         Annotation, AudioAnnotation, ImageAnnotation,
         Link, Group and Generics. Returns the ``tid`` for the

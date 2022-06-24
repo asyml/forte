@@ -135,7 +135,7 @@ class BaseStore:
     ) -> int:
 
         r"""
-        This function proves a general implementation to add all
+        This function provides a general implementation to add all
         types of entries to the data store. It can add namely
         Annotation, AudioAnnotation, ImageAnnotation,
         Link, Group and Generics. Returns the ``tid`` for the
