@@ -51,7 +51,7 @@ class RecordingProcessor(PackProcessor):
         Recording(
             pack=input_pack,
             begin=0,
-            end=len(input_pack.get_payload_data_at("audio", 0)),
+            end=len(input_pack.get_payload_data_at(Modality.Audio, 0)),
         )
 
 
@@ -81,7 +81,7 @@ class TextUtteranceProcessor(PackProcessor):
     """
 
     def _process(self, input_pack: DataPack):
-        tp = TextPayload(input_pack, Modality.text, 0)
+        tp = TextPayload(input_pack, Modality.Text, 0)
         tp.set_cache("test text")
         Utterance(pack=input_pack, begin=0, end=len(input_pack.text))
 
@@ -148,7 +148,7 @@ class AudioAnnotationTest(unittest.TestCase):
         # Test `DataPack.get_span_audio()` with None audio payload
         with self.assertRaises(ValueError):
             pack: DataPack = DataPack()
-            tp = TextPayload(pack, Modality.text, 0)
+            tp = TextPayload(pack, Modality.Text, 0)
             tp.set_cache("test text")
             pack.get_span_audio(begin=0, end=1)
         # Verify the annotations of each datapack
@@ -210,7 +210,8 @@ class AudioAnnotationTest(unittest.TestCase):
             self.assertEqual(len(recordings), 1)
             self.assertTrue(
                 array_equal(
-                    recordings[0].audio, pack.get_payload_data_at("audio", 0)
+                    recordings[0].audio,
+                    pack.get_payload_data_at(Modality.Audio, 0),
                 )
             )
             # Check serialization/deserialization of AudioAnnotation
@@ -232,7 +233,7 @@ class AudioAnnotationTest(unittest.TestCase):
                     self.assertTrue(
                         array_equal(
                             audio_utter.audio,
-                            pack.get_payload_data_at("audio", 0)[
+                            pack.get_payload_data_at(Modality.Audio, 0)[
                                 configs["begin"] : configs["end"]
                             ],
                         )
