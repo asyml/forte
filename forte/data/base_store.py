@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from abc import abstractmethod
+from enum import IntEnum
 from typing import List, Iterator, Tuple, Any, Optional, Dict
 import json
 
@@ -264,6 +265,36 @@ class BaseStore:
             tid: ``tid`` of the Annotation entry that is being added.
                 It's optional, and it will be
                 auto-assigned if not given.
+
+        Returns:
+            ``tid`` of the entry.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def add_payload_raw(
+        self,
+        type_name: str,
+        payload_idx: int,
+        modality: IntEnum,
+        tid: Optional[int] = None,
+        allow_duplicate: bool = True,
+    ) -> int:
+        r"""
+        This function adds an payload entry with ``modality`` and
+        indices to current data store object. Returns the ``tid`` for the
+        inserted entry.
+
+        Args:
+            type_name: The fully qualified type name of the new AudioAnnotation.
+            payload_idx: the index of the payload.
+            modality: The modality object
+            tid: ``tid`` of the Annotation entry that is being added.
+                It's optional, and it will be
+                auto-assigned if not given.
+            allow_duplicate: Whether we allow duplicate in the DataStore. When
+                it's set to False, the function will return the ``tid`` of
+                existing entry if a duplicate is found. Default value is True.
 
         Returns:
             ``tid`` of the entry.
