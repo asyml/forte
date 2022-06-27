@@ -34,7 +34,7 @@ from typing import (
     overload,
     List,
 )
-
+import math
 import numpy as np
 
 from packaging.version import Version
@@ -895,12 +895,33 @@ class Grid:
             )
         self._height = height
         self._width = width
+        # based the image size and the grid shape
+        # we compute the height and width of grid cells
+        # for example, if the image size (image_height,image_width) is
+        #  (640, 480)
+        # and the grid shape (height, width) is (2, 3)
+        # the size of grid cells (self.c_h, self.c_w) will be (320, 240)
+        # if the resulting size of grid is not an integer, we round it up
+        # the last grid cell per row and column might be out of the image size
+        # since we constrain the maximum pixel locations by the image size
         self.c_h, self.c_w = (
-            image_height // self._height,
-            image_width // self._width,
-        )  # compute the height and width of grid cells
+            math.ceil(image_height / self._height),
+            math.ceil(image_width / self._width),
+        )
         self.image_height = image_height
         self.image_width = image_width
+        if image_height <= 0 or image_width <= 0:
+            raise ValueError(
+                "both image height and width must be positive"
+                f"but the image shape is {(image_height, image_width)}"
+                "please input a valid image shape"
+            )
+        if self.c_h <= 0 or self.c_w <= 0:
+            raise ValueError(
+                "cell height and width must be positive"
+                f"but the cell shape is {(self.c_h, self.c_w)}"
+                "please adjust image shape or grid shape accordingly"
+            )
 
     def get_grid_cell(self, img_arr: np.ndarray, h_idx: int, w_idx: int):
         """
@@ -939,20 +960,21 @@ class Grid:
                 "out of scope of w_idx range"
                 f" {(0, self._width)}"
             )
-
         # initialize a numpy zeros array
         array = np.zeros((self.image_height, self.image_width))
         # set grid cell entry values to the values of the original image array
         # (entry values outside of grid cell remain zeros)
         # An example of computing grid height index range is
-        # index * cell height : (index + 1) * cell height.
+        # index * cell height : min((index + 1) * cell height, image_height).
         # It's similar for computing cell width index range
+        # Plus, we constrain the maximum pixel locations by the image size as
+        # the last grid cell per row and column might be out of the image size
         array[
-            h_idx * self.c_h : (h_idx + 1) * self.c_h,
-            w_idx * self.c_w : (w_idx + 1) * self.c_w,
+            h_idx * self.c_h : min((h_idx + 1) * self.c_h, self.image_height),
+            w_idx * self.c_w : min((w_idx + 1) * self.c_w, self.image_width),
         ] = img_arr[
-            h_idx * self.c_h : (h_idx + 1) * self.c_h,
-            w_idx * self.c_w : (w_idx + 1) * self.c_w,
+            h_idx * self.c_h : min((h_idx + 1) * self.c_h, self.image_height),
+            w_idx * self.c_w : min((w_idx + 1) * self.c_w, self.image_width),
         ]
         return array
 
@@ -972,6 +994,14 @@ class Grid:
         Returns:
             A tuple of (y index, x index)
         """
+        # compute the center position of the grid cell by
+        # dividing the grid cell height range and wdith range by 2 (round down)
+        # suppose an extreme case that
+        # a grid cell has
+        # a height range of (0, 3) and a width range of (0, 3)
+        # the grid cell center would be (1, 1)
+        # since the grid cell size is usually very large
+        # the minor offset of the grid cell center usually doesn't matter
         return (
             (h_idx * self.c_h + (h_idx + 1) * self.c_h) // 2,
             (w_idx * self.c_w + (w_idx + 1) * self.c_w) // 2,
