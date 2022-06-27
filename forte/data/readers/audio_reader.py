@@ -70,7 +70,7 @@ class AudioReader(PackReader):
         # Read in audio data and store in DataPack
         # add audio payload into DataPack.payloads
 
-        ap = AudioPayload(pack, Modality.Audio, payload_idx, file_path)
+        ap = AudioPayload(pack, payload_idx, file_path)
         if not self.configs.lazy_read:
             audio_data, sample_rate = self.soundfile.read(file_path)
             ap.set_cache(audio_data)

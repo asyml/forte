@@ -10,6 +10,7 @@ Automatically generated ontology base_ontology. Do not change manually.
 from dataclasses import dataclass
 from enum import IntEnum
 from forte.data.data_pack import DataPack
+from forte.data.modality import Modality
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology.core import Entry
 from forte.data.ontology.core import FDict
@@ -612,11 +613,10 @@ class AudioPayload(Payload):
     def __init__(
         self,
         pack: DataPack,
-        modality: IntEnum,
         payload_idx: int = 0,
         uri: Optional[str] = None,
     ):
-        super().__init__(pack, modality, payload_idx, uri)
+        super().__init__(pack, Modality.Audio, payload_idx, uri)
         self.sample_rate: Optional[int] = None
 
 
@@ -629,11 +629,10 @@ class TextPayload(Payload):
     def __init__(
         self,
         pack: DataPack,
-        modality: IntEnum,
         payload_idx: int = 0,
         uri: Optional[str] = None,
     ):
-        super().__init__(pack, modality, payload_idx, uri)
+        super().__init__(pack, Modality.Text, payload_idx, uri)
 
 
 @dataclass
@@ -645,8 +644,7 @@ class ImagePayload(Payload):
     def __init__(
         self,
         pack: DataPack,
-        modality: IntEnum,
         payload_idx: int = 0,
         uri: Optional[str] = None,
     ):
-        super().__init__(pack, modality, payload_idx, uri)
+        super().__init__(pack, Modality.Image, payload_idx, uri)
