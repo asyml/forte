@@ -14,7 +14,17 @@
 from dataclasses import dataclass
 from enum import IntEnum
 from functools import total_ordering
-from typing import Optional, Tuple, Type, Any, Dict, Union, Iterable, List
+from typing import (
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    Any,
+    Dict,
+    Union,
+    Iterable,
+    List,
+)
 import numpy as np
 
 from forte.data.modality import Modality
@@ -1245,8 +1255,8 @@ class Payload(Entry):
 
         super().__init__(pack)
         self._cache: Union[str, np.ndarray] = ""
-        self.replace_back_operations: List[Tuple] = []
-        self.processed_original_spans: List[Tuple] = []
+        self.replace_back_operations: Sequence[Tuple] = []
+        self.processed_original_spans: Sequence[Tuple] = []
         self.orig_text_len: int = 0
 
     def get_type(self) -> type:
