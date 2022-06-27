@@ -12,7 +12,7 @@
 # limitations under the License.
 
 
-from typing import Dict, List, Iterator, Tuple, Optional, Any, Type, Union
+from typing import Dict, List, Iterator, Tuple, Optional, Any, Type
 import uuid
 import logging
 from heapq import heappush, heappop
@@ -24,7 +24,7 @@ from forte.data.base_store import BaseStore
 from forte.data.ontology.top import (
     Annotation,
     AudioAnnotation,
-    Grid,
+    Grids,
     Group,
     ImageAnnotation,
     Link,
@@ -662,7 +662,9 @@ class DataStore(BaseStore):
 
         return entry
 
-    def _new_grid(self, type_name: str, tid: Optional[int] = None) -> List:
+    def _new_grid(
+        self, type_name: str, image_payload_idx: int, tid: Optional[int] = None
+    ) -> List:
         r"""This function generates a new grid with default fields.
         Called by add_grid_raw() to create a new grid
         with ``type_name``, ``image_payload_idx`` and optional ``tid``.
@@ -679,7 +681,7 @@ class DataStore(BaseStore):
         tid: int = self._new_tid() if tid is None else tid
         entry: List[Any]
 
-        entry = [None, None, tid, type_name]
+        entry = [image_payload_idx, None, tid, type_name]
         entry += self._default_attributes_for_type(type_name)
 
         return entry
@@ -881,7 +883,7 @@ class DataStore(BaseStore):
 
     def _add_entry_raw(
         self,
-        entry_type: Union[Type[Entry], Type[Grid]],
+        entry_type: Type[Entry],
         type_name: str,
         entry: List[Any],
     ):
@@ -915,7 +917,7 @@ class DataStore(BaseStore):
             except KeyError:
                 self.__elements[type_name] = SortedList(key=sorting_fn)
                 self.__elements[type_name].add(entry)
-        elif entry_type in [Link, Group, Generics, ImageAnnotation, Grid]:
+        elif entry_type in [Link, Group, Generics, ImageAnnotation, Grids]:
             try:
                 self.__elements[type_name].append(entry)
             except KeyError:
@@ -1080,6 +1082,7 @@ class DataStore(BaseStore):
     def add_grid_raw(
         self,
         type_name: str,
+        image_payload_idx: int,
         tid: Optional[int] = None,
         allow_duplicate=True,
     ) -> int:
@@ -1091,6 +1094,7 @@ class DataStore(BaseStore):
 
         Args:
             type_name: The fully qualified type name of the new grid.
+            image_payload_idx: the index of the image payload.
             tid: ``tid`` of the Annotation entry that is being added.
                 It's optional, and it will be
                 auto-assigned if not given.
@@ -1107,14 +1111,14 @@ class DataStore(BaseStore):
         # annotation type entry data with default fields.
         # A reference to the entry should be store in both self.__elements and
         # self.__tid_ref_dict.
-        entry = self._new_grid(type_name, tid)
+        entry = self._new_grid(type_name, image_payload_idx, tid)
 
         if not allow_duplicate:
             tid_search_result = self._get_existing_ann_entry_tid(entry)
             # if found existing entry
             if tid_search_result != -1:
                 return tid_search_result
-        return self._add_entry_raw(Grid, type_name, entry)
+        return self._add_entry_raw(Grids, type_name, entry)
 
     def _get_existing_ann_entry_tid(self, entry: List[Any]):
         r"""
