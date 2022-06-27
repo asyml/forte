@@ -1249,18 +1249,28 @@ class Payload(Entry):
     def __init__(
         self,
         pack: PackType,
-        modality: IntEnum,
         payload_idx: int = 0,
         uri: Optional[str] = None,
     ):
-        supported_modality = ("Text", "Audio", "Image")
-        if modality.name not in supported_modality:
+        from ft.onto.base_ontology import (
+            TextPayload,
+            AudioPayload,
+            ImagePayload,
+        )
+
+        if isinstance(self, TextPayload):
+            self._modality = Modality.Text
+        elif isinstance(self, AudioPayload):
+            self._modality = Modality.Audio
+        elif isinstance(self, ImagePayload):
+            self._modality = Modality.Image
+        else:
+            supported_modality = [enum.name for enum in Modality]
             raise ValueError(
                 f"The given modality {modality} is not supported. "
                 f"Currently we only support {supported_modality}"
             )
         self._payload_idx: int = payload_idx
-        self._modality: IntEnum = modality
         self._uri: Optional[str] = uri
 
         super().__init__(pack)
