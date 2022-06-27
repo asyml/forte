@@ -81,8 +81,7 @@ class TextUtteranceProcessor(PackProcessor):
     """
 
     def _process(self, input_pack: DataPack):
-        tp = TextPayload(input_pack, Modality.Text, 0)
-        tp.set_cache("test text")
+        input_pack.set_text("test text")
         Utterance(pack=input_pack, begin=0, end=len(input_pack.text))
 
 
@@ -146,10 +145,9 @@ class AudioAnnotationTest(unittest.TestCase):
 
     def test_audio_annotation(self):
         # Test `DataPack.get_span_audio()` with None audio payload
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ProcessExecutionException):
             pack: DataPack = DataPack()
-            tp = TextPayload(pack, Modality.Text, 0)
-            tp.set_cache("test text")
+            pack.set_text("test text")
             pack.get_span_audio(begin=0, end=1)
         # Verify the annotations of each datapack
         for pack in self._pipeline.process_dataset(self._test_audio_path):
