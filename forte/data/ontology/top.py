@@ -860,8 +860,10 @@ class ImageAnnotation(Entry):
         Args:
             pack: The container that this image annotation
                 will be added to.
-            image_payload_idx: the index of the image payload. If it's not set,
-                it defaults to 0 which means it will load the first image payload.
+            image_payload_idx: the index of the image payload in the DataPack's
+                image payload list.
+                If it's not set, it defaults to 0 which means it will load the
+                first image payload.
         """
         self._image_payload_idx = image_payload_idx
         super().__init__(pack)
@@ -901,7 +903,9 @@ class Grids(Entry):
         pack: The container that this grids will be added to.
         height: the number of grid cell per column, the unit is one grid cell.
         width: the number of grid cell per row, the unit is one grid cell.
-        image_payload_idx: the index of the image payload. If it's not set,
+        image_payload_idx: the index of the image payload in the DataPack's
+            image payload list.
+            If it's not set,
             it defaults to 0 which meaning it will load the first image payload.
     """
 
@@ -1035,7 +1039,9 @@ class Region(ImageAnnotation):
 
     Args:
         pack: the container that this ``Region`` will be added to.
-        image_payload_idx: the index of the image payload. If it's not set,
+        image_payload_idx: the index of the image payload in the DataPack's
+            image payload list.
+            If it's not set,
             it defaults to 0 which meaning it will load the first image payload.
     """
 
@@ -1061,7 +1067,8 @@ class Box(Region):
 
     Args:
         pack: the container that this ``Box`` will be added to.
-        image_payload_idx: the index of the image payload. If it's not set,
+        image_payload_idx: the index of the image payload in the DataPack's
+            image payload list. If it's not set,
             it defaults to 0 which meaning it will load the first image payload.
         cy: the row index of the box center in the image array,
             the unit is one image array entry.
@@ -1184,7 +1191,8 @@ class BoundingBox(Box):
     Args:
         pack: The container that this BoundingBox will
             be added to.
-        image_payload_idx: the index of the image payload. If it's not set,
+        image_payload_idx: the index of the image payload in the DataPack's
+            image payload list. If it's not set,
             it defaults to 0 which means it will load the first image payload.
         height: the height of the bounding box, the unit is one image array
             entry.
@@ -1229,7 +1237,9 @@ class Payload(Entry):
         pack: The container that this `Payload` will
             be added to.
         modality: modality of the payload such as text, audio and image.
-        payload_idx: the index of the payload.
+        payload_idx: the index of the payload in the DataPack's
+            image payload list of the same modality. For example, if we instantiate a ``TextPayload`` inherited from ``Payload``, we assign
+            the payload index in DataPack's text payload list.
         uri: universal resource identifier of the data source. Defaults to None.
 
     Raises:
@@ -1261,7 +1271,8 @@ class Payload(Entry):
 
     def get_type(self) -> type:
         """
-        Get the type of the payload class.
+        Get the class type of the payload class. For example, suppose a ``TextPayload`` inherits this ``Payload`` class, ``TextPayload`` will be
+        returned.
 
         Returns:
             the type of the payload class.
@@ -1288,12 +1299,6 @@ class Payload(Entry):
 
     @property
     def cache(self) -> Union[str, np.ndarray]:
-        if self._cache is None:
-            raise ValueError(
-                "Payload doesn't have a cache."
-                "Please set the reader config `lazy_read` to False"
-                "or manually load it by set_cache()  "
-            )
         return self._cache
 
     @property
@@ -1323,7 +1328,7 @@ class Payload(Entry):
         Set payload index for the DataPack.
 
         Args:
-            payload_index: _description_
+            payload_index: a new payload index to be set.
         """
         self._payload_idx = payload_index
 
