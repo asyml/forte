@@ -33,3 +33,11 @@ MEMBER_TID_INDEX = 1
 
 # The index where the first attribute appears in the internal entry data of DataStore.
 ATTR_BEGIN_INDEX = 4
+
+# Name of the key to access the attribute dict of an entry type from
+# ``_type_attributes`` of ``DataStore``.
+TYPE_ATTR_KEY = "attributes"
+
+# Name of the key to access a set of parent names of an entry type from
+# ``_type_attributes`` of ``DataStore``.
+PARENT_CLASS_KEY = "parent_class"

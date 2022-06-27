@@ -11,8 +11,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
+import json
 from typing import Dict, List, Iterator, Tuple, Optional, Any, Type
+
 import uuid
 import logging
 from heapq import heappush, heappop
@@ -20,6 +21,9 @@ from sortedcontainers import SortedList
 from typing_inspect import get_origin
 
 from forte.utils import get_class
+from forte.utils.utils import get_full_module_name
+from forte.data.ontology.code_generation_objects import EntryTree
+from forte.data.ontology.ontology_code_generator import OntologyCodeGenerator
 from forte.data.base_store import BaseStore
 from forte.data.ontology.top import (
     Annotation,
@@ -35,7 +39,7 @@ from forte.data.ontology.top import (
 )
 from forte.data.ontology.core import Entry, FList, FDict
 from forte.common import constants
-from forte.utils.utils import get_full_module_name
+
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +52,8 @@ class DataStore(BaseStore):
     # pylint: disable=attribute-defined-outside-init
     # pylint: disable=too-many-public-methods
     _type_attributes: dict = {}
+    onto_gen = OntologyCodeGenerator()
+    do_init = False
 
     def __init__(
         self, onto_file_path: Optional[str] = None, dynamically_add_type=True
@@ -134,7 +140,9 @@ class DataStore(BaseStore):
         understand and store ``entry_type`` defined in the provided file.
 
         Args:
-            onto_file_path (str, optional): the path to the ontology file.
+            onto_file_path (str, optional): The path to the input ontology
+                specification file, which should be a json file, and it should
+                have all the entries inside with no import as key.
         """
         super().__init__()
 
@@ -170,19 +178,19 @@ class DataStore(BaseStore):
             #       "attributes": {"pos": 4, "ud_xpos": 5,
             #               "lemma": 6, "chunk": 7, "ner": 8, "sense": 9,
             #               "is_root": 10, "ud_features": 11, "ud_misc": 12},
-            #       "parent_class": "forte.data.ontology.top.Annotation", },
+            #       "parent_class": set("forte.data.ontology.top.Annotation"), },
             #     "ft.onto.base_ontology.Document": {
             #       "attributes": {"document_class": 4,
             #               "sentiment": 5, "classifications": 6},
-            #       "parent_class": "forte.data.ontology.top.Annotation", },
+            #       "parent_class": set("forte.data.ontology.top.Annotation"), },
             #     "ft.onto.base_ontology.Sentence": {
             #       "attributes": {"speaker": 4,
             #               "part_id": 5, "sentiment": 6,
             #               "classification": 7, "classifications": 8},
-            #       "parent_class": "forte.data.ontology.top.Annotation", }
+            #       "parent_class": set(), }
             # }
         """
-
+        self._init_top_to_core_entries()
         if self._onto_file_path:
             self._parse_onto_file()
 
@@ -261,8 +269,8 @@ class DataStore(BaseStore):
         state["entries"] = state.pop("_DataStore__elements")
         state["fields"] = self._type_attributes
         for _, v in state["fields"].items():
-            if "parent_class" in v:
-                v.pop("parent_class")
+            if constants.PARENT_CLASS_KEY in v:
+                v.pop(constants.PARENT_CLASS_KEY)
         return state
 
     def __setstate__(self, state):
@@ -387,18 +395,21 @@ class DataStore(BaseStore):
                 # If a field only occurs in the serialized object but not in
                 # the current class, it will not be detected.
                 # Instead, it will be dropped later.
-                diff = set(v["attributes"].items()) - set(
-                    store._type_attributes[t]["attributes"].items()
+                diff = set(v[constants.TYPE_ATTR_KEY].items()) - set(
+                    store._type_attributes[t][constants.TYPE_ATTR_KEY].items()
                 )
                 for f in diff:
                     # if fields appear in both the current class and the
                     # serialized objects but have different orders, switch
                     # fields to match the order of the current class.
-                    if f[0] in store._type_attributes[t]["attributes"]:
+                    if (
+                        f[0]
+                        in store._type_attributes[t][constants.TYPE_ATTR_KEY]
+                    ):
                         # record indices of the same field in the class and
                         # objects. Save different indices to a dictionary.
                         change_map[f[1]] = store._type_attributes[t][
-                            "attributes"
+                            constants.TYPE_ATTR_KEY
                         ][f[0]]
                     # record indices of fields that only appear in the
                     # current class. We want to fill them with None.
@@ -421,7 +432,9 @@ class DataStore(BaseStore):
                             d[change_map[i]] if i in change_map else d[i]
                             # throw fields that are redundant/only appear in
                             # the serialized object
-                            for i in range(max(v["attributes"].values()) + 1)
+                            for i in range(
+                                max(v[constants.TYPE_ATTR_KEY].values()) + 1
+                            )
                         ]
                 if len(contradict_loc) > 0:
                     if not suppress_warning:
@@ -508,7 +521,10 @@ class DataStore(BaseStore):
             dynamic import is disabled.
         """
         # check if type is in dictionary
-        if type_name in DataStore._type_attributes:
+        if (
+            type_name in DataStore._type_attributes
+            and constants.TYPE_ATTR_KEY in DataStore._type_attributes[type_name]
+        ):
             return DataStore._type_attributes[type_name]
         if not self._dynamically_add_type:
             raise ValueError(
@@ -527,11 +543,10 @@ class DataStore(BaseStore):
             attr_idx += 1
 
         new_entry_info = {
-            "attributes": attr_dict,
-            "parent_class": set(),
+            constants.TYPE_ATTR_KEY: attr_dict,
+            constants.PARENT_CLASS_KEY: set(),
         }
         DataStore._type_attributes[type_name] = new_entry_info
-
         return new_entry_info
 
     def _get_type_attribute_dict(self, type_name: str) -> Dict[str, int]:
@@ -552,7 +567,7 @@ class DataStore(BaseStore):
         Returns:
             attr_dict (dict): The attribute-to-index dictionary of an entry.
         """
-        return self._get_type_info(type_name)["attributes"]
+        return self._get_type_info(type_name)[constants.TYPE_ATTR_KEY]
 
     def _get_type_parent(self, type_name: str) -> str:
         """Get a set of parent names of an entry type. The set is a subset of all
@@ -562,7 +577,7 @@ class DataStore(BaseStore):
         Returns:
             parent_class (str): The parent entry name of an entry.
         """
-        return self._get_type_info(type_name)["parent_class"]
+        return self._get_type_info(type_name)[constants.PARENT_CLASS_KEY]
 
     def _default_attributes_for_type(self, type_name: str) -> List:
         """Get a list of attributes of an entry type with their default values.
@@ -785,11 +800,16 @@ class DataStore(BaseStore):
         """
         if type_name not in DataStore._type_attributes:
             self._get_type_info(type_name=type_name)
-        if "parent_class" not in DataStore._type_attributes[type_name]:
-            DataStore._type_attributes[type_name]["parent_class"] = set()
+        if (
+            constants.PARENT_CLASS_KEY
+            not in DataStore._type_attributes[type_name]
+        ):
+            DataStore._type_attributes[type_name][
+                constants.PARENT_CLASS_KEY
+            ] = set()
         cls_qualified_name = get_full_module_name(cls)
         type_name_parent_class = DataStore._type_attributes[type_name][
-            "parent_class"
+            constants.PARENT_CLASS_KEY
         ]
 
         if no_dynamic_subclass:
@@ -1950,16 +1970,61 @@ class DataStore(BaseStore):
         ``DataStore._type_attributes`` to store type name, parent entry, and its attribute
         information accordingly.
 
-        For every ontology, this function will import paths containing its parent entry and
-        merge all classes contained in the imported file into the dictionary. For example,
-        if an ontology has a parent entry in ``ft.onto.base_ontology``, all classes in
-        ``ft.onto.base_ontology`` will be imported and stored in the internal dictionary.
-        A user can use classes both in the ontology specification file and their parent
-        entries's paths.
+        The ontology specification file should contain all the entry definitions users
+        wanted to use, either manually or through the `-m` option of
+        `generate_ontology create` command. This function will take this one file and
+        only import the types specified inside it.
         """
         if self._onto_file_path is None:
             return
-        raise NotImplementedError
+
+        entry_tree = EntryTree()
+        with open(self._onto_file_path, "r", encoding="utf8") as f:
+            onto_dict = json.load(f)
+        DataStore.onto_gen.parse_schema_for_no_import_onto_specs_file(
+            self._onto_file_path, onto_dict, merged_entry_tree=entry_tree
+        )
+
+        children = entry_tree.root.children
+        while len(children) > 0:
+            entry_node = children.pop(0)
+            children.extend(entry_node.children)
+
+            entry_name = entry_node.name
+            if entry_name in DataStore._type_attributes:
+                continue
+            attr_dict = {}
+            idx = constants.ATTR_BEGIN_INDEX
+
+            # sort the attribute dictionary
+            for d in sorted(entry_node.attributes):
+                name = d
+                attr_dict[name] = idx
+                idx += 1
+
+            entry_dict = {}
+            entry_dict[constants.PARENT_CLASS_KEY] = set()
+            entry_dict[constants.PARENT_CLASS_KEY].add(entry_node.parent.name)
+            entry_dict[constants.TYPE_ATTR_KEY] = attr_dict
+
+            DataStore._type_attributes[entry_name] = entry_dict
+
+    def _init_top_to_core_entries(self):
+        r"""This function will populate the basic user extendable entry types in Top
+        and Core module during DataStore initialization.
+        """
+        if DataStore.do_init is True:
+            return
+
+        for (
+            top_entry,
+            parents,
+        ) in DataStore.onto_gen.top_to_core_entries.items():
+            entry_dict = {}
+            entry_dict[constants.PARENT_CLASS_KEY] = set(parents)
+            DataStore._type_attributes[top_entry] = entry_dict
+
+        DataStore.do_init = True
 
     @staticmethod
     def _get_entry_attributes_by_class(input_entry_class_name: str) -> Dict:
@@ -1967,9 +2032,8 @@ class DataStore(BaseStore):
         a fully qualified name of an entry class.
 
         The `dataclass` module<https://docs.python.org/3/library/dataclasses.html> can add
-        generated special methods to user-defined classes. There is an in-built function
-        called `__dataclass_fields__` that is called on the class object, and it returns
-        all the fields the class contains.
+        generated special methods to user-defined classes. `__dataclass_fields__` is an in-built
+        function that is called on the class object, and it returns all the fields a class contains.
 
         .. note::
 
@@ -1984,8 +2048,8 @@ class DataStore(BaseStore):
             A dictionary of attributes with their field information
             corresponding to the input class.
 
-        For example, for Sentence we want to get a list of
-        ["speaker", "part_id", "sentiment", "classification", "classifications"].
+        For example, for an entry ``ft.onto.base_ontology.Sentence`` we want to
+        get a list of ["speaker", "part_id", "sentiment", "classification", "classifications"].
         The solution looks like the following:
 
         .. code-block:: python

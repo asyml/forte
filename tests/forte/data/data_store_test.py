@@ -143,16 +143,28 @@ class DataStoreTest(unittest.TestCase):
             },
         }
 
-        DataStore._type_attributes = {
-            "ft.onto.base_ontology.Document": {
+        self.base_type_attributes = {
+            'forte.data.ontology.top.Generics': {'parent_class': {'Entry'}},
+            'forte.data.ontology.top.Annotation': {'parent_class': {'Entry'}},
+            'forte.data.ontology.top.Link': {'parent_class': {'BaseLink'}},
+            'forte.data.ontology.top.Group': {'parent_class': {'Entry', 'BaseGroup'}},
+            'forte.data.ontology.top.MultiPackGeneric': {'parent_class': {'Entry', 'MultiEntry'}},
+            'forte.data.ontology.top.MultiPackLink': {'parent_class': {'MultiEntry', 'BaseLink'}},
+            'forte.data.ontology.top.MultiPackGroup': {'parent_class': {'Entry', 'MultiEntry', 'BaseGroup'}},
+            'forte.data.ontology.top.Query': {'parent_class': {'Generics'}},
+            'forte.data.ontology.top.AudioAnnotation': {'parent_class': {'Entry'}}
+        }
+
+        DataStore._type_attributes["ft.onto.base_ontology.Document"] = {
                 "attributes": {
                     "document_class": 4,
                     "sentiment": 5,
                     "classifications": 6,
                 },
                 "parent_class": set(),
-            },
-            "ft.onto.base_ontology.Sentence": {
+            }
+
+        DataStore._type_attributes["ft.onto.base_ontology.Sentence"] = {
                 "attributes": {
                     "speaker": 4,
                     "part_id": 5,
@@ -161,8 +173,7 @@ class DataStoreTest(unittest.TestCase):
                     "classifications": 8,
                 },
                 "parent_class": set(),
-            },
-        }
+            }
         # The order is [Document, Sentence]. Initialize 2 entries in each list.
         # Document entries have tid 1234, 3456.
         # Sentence entries have tid 9999, 1234567.
@@ -608,7 +619,6 @@ class DataStoreTest(unittest.TestCase):
         )
 
         self.assertEqual(num_phrase, 1)
-        self.assertEqual(len(DataStore._type_attributes), 3)
         self.assertEqual(len(self.data_store._DataStore__tid_ref_dict), 8)
         self.assertEqual(
             self.data_store.get_entry(tid=tid_em)[0],
@@ -1237,6 +1247,39 @@ class DataStoreTest(unittest.TestCase):
                 "ft.onto.base_ontology.Title", forte.data.ontology.top.Link
             )
         )
+
+    def test_check_onto_file(self):
+
+        expected_type_attributes = {
+            "ft.onto.test.Description": {
+                "attributes": {
+                    "author": 4,
+                    "passage_id": 5,
+                },
+                "parent_class": {"forte.data.ontology.top.Annotation"},
+            },
+            "ft.onto.test.EntityMention": {
+                "attributes": {
+                    "ner_type": 4,
+                },
+                "parent_class": {"forte.data.ontology.top.Annotation"},
+            },
+            "ft.onto.test.MedicalEntityMention": {
+                "attributes": {
+                    "umls_entities": 4,
+                    "umls_link": 5,
+                },
+                "parent_class": {"ft.onto.test.EntityMention"},
+            }
+        }
+        data_store_from_file = DataStore(onto_file_path="tests/forte/data/ontology/test_specs/test_check_onto_file.json")
+        # Check whether `_type_attributes` contains all items in `expected_type_attributes`
+        union_dict: Dict = dict(data_store_from_file._type_attributes, **expected_type_attributes)
+        self.assertDictEqual(data_store_from_file._type_attributes, union_dict)
+
+        # DataStores share a static type_attribute dict.
+        data_store_non_file = DataStore()
+        self.assertDictEqual(data_store_non_file._type_attributes, data_store_from_file._type_attributes)
 
     def test_entry_conversion(self):
         data_pack = DataPack()
