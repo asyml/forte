@@ -36,7 +36,7 @@ class GridsTest(unittest.TestCase):
         line[2, 2] = 1
         line[3, 3] = 1
         line[4, 4] = 1
-        ip = ImagePayload(self.datapack, Modality.Image)
+        ip = ImagePayload(self.datapack)
         ip.set_cache(line)
         self.datapack.image_annotations.append(
             ImageAnnotation(self.datapack, 0)
@@ -48,7 +48,7 @@ class GridsTest(unittest.TestCase):
         self.zeros = np.zeros((6, 12))
         self.ref_arr = np.zeros((6, 12))
         self.ref_arr[2, 2] = 1
-        ip = ImagePayload(self.datapack, Modality.Image)
+        ip = ImagePayload(self.datapack)
         ip.set_cache(self.ref_arr)
         self.datapack.image_annotations.append(
             ImageAnnotation(self.datapack, 0)
