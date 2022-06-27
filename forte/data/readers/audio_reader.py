@@ -73,7 +73,7 @@ class AudioReader(PackReader):
         ap = AudioPayload(pack, payload_idx, file_path)
         if not self.configs.lazy_read:
             audio_data, sample_rate = self.soundfile.read(file_path)
-            ap.set_cache(audio_data)
+            pack.set_audio(audio_data)
         ap.sample_rate = sample_rate
         pack.pack_name = file_path
         yield pack
