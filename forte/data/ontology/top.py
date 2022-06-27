@@ -1238,7 +1238,8 @@ class Payload(Entry):
             be added to.
         modality: modality of the payload such as text, audio and image.
         payload_idx: the index of the payload in the DataPack's
-            image payload list of the same modality. For example, if we instantiate a ``TextPayload`` inherited from ``Payload``, we assign
+            image payload list of the same modality. For example, if we
+            instantiate a ``TextPayload`` inherited from ``Payload``, we assign
             the payload index in DataPack's text payload list.
         uri: universal resource identifier of the data source. Defaults to None.
 
@@ -1252,7 +1253,7 @@ class Payload(Entry):
         payload_idx: int = 0,
         uri: Optional[str] = None,
     ):
-        from ft.onto.base_ontology import (
+        from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
             TextPayload,
             AudioPayload,
             ImagePayload,
@@ -1267,7 +1268,7 @@ class Payload(Entry):
         else:
             supported_modality = [enum.name for enum in Modality]
             raise ValueError(
-                f"The given modality {modality} is not supported. "
+                f"The given modality {self._modality.name} is not supported. "
                 f"Currently we only support {supported_modality}"
             )
         self._payload_idx: int = payload_idx
@@ -1281,7 +1282,8 @@ class Payload(Entry):
 
     def get_type(self) -> type:
         """
-        Get the class type of the payload class. For example, suppose a ``TextPayload`` inherits this ``Payload`` class, ``TextPayload`` will be
+        Get the class type of the payload class. For example, suppose a
+        ``TextPayload`` inherits this ``Payload`` class, ``TextPayload`` will be
         returned.
 
         Returns:
