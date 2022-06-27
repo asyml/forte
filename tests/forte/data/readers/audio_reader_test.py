@@ -66,7 +66,6 @@ class TestASRProcessor(PackProcessor):
         )
 
         tp = TextPayload(input_pack, 0)
-        tp.set_cache(transcription[0])
         input_pack.set_text(text=transcription[0])
 
 
