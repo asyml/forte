@@ -4,8 +4,6 @@ from typing import List, Set
 from string import Template
 
 from forte.data.base_pack import PackType
-from forte.data.data_pack import DataPack
-from forte.data.multi_pack import MultiPack
 from forte.data.ontology import top
 from forte.data.ontology import utils
 
@@ -119,9 +117,9 @@ else:
 
 def hardcoded_pack_map(clazz):
     if clazz in SINGLE_PACK_CLASSES:
-        return class_name(DataPack)
+        return "forte.data.data_pack.DataPack"
     elif clazz in MULTI_PACK_CLASSES:
-        return class_name(MultiPack)
+        return "forte.data.multi_pack.MultiPack"
     else:
         # When not found, return the default.
         return PACK_TYPE_CLASS_NAME
