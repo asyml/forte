@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import logging
-from typing import Dict, Optional
+from typing import Dict, Optional, cast
 from forte.data.base_pack import PackType
 from forte.data.ontology.core import Entry, FList, FDict
 from forte.data.ontology.core import EntryType
@@ -111,6 +111,7 @@ class EntryConverter:
                 tid=entry.tid,
             )
         elif data_store_ref._is_subclass(entry.entry_type(), Payload):
+            entry = cast(Payload, entry)
             data_store_ref.add_payload_raw(
                 type_name=entry.entry_type(),
                 payload_idx=entry.payload_index,
