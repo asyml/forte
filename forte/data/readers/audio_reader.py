@@ -20,7 +20,6 @@ from typing import Any, Iterator
 from forte.data.data_pack import DataPack
 from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.base_reader import PackReader
-from forte.data.modality import Modality
 from ft.onto.base_ontology import AudioPayload
 
 __all__ = [
@@ -73,7 +72,7 @@ class AudioReader(PackReader):
         ap = AudioPayload(pack, payload_idx, file_path)
         if not self.configs.lazy_read:
             audio_data, sample_rate = self.soundfile.read(file_path)
-            pack.set_audio(audio_data)
+            pack.set_audio(audio_data, sample_rate)
         ap.sample_rate = sample_rate
         pack.pack_name = file_path
         yield pack
