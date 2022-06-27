@@ -43,8 +43,8 @@ class GridTest(unittest.TestCase):
             ImageAnnotation(self.datapack, 0)
         )
 
-        image_height, image_width = self.line.shape
-        grid = Grid(2, 3, image_height, image_width)
+        self.image_height, self.image_width = self.line.shape
+        grid = Grid(2, 3, self.image_height, self.image_width)
 
         self.grid = grid
         self.zeros = np.zeros((4, 6))
@@ -63,7 +63,27 @@ class GridTest(unittest.TestCase):
             array_equal(self.grid.get_grid_cell(self.line, 1, 1), self.ref_arr)
         )
 
-        self.grid.get_grid_cell_center(1, 1)
+        self.assertTrue(
+            array_equal(
+                self.grid.get_grid_cell(self.line, 1, 2).shape,
+                self.ref_arr.shape,
+            )
+        )
+
+        # grid size is 2x3
+        # grid_cell_size is 2x3
+        # the height range of the second grid cell is [2, 4]
+        # the width range of the second grid cell is [2, 4]
+        self.assertEqual(self.grid.get_grid_cell_center(1, 1), (3, 3))
+        grid2 = Grid(2, 2, self.image_height, self.image_width)
+        # grid size is 2x2
+        # grid_cell_size is 2x3
+        # the height range of the second grid cell is [2, 4]
+        # the width range of the second grid cell is [3, 5]
+        # the height index should be (4+2)//2=3
+        # the width index should be (5+3)//2=4
+        print(grid2.get_grid_cell_center(1, 1))
+        self.assertEqual(grid2.get_grid_cell_center(1, 1), (3, 4))
 
     def test_get_grid_cell_value_error(self):
         def fn1():
