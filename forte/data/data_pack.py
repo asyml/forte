@@ -441,7 +441,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             Payload entry containing text data, image or audio data.
 
         """
-        supported_modality = ("Text", "Audio", "Image")
+        supported_modality = [enum.name for enum in Modality]
 
         try:
             # if modality.name == "text":
@@ -707,7 +707,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             if len(processed_original_spans) == 0:
                 return input_index
 
-            len_processed_text = len(self.get_payload_data_at(Modality.Text, 0))
+            len_processed_text = len(self.text)
             orig_index = None
             prev_end = 0
             for (
