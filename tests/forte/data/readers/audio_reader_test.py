@@ -14,10 +14,7 @@
 """
 Unit tests for AudioReader.
 """
-from email.mime import audio
-import importlib
 import os
-from sunau import AUDIO_FILE_ENCODING_ADPCM_G721
 import unittest
 from typing import Dict
 from forte.data import Modality
@@ -31,7 +28,7 @@ from forte.data.data_pack import DataPack
 from forte.data.readers import AudioReader
 from forte.pipeline import Pipeline
 from forte.processors.base.pack_processor import PackProcessor
-from ft.onto.base_ontology import AudioPayload, TextPayload
+from ft.onto.base_ontology import TextPayload
 
 
 class TestASRProcessor(PackProcessor):
@@ -68,7 +65,7 @@ class TestASRProcessor(PackProcessor):
             argmax(self._model(input_values).logits, dim=-1)
         )
 
-        tp = TextPayload(input_pack, Modality.Text, 0)
+        tp = TextPayload(input_pack, 0)
         tp.set_cache(transcription[0])
         input_pack.set_text(text=transcription[0])
 
@@ -91,10 +88,7 @@ class AudioReaderPipelineTest(unittest.TestCase):
         )
         # Define and config the Pipeline
         self._pipeline = Pipeline[DataPack]()
-        self._pipeline.set_reader(
-            AudioReader(),
-            config={"read_kwargs": {"module": "soundfile", "method": "read"}},
-        )
+        self._pipeline.set_reader(AudioReader())
         self._pipeline.add(TestASRProcessor())
         self._pipeline.initialize()
 
