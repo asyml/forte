@@ -34,6 +34,7 @@ import numpy as np
 from sortedcontainers import SortedList
 
 from forte.common.exception import (
+    ProcessExecutionException,
     UnknownOntologyClassException,
 )
 from forte.common.constants import TID_INDEX
@@ -237,7 +238,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             text data in the text payload.
         """
         if len(self.text_payloads) > 0:
-            return self.get_payload_data_at(Modality.Text, 0)
+            return str(self.get_payload_data_at(Modality.Text, 0))
         else:
             return ""
 
@@ -462,7 +463,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                     f" {supported_modality}."
                 )
         except IndexError as e:
-            raise ValueError(
+            raise ProcessExecutionException(
                 f"payload index ({payload_index}) "
                 f"is larger or equal to {modality.name} payload list"
                 f" length ({payloads_length}). "
@@ -568,7 +569,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                 TextPayload,
             )
 
-            tp = TextPayload(self, Modality.Text, text_payload_index)
+            tp = TextPayload(self, text_payload_index)
         else:
             tp = self.get_payload_at(Modality.Text, text_payload_index)
 
@@ -600,7 +601,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                 AudioPayload,
             )
 
-            ap = AudioPayload(self, Modality.Audio)
+            ap = AudioPayload(self)
         else:
             ap = self.get_payload_at(Modality.Audio, audio_payload_index)
 
