@@ -825,7 +825,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                     f"is not a valid begin."
                 )
 
-            if end > len(self.get_payload_data_at(Modality.Text, 0)):
+            if end > len(self.text):
                 if len(self.text) == 0:
                     raise ValueError(
                         f"The end {end} of span is greater than the text "
