@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import logging
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 from forte.data.base_pack import PackType
 from forte.data.ontology.core import Entry, FList, FDict
 from forte.data.ontology.core import EntryType
@@ -49,7 +49,7 @@ class EntryConverter:
         self._entry_dict: Dict[int, Entry] = {}
 
     def save_entry_object(
-        self, entry: Entry, pack: PackType, allow_duplicate: bool = True
+        self, entry: Any, pack: PackType, allow_duplicate: bool = True
     ):
         # pylint: disable=protected-access
         """
@@ -70,70 +70,81 @@ class EntryConverter:
 
         # Create a new registry in DataStore based on entry's type
         if data_store_ref._is_subclass(entry.entry_type(), Annotation):
-            data_store_ref.add_annotation_raw(
+            data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
-                begin=entry.begin,  # type: ignore
-                end=entry.end,  # type: ignore
+                attribute_data=[entry.begin, entry.end],
+                base_class=Annotation,
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,
             )
         elif data_store_ref._is_subclass(entry.entry_type(), Link):
-            data_store_ref.add_link_raw(
+            data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
-                parent_tid=entry.parent,  # type: ignore
-                child_tid=entry.child,  # type: ignore
+                attribute_data=[entry.parent, entry.child],
+                base_class=Link,
                 tid=entry.tid,
             )
         elif data_store_ref._is_subclass(entry.entry_type(), Group):
-            data_store_ref.add_group_raw(
+            data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
-                member_type=get_full_module_name(entry.MemberType),  # type: ignore
+                attribute_data=[get_full_module_name(entry.MemberType), []],
+                base_class=Group,
                 tid=entry.tid,
             )
         elif data_store_ref._is_subclass(entry.entry_type(), Generics):
-            data_store_ref.add_generics_raw(
+            data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
+                attribute_data=[None, None],
+                base_class=Generics,
                 tid=entry.tid,
             )
         elif data_store_ref._is_subclass(entry.entry_type(), AudioAnnotation):
-            data_store_ref.add_audio_annotation_raw(
+            data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
-                begin=entry.begin,  # type: ignore
-                end=entry.end,  # type: ignore
+                attribute_data=[entry.begin, entry.end],
+                base_class=AudioAnnotation,
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,
             )
         elif data_store_ref._is_subclass(entry.entry_type(), ImageAnnotation):
-            data_store_ref.add_image_annotation_raw(
+            data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
-                image_payload_idx=entry.image_payload_idx,  # type: ignore
+                attribute_data=[entry.image_payload_idx, None],
+                base_class=ImageAnnotation,
                 tid=entry.tid,
+                allow_duplicate=allow_duplicate,
             )
         elif data_store_ref._is_subclass(entry.entry_type(), Grids):
             # Will be deprecated in future
-            data_store_ref.add_grid_raw(  # type: ignore
+            data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
-                image_payload_idx=entry.image_payload_idx,  # type: ignore
+                attribute_data=[entry.image_payload_idx, None],
+                base_class=Grids,
                 tid=entry.tid,
+                allow_duplicate=allow_duplicate,
             )
         elif data_store_ref._is_subclass(entry.entry_type(), MultiPackLink):
-            data_store_ref.add_multipack_link_raw(
+            data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
-                parent_pack_id=entry.parent[0],  # type: ignore
-                parent_tid=entry.parent[1],  # type: ignore
-                child_pack_id=entry.child[0],  # type: ignore
-                child_tid=entry.child[1],  # type: ignore
+                attribute_data=[
+                    [entry.parent[0], entry.parent[1]],
+                    [entry.child[0], entry.child[1]],
+                ],
+                base_class=MultiPackLink,
                 tid=entry.tid,
             )
         elif data_store_ref._is_subclass(entry.entry_type(), MultiPackGroup):
-            data_store_ref.add_multipack_group_raw(
+            data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
-                member_type=get_full_module_name(entry.MemberType),  # type: ignore
+                attribute_data=[get_full_module_name(entry.MemberType), []],
+                base_class=MultiPackGroup,
                 tid=entry.tid,
             )
         elif data_store_ref._is_subclass(entry.entry_type(), MultiPackGeneric):
-            data_store_ref.add_multipack_generic_raw(
+            data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
+                attribute_data=[None, None],
+                base_class=MultiPackGeneric,
                 tid=entry.tid,
             )
         else:

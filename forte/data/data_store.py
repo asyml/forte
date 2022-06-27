@@ -966,6 +966,82 @@ class DataStore(BaseStore):
         else:
             raise KeyError(f"Entry with tid {tid} not found.")
 
+    def _create_new_entry(
+        self, type_name: str, attribute_data: List, tid: Optional[int] = None
+    ) -> List:
+        r"""This function generates a new entry with default fields.
+        The new entry is in the format used to be stored in Data Stores.
+
+        Args:
+            type_name: The fully qualified type name of the new entry.
+            attribute_data: It is a list that stores attributes relevant to
+                the entry being added. In order to keep the number of attributes
+                same for all entries, the list is populated with trailing None's.
+            tid: ``tid`` of the generics entry.
+
+        Returns:
+            The list that represents the newly created entry.
+        """
+
+        tid: int = self._new_tid() if tid is None else tid
+        entry: List[Any] = []
+
+        entry.extend(attribute_data)
+
+        entry += [tid, type_name]
+        entry += self._default_attributes_for_type(type_name)
+
+        return entry
+
+    def add_entry_raw(
+        self,
+        type_name: str,
+        attribute_data: List,
+        base_class: Type[Entry],
+        tid: Optional[int] = None,
+        allow_duplicate: bool = True,
+    ) -> int:
+
+        r"""
+        This function provides a general implementation to add all
+        types of entries to the data store. It can add namely
+        Annotation, AudioAnnotation, ImageAnnotation,
+        Link, Group and Generics. Returns the ``tid`` for the
+        inserted entry.
+
+        Args:
+            type_name: The fully qualified type name of the new Entry.
+            attribute_data: It is a list that stores attributes relevant to
+                the entry being added. In order to keep the number of attributes
+                same for all entries, the list is populated with trailing None's.
+            base_class: The type of entry to add to the Data Store. This is
+                a reference to the class of the entry that needs to be added
+                to the DataStore. The reference can be to any of the classes
+                supported by the function.
+            tid: ``tid`` of the Entry that is being added.
+                It's optional, and it will be
+                auto-assigned if not given.
+            allow_duplicate: Whether we allow duplicate in the DataStore. When
+                it's set to False, the function will return the ``tid`` of
+                existing entry if a duplicate is found. Default value is True.
+
+        Returns:
+            ``tid`` of the entry.
+        """
+
+        new_entry = self._create_new_entry(type_name, attribute_data, tid)
+
+        if not self._is_annotation(type_name):
+            allow_duplicate = True
+
+        if not allow_duplicate:
+            tid_search_result = self._get_existing_ann_entry_tid(new_entry)
+            # if found existing entry
+            if tid_search_result != -1:
+                return tid_search_result
+
+        return self._add_entry_raw(base_class, type_name, new_entry)
+
     def add_annotation_raw(
         self,
         type_name: str,
