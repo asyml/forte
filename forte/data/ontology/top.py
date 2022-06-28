@@ -876,13 +876,13 @@ class Box(Region):
         pack: the container that this ``Box`` will be added to.
         image_payload_idx: the index of the image payload. If it's not set,
             it defaults to 0 which meaning it will load the first image payload.
-        height: the height of the box, the unit is one image array entry.
+        height: the height of the box, the unit is one pixel.
         cy: the row index of the box center in the image array,
-            the unit is one image array entry. If not set, the box center
-            will be set to center of image (half height of the image).
+            the unit is one pixel. If not set, the box center
+            will be set to the center of image (half height of the image).
         cx: the column index of the box center in the image array,
-            the unit is one image array entry. If not set, the box center
-            will be set to center of image (half width of the image).
+            the unit is one pixel. If not set, the box center
+            will be set to the center of image (half width of the image).
     """
 
     def __init__(
@@ -914,12 +914,12 @@ class Box(Region):
     def _check_box_center_status(self):
         if not self.is_grid_associated and isinstance(self, BoundingBox):
             raise ValueError(
-                "The box center is set to the center of" "image by default."
+                "The box center is set to the center of the image by default."
             )
 
         if self.is_default_box_center:
             logging.warning(
-                "The box center is set to the center of" "image by default."
+                "The box center is set to the center of the image by default."
             )
 
     def set_center(self, cy: int, cx: int):
@@ -928,9 +928,9 @@ class Box(Region):
 
         Args:
             cy: the row index of the box center in the image array,
-            the unit is one image array entry.
+            the unit is one pixel.
             cx: the column index of the box center in the image array,
-            the unit is one image array entry.
+            the unit is one pixel.
         """
         self.is_default_box_center = False
         self._cy = cy
@@ -1054,7 +1054,7 @@ class BoundingBox(Box):
             it defaults to 0 which means it will load the first image payload.
         height: the height of the bounding box, the unit is one image array
             entry.
-        width: the width of the bounding box, the unit is one image array entry.
+        width: the width of the bounding box, the unit is one pixel.
         grid_height: the height of the associated grid, the unit is one grid
             cell.
         grid_width: the width of the associated grid, the unit is one grid
