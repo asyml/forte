@@ -74,6 +74,8 @@ class GridTest(unittest.TestCase):
         # grid_cell_size is 2x3
         # the height range of the second grid cell is [2, 4]
         # the width range of the second grid cell is [2, 4]
+        # the height index should be (2+4)//2=3
+        # the width index should be (2+4)//2=3
         self.assertEqual(self.grid.get_grid_cell_center(1, 1), (3, 3))
         grid2 = Grid(2, 2, self.image_height, self.image_width)
         # grid size is 2x2
