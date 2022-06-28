@@ -869,10 +869,15 @@ class BaseGroup(Entry, Generic[EntryType]):
 
 class Grid:
     """
-    Regular grid with a grid configuration dependent on the image size.
+    Regular grid with a grid configuration dependent on the image size. It is a data structure used to retrieve grid-related objects such as grid cells
+    from the image. Grid itself doesn't store any data.
 
-    We intialize and constrain the grid shape by the image shape during
-    initialization since usually there aren't many different image sizes in one dataset.
+    Based the image size and the grid shape,
+    we compute the height and the width of grid cells.
+    For example, if the image size (image_height,image_width) is (640, 480)
+    and the grid shape (height, width) is (2, 3)
+    the size of grid cells (self.c_h, self.c_w) will be (320, 240).
+    The grid can be totally "free-form" that we don't initialize it with any image size and pass the image size directly into the method/operation on the fly. However, since the number of different image shapes are limited, we can bound one grid to one image size, and we can also do the image/grid size check during the grid initialization.
 
     Args:
         height: the number of grid cell per column, the unit is one grid cell.
@@ -895,27 +900,24 @@ class Grid:
             )
         self._height = height
         self._width = width
-        # based the image size and the grid shape
-        # we compute the height and width of grid cells
-        # for example, if the image size (image_height,image_width) is
-        #  (640, 480)
-        # and the grid shape (height, width) is (2, 3)
-        # the size of grid cells (self.c_h, self.c_w) will be (320, 240)
-        # if the resulting size of grid is not an integer, we round it up
-        # the last grid cell per row and column might be out of the image size
-        # since we constrain the maximum pixel locations by the image size
-        self.c_h, self.c_w = (
-            math.ceil(image_height / self._height),
-            math.ceil(image_width / self._width),
-        )
-        self.image_height = image_height
-        self.image_width = image_width
+
         if image_height <= 0 or image_width <= 0:
             raise ValueError(
                 "both image height and width must be positive"
                 f"but the image shape is {(image_height, image_width)}"
                 "please input a valid image shape"
             )
+        self._image_height = image_height
+        self._image_width = image_width
+
+        # if the resulting size of grid is not an integer, we round it up.
+        # The last grid cell per row and column might be out of the image size
+        # since we constrain the maximum pixel locations by the image size
+        self.c_h, self.c_w = (
+            math.ceil(image_height / self._height),
+            math.ceil(image_width / self._width),
+        )
+
         if self.c_h <= 0 or self.c_w <= 0:
             raise ValueError(
                 "cell height and width must be positive"
@@ -927,15 +929,20 @@ class Grid:
         """
         Get the array data of a grid cell from image of the image payload index.
         The array is a masked version of the original image, and it has
-        the same size of the image. The array entries that are not
-        within the grid cell will masked as zeros. The array entries that are
-        within the grid cell will be copied to the zeros numpy array.
+        the same size as the original image. The array entries that are not
+        within the grid cell will masked as zeros. The image array entries that
+        are within the grid cell will kept.
 
+        The actual operation is that we intialize a target array with the same
+        size of the original image, and it filled with zeros.
+        Then we only copy entries within the queried grid
+        cell in the image array to the target array at corresponding positions.
 
         Note: all indices are zero-based and counted from top left corner of
         the image.
 
         Args:
+            img_arr: image data represented as a numpy array.
             h_idx: the zero-based height(row) index of the grid cell in the
                 grid, the unit is one grid cell.
             w_idx: the zero-based width(column) index of the grid cell in the
@@ -961,7 +968,7 @@ class Grid:
                 f" {(0, self._width)}"
             )
         # initialize a numpy zeros array
-        array = np.zeros((self.image_height, self.image_width))
+        array = np.zeros((self._image_height, self._image_width))
         # set grid cell entry values to the values of the original image array
         # (entry values outside of grid cell remain zeros)
         # An example of computing grid height index range is
@@ -970,38 +977,37 @@ class Grid:
         # Plus, we constrain the maximum pixel locations by the image size as
         # the last grid cell per row and column might be out of the image size
         array[
-            h_idx * self.c_h : min((h_idx + 1) * self.c_h, self.image_height),
-            w_idx * self.c_w : min((w_idx + 1) * self.c_w, self.image_width),
+            h_idx * self.c_h : min((h_idx + 1) * self.c_h, self._image_height),
+            w_idx * self.c_w : min((w_idx + 1) * self.c_w, self._image_width),
         ] = img_arr[
-            h_idx * self.c_h : min((h_idx + 1) * self.c_h, self.image_height),
-            w_idx * self.c_w : min((w_idx + 1) * self.c_w, self.image_width),
+            h_idx * self.c_h : min((h_idx + 1) * self.c_h, self._image_height),
+            w_idx * self.c_w : min((w_idx + 1) * self.c_w, self._image_width),
         ]
         return array
 
     def get_grid_cell_center(self, h_idx: int, w_idx: int) -> Tuple[int, int]:
         """
         Get the center position of the grid cell in the ``Grid``.
+        The computation of the center position of the grid cell is
+        dividing the grid cell height range and wdith range by 2 (round down)
+
+        Suppose an extreme case that a grid cell has a height range of (0, 3) and a width range of (0, 3) the grid cell center would be (1, 1)
+        since the grid cell size is usually very large
+        the minor offset of the grid cell center usually doesn't matter
 
         Note: all indices are zero-based and counted from top left corner of
         the grid.
 
         Args:
             h_idx: the height(row) index of the grid cell in the grid,
-                , the unit is one image array entry.
+                the unit is one pixel.
             w_idx: the width(column) index of the grid cell in the
-                grid, the unit is one image array entry.
+                grid, the unit is one pixel.
 
         Returns:
             A tuple of (y index, x index)
         """
-        # compute the center position of the grid cell by
-        # dividing the grid cell height range and wdith range by 2 (round down)
-        # suppose an extreme case that
-        # a grid cell has
-        # a height range of (0, 3) and a width range of (0, 3)
-        # the grid cell center would be (1, 1)
-        # since the grid cell size is usually very large
-        # the minor offset of the grid cell center usually doesn't matter
+
         return (
             (h_idx * self.c_h + (h_idx + 1) * self.c_h) // 2,
             (w_idx * self.c_w + (w_idx + 1) * self.c_w) // 2,
@@ -1019,13 +1025,29 @@ class Grid:
     def width(self):
         return self._width
 
+    def __repr__(self):
+        return str(
+            (self._height, self._width, self._image_height, self._image_width)
+        )
+
     def __eq__(self, other):
         if other is None:
             return False
-        return (self.image_payload_idx, self._height, self._width) == (
-            other.image_payload_idx,
+        return (
             self._height,
             self._width,
+            self._image_height,
+            self._image_width,
+        ) == (
+            other._height,
+            other._width,
+            other.image_height,
+            other.image_width,
+        )
+
+    def __hash__(self):
+        return hash(
+            (self._height, self._width, self._image_height, self._image_width)
         )
 
 
