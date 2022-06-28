@@ -55,6 +55,15 @@ __all__ = [
 
 QueryType = Union[Dict[str, Any], np.ndarray]
 
+"""
+To create a new top level entry, the following steps are required to
+make sure it available across the ontology system:
+    1. Create a new top level class that inherits from `Entry` or `MultiEntry`
+    2. Add the new class to `SinglePackEntries` or `MultiPackEntries`
+    3. Register a new method in `DataStore`: `add_<new_entry>_raw()`
+    4. Insert a new conditional branch in `EntryConverter.save_entry_object()`
+"""
+
 
 class Generics(Entry):
     def __init__(self, pack: PackType):
@@ -379,7 +388,6 @@ class Group(BaseGroup[Entry]):
         pack: PackType,
         members: Optional[Iterable[Entry]] = None,
     ):  # pylint: disable=useless-super-delegation
-        self._member_type: Type[Entry] = Entry
         super().__init__(pack, members)
 
     def add_member(self, member: Entry):
@@ -438,8 +446,8 @@ class MultiPackLink(MultiEntry, BaseLink):
         parent: Optional[Entry] = None,
         child: Optional[Entry] = None,
     ):
-        self._parent: Optional[Tuple[int, int]] = None
-        self._child: Optional[Tuple[int, int]] = None
+        self._parent: Tuple = (None, None)
+        self._child: Tuple = (None, None)
 
         super().__init__(pack)
 
@@ -449,16 +457,48 @@ class MultiPackLink(MultiEntry, BaseLink):
             self.set_child(child)
 
     @property
-    def parent(self) -> Tuple[int, int]:
-        if self._parent is None:
-            raise ValueError("Parent is not set for this link.")
+    def parent(self):
+        r"""Get ``pack_id`` and ``tid`` of the parent node. To get the object
+        of the parent node, call :meth:`get_parent`. The function will first
+        try to retrieve the parent from ``DataStore`` in ``self.pack``. If
+        this attempt fails, it will directly return the value in ``_parent``.
+        """
+        try:
+            self._parent = self.pack.get_entry_raw(self.tid)[PARENT_TID_INDEX]
+        except KeyError:
+            # self.tid not found in DataStore
+            pass
         return self._parent
 
+    @parent.setter
+    def parent(self, val: Tuple):
+        r"""Setter function of ``parent``. The update will also be populated
+        into ``DataStore`` in ``self.pack``.
+        """
+        self._parent = val
+        self.pack.get_entry_raw(self.tid)[PARENT_TID_INDEX] = val
+
     @property
-    def child(self) -> Tuple[int, int]:
-        if self._child is None:
-            raise ValueError("Child is not set for this link.")
+    def child(self):
+        r"""Get ``pack_id`` and ``tid`` of the child node. To get the object
+        of the child node, call :meth:`get_child`. The function will first try
+        to retrieve the child from ``DataStore`` in ``self.pack``. If
+        this attempt fails, it will directly return the value in ``_child``.
+        """
+        try:
+            self._child = self.pack.get_entry_raw(self.tid)[CHILD_TID_INDEX]
+        except KeyError:
+            # self.tid not found in DataStore
+            pass
         return self._child
+
+    @child.setter
+    def child(self, val: Tuple):
+        r"""Setter function of ``child``. The update will also be populated
+        into ``DataStore`` in ``self.pack``.
+        """
+        self._child = val
+        self.pack.get_entry_raw(self.tid)[CHILD_TID_INDEX] = val
 
     def parent_id(self) -> int:
         """
@@ -485,9 +525,9 @@ class MultiPackLink(MultiEntry, BaseLink):
         Returns:
             The `pack_id` of the parent pack..
         """
-        if self._parent is None:
+        if self.parent[0] is None:
             raise ValueError("Parent is not set for this link.")
-        return self.pack.packs[self._parent[0]].pack_id
+        return self.pack.packs[self.parent[0]].pack_id
 
     def child_pack_id(self) -> int:
         """
@@ -496,9 +536,9 @@ class MultiPackLink(MultiEntry, BaseLink):
         Returns:
             The `pack_id` of the child pack.
         """
-        if self._child is None:
+        if self.child[0] is None:
             raise ValueError("Child is not set for this link.")
-        return self.pack.packs[self._child[0]].pack_id
+        return self.pack.packs[self.child[0]].pack_id
 
     def set_parent(self, parent: Entry):
         r"""This will set the `parent` of the current instance with given Entry.
@@ -517,7 +557,7 @@ class MultiPackLink(MultiEntry, BaseLink):
             )
         # fix bug/enhancement #559: using pack_id instead of index
         # self._parent = self.pack.get_pack_index(parent.pack_id), parent.tid
-        self._parent = parent.pack_id, parent.tid
+        self.parent = parent.pack_id, parent.tid
 
     def set_child(self, child: Entry):
         r"""This will set the `child` of the current instance with given Entry.
@@ -537,7 +577,7 @@ class MultiPackLink(MultiEntry, BaseLink):
             )
         # fix bug/enhancement #559: using pack_id instead of index
         # self._child = self.pack.get_pack_index(child.pack_id), child.tid
-        self._child = child.pack_id, child.tid
+        self.child = child.pack_id, child.tid
 
     def get_parent(self) -> Entry:
         r"""Get the parent entry of the link.
@@ -549,7 +589,7 @@ class MultiPackLink(MultiEntry, BaseLink):
         if self._parent is None:
             raise ValueError("The parent of this link is not set.")
 
-        pack_idx, parent_tid = self._parent
+        pack_idx, parent_tid = self.parent
         return self.pack.get_subentry(pack_idx, parent_tid)
 
     def get_child(self) -> Entry:
@@ -562,7 +602,7 @@ class MultiPackLink(MultiEntry, BaseLink):
         if self._child is None:
             raise ValueError("The parent of this link is not set.")
 
-        pack_idx, child_tid = self._child
+        pack_idx, child_tid = self.child
         return self.pack.get_subentry(pack_idx, child_tid)
 
 
@@ -576,7 +616,6 @@ class MultiPackGroup(MultiEntry, BaseGroup[Entry]):
     def __init__(
         self, pack: PackType, members: Optional[Iterable[Entry]] = None
     ):  # pylint: disable=useless-super-delegation
-        self._members: List[Tuple[int, int]] = []
         super().__init__(pack)
         if members is not None:
             self.add_members(members)
@@ -587,15 +626,15 @@ class MultiPackGroup(MultiEntry, BaseGroup[Entry]):
                 f"The members of {type(self)} should be "
                 f"instances of {self.MemberType}, but got {type(member)}"
             )
-
-        self._members.append(
-            # fix bug/enhancement 559: use pack_id instead of index
-            (member.pack_id, member.tid)  # self.pack.get_pack_index(..)
+        self.pack.get_entry_raw(self.tid)[MEMBER_TID_INDEX].append(
+            (member.pack_id, member.tid)
         )
 
     def get_members(self) -> List[Entry]:
         members = []
-        for pack_idx, member_tid in self._members:
+        for pack_idx, member_tid in self.pack.get_entry_raw(self.tid)[
+            MEMBER_TID_INDEX
+        ]:
             members.append(self.pack.get_subentry(pack_idx, member_tid))
         return members
 
