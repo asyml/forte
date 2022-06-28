@@ -6,7 +6,7 @@ from forte.data.base_reader import PackReader, MultiPackReader
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology import Generics, MultiPackGeneric, Annotation
-from forte.data.ontology.core import FList, FDict, Pointer
+from forte.data.ontology.core import FList, FDict
 from forte.pipeline import Pipeline
 from forte.processors.base import PackProcessor, MultiPackProcessor
 from ft.onto.base_ontology import EntityMention
@@ -163,7 +163,6 @@ class MultiEntryStructure(unittest.TestCase):
     def test_entry_attribute_mp_pointer(self):
         mpe: ExampleMPEntry = self.pack.get_single(ExampleMPEntry)
         self.assertIsInstance(mpe.refer_entry, ExampleEntry)
-        self.assertIsInstance(mpe.__dict__["refer_entry"], ExampleEntry)
 
         serialized_mp = self.pack.to_string(drop_record=True)
         recovered_mp = MultiPack.from_string(serialized_mp)
