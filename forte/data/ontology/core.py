@@ -987,7 +987,8 @@ class Grid:
 
     def get_grid_cell_center(self, h_idx: int, w_idx: int) -> Tuple[int, int]:
         """
-        Get the center position of the grid cell in the ``Grid``.
+        Get the center position of the grid cell at the specific height index
+        and width index in the ``Grid``.
         The computation of the center position of the grid cell is
         dividing the grid cell height range and wdith range by 2 (round down)
 
@@ -1000,9 +1001,9 @@ class Grid:
 
         Args:
             h_idx: the height(row) index of the grid cell in the grid,
-                the unit is one pixel.
+                the unit is one grid cell.
             w_idx: the width(column) index of the grid cell in the
-                grid, the unit is one pixel.
+                grid, the unit is one grid cell.
 
         Returns:
             A tuple of (y index, x index)
