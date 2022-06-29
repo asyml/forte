@@ -37,7 +37,6 @@ from forte.data.ontology.top import (
 from ft.onto.base_ontology import (
     Recording,
     AudioUtterance,
-    TextPayload,
     Utterance,
 )
 
