@@ -13,6 +13,7 @@
 # limitations under the License.
 from dataclasses import dataclass
 from functools import total_ordering
+from lib2to3.pgen2.token import OP
 from typing import Optional, Tuple, Type, Any, Dict, Union, Iterable, List
 
 import numpy as np
@@ -973,8 +974,6 @@ class Box(Region):
 
         if cy is not None and cx is not None:
             self._check_center_validity(cy, cx)
-            self._cy = cy
-            self._cx = cx
         # TODO: implement the upper bound check for the box height and width
         # after the payload PR https://github.com/asyml/forte/pull/828 is merged
         self._cy = cy
@@ -987,9 +986,7 @@ class Box(Region):
         self._grid_cy: Optional[int] = None
         self._grid_cx: Optional[int] = None
 
-    def _check_center_validity(
-        self, cy: Optional[int], cx: Optional[int]
-    ) -> bool:
+    def _check_center_validity(self, cy: Optional[int], cx: Optional[int]):
         """
         Check whether the box center is valid.
 
@@ -1070,9 +1067,7 @@ class Box(Region):
         Returns:
             The row index of the grid cell center in the image array.
         """
-        if self.is_grid_associated:
-            return self._grid_cy
-        else:
+        if not self.is_grid_associated or self._grid_cy is None:
             raise ValueError(
                 "The box is not associated with a grid."
                 "Therefore, there is no grid cell center."
@@ -1091,13 +1086,12 @@ class Box(Region):
             The column index of the grid cell center in the image array.
         """
 
-        if self.is_grid_associated:
-            return self._grid_cx
-        else:
+        if not self.is_grid_associated or self._grid_cx is None:
             raise ValueError(
                 "The box is not associated with a grid."
                 "Therefore, there is no grid cell center."
             )
+        return self._grid_cx
 
     @property
     def grid_cell_center(self) -> Tuple[int, int]:
@@ -1110,13 +1104,16 @@ class Box(Region):
         Returns:
             Tuple[int, int]: the center of the grid cell that the Box is associated with.
         """
-        if self.is_grid_associated:
-            return self.grid_cy, self.grid_cx
-        else:
+        if (
+            not self.is_grid_associated
+            or self._grid_cy is None
+            or self._grid_cx is None
+        ):
             raise ValueError(
                 "The box is not associated with a grid."
                 "Therefore, there is no grid cell center."
             )
+        return self._grid_cy, self._grid_cx
 
     def set_offset(self, cy_offset: int, cx_offset: int):
         """
@@ -1142,7 +1139,7 @@ class Box(Region):
         return self._cy_offset, self._cx_offset
 
     @property
-    def cy_offset(self) -> Optional[int]:
+    def cy_offset(self) -> int:
         """
         The row index difference between the box center and the grid cell.
 
@@ -1151,11 +1148,11 @@ class Box(Region):
         """
         if self._cy_offset:
             return self._cy_offset
-        if self._is_grid_associated and self._is_box_center_set():
+        if self._grid_cy is not None and self._cy is not None:
             self._cy_offset = self._cy - self._grid_cy
-            return self._cy_offset
         else:
             self._offset_condition_check()
+        return self._cy_offset
 
     @property
     def cx_offset(self) -> Optional[int]:
