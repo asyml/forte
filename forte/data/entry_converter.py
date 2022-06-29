@@ -24,7 +24,6 @@ from forte.data.ontology.top import (
     Generics,
     AudioAnnotation,
     ImageAnnotation,
-    Grids,
     MultiPackGeneric,
     MultiPackGroup,
     MultiPackLink,
@@ -111,15 +110,6 @@ class EntryConverter:
                 type_name=entry.entry_type(),
                 attribute_data=[entry.image_payload_idx, None],
                 base_class=ImageAnnotation,
-                tid=entry.tid,
-                allow_duplicate=allow_duplicate,
-            )
-        elif data_store_ref._is_subclass(entry.entry_type(), Grids):
-            # Will be deprecated in future
-            data_store_ref.add_entry_raw(
-                type_name=entry.entry_type(),
-                attribute_data=[entry.image_payload_idx, None],
-                base_class=Grids,
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,
             )
