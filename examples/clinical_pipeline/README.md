@@ -34,7 +34,19 @@ python ./download_models.py
 model into a different directory.
 
 ## Prepare elastic searcher
-You also need to set up elastic searcher by following guide below to run the pipeline.
+Download corresponding elasticsearch archive from https://www.elastic.co/downloads/past-releases/elasticsearch-7-17-2, unzip it and run `elasticsearch-7-17-2/bin/elasticsearch` to start the service. 
+
+Run the following to check if elasticsearch is running properly:
+```bash
+curl -XGET 'localhost:9200/_cluster/health?pretty'
+```
+
+Make sure you create index 'elastic_indexer' in the cluster before working with this example, you can run the following command:
+```bash
+curl -X PUT localhost:9200/elastic_indexer
+```
+
+You can follow the online blog for more information:
 
 https://www.elastic.co/guide/en/elasticsearch/reference/current/starting-elasticsearch.html
 
