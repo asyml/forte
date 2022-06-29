@@ -117,10 +117,10 @@ class EntryConverter:
             )
         elif data_store_ref._is_subclass(entry.entry_type(), Payload):
             entry = cast(Payload, entry)
-            data_store_ref.add_payload_raw(
+            data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
-                payload_idx=entry.payload_index,
-                modality=entry.modality,
+                attribute_data=[entry.payload_index, entry.modality_name],
+                base_class=Payload,
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,
             )
