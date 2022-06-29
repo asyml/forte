@@ -65,7 +65,6 @@ class TestASRProcessor(PackProcessor):
             argmax(self._model(input_values).logits, dim=-1)
         )
 
-        tp = TextPayload(input_pack, 0)
         input_pack.set_text(text=transcription[0])
 
 
