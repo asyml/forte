@@ -1067,7 +1067,6 @@ class DataPack(BasePack[Entry, Link, Group]):
                 payload_index: the zero-based index of the Payload
                     in this DataPack's Payload entries of a particular modality.
                     The modality is dependent on ``c_type``.
-                    Defaults to 0.
 
             Raises:
                 NotImplementedError: raised when the given context type is
