@@ -15,6 +15,7 @@
 Unit tests for data store related operations.
 """
 
+import os
 import logging
 import unittest
 import copy
@@ -1277,7 +1278,10 @@ class DataStoreTest(unittest.TestCase):
                 "parent_class": {"ft.onto.test.EntityMention"},
             }
         }
-        data_store_from_file = DataStore(onto_file_path="tests/forte/data/ontology/test_specs/test_check_onto_file.json")
+        data_store_from_file = DataStore(onto_file_path=os.path.abspath(os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "ontology/test_specs/test_check_onto_file.json"
+        )))
         # Check whether `_type_attributes` contains all items in `expected_type_attributes`
         union_dict: Dict = dict(data_store_from_file._type_attributes, **expected_type_attributes)
         self.assertDictEqual(data_store_from_file._type_attributes, union_dict)
