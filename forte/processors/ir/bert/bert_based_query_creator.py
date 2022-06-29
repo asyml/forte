@@ -45,6 +45,7 @@ class BertBasedQueryCreator(QueryProcessor):
     def initialize(self, resources: Resources, configs: Config):
         self.resource = resources
         self.config = configs
+
         self.device = torch.device(
             "cuda" if torch.cuda.is_available() else "cpu"
         )
