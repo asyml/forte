@@ -1259,6 +1259,9 @@ class Payload(Entry):
             ImagePayload,
         )
 
+        # since we cannot pass different modality from generated ontology, and
+        # we don't want to import base ontology in the header of the file
+        # we import it here.
         if isinstance(self, TextPayload):
             self._modality = Modality.Text
         elif isinstance(self, AudioPayload):
@@ -1291,31 +1294,29 @@ class Payload(Entry):
         """
         return type(self)
 
-    def get_modality(self) -> IntEnum:
-        """
-        Get the modality of the payload class.
-
-        Returns:
-            the modality of the payload class as an IntEnum object.
-        """
-        return self._modality
-
-    def get_modality_name(self) -> str:
-        """
-        Get the modality of the payload class.
-
-        Returns:
-            the modality of the payload class in str format.
-        """
-        return self._modality.name
-
     @property
     def cache(self) -> Union[str, np.ndarray]:
         return self._cache
 
     @property
     def modality(self) -> IntEnum:
+        """
+        Get the modality of the payload class.
+
+        Returns:
+            the modality of the payload class in ``IntEnum`` format.
+        """
         return self._modality
+
+    @property
+    def modality_name(self) -> str:
+        """
+        Get the modality of the payload class in str format.
+
+        Returns:
+            the modality of the payload class in str format.
+        """
+        return self._modality.name
 
     @property
     def payload_index(self) -> int:

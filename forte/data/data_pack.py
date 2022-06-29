@@ -1550,13 +1550,13 @@ class DataPack(BasePack[Entry, Link, Group]):
         self._entry_converter.save_entry_object(entry=entry, pack=self)
 
         if isinstance(entry, Payload):
-            if entry.get_modality() == Modality.Text:
+            if entry.modality == Modality.Text:
                 entry.set_payload_index(len(self.text_payloads))
                 self.text_payloads.append(entry)
-            elif entry.get_modality() == Modality.Audio:
+            elif entry.modality == Modality.Audio:
                 entry.set_payload_index(len(self.audio_payloads))
                 self.audio_payloads.append(entry)
-            elif entry.get_modality() == Modality.Image:
+            elif entry.modality == Modality.Image:
                 entry.set_payload_index(len(self.image_payloads))
                 self.image_payloads.append(entry)
 
