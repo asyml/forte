@@ -639,15 +639,20 @@ class BaseGroup(Entry, Generic[EntryType]):
 
 class Grid:
     """
-    Regular grid with a grid configuration dependent on the image size. It is a data structure used to retrieve grid-related objects such as grid cells
-    from the image. Grid itself doesn't store any data.
+    Regular grid with a grid configuration dependent on the image size.
+    It is a data structure used to retrieve grid-related objects such as grid
+    cells from the image. Grid itself doesn't store any data.
 
     Based the image size and the grid shape,
     we compute the height and the width of grid cells.
     For example, if the image size (image_height,image_width) is (640, 480)
     and the grid shape (height, width) is (2, 3)
     the size of grid cells (self.c_h, self.c_w) will be (320, 240).
-    The grid can be totally "free-form" that we don't initialize it with any image size and pass the image size directly into the method/operation on the fly. However, since the number of different image shapes are limited, we can bound one grid to one image size, and we can also do the image/grid size check during the grid initialization.
+    The grid can be totally "free-form" that we don't initialize it with any
+    image size and pass the image size directly into the method/operation on
+    the fly. However, since the number of different image shapes are limited,
+    we can bound one grid to one image size, and we can also do the image/grid
+    size check during the grid initialization.
 
     Args:
         height: the number of grid cell per column, the unit is one grid cell.
@@ -767,7 +772,8 @@ class Grid:
         The computation of the center position of the grid cell is
         dividing the grid cell height range and wdith range by 2 (round down)
 
-        Suppose an extreme case that a grid cell has a height range of (0, 3) and a width range of (0, 3) the grid cell center would be (1, 1)
+        Suppose an extreme case that a grid cell has a height range of (0, 3)
+        and a width range of (0, 3) the grid cell center would be (1, 1)
         since the grid cell size is usually very large
         the minor offset of the grid cell center usually doesn't matter
 

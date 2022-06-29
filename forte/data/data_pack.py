@@ -50,7 +50,6 @@ from forte.data.ontology.top import (
     Generics,
     AudioAnnotation,
     ImageAnnotation,
-    Grid,
 )
 from forte.data.span import Span
 from forte.data.types import ReplaceOperationsType, DataRequest

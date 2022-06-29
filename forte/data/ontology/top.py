@@ -13,10 +13,8 @@
 # limitations under the License.
 from dataclasses import dataclass
 from functools import total_ordering
-from lib2to3.pgen2.token import OP
 from typing import Optional, Tuple, Type, Any, Dict, Union, Iterable, List
 
-import logging
 import numpy as np
 from forte.data.base_pack import PackType
 from forte.data.ontology.core import (
@@ -906,6 +904,7 @@ class Region(ImageAnnotation):
 
 
 class Box(Region):
+    # pylint: disable=too-many-public-methods
     """
     A box class with a reference point which is the box center and a box
     configuration.
@@ -914,14 +913,19 @@ class Box(Region):
     only when it has a reference point (box center here).
 
     There are several use cases for a box:
-        1. When we use a box standalone, we need cy, cx to be set. The offset between the box center and the grid cell center is not used.
+        1. When we use a box standalone, we need cy, cx to be set. The offset
+        between the box center and the grid cell center is not used.
         2. When we represent a ground truth box, the box center and its shape
-        are given. We can compute the offset between the box center and the grid cell center.
-        3. When we predict a box, we will have the predicted box shape (height, width) and the offset between the box center and the grid cell center, then we can compute the box center.
+        are given. We can compute the offset between the box center and the
+        grid cell center.
+        3. When we predict a box, we will have the predicted box shape (height,
+        width) and the offset between the box center and the grid cell center,
+        then we can compute the box center.
 
     Based on the use cases, there are two important class conditions:
         1. Whether the box center is set.
-        2. Whether it's associated with a grid. (It might or might not depending on the box use cases)
+        2. Whether it's associated with a grid. (It might or might not
+        depending on the box use cases)
 
     Note: all indices are zero-based and counted from top left corner of
     image. But the unit could be a pixel or a grid cell.
@@ -1003,10 +1007,13 @@ class Box(Region):
         # TODO: implement the upper bound check for the box center
         # after the payload PR https://github.com/asyml/forte/pull/828 is merged
         # if cy >= self.max_y or cx >= self.max_x:
-        #     raise ValueError(f"Box center({cy}, {cx}) must be less than max_y({self.max_y}) and max_x({self.max_x}).")
+        #     raise ValueError(f"Box center({cy}, {cx}) must be less than
+        # max_y({self.max_y}) and max_x({self.max_x}).")
         if cy < self._height / 2 or cx < self._width / 2:
             raise ValueError(
-                f"Box center({cy}, {cx}) must be greater than half height({self._height/2}) and half width({self._width/2}) respectively."
+                f"Box center({cy}, {cx}) must be greater than half "
+                f"height({self._height/2}) and half width({self._width/2})"
+                "respectively."
             )
 
     def set_center(self, cy: int, cx: int):
@@ -1172,7 +1179,8 @@ class Box(Region):
         Compute and return row index of the box center in the image array.
         It returns the row index of the box center in the image array directly
         if the box center is set.
-        Otherwise, if it computes and sets the box center y coordinate when the box is both associated with a grid and the
+        Otherwise, if it computes and sets the box center y coordinate when the
+        box is both associated with a grid and the
         offset is set.
 
         Returns:
@@ -1194,7 +1202,8 @@ class Box(Region):
         The column index of the box center in the image array.
         It returns the column index of the box center in the image array
         directly if the box center is set.
-        Otherwise, if it computes and sets the box center x coordinate when the box is both associated with a grid and the
+        Otherwise, if it computes and sets the box center x coordinate when the
+        box is both associated with a grid and the
         offset is set.
 
         Returns:
@@ -1233,12 +1242,10 @@ class Box(Region):
             The corners of the box in a ``Tuple`` format.
         """
         if self._is_box_center_set():
-            return tuple(
-                [
-                    (self._cy + h_offset, self._cx + w_offset)
-                    for h_offset in [-self._height // 2, self._height // 2]
-                    for w_offset in [-self._width // 2, self._width // 2]
-                ]
+            return (
+                (self._cy + h_offset, self._cx + w_offset)
+                for h_offset in [-self._height // 2, self._height // 2]
+                for w_offset in [-self._width // 2, self._width // 2]
             )
         else:
             raise ValueError(
@@ -1411,7 +1418,8 @@ class Box(Region):
 
     def _offset_condition_check(self):
         """
-        When the the offset is not set, this function checks the reason the offset cannot be computed and raises the corresponding error.
+        When the the offset is not set, this function checks the reason the
+        offset cannot be computed and raises the corresponding error.
 
         Raises:
             ValueError: if the grid cell is not associated with the box and
@@ -1419,7 +1427,10 @@ class Box(Region):
             ValueError: if the grid cell is not associated with the box.
             ValueError: if the box center is not set.
         """
-        result_msg = "Hence, the offset of the box center from the grid cell center cannot be computed."
+        result_msg = (
+            "Hence, the offset of the box center from the grid cell"
+            + "center cannot be computed."
+        )
         if not self._is_grid_associated and not self._is_box_center_set():
             raise ValueError(
                 "The box center is not set and the grid cell center is not set."
@@ -1432,7 +1443,8 @@ class Box(Region):
 
     def _center_condition_check(self):
         """
-        When the the center is not set, this function checks the reason the box center cannot be computed and raises the corresponding error.
+        When the the center is not set, this function checks the reason the box
+        center cannot be computed and raises the corresponding error.
 
         Raises:
             ValueError: if the box center is not set and the grid cell center
