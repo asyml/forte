@@ -663,20 +663,25 @@ class Grid:
         image_height: int,
         image_width: int,
     ):
-        if height <= 0 or width <= 0:
-            raise ValueError(
-                f"height({height}) and "
-                f"width({width}) both must be larger than 0"
-            )
-        self._height = height
-        self._width = width
-
         if image_height <= 0 or image_width <= 0:
             raise ValueError(
                 "both image height and width must be positive"
                 f"but the image shape is {(image_height, image_width)}"
                 "please input a valid image shape"
             )
+        if height <= 0 or width <= 0:
+            raise ValueError(
+                f"height({height}) and "
+                f"width({width}) both must be larger than 0"
+            )
+        if height >= image_height or width >= image_width:
+            raise ValueError(
+                "Grid height and width must be smaller than image height and width"
+            )
+
+        self._height = height
+        self._width = width
+
         self._image_height = image_height
         self._image_width = image_width
 
