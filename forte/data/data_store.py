@@ -11,7 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from enum import IntEnum
 import json
 from typing import Dict, List, Iterator, Tuple, Optional, Any, Type
 
@@ -892,7 +891,6 @@ class DataStore(BaseStore):
                 return tid_search_result
 
         return self._add_entry_raw(base_class, type_name, new_entry)
-
 
     def _get_existing_ann_entry_tid(self, entry: List[Any]):
         r"""

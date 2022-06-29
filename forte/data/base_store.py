@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from abc import abstractmethod
-from enum import IntEnum
 from typing import List, Iterator, Tuple, Any, Optional, Dict, Type
 import json
 from forte.data.ontology.core import Entry
