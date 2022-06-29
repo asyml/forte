@@ -20,7 +20,6 @@ from typing import Any, Iterator
 from forte.data.data_pack import DataPack
 from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.base_reader import PackReader
-from ft.onto.base_ontology import AudioPayload
 
 __all__ = [
     "AudioReader",
@@ -54,27 +53,21 @@ class AudioReader(PackReader):
 
         Returns: Iterator over paths to audio files
         """
-        # construct ImageMeta and store it in DataPack
-        return dataset_path_iterator(
-            audio_directory,
-            self.configs.file_ext,
-        )
+        return dataset_path_iterator(audio_directory, self.configs.file_ext)
 
     def _cache_key_function(self, audio_file: str) -> str:
         return os.path.basename(audio_file)
 
     def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
         pack: DataPack = DataPack()
-        payload_idx = 0
-        # Read in audio data and store in DataPack
-        # add audio payload into DataPack.payloads
 
-        ap = AudioPayload(pack, payload_idx, file_path)
-        if not self.configs.lazy_read:
-            audio_data, sample_rate = self.soundfile.read(file_path)
-            pack.set_audio(audio_data, sample_rate)
-        ap.sample_rate = sample_rate
+        # Read in audio data and store in DataPack
+        audio, sample_rate = self.soundfile.read(
+            file=file_path, **(self.configs.read_kwargs or {})
+        )
+        pack.set_audio(audio=audio, sample_rate=sample_rate)
         pack.pack_name = file_path
+
         yield pack
 
     @classmethod
@@ -93,4 +86,4 @@ class AudioReader(PackReader):
 
         Returns: The default configuration of audio reader.
         """
-        return {"file_ext": ".flac", "lazy_read": False, "read_kwargs": None}
+        return {"file_ext": ".flac", "read_kwargs": None}
