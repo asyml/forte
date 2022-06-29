@@ -13,6 +13,7 @@
 # limitations under the License.
 from dataclasses import dataclass
 from functools import total_ordering
+from lib2to3.pgen2.token import OP
 from typing import Optional, Tuple, Type, Any, Dict, Union, Iterable, List
 
 import logging
@@ -906,22 +907,38 @@ class Region(ImageAnnotation):
 
 class Box(Region):
     """
-    A box class with a center position and a box configuration.
+    A box class with a reference point which is the box center and a box
+    configuration.
+
+    Box of a certain size (height, width), as a regular shape, can be located
+    only when it has a reference point (box center here).
+
+    There are several use cases for a box:
+        1. When we use a box standalone, we need cy, cx to be set. The offset between the box center and the grid cell center is not used.
+        2. When we represent a ground truth box, the box center and its shape
+        are given. We can compute the offset between the box center and the grid cell center.
+        3. When we predict a box, we will have the predicted box shape (height, width) and the offset between the box center and the grid cell center, then we can compute the box center.
+
+    Based on the use cases, there are two important class conditions:
+        1. Whether the box center is set.
+        2. Whether it's associated with a grid. (It might or might not depending on the box use cases)
 
     Note: all indices are zero-based and counted from top left corner of
-    image.
+    image. But the unit could be a pixel or a grid cell.
 
     Args:
         pack: the container that this ``Box`` will be added to.
-        image_payload_idx: the index of the image payload. If it's not set,
-            it defaults to 0 which meaning it will load the first image payload.
+
         height: the height of the box, the unit is one pixel.
+        width: the width of the box, the unit is one pixel.
         cy: the row index of the box center in the image array,
             the unit is one pixel. If not set, the box center
             will be set to the center of image (half height of the image).
         cx: the column index of the box center in the image array,
             the unit is one pixel. If not set, the box center
             will be set to the center of image (half width of the image).
+        image_payload_idx: the index of the image payload. If it's not set,
+            it defaults to 0 which meaning it will load the first image payload.
     """
 
     def __init__(
@@ -935,30 +952,61 @@ class Box(Region):
     ):
         # assume Box is associated with Grid
         super().__init__(pack, image_payload_idx)
-        self.is_default_box_center = True
-        self.is_grid_associated = False
-        # center location
-        if cy is None or cx is None:
-            self._check_box_center_status()
-            h, w = self.pack.get_image_array(image_payload_idx).shape
-            self._cy = h // 2
-            self._cx = w // 2
-        else:
-            self.is_default_box_center = False
-            self._cy = cy
-            self._cx = cx
-        self._height = height
-        self._width = width
 
-    def _check_box_center_status(self):
-        if not self.is_grid_associated and isinstance(self, BoundingBox):
+        # We don't initialize the grid cell center/offset during the class
+        # initialization because we cannot pass the grid cell to the constructor.
+        # Instead, we initialize the grid cell center when we set the grid cell.
+        if height > 0 and width > 0:
+            self._height = height
+            self._width = width
+        else:
             raise ValueError(
-                "The box center is set to the center of the image by default."
+                f"Box height({height}) and width({width}) must be positive."
             )
 
-        if self.is_default_box_center:
-            logging.warning(
-                "The box center is set to the center of the image by default."
+        # TODO: implement the upper bound check for the box height and width
+        # after the payload PR https://github.com/asyml/forte/pull/828 is merged
+
+        if cy is not None and cx is not None:
+            self._check_center_validity(cy, cx)
+            self._cy = cy
+            self._cx = cx
+        # TODO: implement the upper bound check for the box height and width
+        # after the payload PR https://github.com/asyml/forte/pull/828 is merged
+        self._cy = cy
+        self._cx = cx
+        # intialize the grid cell center/offset to None
+        # they must be set later if the ``Box`` use case is associated with Grid
+        self._is_grid_associated = False
+        self._cy_offset: Optional[int] = None
+        self._cx_offset: Optional[int] = None
+        self._grid_cy: Optional[int] = None
+        self._grid_cx: Optional[int] = None
+
+    def _check_center_validity(
+        self, cy: Optional[int], cx: Optional[int]
+    ) -> bool:
+        """
+        Check whether the box center is valid.
+
+        Args:
+            cy: the row index of the box center in the image array.
+            cx: the column index of the box center in the image array.
+
+        Returns:
+            True if the box center is valid, False otherwise.
+        """
+        if cy is None or cx is None:
+            raise ValueError(
+                "Box center cy, cx must be set." "Currently they are None."
+            )
+        # TODO: implement the upper bound check for the box center
+        # after the payload PR https://github.com/asyml/forte/pull/828 is merged
+        # if cy >= self.max_y or cx >= self.max_x:
+        #     raise ValueError(f"Box center({cy}, {cx}) must be less than max_y({self.max_y}) and max_x({self.max_x}).")
+        if cy < self._height / 2 or cx < self._width / 2:
+            raise ValueError(
+                f"Box center({cy}, {cx}) must be greater than half height({self._height/2}) and half width({self._width/2}) respectively."
             )
 
     def set_center(self, cy: int, cx: int):
@@ -967,11 +1015,11 @@ class Box(Region):
 
         Args:
             cy: the row index of the box center in the image array,
-            the unit is one pixel.
+                the unit is one pixel.
             cx: the column index of the box center in the image array,
-            the unit is one pixel.
+                the unit is one pixel.
         """
-        self.is_default_box_center = False
+        self._check_center_validity(cy, cx)
         self._cy = cy
         self._cx = cx
 
@@ -979,56 +1027,324 @@ class Box(Region):
         self, grid: Grid, grid_h_idx: int, grid_w_idx: int
     ):
         """
-        Set the center(reference point) of the Box to be the center of a grid
-        cell.
+        Set the center of a grid cell that the Box is associated with.
+
+        Args:
+            grid: the grid that the box is associated with.
+            grid_h_idx: the row index of the grid cell center in the image
+                array, the unit is one grid cell.
+            grid_w_idx: the column index of the grid cell center in the image
+                array, the unit is one grid cell.
         """
-        self.is_default_box_center = False
-        self.is_grid_associated = True
-        # given a grid cell
-        self._cy, self._cx = grid.get_grid_cell_center(grid_h_idx, grid_w_idx)
+        self._is_grid_associated = True
+        # given a grid cell, compute its center
+        self._grid_cy, self._grid_cx = grid.get_grid_cell_center(
+            grid_h_idx, grid_w_idx
+        )
 
     @property
-    def center(self):
-        self._check_box_center_status()
-        return (self._cy, self._cx)
-
-    @property
-    def corners(self):
+    def is_grid_associated(self) -> bool:
         """
-        Get corners of box.
+        A boolean indicating whether the box is associated with a grid.
+
+        Returns:
+            True if the box is associated with a grid, False otherwise.
         """
-        self._check_box_center_status()
-        return [
-            (self._cy + h_offset, self._cx + w_offset)
-            for h_offset in [-0.5 * self._height, 0.5 * self._height]
-            for w_offset in [-0.5 * self._width, 0.5 * self._width]
-        ]
+        return self._is_grid_associated
 
     @property
-    def box_min_x(self):
-        self._check_box_center_status()
-        return max(self._cx - round(0.5 * self._width), 0)
+    def grid_cy(self) -> int:
+        """
+        The row index of the grid cell center in the image array.
+
+        Raises:
+            ValueError: if the box is not associated with a grid.
+
+        Returns:
+            The row index of the grid cell center in the image array.
+        """
+        if self.is_grid_associated:
+            return self._grid_cy
+        else:
+            raise ValueError(
+                "The box is not associated with a grid."
+                "Therefore, there is no grid cell center."
+            )
+        return self._grid_cy
 
     @property
-    def box_max_x(self):
-        self._check_box_center_status()
-        return min(self._cx + round(0.5 * self._width), self.max_x)
+    def grid_cx(self) -> int:
+        """
+        The column index of the grid cell center in the image array.
+
+        Raises:
+            ValueError: if the box is not associated with a grid.
+
+        Returns:
+            The column index of the grid cell center in the image array.
+        """
+
+        if self.is_grid_associated:
+            return self._grid_cx
+        else:
+            raise ValueError(
+                "The box is not associated with a grid."
+                "Therefore, there is no grid cell center."
+            )
 
     @property
-    def box_min_y(self):
-        self._check_box_center_status()
-        return max(self._cy - round(0.5 * self._height), 0)
+    def grid_cell_center(self) -> Tuple[int, int]:
+        """
+        The center of the grid cell that the Box is associated with.
+
+        Raises:
+            ValueError: if the box is not associated with a grid.
+
+        Returns:
+            Tuple[int, int]: the center of the grid cell that the Box is associated with.
+        """
+        if self.is_grid_associated:
+            return self.grid_cy, self.grid_cx
+        else:
+            raise ValueError(
+                "The box is not associated with a grid."
+                "Therefore, there is no grid cell center."
+            )
+
+    def set_offset(self, cy_offset: int, cx_offset: int):
+        """
+        Set the offset of the box center from the grid cell center.
+
+        Args:
+            cy_offset: the row index of the box center offset from the grid cell
+                center in the image array, the unit is one pixel.
+            cx_offset: the column index of the box center offset from the grid
+                cell center in the image array, the unit is one pixel.
+        """
+        self._cy_offset = cy_offset
+        self._cx_offset = cx_offset
 
     @property
-    def box_max_y(self):
-        self._check_box_center_status()
-        return min(self._cy + round(0.5 * self._height), self.max_y)
+    def offset(self):
+        """
+        The offset of the box center from the grid cell center.
+
+        Returns:
+            the offset of the box center from the grid cell
+        """
+        return self._cy_offset, self._cx_offset
 
     @property
-    def area(self):
+    def cy_offset(self) -> Optional[int]:
+        """
+        The row index difference between the box center and the grid cell.
+
+        Returns:
+            The row index difference between the box center and the grid cell.
+        """
+        if self._cy_offset:
+            return self._cy_offset
+        if self._is_grid_associated and self._is_box_center_set():
+            self._cy_offset = self._cy - self._grid_cy
+            return self._cy_offset
+        else:
+            self._offset_condition_check()
+
+    @property
+    def cx_offset(self) -> Optional[int]:
+        """
+        The column index difference between the box center and the grid cell
+
+        Returns:
+            The column index difference between the box center and the grid cell
+        """
+        if self._cx_offset:
+            return self._cx_offset
+        if self._is_grid_associated and self._is_box_center_set():
+            self._cx_offset = self._cx - self._grid_cx
+            return self._cx_offset
+        else:
+            self._offset_condition_check()
+
+    @property
+    def cy(self) -> int:
+        """
+        Compute and return row index of the box center in the image array.
+        It returns the row index of the box center in the image array directly
+        if the box center is set.
+        Otherwise, if it computes and sets the box center y coordinate when the box is both associated with a grid and the
+        offset is set.
+
+        Returns:
+            The row index of the box center in the image array.
+        """
+        if self._cy is not None:
+            return self._cy
+        else:
+            # if cy computation condition is met, then cy is set
+            if self._is_grid_associated and self._is_offset_set():
+                self._cy = self._grid_cy + self._cy_offset
+                return self._cy
+            else:
+                self._center_condition_check()
+
+    @property
+    def cx(self) -> int:
+        """
+        The column index of the box center in the image array.
+        It returns the column index of the box center in the image array
+        directly if the box center is set.
+        Otherwise, if it computes and sets the box center x coordinate when the box is both associated with a grid and the
+        offset is set.
+
+        Returns:
+            The column index of the box center in the image array.
+        """
+        if self._cx is not None:
+            return self._cx
+        else:
+            # if cx computation condition is met, then cx is set
+            if self._is_grid_associated and self._is_offset_set():
+                self._cx = self._grid_cx + self._cx_offset
+                return self._cx
+            else:
+                self._center_condition_check()
+
+    @property
+    def box_center(self) -> Tuple[int, int]:
+        """
+        Get the box center by using the property function cy() and cx().
+        If box center is not set not computable, it raises a ``ValueError``
+
+        Returns:
+            The box center in a ``Tuple`` format.
+        """
+        return (self.cy, self.cx)
+
+    @property
+    def corners(self) -> Tuple[int, int, int, int]:
+        """
+        Compute and return the corners of the box.
+
+        Raises:
+            ValueError: if the box center is not set.
+
+        Returns:
+            The corners of the box in a ``Tuple`` format.
+        """
+        if self._is_box_center_set():
+            return tuple(
+                [
+                    (self._cy + h_offset, self._cx + w_offset)
+                    for h_offset in [-self._height // 2, self._height // 2]
+                    for w_offset in [-self._width // 2, self._width // 2]
+                ]
+            )
+        else:
+            raise ValueError(
+                "The box center is not set so the box corners"
+                " cannot be calculated."
+                "Please set the box center first or make sure "
+                "box center computation condition is met."
+            )
+
+    @property
+    def box_min_x(self) -> int:
+        """
+        Compute the minimum x coordinate of the box.
+
+        Raises:
+            ValueError: if the box center is not set.
+
+        Returns:
+            The minimum x coordinate of the box.
+        """
+        if self._is_box_center_set():
+            return max(self._cx - round(0.5 * self._width), 0)
+        else:
+            raise ValueError(
+                "The box center is not set so the box min x"
+                " coordinate cannot be calculated."
+                "Please set the box center first or make sure "
+                "box center computation condition is met."
+            )
+
+    @property
+    def box_max_x(self) -> int:
+        """
+        Compute the maximum x coordinate of the box.
+
+        Raises:
+            ValueError: if the box center is not set.
+
+        Returns:
+            The maximum x coordinate of the box.
+        """
+        if self._is_box_center_set():
+            # TODO: check the upper bound
+            return self._cx + self._width // 2
+        else:
+            raise ValueError(
+                "The box center is not set so the box max x"
+                " coordinate cannot be calculated."
+                "Please set the box center first or make sure "
+                "box center computation condition is met."
+            )
+
+    @property
+    def box_min_y(self) -> int:
+        """
+        Compute the minimum y coordinate of the box.
+
+        Raises:
+            ValueError: if the box center is not set.
+
+        Returns:
+            The minimum y coordinate of the box.
+        """
+        if self._is_box_center_set():
+            return max(self._cy - round(0.5 * self._height), 0)
+        else:
+            raise ValueError(
+                "The box center is not set so the box min y"
+                " coordinate cannot be calculated."
+                "Please set the box center first or make sure "
+                "box center computation condition is met."
+            )
+
+    @property
+    def box_max_y(self) -> int:
+        """
+        Compute the maximum y coordinate of the box.
+
+        Raises:
+            ValueError: if the box center is not set.
+
+        Returns:
+            The maximum y coordinate of the box.
+        """
+        if self._is_box_center_set():
+            # TODO: add upper bound
+            return self._cy + round(0.5 * self._height)
+        else:
+            raise ValueError(
+                "The box center is not set so the box max y"
+                " coordinate cannot be calculated."
+                "Please set the box center first or make sure "
+                "box center computation condition is met."
+            )
+
+    @property
+    def area(self) -> int:
+        """
+        Compute the area of the box.
+
+        Returns:
+            The area of the box.
+        """
         return self._height * self._width
 
-    def is_overlapped(self, other):
+    def is_overlapped(self, other) -> bool:
         """
         A function checks whether two boxes are overlapped(two box area have
         intersections).
@@ -1041,8 +1357,15 @@ class Box(Region):
             other: the other ``Box`` object to compared to.
 
         Returns:
-            A boolean value indicating whether there is overlapped.
+            True if the two boxes are overlapped, False otherwise.
         """
+        if not isinstance(other, Box):
+            raise ValueError(
+                "The other object to check overlapping with is"
+                " not a Box object."
+                "You need to check the type of the other object."
+            )
+
         # If one box is on left side of other
         if self.box_min_x > other.box_max_x or other.box_min_x > self.box_max_x:
             return False
@@ -1052,17 +1375,26 @@ class Box(Region):
             return False
         return True
 
-    def compute_iou(self, other):
+    def compute_iou(self, other) -> float:
         """
         A function computes iou(intersection over union) between two boxes.
+        It overwrites the ``compute_iou`` function in it's parent class
+        ``Region``.
 
         Args:
-            other: the other ``Box`` object to compared to.
+            other: the other ``Box`` object to be computed with.
 
         Returns:
             A float value which is (intersection area/ union area) between two
             boxes.
         """
+        if not isinstance(other, Box):
+            raise ValueError(
+                "The other object to compute iou with is"
+                " not a Box object."
+                "You need to check the type of the other object."
+            )
+
         if not self.is_overlapped(other):
             return 0
         box_x_diff = min(
@@ -1076,6 +1408,67 @@ class Box(Region):
         intersection = box_x_diff * box_y_diff
         union = self.area + other.area - intersection
         return intersection / union
+
+    def _offset_condition_check(self):
+        """
+        When the the offset is not set, this function checks the reason the offset cannot be computed and raises the corresponding error.
+
+        Raises:
+            ValueError: if the grid cell is not associated with the box and
+                the box center is not set.
+            ValueError: if the grid cell is not associated with the box.
+            ValueError: if the box center is not set.
+        """
+        result_msg = "Hence, the offset of the box center from the grid cell center cannot be computed."
+        if not self._is_grid_associated and not self._is_box_center_set():
+            raise ValueError(
+                "The box center is not set and the grid cell center is not set."
+                + result_msg
+            )
+        elif not self._is_grid_associated:
+            raise ValueError("The grid cell center is not set." + result_msg)
+        elif not self._is_box_center_set():
+            raise ValueError("The box center is not set." + result_msg)
+
+    def _center_condition_check(self):
+        """
+        When the the center is not set, this function checks the reason the box center cannot be computed and raises the corresponding error.
+
+        Raises:
+            ValueError: if the box center is not set and the grid cell center
+                is not set.
+            ValueError: if the grid cell center is not set.
+            ValueError: if the box center is not set.
+        """
+        result_msg = "Hence, the position of the box center cannot be computed."
+        if not self._is_grid_associated and not self._is_offset_set():
+            raise ValueError(
+                "The box center is not set and the grid cell center is not set."
+                + result_msg
+            )
+        elif not self._is_grid_associated:
+            raise ValueError("The grid cell center is not set." + result_msg)
+        elif not self._is_offset_set():
+            raise ValueError("The offset is not set." + result_msg)
+
+    def _is_box_center_set(self) -> bool:
+        """
+        A function checks whether the box center is set.
+
+        Returns:
+            True if the box center is set, False otherwise.
+        """
+        return self._cy is not None and self._cx is not None
+
+    def _is_offset_set(self) -> bool:
+        """
+        A function checks whether the offset of the box center from the grid
+        is set.
+
+        Returns:
+            True if the offset is set, False otherwise.
+        """
+        return self._cy_offset is not None and self._cx_offset is not None
 
 
 class BoundingBox(Box):
@@ -1112,7 +1505,7 @@ class BoundingBox(Box):
         image_payload_idx: int = 0,
     ):
 
-        self.is_grid_associated = False
+        self._is_grid_associated = False
         super().__init__(
             pack,
             height,
