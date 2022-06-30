@@ -14,7 +14,6 @@
 from dataclasses import dataclass
 from enum import IntEnum
 from functools import total_ordering
-from re import T
 from typing import (
     Optional,
     Sequence,
