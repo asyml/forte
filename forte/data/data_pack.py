@@ -32,7 +32,6 @@ from typing import (
 
 import numpy as np
 from sortedcontainers import SortedList
-
 from forte.common.exception import (
     ProcessExecutionException,
     UnknownOntologyClassException,
@@ -43,7 +42,7 @@ from forte.data.data_store import DataStore
 from forte.data.entry_converter import EntryConverter
 from forte.data.base_pack import BaseMeta, BasePack
 from forte.data.index import BaseIndex
-from forte.data.ontology.core import Entry
+from forte.data.ontology.core import Entry, Grid
 from forte.data.ontology.core import EntryType
 from forte.data.ontology.top import (
     Annotation,
@@ -53,7 +52,6 @@ from forte.data.ontology.top import (
     Generics,
     AudioAnnotation,
     ImageAnnotation,
-    Grids,
     Payload,
 )
 
@@ -177,7 +175,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         self.__replace_back_operations: ReplaceOperationsType = []
         self.__processed_original_spans: List[Tuple[Span, Span]] = []
 
-        self.grids: List[Grids] = []
+        self.grids: List[Grid] = []
 
         self.text_payloads: List[Payload] = []
         self.audio_payloads: List[Payload] = []
