@@ -145,36 +145,46 @@ class DataStoreTest(unittest.TestCase):
         }
 
         self.base_type_attributes = {
-            'forte.data.ontology.top.Generics': {'parent_class': {'Entry'}},
-            'forte.data.ontology.top.Annotation': {'parent_class': {'Entry'}},
-            'forte.data.ontology.top.Link': {'parent_class': {'BaseLink'}},
-            'forte.data.ontology.top.Group': {'parent_class': {'Entry', 'BaseGroup'}},
-            'forte.data.ontology.top.MultiPackGeneric': {'parent_class': {'Entry', 'MultiEntry'}},
-            'forte.data.ontology.top.MultiPackLink': {'parent_class': {'MultiEntry', 'BaseLink'}},
-            'forte.data.ontology.top.MultiPackGroup': {'parent_class': {'Entry', 'MultiEntry', 'BaseGroup'}},
-            'forte.data.ontology.top.Query': {'parent_class': {'Generics'}},
-            'forte.data.ontology.top.AudioAnnotation': {'parent_class': {'Entry'}}
+            "forte.data.ontology.top.Generics": {"parent_class": {"Entry"}},
+            "forte.data.ontology.top.Annotation": {"parent_class": {"Entry"}},
+            "forte.data.ontology.top.Link": {"parent_class": {"BaseLink"}},
+            "forte.data.ontology.top.Group": {
+                "parent_class": {"Entry", "BaseGroup"}
+            },
+            "forte.data.ontology.top.MultiPackGeneric": {
+                "parent_class": {"Entry", "MultiEntry"}
+            },
+            "forte.data.ontology.top.MultiPackLink": {
+                "parent_class": {"MultiEntry", "BaseLink"}
+            },
+            "forte.data.ontology.top.MultiPackGroup": {
+                "parent_class": {"Entry", "MultiEntry", "BaseGroup"}
+            },
+            "forte.data.ontology.top.Query": {"parent_class": {"Generics"}},
+            "forte.data.ontology.top.AudioAnnotation": {
+                "parent_class": {"Entry"}
+            },
         }
 
         DataStore._type_attributes["ft.onto.base_ontology.Document"] = {
-                "attributes": {
-                    "document_class": 4,
-                    "sentiment": 5,
-                    "classifications": 6,
-                },
-                "parent_class": set(),
-            }
+            "attributes": {
+                "document_class": 4,
+                "sentiment": 5,
+                "classifications": 6,
+            },
+            "parent_class": set(),
+        }
 
         DataStore._type_attributes["ft.onto.base_ontology.Sentence"] = {
-                "attributes": {
-                    "speaker": 4,
-                    "part_id": 5,
-                    "sentiment": 6,
-                    "classification": 7,
-                    "classifications": 8,
-                },
-                "parent_class": set(),
-            }
+            "attributes": {
+                "speaker": 4,
+                "part_id": 5,
+                "sentiment": 6,
+                "classification": 7,
+                "classifications": 8,
+            },
+            "parent_class": set(),
+        }
         # The order is [Document, Sentence]. Initialize 2 entries in each list.
         # Document entries have tid 1234, 3456.
         # Sentence entries have tid 9999, 1234567.
@@ -980,7 +990,7 @@ class DataStoreTest(unittest.TestCase):
                 "forte.data.ontology.top.Annotation", range_annotation=(1, 20)
             )
         )
-        self.assertEqual(len(instances), 2)
+        self.assertEqual(len(instances), 4)
 
         # get groups with subclasses
         instances = list(self.data_store.get("forte.data.ontology.top.Group"))
@@ -1276,19 +1286,28 @@ class DataStoreTest(unittest.TestCase):
                     "umls_link": 5,
                 },
                 "parent_class": {"ft.onto.test.EntityMention"},
-            }
+            },
         }
-        data_store_from_file = DataStore(onto_file_path=os.path.abspath(os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            "ontology/test_specs/test_check_onto_file.json"
-        )))
+        data_store_from_file = DataStore(
+            onto_file_path=os.path.abspath(
+                os.path.join(
+                    os.path.dirname(os.path.abspath(__file__)),
+                    "ontology/test_specs/test_check_onto_file.json",
+                )
+            )
+        )
         # Check whether `_type_attributes` contains all items in `expected_type_attributes`
-        union_dict: Dict = dict(data_store_from_file._type_attributes, **expected_type_attributes)
+        union_dict: Dict = dict(
+            data_store_from_file._type_attributes, **expected_type_attributes
+        )
         self.assertDictEqual(data_store_from_file._type_attributes, union_dict)
 
         # DataStores share a static type_attribute dict.
         data_store_non_file = DataStore()
-        self.assertDictEqual(data_store_non_file._type_attributes, data_store_from_file._type_attributes)
+        self.assertDictEqual(
+            data_store_non_file._type_attributes,
+            data_store_from_file._type_attributes,
+        )
 
     def test_entry_conversion(self):
         data_pack = DataPack()

@@ -1351,6 +1351,53 @@ class DataStore(BaseStore):
                 <= range_annotation[constants.END_INDEX]
             )
 
+        def get_bisect_range(entry_class: str, search_list: SortedList):
+            """
+            Perform binary search on the specified list for target entry class.
+            Args:
+                entry_class: Name of the target type of entry. It can be Annotation or
+                    `AudioAnnotation`.
+                search_list: A `SortedList` object on which the binary search
+                    will be carried out.
+            """
+            range_begin = (
+                range_annotation[constants.BEGIN_INDEX]
+                if range_annotation
+                else 0
+            )
+            range_end = (
+                range_annotation[constants.END_INDEX]
+                if range_annotation
+                else search_list[-1][constants.END_INDEX]
+            )
+
+            base_class = (
+                Annotation
+                if self._is_subclass(entry_class, Annotation)
+                else AudioAnnotation
+            )
+
+            temp_begin = self.add_entry_raw(
+                type_name=entry_class,
+                attribute_data=[range_begin, range_begin],
+                base_class=base_class,
+            )
+            begin_index = search_list.bisect_left(self.get_entry(temp_begin)[0])
+
+            temp_end = self.add_entry_raw(
+                type_name=entry_class,
+                attribute_data=[range_end, range_end],
+                base_class=base_class,
+            )
+            end_index = search_list.bisect_left(self.get_entry(temp_end)[0])
+
+            # Make sure these temporary annotations are not part of the
+            # actual data.
+            self.delete_entry(temp_begin)
+            self.delete_entry(temp_end)
+
+            return search_list[begin_index:end_index]
+
         entry_class = get_class(type_name)
         all_types = set()
         if include_sub_type:
@@ -1365,9 +1412,10 @@ class DataStore(BaseStore):
             if range_annotation is None:
                 yield from self.co_iterator_annotation_like(all_types)
             else:
-                for entry in self.co_iterator_annotation_like(all_types):
-                    if within_range(entry, range_annotation):
-                        yield entry
+                for entry_type in all_types:
+                    yield from get_bisect_range(
+                        entry_type, self.__elements[entry_type]
+                    )
         elif issubclass(entry_class, Link):
             for type in all_types:
                 if range_annotation is None:
