@@ -17,6 +17,7 @@ Unit tests for Grid.
 
 import unittest
 from forte.data.ontology.core import Grid
+from ft.onto.base_ontology import ImagePayload
 import numpy as np
 
 from numpy import array_equal
@@ -51,8 +52,8 @@ class GridTest(unittest.TestCase):
         self.ref_arr = np.zeros((4, 6))
         self.ref_arr[2, 2] = 1
         self.ref_arr[3, 3] = 1
-        self.datapack.payloads.append(self.ref_arr)
-
+        ip = ImagePayload(self.datapack, 0)
+        ip.set_cache(self.line)
 
     def test_grids(self):
 
