@@ -258,12 +258,11 @@ class DataStore(BaseStore):
                 to save space.
         """
         state = super().__getstate__()
-        for k in state["_DataStore__elements"]:
+        state["_DataStore__elements"] = {}
+        for k in self.__elements:
             # build the full `_type_attributes`
             self._get_type_info(k)
-            state["_DataStore__elements"][k] = list(
-                state["_DataStore__elements"][k]
-            )
+            state["_DataStore__elements"][k] = list(self.__elements[k])
         state.pop("_DataStore__tid_ref_dict")
         state.pop("_DataStore__tid_idx_dict")
         state.pop("_DataStore__deletion_count")
