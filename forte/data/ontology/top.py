@@ -973,24 +973,25 @@ class Box(Region):
         # assume Box is associated with Grid
         super().__init__(pack, image_payload_idx)
 
+        self._image_height, self._image_width = self.pack.get_payload_data_at(
+            Modality.Image, image_payload_idx
+        ).shape[-2:]
         # We don't initialize the grid cell center/offset during the class
         # initialization because we cannot pass the grid cell to the constructor.
         # Instead, we initialize the grid cell center when we set the grid cell.
-        if height > 0 and width > 0:
-            self._height = height
-            self._width = width
-        else:
+        if not (height > 0 and width > 0):
             raise ValueError(
                 f"Box height({height}) and width({width}) must be positive."
             )
-
-        # TODO: implement the upper bound check for the box height and width
-        # after the payload PR https://github.com/asyml/forte/pull/828 is merged
-
+        if not (height < self._image_height and width < self._image_width):
+            raise ValueError(
+                f"Box height({height}) and width({width}) must be smaller "
+                f"than image height({self._image_height}) and width({self._image_width})."
+            )
+        self._height = height
+        self._width = width
         if cy is not None and cx is not None:
             self._check_center_validity(cy, cx)
-        # TODO: implement the upper bound check for the box height and width
-        # after the payload PR https://github.com/asyml/forte/pull/828 is merged
         self._cy = cy
         self._cx = cx
         # intialize the grid cell center/offset to None
@@ -1014,19 +1015,53 @@ class Box(Region):
         """
         if cy is None or cx is None:
             raise ValueError(
-                "Box center cy, cx must be set." "Currently they are None."
+                "Box center cy, cx must be set to check"
+                " their numerical validaty."
+                "Currently they are None."
             )
-        # TODO: implement the upper bound check for the box center
-        # after the payload PR https://github.com/asyml/forte/pull/828 is merged
-        # if cy >= self.max_y or cx >= self.max_x:
-        #     raise ValueError(f"Box center({cy}, {cx}) must be less than
-        # max_y({self.max_y}) and max_x({self.max_x}).")
+
         if cy < self._height / 2 or cx < self._width / 2:
             raise ValueError(
                 f"Box center({cy}, {cx}) must be greater than half "
                 f"height({self._height/2}) and half width({self._width/2})"
                 "respectively."
             )
+
+        if (
+            cy >= self._image_height - self._height / 2
+            or cx >= self._image_width - self._width / 2
+        ):
+            raise ValueError(
+                f"Box center({cy}, {cx}) must be less than half "
+                f"height({self._image_height - self._height/2}) and half width({self._image_width - self._width/2})"
+                "respectively."
+            )
+
+    def _check_offset_validity(self, cy_offset: int, cx_offset: int):
+        """
+        Check the validaty of cy_offset and cx_offset.
+
+        Args:
+            cy_offset: the offset between the box center and the grid cell
+                center.
+            cx_offset: the offset between the box center and the grid cell
+                center.
+
+        Returns:
+            True if the offset is valid, False otherwise.
+        """
+        if self._is_grid_associated:
+            # the computed cell center
+            computed_cy = self._grid_cy + cy_offset
+            computed_cx = self._grid_cx + cx_offset
+            if computed_cy < 0 or computed_cx < 0:
+                return False
+
+            if (
+                computed_cy > self._image_height
+                or computed_cx > self._image_width
+            ):
+                return False
 
     def set_center(self, cy: int, cx: int):
         """
@@ -1130,7 +1165,9 @@ class Box(Region):
             )
         return self._grid_cy, self._grid_cx
 
-    def set_offset(self, cy_offset: int, cx_offset: int):
+    def set_offset(
+        self, cy_offset: int, cx_offset: int, check_validity: bool = False
+    ):
         """
         Set the offset of the box center from the grid cell center.
 
@@ -1139,7 +1176,11 @@ class Box(Region):
                 center in the image array, the unit is one pixel.
             cx_offset: the column index of the box center offset from the grid
                 cell center in the image array, the unit is one pixel.
+            check_validity: a boolean indicating whether to check the validity
+                of the offset.
         """
+        if check_validity:
+            self._check_offset_validity(cy_offset, cx_offset)
         self._cy_offset = cy_offset
         self._cx_offset = cx_offset
 
@@ -1254,7 +1295,7 @@ class Box(Region):
             The corners of the box in a ``Tuple`` format.
         """
         if self._is_box_center_set():
-            return (
+            return tuple(
                 (self._cy + h_offset, self._cx + w_offset)
                 for h_offset in [-self._height // 2, self._height // 2]
                 for w_offset in [-self._width // 2, self._width // 2]
