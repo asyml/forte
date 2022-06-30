@@ -14,6 +14,7 @@
 from dataclasses import dataclass
 from enum import IntEnum
 from functools import total_ordering
+from re import T
 from typing import (
     Optional,
     Sequence,
@@ -913,7 +914,7 @@ class Region(ImageAnnotation):
         else:
             self._image_payload_idx = image_payload_idx
 
-    def compute_iou(self, other) -> int:
+    def compute_iou(self, other) -> float:
         intersection = np.sum(np.logical_and(self.image, other.image))
         union = np.sum(np.logical_or(self.image, other.image))
         return intersection / union
@@ -1051,7 +1052,11 @@ class Box(Region):
         Returns:
             True if the offset is valid, False otherwise.
         """
-        if self._is_grid_associated:
+        if (
+            self._is_grid_associated
+            and self._grid_cy is not None
+            and self._grid_cx is not None
+        ):
             # the computed cell center
             computed_cy = self._grid_cy + cy_offset
             computed_cx = self._grid_cx + cx_offset
@@ -1203,29 +1208,31 @@ class Box(Region):
         Returns:
             The row index difference between the box center and the grid cell.
         """
-        if self._cy_offset:
+        if self._cy_offset is not None:
             return self._cy_offset
         if self._grid_cy is not None and self._cy is not None:
             self._cy_offset = self._cy - self._grid_cy
         else:
             self._offset_condition_check()
+            raise ValueError("cy_offset is not set.")
         return self._cy_offset
 
     @property
-    def cx_offset(self) -> Optional[int]:
+    def cx_offset(self) -> int:
         """
         The column index difference between the box center and the grid cell
 
         Returns:
             The column index difference between the box center and the grid cell
         """
-        if self._cx_offset:
+        if self._cx_offset is not None:
             return self._cx_offset
-        if self._is_grid_associated and self._is_box_center_set():
+        if self._cx is not None and self._grid_cx is not None:
             self._cx_offset = self._cx - self._grid_cx
-            return self._cx_offset
         else:
             self._offset_condition_check()
+            raise ValueError("cx_offset is not set")
+        return self._cx_offset
 
     @property
     def cy(self) -> int:
@@ -1244,11 +1251,12 @@ class Box(Region):
             return self._cy
         else:
             # if cy computation condition is met, then cy is set
-            if self._is_grid_associated and self._is_offset_set():
+            if self._grid_cy is not None and self._cy_offset is not None:
                 self._cy = self._grid_cy + self._cy_offset
-                return self._cy
             else:
                 self._center_condition_check()
+                raise ValueError("cy is not set.")
+        return self._cy
 
     @property
     def cx(self) -> int:
@@ -1267,11 +1275,12 @@ class Box(Region):
             return self._cx
         else:
             # if cx computation condition is met, then cx is set
-            if self._is_grid_associated and self._is_offset_set():
+            if self._grid_cx is not None and self._cx_offset is not None:
                 self._cx = self._grid_cx + self._cx_offset
-                return self._cx
             else:
                 self._center_condition_check()
+                raise ValueError("cx is not set.")
+        return self._cx
 
     @property
     def box_center(self) -> Tuple[int, int]:
@@ -1285,7 +1294,7 @@ class Box(Region):
         return (self.cy, self.cx)
 
     @property
-    def corners(self) -> Tuple[int, int, int, int]:
+    def corners(self) -> Tuple[Tuple[int, int], ...]:
         """
         Compute and return the corners of the box.
 
@@ -1295,19 +1304,11 @@ class Box(Region):
         Returns:
             The corners of the box in a ``Tuple`` format.
         """
-        if self._is_box_center_set():
-            return tuple(
-                (self._cy + h_offset, self._cx + w_offset)
-                for h_offset in [-self._height // 2, self._height // 2]
-                for w_offset in [-self._width // 2, self._width // 2]
-            )
-        else:
-            raise ValueError(
-                "The box center is not set so the box corners"
-                " cannot be calculated."
-                "Please set the box center first or make sure "
-                "box center computation condition is met."
-            )
+        return tuple(
+            (self.cy + h_offset, self.cx + w_offset)
+            for h_offset in [-self._height // 2, self._height // 2]
+            for w_offset in [-self._width // 2, self._width // 2]
+        )
 
     @property
     def box_min_x(self) -> int:
@@ -1320,15 +1321,7 @@ class Box(Region):
         Returns:
             The minimum x coordinate of the box.
         """
-        if self._is_box_center_set():
-            return max(self._cx - round(0.5 * self._width), 0)
-        else:
-            raise ValueError(
-                "The box center is not set so the box min x"
-                " coordinate cannot be calculated."
-                "Please set the box center first or make sure "
-                "box center computation condition is met."
-            )
+        return max(self.cx - round(0.5 * self._width), 0)
 
     @property
     def box_max_x(self) -> int:
@@ -1341,16 +1334,7 @@ class Box(Region):
         Returns:
             The maximum x coordinate of the box.
         """
-        if self._is_box_center_set():
-            # TODO: check the upper bound
-            return self._cx + self._width // 2
-        else:
-            raise ValueError(
-                "The box center is not set so the box max x"
-                " coordinate cannot be calculated."
-                "Please set the box center first or make sure "
-                "box center computation condition is met."
-            )
+        return self.cx + self._width // 2
 
     @property
     def box_min_y(self) -> int:
@@ -1363,15 +1347,7 @@ class Box(Region):
         Returns:
             The minimum y coordinate of the box.
         """
-        if self._is_box_center_set():
-            return max(self._cy - round(0.5 * self._height), 0)
-        else:
-            raise ValueError(
-                "The box center is not set so the box min y"
-                " coordinate cannot be calculated."
-                "Please set the box center first or make sure "
-                "box center computation condition is met."
-            )
+        return max(self.cy - round(0.5 * self._height), 0)
 
     @property
     def box_max_y(self) -> int:
@@ -1384,16 +1360,7 @@ class Box(Region):
         Returns:
             The maximum y coordinate of the box.
         """
-        if self._is_box_center_set():
-            # TODO: add upper bound
-            return self._cy + round(0.5 * self._height)
-        else:
-            raise ValueError(
-                "The box center is not set so the box max y"
-                " coordinate cannot be calculated."
-                "Please set the box center first or make sure "
-                "box center computation condition is met."
-            )
+        return self.cy + round(0.5 * self._height)
 
     @property
     def area(self) -> int:
