@@ -43,6 +43,7 @@ from forte.common.constants import (
     PARENT_TID_INDEX,
     CHILD_TID_INDEX,
     MEMBER_TID_INDEX,
+    PAYLOAD_INDEX,
 )
 
 __all__ = [
@@ -72,8 +73,15 @@ To create a new top level entry, the following steps are required to
 make sure it available across the ontology system:
     1. Create a new top level class that inherits from `Entry` or `MultiEntry`
     2. Add the new class to `SinglePackEntries` or `MultiPackEntries`
-    3. Register a new method in `DataStore`: `add_<new_entry>_raw()`
-    4. Insert a new conditional branch in `EntryConverter.save_entry_object()`
+    3. Insert a new conditional branch in `EntryConverter.save_entry_object()`
+    4. Decide two main attributes which will qualify as your `attribute_data`
+        parameters. These parameters will be passes in your branch of
+        `EntryConverter.save_entry_object()`. If there are no such parameters,
+        you can pass None
+    5. add `getter` and `setter` functions to update `attribute_data` parameters
+        if you have any
+    6. If additional attributes are required, make the class a `dataclass` and set
+        `dataclass` attributes.
 """
 
 
@@ -879,7 +887,9 @@ class ImageAnnotation(Entry):
                 "Cannot get image because image annotation is not "
                 "attached to any data pack."
             )
-        return self.pack.get_image_array(self._image_payload_idx)
+        return self.pack.get_payload_data_at(
+            Modality.Image, self._image_payload_idx
+        )
 
     @property
     def max_x(self):
@@ -1052,12 +1062,35 @@ class Region(ImageAnnotation):
         else:
             self._image_payload_idx = image_payload_idx
 
+    @property
+    def image_payload_idx(self):
+        r"""Getter function of ``image_payload_idx``. The function will first try to
+        retrieve the image_payload_idx index from ``DataStore`` in ``self.pack``. If
+        this attempt fails, it will directly return the value in ``_image_payload_idx``.
+        """
+        try:
+            self._image_payload_idx = self.pack.get_entry_raw(self.tid)[
+                PAYLOAD_INDEX
+            ]
+        except KeyError:
+            pass
+        return self._image_payload_idx
+
+    @image_payload_idx.setter
+    def image_payload_idx(self, val: int):
+        r"""Setter function of ``image_payload_idx``. The update will also be populated
+        into ``DataStore`` in ``self.pack``.
+        """
+        self._image_payload_idx = val
+        self.pack.get_entry_raw(self.tid)[PAYLOAD_INDEX] = val
+
     def compute_iou(self, other) -> int:
         intersection = np.sum(np.logical_and(self.image, other.image))
         union = np.sum(np.logical_or(self.image, other.image))
         return intersection / union
 
 
+@dataclass
 class Box(Region):
     """
     A box class with a center position and a box configuration.
@@ -1078,13 +1111,18 @@ class Box(Region):
         width: the width of the box, the unit is one image array entry.
     """
 
+    _cy: int
+    _cx: int
+    _height: int
+    _width: int
+
     def __init__(
         self,
         pack: PackType,
-        cy: int,
-        cx: int,
-        height: int,
-        width: int,
+        cy: int = 0,
+        cx: int = 0,
+        height: int = 1,
+        width: int = 1,
         image_payload_idx: int = 0,
     ):
         # assume Box is associated with Grids
@@ -1180,6 +1218,7 @@ class Box(Region):
         return intersection / union
 
 
+@dataclass
 class BoundingBox(Box):
     """
     A bounding box class that associates with image payload and grids and
@@ -1208,15 +1247,17 @@ class BoundingBox(Box):
 
     """
 
+    _grid_id: int
+
     def __init__(
         self,
         pack: PackType,
-        height: int,
-        width: int,
-        grid_height: int,
-        grid_width: int,
-        grid_cell_h_idx: int,
-        grid_cell_w_idx: int,
+        height: int = 1,
+        width: int = 1,
+        grid_height: int = 1,
+        grid_width: int = 1,
+        grid_cell_h_idx: int = 0,
+        grid_cell_w_idx: int = 0,
         image_payload_idx: int = 0,
     ):
         self.grids = Grids(pack, grid_height, grid_width, image_payload_idx)
@@ -1227,6 +1268,8 @@ class BoundingBox(Box):
             width,
             image_payload_idx,
         )
+
+        self._grid_id = self.grids.tid
 
 
 class Payload(Entry):

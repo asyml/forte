@@ -11,6 +11,9 @@ TID_INDEX = 2
 # The index storing entry type in the internal entry data of DataStore.
 ENTRY_TYPE_INDEX = 3
 
+# The index storing the payload ID in internal entry data of DataStore
+PAYLOAD_INDEX = 0
+
 # The index storing entry type (specific to Link and Group type). It is saved
 # in the `tid_idx_dict` in DataStore.
 ENTRY_DICT_TYPE_INDEX = 0
