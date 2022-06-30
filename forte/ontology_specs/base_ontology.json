@@ -444,6 +444,29 @@
           "type": "str"
         }
       ]
+    },
+    {
+      "entry_name": "ft.onto.base_ontology.AudioPayload",
+      "parent_entry": "forte.data.ontology.top.Payload",
+      "description": "A payload that caches audio data",
+      "attributes":[
+        {
+          "name": "sample_rate",
+          "type": "int"
+        }
+      ]
+    },
+    {
+      "entry_name": "ft.onto.base_ontology.TextPayload",
+      "parent_entry": "forte.data.ontology.top.Payload",
+      "description": "A payload that caches text data",
+      "attributes": []
+    },
+    {
+      "entry_name": "ft.onto.base_ontology.ImagePayload",
+      "parent_entry": "forte.data.ontology.top.Payload",
+      "description": "A payload that caches image data",
+      "attributes":[]
     }
   ]
 }
