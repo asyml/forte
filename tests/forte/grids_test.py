@@ -53,6 +53,7 @@ class GridTest(unittest.TestCase):
         self.ref_arr[3, 3] = 1
         self.datapack.payloads.append(self.ref_arr)
 
+
     def test_grids(self):
 
         self.assertTrue(
