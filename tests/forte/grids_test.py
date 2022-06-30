@@ -15,6 +15,8 @@
 Unit tests for Grids.
 """
 import unittest
+from forte.data.modality import Modality
+from ft.onto.base_ontology import ImagePayload
 import numpy as np
 
 from numpy import array_equal
@@ -34,7 +36,8 @@ class GridsTest(unittest.TestCase):
         line[2, 2] = 1
         line[3, 3] = 1
         line[4, 4] = 1
-        self.datapack.payloads.append(line)
+        ip = ImagePayload(self.datapack)
+        ip.set_cache(line)
         self.datapack.image_annotations.append(
             ImageAnnotation(self.datapack, 0)
         )
@@ -45,7 +48,11 @@ class GridsTest(unittest.TestCase):
         self.zeros = np.zeros((6, 12))
         self.ref_arr = np.zeros((6, 12))
         self.ref_arr[2, 2] = 1
-        self.datapack.payloads.append(self.ref_arr)
+        ip = ImagePayload(self.datapack)
+        ip.set_cache(self.ref_arr)
+        self.datapack.image_annotations.append(
+            ImageAnnotation(self.datapack, 0)
+        )
 
     def test_grids(self):
 

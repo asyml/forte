@@ -17,6 +17,7 @@ Unit tests for AudioReader.
 import os
 import unittest
 from typing import Dict
+from forte.data import Modality
 from torch import argmax
 from transformers import Wav2Vec2Processor, Wav2Vec2ForCTC
 
@@ -27,12 +28,14 @@ from forte.data.data_pack import DataPack
 from forte.data.readers import AudioReader
 from forte.pipeline import Pipeline
 from forte.processors.base.pack_processor import PackProcessor
+from ft.onto.base_ontology import TextPayload
 
 
 class TestASRProcessor(PackProcessor):
     """
     An audio processor for automatic speech recognition.
     """
+
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
 
@@ -42,8 +45,11 @@ class TestASRProcessor(PackProcessor):
         self._model = Wav2Vec2ForCTC.from_pretrained(pretrained_model)
 
     def _process(self, input_pack: DataPack):
+        ap = input_pack.get_payload_at(Modality.Audio, 0)
+        sample_rate = ap.sample_rate
+        audio_data = ap.cache
         required_sample_rate: int = 16000
-        if input_pack.sample_rate != required_sample_rate:
+        if sample_rate != required_sample_rate:
             raise ProcessFlowException(
                 f"A sample rate of {required_sample_rate} Hz is requied by the"
                 " pretrained model."
@@ -51,7 +57,7 @@ class TestASRProcessor(PackProcessor):
 
         # tokenize
         input_values = self._tokenizer(
-            input_pack.audio, return_tensors="pt", padding="longest"
+            audio_data, return_tensors="pt", padding="longest"
         ).input_values  # Batch size 1
 
         # take argmax and decode
@@ -75,10 +81,9 @@ class AudioReaderPipelineTest(unittest.TestCase):
                 os.pardir,
                 os.pardir,
                 os.pardir,
-                "data_samples/audio_reader_test"
+                "data_samples/audio_reader_test",
             )
         )
-
         # Define and config the Pipeline
         self._pipeline = Pipeline[DataPack]()
         self._pipeline.set_reader(AudioReader())
@@ -87,12 +92,13 @@ class AudioReaderPipelineTest(unittest.TestCase):
 
     def test_asr_pipeline(self):
         target_transcription: Dict[str, str] = {
-            self._test_audio_path + "/test_audio_0.flac":
-                "A MAN SAID TO THE UNIVERSE SIR I EXIST",
-            self._test_audio_path + "/test_audio_1.flac": (
+            self._test_audio_path
+            + "/test_audio_0.flac": "A MAN SAID TO THE UNIVERSE SIR I EXIST",
+            self._test_audio_path
+            + "/test_audio_1.flac": (
                 "NOR IS MISTER QUILTER'S MANNER LESS INTERESTING "
                 "THAN HIS MATTER"
-            )
+            ),
         }
 
         # Verify the ASR result of each datapack

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from enum import IntEnum
 import logging
 from pathlib import Path
 from typing import (
@@ -26,7 +27,9 @@ from typing import (
     Set,
     Callable,
     Tuple,
+    cast,
 )
+
 import numpy as np
 from sortedcontainers import SortedList
 
@@ -51,7 +54,10 @@ from forte.data.ontology.top import (
     AudioAnnotation,
     ImageAnnotation,
     Grids,
+    Payload,
 )
+
+from forte.data.modality import Modality
 from forte.data.span import Span
 from forte.data.types import ReplaceOperationsType, DataRequest
 from forte.utils import get_class, get_full_module_name
@@ -161,19 +167,16 @@ class DataPack(BasePack[Entry, Link, Group]):
 
     def __init__(self, pack_name: Optional[str] = None):
         super().__init__(pack_name)
-        self._text = ""
         self._audio: Optional[np.ndarray] = None
 
         self._data_store: DataStore = DataStore()
         self._entry_converter: EntryConverter = EntryConverter()
         self.image_annotations: List[ImageAnnotation] = []
         self.grids: List[Grids] = []
-        self.payloads: List[np.ndarray] = []
 
-        self.__replace_back_operations: ReplaceOperationsType = []
-        self.__processed_original_spans: List[Tuple[Span, Span]] = []
-
-        self.__orig_text_len: int = 0
+        self.text_payloads: List[Payload] = []
+        self.audio_payloads: List[Payload] = []
+        self.image_payloads: List[Payload] = []
 
         self._index: DataIndex = DataIndex()
 
@@ -196,18 +199,10 @@ class DataPack(BasePack[Entry, Link, Group]):
         """
         self._entry_converter = EntryConverter()
         super().__setstate__(state)
-
-        # For backward compatibility.
-        if "replace_back_operations" in self.__dict__:
-            self.__replace_back_operations = self.__dict__.pop(
-                "replace_back_operations"
-            )
-        if "processed_original_spans" in self.__dict__:
-            self.__processed_original_spans = self.__dict__.pop(
-                "processed_original_spans"
-            )
-        if "orig_text_len" in self.__dict__:
-            self.__orig_text_len = self.__dict__.pop("orig_text_len")
+        for payload in (
+            self.text_payloads + self.audio_payloads + self.image_payloads
+        ):
+            payload.set_pack(self)
 
         self._index = DataIndex()
         self._index.update_basic_index(list(iter(self)))
@@ -227,18 +222,25 @@ class DataPack(BasePack[Entry, Link, Group]):
 
     @property
     def text(self) -> str:
-        r"""Return the text of the data pack"""
-        return self._text
+        """
+        Get the first text data stored in the DataPack.
+        If there is no text payload in the DataPack, it will return empty
+        string.
 
-    @property
-    def audio(self) -> Optional[np.ndarray]:
-        r"""Return the audio of the data pack"""
-        return self._audio
+        Args:
+            text_payload_index: the index of the text payload. Defaults to 0.
 
-    @property
-    def sample_rate(self) -> Optional[int]:
-        r"""Return the sample rate of the audio data"""
-        return getattr(self._meta, "sample_rate")
+        Raises:
+            ValueError: raised when the index is out of bound of the text
+                payload list.
+
+        Returns:
+            text data in the text payload.
+        """
+        if len(self.text_payloads) > 0:
+            return str(self.get_payload_data_at(Modality.Text, 0))
+        else:
+            return ""
 
     @property
     def all_annotations(self) -> Iterator[Annotation]:
@@ -421,19 +423,99 @@ class DataPack(BasePack[Entry, Link, Group]):
     def groups(self, val):
         self._groups = val
 
-    def get_span_text(self, begin: int, end: int) -> str:
+    def get_payload_at(
+        self, modality: IntEnum, payload_index: int
+    ):  # -> Union[TextPayload, AudioPayload, ImagePayload]:
+        """
+        Get Payload of requested modality at the requested payload index.
+
+        Args:
+            modality: data modality among "text", "audio", "image"
+            payload_index: the zero-based index of the Payload
+                in this DataPack's Payload entries of the requested modality.
+
+        Raises:
+            ValueError: raised when the requested modality is not supported.
+
+        Returns:
+            Payload entry containing text data, image or audio data.
+
+        """
+        supported_modality = [enum.name for enum in Modality]
+
+        try:
+            # if modality.name == "text":
+            if modality == Modality.Text:
+                payloads_length = len(self.text_payloads)
+                payload = self.text_payloads[payload_index]
+            # elif modality.name == "audio":
+            elif modality == Modality.Audio:
+                payloads_length = len(self.audio_payloads)
+                payload = self.audio_payloads[payload_index]
+            # elif modality.name == "image":
+            elif modality == Modality.Image:
+                payloads_length = len(self.image_payloads)
+                payload = self.image_payloads[payload_index]
+            else:
+                raise ValueError(
+                    f"Provided modality {modality.name} is not supported."
+                    "Please provide one of modality among"
+                    f" {supported_modality}."
+                )
+        except IndexError as e:
+            raise ProcessExecutionException(
+                f"payload index ({payload_index}) "
+                f"is larger or equal to {modality.name} payload list"
+                f" length ({payloads_length}). "
+                f"Please input a {modality.name} payload index less than it."
+            ) from e
+        return payload
+
+    def get_payload_data_at(
+        self, modality: IntEnum, payload_index: int
+    ) -> Union[str, np.ndarray]:
+        """
+        Get Payload of requested modality at the requested payload index.
+
+        Args:
+            modality: data modality among "text", "audio", "image"
+            payload_index: the zero-based index of the Payload
+                in this DataPack's Payload entries of the requested modality.
+
+        Raises:
+            ValueError: raised when the requested modality is not supported.
+
+        Returns:
+            different data types for different data modalities.
+
+            1. str data for text data.
+
+            2. Numpy array for image and audio data.
+
+        """
+        return self.get_payload_at(modality, payload_index).cache
+
+    def get_span_text(
+        self, begin: int, end: int, text_payload_index: int = 0
+    ) -> str:
         r"""Get the text in the data pack contained in the span.
 
         Args:
             begin: begin index to query.
             end: end index to query.
+            text_payload_index: the zero-based index of the TextPayload
+                in this DataPack's TextPayload entries. Defaults to 0.
 
         Returns:
             The text within this span.
         """
-        return self._text[begin:end]
+        return cast(
+            str, self.get_payload_data_at(Modality.Text, text_payload_index)
+        )[begin:end]
 
-    def get_span_audio(self, begin: int, end: int) -> np.ndarray:
+    def get_span_audio(
+        self, begin: int, end: int, audio_payload_index=0
+    ) -> np.ndarray:
         r"""Get the audio in the data pack contained in the span.
         `begin` and `end` represent the starting and ending indices of the span
         in audio payload respectively. Each index corresponds to one sample in
@@ -442,73 +524,104 @@ class DataPack(BasePack[Entry, Link, Group]):
         Args:
             begin: begin index to query.
             end: end index to query.
+            audio_payload_index: the zero-based index of the AudioPayload
+                in this DataPack's AudioPayload entries. Defaults to 0.
 
         Returns:
             The audio within this span.
         """
-        if self._audio is None:
-            raise ProcessExecutionException(
-                "The audio payload of this DataPack is not set. Please call"
-                " method `set_audio` before running `get_span_audio`."
-            )
-        return self._audio[begin:end]
-
-    def get_image_array(self, image_payload_idx: int):
-        if image_payload_idx >= len(self.payloads):
-            raise ValueError(
-                f"The input image payload index{(image_payload_idx)}"
-                f" out of range. It should be less than {len(self.payloads)}"
-            )
-        return self.payloads[image_payload_idx]
+        return cast(
+            np.ndarray,
+            self.get_payload_data_at(Modality.Audio, audio_payload_index)[
+                begin:end
+            ],
+        )
 
     def set_text(
         self,
         text: str,
         replace_func: Optional[Callable[[str], ReplaceOperationsType]] = None,
+        text_payload_index: int = 0,
     ):
+        """
+        Set text for TextPayload at a specified index.
 
-        if len(text) < len(self._text):
-            raise ProcessExecutionException(
-                "The new text is overwriting the original one with shorter "
-                "length, which might cause unexpected behavior."
-            )
-
-        if len(self._text):
-            logging.warning(
-                "Need to be cautious when changing the text of a "
-                "data pack, existing entries may get affected. "
-            )
+        Args:
+            text: a str text.
+            replace_func: function that replace text. Defaults to None.
+            text_payload_index: the zero-based index of the TextPayload
+                in this DataPack's TextPayload entries. Defaults to 0.
+        """
+        # Temporary imports
 
         span_ops = [] if replace_func is None else replace_func(text)
-
         # The spans should be mutually exclusive
         (
-            self._text,
-            self.__replace_back_operations,
-            self.__processed_original_spans,
-            self.__orig_text_len,
+            text,
+            replace_back_operations,
+            processed_original_spans,
+            orig_text_len,
         ) = data_utils_io.modify_text_and_track_ops(text, span_ops)
+        # temporary solution for backward compatibility
+        # past API use this method to add a single text in the datapack
+        if len(self.text_payloads) == 0 and text_payload_index == 0:
+            from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
+                TextPayload,
+            )
 
-    def set_audio(self, audio: np.ndarray, sample_rate: int):
+            tp = TextPayload(self, text_payload_index)
+        else:
+            tp = self.get_payload_at(Modality.Text, text_payload_index)
+
+        tp.set_cache(text)
+
+        tp.replace_back_operations = replace_back_operations
+        tp.processed_original_spans = processed_original_spans
+        tp.orig_text_len = orig_text_len
+
+    def set_audio(
+        self,
+        audio: np.ndarray,
+        sample_rate: int,
+        audio_payload_index: int = 0,
+    ):
         r"""Set the audio payload and sample rate of the :class:`~forte.data.data_pack.DataPack`
         object.
 
         Args:
             audio: A numpy array storing the audio waveform.
             sample_rate: An integer specifying the sample rate.
+            audio_payload_index: the zero-based index of the AudioPayload
+                in this DataPack's AudioPayload entries. Defaults to 0.
         """
-        self._audio = audio
-        self.set_meta(sample_rate=sample_rate)
+        # temporary solution for backward compatibility
+        # past API use this method to add a single audio in the datapack
+        if len(self.audio_payloads) == 0 and audio_payload_index == 0:
+            from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
+                AudioPayload,
+            )
 
-    def get_original_text(self):
+            ap = AudioPayload(self)
+        else:
+            ap = self.get_payload_at(Modality.Audio, audio_payload_index)
+
+        ap.set_cache(audio)
+        ap.sample_rate = sample_rate
+
+    def get_original_text(self, text_payload_index: int = 0):
         r"""Get original unmodified text from the :class:`~forte.data.data_pack.DataPack` object.
+
+        Args:
+            text_payload_index: the zero-based index of the TextPayload
+                in this DataPack's  entries. Defaults to 0.
 
         Returns:
             Original text after applying the `replace_back_operations` of
             :class:`~forte.data.data_pack.DataPack` object to the modified text
         """
+        tp = self.get_payload_at(Modality.Text, text_payload_index)
         original_text, _, _, _ = data_utils_io.modify_text_and_track_ops(
-            self._text, self.__replace_back_operations
+            tp.cache, tp.replace_back_operations
         )
         return original_text
 
@@ -588,16 +701,19 @@ class DataPack(BasePack[Entry, Link, Group]):
             Returns:
                 Original index that aligns with input_index
             """
-            if len(self.__processed_original_spans) == 0:
+            processed_original_spans = self.get_payload_at(
+                Modality.Text, 0
+            ).processed_original_spans
+            if len(processed_original_spans) == 0:
                 return input_index
 
-            len_processed_text = len(self._text)
+            len_processed_text = len(self.text)
             orig_index = None
             prev_end = 0
             for (
                 inverse_span,
                 original_span,
-            ) in self.__processed_original_spans:
+            ) in processed_original_spans:
                 # check if the input_index lies between one of the unprocessed
                 # spans
                 if prev_end <= input_index < inverse_span.begin:
@@ -626,9 +742,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             if orig_index is None:
                 # check if the input_index lies between the last unprocessed
                 # span
-                inverse_span, original_span = self.__processed_original_spans[
-                    -1
-                ]
+                inverse_span, original_span = processed_original_spans[-1]
                 if inverse_span.end <= input_index < len_processed_text:
                     increment = original_span.end - inverse_span.end
                     orig_index = input_index + increment
@@ -770,6 +884,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         context_type: Union[str, Type[Annotation], Type[AudioAnnotation]],
         request: Optional[DataRequest] = None,
         skip_k: int = 0,
+        payload_index: int = 0,
     ) -> Iterator[Dict[str, Any]]:
         r"""Fetch data from entries in the data_pack of type
         `context_type`. Data includes `"span"`, annotation-specific
@@ -844,6 +959,9 @@ class DataPack(BasePack[Entry, Link, Group]):
                 returned by default.
             skip_k: Will skip the first `skip_k` instances and generate
                 data from the (`offset` + 1)th instance.
+            payload_index: the zero-based index of the Payload
+                in this DataPack's Payload entries of a particular modality.
+                The modality is dependent on ``context_type``. Defaults to 0.
 
         Returns:
             A data generator, which generates one piece of data (a dict
@@ -932,9 +1050,13 @@ class DataPack(BasePack[Entry, Link, Group]):
                     " [Annotation, AudioAnnotation]."
                 )
 
-        def get_context_data(c_type, context):
-            r"""Get context-specific data of a given context type and
-                context.
+        def get_context_data(
+            c_type: Union[Type[Annotation], Type[AudioAnnotation]],
+            context: Union[Annotation, AudioAnnotation],
+            payload_index: int,
+        ):
+            r"""
+            Get context-specific data of a given context type and context.
 
             Args:
                 c_type:
@@ -942,6 +1064,9 @@ class DataPack(BasePack[Entry, Link, Group]):
                     could be any :class:`~forte.data.ontology.top.Annotation` type.
                 context: context that
                     contains data to be extracted.
+                payload_index: the zero-based index of the Payload
+                    in this DataPack's Payload entries of a particular modality.
+                    The modality is dependent on ``c_type``.
 
             Raises:
                 NotImplementedError: raised when the given context type is
@@ -951,9 +1076,13 @@ class DataPack(BasePack[Entry, Link, Group]):
                 str: context data.
             """
             if issubclass(c_type, Annotation):
-                return self.text[context.begin : context.end]
+                return self.get_payload_data_at(Modality.Text, payload_index)[
+                    context.begin : context.end
+                ]
             elif issubclass(c_type, AudioAnnotation):
-                return self.audio[context.begin : context.end]
+                return self.get_payload_data_at(Modality.Audio, payload_index)[
+                    context.begin : context.end
+                ]
             else:
                 raise NotImplementedError(
                     f"Context type is set to {context_type}"
@@ -971,7 +1100,9 @@ class DataPack(BasePack[Entry, Link, Group]):
                 skipped += 1
                 continue
             data: Dict[str, Any] = {}
-            data["context"] = get_context_data(context_type_, context)
+            data["context"] = get_context_data(
+                context_type_, context, payload_index
+            )
             data["offset"] = context.begin
 
             for field in context_fields:
@@ -1416,6 +1547,17 @@ class DataPack(BasePack[Entry, Link, Group]):
     def _save_entry_to_data_store(self, entry: Entry):
         r"""Save an existing entry object into DataStore"""
         self._entry_converter.save_entry_object(entry=entry, pack=self)
+
+        if isinstance(entry, Payload):
+            if entry.modality == Modality.Text:
+                entry.set_payload_index(len(self.text_payloads))
+                self.text_payloads.append(entry)
+            elif entry.modality == Modality.Audio:
+                entry.set_payload_index(len(self.audio_payloads))
+                self.audio_payloads.append(entry)
+            elif entry.modality == Modality.Image:
+                entry.set_payload_index(len(self.image_payloads))
+                self.image_payloads.append(entry)
 
     def _get_entry_from_data_store(self, tid: int) -> EntryType:
         r"""Generate a class object from entry data in DataStore"""

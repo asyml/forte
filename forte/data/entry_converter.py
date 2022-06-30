@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, cast
 from forte.data.base_pack import PackType
 from forte.data.ontology.core import Entry, FList, FDict
 from forte.data.ontology.core import EntryType
@@ -28,6 +28,7 @@ from forte.data.ontology.top import (
     MultiPackGeneric,
     MultiPackGroup,
     MultiPackLink,
+    Payload,
     SinglePackEntries,
     MultiPackEntries,
 )
@@ -111,6 +112,15 @@ class EntryConverter:
                 type_name=entry.entry_type(),
                 attribute_data=[entry.image_payload_idx, None],
                 base_class=ImageAnnotation,
+                tid=entry.tid,
+                allow_duplicate=allow_duplicate,
+            )
+        elif data_store_ref._is_subclass(entry.entry_type(), Payload):
+            entry = cast(Payload, entry)
+            data_store_ref.add_entry_raw(
+                type_name=entry.entry_type(),
+                attribute_data=[entry.payload_index, entry.modality_name],
+                base_class=Payload,
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,
             )
