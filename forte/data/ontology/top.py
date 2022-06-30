@@ -1033,7 +1033,8 @@ class Box(Region):
         ):
             raise ValueError(
                 f"Box center({cy}, {cx}) must be less than half "
-                f"height({self._image_height - self._height/2}) and half width({self._image_width - self._width/2})"
+                f"height({self._image_height - self._height/2}) and"
+                f" half width({self._image_width - self._width/2})"
                 "respectively."
             )
 
