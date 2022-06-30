@@ -1382,6 +1382,7 @@ class DataStore(BaseStore):
                 base_class=base_class,
             )
             begin_index = search_list.bisect_left(self.get_entry(temp_begin)[0])
+            self.delete_entry(temp_begin)
 
             temp_end = self.add_entry_raw(
                 type_name=entry_class,
@@ -1389,10 +1390,6 @@ class DataStore(BaseStore):
                 base_class=base_class,
             )
             end_index = search_list.bisect_left(self.get_entry(temp_end)[0])
-
-            # Make sure these temporary annotations are not part of the
-            # actual data.
-            self.delete_entry(temp_begin)
             self.delete_entry(temp_end)
 
             return search_list[begin_index:end_index]

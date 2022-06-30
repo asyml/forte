@@ -990,7 +990,7 @@ class DataStoreTest(unittest.TestCase):
                 "forte.data.ontology.top.Annotation", range_annotation=(1, 20)
             )
         )
-        self.assertEqual(len(instances), 4)
+        self.assertEqual(len(instances), 3)
 
         # get groups with subclasses
         instances = list(self.data_store.get("forte.data.ontology.top.Group"))
