@@ -931,12 +931,18 @@ class Box(Region):
     There are several use cases for a box:
         1. When we use a box standalone, we need the box center to be set.The offset
         between the box center and the grid cell center is not used.
-        2. When we represent a ground truth box, the box center and its shape
-        are given. We can compute the offset between the box center and the
+        2. When we represent a ground truth box, the box center and shape are given. If we want to compute loss, its grid center is required to compute the offset between the box center and the
         grid cell center.
         3. When we predict a box, we will have the predicted box shape (height,
         width) and the offset between the box center and the grid cell center,
         then we can compute the box center.
+
+    For example, in the object detection task, dataset label contains a ground truth box (box shape and box center).
+    The inference pipeline is that given a grid cell, we make a prediction of a bounding box (box shape and box offset from the grid cell center).
+        1. If we want to locate the predicted box, we compute the box center based on the second use case.
+        2. If we want to compute the loss, we need values for the center, shape and offset for both boxes. And we need to compute the offset between the box center and the grid cell center based on the third use case.
+
+    A more detailed explanation can be found in the following blog: https://towardsdatascience.com/yolo2-walkthrough-with-examples-e40452ca265f
 
     Based on the use cases, there are two important class conditions:
         1. Whether the box center is set.
