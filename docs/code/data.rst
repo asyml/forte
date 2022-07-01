@@ -387,12 +387,6 @@ Container
     :members:
 
 
-:hidden:`BasePointer`
-------------------------------
-.. autoclass:: forte.data.container.BasePointer
-    :members:
-
-
 Types
 ===============
 :hidden:`ReplaceOperationsType`

@@ -16,6 +16,7 @@ Unit tests for AudioAnnotation.
 """
 import os
 import unittest
+from forte.data.modality import Modality
 import numpy as np
 from typing import Dict, List
 
@@ -27,18 +28,29 @@ from forte.processors.base.pack_processor import PackProcessor
 from forte.data.data_pack import DataPack
 from forte.data.readers import AudioReader
 from forte.data.ontology.top import (
-    Annotation, AudioAnnotation, Generics, Group, Link
+    Annotation,
+    AudioAnnotation,
+    Generics,
+    Group,
+    Link,
 )
-from ft.onto.base_ontology import Recording, AudioUtterance, Utterance
+from ft.onto.base_ontology import (
+    Recording,
+    AudioUtterance,
+    Utterance,
+)
 
 
 class RecordingProcessor(PackProcessor):
     """
     A processor to add a Recording ontology to the whole audio data.
     """
+
     def _process(self, input_pack: DataPack):
         Recording(
-            pack=input_pack, begin=0, end=len(input_pack.audio)
+            pack=input_pack,
+            begin=0,
+            end=len(input_pack.get_payload_data_at(Modality.Audio, 0)),
         )
 
 
@@ -77,11 +89,10 @@ class AudioUtteranceProcessor(PackProcessor):
     A processor to add an AudioUtterance annotation to the specified span of
     audio payload.
     """
+
     def _process(self, input_pack: DataPack):
         audio_utter: AudioUtterance = AudioUtterance(
-            pack=input_pack,
-            begin=self.configs.begin,
-            end=self.configs.end
+            pack=input_pack, begin=self.configs.begin, end=self.configs.end
         )
         audio_utter.speaker = self.configs.speaker
 
@@ -109,20 +120,20 @@ class AudioAnnotationTest(unittest.TestCase):
                 os.pardir,
                 os.pardir,
                 os.pardir,
-                "data_samples/audio_reader_test"
+                "data_samples/audio_reader_test",
             )
         )
 
         self._test_configs = {
             "Alice": {"begin": 200, "end": 35000},
-            "Bob": {"begin": 35200, "end": 72000}
+            "Bob": {"begin": 35200, "end": 72000},
         }
 
         # Define and config the Pipeline
         self._pipeline = Pipeline[DataPack]()
-        self._pipeline.set_reader(AudioReader(), config={
-            "read_kwargs": {"always_2d": "True"}
-        })
+        self._pipeline.set_reader(
+            AudioReader(), config={"read_kwargs": {"always_2d": "True"}}
+        )
         self._pipeline.add(RecordingProcessor())
         for speaker, span in self._test_configs.items():
             self._pipeline.add(
@@ -131,9 +142,7 @@ class AudioAnnotationTest(unittest.TestCase):
         self._pipeline.add(TextUtteranceProcessor())
         self._pipeline.initialize()
 
-
     def test_audio_annotation(self):
-
         # Test `DataPack.get_span_audio()` with None audio payload
         with self.assertRaises(ProcessExecutionException):
             pack: DataPack = DataPack()
@@ -143,39 +152,65 @@ class AudioAnnotationTest(unittest.TestCase):
         for pack in self._pipeline.process_dataset(self._test_audio_path):
             # test get all audio annotation
             # test get selective fields data from subclass of AudioAnnotation
-            raw_data_generator = pack.get_data(AudioAnnotation,
-                                     {Recording:
-                                         {"fields": ["recording_class"]},
-                                    AudioUtterance:
-                                        {"fields": ["speaker"]}}
-                                    )
+            raw_data_generator = pack.get_data(
+                AudioAnnotation,
+                {
+                    Recording: {"fields": ["recording_class"]},
+                    AudioUtterance: {"fields": ["speaker"]},
+                },
+            )
             for data_instance in pack.get(AudioAnnotation):
                 raw_data = next(raw_data_generator)
-                
-                self.assertTrue('Recording' in raw_data.keys() and
-                                "recording_class" in raw_data['Recording'])
-                self.assertTrue('AudioUtterance' in raw_data.keys() and
-                                    "speaker" in raw_data['AudioUtterance'])
+
+                self.assertTrue(
+                    "Recording" in raw_data.keys()
+                    and "recording_class" in raw_data["Recording"]
+                )
+                self.assertTrue(
+                    "AudioUtterance" in raw_data.keys()
+                    and "speaker" in raw_data["AudioUtterance"]
+                )
                 # test grouped data
                 if isinstance(data_instance, Recording):
-                    self.assertTrue(array_equal(np.array([data_instance.audio]), raw_data['Recording']['audio']))
-                    self.assertTrue(data_instance.recording_class ==np.squeeze(raw_data['Recording']['recording_class']).tolist())
+                    self.assertTrue(
+                        array_equal(
+                            np.array([data_instance.audio]),
+                            raw_data["Recording"]["audio"],
+                        )
+                    )
+                    self.assertTrue(
+                        data_instance.recording_class
+                        == np.squeeze(
+                            raw_data["Recording"]["recording_class"]
+                        ).tolist()
+                    )
                 elif isinstance(data_instance, AudioUtterance):
-                    self.assertTrue(array_equal(np.array([data_instance.audio]), raw_data['AudioUtterance']['audio']))
-                    self.assertTrue(data_instance.speaker
-                                ==raw_data['AudioUtterance']['speaker'][0])
+                    self.assertTrue(
+                        array_equal(
+                            np.array([data_instance.audio]),
+                            raw_data["AudioUtterance"]["audio"],
+                        )
+                    )
+                    self.assertTrue(
+                        data_instance.speaker
+                        == raw_data["AudioUtterance"]["speaker"][0]
+                    )
 
             # check non-existence of non-requested data fields
             raw_data_generator = pack.get_data(AudioAnnotation)
             for raw_data in raw_data_generator:
                 self.assertFalse("Recording" in raw_data)
                 self.assertFalse("AudioUtterance" in raw_data)
-            
+
             # Check Recording
             recordings = list(pack.get(Recording))
             self.assertEqual(len(recordings), 1)
-            self.assertTrue(array_equal(recordings[0].audio, pack.audio))
-
+            self.assertTrue(
+                array_equal(
+                    recordings[0].audio,
+                    pack.get_payload_data_at(Modality.Audio, 0),
+                )
+            )
             # Check serialization/deserialization of AudioAnnotation
             new_pack = DataPack.from_string(pack.to_string())
             self.assertEqual(new_pack.audio_annotations, pack.audio_annotations)
@@ -192,10 +227,14 @@ class AudioAnnotationTest(unittest.TestCase):
 
                 for audio_utter in audio_utters:
                     configs: Dict = self._test_configs[audio_utter.speaker]
-                    self.assertTrue(array_equal(
-                        audio_utter.audio,
-                        pack.audio[configs["begin"]:configs["end"]]
-                    ))
+                    self.assertTrue(
+                        array_equal(
+                            audio_utter.audio,
+                            pack.get_payload_data_at(Modality.Audio, 0)[
+                                configs["begin"] : configs["end"]
+                            ],
+                        )
+                    )
 
             # Check `AudioAnnotation.get(Group/Link/Generics)`. Note that only
             # `DummyGroup` and `DummyLink` entries can be retrieved because
@@ -203,8 +242,9 @@ class AudioAnnotationTest(unittest.TestCase):
             for entry_type in (Group, Link):
                 self.assertEqual(
                     len(list(recordings[0].get(entry_type))),
-                    len(self._test_configs)
+                    len(self._test_configs),
                 )
+            # we have one generics meta data
             self.assertEqual(len(list(recordings[0].get(Generics))), 0)
 
             # Check operations with mixing types of entries.
@@ -216,12 +256,27 @@ class AudioAnnotationTest(unittest.TestCase):
             # Verify the new conditional branches in DataPack.get() when dealing
             # with empty annotation/audio_annotation list.
             empty_pack: DataPack = DataPack()
-            self.assertEqual(len(list(empty_pack.get(
-                entry_type=Annotation, range_annotation=utter
-            ))), 0)
-            self.assertEqual(len(list(empty_pack.get(
-                entry_type=AudioAnnotation, range_annotation=recordings[0]
-            ))), 0)
+            self.assertEqual(
+                len(
+                    list(
+                        empty_pack.get(
+                            entry_type=Annotation, range_annotation=utter
+                        )
+                    )
+                ),
+                0,
+            )
+            self.assertEqual(
+                len(
+                    list(
+                        empty_pack.get(
+                            entry_type=AudioAnnotation,
+                            range_annotation=recordings[0],
+                        )
+                    )
+                ),
+                0,
+            )
 
             # Check `DataPack.delete_entry(AudioAnnotation)`
             for audio_annotation in list(pack.get(AudioAnnotation)):
@@ -241,8 +296,7 @@ class AudioAnnotationTest(unittest.TestCase):
 
             # Add coverage index for (Recording, AudioUtterance)
             pack.build_coverage_for(
-                context_type=Recording,
-                covered_type=AudioUtterance
+                context_type=Recording, covered_type=AudioUtterance
             )
             self.assertTrue(pack._index.coverage_index_is_valid)
             self.assertEqual(
@@ -250,24 +304,32 @@ class AudioAnnotationTest(unittest.TestCase):
             )
 
             # Check DataIndex.get_covered()
-            self.assertTrue(pack.covers(
-                context_entry=recording, covered_entry=audio_utters[0]
-            ))
-            self.assertFalse(pack.covers(
-                context_entry=audio_utters[0], covered_entry=recording
-            ))
+            self.assertTrue(
+                pack.covers(
+                    context_entry=recording, covered_entry=audio_utters[0]
+                )
+            )
+            self.assertFalse(
+                pack.covers(
+                    context_entry=audio_utters[0], covered_entry=recording
+                )
+            )
 
             # Check DataIndex.coverage_index_is_valid flag
             pack._index.deactivate_coverage_index()
-            self.assertTrue(pack._index.coverage_index(
-                outer_type=Recording,
-                inner_type=AudioUtterance
-            ) is None)
+            self.assertTrue(
+                pack._index.coverage_index(
+                    outer_type=Recording, inner_type=AudioUtterance
+                )
+                is None
+            )
             pack._index.activate_coverage_index()
-            self.assertFalse(pack._index.coverage_index(
-                outer_type=Recording,
-                inner_type=AudioUtterance
-            ) is None)
+            self.assertFalse(
+                pack._index.coverage_index(
+                    outer_type=Recording, inner_type=AudioUtterance
+                )
+                is None
+            )
 
             # Check DataIndex.have_overlap()
             with self.assertRaises(TypeError):
@@ -286,8 +348,7 @@ class AudioAnnotationTest(unittest.TestCase):
             # Check coverage index when inner and outer entries are the same
             pack._index.deactivate_coverage_index()
             pack.build_coverage_for(
-                context_type=Utterance,
-                covered_type=Utterance
+                context_type=Utterance, covered_type=Utterance
             )
             self.assertEqual(len(pack._index._coverage_index), 1)
             utter = pack.get_single(Utterance)
