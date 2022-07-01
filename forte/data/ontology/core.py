@@ -647,7 +647,7 @@ class Grid:
     we compute the height and the width of grid cells.
     For example, if the image size (image_height,image_width) is (640, 480)
     and the grid shape (height, width) is (2, 3)
-    the size of grid cells (self.c_h, self.c_w) will be (320, 240).
+    the size of grid cells (self.c_h, self.c_w) will be (320, 160).
     The grid can be totally "free-form" that we don't initialize it with any
     image size and pass the image size directly into the method/operation on
     the fly. However, since the number of different image shapes are limited,
@@ -791,8 +791,10 @@ class Grid:
         """
 
         return (
-            (h_idx * self.c_h + (h_idx + 1) * self.c_h) // 2,
-            (w_idx * self.c_w + (w_idx + 1) * self.c_w) // 2,
+            (h_idx * self.c_h + min((h_idx + 1) * self.c_h, self._image_height))
+            // 2,
+            (w_idx * self.c_w + min((w_idx + 1) * self.c_w, self._image_width))
+            // 2,
         )
 
     @property
