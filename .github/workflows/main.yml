@@ -239,3 +239,24 @@ jobs:
           token: ${{ secrets.REPO_DISPATCH_PAT_HECTOR }}
           repository: asyml/forte-wrappers
           event-type: trigger-forte-wrappers
+
+  readme:
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      python-version: 3.9
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ env.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.python-version }}
+
+      - name: Test README.md when python version is 3.9
+        run: |
+          pip install mkcodes
+          pip install --progress-bar off .
+          pip install --progress-bar off forte.spacy nltk
+          mkcodes --github --output tests/temp_readme_test.py README.md
+          python tests/temp_readme_test.py
+          rm tests/temp_readme_test.py

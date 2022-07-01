@@ -12,11 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from dataclasses import dataclass
+from enum import IntEnum
 from functools import total_ordering
-from typing import Optional, Tuple, Type, Any, Dict, Union, Iterable, List
-
+from typing import (
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    Any,
+    Dict,
+    Union,
+    Iterable,
+    List,
+)
 import numpy as np
 
+from forte.data.modality import Modality
 from forte.data.base_pack import PackType
 from forte.data.ontology.core import (
     Entry,
@@ -51,9 +62,19 @@ __all__ = [
     "Region",
     "Box",
     "BoundingBox",
+    "Payload",
 ]
 
 QueryType = Union[Dict[str, Any], np.ndarray]
+
+"""
+To create a new top level entry, the following steps are required to
+make sure it available across the ontology system:
+    1. Create a new top level class that inherits from `Entry` or `MultiEntry`
+    2. Add the new class to `SinglePackEntries` or `MultiPackEntries`
+    3. Register a new method in `DataStore`: `add_<new_entry>_raw()`
+    4. Insert a new conditional branch in `EntryConverter.save_entry_object()`
+"""
 
 
 class Generics(Entry):
@@ -379,7 +400,6 @@ class Group(BaseGroup[Entry]):
         pack: PackType,
         members: Optional[Iterable[Entry]] = None,
     ):  # pylint: disable=useless-super-delegation
-        self._member_type: Type[Entry] = Entry
         super().__init__(pack, members)
 
     def add_member(self, member: Entry):
@@ -438,8 +458,8 @@ class MultiPackLink(MultiEntry, BaseLink):
         parent: Optional[Entry] = None,
         child: Optional[Entry] = None,
     ):
-        self._parent: Optional[Tuple[int, int]] = None
-        self._child: Optional[Tuple[int, int]] = None
+        self._parent: Tuple = (None, None)
+        self._child: Tuple = (None, None)
 
         super().__init__(pack)
 
@@ -449,16 +469,48 @@ class MultiPackLink(MultiEntry, BaseLink):
             self.set_child(child)
 
     @property
-    def parent(self) -> Tuple[int, int]:
-        if self._parent is None:
-            raise ValueError("Parent is not set for this link.")
+    def parent(self):
+        r"""Get ``pack_id`` and ``tid`` of the parent node. To get the object
+        of the parent node, call :meth:`get_parent`. The function will first
+        try to retrieve the parent from ``DataStore`` in ``self.pack``. If
+        this attempt fails, it will directly return the value in ``_parent``.
+        """
+        try:
+            self._parent = self.pack.get_entry_raw(self.tid)[PARENT_TID_INDEX]
+        except KeyError:
+            # self.tid not found in DataStore
+            pass
         return self._parent
 
+    @parent.setter
+    def parent(self, val: Tuple):
+        r"""Setter function of ``parent``. The update will also be populated
+        into ``DataStore`` in ``self.pack``.
+        """
+        self._parent = val
+        self.pack.get_entry_raw(self.tid)[PARENT_TID_INDEX] = val
+
     @property
-    def child(self) -> Tuple[int, int]:
-        if self._child is None:
-            raise ValueError("Child is not set for this link.")
+    def child(self):
+        r"""Get ``pack_id`` and ``tid`` of the child node. To get the object
+        of the child node, call :meth:`get_child`. The function will first try
+        to retrieve the child from ``DataStore`` in ``self.pack``. If
+        this attempt fails, it will directly return the value in ``_child``.
+        """
+        try:
+            self._child = self.pack.get_entry_raw(self.tid)[CHILD_TID_INDEX]
+        except KeyError:
+            # self.tid not found in DataStore
+            pass
         return self._child
+
+    @child.setter
+    def child(self, val: Tuple):
+        r"""Setter function of ``child``. The update will also be populated
+        into ``DataStore`` in ``self.pack``.
+        """
+        self._child = val
+        self.pack.get_entry_raw(self.tid)[CHILD_TID_INDEX] = val
 
     def parent_id(self) -> int:
         """
@@ -485,9 +537,9 @@ class MultiPackLink(MultiEntry, BaseLink):
         Returns:
             The `pack_id` of the parent pack..
         """
-        if self._parent is None:
+        if self.parent[0] is None:
             raise ValueError("Parent is not set for this link.")
-        return self.pack.packs[self._parent[0]].pack_id
+        return self.pack.packs[self.parent[0]].pack_id
 
     def child_pack_id(self) -> int:
         """
@@ -496,9 +548,9 @@ class MultiPackLink(MultiEntry, BaseLink):
         Returns:
             The `pack_id` of the child pack.
         """
-        if self._child is None:
+        if self.child[0] is None:
             raise ValueError("Child is not set for this link.")
-        return self.pack.packs[self._child[0]].pack_id
+        return self.pack.packs[self.child[0]].pack_id
 
     def set_parent(self, parent: Entry):
         r"""This will set the `parent` of the current instance with given Entry.
@@ -517,7 +569,7 @@ class MultiPackLink(MultiEntry, BaseLink):
             )
         # fix bug/enhancement #559: using pack_id instead of index
         # self._parent = self.pack.get_pack_index(parent.pack_id), parent.tid
-        self._parent = parent.pack_id, parent.tid
+        self.parent = parent.pack_id, parent.tid
 
     def set_child(self, child: Entry):
         r"""This will set the `child` of the current instance with given Entry.
@@ -537,7 +589,7 @@ class MultiPackLink(MultiEntry, BaseLink):
             )
         # fix bug/enhancement #559: using pack_id instead of index
         # self._child = self.pack.get_pack_index(child.pack_id), child.tid
-        self._child = child.pack_id, child.tid
+        self.child = child.pack_id, child.tid
 
     def get_parent(self) -> Entry:
         r"""Get the parent entry of the link.
@@ -549,7 +601,7 @@ class MultiPackLink(MultiEntry, BaseLink):
         if self._parent is None:
             raise ValueError("The parent of this link is not set.")
 
-        pack_idx, parent_tid = self._parent
+        pack_idx, parent_tid = self.parent
         return self.pack.get_subentry(pack_idx, parent_tid)
 
     def get_child(self) -> Entry:
@@ -562,7 +614,7 @@ class MultiPackLink(MultiEntry, BaseLink):
         if self._child is None:
             raise ValueError("The parent of this link is not set.")
 
-        pack_idx, child_tid = self._child
+        pack_idx, child_tid = self.child
         return self.pack.get_subentry(pack_idx, child_tid)
 
 
@@ -576,7 +628,6 @@ class MultiPackGroup(MultiEntry, BaseGroup[Entry]):
     def __init__(
         self, pack: PackType, members: Optional[Iterable[Entry]] = None
     ):  # pylint: disable=useless-super-delegation
-        self._members: List[Tuple[int, int]] = []
         super().__init__(pack)
         if members is not None:
             self.add_members(members)
@@ -587,15 +638,15 @@ class MultiPackGroup(MultiEntry, BaseGroup[Entry]):
                 f"The members of {type(self)} should be "
                 f"instances of {self.MemberType}, but got {type(member)}"
             )
-
-        self._members.append(
-            # fix bug/enhancement 559: use pack_id instead of index
-            (member.pack_id, member.tid)  # self.pack.get_pack_index(..)
+        self.pack.get_entry_raw(self.tid)[MEMBER_TID_INDEX].append(
+            (member.pack_id, member.tid)
         )
 
     def get_members(self) -> List[Entry]:
         members = []
-        for pack_idx, member_tid in self._members:
+        for pack_idx, member_tid in self.pack.get_entry_raw(self.tid)[
+            MEMBER_TID_INDEX
+        ]:
             members.append(self.pack.get_subentry(pack_idx, member_tid))
         return members
 
@@ -809,8 +860,10 @@ class ImageAnnotation(Entry):
         Args:
             pack: The container that this image annotation
                 will be added to.
-            image_payload_idx: the index of the image payload. If it's not set,
-                it defaults to 0 which means it will load the first image payload.
+            image_payload_idx: the index of the image payload in the DataPack's
+                image payload list.
+                If it's not set, it defaults to 0 which means it will load the
+                first image payload.
         """
         self._image_payload_idx = image_payload_idx
         super().__init__(pack)
@@ -850,7 +903,9 @@ class Grids(Entry):
         pack: The container that this grids will be added to.
         height: the number of grid cell per column, the unit is one grid cell.
         width: the number of grid cell per row, the unit is one grid cell.
-        image_payload_idx: the index of the image payload. If it's not set,
+        image_payload_idx: the index of the image payload in the DataPack's
+            image payload list.
+            If it's not set,
             it defaults to 0 which meaning it will load the first image payload.
     """
 
@@ -870,7 +925,9 @@ class Grids(Entry):
         self._width = width
         self._image_payload_idx = image_payload_idx
         super().__init__(pack)
-        self.img_arr = self.pack.get_image_array(self._image_payload_idx)
+        self.img_arr = self.pack.get_payload_data_at(
+            Modality.Image, self._image_payload_idx
+        )
         self.c_h, self.c_w = (
             self.img_arr.shape[0] // self._height,
             self.img_arr.shape[1] // self._width,
@@ -982,7 +1039,9 @@ class Region(ImageAnnotation):
 
     Args:
         pack: the container that this ``Region`` will be added to.
-        image_payload_idx: the index of the image payload. If it's not set,
+        image_payload_idx: the index of the image payload in the DataPack's
+            image payload list.
+            If it's not set,
             it defaults to 0 which meaning it will load the first image payload.
     """
 
@@ -1008,7 +1067,8 @@ class Box(Region):
 
     Args:
         pack: the container that this ``Box`` will be added to.
-        image_payload_idx: the index of the image payload. If it's not set,
+        image_payload_idx: the index of the image payload in the DataPack's
+            image payload list. If it's not set,
             it defaults to 0 which meaning it will load the first image payload.
         cy: the row index of the box center in the image array,
             the unit is one image array entry.
@@ -1131,7 +1191,8 @@ class BoundingBox(Box):
     Args:
         pack: The container that this BoundingBox will
             be added to.
-        image_payload_idx: the index of the image payload. If it's not set,
+        image_payload_idx: the index of the image payload in the DataPack's
+            image payload list. If it's not set,
             it defaults to 0 which means it will load the first image payload.
         height: the height of the bounding box, the unit is one image array
             entry.
@@ -1168,6 +1229,142 @@ class BoundingBox(Box):
         )
 
 
+class Payload(Entry):
+    """
+    A payload class that holds data cache of one modality and its data source uri.
+
+    Args:
+        pack: The container that this `Payload` will
+            be added to.
+        modality: modality of the payload such as text, audio and image.
+        payload_idx: the index of the payload in the DataPack's
+            image payload list of the same modality. For example, if we
+            instantiate a ``TextPayload`` inherited from ``Payload``, we assign
+            the payload index in DataPack's text payload list.
+        uri: universal resource identifier of the data source. Defaults to None.
+
+    Raises:
+        ValueError: raised when the modality is not supported.
+    """
+
+    def __init__(
+        self,
+        pack: PackType,
+        payload_idx: int = 0,
+        uri: Optional[str] = None,
+    ):
+        from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
+            TextPayload,
+            AudioPayload,
+            ImagePayload,
+        )
+
+        # since we cannot pass different modality from generated ontology, and
+        # we don't want to import base ontology in the header of the file
+        # we import it here.
+        if isinstance(self, TextPayload):
+            self._modality = Modality.Text
+        elif isinstance(self, AudioPayload):
+            self._modality = Modality.Audio
+        elif isinstance(self, ImagePayload):
+            self._modality = Modality.Image
+        else:
+            supported_modality = [enum.name for enum in Modality]
+            raise ValueError(
+                f"The given modality {self._modality.name} is not supported. "
+                f"Currently we only support {supported_modality}"
+            )
+        self._payload_idx: int = payload_idx
+        self._uri: Optional[str] = uri
+
+        super().__init__(pack)
+        self._cache: Union[str, np.ndarray] = ""
+        self.replace_back_operations: Sequence[Tuple] = []
+        self.processed_original_spans: Sequence[Tuple] = []
+        self.orig_text_len: int = 0
+
+    def get_type(self) -> type:
+        """
+        Get the class type of the payload class. For example, suppose a
+        ``TextPayload`` inherits this ``Payload`` class, ``TextPayload`` will be
+        returned.
+
+        Returns:
+            the type of the payload class.
+        """
+        return type(self)
+
+    @property
+    def cache(self) -> Union[str, np.ndarray]:
+        return self._cache
+
+    @property
+    def modality(self) -> IntEnum:
+        """
+        Get the modality of the payload class.
+
+        Returns:
+            the modality of the payload class in ``IntEnum`` format.
+        """
+        return self._modality
+
+    @property
+    def modality_name(self) -> str:
+        """
+        Get the modality of the payload class in str format.
+
+        Returns:
+            the modality of the payload class in str format.
+        """
+        return self._modality.name
+
+    @property
+    def payload_index(self) -> int:
+        return self._payload_idx
+
+    @property
+    def uri(self) -> Optional[str]:
+        return self._uri
+
+    def set_cache(self, data: Union[str, np.ndarray]):
+        """
+        Load cache data into the payload.
+
+        Args:
+            data: data to be set in the payload. It can be str for text data or
+                numpy array for audio or image data.
+        """
+        self._cache = data
+
+    def set_payload_index(self, payload_index: int):
+        """
+        Set payload index for the DataPack.
+
+        Args:
+            payload_index: a new payload index to be set.
+        """
+        self._payload_idx = payload_index
+
+    def __getstate__(self):
+        r"""
+        Convert ``_modality`` ``Enum`` object to str format for serialization.
+        """
+        # TODO: this function will be removed since
+        # Entry store is being integrated into DataStore
+        state = self.__dict__.copy()
+        state["_modality"] = self._modality.name
+        return state
+
+    def __setstate__(self, state):
+        r"""
+        Convert ``_modality`` string to ``Enum`` object for deserialization.
+        """
+        # TODO: this function will be removed since
+        # Entry store is being integrated into DataStore
+        self.__dict__.update(state)
+        self._modality = getattr(Modality, state["_modality"])
+
+
 SinglePackEntries = (
     Link,
     Group,
@@ -1175,5 +1372,6 @@ SinglePackEntries = (
     Generics,
     AudioAnnotation,
     ImageAnnotation,
+    Payload,
 )
 MultiPackEntries = (MultiPackLink, MultiPackGroup, MultiPackGeneric)
