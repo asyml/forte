@@ -929,7 +929,7 @@ class Box(Region):
     only when it has a reference point (box center here).
 
     There are several use cases for a box:
-        1. When we use a box standalone, we need cy, cx to be set. The offset
+        1. When we use a box standalone, we need the box center to be set.The offset
         between the box center and the grid cell center is not used.
         2. When we represent a ground truth box, the box center and its shape
         are given. We can compute the offset between the box center and the
