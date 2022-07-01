@@ -172,9 +172,6 @@ class DataPack(BasePack[Entry, Link, Group]):
         self.image_annotations: List[ImageAnnotation] = []
         self.payloads: List[np.ndarray] = []
 
-        self.__replace_back_operations: ReplaceOperationsType = []
-        self.__processed_original_spans: List[Tuple[Span, Span]] = []
-
         self.grids: List[Grid] = []
 
         self.text_payloads: List[Payload] = []
