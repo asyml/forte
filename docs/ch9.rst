@@ -4,6 +4,6 @@ Chapter 9. Tasks on Other modalities
    :maxdepth: 2
 
    toc/audio_processing.md
-   notebook_tutorial/Audio
+   notebook_tutorial/Automatic Speech Recognition
 
    toc/image_processing.md
