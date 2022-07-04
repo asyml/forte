@@ -1,6 +1,39 @@
 =======
 History
 =======
+
+0.3.0.dev2
+ — — — — — — — — -
+* DataPack version is still 0.0.2 (unstable)
+* Add a new tutorial for building machine translation system: #818, #826
+* Fix issues in documentation and tutorials: #825, #799, #830
+* Improve data augmentation: #784
+* Data-efficiency improvement: #834, #839, #692, #842
+
+0.3.0.dev1
+ — — — — — — — — -
+* Unstable development version
+* DataPack version is updated to 0.0.2 (unstable), does not support old data pack version.
+* Data-efficiency improvement
+   - Use new data structures such as list/tuples store the data in order to optimize the speed of operations such as add, query, get (type, range, attribute), delete, etc.
+#782, #796, #779, #801, #769, #771, #800, #680, #814
+* A prototyped Computer Vision design and example #795, #813
+* Regular bug fixes
+
+0.2.0
+ — — — — — — — — -
+* DataPack is newly versioned as 0.0.1, also supporting old (un-versioned) data pack versions
+* Add functionalities to data augmentation (#532, #536, #543, #554, #619, #685, #717)
+* Fix issues in examples and create some new ones (#545, #624, #529, #632, #708, #711)
+* Improve doctoring and refactor documentation (#611, #633, #636, #642, #652, #653, #657, #668, #674, #686, #682, #723, #730, #724)
+* Add audio support to DataPack (#585, #592, #600, #603, #609)
+* Improve and fix issues in ontology system (#568, #575, #577, #521)
+* Relax package requirements and move out dependencies (#705, #706, #707, #720, #760)
+* Add readers and selectors (#535, #516, #539)
+* Create some utilities for pipeline (#499, #690, #562)
+* Provide more operations for DataPack and MultiPack (#531, #534, #555, #564, #553, #576)
+* Several clean up and bug fixes (#541, #693, #695)
+
 0.1.2
  — — — — — — — — -
 * Simplify the Configurable interface (#517)
