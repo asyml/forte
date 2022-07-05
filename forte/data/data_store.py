@@ -1185,7 +1185,7 @@ class DataStore(BaseStore):
     def co_iterator_annotation_like(
         self,
         type_names: List[str],
-        range_annotation: Optional[List[int]] = None,
+        range_annotation: Optional[Tuple[int]] = None,
     ) -> Iterator[List]:
         r"""
         Given two or more type names, iterate their entry lists from beginning
