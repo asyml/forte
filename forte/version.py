@@ -20,5 +20,7 @@ VERSION_SHORT = "{0}.{1}".format(_MAJOR, _MINOR)
 VERSION = "{0}.{1}.{2}".format(_MAJOR, _MINOR, _REVISION)
 FORTE_IR_VERSION = "0.0.1"
 PACK_VERSION = "0.0.2"
+# The version before formal release, data pack without
+#  version annotation will be assigned this.
 DEFAULT_PACK_VERSION = "0.0.0"
 PACK_ID_COMPATIBLE_VERSION = "0.0.2"
