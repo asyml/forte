@@ -41,7 +41,7 @@ from forte.data.ontology.top import (
 )
 from forte.data.types import DataRequest
 from forte.utils import get_class, get_full_module_name
-from forte.version import DEFAULT_PACK_VERSION, PACK_ID_COMPATIBLE_VERSION
+from forte.version import DEFAULT_PACK_VERSION
 
 
 logger = logging.getLogger(__name__)
@@ -54,6 +54,10 @@ __all__ = [
 ]
 
 MdRequest = Dict[Type[Union[MultiPackLink, MultiPackGroup]], Union[Dict, List]]
+
+# Before this, version, data packs are indexed in multipack using the index,
+# but afterwards, they are indexed by the pack id.
+version_indexed_by_pack_id = "0.0.1"
 
 
 class MultiPackMeta(BaseMeta):
@@ -149,19 +153,18 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     def _validate(self, entry: EntryType) -> bool:
         return isinstance(entry, MultiPackEntries)
 
-    # TODO: get_subentry maybe useless
     def get_subentry(self, pack_idx: int, entry_id: int):
         r"""
-        Get sub_entry from multi pack. This method uses `pack_id` (a unique
-        identifier assigned to datapack) to get a pack from multi pack,
-        and then return its sub_entry with entry_id. Noted this is changed from
-        the way of accessing such pack before the PACK_ID_COMPATIBLE_VERSION,
+        Get `sub_entry` from `multi pack`. This method uses `pack_id` (a unique
+        identifier assigned to datapack) to get a pack from `multi pack`,
+        and then return its sub_entry with entry_id.
+
+        Noted this is changed from the way of accessing such pack before v0.0.1,
         in which the `pack_idx` was used as list index number to access/reference
-        a pack within the multi pack (and in this case then get the sub_entry).
+        a pack within the `multi pack` (and in this case then get the `sub_entry`).
 
         Args:
-            pack_idx: The pack_id for the data_pack in the
-              multi pack.
+            pack_idx: The pack_id for the data_pack in the multi pack.
             entry_id: the id for the entry from the pack with pack_id
 
         Returns:
@@ -171,7 +174,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         pack_array_index: int = pack_idx  # the old way
         # the following check if the pack version is higher than the (backward)
         # compatible version in which pack_idx is the pack_id not list index
-        if Version(self.pack_version) >= Version(PACK_ID_COMPATIBLE_VERSION):
+        if Version(self.pack_version) >= Version(version_indexed_by_pack_id):
             pack_array_index = self.get_pack_index(
                 pack_idx
             )  # the new way: using pack_id instead of array index
