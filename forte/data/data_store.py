@@ -1183,7 +1183,9 @@ class DataStore(BaseStore):
             return len(self.__elements[type_name]) - delete_count
 
     def co_iterator_annotation_like(
-        self, type_names: List[str]
+        self,
+        type_names: List[str],
+        range_annotation: Optional[List[int]] = None,
     ) -> Iterator[List]:
         r"""
         Given two or more type names, iterate their entry lists from beginning
@@ -1202,6 +1204,8 @@ class DataStore(BaseStore):
 
         The precedence of those values indicates their priority in the min heap
         ordering.
+        Lastly, the `range_annotation` argument determines the span range within
+        which entries of specified by `type_name` need to be fetched.
         For example, if two entries have both the same begin and end field,
         then their order is
         decided by the order of user input type_name (the type that first
@@ -1211,10 +1215,57 @@ class DataStore(BaseStore):
 
         Args:
             type_names: a list of string type names
+            range_annotation: a list with two elements,
+                the start and the end of the range in
+                which we want to get required entries
 
         Returns:
             An iterator of entry elements.
         """
+
+        def get_bisect_range(entry_class: str, search_list: SortedList):
+            """
+            Perform binary search on the specified list for target entry class.
+            Args:
+                entry_class: Name of the target type of entry. It can be Annotation or
+                    `AudioAnnotation`.
+                search_list: A `SortedList` object on which the binary search
+                    will be carried out.
+            """
+            range_begin = (
+                range_annotation[constants.BEGIN_INDEX]
+                if range_annotation
+                else 0
+            )
+            range_end = (
+                range_annotation[constants.END_INDEX]
+                if range_annotation
+                else search_list[-1][constants.END_INDEX]
+            )
+
+            base_class = (
+                Annotation
+                if self._is_subclass(entry_class, Annotation)
+                else AudioAnnotation
+            )
+
+            temp_begin = self.add_entry_raw(
+                type_name=entry_class,
+                attribute_data=[range_begin, range_begin],
+                base_class=base_class,
+            )
+            begin_index = search_list.bisect_left(self.get_entry(temp_begin)[0])
+            self.delete_entry(temp_begin)
+
+            temp_end = self.add_entry_raw(
+                type_name=entry_class,
+                attribute_data=[range_end, range_end],
+                base_class=base_class,
+            )
+            end_index = search_list.bisect_left(self.get_entry(temp_end)[0])
+            self.delete_entry(temp_end)
+
+            return search_list[begin_index:end_index]
 
         n = len(type_names)
         # suppose the length of type_names is N and the length of entry list of
@@ -1225,18 +1276,29 @@ class DataStore(BaseStore):
         # Initialize the first entry of all entry lists
         # it avoids empty entry lists or non-existent entry list
         first_entries = []
+        all_entries = {}
 
-        for tn in type_names:
+        if range_annotation:
+            for entry_type in type_names:
+                all_entries[entry_type] = get_bisect_range(
+                    entry_type, self.__elements[entry_type]
+                )
+        else:
             try:
-                first_entries.append(self.__elements[tn][0])
-            except KeyError as e:  # self.__elements[tn] will be caught here.
+                for tn in type_names:
+                    all_entries[tn] = self.__elements[tn]
+            except KeyError as e:  # all_entries[tn] will be caught here.
                 raise ValueError(
                     f"Input argument `type_names` to the function contains"
                     f" a type name [{tn}], which is not recognized."
                     f" Please input available ones in this DataStore"
                     f" object: {list(self.__elements.keys())}"
                 ) from e
-            except IndexError as e:  # self.__elements[tn][0] will be caught here.
+
+        for tn in type_names:
+            try:
+                first_entries.append(all_entries[tn][0])
+            except IndexError as e:  # all_entries[tn][0] will be caught here.
                 raise ValueError(
                     f"Entry list of type name, {tn} which is"
                     " one list item of input argument `type_names`,"
@@ -1252,7 +1314,7 @@ class DataStore(BaseStore):
         # compare tuple (begin, end, order of type name in input argument
         # type_names)
         # we initialize a MinHeap with the first entry of all sorted entry lists
-        # in self.__elements
+        # in all_entries
         # the metric of comparing entry order is represented by the tuple
         # (begin index of entry, end index of entry,
         # the index of the entry type name in input parameter ``type_names``)
@@ -1281,23 +1343,23 @@ class DataStore(BaseStore):
             # `the current entry` means the entry that
             #      popped entry_tuple represents.
             # `the current entry list` means the entry
-            # list (values of self.__elements) where `the current entry`
+            # list (values of all_entries) where `the current entry`
             # locates at.
 
             # retrieve the popped entry tuple (minimum item in the heap)
-            # and get the p_idx (the index of the current entry list in self.__elements)
+            # and get the p_idx (the index of the current entry list in all_entries)
             entry_tuple = heappop(h)
             (_, _, p_idx), type_name = entry_tuple
             # get the index of current entry
             # and locate the entry represented by the tuple for yielding
             pointer = pointers[p_idx]
-            entry = self.__elements[type_name][pointer]
+            entry = all_entries[type_name][pointer]
             # check whether there is next entry in the current entry list
             # if there is, then we push the new entry's tuple into the heap
-            if pointer + 1 < len(self.__elements[type_name]):
+            if pointer + 1 < len(all_entries[type_name]):
                 pointers[p_idx] += 1
                 new_pointer = pointers[p_idx]
-                new_entry = self.__elements[type_name][new_pointer]
+                new_entry = all_entries[type_name][new_pointer]
                 new_entry_tuple = (
                     (
                         new_entry[constants.BEGIN_INDEX],
@@ -1350,50 +1412,6 @@ class DataStore(BaseStore):
                 <= range_annotation[constants.END_INDEX]
             )
 
-        def get_bisect_range(entry_class: str, search_list: SortedList):
-            """
-            Perform binary search on the specified list for target entry class.
-            Args:
-                entry_class: Name of the target type of entry. It can be Annotation or
-                    `AudioAnnotation`.
-                search_list: A `SortedList` object on which the binary search
-                    will be carried out.
-            """
-            range_begin = (
-                range_annotation[constants.BEGIN_INDEX]
-                if range_annotation
-                else 0
-            )
-            range_end = (
-                range_annotation[constants.END_INDEX]
-                if range_annotation
-                else search_list[-1][constants.END_INDEX]
-            )
-
-            base_class = (
-                Annotation
-                if self._is_subclass(entry_class, Annotation)
-                else AudioAnnotation
-            )
-
-            temp_begin = self.add_entry_raw(
-                type_name=entry_class,
-                attribute_data=[range_begin, range_begin],
-                base_class=base_class,
-            )
-            begin_index = search_list.bisect_left(self.get_entry(temp_begin)[0])
-            self.delete_entry(temp_begin)
-
-            temp_end = self.add_entry_raw(
-                type_name=entry_class,
-                attribute_data=[range_end, range_end],
-                base_class=base_class,
-            )
-            end_index = search_list.bisect_left(self.get_entry(temp_end)[0])
-            self.delete_entry(temp_end)
-
-            return search_list[begin_index:end_index]
-
         entry_class = get_class(type_name)
         all_types = set()
         if include_sub_type:
@@ -1408,10 +1426,10 @@ class DataStore(BaseStore):
             if range_annotation is None:
                 yield from self.co_iterator_annotation_like(all_types)
             else:
-                for entry_type in all_types:
-                    yield from get_bisect_range(
-                        entry_type, self.__elements[entry_type]
-                    )
+                for entry in self.co_iterator_annotation_like(
+                    all_types, range_annotation
+                ):
+                    yield entry
         elif issubclass(entry_class, Link):
             for type in all_types:
                 if range_annotation is None:

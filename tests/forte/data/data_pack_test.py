@@ -19,7 +19,10 @@ import logging
 import unittest
 from typing import List, Tuple
 
+from tomlkit import document
+
 from forte.data.data_pack import DataPack
+from forte.data.ontology.top import Annotation
 from forte.pipeline import Pipeline
 from forte.utils import utils
 from ft.onto.base_ontology import (
@@ -31,6 +34,7 @@ from ft.onto.base_ontology import (
     PredicateLink,
     PredicateMention,
     CoreferenceGroup,
+    Phrase,
 )
 from forte.data.readers import OntonotesReader
 
@@ -167,6 +171,59 @@ class DataPackTest(unittest.TestCase):
                 ("trying", "to influence American policy on China", "ARG1"),
                 ("influence", "he", "ARG0"),
                 ("influence", "American policy on China", "ARG1"),
+            ],
+        )
+
+        # Case 3: Get Child entries when fetching parents with include_sub_type
+        all_anno: List[Tuple[int, str]] = []
+        for doc in self.data_pack.get(Document):
+            for anno in self.data_pack.get(Annotation, doc):
+                # Just to make the test case concise,
+                # We will only consider Sentence, EntityMention
+                # and PredicateArgument
+                if any(
+                    isinstance(anno, check)
+                    for check in [Sentence, EntityMention, PredicateArgument]
+                ):
+                    all_anno.append(anno.text)
+
+        self.assertEqual(
+            all_anno,
+            [
+                "The Indonesian billionaire James Riady",
+                "The Indonesian billionaire James Riady",
+                "The Indonesian billionaire James Riady",
+                "The Indonesian billionaire James Riady",
+                "The Indonesian billionaire James Riady has "
+                "agreed to pay $ 8.5 million and plead guilty "
+                "to illegally donating money for Bill Clinton 's "
+                "1992 presidential campaign .",
+                "Indonesian",
+                "James Riady",
+                "to pay $ 8.5 million and plead guilty to illegally "
+                "donating money for Bill Clinton 's 1992 presidential "
+                "campaign",
+                "$ 8.5 million",
+                "$ 8.5 million",
+                "guilty",
+                "to illegally donating money for Bill Clinton 's 1992 "
+                "presidential campaign",
+                "illegally",
+                "money",
+                "for Bill Clinton 's 1992 presidential campaign",
+                "Bill Clinton 's",
+                "1992",
+                "He",
+                "He",
+                "He admits he was trying to influence American policy on China .",
+                "he",
+                "he",
+                "he",
+                "he was trying to influence American policy on China",
+                "to influence American policy on China",
+                "American",
+                "American policy on China",
+                "China",
             ],
         )
 
