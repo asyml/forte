@@ -19,8 +19,6 @@ import logging
 import unittest
 from typing import List, Tuple
 
-from tomlkit import document
-
 from forte.data.data_pack import DataPack
 from forte.data.ontology.top import Annotation
 from forte.pipeline import Pipeline
