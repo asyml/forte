@@ -51,12 +51,12 @@ def create(args_):
     is_dry_run = not args_.no_dry_run
 
     generated_folder = generator.generate(
-        spec_path,
-        dest_path,
-        is_dry_run,
-        merged_path,
-        leient_prefix,
-        args_.namespace_depth,
+        spec_path=spec_path,
+        destination_dir=dest_path,
+        is_dry_run=is_dry_run,
+        merged_path=merged_path,
+        lenient_prefix=leient_prefix,
+        namespace_depth=args_.namespace_depth,
     )
     log.info("Ontology generated in the directory %s.", generated_folder)
 
