@@ -63,6 +63,7 @@ __all__ = [
     "Box",
     "BoundingBox",
     "Payload",
+    "Meta",
 ]
 
 QueryType = Union[Dict[str, Any], np.ndarray]
@@ -1282,6 +1283,12 @@ class Payload(Entry):
         self.replace_back_operations: Sequence[Tuple] = []
         self.processed_original_spans: Sequence[Tuple] = []
         self.orig_text_len: int = 0
+        self.payloading = None
+        self.meta = None
+
+    def set_meta(self, meta):
+        # there might be a better way to set meta
+        self.meta = meta
 
     def get_type(self) -> type:
         """
@@ -1324,11 +1331,22 @@ class Payload(Entry):
 
     @property
     def uri(self) -> Optional[str]:
+        """
+        Universal resource identifier of the data source.
+
+        Returns:
+            Optional[str]: Universal resource identifier of the data source.
+        """
         return self._uri
+
+    def load(self):
+        fn = self.payloading.route(self.meta)
+        self._cache = fn(self.uri)
 
     def set_cache(self, data: Union[str, np.ndarray]):
         """
-        Load cache data into the payload.
+        Set cache data in the the payload. This method can be useful when users
+        want to set a new cache.
 
         Args:
             data: data to be set in the payload. It can be str for text data or
@@ -1365,6 +1383,11 @@ class Payload(Entry):
         self._modality = getattr(Modality, state["_modality"])
 
 
+class Meta(Generics):
+    def __init__(self, pack: PackType):
+        super().__init__(pack)
+
+
 SinglePackEntries = (
     Link,
     Group,
@@ -1373,5 +1396,6 @@ SinglePackEntries = (
     AudioAnnotation,
     ImageAnnotation,
     Payload,
+    Meta,
 )
 MultiPackEntries = (MultiPackLink, MultiPackGroup, MultiPackGeneric)
