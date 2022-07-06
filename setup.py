@@ -36,6 +36,7 @@ setuptools.setup(
     include_package_data=True,
     platforms="any",
     install_requires=[
+        "enum34==1.1.10;python_version<'3.4'",
         "sortedcontainers>=2.1.0",
         "numpy>=1.16.6",
         "jsonpickle>=1.4",
