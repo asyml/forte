@@ -167,7 +167,6 @@ class DataPack(BasePack[Entry, Link, Group]):
 
     def __init__(self, pack_name: Optional[str] = None):
         super().__init__(pack_name)
-        self._audio: Optional[np.ndarray] = None
 
         self._data_store: DataStore = DataStore()
         self._entry_converter: EntryConverter = EntryConverter()
@@ -241,6 +240,11 @@ class DataPack(BasePack[Entry, Link, Group]):
             return str(self.get_payload_data_at(Modality.Text, 0))
         else:
             return ""
+
+    @property
+    def audio(self) -> Optional[np.ndarray]:
+        r"""Return the audio of the data pack"""
+        return self.get_payload_data_at(Modality.Audio, 0)
 
     @property
     def all_annotations(self) -> Iterator[Annotation]:
