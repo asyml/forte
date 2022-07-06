@@ -77,7 +77,7 @@ class ImagePayloading(Payloading):
             ValueError: if meta is not a valid meta data.
 
         Returns:
-            _type_: _description_
+            a function that takes uri and read data from the uri, and it returns the data.
         """
         if not self._factory.check_meta(meta):
             raise ValueError(f"Meta data{meta} not supported")
@@ -113,13 +113,14 @@ class ImagePayloading(Payloading):
 class AudioPayloading(Payloading):
     def route(self, meta) -> Callable:
         """
-        A function that
+        A function that takes and analyzes an audio meta data and returns a
+        corresponding loading function.
 
         Args:
-            meta (_type_): _description_
+            meta: an Meta ontology object that represent audio meta data.
 
         Returns:
-            Callable: _description_
+            a callable function that takes uri and read data from the uri, and it returns the data.
         """
         if meta.source_type == "local":
             try:
