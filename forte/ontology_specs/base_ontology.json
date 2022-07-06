@@ -467,6 +467,58 @@
       "parent_entry": "forte.data.ontology.top.Payload",
       "description": "A payload that caches image data",
       "attributes":[]
+    },
+    {
+      "entry_name": "ft.onto.base_ontology.JpegMeta",
+      "parent_entry": "forte.data.ontology.top.Meta",
+      "attributes":[
+        {
+        "name": "extension",
+        "type": "str"
+      },
+        {"name": "mime",
+        "type": "str"},
+        {"name": "type_code",
+        "type": "str"},
+        {"name": "version",
+        "type": "str"},
+        {"name": "source_type",
+          "type": "str"}
+       ]
+    },
+    {
+      "entry_name": "ft.onto.base_ontology.AudioMeta",
+      "parent_entry": "forte.data.ontology.top.Meta",
+      "attributes":[
+        {
+        "name": "sample_rate",
+        "type": "int"
+        },
+        {"name": "channels",
+        "type": "int"},
+        {"name": "bits_per_sample",
+        "type": "int"},
+        {"name": "duration",
+        "type": "float"},
+        {"name": "bitrate",
+        "type": "int"},
+        {"name": "encoding",
+        "type": "str"},
+        {"name": "source_type",
+        "type": "str"},
+        {"name": "dtype",
+          "type": "str"}
+       ]
+    },
+    {
+      "entry_name": "ft.onto.base_ontology.JpegPayload",
+      "parent_entry": "ft.onto.base_ontology.ImagePayload",
+      "attributes":[
+        {
+          "name": "meta",
+          "type": "ft.onto.base_ontology.JpegMeta"
+        }
+      ]
     }
   ]
 }
