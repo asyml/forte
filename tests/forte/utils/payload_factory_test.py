@@ -21,7 +21,7 @@ from forte.utils.payload_factory import (
     ImagePayloading,
     PayloadFactory,
 )
-from ft.onto.base_ontology import (
+from ft.onto.payload_ontology import (
     AudioPayload,
     ImagePayload,
     JpegMeta,
