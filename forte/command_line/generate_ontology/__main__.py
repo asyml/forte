@@ -9,8 +9,10 @@ import argparse
 from argparse import RawTextHelpFormatter
 from forte.data.ontology.ontology_code_generator import OntologyCodeGenerator
 
-logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
+log_level = os.environ.get("LOGLEVEL", "INFO")
+logging.getLogger().setLevel(level=log_level)
 log = logging.getLogger(__name__)
+log.setLevel(level=log_level)
 
 
 def normalize_path(path):
@@ -47,14 +49,14 @@ def create(args_):
         log.info("Will not enforce prefix check.")
 
     is_dry_run = not args_.no_dry_run
-    include_init = not args_.exclude_init
+
     generated_folder = generator.generate(
         spec_path,
         dest_path,
         is_dry_run,
-        include_init,
         merged_path,
         leient_prefix,
+        args_.namespace_depth,
     )
     log.info("Ontology generated in the directory %s.", generated_folder)
 
@@ -126,8 +128,8 @@ def main():
         default=None,
         action="store_true",
         help="Generates the package tree in a temporary "
-        "directory if true, ignores the argument "
-        "`--dest_path`",
+             "directory if true, ignores the argument "
+             "`--dest_path`",
     )
 
     create_parser.add_argument(
@@ -137,10 +139,10 @@ def main():
         required=False,
         default=os.getcwd(),
         help="Destination directory provided by the user"
-        ". Only used when --no_dry_run is "
-        "specified. The"
-        " default directory is the current working "
-        "directory.",
+             ". Only used when --no_dry_run is "
+             "specified. The"
+             " default directory is the current working "
+             "directory.",
     )
 
     create_parser.add_argument(
@@ -151,7 +153,7 @@ def main():
         required=False,
         default=None,
         help="Paths in which the root and imported "
-        "spec files are to be searched.",
+             "spec files are to be searched.",
     )
 
     create_parser.add_argument(
@@ -164,25 +166,14 @@ def main():
     )
 
     create_parser.add_argument(
-        "-e",
-        "--exclude_init",
-        required=False,
-        default=None,
-        action="store_true",
-        help="Excludes generation of `__init__.py` files"
-        " in the already existing directories, if"
-        "`__init__.py` not already present.",
-    )
-
-    create_parser.add_argument(
         "-a",
         "--gen_all",
         required=False,
         default=False,
         action="store_true",
         help="If True, will generate all the ontology,"
-        "including the existing ones shipped with "
-        "Forte.",
+             "including the existing ones shipped with "
+             "Forte.",
     )
 
     create_parser.add_argument(
@@ -201,12 +192,12 @@ def main():
         required=False,
         default=0,
         help="set an integer argument namespace_depth "
-        "to allow customized number of levels of namespace packaging."
-        "The generation of __init__.py for all the "
-        "directory levels above namespace_depth will be disabled."
-        "Default value is set to 0 to disable namespace packaging. "
-        "When namespace_depth<=0, namespace packaging will be disabled "
-        "and __init__.py will be included in all directory levels",
+             "to allow customized number of levels of namespace packaging."
+             "The generation of __init__.py for all the "
+             "directory levels above namespace_depth will be disabled."
+             "Default value is set to 0 to disable namespace packaging. "
+             "When namespace_depth<=0, namespace packaging will be disabled "
+             "and __init__.py will be included in all directory levels",
     )
 
     create_parser.set_defaults(func=create)
@@ -228,7 +219,7 @@ def main():
         default=False,
         action="store_true",
         help="If true, skips the interactive deleting of "
-        "folders. Use with caution.",
+             "folders. Use with caution.",
     )
 
     clean_parser.set_defaults(func=clean)
