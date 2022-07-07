@@ -39,7 +39,8 @@ class GridTest(unittest.TestCase):
         self.line[2, 2] = 1
         self.line[3, 3] = 1
         # self.line[4, 4] = 1
-        self.datapack.payloads.append(self.line)
+        ip = ImagePayload(self.datapack)
+        ip.set_cache(self.line)
         self.datapack.image_annotations.append(
             ImageAnnotation(self.datapack, 0)
         )
