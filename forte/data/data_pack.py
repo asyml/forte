@@ -32,7 +32,6 @@ from typing import (
 
 import numpy as np
 from sortedcontainers import SortedList
-
 from forte.common.exception import (
     ProcessExecutionException,
     UnknownOntologyClassException,
@@ -53,7 +52,6 @@ from forte.data.ontology.top import (
     Generics,
     AudioAnnotation,
     ImageAnnotation,
-    Grids,
     Payload,
 )
 
@@ -171,7 +169,6 @@ class DataPack(BasePack[Entry, Link, Group]):
         self._data_store: DataStore = DataStore()
         self._entry_converter: EntryConverter = EntryConverter()
         self.image_annotations: List[ImageAnnotation] = []
-        self.grids: List[Grids] = []
 
         self.text_payloads: List[Payload] = []
         self.audio_payloads: List[Payload] = []
@@ -244,7 +241,7 @@ class DataPack(BasePack[Entry, Link, Group]):
     @property
     def audio(self) -> Optional[np.ndarray]:
         r"""Return the audio of the data pack"""
-        return self.get_payload_data_at(Modality.Audio, 0)
+        return cast(np.ndarray, self.get_payload_data_at(Modality.Audio, 0))
 
     @property
     def all_annotations(self) -> Iterator[Annotation]:
@@ -448,15 +445,12 @@ class DataPack(BasePack[Entry, Link, Group]):
         supported_modality = [enum.name for enum in Modality]
 
         try:
-            # if modality.name == "text":
             if modality == Modality.Text:
                 payloads_length = len(self.text_payloads)
                 payload = self.text_payloads[payload_index]
-            # elif modality.name == "audio":
             elif modality == Modality.Audio:
                 payloads_length = len(self.audio_payloads)
                 payload = self.audio_payloads[payload_index]
-            # elif modality.name == "image":
             elif modality == Modality.Image:
                 payloads_length = len(self.image_payloads)
                 payload = self.image_payloads[payload_index]
@@ -569,7 +563,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         # temporary solution for backward compatibility
         # past API use this method to add a single text in the datapack
         if len(self.text_payloads) == 0 and text_payload_index == 0:
-            from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
+            from ft.onto.payload_ontology import (  # pylint: disable=import-outside-toplevel
                 TextPayload,
             )
 
@@ -601,7 +595,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         # temporary solution for backward compatibility
         # past API use this method to add a single audio in the datapack
         if len(self.audio_payloads) == 0 and audio_payload_index == 0:
-            from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
+            from ft.onto.payload_ontology import (  # pylint: disable=import-outside-toplevel
                 AudioPayload,
             )
 
