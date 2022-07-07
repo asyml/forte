@@ -1243,27 +1243,9 @@ class DataStore(BaseStore):
                 else search_list[-1][constants.END_INDEX]
             )
 
-            base_class = (
-                Annotation
-                if self._is_subclass(entry_class, Annotation)
-                else AudioAnnotation
-            )
+            begin_index = search_list.bisect_left([range_begin, range_begin])
 
-            temp_begin = self.add_entry_raw(
-                type_name=entry_class,
-                attribute_data=[range_begin, range_begin],
-                base_class=base_class,
-            )
-            begin_index = search_list.bisect_left(self.get_entry(temp_begin)[0])
-            self.delete_entry(temp_begin)
-
-            temp_end = self.add_entry_raw(
-                type_name=entry_class,
-                attribute_data=[range_end, range_end],
-                base_class=base_class,
-            )
-            end_index = search_list.bisect_left(self.get_entry(temp_end)[0])
-            self.delete_entry(temp_end)
+            end_index = search_list.bisect_left([range_end, range_end])
 
             return search_list[begin_index:end_index]
 
