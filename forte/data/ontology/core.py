@@ -648,11 +648,33 @@ class Grid:
     For example, if the image size (image_height,image_width) is (640, 480)
     and the grid shape (height, width) is (2, 3)
     the size of grid cells (self.c_h, self.c_w) will be (320, 160).
-    The grid can be totally "free-form" that we don't initialize it with any
+
+    However, when the image size is not divisible by the grid shape, we round
+    up the resulting size(floating number) to an integer.
+    In this way, as each grid
+    cell taking one more pixel, we make the last grid cell per column and row
+    size(height and width) to be the remainder of the image size divided by the
+    grid cell size which is smaller than other grid cell.
+    For example, if the image
+    size is (128, 128) and the grid shape is (13, 13), the first 11 grid cells
+    per column and row will have a size of (10, 10) since 128/13=9.85, so we
+    round up to 10. The last grid cell per column and row will have a size of
+    (8, 8) since 128%10=8.
+
+
+    We require each grid to be bounded/intialized with one image size since
+    the number of different image shapes are limited per computer vision task.
+    For example, we can only have one image size (640, 480) from a CV dataset,
+    and we could augment the dataset with few other image sizes
+    (320, 240), (480, 640). Then there are only three image sizes.
+    Therefore, it won't be troublesome to
+    have a grid for each image size, and we can check the image size during the
+    initialization of the grid.
+    By contrast, if the grid is totally "free-form"
+    that we don't initialize it with any
     image size and pass the image size directly into the method/operation on
-    the fly. However, since the number of different image shapes are limited,
-    we can bound one grid to one image size, and we can also do the image/grid
-    size check during the grid initialization.
+    the fly, the API would be more complex and image size check would be
+    repeated everytime the method is called.
 
     Args:
         height: the number of grid cell per column, the unit is one grid cell.
@@ -713,11 +735,6 @@ class Grid:
         within the grid cell will masked as zeros. The image array entries that
         are within the grid cell will kept.
 
-        The actual operation is that we intialize a target array with the same
-        size of the original image, and it filled with zeros.
-        Then we only copy entries within the queried grid
-        cell in the image array to the target array at corresponding positions.
-
         Note: all indices are zero-based and counted from top left corner of
         the image.
 
@@ -767,15 +784,15 @@ class Grid:
 
     def get_grid_cell_center(self, h_idx: int, w_idx: int) -> Tuple[int, int]:
         """
-        Get the center position of the grid cell at the specific height index
-        and width index in the ``Grid``.
+        Get the center pixel position of the grid cell at the specific height
+        index and width index in the ``Grid``.
         The computation of the center position of the grid cell is
-        dividing the grid cell height range and wdith range by 2 (round down)
+        dividing the grid cell height range and width range by 2 (round down)
 
         Suppose an extreme case that a grid cell has a height range of (0, 3)
-        and a width range of (0, 3) the grid cell center would be (1, 1)
-        since the grid cell size is usually very large
-        the minor offset of the grid cell center usually doesn't matter
+        and a width range of (0, 3) the grid cell center would be (1, 1).
+        Since the grid cell size is usually very large,
+        the offset of the grid cell center is minor.
 
         Note: all indices are zero-based and counted from top left corner of
         the grid.
