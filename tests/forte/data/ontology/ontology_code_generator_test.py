@@ -220,7 +220,8 @@ class GenerateOntologyTest(unittest.TestCase):
                         "WARNING",
                         f"The directory with the name ft is already present "
                         f"in {temp_dir}. New files will be merge into the "
-                        f"existing directory.",
+                        f"existing directory. Note that in this "
+                        f"case, the namespace depth may not take effect.",
                     )
                 )
 
