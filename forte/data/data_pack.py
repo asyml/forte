@@ -241,7 +241,7 @@ class DataPack(BasePack[Entry, Link, Group]):
     @property
     def audio(self) -> Optional[np.ndarray]:
         r"""Return the audio of the data pack"""
-        return self.get_payload_data_at(Modality.Audio, 0)
+        return cast(np.ndarray, self.get_payload_data_at(Modality.Audio, 0))
 
     @property
     def all_annotations(self) -> Iterator[Annotation]:
