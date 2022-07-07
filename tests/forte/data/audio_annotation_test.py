@@ -50,7 +50,7 @@ class RecordingProcessor(PackProcessor):
         Recording(
             pack=input_pack,
             begin=0,
-            end=len(input_pack.get_payload_data_at(Modality.Audio, 0)),
+            end=len(input_pack.audio),
         )
 
 
@@ -208,7 +208,7 @@ class AudioAnnotationTest(unittest.TestCase):
             self.assertTrue(
                 array_equal(
                     recordings[0].audio,
-                    pack.get_payload_data_at(Modality.Audio, 0),
+                    pack.audio,
                 )
             )
             # Check serialization/deserialization of AudioAnnotation
@@ -230,9 +230,7 @@ class AudioAnnotationTest(unittest.TestCase):
                     self.assertTrue(
                         array_equal(
                             audio_utter.audio,
-                            pack.get_payload_data_at(Modality.Audio, 0)[
-                                configs["begin"] : configs["end"]
-                            ],
+                            pack.audio[configs["begin"] : configs["end"]],
                         )
                     )
 
