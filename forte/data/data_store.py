@@ -1223,7 +1223,7 @@ class DataStore(BaseStore):
             An iterator of entry elements.
         """
 
-        def get_bisect_range(entry_class: str, search_list: SortedList):
+        def get_bisect_range(search_list: SortedList):
             """
             Perform binary search on the specified list for target entry class.
             Args:
@@ -1263,7 +1263,7 @@ class DataStore(BaseStore):
         if range_annotation:
             for entry_type in type_names:
                 all_entries[entry_type] = get_bisect_range(
-                    entry_type, self.__elements[entry_type]
+                    self.__elements[entry_type]
                 )
         else:
             try:
