@@ -46,6 +46,7 @@ from forte.data.ontology.core import Entry
 from forte.data.ontology.core import EntryType
 from forte.data.ontology.top import (
     Annotation,
+    Grids,
     Link,
     Group,
     SinglePackEntries,
@@ -170,6 +171,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         self._entry_converter: EntryConverter = EntryConverter()
         self.image_annotations: List[ImageAnnotation] = []
 
+        self.grids: List[Grids] = []
         self.text_payloads: List[Payload] = []
         self.audio_payloads: List[Payload] = []
         self.image_payloads: List[Payload] = []
