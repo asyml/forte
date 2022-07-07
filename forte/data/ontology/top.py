@@ -914,6 +914,17 @@ class Region(ImageAnnotation):
             self._image_payload_idx = image_payload_idx
 
     def compute_iou(self, other) -> float:
+        """
+        Compute the IoU between this region and another region.
+
+        Args:
+            other: Another region object.
+
+        Returns:
+            the IoU between this region and another region as a float.
+        """
+        if not isinstance(other, Region):
+            raise TypeError("other must be a Region object")
         intersection = np.sum(np.logical_and(self.image, other.image))
         union = np.sum(np.logical_or(self.image, other.image))
         return intersection / union
@@ -925,19 +936,37 @@ class Box(Region):
     A box class with a reference point which is the box center and a box
     configuration.
 
-    Box of a certain size (height, width), as a regular shape, can be located
-    only when it has a reference point (box center here).
+    Given a box with shape parameters (height, width), we want to locate its
+    four corners (top-left, top-right, bottom-left, bottom-right). We need
+    to know the locaton of the center of the box.
 
+    Generally, we can either use box standalone or as a bounding box in object
+    detection tasks. In the later case, we need to consider its association with
+    a grid as the task is performed on each grid cell.
     There are several use cases for a box:
-        1. When we use a box standalone, we need the box center to be set.The offset
-        between the box center and the grid cell center is not used.
+        1. When we use a box standalone, we need the box center to be set.
+        The offset between the box center and the grid cell center is not used.
         2. When we represent a ground truth box, the box center and shape are
-        given. If we want to compute loss, its grid center is required to
+        given. If we want to compute loss, its grid cell center is required to
         compute the offset between the box center and the
         grid cell center.
         3. When we predict a box, we will have the predicted box shape (height,
         width) and the offset between the box center and the grid cell center,
         then we can compute the box center.
+
+    .. code-block:: python
+        pack = DataPack("box examples")
+        # create a box
+        simple_box = Box(pack, 640, 480, 320, 240)
+        # create a bounding box at with its center at (320, 240)
+        gt_bbx = Box(pack, 640, 480, 320, 240)
+        # create a predicted bounding box without known its center
+        # and compute its center from the offset and the grid center
+        predicted_bbx = Box(pack, 640, 480)
+        predicted_bbx.set_offset(305, 225)
+        b.set_grid_cell_center(Grid(64, 48, 640, 480), 1, 1)
+        print(b.cy, b.cx) # it prints (320, 240)
+
 
     For example, in the object detection task, dataset label contains a ground
     truth box (box shape and box center).
@@ -966,11 +995,9 @@ class Box(Region):
         height: the height of the box, the unit is one pixel.
         width: the width of the box, the unit is one pixel.
         cy: the row index of the box center in the image array,
-            the unit is one pixel. If not set, the box center
-            will be set to the center of image (half height of the image).
+            the unit is one pixel. If not set, it defaults to None.
         cx: the column index of the box center in the image array,
-            the unit is one pixel. If not set, the box center
-            will be set to the center of image (half width of the image).
+            the unit is one pixel. If not set, it defaults to None.
         image_payload_idx: the index of the image payload. If it's not set,
             it defaults to 0 which meaning it will load the first image payload.
     """
@@ -984,7 +1011,6 @@ class Box(Region):
         cx: Optional[int] = None,
         image_payload_idx: int = 0,
     ):
-        # assume Box is associated with Grid
         super().__init__(pack, image_payload_idx)
 
         self._image_height, self._image_width = self.pack.get_payload_data_at(
@@ -1065,11 +1091,7 @@ class Box(Region):
         Returns:
             True if the offset is valid, False otherwise.
         """
-        if (
-            self._is_grid_associated
-            and self._grid_cy is not None
-            and self._grid_cx is not None
-        ):
+        if self._grid_cy is not None and self._grid_cx is not None:
             # the computed cell center
             computed_cy = self._grid_cy + cy_offset
             computed_cx = self._grid_cx + cx_offset
@@ -1216,7 +1238,8 @@ class Box(Region):
     @property
     def cy_offset(self) -> int:
         """
-        The row index difference between the box center and the grid cell.
+        The row index difference(unit: pixel) between the box center and the
+        grid cell.
 
         Returns:
             The row index difference between the box center and the grid cell.
@@ -1233,7 +1256,8 @@ class Box(Region):
     @property
     def cx_offset(self) -> int:
         """
-        The column index difference between the box center and the grid cell
+        The column index difference(unit: pixel) between the box center and the
+        grid cell
 
         Returns:
             The column index difference between the box center and the grid cell
@@ -1250,7 +1274,8 @@ class Box(Region):
     @property
     def cy(self) -> int:
         """
-        Compute and return row index of the box center in the image array.
+        Compute and return row index(unit: pixel) of the box center
+        in the image array.
         It returns the row index of the box center in the image array directly
         if the box center is set.
         Otherwise, if it computes and sets the box center y coordinate when the
@@ -1274,7 +1299,7 @@ class Box(Region):
     @property
     def cx(self) -> int:
         """
-        The column index of the box center in the image array.
+        The column index(unit: pixel) of the box center in the image array.
         It returns the column index of the box center in the image array
         directly if the box center is set.
         Otherwise, if it computes and sets the box center x coordinate when the
@@ -1298,7 +1323,7 @@ class Box(Region):
     @property
     def box_center(self) -> Tuple[int, int]:
         """
-        Get the box center by using the property function cy() and cx().
+        Get the box center y coordinate and x coordinate.
         If box center is not set not computable, it raises a ``ValueError``
 
         Returns:
@@ -1309,7 +1334,7 @@ class Box(Region):
     @property
     def corners(self) -> Tuple[Tuple[int, int], ...]:
         """
-        Compute and return the corners of the box.
+        Compute and return the positions of corners of the box, (top left, top right, bottom left, bottom right).
 
         Raises:
             ValueError: if the box center is not set.
@@ -1534,14 +1559,6 @@ class BoundingBox(Box):
         height: the height of the bounding box, the unit is one image array
             entry.
         width: the width of the bounding box, the unit is one pixel.
-        grid_height: the height of the associated grid, the unit is one grid
-            cell.
-        grid_width: the width of the associated grid, the unit is one grid
-            cell.
-        grid_cell_h_idx: the height index of the associated grid cell in
-            the grid, the unit is one grid cell.
-        grid_cell_w_idx: the width index of the associated grid cell in
-            the grid, the unit is one grid cell.
     """
 
     def __init__(
