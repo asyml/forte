@@ -19,7 +19,6 @@ from forte.data.ontology.top import Generics
 from forte.data.ontology.top import Group
 from forte.data.ontology.top import Link
 from forte.data.ontology.top import MultiPackLink
-from forte.data.ontology.top import Payload
 from typing import Dict
 from typing import Iterable
 from typing import List
@@ -54,9 +53,6 @@ __all__ = [
     "MRCQuestion",
     "Recording",
     "AudioUtterance",
-    "AudioPayload",
-    "TextPayload",
-    "ImagePayload",
 ]
 
 
@@ -596,44 +592,3 @@ class AudioUtterance(AudioAnnotation):
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self.speaker: Optional[str] = None
-
-
-@dataclass
-class AudioPayload(Payload):
-    """
-    A payload that caches audio data
-    Attributes:
-        sample_rate (Optional[int]):
-    """
-
-    sample_rate: Optional[int]
-
-    def __init__(
-        self, pack: DataPack, payload_idx: int = 0, uri: Optional[str] = None
-    ):
-        super().__init__(pack, payload_idx, uri)
-        self.sample_rate: Optional[int] = None
-
-
-@dataclass
-class TextPayload(Payload):
-    """
-    A payload that caches text data
-    """
-
-    def __init__(
-        self, pack: DataPack, payload_idx: int = 0, uri: Optional[str] = None
-    ):
-        super().__init__(pack, payload_idx, uri)
-
-
-@dataclass
-class ImagePayload(Payload):
-    """
-    A payload that caches image data
-    """
-
-    def __init__(
-        self, pack: DataPack, payload_idx: int = 0, uri: Optional[str] = None
-    ):
-        super().__init__(pack, payload_idx, uri)
