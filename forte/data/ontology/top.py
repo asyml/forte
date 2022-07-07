@@ -1336,7 +1336,8 @@ class Box(Region):
     @property
     def corners(self) -> Tuple[Tuple[int, int], ...]:
         """
-        Compute and return the positions of corners of the box, (top left, top right, bottom left, bottom right).
+        Compute and return the positions of corners of the box, (top left,
+        top right, bottom left, bottom right).
 
         Raises:
             ValueError: if the box center is not set.
