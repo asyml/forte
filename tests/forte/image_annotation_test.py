@@ -74,22 +74,16 @@ class ImageAnnotationTest(unittest.TestCase):
             pack=self.datapack_1,
             height=2,
             width=2,
-            grid_height=3,
-            grid_width=4,
-            grid_cell_h_idx=1,
-            grid_cell_w_idx=1,
         )
+        self.bb1.set_center(1,1)
         self.datapack_1.add_entry(self.bb1)
 
         self.bb2 = BoundingBox(
             pack=self.datapack_1,
             height=3,
             width=4,
-            grid_height=5,
-            grid_width=5,
-            grid_cell_h_idx=3,
-            grid_cell_w_idx=3,
         )
+        self.bb2.set_center(3,3)
         self.datapack_1.add_entry(self.bb2)
 
         # Entries for another image in the same Data Pack
@@ -97,12 +91,9 @@ class ImageAnnotationTest(unittest.TestCase):
             pack=self.datapack_1,
             height=3,
             width=4,
-            grid_height=6,
-            grid_width=6,
-            grid_cell_h_idx=2,
-            grid_cell_w_idx=2,
             image_payload_idx=1,
         )
+        self.bb4.set_center(2.5,2.5)
         self.datapack_1.add_entry(self.bb4)
 
         # Entries for second Data Pack
@@ -110,22 +101,18 @@ class ImageAnnotationTest(unittest.TestCase):
             pack=self.datapack_2,
             height=5,
             width=5,
-            grid_height=3,
-            grid_width=3,
-            grid_cell_h_idx=6,
-            grid_cell_w_idx=6,
             image_payload_idx=0,
         )
+        self.bb3.set_center(4,5)
         self.datapack_2.add_entry(self.bb3)
 
         self.box1 = Box(
             pack=self.datapack_2,
-            cy=7,
-            cx=7,
             height=4,
             width=2,
             image_payload_idx=0,
         )
+        self.box1.set_center(7,7)
         self.datapack_2.add_entry(self.box1)
 
         self.region1 = Region(pack=self.datapack_2, image_payload_idx=1)
@@ -220,14 +207,14 @@ class ImageAnnotationTest(unittest.TestCase):
 
     def test_update_image_annotation(self):
         # Check current value
-        self.assertEqual(self.bb1._height, 2)
+        self.assertEqual(self.bb1.height, 2)
 
         # Change a parameter of the entry object
-        self.bb1._height = 5
+        self.bb1.height = 5
 
         # Fetch attribute value from data store
         bb1_height = self.datapack_1._data_store.get_attribute(
-            self.bb1.tid, "_height"
+            self.bb1.tid, "height"
         )
         # Check new value
         self.assertEqual(bb1_height, 5)
@@ -235,7 +222,7 @@ class ImageAnnotationTest(unittest.TestCase):
         # Updating Non-Dataclass fields
 
         # Check current value
-        self.assertEqual(self.bb4.image_payload_idx, 1)
+        self.assertEqual(self.bb4.image_payload_idx, 0)
 
         # Change a parameter of the entry object
         self.bb4.image_payload_idx = 2
@@ -247,6 +234,20 @@ class ImageAnnotationTest(unittest.TestCase):
         # Check new value
         self.assertEqual(bb4_payload, 2)
 
+
+        self.assertEqual(
+            self.bb2.center_x, 3
+        )
+
+        self.bb2.center_x = 5
+
+        bb2_c_x = self.datapack_1._data_store.get_attribute(
+            self.bb2.tid, "cx"
+        )
+
+        self.assertEqual(bb2_c_x, 5)
+
+
     def test_compute_iou(self):
         box1 = self.bb1
         box2 = self.bb2
@@ -254,15 +255,20 @@ class ImageAnnotationTest(unittest.TestCase):
         box4 = self.bb4
 
         iou1 = box1.compute_iou(box4)
-        self.assertEqual(iou1, 0.14285714285714285)
+        self.assertEqual(iou1, 0.16363636363636364)
 
         iou2 = box1.compute_iou(box2)
-        self.assertEqual(iou2, 0)
+        self.assertEqual(iou2, 0.06666666666666667)
 
         iou3 = box1.compute_iou(box3)
         self.assertEqual(iou3, 0)
 
     def test_compute_overlap_from_data_store(self):
+
+        # Clearing DataIndex and EntryConverter Cache
+        self.datapack_1._index._entry_index = {}
+        self.datapack_1._entry_converter._entry_dict = {}
+
         bb1 = self.datapack_1.get_entry(tid=self.bb1.tid)
         bb2 = self.datapack_1.get_entry(tid=self.bb2.tid)
 
@@ -273,8 +279,6 @@ class ImageAnnotationTest(unittest.TestCase):
 
         new_box = Box(
             pack=self.datapack_1,
-            cy=7,
-            cx=7,
             height=4,
             width=2,
             image_payload_idx=0,

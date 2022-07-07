@@ -145,11 +145,15 @@ class DataStoreTest(unittest.TestCase):
             },
             "forte.data.ontology.top.BoundingBox": {
                 "attributes": {
-                    "_cy": 4,
-                    "_cx": 5,
-                    "_height": 6,
-                    "_width": 7,
-                    "_grid_id": 8,
+                    "cy": 4,
+                    "cx": 5,
+                    "height": 6,
+                    "width": 7,
+                    "cy_offset": 8,
+                    "cx_offset": 9,
+                    "grid_cy": 10,
+                    "grid_cx": 11,
+                    "is_grid_associated": 12
                 },
                 "parent_class": set(),
             },
@@ -176,11 +180,15 @@ class DataStoreTest(unittest.TestCase):
         }
         DataStore._type_attributes["forte.data.ontology.top.BoundingBox"] = {
             "attributes": {
-                "_cy": 4,
-                "_cx": 5,
-                "_height": 6,
-                "_width": 7,
-                "_grid_id": 8,
+                "cy": 4,
+                "cx": 5,
+                "height": 6,
+                "width": 7,
+                "cy_offset": 8,
+                "cx_offset": 9,
+                "grid_cy": 10,
+                "grid_cx": 11,
+                "is_grid_associated": 12
             },
             "parent_class": set(),
         }
@@ -241,22 +249,30 @@ class DataStoreTest(unittest.TestCase):
             None,
             1212,
             "forte.data.ontology.top.BoundingBox",
-            3,
+            1,
+            1,
             5,
-            2,
-            2,
-            1000,
-        ]
-        ref7 = [
             2,
             None,
-            3434,
+            None,
+            None,
+            None,
+            False
+        ]
+        ref7 = [
+            1,
+            None,
+            1212,
             "forte.data.ontology.top.BoundingBox",
             3,
-            5,
-            1,
             3,
-            2000,
+            3,
+            4,
+            None,
+            None,
+            None,
+            None,
+            False
         ]
         ref8 = [0, None, 1000, "forte.data.ontology.top.Grids"]
         ref9 = [0, None, 2000, "forte.data.ontology.top.Grids"]
@@ -849,6 +865,10 @@ class DataStoreTest(unittest.TestCase):
                 None,
                 tid,
                 "forte.data.ontology.top.BoundingBox",
+                None,
+                None,
+                None,
+                None,
                 None,
                 None,
                 None,

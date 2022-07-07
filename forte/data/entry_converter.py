@@ -32,6 +32,7 @@ from forte.data.ontology.top import (
     SinglePackEntries,
     MultiPackEntries,
 )
+from forte.data.ontology.top import BoundingBox, Box
 from forte.utils import get_class, get_full_module_name
 
 logger = logging.getLogger(__name__)
@@ -205,6 +206,8 @@ class EntryConverter:
         # the value can be arbitrary since they will all be routed to DataStore.
         if data_store_ref._is_annotation(type_name):
             entry = entry_class(pack=pack, begin=0, end=0)
+        elif any(entry_class == box_class for box_class in [BoundingBox, Box]):
+            entry = entry_class(pack=pack, height=1, width=1)
         elif any(
             data_store_ref._is_subclass(type_name, type_class)
             for type_class in SinglePackEntries + MultiPackEntries
