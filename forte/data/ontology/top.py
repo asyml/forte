@@ -1080,7 +1080,7 @@ class Box(Region):
 
     def _check_offset_validity(self, cy_offset: int, cx_offset: int):
         """
-        Check the validaty of cy_offset and cx_offset.
+        Check the validaty of y coordinate offset and x coordinate offset.
 
         Args:
             cy_offset: the offset between the box center and the grid cell
@@ -1106,7 +1106,7 @@ class Box(Region):
 
     def set_center(self, cy: int, cx: int):
         """
-        Set the center(reference point) of the Box.
+        Set the y coordinate and x coordinate of the center(a pixel) of the Box.
 
         Args:
             cy: the row index of the box center in the image array,
@@ -1150,7 +1150,7 @@ class Box(Region):
     @property
     def grid_cy(self) -> int:
         """
-        The row index of the grid cell center in the image array.
+        The row index(unit: pixel) of the grid cell center in the image array.
 
         Raises:
             ValueError: if the box is not associated with a grid.
@@ -1168,7 +1168,8 @@ class Box(Region):
     @property
     def grid_cx(self) -> int:
         """
-        The column index of the grid cell center in the image array.
+        The column index(unit: pixel) of the grid cell center in the image
+        array.
 
         Raises:
             ValueError: if the box is not associated with a grid.
@@ -1187,7 +1188,8 @@ class Box(Region):
     @property
     def grid_cell_center(self) -> Tuple[int, int]:
         """
-        The center of the grid cell that the Box is associated with.
+        The position of center(a pixel) of the grid cell that the Box is
+        associated with.
 
         Raises:
             ValueError: if the box is not associated with a grid.
@@ -1210,7 +1212,7 @@ class Box(Region):
         self, cy_offset: int, cx_offset: int, check_validity: bool = False
     ):
         """
-        Set the offset of the box center from the grid cell center.
+        Set the offset(unit: pixel) of the box center from the grid cell center.
 
         Args:
             cy_offset: the row index of the box center offset from the grid cell
@@ -1228,7 +1230,7 @@ class Box(Region):
     @property
     def offset(self):
         """
-        The offset of the box center from the grid cell center.
+        The offset(unit: pixel) of the box center from the grid cell center.
 
         Returns:
             the offset of the box center from the grid cell
@@ -1351,7 +1353,7 @@ class Box(Region):
     @property
     def box_min_x(self) -> int:
         """
-        Compute the minimum x coordinate of the box.
+        Compute the minimum x coordinate(unit: pixel) of the box.
 
         Raises:
             ValueError: if the box center is not set.
@@ -1364,7 +1366,7 @@ class Box(Region):
     @property
     def box_max_x(self) -> int:
         """
-        Compute the maximum x coordinate of the box.
+        Compute the maximum x coordinate(unit: pixel) of the box.
 
         Raises:
             ValueError: if the box center is not set.
@@ -1377,7 +1379,7 @@ class Box(Region):
     @property
     def box_min_y(self) -> int:
         """
-        Compute the minimum y coordinate of the box.
+        Compute the minimum y coordinate(unit: pixel) of the box.
 
         Raises:
             ValueError: if the box center is not set.
@@ -1390,7 +1392,7 @@ class Box(Region):
     @property
     def box_max_y(self) -> int:
         """
-        Compute the maximum y coordinate of the box.
+        Compute the maximum y coordinate(unit: pixel) of the box.
 
         Raises:
             ValueError: if the box center is not set.
@@ -1403,7 +1405,7 @@ class Box(Region):
     @property
     def area(self) -> int:
         """
-        Compute the area of the box.
+        Compute the area of the box(unit: pixel).
 
         Returns:
             The area of the box.
@@ -1443,7 +1445,8 @@ class Box(Region):
 
     def compute_iou(self, other) -> float:
         """
-        A function computes iou(intersection over union) between two boxes.
+        A function computes iou(intersection over union) between two boxes
+        (unit: pixel).
         It overwrites the ``compute_iou`` function in it's parent class
         ``Region``.
 
@@ -1556,8 +1559,7 @@ class BoundingBox(Box):
         image_payload_idx: the index of the image payload in the DataPack's
             image payload list. If it's not set,
             it defaults to 0 which means it will load the first image payload.
-        height: the height of the bounding box, the unit is one image array
-            entry.
+        height: the height of the bounding box, the unit is one pixel.
         width: the width of the bounding box, the unit is one pixel.
     """
 
