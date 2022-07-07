@@ -1272,7 +1272,7 @@ class Payload(Entry):
         else:
             supported_modality = [enum.name for enum in Modality]
             raise ValueError(
-                f"The given modality {self._modality.name} is not supported. "
+                f"The given payload type {type(self)} is not supported. "
                 f"Currently we only support {supported_modality}"
             )
         self._payload_idx: int = payload_idx
