@@ -294,33 +294,21 @@ following -
     optional arguments:
       -h, --help            show this help message and exit
       -i SPEC, --spec SPEC  The main input JSON specification.
-      -r, --no_dry_run      Generates the package tree in a temporary directory if
-                            true, ignores the argument `--dest_path`
+      -r, --no_dry_run      Generates the package tree in a temporary directory if true, ignores the argument `--dest_path`
       -o DEST_PATH, --dest_path DEST_PATH
-                            Destination directory provided by the user. Only used
-                            when --no_dry_run is specified. The default directory
-                            is the current working directory.
-      -s [SPEC_PATHS [SPEC_PATHS ...]], --spec_paths [SPEC_PATHS [SPEC_PATHS ...]]
-                            Paths in which the root and imported spec files are to
-                            be searched.
+                            Destination directory provided by the user. Only used when --no_dry_run is specified. The default directory is the current
+                            working directory.
+      -s [SPEC_PATHS ...], --spec_paths [SPEC_PATHS ...]
+                            Paths in which the root and imported spec files are to be searched.
       -m MERGED_PATH, --merged_path MERGED_PATH
                             The destination file path for the mergedfile path.
-      -e, --exclude_init    Excludes generation of `__init__.py` files in the
-                            already existing directories, if`__init__.py` not
-                            already present.
-      -a, --gen_all         If True, will generate all the ontology,including the
-                            existing ones shipped with Forte.
+      -a, --gen_all         If True, will generate all the ontology,including the existing ones shipped with Forte.
       -l, --lenient_prefix  If True, will not enforce prefix check.
       -n NAMESPACE_DEPTH, --namespace_depth NAMESPACE_DEPTH
-                            set an integer argument namespace_depth to allow
-                            customized number of levels of namespace packaging.The
-                            generation of __init__.py for all the directory levels
-                            above namespace_depth will be disabled.Default value
-                            is set to 0 to disable namespace packaging. When
-                            namespace_depth<=0, namespace packaging will be
-                            disabled and __init__.py will be included in all
+                            set an integer argument namespace_depth to allow customized number of levels of namespace packaging.The generation of
+                            __init__.py for all the directory levels above namespace_depth will be disabled.Default value is set to 0 to disable
+                            namespace packaging. When namespace_depth<=0, namespace packaging will be disabled and __init__.py will be included in all
                             directory levels
-
      ```
 
 * Run the `generate_ontology` command in `create` mode. Let the destination path be a directory `src` in user project.
