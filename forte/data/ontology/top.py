@@ -1211,7 +1211,7 @@ class Box(Region):
         if cy < self.height / 2 or cx < self.width / 2:
             raise ValueError(
                 f"Box center({cy}, {cx}) must be greater than half "
-                f"height({self.height/2}) and half width({self._width/2})"
+                f"height({self.height/2}) and half width({self.width/2})"
                 "respectively."
             )
 
