@@ -1254,7 +1254,7 @@ class Payload(Entry):
         payload_idx: int = 0,
         uri: Optional[str] = None,
     ):
-        from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
+        from ft.onto.payload_ontology import (  # pylint: disable=import-outside-toplevel
             TextPayload,
             AudioPayload,
             ImagePayload,
@@ -1388,6 +1388,7 @@ class Meta(Generics):
         self, pack: PackType
     ):  # pylint: disable=useless-super-delegation
         super().__init__(pack)
+        self.source_type = None  # data source type, it can be 'local` or 'web'
 
 
 SinglePackEntries = (
