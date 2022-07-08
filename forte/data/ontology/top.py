@@ -1254,7 +1254,7 @@ class Payload(Entry):
         payload_idx: int = 0,
         uri: Optional[str] = None,
     ):
-        from ft.onto.payload_ontology import (  # pylint: disable=import-outside-toplevel
+        from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
             TextPayload,
             AudioPayload,
             ImagePayload,
@@ -1272,7 +1272,7 @@ class Payload(Entry):
         else:
             supported_modality = [enum.name for enum in Modality]
             raise ValueError(
-                f"The given payload type {type(self)} is not supported. "
+                f"The given modality {self._modality.name} is not supported. "
                 f"Currently we only support {supported_modality}"
             )
         self._payload_idx: int = payload_idx
@@ -1384,7 +1384,10 @@ class Payload(Entry):
 
 
 class Meta(Generics):
-    pass
+    def __init__(
+        self, pack: PackType
+    ):  # pylint: disable=useless-super-delegation
+        super().__init__(pack)
 
 
 SinglePackEntries = (
