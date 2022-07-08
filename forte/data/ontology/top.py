@@ -1384,8 +1384,7 @@ class Payload(Entry):
 
 
 class Meta(Generics):
-    def __init__(self, pack: PackType):
-        super().__init__(pack)
+    pass
 
 
 SinglePackEntries = (
