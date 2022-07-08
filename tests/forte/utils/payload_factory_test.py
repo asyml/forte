@@ -71,7 +71,7 @@ class PayloadFactoryTest(unittest.TestCase):
         audio_meta.sample_rate = 44100
         audio_meta.channels = 2
         audio_meta.dtype = "float64"
-
+        audio_meta.encoding = "flac"
         self.f.register(audio_meta)
 
         # 2. each payloading intialized with a factory

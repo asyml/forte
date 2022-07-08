@@ -1,8 +1,7 @@
-from abc import abstractclassmethod
+from abc import abstractmethod
 from typing import Callable
-from forte.data.ontology.top import Meta
-from functools import partial
 import numpy as np
+from forte.data.ontology.top import Meta
 
 
 class PayloadFactory:
@@ -24,14 +23,10 @@ class PayloadFactory:
         """
         if meta.source_type not in ("web", "local"):
             raise ValueError("Meta data source must be either 'web' or 'local'")
-
-        self.valid_meta[meta] = True
+        self.valid_meta[type(meta)] = True
 
     def check_meta(self, meta):
-        if meta in self.valid_meta:
-            return True
-        else:
-            return False
+        return type(meta) in self.valid_meta
 
 
 class Payloading:
@@ -45,8 +40,8 @@ class Payloading:
     def load_factory(self, factory):
         self._factory = factory
 
-    @abstractclassmethod
-    def route(meta):
+    @abstractmethod
+    def route(self, meta):
         """
         Convert the meta into a loading function that takes uri and read data
         from the uri.
@@ -86,16 +81,18 @@ class ImagePayloading(Payloading):
                 import matplotlib.pyplot as plt  # pylint: disable=import-outside-toplevel
             except ModuleNotFoundError as e:
                 raise ModuleNotFoundError(
-                    "ImagePayloading reading local file requires `matplotlib` package to be installed."
+                    "ImagePayloading reading local file requires `matplotlib`"
+                    "package to be installed."
                 ) from e
             return plt.imread
         elif meta.source_type == "web":
             try:
-                from PIL import Image
-                import requests
+                from PIL import Image  # pylint: disable=import-outside-toplevel
+                import requests  # pylint: disable=import-outside-toplevel
             except ModuleNotFoundError as e:
                 raise ModuleNotFoundError(
-                    "ImagePayloading reading web file requires `PIL` and `requests` packages to be installed."
+                    "ImagePayloading reading web file requires `PIL` and"
+                    "`requests` packages to be installed."
                 ) from e
 
             def read_uri(uri):
@@ -141,7 +138,7 @@ class AudioPayloading(Payloading):
                 return seq[0]
 
             def read_uri(uri):
-                if meta.encoding == None:  # data type is ".raw"
+                if meta.encoding is None:  # data type is ".raw"
                     return get_first(
                         soundfile.read(
                             file=uri,

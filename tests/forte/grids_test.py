@@ -16,7 +16,7 @@ Unit tests for Grids.
 """
 import unittest
 from forte.data.modality import Modality
-from ft.onto.base_ontology import ImagePayload
+from ft.onto.payload_ontology import ImagePayload
 import numpy as np
 
 from numpy import array_equal
