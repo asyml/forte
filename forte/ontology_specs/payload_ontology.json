@@ -37,9 +37,7 @@
               {"name": "type_code",
               "type": "str"},
               {"name": "version",
-              "type": "str"},
-              {"name": "source_type",
-                "type": "str"}
+              "type": "str"}
              ]
           },
           {
@@ -59,8 +57,6 @@
               {"name": "bitrate",
               "type": "int"},
               {"name": "encoding",
-              "type": "str"},
-              {"name": "source_type",
               "type": "str"},
               {"name": "dtype",
                 "type": "str"}

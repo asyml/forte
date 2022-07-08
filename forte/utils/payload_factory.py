@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from multiprocessing.sharedctypes import Value
 from typing import Callable
 import numpy as np
 from forte.data.ontology.top import Meta
@@ -76,6 +77,9 @@ class ImagePayloading(Payloading):
         """
         if not self._factory.check_meta(meta):
             raise ValueError(f"Meta data{meta} not supported")
+        if not meta.source_type in ("web", "local"):
+            raise ValueError("Meta data source must be either 'web' or 'local'")
+
         if meta.source_type == "local":
             try:
                 import matplotlib.pyplot as plt  # pylint: disable=import-outside-toplevel
@@ -85,7 +89,7 @@ class ImagePayloading(Payloading):
                     "package to be installed."
                 ) from e
             return plt.imread
-        elif meta.source_type == "web":
+        else:
             try:
                 from PIL import Image  # pylint: disable=import-outside-toplevel
                 import requests  # pylint: disable=import-outside-toplevel
@@ -151,3 +155,5 @@ class AudioPayloading(Payloading):
                     return get_first(soundfile.read(file=uri))
 
             return read_uri
+        else:
+            pass
