@@ -787,10 +787,13 @@ class Grid:
         Get the center pixel position of the grid cell at the specific height
         index and width index in the ``Grid``.
         The computation of the center position of the grid cell is
-        dividing the grid cell height range and width range by 2 (round down)
+        dividing the grid cell height range (unit: pixel) and
+        width range (unit: pixel) by 2 (round down)
 
-        Suppose an extreme case that a grid cell has a height range of (0, 3)
-        and a width range of (0, 3) the grid cell center would be (1, 1).
+        Suppose an extreme case that a grid cell has a height range
+        (unit: pixel) of (0, 3)
+        and a width range (unit: pixel) of (0, 3) the grid cell center
+        would be (1, 1).
         Since the grid cell size is usually very large,
         the offset of the grid cell center is minor.
 
