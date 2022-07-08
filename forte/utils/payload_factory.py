@@ -24,11 +24,6 @@ class PayloadFactory:
         """
         if meta.source_type not in ("web", "local"):
             raise ValueError("Meta data source must be either 'web' or 'local'")
-        import pdb
-
-        pdb.set_trace()
-        print("")
-
         self.valid_meta[type(meta)] = True
 
     def check_meta(self, meta):
