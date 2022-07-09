@@ -1219,8 +1219,8 @@ class DataStore(BaseStore):
         :class:`~ft.onto.base_ontology.Sentence` and
         :class:`~ft.onto.base_ontology.EntityMention`.
         Each type has two entries. The two entries of type `Sentence` ranges from span
-        (0,5) amd (6,10). Similarly, the two entries of type `EntityMention` has spans
-        (0,3) and (15,20). If we consider the following function call
+        `(0,5)` and `(6,10)`. Similarly, the two entries of type `EntityMention` has span
+        `(0,3)` and `(15,20)`.
 
         .. code-block:: python
 
