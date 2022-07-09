@@ -1185,7 +1185,8 @@ class DataStore(BaseStore):
     def co_iterator_annotation_like(
         self,
         type_names: List[str],
-        range_annotation: Optional[Tuple[int]] = None,
+        range_begin: Optional[int] = None,
+        range_end: Optional[int] = None,
     ) -> Iterator[List]:
         r"""
         Given two or more type names, iterate their entry lists from beginning
@@ -1204,14 +1205,53 @@ class DataStore(BaseStore):
 
         The precedence of those values indicates their priority in the min heap
         ordering.
-        Lastly, the `range_annotation` argument determines the span range within
-        which entries of specified by `type_name` need to be fetched.
-        For example, if two entries have both the same begin and end field,
-        then their order is
+
+        Lastly, the `range_begin` and `range_end` argument determines the start
+        and end position of the span range within which entries of specified by
+        `type_name` need to be fetched. For example, if two entries have both
+        the same begin and end field, then their order is
         decided by the order of user input type_name (the type that first
         appears in the target type list will return first).
         For entries that have the exact same `begin`, `end` and `type_name`,
         the order will be determined arbitrarily.
+
+        For example, let's say we have two entry types,
+        :class:`~ft.onto.base_ontology.Sentence` and
+        :class:`~ft.onto.base_ontology.EntityMention`.
+        Each type has two entries. The two entries of type `Sentence` ranges from span
+        (0,5) amd (6,10). Similarly, the two entries of type `EntityMention` has spans
+        (0,3) and (15,20). If we consider the following function call
+
+        .. code-block:: python
+
+            # function signature
+            entries = list(
+                co_iterator_annotation_like(
+                    type_names = [
+                        "ft.onto.base_ontology.Sentence",
+                        "ft.onto.base_ontology.EntityMention"
+                    ],
+                    range_begin = 0,
+                    range_end = 12
+                )
+            )
+
+            # Fetching result
+            result = [
+                all_anno.append([type(anno).__name__, anno.begin, anno.end])
+                for all_anno in entries
+            ]
+
+            # return
+            result = [
+                ['Sentence', 0, 5],
+                ['EntityMention', 0, 5],
+                ['Sentence', 6, 10]
+            ]
+
+        From this we can see how `range_begin` and `range_end` affect which
+        entries will be fetched and also how the function chooses the order
+        in which entries are fetched.
 
         Args:
             type_names: a list of string type names
@@ -1223,33 +1263,30 @@ class DataStore(BaseStore):
             An iterator of entry elements.
         """
 
-        def get_bisect_range(search_list: SortedList):
+        def get_bisect_range(search_list: SortedList) -> Optional[Tuple[int]]:
             """
             Perform binary search on the specified list for target entry class.
             Args:
-                entry_class: Name of the target type of entry. It can be Annotation or
-                    `AudioAnnotation`.
+                entry_class: Name of the target type of entry. It can be a subtype
+                    of :class:`~forte.data.ontology.top.Annotation` or
+                    :class:`~forte.data.ontology.top.AudioAnnotation`.
                 search_list: A `SortedList` object on which the binary search
                     will be carried out.
             """
-            range_begin = (
-                range_annotation[constants.BEGIN_INDEX]
-                if range_annotation
-                else 0
-            )
-            range_end = (
-                range_annotation[constants.END_INDEX]
-                if range_annotation
-                else search_list[-1][constants.END_INDEX]
-            )
+
+            # Check if there are any entries within the given range
+            if (
+                search_list[0][constants.BEGIN_INDEX] > range_end
+                or search_list[-1][constants.END_INDEX] < range_begin
+            ):
+                return None
 
             begin_index = search_list.bisect_left([range_begin, range_begin])
 
             end_index = search_list.bisect_left([range_end, range_end])
 
-            return search_list[begin_index:end_index]
+            return (begin_index, end_index)
 
-        n = len(type_names)
         # suppose the length of type_names is N and the length of entry list of
         # one type is M
         # then the time complexity of using min-heap to iterate
@@ -1258,18 +1295,33 @@ class DataStore(BaseStore):
         # Initialize the first entry of all entry lists
         # it avoids empty entry lists or non-existent entry list
         first_entries = []
-        all_entries = {}
 
-        if range_annotation:
-            for entry_type in type_names:
-                all_entries[entry_type] = get_bisect_range(
-                    self.__elements[entry_type]
-                )
+        # For every entry type, store the index of the first and last entry
+        # of that type that needs to be fetched. When range_end and range_begin
+        # are None, we fetch all entries of each type (mentioned in type_names).
+        # But when range_end and range_end is specified, we find the first and
+        # last entry of a given type that needs to fetched and only iterate
+        # between them
+        all_entries_range = {}
+
+        # This list stores the types of entries that have atleast one entry to
+        # fetch. The order of the types in this list is the same as the order
+        # followed by them in type_names.
+        valid_type_names = []
+
+        if range_begin is not None and range_end is not None:
+            for tn in type_names:
+                possible_entries = get_bisect_range(self.__elements[tn])
+                if possible_entries is not None:
+                    all_entries_range[tn] = possible_entries
+                    valid_type_names.append(tn)
+
         else:
             try:
                 for tn in type_names:
-                    all_entries[tn] = self.__elements[tn]
-            except KeyError as e:  # all_entries[tn] will be caught here.
+                    all_entries_range[tn] = (0, len(self.__elements[tn]))
+                valid_type_names = type_names
+            except KeyError as e:  # all_entries_range[tn] will be caught here.
                 raise ValueError(
                     f"Input argument `type_names` to the function contains"
                     f" a type name [{tn}], which is not recognized."
@@ -1277,10 +1329,12 @@ class DataStore(BaseStore):
                     f" object: {list(self.__elements.keys())}"
                 ) from e
 
-        for tn in type_names:
+        for tn in valid_type_names:
             try:
-                first_entries.append(all_entries[tn][0])
-            except IndexError as e:  # all_entries[tn][0] will be caught here.
+                first_entries.append(
+                    self.__elements[tn][all_entries_range[tn][0]]
+                )
+            except IndexError as e:  # all_entries_range[tn][0] will be caught here.
                 raise ValueError(
                     f"Entry list of type name, {tn} which is"
                     " one list item of input argument `type_names`,"
@@ -1290,8 +1344,8 @@ class DataStore(BaseStore):
                 ) from e
 
         # record the current entry index for elements
-        # pointers[i] is the index of entry at (i)th sorted entry lists
-        pointers = [0] * n
+        # pointers[tn] is the index of entry of type tn
+        pointers = {key: val[0] for key, val in all_entries_range.items()}
 
         # compare tuple (begin, end, order of type name in input argument
         # type_names)
@@ -1300,8 +1354,8 @@ class DataStore(BaseStore):
         # the metric of comparing entry order is represented by the tuple
         # (begin index of entry, end index of entry,
         # the index of the entry type name in input parameter ``type_names``)
-        h: List[Tuple[Tuple[int, int, int], str]] = []
-        for p_idx in range(n):
+        h: List[Tuple[Tuple[int, int], str]] = []
+        for p_idx in range(len(first_entries)):
             entry_tuple = (
                 (
                     first_entries[p_idx][constants.BEGIN_INDEX],
@@ -1334,14 +1388,14 @@ class DataStore(BaseStore):
             (_, _, p_idx), type_name = entry_tuple
             # get the index of current entry
             # and locate the entry represented by the tuple for yielding
-            pointer = pointers[p_idx]
-            entry = all_entries[type_name][pointer]
+            pointer = pointers[type_name]
+            entry = self.__elements[type_name][pointer]
             # check whether there is next entry in the current entry list
             # if there is, then we push the new entry's tuple into the heap
-            if pointer + 1 < len(all_entries[type_name]):
-                pointers[p_idx] += 1
-                new_pointer = pointers[p_idx]
-                new_entry = all_entries[type_name][new_pointer]
+            if pointer + 1 < all_entries_range[type_name][1]:
+                pointers[type_name] += 1
+                new_pointer = pointers[type_name]
+                new_entry = self.__elements[type_name][new_pointer]
                 new_entry_tuple = (
                     (
                         new_entry[constants.BEGIN_INDEX],
@@ -1409,7 +1463,9 @@ class DataStore(BaseStore):
                 yield from self.co_iterator_annotation_like(all_types)
             else:
                 for entry in self.co_iterator_annotation_like(
-                    all_types, range_annotation
+                    all_types,
+                    range_begin=range_annotation[0],
+                    range_end=range_annotation[1],
                 ):
                     yield entry
         elif issubclass(entry_class, Link):
