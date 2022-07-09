@@ -1263,7 +1263,9 @@ class DataStore(BaseStore):
             An iterator of entry elements.
         """
 
-        def get_bisect_range(search_list: SortedList) -> Optional[Tuple[int]]:
+        def get_bisect_range(
+            search_list: SortedList,
+        ) -> Optional[Tuple[int, int]]:
             """
             Perform binary search on the specified list for target entry class.
             Args:
@@ -1354,15 +1356,15 @@ class DataStore(BaseStore):
         # the metric of comparing entry order is represented by the tuple
         # (begin index of entry, end index of entry,
         # the index of the entry type name in input parameter ``type_names``)
-        h: List[Tuple[Tuple[int, int], str]] = []
-        for p_idx in range(len(first_entries)):
+        h: List[Tuple[Tuple[int, int, int], str]] = []
+        for p_idx, entry in enumerate(first_entries):
             entry_tuple = (
                 (
-                    first_entries[p_idx][constants.BEGIN_INDEX],
-                    first_entries[p_idx][constants.END_INDEX],
+                    entry[constants.BEGIN_INDEX],
+                    entry[constants.END_INDEX],
                     p_idx,
                 ),
-                first_entries[p_idx][constants.ENTRY_TYPE_INDEX],
+                entry[constants.ENTRY_TYPE_INDEX],
             )
             heappush(
                 h,
@@ -1464,8 +1466,8 @@ class DataStore(BaseStore):
             else:
                 for entry in self.co_iterator_annotation_like(
                     all_types,
-                    range_begin=range_annotation[0],
-                    range_end=range_annotation[1],
+                    range_begin=range_annotation[constants.BEGIN_INDEX],
+                    range_end=range_annotation[constants.END_INDEX],
                 ):
                     yield entry
         elif issubclass(entry_class, Link):
