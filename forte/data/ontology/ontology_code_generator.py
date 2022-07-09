@@ -536,7 +536,9 @@ class OntologyCodeGenerator:
                         "The directory with the name "
                         "%s is already present in "
                         "%s. New files will be merge into the "
-                        "existing directory.",
+                        "existing directory. Note that in this "
+                        "case, the namespace depth may not take "
+                        "effect.",
                         existing_top_dir,
                         destination_dir,
                     )

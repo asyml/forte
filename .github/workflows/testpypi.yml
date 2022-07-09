@@ -1,4 +1,4 @@
-name: PYPI
+name: TESTPYPI
 
 on:
   push: 

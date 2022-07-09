@@ -36,9 +36,7 @@ from typing import (
 
 import numpy as np
 
-from packaging.version import Version
-
-from forte.data.container import ContainerType, BasePointer
+from forte.data.container import ContainerType
 
 __all__ = [
     "Entry",
@@ -47,16 +45,11 @@ __all__ = [
     "LinkType",
     "GroupType",
     "EntryType",
-    "Pointer",
-    "MpPointer",
     "FDict",
     "FList",
     "FNdArray",
     "MultiEntry",
 ]
-
-from forte.utils import get_full_module_name
-from forte.version import DEFAULT_PACK_VERSION, PACK_ID_COMPATIBLE_VERSION
 
 default_entry_fields = [
     "_Entry__pack",
@@ -78,78 +71,6 @@ unserializable_fields = [
     # This may be related to typing, but cannot be supported by typing.
     "__orig_class__",
 ]
-
-_f_struct_keys: Dict[str, bool] = {}
-_pointer_keys: Dict[str, bool] = {}
-
-
-def set_state_func(instance, state):
-    # pylint: disable=protected-access
-    """
-    An internal used function. `instance` is an instance of Entry or a
-    MultiEntry. This function will populate the internal states for them.
-
-    Args:
-        instance:
-        state:
-
-    Returns:
-        None
-    """
-    # During de-serialization, convert the list back to numpy array.
-    if "_embedding" in state:
-        state["_embedding"] = np.array(state["_embedding"])
-    else:
-        state["_embedding"] = np.empty(0)
-
-    # NOTE: the __pack will be set via set_pack from the Pack side.
-    cls_name = get_full_module_name(instance)
-    for k, v in state.items():
-        key = cls_name + "_" + k
-        if _f_struct_keys.get(key, False):
-            v._set_parent(instance)
-        else:
-            if isinstance(v, (FList, FDict)):
-                v._set_parent(instance)
-                _f_struct_keys[key] = True
-            else:
-                _f_struct_keys[key] = False
-
-    instance.__dict__.update(state)
-
-
-def get_state_func(instance):
-    # pylint: disable=protected-access
-    r"""In serialization, the reference to pack is not set, and
-    it will be set by the container.
-
-    This also implies that it is not advised to serialize an entry on its
-    own, without the ``Container`` as the context, there is little semantics
-    remained in an entry and unexpected errors could occur.
-    """
-    state = instance.__dict__.copy()
-    # During serialization, convert the numpy array as a list.
-    emb = list(instance._embedding.tolist())
-    if len(emb) == 0:
-        state.pop("_embedding")
-    else:
-        state["_embedding"] = emb
-
-    cls_name = get_full_module_name(instance)
-    for k, v in state.items():
-        key = cls_name + "_" + k
-        if k in _pointer_keys:
-            if _pointer_keys[key]:
-                state[k] = v.as_pointer(instance)
-        else:
-            if isinstance(v, Entry):
-                state[k] = v.as_pointer(instance)
-                _pointer_keys[key] = True
-            else:
-                _pointer_keys[key] = False
-
-    state.pop("_Entry__pack")
-    return state
 
 
 @dataclass
@@ -191,19 +112,6 @@ class Entry(Generic[ContainerType]):
         self._embedding: np.ndarray = np.empty(0)
         self.pack._validate(self)
         self.pack.on_entry_creation(self)
-
-    def __getstate__(self):
-        r"""In serialization, the pack is not serialize, and it will be set
-        by the container.
-
-        This also implies that it is not advised to serialize an entry on its
-        own, without the ``Container`` as the context, there is little semantics
-        remained in an entry.
-        """
-        return get_state_func(self)
-
-    def __setstate__(self, state):
-        set_state_func(self, state)
 
     # using property decorator
     # a getter function for self._embedding
@@ -249,62 +157,6 @@ class Entry(Generic[ContainerType]):
 
     def set_pack(self, pack: ContainerType):
         self.__pack = pack
-
-    def relink_pointer(self):
-        """
-        This function is normally called after deserialization. It can be called
-        when the pack reference of this entry is ready (i.e. after `set_pack`).
-        The purpose is to convert the `Pointer` objects into actual entries.
-        """
-        cls_name = get_full_module_name(self)
-        for k, v in self.__dict__.items():
-            key = cls_name + "_" + k
-            if k in _pointer_keys:
-                if _pointer_keys[key]:
-                    setattr(self, k, self._resolve_pointer(v))
-            else:
-                if isinstance(v, BasePointer):
-                    _pointer_keys[key] = True
-                    setattr(self, k, self._resolve_pointer(v))
-                else:
-                    _pointer_keys[key] = False
-
-    def as_pointer(self, from_entry: "Entry"):
-        """
-        Return this entry as a pointer of this entry relative to the
-        ``from_entry``.
-
-        Args:
-            from_entry: the entry to point from.
-
-        Returns:
-            A pointer to the this entry from the ``from_entry``.
-        """
-        if isinstance(from_entry, MultiEntry):
-            return MpPointer(
-                # bug fix/enhancement 559: change pack index to pack_id for multi-entry/multi-pack
-                self.pack_id,
-                self.tid,  # from_entry.pack.get_pack_index(self.pack_id)
-            )
-        elif isinstance(from_entry, Entry):
-            return Pointer(self.tid)
-
-    def _resolve_pointer(self, ptr: BasePointer):
-        """
-        Resolve into an entry on the provided pointer ``ptr`` from this entry.
-
-        Args:
-            ptr: A pointer that refer to an entity.
-
-        Returns:
-            None
-        """
-        if isinstance(ptr, Pointer):
-            return self.pack.get_entry(ptr.tid)
-        else:
-            raise TypeError(
-                f"Unsupported pointer type {ptr.__class__} for entry"
-            )
 
     def entry_type(self) -> str:
         """Return the full name of this entry type."""
@@ -414,44 +266,7 @@ class MultiEntry(Entry, ABC):
     A :class:`forte.data.ontology.top.MultiPackGroup` object represents a
     collection of multiple entries among different data packs.
     """
-
-    def as_pointer(self, from_entry: "Entry") -> "Pointer":
-        """
-        Get a pointer of the entry relative to this entry
-
-        Args:
-            from_entry: The entry relative from.
-
-        Returns:
-             A pointer relative to the this entry.
-        """
-        if isinstance(from_entry, MultiEntry):
-            return Pointer(self.tid)
-        elif isinstance(from_entry, Entry):
-            raise ValueError(
-                "Do not support reference a multi pack entry from an entry."
-            )
-
-    def _resolve_pointer(self, ptr: BasePointer) -> Entry:
-        if isinstance(ptr, Pointer):
-            return self.pack.get_entry(ptr.tid)
-        elif isinstance(ptr, MpPointer):
-            # bugfix/new feature 559: in new version pack_index will be using pack_id internally
-            pack_array_index = ptr.pack_index  # old version
-            pack_version = ""
-            try:
-                pack_version = self.pack.pack_version
-            except AttributeError:
-                pack_version = DEFAULT_PACK_VERSION  # set to default if lacking version attribute
-
-            if Version(pack_version) >= Version(PACK_ID_COMPATIBLE_VERSION):
-                pack_array_index = self.pack.get_pack_index(
-                    ptr.pack_index
-                )  # default: new version
-
-            return self.pack.packs[pack_array_index].get_entry(ptr.tid)
-        else:
-            raise TypeError(f"Unknown pointer type {ptr.__class__}")
+    pass
 
 
 EntryType = TypeVar("EntryType", bound=Entry)
@@ -674,51 +489,6 @@ class FNdArray:
         # Stored dtype and shape should match to the provided array's.
         self._dtype = self._data.dtype
         self._shape = self._data.shape
-
-
-class Pointer(BasePointer):
-    """
-    A pointer that points to an entry in the current pack, this is basically
-    containing the entry's tid.
-    """
-
-    def __init__(self, tid: int):
-        self._tid: int = tid
-
-    @property
-    def tid(self):
-        return self._tid
-
-    def __str__(self):
-        return f"[Entry Pointer]:{self.tid}"
-
-    def __eq__(self, other):
-        return self.tid == other.tid
-
-
-class MpPointer(BasePointer):
-    """
-    Multi pack Pointer. A pointer that refers to an entry of one of the pack in
-    the multi pack. This contains the pack's index and the entries' tid.
-    """
-
-    def __init__(self, pack_index: int, tid: int):
-        self._pack_index: int = pack_index
-        self._tid: int = tid
-
-    @property
-    def pack_index(self):
-        return self._pack_index
-
-    @property
-    def tid(self):
-        return self._tid
-
-    def __str__(self):
-        return f"[Entry Pointer]:{self.pack_index},{self.tid}"
-
-    def __eq__(self, other):
-        return self._pack_index == other._pack_index and self.tid == other.tid
 
 
 class BaseLink(Entry, ABC):
