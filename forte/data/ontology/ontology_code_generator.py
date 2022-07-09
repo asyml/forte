@@ -794,12 +794,12 @@ class OntologyCodeGenerator:
 
             # Get various parts of the entry name.
             en = EntryName(raw_entry_name)
-            entry_item, properties = self.parse_entry(en, definition)
-
-            # Add it as a defining object.
+            # First add the entry, and then parse the attribute. In this
+            #  order, we can avoid some incorrect warning.
             self.import_managers.get(en.module_name).add_defining_objects(
                 raw_entry_name
             )
+            entry_item, properties = self.parse_entry(en, definition)
 
             # Get or set module writer only if the ontology to be generated
             # is not already installed.
