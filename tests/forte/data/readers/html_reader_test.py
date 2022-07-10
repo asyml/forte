@@ -57,6 +57,10 @@ class HTMLReaderPipelineTest(unittest.TestCase):
             "Page TitleThis is a paragraph",
         ),
         (
+                "<html>This example has a broken end tag</html",
+                "This example has a broken end tag</html"
+        ),
+        (
             """<!DOCTYPE html>
     <html>
     <head>
