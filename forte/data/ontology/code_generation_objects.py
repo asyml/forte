@@ -14,6 +14,7 @@
 import itertools as it
 import logging
 import os
+import warnings
 from abc import ABC
 from pathlib import Path
 from typing import Optional, Any, List, Dict, Set, Tuple
@@ -21,6 +22,7 @@ from numpy import ndarray
 
 from forte.data.ontology.code_generation_exceptions import (
     CodeGenerationException,
+    OntologyGenerationWarning,
 )
 from forte.data.ontology.ontology_code_const import (
     SUPPORTED_PRIMITIVES,
@@ -173,10 +175,10 @@ class ImportManager:
             if class_name not in self.__short_name_pool:
                 self.__short_name_pool.add(class_name)
             else:
-                logging.warning(
-                    "Re-declared a new class named [%s]"
+                warnings.warn(
+                    f"Re-declared a new class named [{class_name}]"
                     ", which is probably used in import.",
-                    class_name,
+                    OntologyGenerationWarning,
                 )
             self.__defining_names[full_name] = class_name
 
