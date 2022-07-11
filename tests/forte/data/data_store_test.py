@@ -27,6 +27,7 @@ from forte.data.ontology.top import (
     Annotation,
     Generics,
     AudioAnnotation,
+    ImageAnnotation,
     Group,
     Link,
     MultiPackGeneric,
@@ -142,42 +143,59 @@ class DataStoreTest(unittest.TestCase):
                 },
                 "parent_class": set(),
             },
-        }
-
-        self.base_type_attributes = {
-            'forte.data.ontology.top.Generics': {'parent_class': {'Entry'}},
-            'forte.data.ontology.top.Annotation': {'parent_class': {'Entry'}},
-            'forte.data.ontology.top.Link': {'parent_class': {'BaseLink'}},
-            'forte.data.ontology.top.Group': {'parent_class': {'Entry', 'BaseGroup'}},
-            'forte.data.ontology.top.MultiPackGeneric': {'parent_class': {'Entry', 'MultiEntry'}},
-            'forte.data.ontology.top.MultiPackLink': {'parent_class': {'MultiEntry', 'BaseLink'}},
-            'forte.data.ontology.top.MultiPackGroup': {'parent_class': {'Entry', 'MultiEntry', 'BaseGroup'}},
-            'forte.data.ontology.top.Query': {'parent_class': {'Generics'}},
-            'forte.data.ontology.top.AudioAnnotation': {'parent_class': {'Entry'}}
+            "forte.data.ontology.top.BoundingBox": {
+                "attributes": {
+                    "cy": 4,
+                    "cx": 5,
+                    "height": 6,
+                    "width": 7,
+                    "cy_offset": 8,
+                    "cx_offset": 9,
+                    "grid_cy": 10,
+                    "grid_cx": 11,
+                    "is_grid_associated": 12
+                },
+                "parent_class": set(),
+            },
         }
 
         DataStore._type_attributes["ft.onto.base_ontology.Document"] = {
-                "attributes": {
-                    "document_class": 4,
-                    "sentiment": 5,
-                    "classifications": 6,
-                },
-                "parent_class": set(),
-            }
+            "attributes": {
+                "document_class": 4,
+                "sentiment": 5,
+                "classifications": 6,
+            },
+            "parent_class": set(),
+        }
 
         DataStore._type_attributes["ft.onto.base_ontology.Sentence"] = {
-                "attributes": {
-                    "speaker": 4,
-                    "part_id": 5,
-                    "sentiment": 6,
-                    "classification": 7,
-                    "classifications": 8,
-                },
-                "parent_class": set(),
-            }
-        # The order is [Document, Sentence]. Initialize 2 entries in each list.
+            "attributes": {
+                "speaker": 4,
+                "part_id": 5,
+                "sentiment": 6,
+                "classification": 7,
+                "classifications": 8,
+            },
+            "parent_class": set(),
+        }
+        DataStore._type_attributes["forte.data.ontology.top.BoundingBox"] = {
+            "attributes": {
+                "cy": 4,
+                "cx": 5,
+                "height": 6,
+                "width": 7,
+                "cy_offset": 8,
+                "cx_offset": 9,
+                "grid_cy": 10,
+                "grid_cx": 11,
+                "is_grid_associated": 12
+            },
+            "parent_class": set(),
+        }
+        # The order is [Document, Sentence, BoundingBox]. Initialize 2 entries in each list.
         # Document entries have tid 1234, 3456.
         # Sentence entries have tid 9999, 1234567.
+        # BoundingBox entries have tid 1212, 3434.
         # The type id for Document is 0, Sentence is 1.
 
         ref1 = [
@@ -226,6 +244,39 @@ class DataStoreTest(unittest.TestCase):
             7654,
             "forte.data.ontology.top.Annotation",
         ]
+        ref6 = [
+            1,
+            None,
+            1212,
+            "forte.data.ontology.top.BoundingBox",
+            1,
+            1,
+            5,
+            2,
+            None,
+            None,
+            None,
+            None,
+            False
+        ]
+        ref7 = [
+            1,
+            None,
+            1212,
+            "forte.data.ontology.top.BoundingBox",
+            3,
+            3,
+            3,
+            4,
+            None,
+            None,
+            None,
+            None,
+            False
+        ]
+        ref8 = [0, None, 1000, "forte.data.ontology.top.Grids"]
+        ref9 = [0, None, 2000, "forte.data.ontology.top.Grids"]
+        ref10 = [0, None, 8888, "forte.data.ontology.top.ImageAnnotation"]
 
         sorting_fn = lambda s: (
             s[constants.BEGIN_INDEX],
@@ -271,6 +322,9 @@ class DataStoreTest(unittest.TestCase):
                     "forte.data.ontology.top.Link",
                 ],
             ],
+            "forte.data.ontology.top.BoundingBox": [ref6, ref7],
+            "forte.data.ontology.top.Grids": [ref8, ref9],
+            "forte.data.ontology.top.ImageAnnotation": [ref10],
         }
         self.data_store._DataStore__tid_ref_dict = {
             1234: ref1,
@@ -284,6 +338,11 @@ class DataStoreTest(unittest.TestCase):
             23456: ["forte.data.ontology.top.Group", 1],
             34567: ["forte.data.ontology.top.Group", 2],
             88888: ["forte.data.ontology.top.Link", 0],
+            1212: ["forte.data.ontology.top.BoundingBox", 0],
+            3434: ["forte.data.ontology.top.BoundingBox", 1],
+            1000: ["forte.data.ontology.top.Grids", 0],
+            2000: ["forte.data.ontology.top.Grids", 1],
+            8888: ["forte.data.ontology.top.ImageAnnotation", 0],
         }
 
     def test_get_type_info(self):
@@ -304,6 +363,14 @@ class DataStoreTest(unittest.TestCase):
             DataStore._type_attributes["ft.onto.base_ontology.Document"],
             self.reference_type_attributes["ft.onto.base_ontology.Document"],
         )
+
+        empty_data_store._get_type_info("forte.data.ontology.top.BoundingBox")
+        self.assertEqual(
+            DataStore._type_attributes["forte.data.ontology.top.BoundingBox"],
+            self.reference_type_attributes[
+                "forte.data.ontology.top.BoundingBox"
+            ],
+        )
         # test the return value
         self.assertEqual(
             doc_attr_dict,
@@ -321,7 +388,7 @@ class DataStoreTest(unittest.TestCase):
         doc_attr_dict = empty_data_store._get_type_info(
             "ft.onto.base_ontology.Document"
         )
-        self.assertEqual(len(DataStore._type_attributes), 2)
+        self.assertEqual(len(DataStore._type_attributes), 3)
         self.assertEqual(
             doc_attr_dict,
             DataStore._type_attributes["ft.onto.base_ontology.Document"],
@@ -344,8 +411,11 @@ class DataStoreTest(unittest.TestCase):
         doc_type = "ft.onto.base_ontology.Document"
         ann_type = "forte.data.ontology.top.Annotation"
         group_type = "forte.data.ontology.top.Group"
+        box_type = "forte.data.ontology.top.BoundingBox"
+
         sent_list = list(self.data_store._DataStore__elements[sent_type])
         doc_list = list(self.data_store._DataStore__elements[doc_type])
+        box_list = list(self.data_store._DataStore__elements[box_type])
         ann_list = list(
             self.data_store.co_iterator_annotation_like(
                 list(self.data_store._get_all_subclass(ann_type, True))
@@ -356,13 +426,16 @@ class DataStoreTest(unittest.TestCase):
         sent_entries = list(self.data_store.all_entries(sent_type))
         doc_entries = list(self.data_store.all_entries(doc_type))
         ann_entries = list(self.data_store.all_entries(ann_type))
+        box_entries = list(self.data_store.all_entries(box_type))
 
         self.assertEqual(sent_list, sent_entries)
         self.assertEqual(doc_list, doc_entries)
         self.assertEqual(ann_list, ann_entries)
+        self.assertEqual(box_list, box_entries)
 
         self.assertEqual(self.data_store.num_entries(sent_type), len(sent_list))
         self.assertEqual(self.data_store.num_entries(doc_type), len(doc_list))
+        self.assertEqual(self.data_store.num_entries(box_type), len(box_list))
         self.assertEqual(
             self.data_store.num_entries(ann_type), len(ann_entries)
         )
@@ -396,6 +469,12 @@ class DataStoreTest(unittest.TestCase):
         self.data_store.delete_entry(23456)
         num_group_entries = self.data_store.num_entries(group_type)
         self.assertEqual(num_group_entries, len(group_list) - 1)
+
+        # remove a boundingbox
+        self.data_store.delete_entry(1212)
+        self.assertEqual(
+            self.data_store.num_entries(box_type), len(box_list) - 1
+        )
 
     def test_co_iterator_annotation_like(self):
         type_names = [
@@ -737,6 +816,67 @@ class DataStoreTest(unittest.TestCase):
             [0, 1, tid, "ft.onto.base_ontology.Recording", []],
         )
 
+    def test_add_image_annotation_raw(self):
+        tid_bounding_box: int = self.data_store.add_entry_raw(
+            type_name="forte.data.ontology.top.BoundingBox",
+            attribute_data=[25, None],
+            base_class=ImageAnnotation,
+        )
+
+        tid_box: int = self.data_store.add_entry_raw(
+            type_name="forte.data.ontology.top.Box",
+            attribute_data=[30, None],
+            base_class=ImageAnnotation,
+        )
+
+        tid_region: int = self.data_store.add_entry_raw(
+            type_name="forte.data.ontology.top.Region",
+            attribute_data=[35, None],
+            base_class=ImageAnnotation,
+        )
+        self.assertEqual(
+            len(
+                self.data_store._DataStore__elements[
+                    "forte.data.ontology.top.Box"
+                ]
+            ),
+            1,
+        )
+        self.assertEqual(
+            len(
+                self.data_store._DataStore__elements[
+                    "forte.data.ontology.top.Region"
+                ]
+            ),
+            1,
+        )
+
+        tid = 88
+        self.data_store.add_entry_raw(
+            type_name="forte.data.ontology.top.BoundingBox",
+            attribute_data=[45, None],
+            base_class=ImageAnnotation,
+            tid=tid,
+        )
+        self.assertEqual(
+            self.data_store.get_entry(tid=88)[0],
+            [
+                45,
+                None,
+                tid,
+                "forte.data.ontology.top.BoundingBox",
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            ],
+        )
+
     def test_add_generics_raw(self):
         # test add Document entry
         tid_generics: int = self.data_store.add_entry_raw(
@@ -910,6 +1050,7 @@ class DataStoreTest(unittest.TestCase):
         # set attribute with originally none value
         self.data_store.set_attribute(1234, "document_class", "Class D")
         speaker = self.data_store.get_attribute(9999, "speaker")
+
         doc_class = self.data_store.get_attribute(1234, "document_class")
 
         self.assertEqual(speaker, "student")
@@ -1031,7 +1172,7 @@ class DataStoreTest(unittest.TestCase):
 
         # delete group
         self.data_store.delete_entry(10123)
-        self.assertEqual(len(self.data_store._DataStore__tid_idx_dict), 3)
+        self.assertEqual(len(self.data_store._DataStore__tid_idx_dict), 8)
         self.data_store.delete_entry(23456)
         self.data_store.delete_entry(34567)
         self.assertTrue(
@@ -1054,7 +1195,7 @@ class DataStoreTest(unittest.TestCase):
     def test_delete_entry_nonexist(self):
         # Entry tid does not exist; should raise a KeyError
         with self.assertRaises(KeyError):
-            self.data_store.delete_entry(1000)
+            self.data_store.delete_entry(5000)
 
     def test_delete_entry_by_loc(self):
         self.data_store._delete_entry_by_loc(
@@ -1276,19 +1417,28 @@ class DataStoreTest(unittest.TestCase):
                     "umls_link": 5,
                 },
                 "parent_class": {"ft.onto.test.EntityMention"},
-            }
+            },
         }
-        data_store_from_file = DataStore(onto_file_path=os.path.abspath(os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            "ontology/test_specs/test_check_onto_file.json"
-        )))
+        data_store_from_file = DataStore(
+            onto_file_path=os.path.abspath(
+                os.path.join(
+                    os.path.dirname(os.path.abspath(__file__)),
+                    "ontology/test_specs/test_check_onto_file.json",
+                )
+            )
+        )
         # Check whether `_type_attributes` contains all items in `expected_type_attributes`
-        union_dict: Dict = dict(data_store_from_file._type_attributes, **expected_type_attributes)
+        union_dict: Dict = dict(
+            data_store_from_file._type_attributes, **expected_type_attributes
+        )
         self.assertDictEqual(data_store_from_file._type_attributes, union_dict)
 
         # DataStores share a static type_attribute dict.
         data_store_non_file = DataStore()
-        self.assertDictEqual(data_store_non_file._type_attributes, data_store_from_file._type_attributes)
+        self.assertDictEqual(
+            data_store_non_file._type_attributes,
+            data_store_from_file._type_attributes,
+        )
 
     def test_entry_conversion(self):
         data_pack = DataPack()
