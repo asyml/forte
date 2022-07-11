@@ -987,7 +987,7 @@ class DataStoreTest(unittest.TestCase):
         # get annotations with subclasses and range annotation
         instances = list(
             self.data_store.get(
-                "forte.data.ontology.top.Annotation", range_annotation=(1, 20)
+                "forte.data.ontology.top.Annotation", range_span=(1, 20)
             )
         )
         self.assertEqual(len(instances), 3)
@@ -999,7 +999,7 @@ class DataStoreTest(unittest.TestCase):
         # get groups with subclasses and range annotation
         instances = list(
             self.data_store.get(
-                "forte.data.ontology.top.Group", range_annotation=(1, 20)
+                "forte.data.ontology.top.Group", range_span=(1, 20)
             )
         )
         self.assertEqual(len(instances), 0)
@@ -1011,7 +1011,7 @@ class DataStoreTest(unittest.TestCase):
         # get links with subclasses and range annotation
         instances = list(
             self.data_store.get(
-                "forte.data.ontology.top.Link", range_annotation=(0, 9)
+                "forte.data.ontology.top.Link", range_span=(0, 9)
             )
         )
         self.assertEqual(len(instances), 1)
@@ -1019,7 +1019,7 @@ class DataStoreTest(unittest.TestCase):
         # get links with subclasses and range annotation
         instances = list(
             self.data_store.get(
-                "forte.data.ontology.top.Link", range_annotation=(4, 11)
+                "forte.data.ontology.top.Link", range_span=(4, 11)
             )
         )
         self.assertEqual(len(instances), 0)

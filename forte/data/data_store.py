@@ -1255,8 +1255,9 @@ class DataStore(BaseStore):
 
         Args:
             type_names: a list of string type names
-            range_annotation: a list with two elements,
-                the start and the end of the range in
+            range_begin: start index of the range in
+                which we want to get required entries
+            range_end: end index of the range in
                 which we want to get required entries
 
         Returns:
@@ -1416,7 +1417,7 @@ class DataStore(BaseStore):
         self,
         type_name: str,
         include_sub_type: bool = True,
-        range_annotation: Optional[Tuple[int]] = None,
+        range_span: Optional[Tuple[int]] = None,
     ) -> Iterator[List]:
         r"""This function fetches entries from the data store of
         type ``type_name``. If `include_sub_type` is set to True and
@@ -1427,27 +1428,25 @@ class DataStore(BaseStore):
         Args:
             type_name: The fully qualified name of the entry.
             include_sub_type: A boolean to indicate whether get its subclass.
-            range_annotation: A tuple that contains the begin and end indices
+            range_span: A tuple that contains the begin and end indices
                 of the searching range of entries.
 
         Returns:
             An iterator of the entries matching the provided arguments.
         """
 
-        def within_range(
-            entry: List[Any], range_annotation: Tuple[int]
-        ) -> bool:
+        def within_range(entry: List[Any], range_span: Tuple[int]) -> bool:
             """
             A helper function for deciding whether an annotation entry is
-            inside the `range_annotation`.
+            inside the `range_span`.
             """
             if not self._is_annotation(entry[constants.ENTRY_TYPE_INDEX]):
                 return False
             return (
                 entry[constants.BEGIN_INDEX]
-                >= range_annotation[constants.BEGIN_INDEX]
+                >= range_span[constants.BEGIN_INDEX]
                 and entry[constants.END_INDEX]
-                <= range_annotation[constants.END_INDEX]
+                <= range_span[constants.END_INDEX]
             )
 
         entry_class = get_class(type_name)
@@ -1461,18 +1460,18 @@ class DataStore(BaseStore):
         all_types = list(all_types)
         all_types.sort()
         if self._is_annotation(type_name):
-            if range_annotation is None:
+            if range_span is None:
                 yield from self.co_iterator_annotation_like(all_types)
             else:
                 for entry in self.co_iterator_annotation_like(
                     all_types,
-                    range_begin=range_annotation[constants.BEGIN_INDEX],
-                    range_end=range_annotation[constants.END_INDEX],
+                    range_begin=range_span[constants.BEGIN_INDEX],
+                    range_end=range_span[constants.END_INDEX],
                 ):
                     yield entry
         elif issubclass(entry_class, Link):
             for type in all_types:
-                if range_annotation is None:
+                if range_span is None:
                     yield from self.iter(type)
                 else:
                     for entry in self.__elements[type]:
@@ -1490,12 +1489,12 @@ class DataStore(BaseStore):
                                 entry[constants.CHILD_TID_INDEX]
                             ]
                             if within_range(
-                                parent, range_annotation
-                            ) and within_range(child, range_annotation):
+                                parent, range_span
+                            ) and within_range(child, range_span):
                                 yield entry
         elif issubclass(entry_class, Group):
             for type in all_types:
-                if range_annotation is None:
+                if range_span is None:
                     yield from self.iter(type)
                 else:
                     for entry in self.__elements[type]:
@@ -1505,7 +1504,7 @@ class DataStore(BaseStore):
                             within = True
                             for m in members:
                                 e = self.__tid_ref_dict[m]
-                                if not within_range(e, range_annotation):
+                                if not within_range(e, range_span):
                                     within = False
                                     break
                             if within:
