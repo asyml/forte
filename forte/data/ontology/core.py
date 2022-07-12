@@ -641,15 +641,17 @@ class Grid:
     Regular grid with a grid configuration dependent on the image size.
     It is a data structure used to retrieve grid-related objects such as grid
     cells from the image. Grid itself doesn't store any data.
+
     Based the image size and the grid shape,
     we compute the height and the width of grid cells.
     For example, if the image size (image_height,image_width) is (640, 480)
     and the grid shape (height, width) is (2, 3)
     the size of grid cells (self.c_h, self.c_w) will be (320, 160).
+
     However, when the image size is not divisible by the grid shape, we round
     up the resulting size(floating number) to an integer.
-    In this way, as each grid
-    cell taking one more pixel, we make the last grid cell per column and row
+    In this way, as each grid cell taking one more pixel,
+    we make the last grid cell per column and row
     size(height and width) to be the remainder of the image size divided by the
     grid cell size which is smaller than other grid cell.
     For example, if the image
@@ -657,6 +659,7 @@ class Grid:
     per column and row will have a size of (10, 10) since 128/13=9.85, so we
     round up to 10. The last grid cell per column and row will have a size of
     (8, 8) since 128%10=8.
+
     We require each grid to be bounded/intialized with one image size since
     the number of different image shapes are limited per computer vision task.
     For example, we can only have one image size (640, 480) from a CV dataset,
@@ -665,11 +668,12 @@ class Grid:
     Therefore, it won't be troublesome to
     have a grid for each image size, and we can check the image size during the
     initialization of the grid.
-    By contrast, if the grid is totally "free-form"
-    that we don't initialize it with any
+
+    By contrast, if we don't initialize it with any
     image size and pass the image size directly into the method/operation on
     the fly, the API would be more complex and image size check would be
     repeated everytime the method is called.
+
     Args:
         height: the number of grid cell per column, the unit is one grid cell.
         width: the number of grid cell per row, the unit is one grid cell.
