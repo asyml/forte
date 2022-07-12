@@ -33,6 +33,7 @@ from forte.data.ontology.core import (
     Entry,
     BaseLink,
     BaseGroup,
+    Grid,
     MultiEntry,
     EntryType,
 )
