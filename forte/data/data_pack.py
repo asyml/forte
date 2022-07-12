@@ -53,7 +53,6 @@ from forte.data.ontology.top import (
     Generics,
     AudioAnnotation,
     ImageAnnotation,
-    Grids,
     Payload,
 )
 
@@ -171,7 +170,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         self._data_store: DataStore = DataStore()
         self._entry_converter: EntryConverter = EntryConverter()
         self.image_annotations: List[ImageAnnotation] = []
-        self.grids: List[Grids] = []
+        self.grids: List[Grid] = []
 
         self.text_payloads: List[Payload] = []
         self.audio_payloads: List[Payload] = []
