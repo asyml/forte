@@ -1056,34 +1056,29 @@ class BoundingBox(Box):
         image_payload_idx: the index of the image payload in the DataPack's
             image payload list. If it's not set,
             it defaults to 0 which means it will load the first image payload.
+        cy: the row index of the box center in the image array, unit is one
+            pixel.
+        cx: the column index of the box center in the image array, unit is one
+            pixel.
         height: the height of the bounding box, the unit is one image array
             entry.
         width: the width of the bounding box, the unit is one image array entry.
-        grid_height: the height of the associated grid, the unit is one grid
-            cell.
-        grid_width: the width of the associated grid, the unit is one grid
-            cell.
-        grid_cell_h_idx: the height index of the associated grid cell in
-            the grid, the unit is one grid cell.
-        grid_cell_w_idx: the width index of the associated grid cell in
-            the grid, the unit is one grid cell.
 
     """
 
     def __init__(
         self,
         pack: PackType,
+        cy: int,
+        cx: int,
         height: int,
         width: int,
-        grid_height: int,
-        grid_width: int,
-        grid_cell_h_idx: int,
-        grid_cell_w_idx: int,
         image_payload_idx: int = 0,
     ):
         super().__init__(
             pack,
-            *self.grid.get_grid_cell_center(grid_cell_h_idx, grid_cell_w_idx),
+            cy,
+            cx,
             height,
             width,
             image_payload_idx,
