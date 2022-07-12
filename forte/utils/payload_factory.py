@@ -1,5 +1,4 @@
 from abc import abstractmethod
-from multiprocessing.sharedctypes import Value
 from typing import Callable
 import numpy as np
 from forte.data.ontology.top import Meta
