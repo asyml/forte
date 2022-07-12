@@ -1081,7 +1081,6 @@ class BoundingBox(Box):
         grid_cell_w_idx: int,
         image_payload_idx: int = 0,
     ):
-        self.grid = Grid(pack, grid_height, grid_width, image_payload_idx)
         super().__init__(
             pack,
             *self.grid.get_grid_cell_center(grid_cell_h_idx, grid_cell_w_idx),
