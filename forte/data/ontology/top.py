@@ -33,7 +33,6 @@ from forte.data.ontology.core import (
     Entry,
     BaseLink,
     BaseGroup,
-    Grid,
     MultiEntry,
     EntryType,
 )
@@ -1074,7 +1073,7 @@ class BoundingBox(Box):
         height: int,
         width: int,
         image_payload_idx: int = 0,
-    ):
+    ):  # pylint: disable=useless-super-delegation
         super().__init__(
             pack,
             cy,
