@@ -50,6 +50,7 @@ __all__ = [
     "FList",
     "FNdArray",
     "MultiEntry",
+    "Grid",
 ]
 
 default_entry_fields = [
