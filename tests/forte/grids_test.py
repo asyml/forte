@@ -12,77 +12,101 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests for Grids.
+Unit tests for Grid.
 """
+
 import unittest
-from forte.data.modality import Modality
+from forte.data.ontology.core import Grid
 from ft.onto.base_ontology import ImagePayload
 import numpy as np
 
 from numpy import array_equal
-from forte.data.ontology.top import Grids
+
 from forte.data.data_pack import DataPack
 from forte.data.ontology.top import ImageAnnotation
 
 
-class GridsTest(unittest.TestCase):
+class GridTest(unittest.TestCase):
     """
-    Test Grids related ontologies and operations.
+    Test Grid related ontologies and operations.
     """
 
     def setUp(self):
         self.datapack = DataPack("image")
-        line = np.zeros((6, 12))
-        line[2, 2] = 1
-        line[3, 3] = 1
-        line[4, 4] = 1
+
+        self.line = np.zeros((4, 6))
+        self.line[1, 1] = 1
+        self.line[2, 2] = 1
+        self.line[3, 3] = 1
+        # self.line[4, 4] = 1
         ip = ImagePayload(self.datapack)
-        ip.set_cache(line)
+        ip.set_cache(self.line)
         self.datapack.image_annotations.append(
             ImageAnnotation(self.datapack, 0)
         )
 
-        grids = Grids(self.datapack, 3, 4)
+        self.image_height, self.image_width = self.line.shape
+        grid = Grid(2, 3, self.image_height, self.image_width)
 
-        self.datapack.grids.append(grids)
-        self.zeros = np.zeros((6, 12))
-        self.ref_arr = np.zeros((6, 12))
+        self.grid = grid
+        self.zeros = np.zeros((4, 6))
+        self.ref_arr = np.zeros((4, 6))
         self.ref_arr[2, 2] = 1
-        ip = ImagePayload(self.datapack)
-        ip.set_cache(self.ref_arr)
-        self.datapack.image_annotations.append(
-            ImageAnnotation(self.datapack, 0)
-        )
+        self.ref_arr[3, 3] = 1
+        ip = ImagePayload(self.datapack, 0)
+        ip.set_cache(self.line)
 
     def test_grids(self):
 
         self.assertTrue(
-            array_equal(self.datapack.grids[0].get_grid_cell(0, 0), self.zeros)
+            array_equal(self.grid.get_grid_cell(self.line, 0, 1), self.zeros)
+        )
+
+        self.assertTrue(
+            array_equal(self.grid.get_grid_cell(self.line, 1, 1), self.ref_arr)
         )
 
         self.assertTrue(
             array_equal(
-                self.datapack.grids[0].get_grid_cell(1, 0), self.ref_arr
+                self.grid.get_grid_cell(self.line, 1, 2).shape,
+                self.ref_arr.shape,
             )
         )
 
+        # grid size is 2x3
+        # grid_cell_size is 2x3
+        # the height range of the second grid cell is [2, 4]
+        # the width range of the second grid cell is [2, 4]
+        # the height index should be (2+4)//2=3
+        # the width index should be (2+4)//2=3
+        self.assertEqual(self.grid.get_grid_cell_center(1, 1), (3, 3))
+        grid2 = Grid(2, 2, self.image_height, self.image_width)
+        # grid size is 2x2
+        # grid_cell_size is 2x3
+        # the height range of the second grid cell is [2, 4]
+        # the width range of the second grid cell is [3, 5]
+        # the height index should be (4+2)//2=3
+        # the width index should be (5+3)//2=4
+        print(grid2.get_grid_cell_center(1, 1))
+        self.assertEqual(grid2.get_grid_cell_center(1, 1), (3, 4))
+
     def test_get_grid_cell_value_error(self):
         def fn1():
-            self.datapack.grids[0].get_grid_cell(3, 0)
+            self.grid.get_grid_cell(self.line, 2, 0)
 
         self.assertRaises(ValueError, fn1)
 
         def fn2():
-            self.datapack.grids[0].get_grid_cell(0, 4)
+            self.grid.get_grid_cell(self.line, 0, 3)
 
         self.assertRaises(ValueError, fn2)
 
         def fn3():
-            self.datapack.grids[0].get_grid_cell(-1, 0)
+            self.grid.get_grid_cell(self.line, -1, 0)
 
         self.assertRaises(ValueError, fn3)
 
         def fn4():
-            self.datapack.grids[0].get_grid_cell(0, -1)
+            self.grid.get_grid_cell(self.line, 0, -1)
 
         self.assertRaises(ValueError, fn4)

@@ -23,6 +23,7 @@ from dataclasses import dataclass
 from typing import (
     Iterable,
     Optional,
+    Tuple,
     Type,
     Hashable,
     TypeVar,
@@ -33,7 +34,7 @@ from typing import (
     overload,
     List,
 )
-
+import math
 import numpy as np
 
 from forte.data.container import ContainerType

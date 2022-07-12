@@ -28,7 +28,6 @@ from forte.data.base_store import BaseStore
 from forte.data.ontology.top import (
     Annotation,
     AudioAnnotation,
-    Grids,
     Group,
     ImageAnnotation,
     Link,
@@ -775,7 +774,6 @@ class DataStore(BaseStore):
             Group,
             Generics,
             ImageAnnotation,
-            Grids,
             Payload,
             MultiPackLink,
             MultiPackGroup,

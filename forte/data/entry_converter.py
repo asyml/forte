@@ -24,7 +24,6 @@ from forte.data.ontology.top import (
     Generics,
     AudioAnnotation,
     ImageAnnotation,
-    Grids,
     MultiPackGeneric,
     MultiPackGroup,
     MultiPackLink,
