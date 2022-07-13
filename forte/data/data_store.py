@@ -1182,6 +1182,42 @@ class DataStore(BaseStore):
             delete_count = self.__deletion_count.get(type_name, 0)
             return len(self.__elements[type_name]) - delete_count
 
+    def get_bisect_range(
+        self, search_list: SortedList, range_begin: int, range_end: int
+    ) -> Optional[List]:
+        """
+        Perform binary search on the specified list for target entry class.
+        Args:
+            entry_class: Name of the target type of entry. It can be a subtype
+                of :class:`~forte.data.ontology.top.Annotation` or
+                :class:`~forte.data.ontology.top.AudioAnnotation`.
+            search_list: A `SortedList` object on which the binary search
+                will be carried out.
+        """
+
+        # Check if there are any entries within the given range
+        if (
+            search_list[0][constants.BEGIN_INDEX] > range_end
+            or search_list[-1][constants.END_INDEX] < range_begin
+        ):
+            return None
+
+        result_list = []
+
+        begin_index = search_list.bisect_left([range_begin, range_begin])
+
+        for idx in range(begin_index, len(search_list)):
+            if search_list[idx][constants.BEGIN_INDEX] > range_end:
+                break
+
+            if search_list[idx][constants.END_INDEX] <= range_end:
+                result_list.append(search_list[idx])
+
+        if len(result_list) == 0:
+            return None
+
+        return result_list
+
     def co_iterator_annotation_like(
         self,
         type_names: List[str],
@@ -1264,32 +1300,6 @@ class DataStore(BaseStore):
             An iterator of entry elements.
         """
 
-        def get_bisect_range(
-            search_list: SortedList,
-        ) -> Optional[Tuple[int, int]]:
-            """
-            Perform binary search on the specified list for target entry class.
-            Args:
-                entry_class: Name of the target type of entry. It can be a subtype
-                    of :class:`~forte.data.ontology.top.Annotation` or
-                    :class:`~forte.data.ontology.top.AudioAnnotation`.
-                search_list: A `SortedList` object on which the binary search
-                    will be carried out.
-            """
-
-            # Check if there are any entries within the given range
-            if (
-                search_list[0][constants.BEGIN_INDEX] > range_end
-                or search_list[-1][constants.END_INDEX] < range_begin
-            ):
-                return None
-
-            begin_index = search_list.bisect_left([range_begin, range_begin])
-
-            end_index = search_list.bisect_left([range_end, range_end])
-
-            return (begin_index, end_index)
-
         # suppose the length of type_names is N and the length of entry list of
         # one type is M
         # then the time complexity of using min-heap to iterate
@@ -1299,12 +1309,11 @@ class DataStore(BaseStore):
         # it avoids empty entry lists or non-existent entry list
         first_entries = []
 
-        # For every entry type, store the index of the first and last entry
-        # of that type that needs to be fetched. When range_end and range_begin
-        # are None, we fetch all entries of each type (mentioned in type_names).
-        # But when range_end and range_end is specified, we find the first and
-        # last entry of a given type that needs to fetched and only iterate
-        # between them
+        # For every entry type, store the entries that fall within the required
+        # range.When range_end and range_begin are None, we fetch all entries of
+        # each type (mentioned in type_names). But when range_end and range_end
+        # is specified, we find the list of entries that fall within the range
+        # and only iterate through them
         all_entries_range = {}
 
         # This list stores the types of entries that have atleast one entry to
@@ -1314,7 +1323,9 @@ class DataStore(BaseStore):
 
         if range_begin is not None and range_end is not None:
             for tn in type_names:
-                possible_entries = get_bisect_range(self.__elements[tn])
+                possible_entries = self.get_bisect_range(
+                    self.__elements[tn], range_begin, range_end
+                )
                 if possible_entries is not None:
                     all_entries_range[tn] = possible_entries
                     valid_type_names.append(tn)
@@ -1322,7 +1333,7 @@ class DataStore(BaseStore):
         else:
             try:
                 for tn in type_names:
-                    all_entries_range[tn] = (0, len(self.__elements[tn]))
+                    all_entries_range[tn] = self.__elements[tn]
                 valid_type_names = type_names
             except KeyError as e:  # all_entries_range[tn] will be caught here.
                 raise ValueError(
@@ -1334,9 +1345,7 @@ class DataStore(BaseStore):
 
         for tn in valid_type_names:
             try:
-                first_entries.append(
-                    self.__elements[tn][all_entries_range[tn][0]]
-                )
+                first_entries.append(all_entries_range[tn][0])
             except IndexError as e:  # all_entries_range[tn][0] will be caught here.
                 raise ValueError(
                     f"Entry list of type name, {tn} which is"
@@ -1348,7 +1357,7 @@ class DataStore(BaseStore):
 
         # record the current entry index for elements
         # pointers[tn] is the index of entry of type tn
-        pointers = {key: val[0] for key, val in all_entries_range.items()}
+        pointers = {key: 0 for key in all_entries_range}
 
         # compare tuple (begin, end, order of type name in input argument
         # type_names)
@@ -1392,13 +1401,13 @@ class DataStore(BaseStore):
             # get the index of current entry
             # and locate the entry represented by the tuple for yielding
             pointer = pointers[type_name]
-            entry = self.__elements[type_name][pointer]
+            entry = all_entries_range[type_name][pointer]
             # check whether there is next entry in the current entry list
             # if there is, then we push the new entry's tuple into the heap
-            if pointer + 1 < all_entries_range[type_name][1]:
+            if pointer + 1 < len(all_entries_range[type_name]):
                 pointers[type_name] += 1
                 new_pointer = pointers[type_name]
-                new_entry = self.__elements[type_name][new_pointer]
+                new_entry = all_entries_range[type_name][new_pointer]
                 new_entry_tuple = (
                     (
                         new_entry[constants.BEGIN_INDEX],
