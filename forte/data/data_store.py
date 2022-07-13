@@ -70,7 +70,7 @@ class DataStore(BaseStore):
         Currently, DataStore supports storing data structures with linear span
         (e.g. Annotation), and relational data structures (e.g Link and Group).
         Future extension of the class may support data structures with 2-d range
-         (e.g. bounding boxes).
+        (e.g. bounding boxes).
 
         Internally, we store every entry in a variable ``__elements``, which is
         a nested list: a list of ``entry lists``.
@@ -741,8 +741,8 @@ class DataStore(BaseStore):
     ):
         """
         This function add raw entry in DataStore object
-        based on corresponding type name
-         and sort them based on entry type.
+        based on corresponding type name and sort them
+        based on entry type.
 
         Args:
             entry_type: entry's type which decides the sorting of entry.
@@ -1187,12 +1187,20 @@ class DataStore(BaseStore):
     ) -> Optional[List]:
         """
         Perform binary search on the specified list for target entry class.
+        Entry class can be a subtype of
+        :class:`~forte.data.ontology.top.Annotation`
+        or :class:`~forte.data.ontology.top.AudioAnnotation`.
+
         Args:
-            entry_class: Name of the target type of entry. It can be a subtype
-                of :class:`~forte.data.ontology.top.Annotation` or
-                :class:`~forte.data.ontology.top.AudioAnnotation`.
             search_list: A `SortedList` object on which the binary search
                 will be carried out.
+            range_begin: start index of the range in
+                which we want to get required entries
+            range_end: end index of the range in
+                which we want to get required entries
+
+        Returns:
+            List of entries to fetch
         """
 
         # Check if there are any entries within the given range
