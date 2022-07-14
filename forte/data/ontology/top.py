@@ -1249,22 +1249,33 @@ class BoundingBox(Box):
     def __init__(
         self,
         pack: PackType,
-        height: int,
-        width: int,
-        grid_height: int,
-        grid_width: int,
-        grid_cell_h_idx: int,
-        grid_cell_w_idx: int,
+        tl_point: List[int],
+        br_point: List[int],
         image_payload_idx: int = 0,
     ):
-        self.grids = Grids(pack, grid_height, grid_width, image_payload_idx)
-        cy, cx = self.grids.get_grid_cell_center(
-            grid_cell_h_idx, grid_cell_w_idx
-        )
         super().__init__(
             pack,
-            [cy - round(height / 2), cx - round(width / 2)],
-            [cy - round(height / 2) + height, cx - round(width / 2) + width],
+            tl_point,
+            br_point,
+            image_payload_idx,
+        )
+
+    @classmethod
+    def from_center_n_shape(
+        self,
+        pack: PackType,
+        cy: int,
+        cx: int,
+        height: int,
+        width: int,
+        image_payload_idx: int = 0,
+    ):
+        return super().from_center_n_shape(
+            pack,
+            cy,
+            cx,
+            height,
+            width,
             image_payload_idx,
         )
 
