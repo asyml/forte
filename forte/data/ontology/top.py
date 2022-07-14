@@ -1240,31 +1240,6 @@ class Box(Region):
             return False
         return True
 
-    def compute_iou(self, other):
-        """
-        A function computes iou(intersection over union) between two boxes.
-
-        Args:
-            other: the other ``Box`` object to compared to.
-
-        Returns:
-            A float value which is (intersection area/ union area) between two
-            boxes.
-        """
-        if not self.is_overlapped(other):
-            return 0
-        box_x_diff = min(
-            abs(other.box_max_x - self.box_min_x),
-            abs(other.box_min_x - self.box_max_x),
-        )
-        box_y_diff = min(
-            abs(other.box_max_y - self.box_min_y),
-            abs(other.box_min_y - self.box_max_y),
-        )
-        intersection = box_x_diff * box_y_diff
-        union = self.area + other.area - intersection
-        return intersection / union
-
 
 class BoundingBox(Box):
     """
