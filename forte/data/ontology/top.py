@@ -1052,7 +1052,7 @@ class Region(ImageAnnotation):
         else:
             self._image_payload_idx = image_payload_idx
 
-    def compute_iou(self, other) -> int:
+    def compute_iou(self, other) -> float:
         intersection = np.sum(np.logical_and(self.image, other.image))
         union = np.sum(np.logical_or(self.image, other.image))
         return intersection / union
