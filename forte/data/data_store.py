@@ -1183,7 +1183,7 @@ class DataStore(BaseStore):
             return len(self.__elements[type_name]) - delete_count
 
     def get_bisect_range(
-        self, search_list: SortedList, range_span: Optional[Tuple[int]] = None
+        self, search_list: SortedList, range_span: Tuple[int]
     ) -> Optional[List]:
         """
         Perform binary search on the specified list for target entry class.
@@ -1203,8 +1203,10 @@ class DataStore(BaseStore):
 
         # Check if there are any entries within the given range
         if (
-            search_list[0][constants.BEGIN_INDEX] > range_span[1]
-            or search_list[-1][constants.END_INDEX] < range_span[0]
+            search_list[0][constants.BEGIN_INDEX]
+            > range_span[constants.END_INDEX]
+            or search_list[-1][constants.END_INDEX]
+            < range_span[constants.BEGIN_INDEX]
         ):
             return None
 
@@ -1213,10 +1215,16 @@ class DataStore(BaseStore):
         begin_index = search_list.bisect_left([range_span[0], range_span[0]])
 
         for idx in range(begin_index, len(search_list)):
-            if search_list[idx][constants.BEGIN_INDEX] > range_span[1]:
+            if (
+                search_list[idx][constants.BEGIN_INDEX]
+                > range_span[constants.END_INDEX]
+            ):
                 break
 
-            if search_list[idx][constants.END_INDEX] <= range_span[1]:
+            if (
+                search_list[idx][constants.END_INDEX]
+                <= range_span[constants.END_INDEX]
+            ):
                 result_list.append(search_list[idx])
 
         if len(result_list) == 0:
