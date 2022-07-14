@@ -170,7 +170,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         self._data_store: DataStore = DataStore()
         self._entry_converter: EntryConverter = EntryConverter()
         self.image_annotations: List[ImageAnnotation] = []
-        self.grids: List[Grid] = []
+        self.grid: Grid = None
 
         self.text_payloads: List[Payload] = []
         self.audio_payloads: List[Payload] = []
