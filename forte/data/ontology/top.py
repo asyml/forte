@@ -1116,7 +1116,7 @@ class Box(Region):
 
     @classmethod
     def from_center_n_shape(
-        self,
+        cls,
         pack: PackType,
         cy: int,
         cx: int,
@@ -1125,9 +1125,7 @@ class Box(Region):
         image_payload_idx: int = 0,
     ):
         # center location
-        self._height = height
-        self._width = width
-        return self(
+        return cls(
             pack,
             [cy - round(height / 2), cx - round(width / 2)],
             [cy - round(height / 2) + height, cx - round(width / 2) + width],
@@ -1260,7 +1258,7 @@ class BoundingBox(Box):
         image_payload_idx: int = 0,
     ):
         self.grids = Grids(pack, grid_height, grid_width, image_payload_idx)
-        super().__init__(
+        super().__init__(  # pylint: disable=too-many-function-args
             pack,
             *self.grids.get_grid_cell_center(grid_cell_h_idx, grid_cell_w_idx),
             height,
