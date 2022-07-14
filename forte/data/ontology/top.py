@@ -1147,6 +1147,39 @@ class Box(Region):
             image_payload_idx,
         )
 
+    def compute_iou(self, other) -> float:
+        """
+        A function computes iou(intersection over union) between two boxes
+        (unit: pixel).
+        It overwrites the ``compute_iou`` function in it's parent class
+        ``Region``.
+        Args:
+            other: the other ``Box`` object to be computed with.
+        Returns:
+            A float value which is (intersection area/ union area) between two
+            boxes.
+        """
+        if not isinstance(other, Box):
+            raise ValueError(
+                "The other object to compute iou with is"
+                " not a Box object."
+                "You need to check the type of the other object."
+            )
+
+        if not self.is_overlapped(other):
+            return 0
+        box_x_diff = min(
+            abs(other.box_max_x - self.box_min_x),
+            abs(other.box_min_x - self.box_max_x),
+        )
+        box_y_diff = min(
+            abs(other.box_max_y - self.box_min_y),
+            abs(other.box_min_y - self.box_max_y),
+        )
+        intersection = box_x_diff * box_y_diff
+        union = self.area + other.area - intersection
+        return intersection / union
+
     @property
     def center(self):
         return (self._cy, self._cx)
