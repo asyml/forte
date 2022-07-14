@@ -1052,7 +1052,7 @@ class Region(ImageAnnotation):
         else:
             self._image_payload_idx = image_payload_idx
 
-    def compute_iou(self, other) -> int:
+    def compute_iou(self, other) -> float:
         intersection = np.sum(np.logical_and(self.image, other.image))
         union = np.sum(np.logical_or(self.image, other.image))
         return intersection / union
@@ -1067,19 +1067,54 @@ class Box(Region):
 
     Args:
         pack: the container that this ``Box`` will be added to.
+        tl_point: the indices of top left point of the box, the unit is one
+            pixel.
+        br_point: the indices of bottom right point of the box, the unit is one
+            pixel.
         image_payload_idx: the index of the image payload in the DataPack's
             image payload list. If it's not set,
             it defaults to 0 which meaning it will load the first image payload.
-        cy: the row index of the box center in the image array,
-            the unit is one image array entry.
-        cx: the column index of the box center in the image array,
-            the unit is one image array entry.
-        height: the height of the box, the unit is one image array entry.
-        width: the width of the box, the unit is one image array entry.
     """
 
     def __init__(
         self,
+        pack: PackType,
+        tl_point: List[int],
+        br_point: List[int],
+        image_payload_idx: int = 0,
+    ):
+        super().__init__(pack, image_payload_idx)
+        if tl_point[0] < 0 or tl_point[1] < 0:
+            raise ValueError(
+                f"input parameter top left point indices ({tl_point}) must"
+                "be non-negative"
+            )
+        if br_point[0] < 0 or br_point[1] < 0:
+            raise ValueError(
+                f"input parameter bottom right point indices ({br_point}) must"
+                "be non-negative"
+            )
+        if tl_point[0] >= br_point[0]:
+            raise ValueError(
+                f"top left point y coordinate({tl_point[0]}) must be less than"
+                f" bottom right y coordinate({br_point[0]})"
+            )
+        if tl_point[1] >= br_point[1]:
+            raise ValueError(
+                f"top left point x coordinate({tl_point[1]}) must be less than"
+                f" bottom right x coordinate({br_point[1]})"
+            )
+
+        self.y0, self.x0 = tl_point
+        self.y1, self.x1 = br_point
+        self._cy = round((self.y0 + self.y1) / 2)
+        self._cx = round((self.x0 + self.x1) / 2)
+        self._height = self.y1 - self.y0
+        self._width = self.x1 - self.x0
+
+    @classmethod
+    def init_from_center_n_shape(
+        cls,
         pack: PackType,
         cy: int,
         cx: int,
@@ -1087,13 +1122,63 @@ class Box(Region):
         width: int,
         image_payload_idx: int = 0,
     ):
-        # assume Box is associated with Grids
-        super().__init__(pack, image_payload_idx)
+        """
+        A class method to initialize a ``Box`` from a box's center position and
+        shape.
+
+        Args:
+            pack: the container that this ``BoundingBox`` will be added to.
+            cy: the y coordinate of the box's center, the unit is one pixel.
+            cx: the x coordinate of the box's center, the unit is one pixel.
+            height: the height of the box, the unit is one pixel.
+            width: the width of the box, the unit is one pixel.
+            image_payload_idx: the index of the image payload in the DataPack's
+                image payload list. If it's not set, it defaults to 0 which
+                meaning it will load the first image payload.
+
+        Returns:
+            A ``Box`` instance.
+        """
         # center location
-        self._cy = cy
-        self._cx = cx
-        self._height = height
-        self._width = width
+        return cls(
+            pack,
+            [cy - round(height / 2), cx - round(width / 2)],
+            [cy - round(height / 2) + height, cx - round(width / 2) + width],
+            image_payload_idx,
+        )
+
+    def compute_iou(self, other) -> float:
+        """
+        A function computes iou(intersection over union) between two boxes
+        (unit: pixel).
+        It overwrites the ``compute_iou`` function in it's parent class
+        ``Region``.
+        Args:
+            other: the other ``Box`` object to be computed with.
+        Returns:
+            A float value which is (intersection area/ union area) between two
+            boxes.
+        """
+        if not isinstance(other, Box):
+            raise ValueError(
+                "The other object to compute iou with is"
+                " not a Box object."
+                "You need to check the type of the other object."
+            )
+
+        if not self.is_overlapped(other):
+            return 0
+        box_x_diff = min(
+            abs(other.box_max_x - self.box_min_x),
+            abs(other.box_min_x - self.box_max_x),
+        )
+        box_y_diff = min(
+            abs(other.box_max_y - self.box_min_y),
+            abs(other.box_min_y - self.box_max_y),
+        )
+        intersection = box_x_diff * box_y_diff
+        union = self.area + other.area - intersection
+        return intersection / union
 
     @property
     def center(self):
@@ -1105,9 +1190,10 @@ class Box(Region):
         Get corners of box.
         """
         return [
-            (self._cy + h_offset, self._cx + w_offset)
-            for h_offset in [-0.5 * self._height, 0.5 * self._height]
-            for w_offset in [-0.5 * self._width, 0.5 * self._width]
+            (self.y0, self.x0),
+            (self.y0, self.x1),
+            (self.y1, self.x0),
+            (self.y1, self.x1),
         ]
 
     @property
@@ -1154,31 +1240,6 @@ class Box(Region):
             return False
         return True
 
-    def compute_iou(self, other):
-        """
-        A function computes iou(intersection over union) between two boxes.
-
-        Args:
-            other: the other ``Box`` object to compared to.
-
-        Returns:
-            A float value which is (intersection area/ union area) between two
-            boxes.
-        """
-        if not self.is_overlapped(other):
-            return 0
-        box_x_diff = min(
-            abs(other.box_max_x - self.box_min_x),
-            abs(other.box_min_x - self.box_max_x),
-        )
-        box_y_diff = min(
-            abs(other.box_max_y - self.box_min_y),
-            abs(other.box_min_y - self.box_max_y),
-        )
-        intersection = box_x_diff * box_y_diff
-        union = self.area + other.area - intersection
-        return intersection / union
-
 
 class BoundingBox(Box):
     """
@@ -1189,42 +1250,30 @@ class BoundingBox(Box):
     the image/grid.
 
     Args:
-        pack: The container that this BoundingBox will
-            be added to.
+        pack: the container that this ``Box`` will be added to.
+        tl_point: the indices of top left point of the box, the unit is one
+            pixel.
+        br_point: the indices of bottom right point of the box, the unit is one
+            pixel.
         image_payload_idx: the index of the image payload in the DataPack's
             image payload list. If it's not set,
-            it defaults to 0 which means it will load the first image payload.
-        height: the height of the bounding box, the unit is one image array
-            entry.
-        width: the width of the bounding box, the unit is one image array entry.
-        grid_height: the height of the associated grid, the unit is one grid
-            cell.
-        grid_width: the width of the associated grid, the unit is one grid
-            cell.
-        grid_cell_h_idx: the height index of the associated grid cell in
-            the grid, the unit is one grid cell.
-        grid_cell_w_idx: the width index of the associated grid cell in
-            the grid, the unit is one grid cell.
-
+            it defaults to 0 which meaning it will load the first image payload.
     """
 
-    def __init__(
-        self,
+    @classmethod
+    def init_from_center_n_shape(
+        cls,
         pack: PackType,
+        cy: int,
+        cx: int,
         height: int,
         width: int,
-        grid_height: int,
-        grid_width: int,
-        grid_cell_h_idx: int,
-        grid_cell_w_idx: int,
         image_payload_idx: int = 0,
     ):
-        self.grids = Grids(pack, grid_height, grid_width, image_payload_idx)
-        super().__init__(
+        return cls(
             pack,
-            *self.grids.get_grid_cell_center(grid_cell_h_idx, grid_cell_w_idx),
-            height,
-            width,
+            [cy - round(height / 2), cx - round(width / 2)],
+            [cy - round(height / 2) + height, cx - round(width / 2) + width],
             image_payload_idx,
         )
 
