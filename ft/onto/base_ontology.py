@@ -26,6 +26,7 @@ from typing import List
 from typing import Optional
 
 __all__ = [
+    "Character",
     "Token",
     "Subword",
     "Classification",
@@ -58,6 +59,16 @@ __all__ = [
     "TextPayload",
     "ImagePayload",
 ]
+
+
+@dataclass
+class Character(Annotation):
+    """
+    A span based annotation :class:`Character`, used to represent a character.
+    """
+
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
 
 
 @dataclass
@@ -311,7 +322,12 @@ class PredicateLink(Link):
     ParentType = PredicateMention
     ChildType = PredicateArgument
 
-    def __init__(self, pack: DataPack, parent: Optional[Entry] = None, child: Optional[Entry] = None):
+    def __init__(
+        self,
+        pack: DataPack,
+        parent: Optional[Entry] = None,
+        child: Optional[Entry] = None,
+    ):
         super().__init__(pack, parent, child)
         self.arg_type: Optional[str] = None
 
@@ -331,7 +347,12 @@ class Dependency(Link):
     ParentType = Token
     ChildType = Token
 
-    def __init__(self, pack: DataPack, parent: Optional[Entry] = None, child: Optional[Entry] = None):
+    def __init__(
+        self,
+        pack: DataPack,
+        parent: Optional[Entry] = None,
+        child: Optional[Entry] = None,
+    ):
         super().__init__(pack, parent, child)
         self.dep_label: Optional[str] = None
         self.rel_type: Optional[str] = None
@@ -340,7 +361,7 @@ class Dependency(Link):
 @dataclass
 class EnhancedDependency(Link):
     """
-    A `Link` type entry which represent a enhanced dependency: 
+    A `Link` type entry which represent a enhanced dependency:
      https://universaldependencies.org/u/overview/enhanced-syntax.html
     Attributes:
         dep_label (Optional[str]):	The enhanced dependency label in Universal Dependency.
@@ -351,7 +372,12 @@ class EnhancedDependency(Link):
     ParentType = Token
     ChildType = Token
 
-    def __init__(self, pack: DataPack, parent: Optional[Entry] = None, child: Optional[Entry] = None):
+    def __init__(
+        self,
+        pack: DataPack,
+        parent: Optional[Entry] = None,
+        child: Optional[Entry] = None,
+    ):
         super().__init__(pack, parent, child)
         self.dep_label: Optional[str] = None
 
@@ -369,7 +395,12 @@ class RelationLink(Link):
     ParentType = EntityMention
     ChildType = EntityMention
 
-    def __init__(self, pack: DataPack, parent: Optional[Entry] = None, child: Optional[Entry] = None):
+    def __init__(
+        self,
+        pack: DataPack,
+        parent: Optional[Entry] = None,
+        child: Optional[Entry] = None,
+    ):
         super().__init__(pack, parent, child)
         self.rel_type: Optional[str] = None
 
@@ -387,7 +418,12 @@ class CrossDocEntityRelation(MultiPackLink):
     ParentType = EntityMention
     ChildType = EntityMention
 
-    def __init__(self, pack: MultiPack, parent: Optional[Entry] = None, child: Optional[Entry] = None):
+    def __init__(
+        self,
+        pack: MultiPack,
+        parent: Optional[Entry] = None,
+        child: Optional[Entry] = None,
+    ):
         super().__init__(pack, parent, child)
         self.rel_type: Optional[str] = None
 
@@ -400,7 +436,9 @@ class CoreferenceGroup(Group):
 
     MemberType = EntityMention
 
-    def __init__(self, pack: DataPack, members: Optional[Iterable[Entry]] = None):
+    def __init__(
+        self, pack: DataPack, members: Optional[Iterable[Entry]] = None
+    ):
         super().__init__(pack, members)
 
 
@@ -417,7 +455,12 @@ class EventRelation(Link):
     ParentType = EventMention
     ChildType = EventMention
 
-    def __init__(self, pack: DataPack, parent: Optional[Entry] = None, child: Optional[Entry] = None):
+    def __init__(
+        self,
+        pack: DataPack,
+        parent: Optional[Entry] = None,
+        child: Optional[Entry] = None,
+    ):
         super().__init__(pack, parent, child)
         self.rel_type: Optional[str] = None
 
@@ -435,7 +478,12 @@ class CrossDocEventRelation(MultiPackLink):
     ParentType = EventMention
     ChildType = EventMention
 
-    def __init__(self, pack: MultiPack, parent: Optional[Entry] = None, child: Optional[Entry] = None):
+    def __init__(
+        self,
+        pack: MultiPack,
+        parent: Optional[Entry] = None,
+        child: Optional[Entry] = None,
+    ):
         super().__init__(pack, parent, child)
         self.rel_type: Optional[str] = None
 
@@ -457,8 +505,8 @@ class ConstituentNode(Annotation):
     sentiment: Dict[str, float]
     is_root: Optional[bool]
     is_leaf: Optional[bool]
-    parent_node: Optional['ConstituentNode']
-    children_nodes: FList['ConstituentNode']
+    parent_node: Optional["ConstituentNode"]
+    children_nodes: FList["ConstituentNode"]
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
@@ -466,8 +514,8 @@ class ConstituentNode(Annotation):
         self.sentiment: Dict[str, float] = dict()
         self.is_root: Optional[bool] = None
         self.is_leaf: Optional[bool] = None
-        self.parent_node: Optional['ConstituentNode'] = None
-        self.children_nodes: FList['ConstituentNode'] = FList(self)
+        self.parent_node: Optional["ConstituentNode"] = None
+        self.children_nodes: FList["ConstituentNode"] = FList(self)
 
 
 @dataclass
@@ -492,7 +540,6 @@ class Body(Annotation):
 
 @dataclass
 class MCOption(Annotation):
-
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
 
@@ -572,7 +619,9 @@ class AudioPayload(Payload):
 
     sample_rate: Optional[int]
 
-    def __init__(self, pack: DataPack, payload_idx: int = 0, uri: Optional[str] = None):
+    def __init__(
+        self, pack: DataPack, payload_idx: int = 0, uri: Optional[str] = None
+    ):
         super().__init__(pack, payload_idx, uri)
         self.sample_rate: Optional[int] = None
 
@@ -583,7 +632,9 @@ class TextPayload(Payload):
     A payload that caches text data
     """
 
-    def __init__(self, pack: DataPack, payload_idx: int = 0, uri: Optional[str] = None):
+    def __init__(
+        self, pack: DataPack, payload_idx: int = 0, uri: Optional[str] = None
+    ):
         super().__init__(pack, payload_idx, uri)
 
 
@@ -593,5 +644,7 @@ class ImagePayload(Payload):
     A payload that caches image data
     """
 
-    def __init__(self, pack: DataPack, payload_idx: int = 0, uri: Optional[str] = None):
+    def __init__(
+        self, pack: DataPack, payload_idx: int = 0, uri: Optional[str] = None
+    ):
         super().__init__(pack, payload_idx, uri)
