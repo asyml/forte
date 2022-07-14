@@ -1067,15 +1067,13 @@ class Box(Region):
 
     Args:
         pack: the container that this ``Box`` will be added to.
+        tl_point: the indices of top left point of the box, the unit is one
+            pixel.
+        br_point: the indices of bottom right point of the box, the unit is one
+            pixel.
         image_payload_idx: the index of the image payload in the DataPack's
             image payload list. If it's not set,
             it defaults to 0 which meaning it will load the first image payload.
-        cy: the row index of the box center in the image array,
-            the unit is one image array entry.
-        cx: the column index of the box center in the image array,
-            the unit is one image array entry.
-        height: the height of the box, the unit is one image array entry.
-        width: the width of the box, the unit is one image array entry.
     """
 
     def __init__(
@@ -1115,7 +1113,7 @@ class Box(Region):
         self._width = self.x1 - self.x0
 
     @classmethod
-    def from_center_n_shape(
+    def init_from_center_n_shape(
         cls,
         pack: PackType,
         cy: int,
@@ -1124,6 +1122,23 @@ class Box(Region):
         width: int,
         image_payload_idx: int = 0,
     ):
+        """
+        A class method to initialize a ``Box`` from a box's center position and
+        shape.
+
+        Args:
+            pack: the container that this ``BoundingBox`` will be added to.
+            cy: the y coordinate of the box's center, the unit is one pixel.
+            cx: the x coordinate of the box's center, the unit is one pixel.
+            height: the height of the box, the unit is one pixel.
+            width: the width of the box, the unit is one pixel.
+            image_payload_idx: the index of the image payload in the DataPack's
+                image payload list. If it's not set, it defaults to 0 which
+                meaning it will load the first image payload.
+
+        Returns:
+            A ``Box`` instance.
+        """
         # center location
         return cls(
             pack,
@@ -1227,42 +1242,19 @@ class BoundingBox(Box):
     the image/grid.
 
     Args:
-        pack: The container that this BoundingBox will
-            be added to.
+        pack: the container that this ``Box`` will be added to.
+        tl_point: the indices of top left point of the box, the unit is one
+            pixel.
+        br_point: the indices of bottom right point of the box, the unit is one
+            pixel.
         image_payload_idx: the index of the image payload in the DataPack's
             image payload list. If it's not set,
-            it defaults to 0 which means it will load the first image payload.
-        height: the height of the bounding box, the unit is one image array
-            entry.
-        width: the width of the bounding box, the unit is one image array entry.
-        grid_height: the height of the associated grid, the unit is one grid
-            cell.
-        grid_width: the width of the associated grid, the unit is one grid
-            cell.
-        grid_cell_h_idx: the height index of the associated grid cell in
-            the grid, the unit is one grid cell.
-        grid_cell_w_idx: the width index of the associated grid cell in
-            the grid, the unit is one grid cell.
-
+            it defaults to 0 which meaning it will load the first image payload.
     """
 
-    def __init__(
-        self,
-        pack: PackType,
-        tl_point: List[int],
-        br_point: List[int],
-        image_payload_idx: int = 0,
-    ):
-        super().__init__(
-            pack,
-            tl_point,
-            br_point,
-            image_payload_idx,
-        )
-
     @classmethod
-    def from_center_n_shape(
-        self,
+    def init_from_center_n_shape(
+        cls,
         pack: PackType,
         cy: int,
         cx: int,
@@ -1270,12 +1262,10 @@ class BoundingBox(Box):
         width: int,
         image_payload_idx: int = 0,
     ):
-        return super().from_center_n_shape(
+        return cls(
             pack,
-            cy,
-            cx,
-            height,
-            width,
+            [cy - round(height / 2), cx - round(width / 2)],
+            [cy - round(height / 2) + height, cx - round(width / 2) + width],
             image_payload_idx,
         )
 
