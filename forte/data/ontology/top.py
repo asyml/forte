@@ -903,11 +903,11 @@ class ImageAnnotation(Entry):
             width: the width of the image. The unit is pixel.
             height: the height of the image. The unit is pixel.
         """
-        self._image_width = (
-            width  # pylint: disable=attribute-defined-outside-init
+        self._image_width = (  # pylint: disable=attribute-defined-outside-init
+            width
         )
-        self._image_height = (
-            height  # pylint: disable=attribute-defined-outside-init
+        self._image_height = (  # pylint: disable=attribute-defined-outside-init
+            height
         )
 
     def __eq__(self, other):
