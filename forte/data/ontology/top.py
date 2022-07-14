@@ -1081,19 +1081,58 @@ class Box(Region):
     def __init__(
         self,
         pack: PackType,
+        tl_point: List[int],
+        br_point: List[int],
+        image_payload_idx: int = 0,
+    ):
+        super().__init__(pack, image_payload_idx)
+        if tl_point[0] < 0 or tl_point[1] < 0:
+            raise ValueError(
+                f"input parameter top left point indices ({tl_point}) must"
+                "be non-negative"
+            )
+        if br_point[0] < 0 or br_point[1] < 0:
+            raise ValueError(
+                f"input parameter bottom right point indices ({br_point}) must"
+                "be non-negative"
+            )
+        if tl_point[0] >= br_point[0]:
+            raise ValueError(
+                f"top left point y coordinate({tl_point[0]}) must be less than"
+                f" bottom right y coordinate({br_point[0]})"
+            )
+        if tl_point[1] >= br_point[1]:
+            raise ValueError(
+                f"top left point x coordinate({tl_point[1]}) must be less than"
+                f" bottom right x coordinate({br_point[1]})"
+            )
+
+        self.y0, self.x0 = tl_point
+        self.y1, self.x1 = br_point
+        self._cy = round((self.y0 + self.y1) / 2)
+        self._cx = round((self.x0 + self.x1) / 2)
+        self._height = self.y1 - self.y0
+        self._width = self.x1 - self.x0
+
+    @classmethod
+    def from_center_n_shape(
+        self,
+        pack: PackType,
         cy: int,
         cx: int,
         height: int,
         width: int,
         image_payload_idx: int = 0,
     ):
-        # assume Box is associated with Grids
-        super().__init__(pack, image_payload_idx)
         # center location
-        self._cy = cy
-        self._cx = cx
         self._height = height
         self._width = width
+        return self(
+            pack,
+            [cy - round(height / 2), cx - round(width / 2)],
+            [cy - round(height / 2) + height, cx - round(width / 2) + width],
+            image_payload_idx,
+        )
 
     @property
     def center(self):
@@ -1105,9 +1144,10 @@ class Box(Region):
         Get corners of box.
         """
         return [
-            (self._cy + h_offset, self._cx + w_offset)
-            for h_offset in [-0.5 * self._height, 0.5 * self._height]
-            for w_offset in [-0.5 * self._width, 0.5 * self._width]
+            (self.y0, self.x0),
+            (self.y0, self.x1),
+            (self.y1, self.x0),
+            (self.y1, self.x1),
         ]
 
     @property
