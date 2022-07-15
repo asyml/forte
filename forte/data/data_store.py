@@ -1182,14 +1182,16 @@ class DataStore(BaseStore):
             delete_count = self.__deletion_count.get(type_name, 0)
             return len(self.__elements[type_name]) - delete_count
 
-    def get_bisect_range(
+    def _get_bisect_range(
         self, search_list: SortedList, range_span: Tuple[int]
     ) -> Optional[List]:
         """
         Perform binary search on the specified list for target entry class.
         Entry class can be a subtype of
         :class:`~forte.data.ontology.top.Annotation`
-        or :class:`~forte.data.ontology.top.AudioAnnotation`.
+        or :class:`~forte.data.ontology.top.AudioAnnotation`. This function
+        finds the the elements in the `Annotation` or `AudioAnnotation`
+        sorted list whose begin and end index falls within `range_span`.
 
         Args:
             search_list: A `SortedList` object on which the binary search
@@ -1331,7 +1333,7 @@ class DataStore(BaseStore):
 
         if range_span is not None:
             for tn in type_names:
-                possible_entries = self.get_bisect_range(
+                possible_entries = self._get_bisect_range(
                     self.__elements[tn], range_span
                 )
                 if possible_entries is not None:
