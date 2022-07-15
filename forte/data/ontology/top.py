@@ -1127,7 +1127,7 @@ class Box(Region):
         shape.
 
         Args:
-            pack: the container that this ``BoundingBox`` will be added to.
+            pack: the container that this ``Box`` will be added to.
             cy: the y coordinate of the box's center, the unit is one pixel.
             cx: the x coordinate of the box's center, the unit is one pixel.
             height: the height of the box, the unit is one pixel.
@@ -1270,6 +1270,23 @@ class BoundingBox(Box):
         width: int,
         image_payload_idx: int = 0,
     ):
+        """
+        A class method to initialize a ``BoundingBox`` from a box's center position and
+        shape.
+
+        Args:
+            pack: the container that this ``BoundingBox`` will be added to.
+            cy: the y coordinate of the box's center, the unit is one pixel.
+            cx: the x coordinate of the box's center, the unit is one pixel.
+            height: the height of the box, the unit is one pixel.
+            width: the width of the box, the unit is one pixel.
+            image_payload_idx: the index of the image payload in the DataPack's
+                image payload list. If it's not set, it defaults to 0 which
+                meaning it will load the first image payload.
+
+        Returns:
+            A ``BoundingBox`` instance.
+        """
         return cls(
             pack,
             [cy - round(height / 2), cx - round(width / 2)],
