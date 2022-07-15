@@ -1183,7 +1183,7 @@ class DataStore(BaseStore):
             return len(self.__elements[type_name]) - delete_count
 
     def _get_bisect_range(
-        self, search_list: SortedList, range_span: Tuple[int]
+        self, search_list: SortedList, range_span: Tuple[int, int]
     ) -> Optional[List]:
         """
         Perform binary search on the specified list for target entry class.
@@ -1205,10 +1205,8 @@ class DataStore(BaseStore):
 
         # Check if there are any entries within the given range
         if (
-            search_list[0][constants.BEGIN_INDEX]
-            > range_span[constants.END_INDEX]
-            or search_list[-1][constants.END_INDEX]
-            < range_span[constants.BEGIN_INDEX]
+            search_list[0][constants.BEGIN_INDEX] > range_span[1]
+            or search_list[-1][constants.END_INDEX] < range_span[0]
         ):
             return None
 
@@ -1217,16 +1215,10 @@ class DataStore(BaseStore):
         begin_index = search_list.bisect_left([range_span[0], range_span[0]])
 
         for idx in range(begin_index, len(search_list)):
-            if (
-                search_list[idx][constants.BEGIN_INDEX]
-                > range_span[constants.END_INDEX]
-            ):
+            if search_list[idx][constants.BEGIN_INDEX] > range_span[1]:
                 break
 
-            if (
-                search_list[idx][constants.END_INDEX]
-                <= range_span[constants.END_INDEX]
-            ):
+            if search_list[idx][constants.END_INDEX] <= range_span[1]:
                 result_list.append(search_list[idx])
 
         if len(result_list) == 0:
@@ -1235,7 +1227,9 @@ class DataStore(BaseStore):
         return result_list
 
     def co_iterator_annotation_like(
-        self, type_names: List[str], range_span: Optional[Tuple[int]] = None
+        self,
+        type_names: List[str],
+        range_span: Optional[Tuple[int, int]] = None,
     ) -> Iterator[List]:
         r"""
         Given two or more type names, iterate their entry lists from beginning
@@ -1437,7 +1431,7 @@ class DataStore(BaseStore):
         self,
         type_name: str,
         include_sub_type: bool = True,
-        range_span: Optional[Tuple[int]] = None,
+        range_span: Optional[Tuple[int, int]] = None,
     ) -> Iterator[List]:
         r"""This function fetches entries from the data store of
         type ``type_name``. If `include_sub_type` is set to True and
@@ -1455,7 +1449,7 @@ class DataStore(BaseStore):
             An iterator of the entries matching the provided arguments.
         """
 
-        def within_range(entry: List[Any], range_span: Tuple[int]) -> bool:
+        def within_range(entry: List[Any], range_span: Tuple[int, int]) -> bool:
             """
             A helper function for deciding whether an annotation entry is
             inside the `range_span`.
@@ -1463,10 +1457,8 @@ class DataStore(BaseStore):
             if not self._is_annotation(entry[constants.ENTRY_TYPE_INDEX]):
                 return False
             return (
-                entry[constants.BEGIN_INDEX]
-                >= range_span[constants.BEGIN_INDEX]
-                and entry[constants.END_INDEX]
-                <= range_span[constants.END_INDEX]
+                entry[constants.BEGIN_INDEX] >= range_span[0]
+                and entry[constants.END_INDEX] <= range_span[1]
             )
 
         entry_class = get_class(type_name)
