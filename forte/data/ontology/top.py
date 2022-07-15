@@ -1148,7 +1148,7 @@ class Box(Region):
         shape.
 
         Args:
-            pack: the container that this ``BoundingBox`` will be added to.
+            pack: the container that this ``Box`` will be added to.
             cy: the y coordinate of the box's center, the unit is one pixel.
             cx: the x coordinate of the box's center, the unit is one pixel.
             height: the height of the box, the unit is one pixel.
@@ -1219,19 +1219,19 @@ class Box(Region):
 
     @property
     def box_min_x(self):
-        return max(self._cx - round(0.5 * self._width), 0)
+        return max(self.x0, 0)
 
     @property
     def box_max_x(self):
-        return min(self._cx + round(0.5 * self._width), self.max_x)
+        return min(self.x1, self.pack.image_width)
 
     @property
     def box_min_y(self):
-        return max(self._cy - round(0.5 * self._height), 0)
+        return max(self.y0, 0)
 
     @property
     def box_max_y(self):
-        return min(self._cy + round(0.5 * self._height), self.max_y)
+        return min(self.y1, self.pack.image_height)
 
     @property
     def area(self):
@@ -1271,7 +1271,7 @@ class BoundingBox(Box):
     the image/grid.
 
     Args:
-        pack: the container that this ``Box`` will be added to.
+        pack: the container that this ``BoundingBox`` will be added to.
         tl_point: the indices of top left point of the box, the unit is one
             pixel.
         br_point: the indices of bottom right point of the box, the unit is one
@@ -1291,6 +1291,23 @@ class BoundingBox(Box):
         width: int,
         image_payload_idx: int = 0,
     ):
+        """
+        A class method to initialize a ``BoundingBox`` from a box's center position and
+        shape.
+
+        Args:
+            pack: the container that this ``BoundingBox`` will be added to.
+            cy: the y coordinate of the box's center, the unit is one pixel.
+            cx: the x coordinate of the box's center, the unit is one pixel.
+            height: the height of the box, the unit is one pixel.
+            width: the width of the box, the unit is one pixel.
+            image_payload_idx: the index of the image payload in the DataPack's
+                image payload list. If it's not set, it defaults to 0 which
+                meaning it will load the first image payload.
+
+        Returns:
+            A ``BoundingBox`` instance.
+        """
         return cls(
             pack,
             [cy - round(height / 2), cx - round(width / 2)],
