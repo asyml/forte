@@ -1198,19 +1198,19 @@ class Box(Region):
 
     @property
     def box_min_x(self):
-        return max(self._cx - round(0.5 * self._width), 0)
+        return max(self.x0, 0)
 
     @property
     def box_max_x(self):
-        return min(self._cx + round(0.5 * self._width), self.max_x)
+        return min(self.x1, self.pack.image_width)
 
     @property
     def box_min_y(self):
-        return max(self._cy - round(0.5 * self._height), 0)
+        return max(self.y0, 0)
 
     @property
     def box_max_y(self):
-        return min(self._cy + round(0.5 * self._height), self.max_y)
+        return min(self.y1, self.pack.image_height)
 
     @property
     def area(self):
@@ -1250,7 +1250,7 @@ class BoundingBox(Box):
     the image/grid.
 
     Args:
-        pack: the container that this ``Box`` will be added to.
+        pack: the container that this ``BoundingBox`` will be added to.
         tl_point: the indices of top left point of the box, the unit is one
             pixel.
         br_point: the indices of bottom right point of the box, the unit is one
