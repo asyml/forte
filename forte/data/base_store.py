@@ -291,7 +291,7 @@ class BaseStore:
         self,
         type_name: str,
         include_sub_type: bool,
-        range_span: Optional[Tuple[int,int]] = None,
+        range_span: Optional[Tuple[int, int]] = None,
     ) -> Iterator[List]:
         r"""This function fetches entries from the data store of
         type ``type_name``.
