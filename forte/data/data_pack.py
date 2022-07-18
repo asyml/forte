@@ -1513,7 +1513,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             for entry_data in self._data_store.get(
                 type_name=get_full_module_name(entry_type_),
                 include_sub_type=include_sub_type,
-                range_annotation=range_annotation  # type: ignore
+                range_span=range_annotation  # type: ignore
                 and (range_annotation.begin, range_annotation.end),
             ):
                 entry: Entry = self.get_entry(tid=entry_data[TID_INDEX])

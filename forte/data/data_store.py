@@ -70,7 +70,7 @@ class DataStore(BaseStore):
         Currently, DataStore supports storing data structures with linear span
         (e.g. Annotation), and relational data structures (e.g Link and Group).
         Future extension of the class may support data structures with 2-d range
-         (e.g. bounding boxes).
+        (e.g. bounding boxes).
 
         Internally, we store every entry in a variable ``__elements``, which is
         a nested list: a list of ``entry lists``.
@@ -258,12 +258,11 @@ class DataStore(BaseStore):
                 to save space.
         """
         state = super().__getstate__()
-        for k in state["_DataStore__elements"]:
+        state["_DataStore__elements"] = {}
+        for k in self.__elements:
             # build the full `_type_attributes`
             self._get_type_info(k)
-            state["_DataStore__elements"][k] = list(
-                state["_DataStore__elements"][k]
-            )
+            state["_DataStore__elements"][k] = list(self.__elements[k])
         state.pop("_DataStore__tid_ref_dict")
         state.pop("_DataStore__tid_idx_dict")
         state.pop("_DataStore__deletion_count")
@@ -753,8 +752,8 @@ class DataStore(BaseStore):
     ):
         """
         This function add raw entry in DataStore object
-        based on corresponding type name
-         and sort them based on entry type.
+        based on corresponding type name and sort them
+        based on entry type.
 
         Args:
             entry_type: entry's type which decides the sorting of entry.
@@ -1300,8 +1299,68 @@ class DataStore(BaseStore):
             delete_count = self.__deletion_count.get(type_name, 0)
             return len(self.__elements[type_name]) - delete_count
 
+    def _get_bisect_range(
+        self,
+        search_list: SortedList,
+        range_span: Tuple[int, int],
+        type_name: str,
+    ) -> Optional[List]:
+        """
+        Perform binary search on the specified list for target entry class.
+        Entry class can be a subtype of
+        :class:`~forte.data.ontology.top.Annotation`
+        or :class:`~forte.data.ontology.top.AudioAnnotation`. This function
+        finds the the elements in the `Annotation` or `AudioAnnotation`
+        sorted list whose begin and end index falls within `range_span`.
+
+        Args:
+            search_list: A `SortedList` object on which the binary search
+                will be carried out.
+            range_span: a tuple that indicates the start and end index
+                of the range in which we want to get required entries
+            type_name: Type of entry represented by the DataStore
+
+        Returns:
+            List of entries to fetch
+        """
+
+        begin = self._get_datastore_attr_idx(type_name, "begin")
+        end = self._get_datastore_attr_idx(type_name, "end")
+
+        # Check if there are any entries within the given range
+        if (
+            search_list[0][begin] > range_span[1]
+            or search_list[-1][end] < range_span[0]
+        ):
+            return None
+
+        result_list = []
+
+        temp_entry = self.add_entry_raw(
+            type_name=type_name,
+            attribute_data={"begin": range_span[0], "end": range_span[0]},
+        )
+
+        begin_index = search_list.bisect_left(self.get_entry(temp_entry)[0])
+
+        self.delete_entry(temp_entry)
+
+        for idx in range(begin_index, len(search_list)):
+            if search_list[idx][begin] > range_span[1]:
+                break
+
+            if search_list[idx][end] <= range_span[1]:
+                result_list.append(search_list[idx])
+
+        if len(result_list) == 0:
+            return None
+
+        return result_list
+
     def co_iterator_annotation_like(
-        self, type_names: List[str]
+        self,
+        type_names: List[str],
+        range_span: Optional[Tuple[int, int]] = None,
     ) -> Iterator[List]:
         r"""
         Given two or more type names, iterate their entry lists from beginning
@@ -1320,21 +1379,62 @@ class DataStore(BaseStore):
 
         The precedence of those values indicates their priority in the min heap
         ordering.
-        For example, if two entries have both the same begin and end field,
-        then their order is
+
+        Lastly, the `range_span` argument determines the start
+        and end position of the span range within which entries of specified by
+        `type_name` need to be fetched. For example, if two entries have both
+        the same begin and end field, then their order is
         decided by the order of user input type_name (the type that first
         appears in the target type list will return first).
         For entries that have the exact same `begin`, `end` and `type_name`,
         the order will be determined arbitrarily.
 
+        For example, let's say we have two entry types,
+        :class:`~ft.onto.base_ontology.Sentence` and
+        :class:`~ft.onto.base_ontology.EntityMention`.
+        Each type has two entries. The two entries of type `Sentence` ranges from span
+        `(0,5)` and `(6,10)`. Similarly, the two entries of type `EntityMention` has span
+        `(0,3)` and `(15,20)`.
+
+        .. code-block:: python
+
+            # function signature
+            entries = list(
+                co_iterator_annotation_like(
+                    type_names = [
+                        "ft.onto.base_ontology.Sentence",
+                        "ft.onto.base_ontology.EntityMention"
+                    ],
+                    range_span = (0,12)
+                )
+            )
+
+            # Fetching result
+            result = [
+                all_anno.append([type(anno).__name__, anno.begin, anno.end])
+                for all_anno in entries
+            ]
+
+            # return
+            result = [
+                ['Sentence', 0, 5],
+                ['EntityMention', 0, 5],
+                ['Sentence', 6, 10]
+            ]
+
+        From this we can see how `range_span` affects which
+        entries will be fetched and also how the function chooses the order
+        in which entries are fetched.
+
         Args:
             type_names: a list of string type names
+            range_span: a tuple that indicates the start and end index
+                of the range in which we want to get required entries
 
         Returns:
             An iterator of entry elements.
         """
 
-        n = len(type_names)
         # suppose the length of type_names is N and the length of entry list of
         # one type is M
         # then the time complexity of using min-heap to iterate
@@ -1344,25 +1444,53 @@ class DataStore(BaseStore):
         # it avoids empty entry lists or non-existent entry list
         first_entries = []
 
-        # Store the begin and end index in the DataStore entry
-        # for each type of entry
-        span_pos = {}
+        # For every entry type, store the entries that fall within the required
+        # range.When range_end and range_begin are None, we fetch all entries of
+        # each type (mentioned in type_names). But when range_end and range_end
+        # is specified, we find the list of entries that fall within the range
+        # and only iterate through them
+        #
+        all_entries_range = {}
 
-        for tn in type_names:
-            try:
-                first_entries.append(self.__elements[tn][0])
-                span_pos[tn] = (
-                    self._get_datastore_attr_idx(tn, "begin"),
-                    self._get_datastore_attr_idx(tn, "end"),
+        # This list stores the types of entries that have atleast one entry to
+        # fetch. The order of the types in this list is the same as the order
+        # followed by them in type_names.
+        valid_type_names = []
+
+        if range_span is not None:
+            for tn in type_names:
+                possible_entries = self._get_bisect_range(
+                    self.__elements[tn], range_span, tn
                 )
-            except KeyError as e:  # self.__elements[tn] will be caught here.
+                if possible_entries is not None:
+                    all_entries_range[tn] = possible_entries
+                    valid_type_names.append(tn)
+
+        else:
+            try:
+                for tn in type_names:
+                    all_entries_range[tn] = self.__elements[tn]
+                valid_type_names = type_names
+            except KeyError as e:  # all_entries_range[tn] will be caught here.
                 raise ValueError(
                     f"Input argument `type_names` to the function contains"
                     f" a type name [{tn}], which is not recognized."
                     f" Please input available ones in this DataStore"
                     f" object: {list(self.__elements.keys())}"
                 ) from e
-            except IndexError as e:  # self.__elements[tn][0] will be caught here.
+
+        # Store the positions where the begin and end index is stored in the
+        # DataStore entry for each type of entry
+        span_pos = {}
+
+        for tn in valid_type_names:
+            try:
+                first_entries.append(all_entries_range[tn][0])
+                span_pos[tn] = (
+                    self._get_datastore_attr_idx(tn, "begin"),
+                    self._get_datastore_attr_idx(tn, "end"),
+                )
+            except IndexError as e:  # all_entries_range[tn][0] will be caught here.
                 raise ValueError(
                     f"Entry list of type name, {tn} which is"
                     " one list item of input argument `type_names`,"
@@ -1372,18 +1500,18 @@ class DataStore(BaseStore):
                 ) from e
 
         # record the current entry index for elements
-        # pointers[i] is the index of entry at (i)th sorted entry lists
-        pointers = [0] * n
+        # pointers[tn] is the index of entry of type tn
+        pointers = {key: 0 for key in all_entries_range}
 
         # compare tuple (begin, end, order of type name in input argument
         # type_names)
         # we initialize a MinHeap with the first entry of all sorted entry lists
-        # in self.__elements
+        # in all_entries_range
         # the metric of comparing entry order is represented by the tuple
         # (begin index of entry, end index of entry,
         # the index of the entry type name in input parameter ``type_names``)
         h: List[Tuple[Tuple[int, int, int], str]] = []
-        for p_idx in range(n):
+        for p_idx, entry in enumerate(first_entries):
             entry_tuple = (
                 (
                     first_entries[p_idx][
@@ -1398,7 +1526,7 @@ class DataStore(BaseStore):
                     ],
                     p_idx,
                 ),
-                first_entries[p_idx][constants.ENTRY_TYPE_INDEX],
+                entry[constants.ENTRY_TYPE_INDEX],
             )
             heappush(
                 h,
@@ -1415,23 +1543,24 @@ class DataStore(BaseStore):
             # `the current entry` means the entry that
             #      popped entry_tuple represents.
             # `the current entry list` means the entry
-            # list (values of self.__elements) where `the current entry`
+            # list (values of all_entries_range) where `the current entry`
             # locates at.
 
             # retrieve the popped entry tuple (minimum item in the heap)
-            # and get the p_idx (the index of the current entry list in self.__elements)
+            # and get the p_idx (the index of the current entry
+            # list in all_entries_range)
             entry_tuple = heappop(h)
             (_, _, p_idx), type_name = entry_tuple
             # get the index of current entry
             # and locate the entry represented by the tuple for yielding
-            pointer = pointers[p_idx]
-            entry = self.__elements[type_name][pointer]
+            pointer = pointers[type_name]
+            entry = all_entries_range[type_name][pointer]
             # check whether there is next entry in the current entry list
             # if there is, then we push the new entry's tuple into the heap
-            if pointer + 1 < len(self.__elements[type_name]):
-                pointers[p_idx] += 1
-                new_pointer = pointers[p_idx]
-                new_entry = self.__elements[type_name][new_pointer]
+            if pointer + 1 < len(all_entries_range[type_name]):
+                pointers[type_name] += 1
+                new_pointer = pointers[type_name]
+                new_entry = all_entries_range[type_name][new_pointer]
                 new_entry_tuple = (
                     (
                         new_entry[span_pos[type_name][0]],
@@ -1450,7 +1579,7 @@ class DataStore(BaseStore):
         self,
         type_name: str,
         include_sub_type: bool = True,
-        range_annotation: Optional[Tuple[int]] = None,
+        range_span: Optional[Tuple[int, int]] = None,
     ) -> Iterator[List]:
         r"""This function fetches entries from the data store of
         type ``type_name``. If `include_sub_type` is set to True and
@@ -1461,33 +1590,28 @@ class DataStore(BaseStore):
         Args:
             type_name: The fully qualified name of the entry.
             include_sub_type: A boolean to indicate whether get its subclass.
-            range_annotation: A tuple that contains the begin and end indices
+            range_span: A tuple that contains the begin and end indices
                 of the searching range of entries.
 
         Returns:
             An iterator of the entries matching the provided arguments.
         """
 
-        def within_range(
-            entry: List[Any], range_annotation: Tuple[int]
-        ) -> bool:
+        def within_range(entry: List[Any], range_span: Tuple[int, int]) -> bool:
             """
             A helper function for deciding whether an annotation entry is
-            inside the `range_annotation`.
+            inside the `range_span`.
             """
-            begin_idx = self._get_datastore_attr_idx(
+            begin = self._get_datastore_attr_idx(
                 entry[constants.ENTRY_TYPE_INDEX], "begin"
             )
-            end_idx = self._get_datastore_attr_idx(
+            end = self._get_datastore_attr_idx(
                 entry[constants.ENTRY_TYPE_INDEX], "end"
             )
 
             if not self._is_annotation(entry[constants.ENTRY_TYPE_INDEX]):
                 return False
-            return (
-                entry[begin_idx] >= range_annotation[0]
-                and entry[end_idx] <= range_annotation[1]
-            )
+            return entry[begin] >= range_span[0] and entry[end] <= range_span[1]
 
         entry_class = get_class(type_name)
         all_types = set()
@@ -1500,15 +1624,16 @@ class DataStore(BaseStore):
         all_types = list(all_types)
         all_types.sort()
         if self._is_annotation(type_name):
-            if range_annotation is None:
+            if range_span is None:
                 yield from self.co_iterator_annotation_like(all_types)
             else:
-                for entry in self.co_iterator_annotation_like(all_types):
-                    if within_range(entry, range_annotation):
-                        yield entry
+                for entry in self.co_iterator_annotation_like(
+                    all_types, range_span=range_span
+                ):
+                    yield entry
         elif issubclass(entry_class, Link):
             for type in all_types:
-                if range_annotation is None:
+                if range_span is None:
                     yield from self.iter(type)
                 else:
                     for entry in self.__elements[type]:
@@ -1525,12 +1650,12 @@ class DataStore(BaseStore):
                             parent = self.__tid_ref_dict[entry[parent_idx]]
                             child = self.__tid_ref_dict[entry[child_idx]]
                             if within_range(
-                                parent, range_annotation
-                            ) and within_range(child, range_annotation):
+                                parent, range_span
+                            ) and within_range(child, range_span):
                                 yield entry
         elif issubclass(entry_class, Group):
             for type in all_types:
-                if range_annotation is None:
+                if range_span is None:
                     yield from self.iter(type)
                 else:
                     for entry in self.__elements[type]:
@@ -1547,7 +1672,7 @@ class DataStore(BaseStore):
                             within = True
                             for m in members:
                                 e = self.__tid_ref_dict[m]
-                                if not within_range(e, range_annotation):
+                                if not within_range(e, range_span):
                                     within = False
                                     break
                             if within:

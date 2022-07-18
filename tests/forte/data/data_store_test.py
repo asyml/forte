@@ -259,8 +259,16 @@ class DataStoreTest(unittest.TestCase):
         ref5 = [7654, "forte.data.ontology.top.Annotation", 10, 20, 0]
 
         sorting_fn = lambda s: (
-            s[constants.BEGIN_INDEX],
-            s[constants.END_INDEX],
+            s[
+                self.reference_type_attributes[
+                    "forte.data.ontology.top.Annotation"
+                ]['attributes']['begin']
+            ],
+            s[
+                self.reference_type_attributes[
+                    "forte.data.ontology.top.Annotation"
+                ]['attributes']['end']
+            ],
         )
         self.data_store._DataStore__elements = {
             "ft.onto.base_ontology.Document": SortedList(
@@ -1050,7 +1058,7 @@ class DataStoreTest(unittest.TestCase):
         # get annotations with subclasses and range annotation
         instances = list(
             self.data_store.get(
-                "forte.data.ontology.top.Annotation", range_annotation=(1, 20)
+                "forte.data.ontology.top.Annotation", range_span=(1, 20)
             )
         )
         self.assertEqual(len(instances), 2)
@@ -1062,7 +1070,7 @@ class DataStoreTest(unittest.TestCase):
         # get groups with subclasses and range annotation
         instances = list(
             self.data_store.get(
-                "forte.data.ontology.top.Group", range_annotation=(1, 20)
+                "forte.data.ontology.top.Group", range_span=(1, 20)
             )
         )
         self.assertEqual(len(instances), 0)
@@ -1074,7 +1082,7 @@ class DataStoreTest(unittest.TestCase):
         # get links with subclasses and range annotation
         instances = list(
             self.data_store.get(
-                "forte.data.ontology.top.Link", range_annotation=(0, 9)
+                "forte.data.ontology.top.Link", range_span=(0, 9)
             )
         )
         self.assertEqual(len(instances), 1)
@@ -1082,7 +1090,7 @@ class DataStoreTest(unittest.TestCase):
         # get links with subclasses and range annotation
         instances = list(
             self.data_store.get(
-                "forte.data.ontology.top.Link", range_annotation=(4, 11)
+                "forte.data.ontology.top.Link", range_span=(4, 11)
             )
         )
         self.assertEqual(len(instances), 0)
