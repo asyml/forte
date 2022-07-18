@@ -1126,12 +1126,12 @@ class Box(Region):
                 f" bottom right x coordinate({br_point[1]})"
             )
 
-        self.y0, self.x0 = tl_point
-        self.y1, self.x1 = br_point
-        self._cy = round((self.y0 + self.y1) / 2)
-        self._cx = round((self.x0 + self.x1) / 2)
-        self._height = self.y1 - self.y0
-        self._width = self.x1 - self.x0
+        self._y0, self._x0 = tl_point
+        self._y1, self._x1 = br_point
+        self._cy = round((self._y0 + self._y1) / 2)
+        self._cx = round((self._x0 + self._x1) / 2)
+        self._height = self._y1 - self._y0
+        self._width = self._x1 - self._x0
 
     @classmethod
     def init_from_center_n_shape(
@@ -1211,27 +1211,27 @@ class Box(Region):
         Get corners of box.
         """
         return [
-            (self.y0, self.x0),
-            (self.y0, self.x1),
-            (self.y1, self.x0),
-            (self.y1, self.x1),
+            (self._y0, self._x0),
+            (self._y0, self._x1),
+            (self._y1, self._x0),
+            (self._y1, self._x1),
         ]
 
     @property
     def box_min_x(self):
-        return max(self.x0, 0)
+        return self._x0
 
     @property
     def box_max_x(self):
-        return min(self.x1, self.pack.image_width)
+        return min(self._x1, self.max_x)
 
     @property
     def box_min_y(self):
-        return max(self.y0, 0)
+        return self._y0
 
     @property
     def box_max_y(self):
-        return min(self.y1, self.pack.image_height)
+        return min(self._y1, self.max_y)
 
     @property
     def area(self):
