@@ -61,7 +61,6 @@ __all__ = [
     "Grids",
     "Region",
     "Box",
-    "BoundingBox",
     "Payload",
 ]
 
@@ -853,7 +852,7 @@ class AudioAnnotation(Entry):
 class ImageAnnotation(Entry):
     def __init__(self, pack: PackType, image_payload_idx: int = 0):
         """
-        ImageAnnotation type entries, such as "edge" and "bounding box".
+        ImageAnnotation type entries, such as "edge" and "box".
         Each ImageAnnotation has a ``image_payload_idx`` corresponding to its
         image representation in the payload array.
 
@@ -1221,7 +1220,7 @@ class Box(Region):
         A function checks whether two boxes are overlapped(two box area have
         intersections).
 
-        Note: in edges cases where two bounding boxes' boundaries share the
+        Note: in edges cases where two boxes' boundaries share the
         same line segment/corner in the image array, it won't be considered
         overlapped.
 
@@ -1239,60 +1238,6 @@ class Box(Region):
         if self.box_min_y > other.box_max_y or other.box_min_y > self.box_max_y:
             return False
         return True
-
-
-class BoundingBox(Box):
-    """
-    A bounding box class that associates with image payload and grids and
-    has a configuration of height and width.
-
-    Note: all indices are zero-based and counted from top left corner of
-    the image/grid.
-
-    Args:
-        pack: the container that this ``BoundingBox`` will be added to.
-        tl_point: the indices of top left point of the box, the unit is one
-            pixel.
-        br_point: the indices of bottom right point of the box, the unit is one
-            pixel.
-        image_payload_idx: the index of the image payload in the DataPack's
-            image payload list. If it's not set,
-            it defaults to 0 which meaning it will load the first image payload.
-    """
-
-    @classmethod
-    def init_from_center_n_shape(
-        cls,
-        pack: PackType,
-        cy: int,
-        cx: int,
-        height: int,
-        width: int,
-        image_payload_idx: int = 0,
-    ):
-        """
-        A class method to initialize a ``BoundingBox`` from a box's center position and
-        shape.
-
-        Args:
-            pack: the container that this ``BoundingBox`` will be added to.
-            cy: the y coordinate of the box's center, the unit is one pixel.
-            cx: the x coordinate of the box's center, the unit is one pixel.
-            height: the height of the box, the unit is one pixel.
-            width: the width of the box, the unit is one pixel.
-            image_payload_idx: the index of the image payload in the DataPack's
-                image payload list. If it's not set, it defaults to 0 which
-                meaning it will load the first image payload.
-
-        Returns:
-            A ``BoundingBox`` instance.
-        """
-        return cls(
-            pack,
-            [cy - round(height / 2), cx - round(width / 2)],
-            [cy - round(height / 2) + height, cx - round(width / 2) + width],
-            image_payload_idx,
-        )
 
 
 class Payload(Entry):
