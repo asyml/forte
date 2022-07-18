@@ -949,7 +949,7 @@ class DataStore(BaseStore):
     def add_entry_raw(
         self,
         type_name: str,
-        attribute_data: Dict = {},
+        attribute_data: Dict,
         tid: Optional[int] = None,
         allow_duplicate: bool = True,
     ) -> int:
@@ -1516,16 +1516,8 @@ class DataStore(BaseStore):
         for p_idx, entry in enumerate(first_entries):
             entry_tuple = (
                 (
-                    first_entries[p_idx][
-                        span_pos[
-                            first_entries[p_idx][constants.ENTRY_TYPE_INDEX]
-                        ][0]
-                    ],
-                    first_entries[p_idx][
-                        span_pos[
-                            first_entries[p_idx][constants.ENTRY_TYPE_INDEX]
-                        ][1]
-                    ],
+                    entry[span_pos[entry[constants.ENTRY_TYPE_INDEX]][0]],
+                    entry[span_pos[entry[constants.ENTRY_TYPE_INDEX]][1]],
                     p_idx,
                 ),
                 entry[constants.ENTRY_TYPE_INDEX],

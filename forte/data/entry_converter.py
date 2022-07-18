@@ -53,7 +53,7 @@ class EntryConverter:
         self,
         entry: Any,
         pack: PackType,
-        attribute_data: Dict = {},
+        attribute_data: Dict,
         allow_duplicate: bool = True,
     ):
         # pylint: disable=protected-access
@@ -97,6 +97,7 @@ class EntryConverter:
             data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
                 tid=entry.tid,
+                attribute_data=attribute_data,
             )
         elif data_store_ref._is_subclass(entry.entry_type(), AudioAnnotation):
             data_store_ref.add_entry_raw(
@@ -110,6 +111,7 @@ class EntryConverter:
                 type_name=entry.entry_type(),
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,
+                attribute_data=attribute_data,
             )
         elif data_store_ref._is_subclass(entry.entry_type(), Payload):
             entry = cast(Payload, entry)
@@ -125,6 +127,7 @@ class EntryConverter:
                 type_name=entry.entry_type(),
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,
+                attribute_data=attribute_data,
             )
         elif data_store_ref._is_subclass(entry.entry_type(), MultiPackLink):
             data_store_ref.add_entry_raw(
@@ -142,6 +145,7 @@ class EntryConverter:
             data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
                 tid=entry.tid,
+                attribute_data=attribute_data,
             )
         else:
             valid_entries: str = ", ".join(

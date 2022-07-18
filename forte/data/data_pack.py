@@ -446,7 +446,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         """
         supported_modality = [enum.name for enum in Modality]
-
+        payload_length: int = 0
         try:
             # if modality.name == "text":
             if modality == Modality.Text:
@@ -1567,9 +1567,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         #   better solution.
         self.__dict__.update(datapack.__dict__)
 
-    def _save_entry_to_data_store(
-        self, entry: Entry, attribute_data: Dict = {}
-    ):
+    def _save_entry_to_data_store(self, entry: Entry, attribute_data: Dict):
         r"""Save an existing entry object into DataStore"""
         self._entry_converter.save_entry_object(
             entry=entry, pack=self, attribute_data=attribute_data

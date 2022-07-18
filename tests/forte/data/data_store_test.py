@@ -799,7 +799,7 @@ class DataStoreTest(unittest.TestCase):
     def test_add_generics_raw(self):
         # test add Document entry
         tid_generics: int = self.data_store.add_entry_raw(
-            type_name="forte.data.ontology.top.Generics",
+            type_name="forte.data.ontology.top.Generics", attribute_data={}
         )
         # check number of Generics
         self.assertEqual(
@@ -813,6 +813,7 @@ class DataStoreTest(unittest.TestCase):
         tid = 77
         self.data_store.add_entry_raw(
             type_name="forte.data.ontology.top.Generics",
+            attribute_data={},
             tid=tid,
         )
         self.assertEqual(
@@ -899,6 +900,7 @@ class DataStoreTest(unittest.TestCase):
     def test_add_multientry_raw(self):
         self.data_store.add_entry_raw(
             type_name="forte.data.ontology.top.MultiPackGeneric",
+            attribute_data={},
         )
         # check number of MultiPackGeneric
         self.assertEqual(

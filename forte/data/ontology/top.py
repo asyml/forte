@@ -71,7 +71,7 @@ make sure it available across the ontology system:
 
 class Generics(Entry):
     def __init__(self, pack: PackType):
-        super().__init__(pack=pack)
+        super().__init__(pack=pack, attribute_data={})
 
 
 @dataclass
@@ -381,7 +381,7 @@ class Group(BaseGroup[Entry]):
 
 class MultiPackGeneric(MultiEntry, Entry):
     def __init__(self, pack: PackType):
-        super().__init__(pack=pack)
+        super().__init__(pack=pack, attribute_data={})
 
 
 @dataclass
@@ -760,7 +760,7 @@ class ImageAnnotation(Entry):
                 first image payload.
         """
         self._image_payload_idx = image_payload_idx
-        super().__init__(pack)
+        super().__init__(pack, attribute_data={})
 
     @property
     def image_payload_idx(self) -> int:
@@ -818,7 +818,7 @@ class Grids(Entry):
         self._height = height
         self._width = width
         self._image_payload_idx = image_payload_idx
-        super().__init__(pack)
+        super().__init__(pack, attribute_data={})
         self.img_arr = self.pack.get_payload_data_at(
             Modality.Image, self._image_payload_idx
         )

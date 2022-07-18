@@ -732,7 +732,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             its Data Store entry.
         """
 
-        return self._data_store.get_datastore_attr_idx(type_name, attr_name)
+        return self._data_store.get_datastore_attr_idx(type_name, attr_name) #type: ignore
 
     def get_cross_pack_data(
         self,
@@ -972,9 +972,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     def view(self):
         return copy.deepcopy(self)
 
-    def _save_entry_to_data_store(
-        self, entry: Entry, attribute_data: Dict = {}
-    ):
+    def _save_entry_to_data_store(self, entry: Entry, attribute_data: Dict):
         r"""Save an existing entry object into DataStore"""
         self._entry_converter.save_entry_object(
             entry=entry, pack=self, attribute_data=attribute_data
