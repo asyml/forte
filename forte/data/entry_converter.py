@@ -53,7 +53,7 @@ class EntryConverter:
         self,
         entry: Any,
         pack: PackType,
-        attribute_data: Optional[Dict] = None,
+        attribute_data: Dict = {},
         allow_duplicate: bool = True,
     ):
         # pylint: disable=protected-access

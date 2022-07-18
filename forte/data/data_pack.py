@@ -242,7 +242,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             return ""
 
     @property
-    def audio(self) -> Optional[np.ndarray]:
+    def audio(self) -> Union[str, np.ndarray]:
         r"""Return the audio of the data pack"""
         return self.get_payload_data_at(Modality.Audio, 0)
 
@@ -498,6 +498,25 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         """
         return self.get_payload_at(modality, payload_index).cache
+
+    def get_data_store_attribute_idx(
+        self, type_name: str, attr_name: str
+    ) -> int:
+        r"""Get the index at which a given attribute is stored in a
+            Data Store entry.
+
+        Args:
+            `type_name`: A string representing the type of entry whose
+            attribute index needs to be fetched.
+            `attr_name`: The name of the attribute whose index in the Data
+            Store needs to be fetched.
+
+        Returns:
+            An integer representing the position of the required attribute in
+            its Data Store entry.
+        """
+
+        return self._data_store.get_datastore_attr_idx(type_name, attr_name)
 
     def get_span_text(
         self, begin: int, end: int, text_payload_index: int = 0
@@ -1322,10 +1341,10 @@ class DataPack(BasePack[Entry, Link, Group]):
                 )
 
             a_dict["parent"].append(
-                np.where(data[parent_type]["tid"] == link.parent.tid)[0][0]
+                np.where(data[parent_type]["tid"] == link.parent.tid)[0][0]  # type: ignore
             )
             a_dict["child"].append(
-                np.where(data[child_type]["tid"] == link.child.tid)[0][0]
+                np.where(data[child_type]["tid"] == link.child.tid)[0][0]  # type: ignore
             )
 
             for field in fields:
@@ -1549,7 +1568,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         self.__dict__.update(datapack.__dict__)
 
     def _save_entry_to_data_store(
-        self, entry: Entry, attribute_data: Optional[Dict] = None
+        self, entry: Entry, attribute_data: Dict = {}
     ):
         r"""Save an existing entry object into DataStore"""
         self._entry_converter.save_entry_object(

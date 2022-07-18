@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from dataclasses import dataclass
-from email.mime import audio
-from enum import IntEnum
 from functools import total_ordering
 from typing import (
     Optional,
@@ -301,7 +299,7 @@ class Link(BaseLink):
             )
         if self.parent is None:
             raise ValueError("The parent of this entry is not set.")
-        return self.parent
+        return self.parent  # type: ignore
 
     def get_child(self) -> Entry:
         r"""Get the child entry of the link.
@@ -316,7 +314,7 @@ class Link(BaseLink):
             )
         if self.child is None:
             raise ValueError("The child of this entry is not set.")
-        return self.child
+        return self.child  # type: ignore
 
 
 # pylint: disable=duplicate-bases
@@ -352,7 +350,8 @@ class Group(BaseGroup[Entry]):
                 f"The members of {type(self)} should be "
                 f"instances of {self.MemberType}, but got {type(member)}"
             )
-        members_index = self.pack._data_store._get_datastore_attr_idx(
+
+        members_index = self.pack.get_data_store_attribute_idx(
             self.entry_type(), "members"
         )
         self.pack.get_entry_raw(self.tid)[members_index].append(member.tid)
@@ -371,7 +370,7 @@ class Group(BaseGroup[Entry]):
                 "Cannot get members because group is not "
                 "attached to any data pack."
             )
-        members_index = self.pack._data_store._get_datastore_attr_idx(
+        members_index = self.pack.get_data_store_attribute_idx(
             self.entry_type(), "members"
         )
         member_entries = []
@@ -512,7 +511,7 @@ class MultiPackLink(MultiEntry, BaseLink):
         if self.parent is None:
             raise ValueError("The parent of this link is not set.")
 
-        return self.parent
+        return self.parent  # type: ignore
 
     def get_child(self) -> Entry:
         r"""Get the child entry of the link.
@@ -524,7 +523,7 @@ class MultiPackLink(MultiEntry, BaseLink):
         if self.child is None:
             raise ValueError("The parent of this link is not set.")
 
-        return self.child
+        return self.child  # type: ignore
 
 
 # pylint: disable=duplicate-bases
@@ -554,7 +553,7 @@ class MultiPackGroup(MultiEntry, BaseGroup[Entry]):
                 f"The members of {type(self)} should be "
                 f"instances of {self.MemberType}, but got {type(member)}"
             )
-        members_index = self.pack._data_store._get_datastore_attr_idx(
+        members_index = self.pack.get_data_store_attribute_idx(
             self.entry_type(), "members"
         )
 
@@ -564,7 +563,7 @@ class MultiPackGroup(MultiEntry, BaseGroup[Entry]):
 
     def get_members(self) -> List[Entry]:
         members = []
-        members_index = self.pack._data_store._get_datastore_attr_idx(
+        members_index = self.pack.get_data_store_attribute_idx(
             self.entry_type(), "members"
         )
 

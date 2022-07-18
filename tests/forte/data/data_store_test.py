@@ -262,12 +262,12 @@ class DataStoreTest(unittest.TestCase):
             s[
                 self.reference_type_attributes[
                     "forte.data.ontology.top.Annotation"
-                ]['attributes']['begin']
+                ]["attributes"]["begin"]
             ],
             s[
                 self.reference_type_attributes[
                     "forte.data.ontology.top.Annotation"
-                ]['attributes']['end']
+                ]["attributes"]["end"]
             ],
         )
         self.data_store._DataStore__elements = {

@@ -127,7 +127,7 @@ class BaseStore:
     def add_entry_raw(
         self,
         type_name: str,
-        attribute_data: Optional[Dict] = None,
+        attribute_data: Dict = {},
         tid: Optional[int] = None,
         allow_duplicate: bool = True,
     ) -> int:

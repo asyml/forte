@@ -288,11 +288,13 @@ class DataStore(BaseStore):
         self._DataStore__deletion_count = {}
 
         reset_index = {}
+        begin_idx: int
+        end_idx: int
         for k in self.__elements:
             if self._is_annotation(k):
                 # convert list back to sorted list
-                begin_idx = self._get_datastore_attr_idx(k, "begin")
-                end_idx = self._get_datastore_attr_idx(k, "end")
+                begin_idx = self.get_datastore_attr_idx(k, "begin")
+                end_idx = self.get_datastore_attr_idx(k, "end")
 
                 sorting_fn = lambda s: (
                     s[begin_idx],
@@ -862,24 +864,24 @@ class DataStore(BaseStore):
 
         return entry
 
-    def _get_datastore_attr_idx(self, type_name: str, attr: str) -> int:
+    def get_datastore_attr_idx(self, type_name: str, attr: str) -> int:
         try:
             return self._type_attributes[type_name][constants.TYPE_ATTR_KEY][
                 attr
             ]
-        except KeyError:
+        except KeyError as e:
             raise KeyError(
                 f"Attribute {attr} is not a part"
                 f"of type attributes for {type_name}"
-            )
+            ) from e
 
     def _validate_entry(self, new_entry: List) -> List:
         type_name = new_entry[constants.ENTRY_TYPE_INDEX]
 
         # Handling creation of annotation type entries
         if self._is_annotation(type_name):
-            begin_idx = self._get_datastore_attr_idx(type_name, "begin")
-            end_idx = self._get_datastore_attr_idx(type_name, "end")
+            begin_idx = self.get_datastore_attr_idx(type_name, "begin")
+            end_idx = self.get_datastore_attr_idx(type_name, "end")
 
             # If the begin and end index is not set
             # Data Store will not be able to add this
@@ -894,7 +896,7 @@ class DataStore(BaseStore):
 
             # If payload is not set, set it to its default value,
             # ie. 0.
-            payload_id_idx = self._get_datastore_attr_idx(
+            payload_id_idx = self.get_datastore_attr_idx(
                 type_name, "payload_idx"
             )
 
@@ -905,8 +907,8 @@ class DataStore(BaseStore):
             issubclass(get_class(type_name), cls)
             for cls in (Group, MultiPackGroup)
         ):
-            members_idx = self._get_datastore_attr_idx(type_name, "members")
-            type_idx = self._get_datastore_attr_idx(type_name, "member_type")
+            members_idx = self.get_datastore_attr_idx(type_name, "members")
+            type_idx = self.get_datastore_attr_idx(type_name, "member_type")
 
             if new_entry[members_idx] is None:
                 new_entry[members_idx] = []
@@ -923,8 +925,8 @@ class DataStore(BaseStore):
             issubclass(get_class(type_name), cls)
             for cls in (Link, MultiPackLink)
         ):
-            parent_idx = self._get_datastore_attr_idx(type_name, "parent_type")
-            child_idx = self._get_datastore_attr_idx(type_name, "child_type")
+            parent_idx = self.get_datastore_attr_idx(type_name, "parent_type")
+            child_idx = self.get_datastore_attr_idx(type_name, "child_type")
 
             if new_entry[parent_idx] and new_entry[child_idx]:
                 if not issubclass(
@@ -947,7 +949,7 @@ class DataStore(BaseStore):
     def add_entry_raw(
         self,
         type_name: str,
-        attribute_data: Optional[Dict] = None,
+        attribute_data: Dict = {},
         tid: Optional[int] = None,
         allow_duplicate: bool = True,
     ) -> int:
@@ -981,7 +983,7 @@ class DataStore(BaseStore):
             constants.TYPE_ATTR_KEY
         ]
 
-        if attribute_data is not None:
+        if len(attribute_data) != 0:
             for attr, value in attribute_data.items():
                 # Check if the attributes passed are valid
                 if attr in type_attributes:
@@ -1023,8 +1025,8 @@ class DataStore(BaseStore):
         """
 
         type_name = entry[constants.ENTRY_TYPE_INDEX]
-        begin_idx = self._get_datastore_attr_idx(type_name, "begin")
-        end_idx = self._get_datastore_attr_idx(type_name, "end")
+        begin_idx = self.get_datastore_attr_idx(type_name, "begin")
+        end_idx = self.get_datastore_attr_idx(type_name, "end")
 
         begin = entry[begin_idx]
         end = entry[end_idx]
@@ -1324,8 +1326,8 @@ class DataStore(BaseStore):
             List of entries to fetch
         """
 
-        begin = self._get_datastore_attr_idx(type_name, "begin")
-        end = self._get_datastore_attr_idx(type_name, "end")
+        begin = self.get_datastore_attr_idx(type_name, "begin")
+        end = self.get_datastore_attr_idx(type_name, "end")
 
         # Check if there are any entries within the given range
         if (
@@ -1487,8 +1489,8 @@ class DataStore(BaseStore):
             try:
                 first_entries.append(all_entries_range[tn][0])
                 span_pos[tn] = (
-                    self._get_datastore_attr_idx(tn, "begin"),
-                    self._get_datastore_attr_idx(tn, "end"),
+                    self.get_datastore_attr_idx(tn, "begin"),
+                    self.get_datastore_attr_idx(tn, "end"),
                 )
             except IndexError as e:  # all_entries_range[tn][0] will be caught here.
                 raise ValueError(
@@ -1602,10 +1604,10 @@ class DataStore(BaseStore):
             A helper function for deciding whether an annotation entry is
             inside the `range_span`.
             """
-            begin = self._get_datastore_attr_idx(
+            begin = self.get_datastore_attr_idx(
                 entry[constants.ENTRY_TYPE_INDEX], "begin"
             )
-            end = self._get_datastore_attr_idx(
+            end = self.get_datastore_attr_idx(
                 entry[constants.ENTRY_TYPE_INDEX], "end"
             )
 
@@ -1637,10 +1639,10 @@ class DataStore(BaseStore):
                     yield from self.iter(type)
                 else:
                     for entry in self.__elements[type]:
-                        parent_idx = self._get_datastore_attr_idx(
+                        parent_idx = self.get_datastore_attr_idx(
                             entry[constants.ENTRY_TYPE_INDEX], "parent"
                         )
-                        child_idx = self._get_datastore_attr_idx(
+                        child_idx = self.get_datastore_attr_idx(
                             entry[constants.ENTRY_TYPE_INDEX], "child"
                         )
 
@@ -1659,10 +1661,10 @@ class DataStore(BaseStore):
                     yield from self.iter(type)
                 else:
                     for entry in self.__elements[type]:
-                        member_type_idx = self._get_datastore_attr_idx(
+                        member_type_idx = self.get_datastore_attr_idx(
                             entry[constants.ENTRY_TYPE_INDEX], "member_type"
                         )
-                        members_idx = self._get_datastore_attr_idx(
+                        members_idx = self.get_datastore_attr_idx(
                             entry[constants.ENTRY_TYPE_INDEX], "members"
                         )
 

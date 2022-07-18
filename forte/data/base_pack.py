@@ -436,7 +436,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
     def on_entry_creation(
         self,
         entry: Entry,
-        attribute_data: Optional[Dict] = None,
+        attribute_data: Dict = {},
         component_name: Optional[str] = None,
     ):
         """
@@ -605,7 +605,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
     @abstractmethod
     def _save_entry_to_data_store(
-        self, entry: Entry, attribute_data: Optional[Dict] = None
+        self, entry: Entry, attribute_data: Dict = {}
     ):
         r"""Save an existing entry object into DataStore"""
         raise NotImplementedError

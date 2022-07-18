@@ -100,9 +100,7 @@ class Entry(Generic[ContainerType]):
         pack: Each entry should be associated with one pack upon creation.
     """
 
-    def __init__(
-        self, pack: ContainerType, attribute_data: Optional[Dict] = None
-    ):
+    def __init__(self, pack: ContainerType, attribute_data: Dict = {}):
         # The Entry should have a reference to the data pack, and the data pack
         # need to store the entries. In order to resolve the cyclic references,
         # we create a generic class EntryContainer to be the place holder of
@@ -494,9 +492,7 @@ class FNdArray:
 
 
 class BaseLink(Entry, ABC):
-    def __init__(
-        self, pack: ContainerType, attribute_data: Optional[Dict] = None
-    ):
+    def __init__(self, pack: ContainerType, attribute_data: Dict = {}):
         super().__init__(pack, attribute_data)
 
         if attribute_data["parent"] is not None:
@@ -571,9 +567,7 @@ class BaseGroup(Entry, Generic[EntryType]):
     """
     MemberType: Type[EntryType]
 
-    def __init__(
-        self, pack: ContainerType, attribute_data: Optional[Dict] = None
-    ):
+    def __init__(self, pack: ContainerType, attribute_data: Dict = {}):
         super().__init__(pack, attribute_data)
         if attribute_data["members"] is not None:
             self.add_members(attribute_data["members"])
