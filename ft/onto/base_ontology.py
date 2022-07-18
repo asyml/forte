@@ -247,6 +247,7 @@ class PredicateArgument(Annotation):
         self.is_verb: Optional[bool] = None
 
 
+
 @dataclass
 class EntityMention(Annotation):
     """
@@ -340,7 +341,7 @@ class Dependency(Link):
 @dataclass
 class EnhancedDependency(Link):
     """
-    A `Link` type entry which represent a enhanced dependency: 
+    A `Link` type entry which represent a enhanced dependency:
      https://universaldependencies.org/u/overview/enhanced-syntax.html
     Attributes:
         dep_label (Optional[str]):	The enhanced dependency label in Universal Dependency.
