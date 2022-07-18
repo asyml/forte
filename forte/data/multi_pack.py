@@ -953,9 +953,13 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     def view(self):
         return copy.deepcopy(self)
 
-    def _save_entry_to_data_store(self, entry: Entry):
+    def _save_entry_to_data_store(
+        self, entry: Entry, attribute_data: Optional[Dict] = None
+    ):
         r"""Save an existing entry object into DataStore"""
-        self._entry_converter.save_entry_object(entry=entry, pack=self)
+        self._entry_converter.save_entry_object(
+            entry=entry, pack=self, attribute_data=attribute_data
+        )
 
     def _get_entry_from_data_store(self, tid: int) -> EntryType:
         r"""Generate a class object from entry data in DataStore"""

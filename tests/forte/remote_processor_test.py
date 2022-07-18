@@ -83,3 +83,7 @@ class AdvancedPipelineTest(unittest.TestCase):
         utterance = get_last_utterance(res, "ai")
         self.assertEqual(len([_ for _ in res.get(Utterance)]), 2)
         self.assertEqual(utterance.text, o_str)
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -100,7 +100,9 @@ class Entry(Generic[ContainerType]):
         pack: Each entry should be associated with one pack upon creation.
     """
 
-    def __init__(self, pack: ContainerType):
+    def __init__(
+        self, pack: ContainerType, attribute_data: Optional[Dict] = None
+    ):
         # The Entry should have a reference to the data pack, and the data pack
         # need to store the entries. In order to resolve the cyclic references,
         # we create a generic class EntryContainer to be the place holder of
@@ -111,7 +113,7 @@ class Entry(Generic[ContainerType]):
         self._tid: int = uuid.uuid4().int
         self._embedding: np.ndarray = np.empty(0)
         self.pack._validate(self)
-        self.pack.on_entry_creation(self)
+        self.pack.on_entry_creation(self, attribute_data)
 
     # using property decorator
     # a getter function for self._embedding
@@ -493,17 +495,14 @@ class FNdArray:
 
 class BaseLink(Entry, ABC):
     def __init__(
-        self,
-        pack: ContainerType,
-        parent: Optional[Entry] = None,
-        child: Optional[Entry] = None,
+        self, pack: ContainerType, attribute_data: Optional[Dict] = None
     ):
-        super().__init__(pack)
+        super().__init__(pack, attribute_data)
 
-        if parent is not None:
-            self.set_parent(parent)
-        if child is not None:
-            self.set_child(child)
+        if attribute_data["parent"] is not None:
+            self.set_parent(attribute_data["parent"])
+        if attribute_data["child"] is not None:
+            self.set_child(attribute_data["child"])
 
     @abstractmethod
     def set_parent(self, parent: Entry):
@@ -573,11 +572,11 @@ class BaseGroup(Entry, Generic[EntryType]):
     MemberType: Type[EntryType]
 
     def __init__(
-        self, pack: ContainerType, members: Optional[Iterable[EntryType]] = None
+        self, pack: ContainerType, attribute_data: Optional[Dict] = None
     ):
-        super().__init__(pack)
-        if members is not None:
-            self.add_members(members)
+        super().__init__(pack, attribute_data)
+        if attribute_data["members"] is not None:
+            self.add_members(attribute_data["members"])
 
     @abstractmethod
     def add_member(self, member: EntryType):

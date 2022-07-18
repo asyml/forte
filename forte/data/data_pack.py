@@ -1322,10 +1322,10 @@ class DataPack(BasePack[Entry, Link, Group]):
                 )
 
             a_dict["parent"].append(
-                np.where(data[parent_type]["tid"] == link.parent)[0][0]
+                np.where(data[parent_type]["tid"] == link.parent.tid)[0][0]
             )
             a_dict["child"].append(
-                np.where(data[child_type]["tid"] == link.child)[0][0]
+                np.where(data[child_type]["tid"] == link.child.tid)[0][0]
             )
 
             for field in fields:
@@ -1548,18 +1548,31 @@ class DataPack(BasePack[Entry, Link, Group]):
         #   better solution.
         self.__dict__.update(datapack.__dict__)
 
-    def _save_entry_to_data_store(self, entry: Entry):
+    def _save_entry_to_data_store(
+        self, entry: Entry, attribute_data: Optional[Dict] = None
+    ):
         r"""Save an existing entry object into DataStore"""
-        self._entry_converter.save_entry_object(entry=entry, pack=self)
+        self._entry_converter.save_entry_object(
+            entry=entry, pack=self, attribute_data=attribute_data
+        )
 
         if isinstance(entry, Payload):
-            if entry.modality == Modality.Text:
+            if (
+                getattr(Modality, attribute_data["modality_name"])
+                == Modality.Text
+            ):
                 entry.set_payload_index(len(self.text_payloads))
                 self.text_payloads.append(entry)
-            elif entry.modality == Modality.Audio:
+            elif (
+                getattr(Modality, attribute_data["modality_name"])
+                == Modality.Audio
+            ):
                 entry.set_payload_index(len(self.audio_payloads))
                 self.audio_payloads.append(entry)
-            elif entry.modality == Modality.Image:
+            elif (
+                getattr(Modality, attribute_data["modality_name"])
+                == Modality.Image
+            ):
                 entry.set_payload_index(len(self.image_payloads))
                 self.image_payloads.append(entry)
 

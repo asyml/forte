@@ -434,7 +434,10 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                 self._field_records[c] = {(entry_id, field_name)}
 
     def on_entry_creation(
-        self, entry: Entry, component_name: Optional[str] = None
+        self,
+        entry: Entry,
+        attribute_data: Optional[Dict] = None,
+        component_name: Optional[str] = None,
     ):
         """
         Call this when adding a new entry, will be called
@@ -551,7 +554,9 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             )
 
         # Save the input entry object in DataStore
-        self._save_entry_to_data_store(entry=entry)
+        self._save_entry_to_data_store(
+            entry=entry, attribute_data=attribute_data
+        )
 
         # Register property functions for all dataclass fields.
         for name, field in entry.__dataclass_fields__.items():
@@ -599,7 +604,9 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         return self._data_store.get_entry(tid=tid)[0]
 
     @abstractmethod
-    def _save_entry_to_data_store(self, entry: Entry):
+    def _save_entry_to_data_store(
+        self, entry: Entry, attribute_data: Optional[Dict] = None
+    ):
         r"""Save an existing entry object into DataStore"""
         raise NotImplementedError
 

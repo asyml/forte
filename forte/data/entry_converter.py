@@ -50,7 +50,11 @@ class EntryConverter:
         self._entry_dict: Dict[int, Entry] = {}
 
     def save_entry_object(
-        self, entry: Any, pack: PackType, allow_duplicate: bool = True
+        self,
+        entry: Any,
+        pack: PackType,
+        attribute_data: Optional[Dict] = None,
+        allow_duplicate: bool = True,
     ):
         # pylint: disable=protected-access
         """
@@ -73,45 +77,37 @@ class EntryConverter:
         if data_store_ref._is_subclass(entry.entry_type(), Annotation):
             data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
-                attribute_data=[entry.begin, entry.end],
-                base_class=Annotation,
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,
+                attribute_data=attribute_data,
             )
         elif data_store_ref._is_subclass(entry.entry_type(), Link):
             data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
-                attribute_data=[entry.parent, entry.child],
-                base_class=Link,
                 tid=entry.tid,
+                attribute_data=attribute_data,
             )
         elif data_store_ref._is_subclass(entry.entry_type(), Group):
             data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
-                attribute_data=[get_full_module_name(entry.MemberType), []],
-                base_class=Group,
                 tid=entry.tid,
+                attribute_data=attribute_data,
             )
         elif data_store_ref._is_subclass(entry.entry_type(), Generics):
             data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
-                attribute_data=[None, None],
-                base_class=Generics,
                 tid=entry.tid,
             )
         elif data_store_ref._is_subclass(entry.entry_type(), AudioAnnotation):
             data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
-                attribute_data=[entry.begin, entry.end],
-                base_class=AudioAnnotation,
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,
+                attribute_data=attribute_data,
             )
         elif data_store_ref._is_subclass(entry.entry_type(), ImageAnnotation):
             data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
-                attribute_data=[entry.image_payload_idx, None],
-                base_class=ImageAnnotation,
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,
             )
@@ -119,42 +115,32 @@ class EntryConverter:
             entry = cast(Payload, entry)
             data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
-                attribute_data=[entry.payload_index, entry.modality_name],
-                base_class=Payload,
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,
+                attribute_data=attribute_data,
             )
         elif data_store_ref._is_subclass(entry.entry_type(), Grids):
             # Will be deprecated in future
             data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
-                attribute_data=[entry.image_payload_idx, None],
-                base_class=Grids,
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,
             )
         elif data_store_ref._is_subclass(entry.entry_type(), MultiPackLink):
             data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
-                attribute_data=[
-                    [entry.parent[0], entry.parent[1]],
-                    [entry.child[0], entry.child[1]],
-                ],
-                base_class=MultiPackLink,
+                attribute_data=attribute_data,
                 tid=entry.tid,
             )
         elif data_store_ref._is_subclass(entry.entry_type(), MultiPackGroup):
             data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
-                attribute_data=[get_full_module_name(entry.MemberType), []],
-                base_class=MultiPackGroup,
+                attribute_data=attribute_data,
                 tid=entry.tid,
             )
         elif data_store_ref._is_subclass(entry.entry_type(), MultiPackGeneric):
             data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
-                attribute_data=[None, None],
-                base_class=MultiPackGeneric,
                 tid=entry.tid,
             )
         else:
