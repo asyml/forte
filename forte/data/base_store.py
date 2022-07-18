@@ -291,7 +291,7 @@ class BaseStore:
         self,
         type_name: str,
         include_sub_type: bool,
-        range_annotation: Optional[Tuple[int]] = None,
+        range_span: Optional[Tuple[int, int]] = None,
     ) -> Iterator[List]:
         r"""This function fetches entries from the data store of
         type ``type_name``.
@@ -299,7 +299,7 @@ class BaseStore:
         Args:
             type_name: The index of the list in ``self.__elements``.
             include_sub_type: A boolean to indicate whether get its subclass.
-            range_annotation: A tuple that contains the begin and end indices
+            range_span: A tuple that contains the begin and end indices
                 of the searching range of annotation-like entries.
 
         Returns:
