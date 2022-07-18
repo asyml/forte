@@ -247,7 +247,6 @@ class PredicateArgument(Annotation):
         self.is_verb: Optional[bool] = None
 
 
-
 @dataclass
 class EntityMention(Annotation):
     """
