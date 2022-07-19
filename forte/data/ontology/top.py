@@ -1266,6 +1266,5 @@ SinglePackEntries = (
     AudioAnnotation,
     ImageAnnotation,
     Payload,
-    Meta,
 )
 MultiPackEntries = (MultiPackLink, MultiPackGroup, MultiPackGeneric)
