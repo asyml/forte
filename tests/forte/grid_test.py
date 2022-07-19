@@ -17,13 +17,12 @@ Unit tests for Grid.
 
 import unittest
 from forte.data.ontology.core import Grid
-from ft.onto.base_ontology import ImagePayload
 import numpy as np
 
 from numpy import array_equal
 
 from forte.data.data_pack import DataPack
-from forte.data.ontology.top import ImageAnnotation
+from forte.data.ontology.top import ImagePayload
 
 
 class GridTest(unittest.TestCase):

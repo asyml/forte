@@ -2,7 +2,6 @@ from abc import abstractmethod
 from multiprocessing.sharedctypes import Value
 from typing import Callable
 import numpy as np
-from forte.data.ontology.top import Meta
 
 
 class PayloadFactory:
@@ -15,16 +14,16 @@ class PayloadFactory:
             {}
         )  # map from meta data name to function that handles this meta data
 
-    def register(self, meta: Meta):
+    def register(self, payload):
         """
         A function that registers a meta data type into the factory.
 
         Args:
             meta_name: a Generic object that is used to register a Payload meta data type.
         """
-        if meta.source_type not in ("web", "local"):
+        if payload.source_type not in ("web", "local"):
             raise ValueError("Meta data source must be either 'web' or 'local'")
-        self.valid_meta[type(meta)] = True
+        self.valid_meta[type(payload)] = True
 
     def check_meta(self, meta):
         return type(meta) in self.valid_meta

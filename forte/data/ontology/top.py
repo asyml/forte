@@ -61,6 +61,9 @@ __all__ = [
     "Region",
     "Box",
     "Payload",
+    "TextPayload",
+    "AudioPayload",
+    "ImagePayload",
 ]
 
 QueryType = Union[Dict[str, Any], np.ndarray]
@@ -1129,11 +1132,11 @@ class Payload(Entry):
         payload_idx: int = 0,
         uri: Optional[str] = None,
     ):
-        from ft.onto.payload_ontology import (  # pylint: disable=import-outside-toplevel
-            TextPayload,
-            AudioPayload,
-            ImagePayload,
-        )
+        # from ft.onto.payload_ontology import (  # pylint: disable=import-outside-toplevel
+        #     TextPayload,
+        #     AudioPayload,
+        #     ImagePayload,
+        # )
 
         # since we cannot pass different modality from generated ontology, and
         # we don't want to import base ontology in the header of the file
@@ -1258,6 +1261,44 @@ class Payload(Entry):
         self._modality = getattr(Modality, state["_modality"])
 
 
+class AudioPayload(Payload):
+    """
+    A payload that caches audio data
+    Attributes:
+        sample_rate (Optional[int]):
+    """
+
+    sample_rate: Optional[int]
+
+    def __init__(
+        self, pack: PackType, payload_idx: int = 0, uri: Optional[str] = None
+    ):
+        super().__init__(pack, payload_idx, uri)
+        self.sample_rate: Optional[int] = None
+
+
+class TextPayload(Payload):
+    """
+    A payload that caches text data
+    """
+
+    def __init__(
+        self, pack: PackType, payload_idx: int = 0, uri: Optional[str] = None
+    ):
+        super().__init__(pack, payload_idx, uri)
+
+
+class ImagePayload(Payload):
+    """
+    A payload that caches image data
+    """
+
+    def __init__(
+        self, pack: PackType, payload_idx: int = 0, uri: Optional[str] = None
+    ):
+        super().__init__(pack, payload_idx, uri)
+
+
 SinglePackEntries = (
     Link,
     Group,
@@ -1266,5 +1307,8 @@ SinglePackEntries = (
     AudioAnnotation,
     ImageAnnotation,
     Payload,
+    TextPayload,
+    AudioPayload,
+    ImagePayload,
 )
 MultiPackEntries = (MultiPackLink, MultiPackGroup, MultiPackGeneric)
