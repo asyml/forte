@@ -721,7 +721,7 @@ class Grid:
 
     def get_grid_cell(self, img_arr: np.ndarray, h_idx: int, w_idx: int):
         """
-        Get the array data of a grid cell from image of the image payload index.
+        Get the array data of a grid cell from the image data.
         The array is a masked version of the original image, and it has
         the same size as the original image. The array entries that are not
         within the grid cell will masked as zeros. The image array entries that
