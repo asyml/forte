@@ -52,7 +52,7 @@ class GridTest(unittest.TestCase):
         ip = ImagePayload(self.datapack, 0)
         ip.set_cache(self.line)
 
-    def test_grids(self):
+    def test_grid(self):
 
         self.assertTrue(
             array_equal(self.grid.get_grid_cell(self.line, 0, 1), self.zeros)
