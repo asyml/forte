@@ -1066,10 +1066,10 @@ class Box(Region):
 
     Args:
         pack: the container that this ``Box`` will be added to.
-        tl_point: the indices of top left point of the box, the unit is one
-            pixel.
-        br_point: the indices of bottom right point of the box, the unit is one
-            pixel.
+        tl_point: the indices of top left point of the box
+            [row index, column index], the unit is one pixel.
+        br_point: the indices of bottom right point of the box
+            [row index, column index], the unit is one pixel.
         image_payload_idx: the index of the image payload in the DataPack's
             image payload list. If it's not set,
             it defaults to 0 which meaning it will load the first image payload.
@@ -1125,10 +1125,13 @@ class Box(Region):
         A class method to initialize a ``Box`` from a box's center position and
         shape.
 
+        Note: all indices are zero-based and counted from top left corner of
+        image.
+
         Args:
             pack: the container that this ``Box`` will be added to.
-            cy: the y coordinate of the box's center, the unit is one pixel.
-            cx: the x coordinate of the box's center, the unit is one pixel.
+            cy: the row coordinate of the box's center, the unit is one pixel.
+            cx: the column coordinate of the box's center, the unit is one pixel.
             height: the height of the box, the unit is one pixel.
             width: the width of the box, the unit is one pixel.
             image_payload_idx: the index of the image payload in the DataPack's
@@ -1152,6 +1155,7 @@ class Box(Region):
         (unit: pixel).
         It overwrites the ``compute_iou`` function in it's parent class
         ``Region``.
+
         Args:
             other: the other ``Box`` object to be computed with.
         Returns:
