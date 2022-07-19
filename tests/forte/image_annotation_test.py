@@ -19,7 +19,7 @@ from forte.data.modality import Modality
 import numpy as np
 
 from numpy import array_equal
-from forte.data.ontology.top import BoundingBox, Box, ImageAnnotation
+from forte.data.ontology.top import Box, Box, ImageAnnotation
 
 from ft.onto.base_ontology import ImagePayload
 
@@ -29,7 +29,7 @@ import unittest
 
 class ImageAnnotationTest(unittest.TestCase):
     """
-    Test ImageAnnotation related ontologies like Edge and BoundingBox.
+    Test ImageAnnotation related ontologies like Edge and Box.
     """
 
     def setUp(self):
@@ -93,4 +93,4 @@ class ImageAnnotationTest(unittest.TestCase):
 
         self.assertRaises(ValueError, wrong_box)
 
-        b3 = BoundingBox.init_from_center_n_shape(self.datapack, 4, 4, 5, 5)
+        b3 = Box.init_from_center_n_shape(self.datapack, 4, 4, 5, 5)

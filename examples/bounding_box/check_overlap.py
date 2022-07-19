@@ -1,5 +1,5 @@
 import numpy as np
-from forte.data.ontology.top import BoundingBox, Link, Annotation
+from forte.data.ontology.top import Box, Link, Annotation
 from forte.data.data_pack import DataPack
 
 datapack = DataPack("image")
@@ -13,15 +13,15 @@ datapack.payloads.append(line)
 datapack.payloads.append(line)
 # grid config: 3 x 4
 # grid cell indices: (0, 0)
-bb1 = BoundingBox(datapack, 0, 2, 2, 3, 4, 0, 0)
+bb1 = Box(datapack, 0, 2, 2, 3, 4, 0, 0)
 datapack.image_annotations.append(bb1)
 # grid config: 3 x 4
 # grid cell indices: (1, 0)
-bb2 = BoundingBox(datapack, 0, 2, 2, 3, 4, 1, 0)
+bb2 = Box(datapack, 0, 2, 2, 3, 4, 1, 0)
 datapack.image_annotations.append(bb2)
 # grid config: 4 x 4
 # grid cell indices: (1, 0)
-bb3 = BoundingBox(datapack, 0, 2, 2, 4, 4, 0, 0)
+bb3 = Box(datapack, 0, 2, 2, 4, 4, 0, 0)
 
 print(bb1.is_overlapped(bb2))
 print(bb1.is_overlapped(bb3))
