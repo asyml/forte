@@ -38,12 +38,8 @@ class GridTest(unittest.TestCase):
         self.line[1, 1] = 1
         self.line[2, 2] = 1
         self.line[3, 3] = 1
-        # self.line[4, 4] = 1
         ip = ImagePayload(self.datapack)
         ip.set_cache(self.line)
-        self.datapack.image_annotations.append(
-            ImageAnnotation(self.datapack, 0)
-        )
 
         self.image_height, self.image_width = self.line.shape
         grid = Grid(2, 3, self.image_height, self.image_width)
