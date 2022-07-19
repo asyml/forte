@@ -61,7 +61,6 @@ __all__ = [
     "Region",
     "Box",
     "Payload",
-    "Meta",
 ]
 
 QueryType = Union[Dict[str, Any], np.ndarray]
@@ -1257,14 +1256,6 @@ class Payload(Entry):
         # Entry store is being integrated into DataStore
         self.__dict__.update(state)
         self._modality = getattr(Modality, state["_modality"])
-
-
-class Meta(Generics):
-    def __init__(
-        self, pack: PackType
-    ):  # pylint: disable=useless-super-delegation
-        super().__init__(pack)
-        self.source_type = None  # data source type, it can be 'local` or 'web'
 
 
 SinglePackEntries = (
