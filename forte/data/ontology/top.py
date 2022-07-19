@@ -1268,8 +1268,6 @@ class AudioPayload(Payload):
         sample_rate (Optional[int]):
     """
 
-    sample_rate: Optional[int]
-
     def __init__(
         self, pack: PackType, payload_idx: int = 0, uri: Optional[str] = None
     ):
@@ -1282,7 +1280,7 @@ class TextPayload(Payload):
     A payload that caches text data
     """
 
-    def __init__(
+    def __init__(  # pylint: disable=useless-super-delegation
         self, pack: PackType, payload_idx: int = 0, uri: Optional[str] = None
     ):
         super().__init__(pack, payload_idx, uri)
@@ -1293,7 +1291,7 @@ class ImagePayload(Payload):
     A payload that caches image data
     """
 
-    def __init__(
+    def __init__(  # pylint: disable=useless-super-delegation
         self, pack: PackType, payload_idx: int = 0, uri: Optional[str] = None
     ):
         super().__init__(pack, payload_idx, uri)
