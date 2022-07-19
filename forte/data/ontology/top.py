@@ -948,7 +948,6 @@ class Box(Region):
         width: int,
         image_payload_idx: int = 0,
     ):
-        # assume Box is associated with Grid
         super().__init__(pack, image_payload_idx)
         # center location
         self._cy = cy
