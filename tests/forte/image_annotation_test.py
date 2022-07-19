@@ -19,7 +19,7 @@ from forte.data.modality import Modality
 import numpy as np
 
 from numpy import array_equal
-from forte.data.ontology.top import Box, Box, ImageAnnotation
+from forte.data.ontology.top import Box, ImageAnnotation
 
 from ft.onto.base_ontology import ImagePayload
 
