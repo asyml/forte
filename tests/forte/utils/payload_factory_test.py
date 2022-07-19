@@ -1,4 +1,4 @@
-# Copyright 2021 The Forte Authors. All Rights Reserved.
+# Copyright 2022 The Forte Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,19 +16,98 @@ Unit test for payload factory.
 """
 import os
 import unittest
-from forte.utils.payload_factory import (
-    AudioPayloading,
-    ImagePayloading,
-    PayloadFactory,
-)
 from ft.onto.payload_ontology import (
-    AudioPayload,
-    ImagePayload,
-    JpegMeta,
-    AudioMeta,
+    JpegPayload,
+    SoundFilePayload
 )
 from forte.data.data_pack import DataPack
+from forte.utils.payload_factory import register
 
+@register
+class OnlineJpegPayload(JpegPayload):
+    def loading_fn(self):
+        """
+        A function that parses payload meta data and prepare and returns a loading function.
+        
+        This function is not stored in data store but will be used
+        for registering in PayloadFactory.
+        
+        Returns:
+            a function that reads image data from an url.
+        """
+        try:
+            from PIL import Image  # pylint: disable=import-outside-toplevel
+            import requests  # pylint: disable=import-outside-toplevel
+            import numpy as np
+        except ModuleNotFoundError as e:
+            raise ModuleNotFoundError(
+                "ImagePayloading reading web file requires `PIL` and"
+                "`requests` packages to be installed."
+            ) from e
+
+        def read_uri(uri):
+            # customize this function to read data from uri
+            uri_obj = requests.get(uri, stream=True)
+            pil_image = Image.open(uri_obj.raw)
+            return np.asarray(pil_image)
+
+        return read_uri
+
+@register
+class LocalJpegPayload(JpegPayload):
+    def loading_fn(self):
+        """
+        A function that parses payload meta data and prepare and returns a loading function.
+        
+        This function is not stored in data store but will be used
+        for registering in PayloadFactory.
+        
+        Returns:
+            a function that reads image data from an url.
+        """
+        try:
+            import matplotlib.pyplot as plt  # pylint: disable=import-outside-toplevel
+        except ModuleNotFoundError as e:
+            raise ModuleNotFoundError(
+                "ImagePayloading reading local file requires `matplotlib`"
+                "package to be installed."
+            ) from e
+        return plt.imread
+
+@register
+class LocalSoundfilePayload(SoundFilePayload):
+    def loading_fn(self):
+        try:
+            import soundfile  # pylint: disable=import-outside-toplevel
+        except ModuleNotFoundError as e:
+            raise ModuleNotFoundError(
+                "AudioPayloading requires 'soundfile' package to be installed."
+                " You can refer to [extra modules to install]('pip install"
+                " forte['audio_ext']) or 'pip install forte"
+                ". Note that additional steps might apply to Linux"
+                " users (refer to "
+                "https://pysoundfile.readthedocs.io/en/latest/#installation)."
+            ) from e
+
+        def get_first(
+            seq,
+        ):  # takes the first item as soundfile returns a tuple of (data, samplerate)
+            return seq[0]
+
+        def read_uri(uri):
+            if self.encoding is None:  # data type is ".raw"
+                return get_first(
+                    soundfile.read(
+                        file=uri,
+                        samplerate=self.sample_rate,
+                        channels=self.channels,
+                        dtype=self.dtype,
+                    )
+                )
+            else:  # sound file auto detect the
+                return get_first(soundfile.read(file=uri))
+
+        return read_uri
 
 class PayloadFactoryTest(unittest.TestCase):
     """
@@ -36,53 +115,18 @@ class PayloadFactoryTest(unittest.TestCase):
     """
 
     def setUp(self):
+        pass
 
-        self.f = PayloadFactory()
-
-    def test_image_payloading(self):
+    def test_online_image_payload(self):
         datapack = DataPack("image")
-        img_meta = JpegMeta(datapack)
-        img_meta.source_type = "local"
+        uri = "https://assets.website-files.com/6241e60ecd4aa2049d61387c/62576e00dd225cf869b24e0f_61f880d055d4f6f2497fb3cc_symphony-EDITOR-p-1080.jpeg"
+        payload = OnlineJpegPayload(datapack, uri=uri)        
+        payload.loading_fn()(uri)
 
-        self.f.register(img_meta)
-
-        # 2. each payloading intialized with a factory
-        payloading = ImagePayloading()
-        # payload loads the factory with registered meta data
-        payloading.load_factory(self.f)
-
-        # payloading = UriImagePayloading()
-        fn = payloading.route(img_meta)
-
-        # 3. datapack and payload
-
-        uri = "test.png"
-        # uri = "https://assets.website-files.com/6241e60ecd4aa2049d61387c/62576e00dd225cf869b24e0f_61f880d055d4f6f2497fb3cc_symphony-EDITOR-p-1080.jpeg"
-        ip = ImagePayload(datapack, 0, uri=uri)
-        ip.payloading = payloading
-        ip.set_meta(img_meta)  # maybe only store a meta name in ip
-        ip.load()
-        print(ip.cache)
-
-    def test_audio_payloading(self):
+    def test_audio_payload(self):
         datapack = DataPack("audio")
-        audio_meta = AudioMeta(datapack)
-        audio_meta.source_type = "local"
-        audio_meta.sample_rate = 44100
-        audio_meta.channels = 2
-        audio_meta.dtype = "float64"
-        audio_meta.encoding = "flac"
-        self.f.register(audio_meta)
-
-        # 2. each payloading intialized with a factory
-        payloading = AudioPayloading()
-        # payload loads the factory with registered meta data
-        payloading.load_factory(self.f)
-
-        fn = payloading.route(audio_meta)
-
-        # 3. datapack and payload
-
+        uri = "https://assets.website-files.com/6241e60ecd4aa2049d61387c/62576e00dd225cf869b24e0f_61f880d055d4f6f2497fb3cc_symphony-EDITOR-p-1080.jpeg"
+        payload = LocalSoundfilePayload(datapack, uri=uri)    
         uri = (
             os.path.abspath(
                 os.path.join(
@@ -94,9 +138,5 @@ class PayloadFactoryTest(unittest.TestCase):
                 )
             )
             + "/test_audio_0.flac"
-        )
-        ap = AudioPayload(datapack, 0, uri=uri)
-        ap.payloading = payloading
-        ap.set_meta(audio_meta)  # maybe only store a meta name in ap
-        ap.load()
-        print("Audio payload data:", ap.cache)
+        )    
+        payload.loading_fn()(uri)
