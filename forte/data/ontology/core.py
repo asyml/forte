@@ -662,20 +662,6 @@ class Grid:
     round up to 10. The last grid cell per column and row will have a size of
     (8, 8) since 128%10=8.
 
-    We require each grid to be bounded/intialized with one image size since
-    the number of different image shapes are limited per computer vision task.
-    For example, we can only have one image size (640, 480) from a CV dataset,
-    and we could augment the dataset with few other image sizes
-    (320, 240), (480, 640). Then there are only three image sizes.
-    Therefore, it won't be troublesome to
-    have a grid for each image size, and we can check the image size during the
-    initialization of the grid.
-
-    By contrast, if we don't initialize it with any
-    image size and pass the image size directly into the method/operation on
-    the fly, the API would be more complex and image size check would be
-    repeated everytime the method is called.
-
     Args:
         height: the number of grid cell per column, the unit is one grid cell.
         width: the number of grid cell per row, the unit is one grid cell.
@@ -709,6 +695,19 @@ class Grid:
         self._height = height
         self._width = width
 
+        # We require each grid to be bounded/intialized with one image size since
+        # the number of different image shapes are limited per computer vision task.
+        # For example, we can only have one image size (640, 480) from a CV dataset,
+        # and we could augment the dataset with few other image sizes
+        # (320, 240), (480, 640). Then there are only three image sizes.
+        # Therefore, it won't be troublesome to
+        # have a grid for each image size, and we can check the image size during the
+        # initialization of the grid.
+
+        # By contrast, if we don't initialize it with any
+        # image size and pass the image size directly into the method/operation on
+        # the fly, the API would be more complex and image size check would be
+        # repeated everytime the method is called.
         self._image_height = image_height
         self._image_width = image_width
 
@@ -719,13 +718,6 @@ class Grid:
             math.ceil(image_height / self._height),
             math.ceil(image_width / self._width),
         )
-
-        if self.c_h <= 0 or self.c_w <= 0:
-            raise ValueError(
-                "cell height and width must be positive"
-                f"but the cell shape is {(self.c_h, self.c_w)}"
-                "please adjust image shape or grid shape accordingly"
-            )
 
     def get_grid_cell(self, img_arr: np.ndarray, h_idx: int, w_idx: int):
         """
