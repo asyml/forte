@@ -719,24 +719,32 @@ class Grid:
             math.ceil(image_width / self._width),
         )
 
-    def get_grid_cell(self, img_arr: np.ndarray, h_idx: int, w_idx: int):
+    def _get_image_within_grid_cell(
+        self,
+        img_arr: np.ndarray,
+        h_idx: int,
+        w_idx: int,
+    ) -> np.ndarray:
         """
-        Get the array data of a grid cell from the image data.
+        Get the array data within a grid cell from the image data.
         The array is a masked version of the original image, and it has
         the same size as the original image. The array entries that are not
         within the grid cell will masked as zeros. The image array entries that
         are within the grid cell will kept.
         Note: all indices are zero-based and counted from top left corner of
         the image.
+
         Args:
             img_arr: image data represented as a numpy array.
             h_idx: the zero-based height(row) index of the grid cell in the
                 grid, the unit is one grid cell.
             w_idx: the zero-based width(column) index of the grid cell in the
                 grid, the unit is one grid cell.
+
         Raises:
             ValueError: ``h_idx`` is out of the range specified by ``height``.
             ValueError: ``w_idx`` is out of the range specified by ``width``.
+
         Returns:
             numpy array that represents the grid cell.
         """
@@ -752,23 +760,38 @@ class Grid:
                 "out of scope of w_idx range"
                 f" {(0, self._width)}"
             )
-        # initialize a numpy zeros array
-        array = np.zeros((self._image_height, self._image_width))
-        # set grid cell entry values to the values of the original image array
-        # (entry values outside of grid cell remain zeros)
-        # An example of computing grid height index range is
-        # index * cell height : min((index + 1) * cell height, image_height).
-        # It's similar for computing cell width index range
-        # Plus, we constrain the maximum pixel locations by the image size as
-        # the last grid cell per row and column might be out of the image size
-        array[
-            h_idx * self.c_h : min((h_idx + 1) * self.c_h, self._image_height),
-            w_idx * self.c_w : min((w_idx + 1) * self.c_w, self._image_width),
-        ] = img_arr[
+
+        return img_arr[
             h_idx * self.c_h : min((h_idx + 1) * self.c_h, self._image_height),
             w_idx * self.c_w : min((w_idx + 1) * self.c_w, self._image_width),
         ]
-        return array
+
+    def get_overlapped_grid_cell_indices(
+        self, image_arr: np.ndarray
+    ) -> List[Tuple[int, int]]:
+        """
+        Get the grid cell indices in the form of (height index, width index)
+        that image array overlaps with.
+
+        Args:
+            image_arr: image data represented as a numpy array.
+
+        Returns:
+            a list of tuples that represents the grid cell indices that image array overlaps with.
+        """
+        grid_cell_indices = []
+        for h_idx in range(self._height):
+            for w_idx in range(self._width):
+                if (
+                    np.sum(
+                        self._get_image_within_grid_cell(
+                            image_arr, h_idx, w_idx
+                        )
+                    )
+                    > 0
+                ):
+                    grid_cell_indices.append((h_idx, w_idx))
+        return grid_cell_indices
 
     def get_grid_cell_center(self, h_idx: int, w_idx: int) -> Tuple[int, int]:
         """

@@ -53,22 +53,6 @@ class GridTest(unittest.TestCase):
         ip.set_cache(self.line)
 
     def test_grid(self):
-
-        self.assertTrue(
-            array_equal(self.grid.get_grid_cell(self.line, 0, 1), self.zeros)
-        )
-
-        self.assertTrue(
-            array_equal(self.grid.get_grid_cell(self.line, 1, 1), self.ref_arr)
-        )
-
-        self.assertTrue(
-            array_equal(
-                self.grid.get_grid_cell(self.line, 1, 2).shape,
-                self.ref_arr.shape,
-            )
-        )
-
         # grid size is 2x3
         # grid_cell_size is 2x3
         # the height range of the second grid cell is [2, 4]
@@ -88,21 +72,33 @@ class GridTest(unittest.TestCase):
 
     def test_get_grid_cell_value_error(self):
         def fn1():
-            self.grid.get_grid_cell(self.line, 2, 0)
+            self.grid._get_image_within_grid_cell(self.line, 2, 0)
 
         self.assertRaises(ValueError, fn1)
 
         def fn2():
-            self.grid.get_grid_cell(self.line, 0, 3)
+            self.grid._get_image_within_grid_cell(self.line, 0, 3)
 
         self.assertRaises(ValueError, fn2)
 
         def fn3():
-            self.grid.get_grid_cell(self.line, -1, 0)
+            self.grid._get_image_within_grid_cell(self.line, -1, 0)
 
         self.assertRaises(ValueError, fn3)
 
         def fn4():
-            self.grid.get_grid_cell(self.line, 0, -1)
+            self.grid._get_image_within_grid_cell(self.line, 0, -1)
 
         self.assertRaises(ValueError, fn4)
+
+
+
+    def test_get_overlapped_grid_cell_indices(self):
+        self.assertEqual(self.grid.get_overlapped_grid_cell_indices(self.line), [(0,0), (1,1)])
+        
+        line = np.zeros((4, 6))
+        line[0,0]= 1
+        line[2,0]=1
+        line[0,2]=1
+        line[0,4]=1
+        self.assertEqual(self.grid.get_overlapped_grid_cell_indices(line), [(0, 0), (0, 1), (0, 2), (1, 0)])
