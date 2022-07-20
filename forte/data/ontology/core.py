@@ -663,8 +663,8 @@ class Grid:
     (8, 8) since 128%10=8.
 
     Args:
-        height: the number of grid cell per column, the unit is one grid cell.
-        width: the number of grid cell per row, the unit is one grid cell.
+        height: the number of grid cell per column.
+        width: the number of grid cell per row.
         image_height: the number of pixels per column in the image.
         image_width: the number of pixels per row in the image.
     """
@@ -800,7 +800,7 @@ class Grid:
         The computation of the center position of the grid cell is
         dividing the grid cell height range (unit: pixel) and
         width range (unit: pixel) by 2 (round down)
-        Suppose an extreme case that a grid cell has a height range
+        Suppose an edge case that a grid cell has a height range
         (unit: pixel) of (0, 3)
         and a width range (unit: pixel) of (0, 3) the grid cell center
         would be (1, 1).
