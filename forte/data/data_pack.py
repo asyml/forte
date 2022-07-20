@@ -46,6 +46,7 @@ from forte.data.ontology.core import Entry, Grid
 from forte.data.ontology.core import EntryType
 from forte.data.ontology.top import (
     Annotation,
+    AudioPayload,
     Link,
     Group,
     SinglePackEntries,
@@ -53,6 +54,7 @@ from forte.data.ontology.top import (
     AudioAnnotation,
     ImageAnnotation,
     Payload,
+    TextPayload,
 )
 
 from forte.data.modality import Modality
@@ -564,10 +566,6 @@ class DataPack(BasePack[Entry, Link, Group]):
         # temporary solution for backward compatibility
         # past API use this method to add a single text in the datapack
         if len(self.text_payloads) == 0 and text_payload_index == 0:
-            from ft.onto.payload_ontology import (  # pylint: disable=import-outside-toplevel
-                TextPayload,
-            )
-
             tp = TextPayload(self, text_payload_index)
         else:
             tp = self.get_payload_at(Modality.Text, text_payload_index)
@@ -596,10 +594,6 @@ class DataPack(BasePack[Entry, Link, Group]):
         # temporary solution for backward compatibility
         # past API use this method to add a single audio in the datapack
         if len(self.audio_payloads) == 0 and audio_payload_index == 0:
-            from ft.onto.payload_ontology import (  # pylint: disable=import-outside-toplevel
-                AudioPayload,
-            )
-
             ap = AudioPayload(self)
         else:
             ap = self.get_payload_at(Modality.Audio, audio_payload_index)

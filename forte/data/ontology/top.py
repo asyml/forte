@@ -1132,12 +1132,6 @@ class Payload(Entry):
         payload_idx: int = 0,
         uri: Optional[str] = None,
     ):
-        # from ft.onto.payload_ontology import (  # pylint: disable=import-outside-toplevel
-        #     TextPayload,
-        #     AudioPayload,
-        #     ImagePayload,
-        # )
-
         # since we cannot pass different modality from generated ontology, and
         # we don't want to import base ontology in the header of the file
         # we import it here.
