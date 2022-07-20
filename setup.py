@@ -82,8 +82,8 @@ setuptools.setup(
         # transformers 4.10.0 will break the translation model we used here
         "nlp": ["texar-pytorch>=0.1.4"],
         "extractor": ["texar-pytorch>=0.1.4"],
-        "payload": ["soundfile",
-                    "PIL",
+        "payload": ["soundfile>=0.10.3",
+                    "Pillow",
                     "requests",]
     },
     entry_points={
