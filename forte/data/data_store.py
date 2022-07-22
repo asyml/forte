@@ -646,13 +646,14 @@ class DataStore(BaseStore):
             attr_dict (list): A list of attributes with default values.
         """
         attr_dict: Dict = self._get_type_attribute_dict(type_name)
+        attr_fields: Dict = self._get_entry_attributes_by_class(type_name)
         attr_list: List = [None] * len(attr_dict)
         for attr_name, attr_info in attr_dict.items():
             # TODO: We should keep a record of the attribute class instead of
             # inspecting the class on the fly.
             attr_id = attr_info[constants.ATTR_INDEX_KEY]
 
-            attr_class = attr_dict[attr_name][constants.ATTR_TYPE_KEY][0]
+            attr_class = get_origin(attr_fields[attr_name].type)
             if attr_class in (FList, list, List):
                 attr_list[attr_id - constants.ATTR_BEGIN_INDEX] = []
             elif attr_class in (FDict, dict, Dict):
