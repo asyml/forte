@@ -811,7 +811,8 @@ class OntologyCodeGenerator:
                 module_writer.add_entry(en, entry_item)
 
             # Adding entry attributes to the allowed types for validation.
-            for property_name in properties:
+            for property in properties:
+                property_name = property[0]
                 # Check if the name is allowed.
                 if not property_name.isidentifier():
                     raise InvalidIdentifierException(
@@ -826,7 +827,7 @@ class OntologyCodeGenerator:
                         f"the ontology, will be overridden",
                         DuplicatedAttributesWarning,
                     )
-                self.allowed_types_tree[en.class_name].add(property_name)
+                self.allowed_types_tree[en.class_name].add(property)
             # populate the entry tree based on information
             if merged_entry_tree is not None:
                 curr_entry_name = en.class_name
@@ -1032,16 +1033,17 @@ class OntologyCodeGenerator:
         property_items, property_names = [], []
         for prop_schema in properties:
             # TODO: add test
-            prop_name = prop_schema["name"]
-            if prop_name in RESERVED_ATTRIBUTE_NAMES:
+            prop = (prop_schema["name"], prop_schema["type"])
+
+            if prop_schema["name"] in RESERVED_ATTRIBUTE_NAMES:
                 raise InvalidIdentifierException(
-                    f"The attribute name {prop_name} is reserved and cannot be "
+                    f"The attribute name {prop_schema['name']} is reserved and cannot be "
                     f"used, please consider changed the name. The list of "
                     f"reserved name strings are "
                     f"{RESERVED_ATTRIBUTE_NAMES}"
                 )
 
-            property_names.append(prop_schema["name"])
+            property_names.append(prop)
             property_items.append(self.parse_property(entry_name, prop_schema))
 
         # For special classes that requires a constraint.

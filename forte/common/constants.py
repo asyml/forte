@@ -38,6 +38,14 @@ ATTR_BEGIN_INDEX = 4
 # ``_type_attributes`` of ``DataStore``.
 TYPE_ATTR_KEY = "attributes"
 
+# Name of the key to access the type of an attribute from
+# ``_type_attributes`` of ``DataStore``.
+ATTR_TYPE_KEY = "type"
+
+# Name of the key to access the index of an attribute from
+# ``_type_attributes`` of ``DataStore``.
+ATTR_INDEX_KEY = "index"
+
 # Name of the key to access a set of parent names of an entry type from
 # ``_type_attributes`` of ``DataStore``.
 PARENT_CLASS_KEY = "parent_class"
