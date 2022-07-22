@@ -31,8 +31,8 @@ from typing import (
     Any,
     Iterable,
 )
-from typing_inspect import is_forward_ref
 from functools import partial
+from typing_inspect import is_forward_ref
 from packaging.version import Version
 import jsonpickle
 
@@ -525,7 +525,6 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             entry_type = data_store_ref.get_entry_types(
                 cls.entry_type(), attr_name
             )
-
             # Assumption: Users will not assign value to a FList/FDict field.
             # Only internal methods can set the FList/FDict field, and value's
             # type has to be Iterator[Entry]/Dict[Any, Entry].

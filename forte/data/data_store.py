@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from copy import deepcopy
 import json
 from typing import Dict, List, Iterator, Set, Tuple, Optional, Any, Type
 
@@ -271,10 +272,13 @@ class DataStore(BaseStore):
         """
         state = super().__getstate__()
         state["_DataStore__elements"] = {}
+        state["_DataStore_type_attributes"] = deepcopy(self._type_attributes)
+
         for k in self.__elements:
             # build the full `_type_attributes`
             self._get_type_info(k)
-            for _, info in self._type_attributes[k][
+
+            for _, info in state["_DataStore_type_attributes"][k][
                 constants.TYPE_ATTR_KEY
             ].items():
                 info.pop(constants.ATTR_TYPE_KEY)
@@ -284,7 +288,7 @@ class DataStore(BaseStore):
         state.pop("_DataStore__deletion_count")
         state["entries"] = state.pop("_DataStore__elements")
 
-        state["fields"] = self._type_attributes
+        state["fields"] = state["_DataStore_type_attributes"]
         for _, v in state["fields"].items():
             if constants.PARENT_CLASS_KEY in v:
                 v.pop(constants.PARENT_CLASS_KEY)
