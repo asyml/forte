@@ -968,7 +968,7 @@ class OntologyCodeGenerator:
 
     def parse_entry(
         self, entry_name: EntryName, schema: Dict
-    ) -> Tuple[EntryDefinition, List[str]]:
+    ) -> Tuple[EntryDefinition, List[Tuple[Any, Any]]]:
         """
         Args:
             entry_name: Object holds various name form of the entry.

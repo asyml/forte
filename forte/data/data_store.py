@@ -12,6 +12,7 @@
 # limitations under the License.
 
 from copy import deepcopy
+from inspect import isclass
 import json
 from typing import Dict, List, Iterator, Set, Tuple, Optional, Any, Type
 
@@ -20,6 +21,8 @@ import logging
 from heapq import heappush, heappop
 from sortedcontainers import SortedList
 from typing_inspect import get_origin, get_args
+
+# from ft.onto.base_ontology import Utterance
 
 from forte.utils import get_class
 from forte.utils.utils import get_full_module_name
@@ -272,23 +275,27 @@ class DataStore(BaseStore):
         """
         state = super().__getstate__()
         state["_DataStore__elements"] = {}
-        state["_DataStore_type_attributes"] = deepcopy(self._type_attributes)
+
+        # Make a copy of the updated type_attributes
+        state["_type_attributes"] = deepcopy(DataStore._type_attributes)
 
         for k in self.__elements:
+
             # build the full `_type_attributes`
             self._get_type_info(k)
-
-            for _, info in state["_DataStore_type_attributes"][k][
+            for _, info in state["_type_attributes"][k][
                 constants.TYPE_ATTR_KEY
             ].items():
                 info.pop(constants.ATTR_TYPE_KEY)
+
             state["_DataStore__elements"][k] = list(self.__elements[k])
+
         state.pop("_DataStore__tid_ref_dict")
         state.pop("_DataStore__tid_idx_dict")
         state.pop("_DataStore__deletion_count")
         state["entries"] = state.pop("_DataStore__elements")
 
-        state["fields"] = state["_DataStore_type_attributes"]
+        state["fields"] = state["_type_attributes"]
         for _, v in state["fields"].items():
             if constants.PARENT_CLASS_KEY in v:
                 v.pop(constants.PARENT_CLASS_KEY)
@@ -666,7 +673,8 @@ class DataStore(BaseStore):
 
     def _add_entry_types(
         self, type_name: str, attributes: Optional[Set[Tuple[str, str]]] = None
-    ) -> Dict:
+    ) -> Dict[str, Tuple]:
+        # [str, Tuple[Any, Tuple[Any]]]:
         r"""This function takes a fully qualified ``type_name`` class name,
         adds the type of all its dataclass attributes to the
         `_entry_type_dict` dictionary class variable.
@@ -684,10 +692,14 @@ class DataStore(BaseStore):
                         }
         """
         type_dict = {}
+        attr_class: Any
+        attr_args: Tuple
 
         if attributes:
             for attr, type_val in attributes:
-                type_dict[attr] = (type(None), (get_class(type_val),))
+                attr_class = type(None)
+                attr_args = tuple([get_class(type_val)])
+                type_dict[attr] = tuple([attr_class, attr_args])
 
         else:
             attr_fields: Dict = self._get_entry_attributes_by_class(type_name)
@@ -695,7 +707,15 @@ class DataStore(BaseStore):
                 attr_class = get_origin(attr_info.type)
                 attr_args = get_args(attr_info.type)
 
-                type_dict[attr_name] = (attr_class, attr_args)
+                attr_class = (
+                    attr_class if isclass(attr_class) else attr_class.__class__
+                )
+
+                attr_args = tuple(
+                    val if isclass(val) else val.__class__ for val in attr_args
+                )
+
+                type_dict[attr_name] = tuple([attr_class, attr_args])
 
         return type_dict
 
@@ -803,9 +823,9 @@ class DataStore(BaseStore):
             stored in the ``_type_attributes`` dictionary of the Data Store.
         """
         try:
-            return self._type_attributes[type_name][constants.TYPE_ATTR_KEY][
-                attr_name
-            ][constants.ATTR_TYPE_KEY]
+            return DataStore._type_attributes[type_name][
+                constants.TYPE_ATTR_KEY
+            ][attr_name][constants.ATTR_TYPE_KEY]
         except KeyError as e:
             raise KeyError(
                 f"Attribute {attr_name} does not have type "

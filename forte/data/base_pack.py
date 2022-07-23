@@ -20,6 +20,7 @@ import uuid
 from abc import abstractmethod
 from pathlib import Path
 from typing import (
+    ForwardRef,
     List,
     Optional,
     Set,
@@ -32,7 +33,7 @@ from typing import (
     Iterable,
 )
 from functools import partial
-from typing_inspect import is_forward_ref
+from inspect import isclass
 from packaging.version import Version
 import jsonpickle
 
@@ -482,12 +483,10 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                 # Check dataclass attribute value type
                 # If the attribute was an Entry object, only its tid
                 # is stored in the DataStore and hence its needs to be converted.
-                if entry_type[1] and (
-                    any(is_forward_ref(entry) for entry in list(entry_type[1]))
-                    or any(
-                        issubclass(entry, (Entry))
-                        for entry in list(entry_type[1])
-                    )
+                if entry_type[1] and any(
+                    issubclass(entry, (Entry, ForwardRef))
+                    for entry in list(entry_type[1])
+                    if isclass(entry)
                 ):
                     return cls.pack.get_entry(tid=attr_val)
 

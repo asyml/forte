@@ -20,7 +20,7 @@ import logging
 import unittest
 import copy
 from sortedcontainers import SortedList
-from typing import List, Optional, Dict, Union
+from typing import List, Optional, Dict, Union, _SpecialForm
 from dataclasses import dataclass
 from forte.data.data_store import DataStore
 from forte.data.ontology.top import (
@@ -139,8 +139,14 @@ class DataStoreTest(unittest.TestCase):
             },
             "ft.onto.base_ontology.Sentence": {
                 "attributes": {
-                    "speaker": {"index": 4, "type": (Union, (str, type(None)))},
-                    "part_id": {"index": 5, "type": (Union, (int, type(None)))},
+                    "speaker": {
+                        "index": 4,
+                        "type": (_SpecialForm, (str, type(None))),
+                    },
+                    "part_id": {
+                        "index": 5,
+                        "type": (_SpecialForm, (int, type(None))),
+                    },
                     "sentiment": {"index": 6, "type": (dict, (str, float))},
                     "classification": {
                         "index": 7,
@@ -191,8 +197,14 @@ class DataStoreTest(unittest.TestCase):
 
         DataStore._type_attributes["ft.onto.base_ontology.Sentence"] = {
             "attributes": {
-                "speaker": {"index": 4, "type": (Union, (str, type(None)))},
-                "part_id": {"index": 5, "type": (Union, (int, type(None)))},
+                "speaker": {
+                    "index": 4,
+                    "type": (_SpecialForm, (str, type(None))),
+                },
+                "part_id": {
+                    "index": 5,
+                    "type": (_SpecialForm, (int, type(None))),
+                },
                 "sentiment": {"index": 6, "type": (dict, (str, float))},
                 "classification": {"index": 7, "type": (dict, (str, float))},
                 "classifications": {
