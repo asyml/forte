@@ -42,6 +42,12 @@ class ImageAnnotationTest(unittest.TestCase):
         ip.set_cache(self.line)
         ImageAnnotation(self.datapack)
 
+    def test_datapack_image_operation(self):
+        datapack = DataPack("image2")
+        datapack.set_image(self.line, 0)
+        self.assertTrue(np.array_equal(datapack.image, self.datapack.image))
+
+
     def test_image_annotation(self):
         self.assertEqual(
             self.datapack.get_single(ImageAnnotation).image_payload_idx, 0

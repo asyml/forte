@@ -891,6 +891,7 @@ class ImageAnnotation(Entry):
 
     @property
     def image_shape(self):
+        self.pack.get_payload_data_at(Modality.Image, self._image_payload_idx)
         return (self._image_height, self._image_width)
 
     def set_image_shape(self, width, height):
