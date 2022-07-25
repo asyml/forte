@@ -141,11 +141,11 @@ class DataStoreTest(unittest.TestCase):
                 "attributes": {
                     "speaker": {
                         "index": 4,
-                        "type": (_SpecialForm, (str, type(None))),
+                        "type": (Union, (str, type(None))),
                     },
                     "part_id": {
                         "index": 5,
-                        "type": (_SpecialForm, (int, type(None))),
+                        "type": (Union, (int, type(None))),
                     },
                     "sentiment": {"index": 6, "type": (dict, (str, float))},
                     "classification": {
@@ -199,11 +199,11 @@ class DataStoreTest(unittest.TestCase):
             "attributes": {
                 "speaker": {
                     "index": 4,
-                    "type": (_SpecialForm, (str, type(None))),
+                    "type": (Union, (str, type(None))),
                 },
                 "part_id": {
                     "index": 5,
-                    "type": (_SpecialForm, (int, type(None))),
+                    "type": (Union, (int, type(None))),
                 },
                 "sentiment": {"index": 6, "type": (dict, (str, float))},
                 "classification": {"index": 7, "type": (dict, (str, float))},

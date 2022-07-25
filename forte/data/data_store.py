@@ -12,7 +12,6 @@
 # limitations under the License.
 
 from copy import deepcopy
-from inspect import isclass
 import json
 from typing import Dict, List, Iterator, Set, Tuple, Optional, Any, Type
 
@@ -674,7 +673,6 @@ class DataStore(BaseStore):
     def _add_entry_types(
         self, type_name: str, attributes: Optional[Set[Tuple[str, str]]] = None
     ) -> Dict[str, Tuple]:
-        # [str, Tuple[Any, Tuple[Any]]]:
         r"""This function takes a fully qualified ``type_name`` class name,
         adds the type of all its dataclass attributes to the
         `_entry_type_dict` dictionary class variable.
@@ -706,14 +704,6 @@ class DataStore(BaseStore):
             for attr_name, attr_info in attr_fields.items():
                 attr_class = get_origin(attr_info.type)
                 attr_args = get_args(attr_info.type)
-
-                attr_class = (
-                    attr_class if isclass(attr_class) else attr_class.__class__
-                )
-
-                attr_args = tuple(
-                    val if isclass(val) else val.__class__ for val in attr_args
-                )
 
                 type_dict[attr_name] = tuple([attr_class, attr_args])
 
