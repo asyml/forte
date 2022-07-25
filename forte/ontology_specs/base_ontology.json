@@ -2,6 +2,11 @@
   "name": "base_ontology",
   "definitions": [
     {
+      "entry_name": "ft.onto.base_ontology.Character",
+      "parent_entry": "forte.data.ontology.top.Annotation",
+      "description": "A span based annotation :class:`Character`, used to represent a character."
+    },
+    {
       "entry_name": "ft.onto.base_ontology.Token",
       "parent_entry": "forte.data.ontology.top.Annotation",
       "description": "A span based annotation :class:`Token`, used to represent a token or a word.",

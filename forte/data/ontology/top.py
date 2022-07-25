@@ -878,15 +878,36 @@ class ImageAnnotation(Entry):
                 "Cannot get image because image annotation is not "
                 "attached to any data pack."
             )
-        return self.pack.get_image_array(self._image_payload_idx)
+        return self.pack.get_payload_data_at(
+            Modality.Image, self._image_payload_idx
+        )
 
     @property
     def max_x(self):
-        return self.image.shape[1] - 1
+        return self._image_width - 1
 
     @property
     def max_y(self):
-        return self.image.shape[0] - 1
+        return self._image_height - 1
+
+    @property
+    def image_shape(self):
+        return (self._image_height, self._image_width)
+
+    def set_image_shape(self, width, height):
+        """
+        This function is used to set the shape of the image.
+
+        Args:
+            width: the width of the image. The unit is pixel.
+            height: the height of the image. The unit is pixel.
+        """
+        self._image_width = (  # pylint: disable=attribute-defined-outside-init
+            width
+        )
+        self._image_height = (  # pylint: disable=attribute-defined-outside-init
+            height
+        )
 
     def __eq__(self, other):
         if other is None:
