@@ -43,7 +43,7 @@ from forte.data.data_store import DataStore
 from forte.data.entry_converter import EntryConverter
 from forte.data.base_pack import BaseMeta, BasePack
 from forte.data.index import BaseIndex
-from forte.data.ontology.core import Entry, Grid
+from forte.data.ontology.core import Entry
 from forte.data.ontology.core import EntryType
 from forte.data.ontology.top import (
     Annotation,
@@ -170,7 +170,6 @@ class DataPack(BasePack[Entry, Link, Group]):
         self._data_store: DataStore = DataStore()
         self._entry_converter: EntryConverter = EntryConverter()
         self.image_annotations: List[ImageAnnotation] = []
-        self.grid: Optional[Grid] = None
 
         self.text_payloads: List[Payload] = []
         self.audio_payloads: List[Payload] = []
