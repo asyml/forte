@@ -794,7 +794,6 @@ class Grid:
                     grid_cell_indices.append((h_idx, w_idx))
         return grid_cell_indices
 
-
     def get_grid_cell_center(self, h_idx: int, w_idx: int) -> Tuple[int, int]:
         """
         Get the center pixel position of the grid cell at the specific height
