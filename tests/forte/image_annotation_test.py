@@ -15,6 +15,7 @@
 Unit tests for ImageAnnotation.
 """
 import unittest
+from forte.common.exception import ProcessExecutionException
 from forte.data.modality import Modality
 import numpy as np
 
@@ -46,6 +47,15 @@ class ImageAnnotationTest(unittest.TestCase):
         datapack = DataPack("image2")
         datapack.set_image(self.line, 0)
         self.assertTrue(np.array_equal(datapack.image, self.datapack.image))
+        def fn():
+            datapack.set_image(self.line, 2)
+        self.assertRaises(ProcessExecutionException, fn)
+
+        def fn():
+            datapack.get_image(1)
+        self.assertRaises(ProcessExecutionException, fn)
+
+
 
 
     def test_image_annotation(self):

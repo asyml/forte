@@ -249,6 +249,10 @@ class DataPack(BasePack[Entry, Link, Group]):
         r"""Return the image of the data pack"""
         return self.get_payload_data_at(Modality.Image, 0)
 
+    def get_image(self, index: int):
+        r"""Return the image at the given index"""
+        return self.get_payload_data_at(Modality.Image, index)
+
     @property
     def all_annotations(self) -> Iterator[Annotation]:
         """
