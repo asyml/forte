@@ -278,7 +278,6 @@ class DataStore(BaseStore):
         state["_type_attributes"] = deepcopy(DataStore._type_attributes)
 
         for k in self.__elements:
-
             # build the full `_type_attributes`
             self._get_type_info(k)
             for _, info in state["_type_attributes"][k][
@@ -292,8 +291,7 @@ class DataStore(BaseStore):
         state.pop("_DataStore__tid_idx_dict")
         state.pop("_DataStore__deletion_count")
         state["entries"] = state.pop("_DataStore__elements")
-
-        state["fields"] = state["_type_attributes"]
+        state["fields"] = state.pop("_type_attributes")
         for _, v in state["fields"].items():
             if constants.PARENT_CLASS_KEY in v:
                 v.pop(constants.PARENT_CLASS_KEY)
