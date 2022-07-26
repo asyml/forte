@@ -552,17 +552,22 @@ class DataPack(BasePack[Entry, Link, Group]):
         self,
         text: str,
         replace_func: Optional[Callable[[str], ReplaceOperationsType]] = None,
-        text_payload_index: int = -1,
+        text_payload_index: int = 0,
     ):
         """
-        Set text for TextPayload at a specified index.
+        Set text for TextPayload at a specified index or add a new TextPayload
+        in the DataPack.
+
+        Raises:
+            ValueError: raised when the text payload index is out of range.
 
         Args:
             text: a str text.
             replace_func: function that replace text. Defaults to None.
             text_payload_index: the zero-based index of the TextPayload
-                in this DataPack's TextPayload entries. Defaults to -1, and
-                it adds a new TextPayload to the end of the TextPayload list.
+                in this DataPack's TextPayload entries.
+                If it's -1, a new TextPayload will be added to the DataPack.
+                If it's 0, it adds a new TextPayload if there is no text payload in the data pack.
         """
         # Temporary imports
 
@@ -576,16 +581,22 @@ class DataPack(BasePack[Entry, Link, Group]):
         ) = data_utils_io.modify_text_and_track_ops(text, span_ops)
         # temporary solution for backward compatibility
         # past API use this method to add a single text in the datapack
-        if text_payload_index == -1:
+        if text_payload_index == -1 or (
+            text_payload_index == 0 and len(self.text_payloads) == 0
+        ):
             from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
                 TextPayload,
             )
 
             tp = TextPayload(self, text_payload_index)
-        elif text_payload_index < len(self.text_payloads):
+        elif 0 <= text_payload_index < len(self.text_payloads):
             tp = self.get_payload_at(Modality.Text, text_payload_index)
         else:
-            raise ValueError("text_payload_index is out of range.")
+            raise ValueError(
+                f"text payload index{text_payload_index} is out "
+                "of range. Please input a valid index between 0 "
+                f"and {len(self.text_payloads)}"
+            )
 
         tp.set_cache(text)
 
@@ -597,28 +608,39 @@ class DataPack(BasePack[Entry, Link, Group]):
         self,
         audio: np.ndarray,
         sample_rate: int,
-        audio_payload_index: int = 0,
+        audio_payload_index: int = -1,
     ):
-        r"""Set the audio payload and sample rate of the :class:`~forte.data.data_pack.DataPack`
-        object.
+        r"""
+        Set audio for AudioPayload at a specified index or add a new AudioPayload in the DataPack.
+
+        Raises:
+            ValueError: raised when the audio payload index is out of range.
 
         Args:
             audio: A numpy array storing the audio waveform.
             sample_rate: An integer specifying the sample rate.
             audio_payload_index: the zero-based index of the AudioPayload
                 in this DataPack's AudioPayload entries. Defaults to -1, and
-                it adds a new TextPayload to the end of the TextPayload list.
+                it adds a new audio payload if there is no audio payload in the data pack.
         """
         # temporary solution for backward compatibility
         # past API use this method to add a single audio in the datapack
-        if len(self.audio_payloads) == 0 and audio_payload_index == 0:
+        if audio_payload_index == -1 or (
+            audio_payload_index == 0 and len(self.audio_payloads) == 0
+        ):
             from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
                 AudioPayload,
             )
 
             ap = AudioPayload(self)
-        else:
+        elif 0 <= audio_payload_index < len(self.audio_payloads):
             ap = self.get_payload_at(Modality.Audio, audio_payload_index)
+        else:
+            raise ValueError(
+                f"audio payload index{audio_payload_index} is out "
+                "of range. Please input a valid index between 0 "
+                f"and {len(self.audio_payloads)}"
+            )
 
         ap.set_cache(audio)
         ap.sample_rate = sample_rate
@@ -626,26 +648,36 @@ class DataPack(BasePack[Entry, Link, Group]):
     def set_image(
         self,
         image,
-        image_payload_index: int = 0,
+        image_payload_index: int = -1,
     ):
-        r"""Set the image payload of the :class:`~forte.data.data_pack.DataPack`
-        object.
+        r"""
+        Set image for ImagePayload at a specified index or add a new ImagePayload in the DataPack.
+
+        Raises:
+            ValueError: raised when the image payload index is out of range.
 
         Args:
             image: A numpy array storing the image.
             image_payload_index: the zero-based index of the ImagePayload
-                in this DataPack's ImagePayload entries. Defaults to 0.
+                in this DataPack's ImagePayload entries. Defaults to 0, and
+                it adds a new image payload if there is no image payload in the data pack.
         """
-        # temporary solution for backward compatibility
-        # past API use this method to add a single image in the datapack
-        if len(self.image_payloads) == 0 and image_payload_index == 0:
+        if image_payload_index == -1 or (
+            image_payload_index == 0 and len(self.image_payloads) == 0
+        ):
             from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
                 ImagePayload,
             )
 
             ip = ImagePayload(self)
-        else:
+        elif 0 <= image_payload_index < len(self.image_payloads):
             ip = self.get_payload_at(Modality.Image, image_payload_index)
+        else:
+            raise ValueError(
+                f"image payload index{image_payload_index} is out "
+                "of range. Please input a valid index between 0 "
+                f"and {len(self.image_payloads)}"
+            )
 
         ip.set_cache(image)
 
@@ -862,7 +894,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
             if begin < 0:
                 raise ValueError(
-                    f"The begin {begin} is smaller than 0, this"
+                    f"The begin {begin} is smaller than 0, this "
                     f"is not a valid begin."
                 )
 
