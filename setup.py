@@ -82,7 +82,7 @@ setuptools.setup(
         # transformers 4.10.0 will break the translation model we used here
         "nlp": ["texar-pytorch>=0.1.4"],
         "extractor": ["texar-pytorch>=0.1.4"],
-        "ocr": ["PIL", "requests", "pytesseract"]
+        "ocr": ["Pillow", "requests", "pytesseract"]
     },
     entry_points={
         "console_scripts": [
