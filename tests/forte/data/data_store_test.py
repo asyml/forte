@@ -20,7 +20,7 @@ import logging
 import unittest
 import copy
 from sortedcontainers import SortedList
-from typing import List, Optional, Dict, Union, _SpecialForm
+from typing import List, Optional, Dict, Union
 from dataclasses import dataclass
 from forte.data.data_store import DataStore
 from forte.data.ontology.top import (

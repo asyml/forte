@@ -269,7 +269,8 @@ class OntologyCodeGenerator:
         # Adjacency list to store the allowed types (in-built or user-defined),
         # and their attributes (if any) in order to validate the attribute
         # types.
-        self.allowed_types_tree: Dict[str, Set] = {}
+        self.allowed_types_tree: Dict[str, Set[Tuple]] = {}
+
         for type_str in ALL_INBUILT_TYPES:
             self.allowed_types_tree[type_str] = set()
 
@@ -820,14 +821,16 @@ class OntologyCodeGenerator:
                         f"python identifier."
                     )
 
-                if property_name in self.allowed_types_tree[en.class_name]:
+                if property_name in set(
+                    val[0] for val in self.allowed_types_tree[en.class_name]
+                ):
                     warnings.warn(
                         f"Attribute type for the entry {en.class_name} "
                         f"and the attribute {property_name} already present in "
                         f"the ontology, will be overridden",
                         DuplicatedAttributesWarning,
                     )
-                self.allowed_types_tree[en.class_name].add(property)
+                self.allowed_types_tree[en.class_name].add(tuple(property))
             # populate the entry tree based on information
             if merged_entry_tree is not None:
                 curr_entry_name = en.class_name

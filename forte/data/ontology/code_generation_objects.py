@@ -797,7 +797,7 @@ class EntryTreeNode:
         self.children: List[EntryTreeNode] = []
         self.parent: Optional[EntryTreeNode] = None
         self.name: str = name
-        self.attributes: Set[str] = set()
+        self.attributes: Set[Tuple] = set()
 
     def __repr__(self):
         r"""for printing purpose."""
@@ -817,7 +817,7 @@ class EntryTree:
         self,
         curr_entry_name: str,
         parent_entry_name: str,
-        curr_entry_attr: Set[str],
+        curr_entry_attr: Set[Tuple],
     ):
         r"""Add a tree node with `curr_entry_name` as a child to
         `parent_entry_name` in the tree, the attributes `curr_entry_attr`
@@ -864,9 +864,9 @@ class EntryTree:
             found_node = search(self.root, search_node_name=node_name)
             if found_node is not None:
                 while found_node.parent.name != "root":
-                    node_dict[
-                        found_node.parent.name
-                    ] = found_node.parent.attributes
+                    node_dict[found_node.parent.name] = set(
+                        val[0] for val in found_node.parent.attributes
+                    )
                     found_node = found_node.parent
 
     def todict(self) -> Dict[str, Any]:
@@ -906,12 +906,16 @@ class EntryTree:
 
         if parent_entry_name is None:
             self.root = EntryTreeNode(name=tree_dict["name"])
-            self.root.attributes = set(tree_dict["attributes"])
+            self.root.attributes = set(
+                tuple(attr) for attr in tree_dict["attributes"]
+            )
         else:
             self.add_node(
                 curr_entry_name=tree_dict["name"],
                 parent_entry_name=parent_entry_name,
-                curr_entry_attr=set(tree_dict["attributes"]),
+                curr_entry_attr=set(
+                    tuple(attr) for attr in tree_dict["attributes"]
+                ),
             )
         for child in tree_dict["children"]:
             self.fromdict(child, tree_dict["name"])

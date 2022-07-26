@@ -483,11 +483,15 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                 # Check dataclass attribute value type
                 # If the attribute was an Entry object, only its tid
                 # is stored in the DataStore and hence its needs to be converted.
-                if entry_type[1] and any(
-                    issubclass(entry, Entry)
-                    if isclass(entry)
-                    else is_forward_ref(entry)
-                    for entry in list(entry_type[1])
+                if (
+                    isinstance(attr_val, int)
+                    and entry_type[1]
+                    and any(
+                        issubclass(entry, Entry)
+                        if isclass(entry)
+                        else is_forward_ref(entry)
+                        for entry in list(entry_type[1])
+                    )
                 ):
                     return cls.pack.get_entry(tid=attr_val)
 
