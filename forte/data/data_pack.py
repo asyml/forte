@@ -543,7 +543,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         self,
         text: str,
         replace_func: Optional[Callable[[str], ReplaceOperationsType]] = None,
-        text_payload_index: int = 0,
+        text_payload_index: int = -1,
     ):
         """
         Set text for TextPayload at a specified index.
@@ -552,7 +552,8 @@ class DataPack(BasePack[Entry, Link, Group]):
             text: a str text.
             replace_func: function that replace text. Defaults to None.
             text_payload_index: the zero-based index of the TextPayload
-                in this DataPack's TextPayload entries. Defaults to 0.
+                in this DataPack's TextPayload entries. Defaults to -1, and
+                it adds a new TextPayload to the end of the TextPayload list.
         """
         # Temporary imports
 
@@ -566,14 +567,16 @@ class DataPack(BasePack[Entry, Link, Group]):
         ) = data_utils_io.modify_text_and_track_ops(text, span_ops)
         # temporary solution for backward compatibility
         # past API use this method to add a single text in the datapack
-        if len(self.text_payloads) == 0 and text_payload_index == 0:
+        if text_payload_index == -1:
             from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
                 TextPayload,
             )
 
             tp = TextPayload(self, text_payload_index)
-        else:
+        elif text_payload_index < len(self.text_payloads):
             tp = self.get_payload_at(Modality.Text, text_payload_index)
+        else:
+            raise ValueError("text_payload_index is out of range.")
 
         tp.set_cache(text)
 
@@ -594,7 +597,8 @@ class DataPack(BasePack[Entry, Link, Group]):
             audio: A numpy array storing the audio waveform.
             sample_rate: An integer specifying the sample rate.
             audio_payload_index: the zero-based index of the AudioPayload
-                in this DataPack's AudioPayload entries. Defaults to 0.
+                in this DataPack's AudioPayload entries. Defaults to -1, and
+                it adds a new TextPayload to the end of the TextPayload list.
         """
         # temporary solution for backward compatibility
         # past API use this method to add a single audio in the datapack
