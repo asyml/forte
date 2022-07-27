@@ -808,13 +808,13 @@ class DataStore(BaseStore):
         in an entry of type ``type_name``
 
         Args:
-            type_name (str): The type name of the entry whose attribute enty
+            type_name (str): The type name of the entry whose attribute entry
                 type needs to be fetched
             attr_name (str): The name of the attribute in the entry whose type
                 information needs to be fetched.
 
         Returns:
-            The type information of the required attribute. This infromation is
+            The type information of the required attribute. This information is
             stored in the ``_type_attributes`` dictionary of the Data Store.
         """
         try:
