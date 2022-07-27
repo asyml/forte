@@ -251,7 +251,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         r"""
         Return the image data from the first image payload in the data pack.
         """
-        return self.get_payload_data_at(Modality.Image, 0)
+        return self.get_image(0)
 
     def get_image(self, index: int):
         """
