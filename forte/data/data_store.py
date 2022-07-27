@@ -21,8 +21,6 @@ from heapq import heappush, heappop
 from sortedcontainers import SortedList
 from typing_inspect import get_origin, get_args
 
-# from ft.onto.base_ontology import Utterance
-
 from forte.utils import get_class
 from forte.utils.utils import get_full_module_name
 from forte.data.ontology.code_generation_objects import EntryTree
@@ -275,7 +273,8 @@ class DataStore(BaseStore):
         state["_DataStore__elements"] = {}
 
         # Make a copy of the updated type_attributes
-        state["_type_attributes"] = deepcopy(DataStore._type_attributes)
+        type_attributes = deepcopy(DataStore._type_attributes)
+        state["_type_attributes"] = DataStore._type_attributes
 
         for k in self.__elements:
             # build the full `_type_attributes`
@@ -295,6 +294,7 @@ class DataStore(BaseStore):
         for _, v in state["fields"].items():
             if constants.PARENT_CLASS_KEY in v:
                 v.pop(constants.PARENT_CLASS_KEY)
+        DataStore._type_attributes = type_attributes
         return state
 
     def __setstate__(self, state):
@@ -701,6 +701,14 @@ class DataStore(BaseStore):
             for attr_name, attr_info in attr_fields.items():
                 attr_class = get_origin(attr_info.type)
                 attr_args = get_args(attr_info.type)
+
+                # Prior to Python 3.7, typing.List and typing.Dict
+                # is not converted to primitive forms of list and
+                # dict. We handle them separately here
+                if attr_class == Dict:
+                    attr_class = dict
+                if attr_class == List:
+                    attr_class = list
 
                 type_dict[attr_name] = tuple([attr_class, attr_args])
 
