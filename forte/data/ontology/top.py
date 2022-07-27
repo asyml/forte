@@ -14,7 +14,6 @@
 from dataclasses import dataclass
 from enum import IntEnum
 from functools import total_ordering
-from tkinter import N
 from typing import (
     Optional,
     Sequence,
@@ -912,7 +911,7 @@ class ImageAnnotation(Entry):
         image_shape = self.pack.get_payload_at(
             Modality.Image, self._image_payload_idx
         )._cache_shape
-        if not (2 <= len(image_shape) <= 3):
+        if not 2 <= len(image_shape) <= 3:
             raise ValueError(
                 "Image shape is not valid."
                 "It should be 2D ([height, width])"
@@ -1251,10 +1250,12 @@ class Payload(Entry):
         Args:
             data: data to be set in the payload. It can be str for text data or
                 numpy array for audio or image data.
-            cache_shape: the shape of the data. Its representation varies based on the modality and its length.
+            cache_shape: the shape of the data. Its representation varies based
+                on the modality and its length.
                 For text data, it is the length of the text.[length, text_embedding_dim]
                 For audio data, it is the length of the audio. [length, audio_embedding_dim]
-                For image data, it is the shape of the image. [height, width, channel]
+                For image data, it is the shape of the image. [height, width,
+                channel]
                 For example, for image data, if the cache_shape length is 2, it means the image data is a 2D image [height, width].
         """
         self._cache = data
