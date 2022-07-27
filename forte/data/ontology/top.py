@@ -14,6 +14,7 @@
 from dataclasses import dataclass
 from enum import IntEnum
 from functools import total_ordering
+from tkinter import N
 from typing import (
     Optional,
     Sequence,
@@ -883,30 +884,41 @@ class ImageAnnotation(Entry):
 
     @property
     def max_x(self):
-        return self._image_width - 1
+        return self.image_shape[1] - 1
 
     @property
     def max_y(self):
-        return self._image_height - 1
+        return self.image_shape[0] - 1
 
     @property
     def image_shape(self):
-        return (self._image_height, self._image_width)
-
-    def set_image_shape(self, width, height):
         """
-        This function is used to set the shape of the image.
+        Returns the shape of the image.
 
-        Args:
-            width: the width of the image. The unit is pixel.
-            height: the height of the image. The unit is pixel.
+        Raises:
+            ValueError: if the image annotation is not attached to any data
+                pack.
+            ValueError: if the image shape is not valid. It must be either
+                2D or 3D.
+
+        Returns:
+            The shape of the image.
         """
-        self._image_width = (  # pylint: disable=attribute-defined-outside-init
-            width
-        )
-        self._image_height = (  # pylint: disable=attribute-defined-outside-init
-            height
-        )
+        if self.pack is None:
+            raise ValueError(
+                "Cannot get image because image annotation is not "
+                "attached to any data pack."
+            )
+        image_shape = self.pack.get_payload_at(
+            Modality.Image, self._image_payload_idx
+        )._cache_shape
+        if not (2 <= len(image_shape) <= 3):
+            raise ValueError(
+                "Image shape is not valid."
+                "It should be 2D ([height, width])"
+                " or 3D ([height, width, channel])."
+            )
+        return image_shape
 
     def __eq__(self, other):
         if other is None:
@@ -1176,6 +1188,7 @@ class Payload(Entry):
 
         super().__init__(pack)
         self._cache: Union[str, np.ndarray] = ""
+        self._cache_shape = None
         self.replace_back_operations: Sequence[Tuple] = []
         self.processed_original_spans: Sequence[Tuple] = []
         self.orig_text_len: int = 0
@@ -1223,15 +1236,33 @@ class Payload(Entry):
     def uri(self) -> Optional[str]:
         return self._uri
 
-    def set_cache(self, data: Union[str, np.ndarray]):
+    @property
+    def cache_shape(self) -> Optional[Sequence[int]]:
+        return self._cache_shape
+
+    def set_cache(
+        self,
+        data: Union[str, np.ndarray],
+        cache_shape: Optional[Sequence[int]] = None,
+    ):
         """
-        Load cache data into the payload.
+        Load cache data into the payload and set the data shape.
 
         Args:
             data: data to be set in the payload. It can be str for text data or
                 numpy array for audio or image data.
+            cache_shape: the shape of the data. Its representation varies based on the modality and its length.
+                For text data, it is the length of the text.[length, text_embedding_dim]
+                For audio data, it is the length of the audio. [length, audio_embedding_dim]
+                For image data, it is the shape of the image. [height, width, channel]
+                For example, for image data, if the cache_shape length is 2, it means the image data is a 2D image [height, width].
         """
         self._cache = data
+        if isinstance(data, np.ndarray):
+            # if it's a numpy array, we need to set the shape
+            # even if user input a shape, it will be overwritten
+            cache_shape = data.shape
+        self._cache_shape = cache_shape
 
     def set_payload_index(self, payload_index: int):
         """
