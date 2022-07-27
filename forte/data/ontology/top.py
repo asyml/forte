@@ -1250,6 +1250,12 @@ class Payload(Entry):
         # Entry store is being integrated into DataStore
         state = self.__dict__.copy()
         state["_modality"] = self._modality.name
+
+        if isinstance(state["_cache"], np.ndarray):
+            state["_cache"] = list(self._cache.tolist())
+        if isinstance(state["_embedding"], np.ndarray):
+            state["_embedding"] = list(self._embedding.tolist())
+
         return state
 
     def __setstate__(self, state):
@@ -1260,6 +1266,15 @@ class Payload(Entry):
         # Entry store is being integrated into DataStore
         self.__dict__.update(state)
         self._modality = getattr(Modality, state["_modality"])
+
+        # During de-serialization, convert the list back to numpy array.
+        if "_embedding" in state:
+            state["_embedding"] = np.array(state["_embedding"])
+        else:
+            state["_embedding"] = np.empty(0)
+
+        if "_cache" in state and isinstance(state["_cache"], list):
+            state["_cache"] = np.array(state["_cache"])
 
 
 SinglePackEntries = (
