@@ -241,16 +241,28 @@ class DataPack(BasePack[Entry, Link, Group]):
 
     @property
     def audio(self):
-        r"""Return the audio of the data pack"""
+        r"""
+        Return the audio data from the first audio payload in the DataPack.
+        """
         return self.get_payload_data_at(Modality.Audio, 0)
 
     @property
     def image(self):
-        r"""Return the image of the data pack"""
+        r"""
+        Return the image data from the first image payload in the data pack.
+        """
         return self.get_payload_data_at(Modality.Image, 0)
 
     def get_image(self, index: int):
-        r"""Return the image at the given index"""
+        """
+        Return the image data from the image payload at the specified index.
+
+        Args:
+            index: image payload index for retrieving the image data.
+
+        Returns:
+            image payload data at the specified index.
+        """
         return self.get_payload_data_at(Modality.Image, index)
 
     @property
