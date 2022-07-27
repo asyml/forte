@@ -130,7 +130,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
             ${{ runner.os }}-
-      - name:
+      - name: ocr test
         run: |
         sudo apt-get install automake ca-certificates g++ git libtool libleptonica-dev make pkg-config
         sudo apt install tesseract-ocr
