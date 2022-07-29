@@ -26,6 +26,7 @@ from typing import List
 from typing import Optional
 
 __all__ = [
+    "Character",
     "Token",
     "Subword",
     "Classification",
@@ -58,6 +59,16 @@ __all__ = [
     "TextPayload",
     "ImagePayload",
 ]
+
+
+@dataclass
+class Character(Annotation):
+    """
+    A span based annotation :class:`Character`, used to represent a character.
+    """
+
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
 
 
 @dataclass

@@ -24,7 +24,6 @@ from forte.data.ontology.top import (
     Generics,
     AudioAnnotation,
     ImageAnnotation,
-    Grids,
     MultiPackGeneric,
     MultiPackGroup,
     MultiPackLink,
@@ -150,6 +149,7 @@ class EntryConverter:
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,
             )
+
         elif data_store_ref._is_subclass(entry.entry_type(), MultiPackLink):
             data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),

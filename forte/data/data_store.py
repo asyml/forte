@@ -28,7 +28,6 @@ from forte.data.base_store import BaseStore
 from forte.data.ontology.top import (
     Annotation,
     AudioAnnotation,
-    Grids,
     Group,
     ImageAnnotation,
     Link,
@@ -812,6 +811,7 @@ class DataStore(BaseStore):
                 MultiPackGeneric,
             ]
         ):
+
             try:
                 self.__elements[type_name].append(entry)
             except KeyError:
