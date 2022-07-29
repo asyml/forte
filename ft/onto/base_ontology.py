@@ -20,7 +20,7 @@ from forte.data.ontology.top import Group
 from forte.data.ontology.top import Link
 from forte.data.ontology.top import MultiPackLink
 from forte.data.ontology.top import Payload
-from typing import Any, Dict
+from typing import Dict
 from typing import Iterable
 from typing import List
 from typing import Optional

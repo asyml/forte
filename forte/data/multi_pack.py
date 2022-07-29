@@ -715,25 +715,6 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             context_type, request, skip_k
         )
 
-    def get_data_store_attribute_idx(
-        self, type_name: str, attr_name: str
-    ) -> int:
-        r"""Get the index at which a given attribute is stored in a
-            Data Store entry.
-
-        Args:
-            `type_name`: A string representing the type of entry whose
-            attribute index needs to be fetched.
-            `attr_name`: The name of the attribute whose index in the Data
-            Store needs to be fetched.
-
-        Returns:
-            An integer representing the position of the required attribute in
-            its Data Store entry.
-        """
-
-        return self._data_store.get_datastore_attr_idx(type_name, attr_name) #type: ignore
-
     def get_cross_pack_data(
         self,
         request: MdRequest,
@@ -972,11 +953,9 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     def view(self):
         return copy.deepcopy(self)
 
-    def _save_entry_to_data_store(self, entry: Entry, attribute_data: Dict):
+    def _save_entry_to_data_store(self, entry: Entry):
         r"""Save an existing entry object into DataStore"""
-        self._entry_converter.save_entry_object(
-            entry=entry, pack=self, attribute_data=attribute_data
-        )
+        self._entry_converter.save_entry_object(entry=entry, pack=self)
 
     def _get_entry_from_data_store(self, tid: int) -> EntryType:
         r"""Generate a class object from entry data in DataStore"""

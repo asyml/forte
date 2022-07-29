@@ -53,7 +53,7 @@ class EntryContainer(Generic[E, L, G]):
             self._field_records = self.__dict__.pop("field_records")
 
     @abstractmethod
-    def on_entry_creation(self, entry: E, attribute_data: Dict):
+    def on_entry_creation(self, entry: E):
         raise NotImplementedError
 
     @abstractmethod

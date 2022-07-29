@@ -23,6 +23,7 @@ from typing import (
     Union,
     Iterable,
     List,
+    cast,
 )
 import numpy as np
 
@@ -34,8 +35,10 @@ from forte.data.ontology.core import (
     BaseGroup,
     MultiEntry,
     EntryType,
+    FList,
 )
 from forte.data.span import Span
+
 
 __all__ = [
     "Generics",
@@ -71,7 +74,7 @@ make sure it available across the ontology system:
 
 class Generics(Entry):
     def __init__(self, pack: PackType):
-        super().__init__(pack=pack, attribute_data={})
+        super().__init__(pack=pack)
 
 
 @dataclass
@@ -95,16 +98,11 @@ class Annotation(Entry):
     def __init__(
         self, pack: PackType, begin: int, end: int, text_payload_idx: int = 0
     ):
-        attribute_data = {
-            "begin": begin,
-            "end": end,
-            "payload_idx": text_payload_idx,
-        }
-        super().__init__(pack, attribute_data)
         self._span: Optional[Span] = None
         self.begin: int = begin
         self.end: int = end
         self.payload_idx: int = text_payload_idx
+        super().__init__(pack)
 
     def __getstate__(self):
         r"""For serializing Annotation, we should create Span annotations for
@@ -249,13 +247,10 @@ class Link(BaseLink):
         parent: Optional[Entry] = None,
         child: Optional[Entry] = None,
     ):
-        attribute_data = {
-            "parent": parent,
-            "child": child,
-            "parent_type": self.ParentType,
-            "child_type": self.ChildType,
-        }
-        super().__init__(pack, attribute_data)
+
+        self.parent_type = self.ParentType
+        self.child_type = self.ChildType
+        super().__init__(pack, parent, child)
 
     # TODO: Can we get better type hint here?
     def set_parent(self, parent: Entry):
@@ -299,7 +294,7 @@ class Link(BaseLink):
             )
         if self.parent is None:
             raise ValueError("The parent of this entry is not set.")
-        return self.parent  # type: ignore
+        return cast(Entry, self.parent)
 
     def get_child(self) -> Entry:
         r"""Get the child entry of the link.
@@ -314,7 +309,7 @@ class Link(BaseLink):
             )
         if self.child is None:
             raise ValueError("The child of this entry is not set.")
-        return self.child  # type: ignore
+        return cast(Entry, self.child)
 
 
 # pylint: disable=duplicate-bases
@@ -325,7 +320,7 @@ class Group(BaseGroup[Entry]):
     store a set of members, no duplications allowed.
     """
 
-    members: Optional[Iterable[Entry]]
+    members: FList[Entry]
     member_type: Type[Entry]
 
     MemberType = Entry
@@ -335,8 +330,9 @@ class Group(BaseGroup[Entry]):
         pack: PackType,
         members: Optional[Iterable[Entry]] = None,
     ):  # pylint: disable=useless-super-delegation
-        attribute_data = {"member_type": self.MemberType, "members": members}
-        super().__init__(pack, attribute_data)
+        # attribute_data = {"member_type": self.MemberType, "members": members}
+        self.member_type = self.MemberType
+        super().__init__(pack, members)
 
     def add_member(self, member: Entry):
         r"""Add one entry to the group. The update will be populated to the
@@ -350,11 +346,10 @@ class Group(BaseGroup[Entry]):
                 f"The members of {type(self)} should be "
                 f"instances of {self.MemberType}, but got {type(member)}"
             )
-
-        members_index = self.pack.get_data_store_attribute_idx(
-            self.entry_type(), "members"
-        )
-        self.pack.get_entry_raw(self.tid)[members_index].append(member.tid)
+        if self.members is None:
+            self.members = [member]
+        else:
+            self.members.append(member)
 
     def get_members(self) -> List[Entry]:
         r"""Get the member entries in the group. The function will retrieve
@@ -370,18 +365,17 @@ class Group(BaseGroup[Entry]):
                 "Cannot get members because group is not "
                 "attached to any data pack."
             )
-        members_index = self.pack.get_data_store_attribute_idx(
-            self.entry_type(), "members"
-        )
+
         member_entries = []
-        for m in self.pack.get_entry_raw(self.tid)[members_index]:
-            member_entries.append(self.pack.get_entry(m))
+        if self.members is not None:
+            for m in self.members:
+                member_entries.append(m)
         return member_entries
 
 
 class MultiPackGeneric(MultiEntry, Entry):
     def __init__(self, pack: PackType):
-        super().__init__(pack=pack, attribute_data={})
+        super().__init__(pack=pack)
 
 
 @dataclass
@@ -408,14 +402,9 @@ class MultiPackLink(MultiEntry, BaseLink):
         child: Optional[Entry] = None,
     ):
 
-        attribute_data = {
-            "parent": None,
-            "child": None,
-            "parent_type": self.ParentType,
-            "child_type": self.ChildType,
-        }
-
-        super().__init__(pack, attribute_data)
+        self.parent_type = self.ParentType
+        self.child_type = self.ChildType
+        super().__init__(pack, parent, child)
 
         if parent is not None:
             self.set_parent(parent)
@@ -511,7 +500,7 @@ class MultiPackLink(MultiEntry, BaseLink):
         if self.parent is None:
             raise ValueError("The parent of this link is not set.")
 
-        return self.parent  # type: ignore
+        return cast(Entry, self.parent)
 
     def get_child(self) -> Entry:
         r"""Get the child entry of the link.
@@ -523,7 +512,7 @@ class MultiPackLink(MultiEntry, BaseLink):
         if self.child is None:
             raise ValueError("The parent of this link is not set.")
 
-        return self.child  # type: ignore
+        return cast(Entry, self.child)
 
 
 # pylint: disable=duplicate-bases
@@ -533,7 +522,7 @@ class MultiPackGroup(MultiEntry, BaseGroup[Entry]):
     of members.
     """
     member_type: Type[Entry] = Entry
-    members: Optional[Iterable[Entry]] = None
+    members: Optional[FList[Entry]] = None
 
     MemberType = Entry
 
@@ -541,8 +530,8 @@ class MultiPackGroup(MultiEntry, BaseGroup[Entry]):
         self, pack: PackType, members: Optional[Iterable[Entry]] = None
     ):  # pylint: disable=useless-super-delegation
 
-        attribute_data = {"members": [], "member_type": self.MemberType}
-        super().__init__(pack, attribute_data)
+        self.member_type = self.MemberType
+        super().__init__(pack)
 
         if members is not None:
             self.add_members(members)
@@ -553,24 +542,17 @@ class MultiPackGroup(MultiEntry, BaseGroup[Entry]):
                 f"The members of {type(self)} should be "
                 f"instances of {self.MemberType}, but got {type(member)}"
             )
-        members_index = self.pack.get_data_store_attribute_idx(
-            self.entry_type(), "members"
-        )
-
-        self.pack.get_entry_raw(self.tid)[members_index].append(
-            (member.pack_id, member.tid)
-        )
+        if self.members is None:
+            self.members = cast(FList, [member])
+        else:
+            self.members.append(member)
 
     def get_members(self) -> List[Entry]:
         members = []
-        members_index = self.pack.get_data_store_attribute_idx(
-            self.entry_type(), "members"
-        )
-
-        for pack_idx, member_tid in self.pack.get_entry_raw(self.tid)[
-            members_index
-        ]:
-            members.append(self.pack.get_subentry(pack_idx, member_tid))
+        if self.members is not None:
+            member_data = self.members
+            for m in member_data:
+                members.append(m)
         return members
 
 
@@ -633,16 +615,11 @@ class AudioAnnotation(Entry):
         self, pack: PackType, begin: int, end: int, audio_payload_idx: int = 0
     ):
 
-        attribute_data = {
-            "begin": begin,
-            "end": end,
-            "payload_idx": audio_payload_idx,
-        }
-        super().__init__(pack, attribute_data)
         self._span: Optional[Span] = None
         self.begin: int = begin
         self.end: int = end
         self.payload_idx: int = audio_payload_idx
+        super().__init__(pack)
 
     @property
     def audio(self):
@@ -760,7 +737,7 @@ class ImageAnnotation(Entry):
                 first image payload.
         """
         self._image_payload_idx = image_payload_idx
-        super().__init__(pack, attribute_data={})
+        super().__init__(pack)
 
     @property
     def image_payload_idx(self) -> int:
@@ -818,7 +795,7 @@ class Grids(Entry):
         self._height = height
         self._width = width
         self._image_payload_idx = image_payload_idx
-        super().__init__(pack, attribute_data={})
+        super().__init__(pack)
         self.img_arr = self.pack.get_payload_data_at(
             Modality.Image, self._image_payload_idx
         )
@@ -1174,18 +1151,12 @@ class Payload(Entry):
                 f"Currently we only support {supported_modality}"
             )
 
-        attribute_data = {
-            "payload_idx": payload_idx,
-            "modality_name": modality.name,
-            "uri": uri,
-        }
-
-        super().__init__(pack, attribute_data)
-
         self.modality = modality
+        self.modality_name: str = modality.name
         self.payload_idx: int = payload_idx
         self.uri: Optional[str] = uri
 
+        super().__init__(pack)
         self._cache: Union[str, np.ndarray] = ""
         self.replace_back_operations: Sequence[Tuple] = []
         self.processed_original_spans: Sequence[Tuple] = []

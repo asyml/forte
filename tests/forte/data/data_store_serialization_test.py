@@ -21,11 +21,14 @@ import tempfile
 import os
 from sortedcontainers import SortedList
 from forte.data.data_store import DataStore
+from forte.common import constants
 
 logging.basicConfig(level=logging.DEBUG)
 
 
 class DataStoreTest(unittest.TestCase):
+
+
     def setUp(self) -> None:
         self.data_store = DataStore()
         # This test setup changes the order of fields and delete one field of
@@ -36,31 +39,50 @@ class DataStoreTest(unittest.TestCase):
         DataStore._type_attributes = {
             "ft.onto.base_ontology.Document": {
                 "attributes": {
-                    "sentiment": 4,
-                    "classifications": 5,
+                    "begin": 2,
+                    "end": 3,
+                    "payload_idx": 4,
+                    "sentiment": 5,
+                    "classifications": 6,
                 },
                 "parent_entry": "forte.data.ontology.top.Annotation",
             },
             "ft.onto.base_ontology.Sentence": {
                 "attributes": {
-                    "sentiment": 4,
-                    "speaker": 5,
-                    "part_id": 6,
-                    "classification_test": 7,
-                    "classifications": 8,
-                    "temp": 9,
+                    "begin": 2,
+                    "end": 3,
+                    "payload_idx": 4,
+                    "sentiment": 5,
+                    "speaker": 6,
+                    "part_id": 7,
+                    "classification_test": 8,
+                    "classifications": 9,
+                    "temp": 10,
                 },
                 "parent_entry": "forte.data.ontology.top.Annotation",
             },
             "forte.data.ontology.top.Group": {
-                "attributes": {},
+                "attributes": {
+                    'members': 2,
+                    'member_type': 3
+                },
                 "parent_entry": "forte.data.ontology.core.BaseGroup",
             },
             "forte.data.ontology.top.Link": {
-                "attributes": {},
+                "attributes": {
+                    'parent_type': 2,
+                    'child_type': 3,
+                    'parent': 4,
+                    'child': 5
+                },
                 "parent_entry": "forte.data.ontology.core.BaseLink",
             },
         }
+
+        self.sorting_fn = lambda s: (
+            s[2],
+            s[3],
+        )
 
         # Document entries have tid 1234, 3456, 4567, 5678, 7890.
         # Sentence entries have tid 9999, 1234567, 100, 5000.
@@ -68,54 +90,60 @@ class DataStoreTest(unittest.TestCase):
             "ft.onto.base_ontology.Document": SortedList(
                 [
                     [
-                        0,
-                        5,
                         1234,
                         "ft.onto.base_ontology.Document",
+                        0,
+                        5,
+                        0,
                         "Positive",
                         None,
                     ],
                     [
-                        10,
-                        25,
                         3456,
                         "ft.onto.base_ontology.Document",
+                        10,
+                        25,
+                        0,
                         "Negative",
                         "Class B",
                     ],
                     [
-                        15,
-                        20,
                         4567,
                         "ft.onto.base_ontology.Document",
+                        15,
+                        20,
+                        0,
                         "Positive",
                         "Class C",
                     ],
                     [
-                        20,
-                        25,
                         5678,
                         "ft.onto.base_ontology.Document",
+                        20,
+                        25,
+                        0,
                         "Neutral",
                         "Class D",
                     ],
                     [
-                        40,
-                        55,
                         7890,
                         "ft.onto.base_ontology.Document",
+                        40,
+                        55,
+                        0,
                         "Very Positive",
                         "Class E",
                     ],
                 ],
-            ),
+            key=self.sorting_fn),
             "ft.onto.base_ontology.Sentence": SortedList(
                 [
                     [
-                        6,
-                        9,
                         9999,
                         "ft.onto.base_ontology.Sentence",
+                        6,
+                        9,
+                        0,
                         "Positive",
                         "teacher",
                         1,
@@ -124,10 +152,11 @@ class DataStoreTest(unittest.TestCase):
                         "cba",
                     ],
                     [
-                        55,
-                        70,
                         1234567,
                         "ft.onto.base_ontology.Sentence",
+                        55,
+                        70,
+                        0,
                         "Negative",
                         None,
                         None,
@@ -136,10 +165,11 @@ class DataStoreTest(unittest.TestCase):
                         "abc",
                     ],
                     [
-                        60,
-                        90,
                         100,
                         "ft.onto.base_ontology.Sentence",
+                        60,
+                        90,
+                        0,
                         "Positive",
                         "student",
                         2,
@@ -148,10 +178,11 @@ class DataStoreTest(unittest.TestCase):
                         "bad",
                     ],
                     [
-                        65,
-                        90,
                         5000,
                         "ft.onto.base_ontology.Sentence",
+                        65,
+                        90,
+                        0,
                         "Positive",
                         "TA",
                         3,
@@ -160,27 +191,30 @@ class DataStoreTest(unittest.TestCase):
                         "good",
                     ],
                 ],
-            ),
+            key=self.sorting_fn),
             "forte.data.ontology.top.Group": [
                 [
-                    "ft.onto.base_ontology.Sentence",
-                    [9999, 1234567],
                     10123,
                     "forte.data.ontology.top.Group",
+                    [9999, 1234567],
+                    "ft.onto.base_ontology.Sentence"
                 ],
                 [
-                    "ft.onto.base_ontology.Document",
-                    [1234, 3456],
                     23456,
                     "forte.data.ontology.top.Group",
+                    [1234, 3456],
+                    "ft.onto.base_ontology.Document"
                 ],
             ],
             "forte.data.ontology.top.Link": [
                 [
-                    9999,
-                    1234,
                     88888,
                     "forte.data.ontology.top.Link",
+                    "ft.onto.base_ontology.Sentence",
+                    "ft.onto.base_ontology.Document",
+                    9999,
+                    1234,
+                    
                 ],
             ],
         }
@@ -236,28 +270,42 @@ class DataStoreTest(unittest.TestCase):
             DataStore._type_attributes = {
                 "ft.onto.base_ontology.Document": {
                     "attributes": {
-                        "document_class": 4,
-                        "sentiment": 5,
-                        "classifications": 6,
+                        "begin": 2,
+                        "end": 3,
+                        "payload_idx": 4,
+                        "document_class": 5,
+                        "sentiment": 6,
+                        "classifications": 7,
                     },
                     "parent_entry": "forte.data.ontology.top.Annotation",
                 },
                 "ft.onto.base_ontology.Sentence": {
                     "attributes": {
-                        "speaker": 4,
-                        "part_id": 5,
-                        "sentiment": 6,
-                        "classification": 7,
-                        "classifications": 8,
+                        "begin": 2,
+                        "end": 3,
+                        "payload_idx": 4,
+                        "speaker": 5,
+                        "part_id": 6,
+                        "sentiment": 7,
+                        "classification": 8,
+                        "classifications": 9,
                     },
                     "parent_entry": "forte.data.ontology.top.Annotation",
                 },
                 "forte.data.ontology.top.Group": {
-                    "attributes": {},
+                    "attributes": {
+                        'members': 2,
+                        'member_type': 3
+                    },
                     "parent_entry": "forte.data.ontology.core.BaseGroup",
                 },
                 "forte.data.ontology.top.Link": {
-                    "attributes": {},
+                    "attributes": {
+                        'parent_type': 2,
+                        'child_type': 3,
+                        'parent': 4,
+                        'child': 5
+                    },
                     "parent_entry": "forte.data.ontology.core.BaseLink",
                 },
             }
@@ -267,65 +315,77 @@ class DataStoreTest(unittest.TestCase):
                 tmpfilepath, serialize_method="json", check_attribute=True
             )
             self.assertEqual(temp._type_attributes, DataStore._type_attributes)
+
+            self.sorting_fn = lambda s: (
+                s[2],
+                s[3],
+            )
+
             self.assertEqual(
                 temp._DataStore__elements,
                 {
                     "ft.onto.base_ontology.Document": SortedList(
                         [
                             [
-                                0,
-                                5,
                                 1234,
                                 "ft.onto.base_ontology.Document",
+                                0,
+                                5,
+                                0,
                                 None,
                                 "Positive",
                                 None,
                             ],
                             [
-                                10,
-                                25,
                                 3456,
                                 "ft.onto.base_ontology.Document",
+                                10,
+                                25,
+                                0,
                                 None,
                                 "Negative",
                                 "Class B",
                             ],
                             [
-                                15,
-                                20,
                                 4567,
                                 "ft.onto.base_ontology.Document",
+                                15,
+                                20,
+                                0,
                                 None,
                                 "Positive",
                                 "Class C",
                             ],
                             [
-                                20,
-                                25,
                                 5678,
                                 "ft.onto.base_ontology.Document",
+                                20,
+                                25,
+                                0,
                                 None,
                                 "Neutral",
                                 "Class D",
                             ],
                             [
-                                40,
-                                55,
                                 7890,
                                 "ft.onto.base_ontology.Document",
+                                40,
+                                55,
+                                0,
                                 None,
                                 "Very Positive",
                                 "Class E",
                             ],
                         ],
-                    ),
+                    key=self.sorting_fn),
                     "ft.onto.base_ontology.Sentence": SortedList(
                         [
                             [
-                                6,
-                                9,
                                 9999,
                                 "ft.onto.base_ontology.Sentence",
+                                6,
+                                9,
+                                0,
                                 "teacher",
                                 1,
                                 "Positive",
@@ -333,10 +393,11 @@ class DataStoreTest(unittest.TestCase):
                                 None,
                             ],
                             [
-                                55,
-                                70,
                                 1234567,
                                 "ft.onto.base_ontology.Sentence",
+                                55,
+                                70,
+                                0,
                                 None,
                                 None,
                                 "Negative",
@@ -344,10 +405,11 @@ class DataStoreTest(unittest.TestCase):
                                 "Class D",
                             ],
                             [
-                                60,
-                                90,
                                 100,
                                 "ft.onto.base_ontology.Sentence",
+                                60,
+                                90,
+                                0,
                                 "student",
                                 2,
                                 "Positive",
@@ -355,10 +417,11 @@ class DataStoreTest(unittest.TestCase):
                                 "class1",
                             ],
                             [
-                                65,
-                                90,
                                 5000,
                                 "ft.onto.base_ontology.Sentence",
+                                65,
+                                90,
+                                0,
                                 "TA",
                                 3,
                                 "Positive",
@@ -366,29 +429,33 @@ class DataStoreTest(unittest.TestCase):
                                 "class2",
                             ],
                         ],
-                    ),
+                    key=self.sorting_fn),
                     "forte.data.ontology.top.Group": [
                         [
-                            "ft.onto.base_ontology.Sentence",
-                            [9999, 1234567],
                             10123,
                             "forte.data.ontology.top.Group",
+                            [9999, 1234567],
+                            "ft.onto.base_ontology.Sentence"
                         ],
                         [
-                            "ft.onto.base_ontology.Document",
-                            [1234, 3456],
                             23456,
                             "forte.data.ontology.top.Group",
+                            [1234, 3456],
+                            "ft.onto.base_ontology.Document"
                         ],
                     ],
                     "forte.data.ontology.top.Link": [
                         [
-                            9999,
-                            1234,
                             88888,
                             "forte.data.ontology.top.Link",
+                            "ft.onto.base_ontology.Sentence",
+                            "ft.onto.base_ontology.Document",
+                            9999,
+                            1234,
+                            
                         ],
                     ],
+        
                 },
             )
             self.assertEqual(
@@ -437,60 +504,72 @@ class DataStoreTest(unittest.TestCase):
                 tmpfilepath, serialize_method="json", check_attribute=False
             )
             self.assertEqual(temp._type_attributes, DataStore._type_attributes)
+
+            self.sorting_fn = lambda s: (
+                s[2],
+                s[3],
+            )
+
             self.assertEqual(
                 temp._DataStore__elements,
                 {
                     "ft.onto.base_ontology.Document": SortedList(
                         [
                             [
-                                0,
-                                5,
                                 1234,
                                 "ft.onto.base_ontology.Document",
+                                0,
+                                5,
+                                0,
                                 "Positive",
                                 None,
                             ],
                             [
-                                10,
-                                25,
                                 3456,
                                 "ft.onto.base_ontology.Document",
+                                10,
+                                25,
+                                0,
                                 "Negative",
                                 "Class B",
                             ],
                             [
-                                15,
-                                20,
                                 4567,
                                 "ft.onto.base_ontology.Document",
+                                15,
+                                20,
+                                0,
                                 "Positive",
                                 "Class C",
                             ],
                             [
-                                20,
-                                25,
                                 5678,
                                 "ft.onto.base_ontology.Document",
+                                20,
+                                25,
+                                0,
                                 "Neutral",
                                 "Class D",
                             ],
                             [
-                                40,
-                                55,
                                 7890,
                                 "ft.onto.base_ontology.Document",
+                                40,
+                                55,
+                                0,
                                 "Very Positive",
                                 "Class E",
                             ],
                         ],
-                    ),
+                    key=self.sorting_fn),
                     "ft.onto.base_ontology.Sentence": SortedList(
                         [
                             [
-                                6,
-                                9,
                                 9999,
                                 "ft.onto.base_ontology.Sentence",
+                                6,
+                                9,
+                                0,
                                 "Positive",
                                 "teacher",
                                 1,
@@ -499,10 +578,11 @@ class DataStoreTest(unittest.TestCase):
                                 "cba",
                             ],
                             [
-                                55,
-                                70,
                                 1234567,
                                 "ft.onto.base_ontology.Sentence",
+                                55,
+                                70,
+                                0,
                                 "Negative",
                                 None,
                                 None,
@@ -511,10 +591,11 @@ class DataStoreTest(unittest.TestCase):
                                 "abc",
                             ],
                             [
-                                60,
-                                90,
                                 100,
                                 "ft.onto.base_ontology.Sentence",
+                                60,
+                                90,
+                                0,
                                 "Positive",
                                 "student",
                                 2,
@@ -523,10 +604,11 @@ class DataStoreTest(unittest.TestCase):
                                 "bad",
                             ],
                             [
-                                65,
-                                90,
                                 5000,
                                 "ft.onto.base_ontology.Sentence",
+                                65,
+                                90,
+                                0,
                                 "Positive",
                                 "TA",
                                 3,
@@ -534,28 +616,31 @@ class DataStoreTest(unittest.TestCase):
                                 "class2",
                                 "good",
                             ],
-                        ]
-                    ),
+                        ],
+                    key=self.sorting_fn),
                     "forte.data.ontology.top.Group": [
                         [
-                            "ft.onto.base_ontology.Sentence",
-                            [9999, 1234567],
                             10123,
                             "forte.data.ontology.top.Group",
+                            [9999, 1234567],
+                            "ft.onto.base_ontology.Sentence"
                         ],
                         [
-                            "ft.onto.base_ontology.Document",
-                            [1234, 3456],
                             23456,
                             "forte.data.ontology.top.Group",
+                            [1234, 3456],
+                            "ft.onto.base_ontology.Document"
                         ],
                     ],
                     "forte.data.ontology.top.Link": [
                         [
-                            9999,
-                            1234,
                             88888,
                             "forte.data.ontology.top.Link",
+                            "ft.onto.base_ontology.Sentence",
+                            "ft.onto.base_ontology.Document",
+                            9999,
+                            1234,
+                            
                         ],
                     ],                
                 },
@@ -606,7 +691,7 @@ class DataStoreTest(unittest.TestCase):
             with self.assertRaisesRegex(
                 ValueError,
                 "Saved ft.onto.base_ontology.Document objects have unidentified"
-                " fields at indices 4, which raise an error.",
+                " fields at indices 5, which raise an error.",
             ):
                 DataStore.deserialize(
                     tmpfilepath,
@@ -626,28 +711,42 @@ class DataStoreTest(unittest.TestCase):
             DataStore._type_attributes = {
                 "ft.onto.base_ontology.Document": {
                     "attributes": {
-                        "document_class": 4,
-                        "sentiment": 5,
-                        "classifications": 6,
+                         "begin": 2,
+                        "end": 3,
+                        "payload_idx": 4,
+                        "document_class": 5,
+                        "sentiment": 6,
+                        "classifications": 7,
                     },
                     "parent_entry": "forte.data.ontology.top.Annotation",
                 },
                 "ft.onto.base_ontology.Sentence": {
                     "attributes": {
-                        "speaker": 4,
-                        "part_id": 5,
-                        "sentiment": 6,
-                        "classification": 7,
-                        "classifications": 8,
+                        "begin": 2,
+                        "end": 3,
+                        "payload_idx": 4,
+                        "speaker": 5,
+                        "part_id": 6,
+                        "sentiment": 7,
+                        "classification": 8,
+                        "classifications": 9,
                     },
                     "parent_entry": "forte.data.ontology.top.Annotation",
                 },
                 "forte.data.ontology.top.Group": {
-                    "attributes": {},
+                    "attributes": {
+                        'members': 2,
+                        'member_type': 3
+                    },
                     "parent_entry": "forte.data.ontology.core.BaseGroup",
                 },
                 "forte.data.ontology.top.Link": {
-                    "attributes": {},
+                    "attributes": {
+                        'parent_type': 2,
+                        'child_type': 3,
+                        'parent': 4,
+                        'child': 5
+                    },
                     "parent_entry": "forte.data.ontology.core.BaseLink",
                 },
             }
@@ -711,28 +810,42 @@ class DataStoreTest(unittest.TestCase):
             DataStore._type_attributes = {
                 "ft.onto.base_ontology.Document": {
                     "attributes": {
-                        "document_class": 4,
-                        "sentiment": 5,
-                        "classifications": 6,
+                        "begin": 2,
+                        "end": 3,
+                        "payload_idx": 4,
+                        "document_class": 5,
+                        "sentiment": 6,
+                        "classifications": 7,
                     },
                     "parent_entry": "forte.data.ontology.top.Annotation",
                 },
                 "ft.onto.base_ontology.Sentence": {
                     "attributes": {
-                        "speaker": 4,
-                        "part_id": 5,
-                        "sentiment": 6,
-                        "classification": 7,
-                        "classifications": 8,
+                        "begin": 2,
+                        "end": 3,
+                        "payload_idx": 4,
+                        "speaker": 5,
+                        "part_id": 6,
+                        "sentiment": 7,
+                        "classification": 8,
+                        "classifications": 9,
                     },
                     "parent_entry": "forte.data.ontology.top.Annotation",
                 },
                 "forte.data.ontology.top.Group": {
-                    "attributes": {},
+                    "attributes": {
+                        'members': 2,
+                        'member_type': 3
+                    },
                     "parent_entry": "forte.data.ontology.core.BaseGroup",
                 },
                 "forte.data.ontology.top.Link": {
-                    "attributes": {},
+                    "attributes": {
+                        'parent_type': 2,
+                        'child_type': 3,
+                        'parent': 4,
+                        'child': 5
+                    },
                     "parent_entry": "forte.data.ontology.core.BaseLink",
                 },
             }
@@ -740,56 +853,67 @@ class DataStoreTest(unittest.TestCase):
                 tmpfilepath, serialize_method="json", check_attribute=True
             )
             self.assertEqual(temp._type_attributes, DataStore._type_attributes)
+
+            self.sorting_fn = lambda s: (
+                s[2],
+                s[3],
+            )
+
             self.assertEqual(
                 temp._DataStore__elements,
                 {
                     "ft.onto.base_ontology.Document": SortedList(
                         [
                             [
-                                0,
-                                5,
                                 1234,
                                 "ft.onto.base_ontology.Document",
+                                0,
+                                5,
+                                0,
                                 None,
                                 "Positive",
                                 None,
                             ],
                             [
-                                10,
-                                25,
                                 3456,
                                 "ft.onto.base_ontology.Document",
+                                10,
+                                25,
+                                0,
                                 None,
                                 "Negative",
                                 "Class B",
                             ],
                             [
-                                20,
-                                25,
                                 5678,
                                 "ft.onto.base_ontology.Document",
+                                20,
+                                25,
+                                0,
                                 None,
                                 "Neutral",
                                 "Class D",
                             ],
                             [
-                                40,
-                                55,
                                 7890,
                                 "ft.onto.base_ontology.Document",
+                                40,
+                                55,
+                                0,
                                 None,
                                 "Very Positive",
                                 "Class E",
                             ],
                         ],
-                    ),
+                    key=self.sorting_fn),
                     "ft.onto.base_ontology.Sentence": SortedList(
                         [
                             [
-                                6,
-                                9,
                                 9999,
                                 "ft.onto.base_ontology.Sentence",
+                                6,
+                                9,
+                                0,
                                 "teacher",
                                 1,
                                 "Positive",
@@ -797,10 +921,11 @@ class DataStoreTest(unittest.TestCase):
                                 None,
                             ],
                             [
-                                55,
-                                70,
                                 1234567,
                                 "ft.onto.base_ontology.Sentence",
+                                55,
+                                70,
+                                0,
                                 None,
                                 None,
                                 "Negative",
@@ -808,10 +933,11 @@ class DataStoreTest(unittest.TestCase):
                                 "Class D",
                             ],
                             [
-                                60,
-                                90,
                                 100,
                                 "ft.onto.base_ontology.Sentence",
+                                60,
+                                90,
+                                0,
                                 "student",
                                 2,
                                 "Positive",
@@ -819,10 +945,11 @@ class DataStoreTest(unittest.TestCase):
                                 "class1",
                             ],
                             [
-                                65,
-                                90,
                                 5000,
                                 "ft.onto.base_ontology.Sentence",
+                                65,
+                                90,
+                                0,
                                 "TA",
                                 3,
                                 "Positive",
@@ -830,21 +957,24 @@ class DataStoreTest(unittest.TestCase):
                                 "class2",
                             ],
                         ],
-                    ),
+                    key=self.sorting_fn),
                     "forte.data.ontology.top.Group": [
                         [
-                            "ft.onto.base_ontology.Document",
-                            [1234, 3456],
                             23456,
                             "forte.data.ontology.top.Group",
+                            [1234, 3456],
+                            "ft.onto.base_ontology.Document"
                         ],
                     ],
                     "forte.data.ontology.top.Link": [
                         [
-                            9999,
-                            1234,
                             88888,
                             "forte.data.ontology.top.Link",
+                            "ft.onto.base_ontology.Sentence",
+                            "ft.onto.base_ontology.Document",
+                            9999,
+                            1234,
+                            
                         ],
                     ],
                 },

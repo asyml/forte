@@ -242,7 +242,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             return ""
 
     @property
-    def audio(self) -> Union[str, np.ndarray]:
+    def audio(self):
         r"""Return the audio of the data pack"""
         return self.get_payload_data_at(Modality.Audio, 0)
 
@@ -446,7 +446,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         """
         supported_modality = [enum.name for enum in Modality]
-        payload_length: int = 0
+        payloads_length: int = 0
         try:
             # if modality.name == "text":
             if modality == Modality.Text:
@@ -498,25 +498,6 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         """
         return self.get_payload_at(modality, payload_index).cache
-
-    def get_data_store_attribute_idx(
-        self, type_name: str, attr_name: str
-    ) -> int:
-        r"""Get the index at which a given attribute is stored in a
-            Data Store entry.
-
-        Args:
-            `type_name`: A string representing the type of entry whose
-            attribute index needs to be fetched.
-            `attr_name`: The name of the attribute whose index in the Data
-            Store needs to be fetched.
-
-        Returns:
-            An integer representing the position of the required attribute in
-            its Data Store entry.
-        """
-
-        return self._data_store.get_datastore_attr_idx(type_name, attr_name)
 
     def get_span_text(
         self, begin: int, end: int, text_payload_index: int = 0
@@ -1567,29 +1548,18 @@ class DataPack(BasePack[Entry, Link, Group]):
         #   better solution.
         self.__dict__.update(datapack.__dict__)
 
-    def _save_entry_to_data_store(self, entry: Entry, attribute_data: Dict):
+    def _save_entry_to_data_store(self, entry: Entry):
         r"""Save an existing entry object into DataStore"""
-        self._entry_converter.save_entry_object(
-            entry=entry, pack=self, attribute_data=attribute_data
-        )
+        self._entry_converter.save_entry_object(entry=entry, pack=self)
 
         if isinstance(entry, Payload):
-            if (
-                getattr(Modality, attribute_data["modality_name"])
-                == Modality.Text
-            ):
+            if Modality.Text.name == entry.modality_name:
                 entry.set_payload_index(len(self.text_payloads))
                 self.text_payloads.append(entry)
-            elif (
-                getattr(Modality, attribute_data["modality_name"])
-                == Modality.Audio
-            ):
+            elif Modality.Audio.name == entry.modality_name:
                 entry.set_payload_index(len(self.audio_payloads))
                 self.audio_payloads.append(entry)
-            elif (
-                getattr(Modality, attribute_data["modality_name"])
-                == Modality.Image
-            ):
+            elif Modality.Image.name == entry.modality_name:
                 entry.set_payload_index(len(self.image_payloads))
                 self.image_payloads.append(entry)
 

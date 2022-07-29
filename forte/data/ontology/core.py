@@ -99,8 +99,14 @@ class Entry(Generic[ContainerType]):
     Args:
         pack: Each entry should be associated with one pack upon creation.
     """
+    # This dict is used only at the time of creation of an entry. Many entries
+    # like Annotation require some attributes like begin and end to be set at
+    # the time of creation. This dictionry is used to set all dataclass
+    # attributes of an entry whose datastore entry needs to be created irrespective
+    # of whether a getter and setter property for its attributes is made or not.
+    cached_attribute_data = {}  # type: ignore
 
-    def __init__(self, pack: ContainerType, attribute_data: Dict):
+    def __init__(self, pack: ContainerType):
         # The Entry should have a reference to the data pack, and the data pack
         # need to store the entries. In order to resolve the cyclic references,
         # we create a generic class EntryContainer to be the place holder of
@@ -111,7 +117,7 @@ class Entry(Generic[ContainerType]):
         self._tid: int = uuid.uuid4().int
         self._embedding: np.ndarray = np.empty(0)
         self.pack._validate(self)
-        self.pack.on_entry_creation(self, attribute_data)
+        self.pack.on_entry_creation(self)
 
     # using property decorator
     # a getter function for self._embedding
@@ -492,13 +498,18 @@ class FNdArray:
 
 
 class BaseLink(Entry, ABC):
-    def __init__(self, pack: ContainerType, attribute_data: Dict):
-        super().__init__(pack, attribute_data)
+    def __init__(
+        self,
+        pack: ContainerType,
+        parent: Optional[Entry] = None,
+        child: Optional[Entry] = None,
+    ):
+        super().__init__(pack)
 
-        if attribute_data["parent"] is not None:
-            self.set_parent(attribute_data["parent"])
-        if attribute_data["child"] is not None:
-            self.set_child(attribute_data["child"])
+        if parent is not None:
+            self.set_parent(parent)
+        if child is not None:
+            self.set_child(child)
 
     @abstractmethod
     def set_parent(self, parent: Entry):
@@ -567,10 +578,12 @@ class BaseGroup(Entry, Generic[EntryType]):
     """
     MemberType: Type[EntryType]
 
-    def __init__(self, pack: ContainerType, attribute_data: Dict):
-        super().__init__(pack, attribute_data)
-        if attribute_data["members"] is not None:
-            self.add_members(attribute_data["members"])
+    def __init__(
+        self, pack: ContainerType, members: Optional[Iterable[EntryType]] = None
+    ):
+        super().__init__(pack)
+        if members is not None:
+            self.add_members(members)
 
     @abstractmethod
     def add_member(self, member: EntryType):

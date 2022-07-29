@@ -436,7 +436,6 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
     def on_entry_creation(
         self,
         entry: Entry,
-        attribute_data: Dict,
         component_name: Optional[str] = None,
     ):
         """
@@ -512,8 +511,22 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                 field_type: The type of the attribute.
             """
             attr_value: Any
+
+            try:
+                pack = cls.pack
+            except AttributeError as err:
+                if attr_name not in cls.cached_attribute_data:
+                    cls.cached_attribute_data[attr_name] = value
+                    return
+                else:
+                    raise KeyError(
+                        "You are trying to overwrite the value "
+                        f"of {attr_name} for a data store entry "
+                        "before for it is created."
+                    ) from err
+
             data_store_ref = (
-                cls.pack._data_store  # pylint: disable=protected-access
+                pack._data_store  # pylint: disable=protected-access
             )
             # Assumption: Users will not assign value to a FList/FDict field.
             # Only internal methods can set the FList/FDict field, and value's
@@ -553,13 +566,24 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                 tid=cls.tid, attr_name=attr_name, attr_value=attr_value
             )
 
+        # If this is the first time an entry of this type is
+        # created, its attributes do not have a getter and setter
+        # property associated with them. In this case, we manually
+        # add all dataclass attributes to the cached_attribute_data
+        # dict.
+        for name in entry.__dataclass_fields__:
+            if (
+                hasattr(type(entry), name)
+                and not isinstance(getattr(type(entry), name), property)
+            ) or (not hasattr(type(entry), name)):
+                entry.cached_attribute_data[name] = getattr(entry, name, None)
+
         # Save the input entry object in DataStore
-        self._save_entry_to_data_store(
-            entry=entry, attribute_data=attribute_data
-        )
+        self._save_entry_to_data_store(entry=entry)
 
         # Register property functions for all dataclass fields.
         for name, field in entry.__dataclass_fields__.items():
+
             # Convert the typing annotation to the original class.
             # This will be used to determine if a field is FList/FDict.
             field_type = get_origin(field.type)
@@ -604,7 +628,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         return self._data_store.get_entry(tid=tid)[0]
 
     @abstractmethod
-    def _save_entry_to_data_store(self, entry: Entry, attribute_data):
+    def _save_entry_to_data_store(self, entry: Entry):
         r"""Save an existing entry object into DataStore"""
         raise NotImplementedError
 

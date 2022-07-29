@@ -32,6 +32,7 @@ from forte.data.ontology.top import (
     SinglePackEntries,
     MultiPackEntries,
 )
+from forte.common import constants
 from forte.utils import get_class, get_full_module_name
 
 logger = logging.getLogger(__name__)
@@ -53,7 +54,6 @@ class EntryConverter:
         self,
         entry: Any,
         pack: PackType,
-        attribute_data: Dict,
         allow_duplicate: bool = True,
     ):
         # pylint: disable=protected-access
@@ -79,39 +79,62 @@ class EntryConverter:
                 type_name=entry.entry_type(),
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,
-                attribute_data=attribute_data,
+                # Once an attribute is accessed from the cached_attribute_data
+                # dict, it must be removed
+                attribute_data=[
+                    entry.cached_attribute_data.pop(constants.BEGIN_ATTR_NAME),
+                    entry.cached_attribute_data.pop(constants.END_ATTR_NAME),
+                ],
             )
         elif data_store_ref._is_subclass(entry.entry_type(), Link):
             data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
                 tid=entry.tid,
-                attribute_data=attribute_data,
+                # Once an attribute is accessed from the cached_attribute_data
+                # dict, it must be removed
+                attribute_data=[
+                    entry.cached_attribute_data.pop(
+                        constants.PARENT_TYPE_ATTR_NAME
+                    ),
+                    entry.cached_attribute_data.pop(
+                        constants.CHILD_TYPE_ATTR_NAME
+                    ),
+                ],
             )
         elif data_store_ref._is_subclass(entry.entry_type(), Group):
             data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
                 tid=entry.tid,
-                attribute_data=attribute_data,
+                # Once an attribute is accessed from the cached_attribute_data
+                # dict, it must be removed
+                attribute_data=[
+                    entry.cached_attribute_data.pop(
+                        constants.MEMBER_TYPE_ATTR_NAME
+                    )
+                ],
             )
         elif data_store_ref._is_subclass(entry.entry_type(), Generics):
             data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
                 tid=entry.tid,
-                attribute_data=attribute_data,
             )
         elif data_store_ref._is_subclass(entry.entry_type(), AudioAnnotation):
             data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,
-                attribute_data=attribute_data,
+                # Once an attribute is accessed from the cached_attribute_data
+                # dict, it must be removed
+                attribute_data=[
+                    entry.cached_attribute_data.pop(constants.BEGIN_ATTR_NAME),
+                    entry.cached_attribute_data.pop(constants.END_ATTR_NAME),
+                ],
             )
         elif data_store_ref._is_subclass(entry.entry_type(), ImageAnnotation):
             data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,
-                attribute_data=attribute_data,
             )
         elif data_store_ref._is_subclass(entry.entry_type(), Payload):
             entry = cast(Payload, entry)
@@ -119,7 +142,6 @@ class EntryConverter:
                 type_name=entry.entry_type(),
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,
-                attribute_data=attribute_data,
             )
         elif data_store_ref._is_subclass(entry.entry_type(), Grids):
             # Will be deprecated in future
@@ -127,25 +149,38 @@ class EntryConverter:
                 type_name=entry.entry_type(),
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,
-                attribute_data=attribute_data,
             )
         elif data_store_ref._is_subclass(entry.entry_type(), MultiPackLink):
             data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
-                attribute_data=attribute_data,
                 tid=entry.tid,
+                # Once an attribute is accessed from the cached_attribute_data
+                # dict, it must be removed
+                attribute_data=[
+                    entry.cached_attribute_data.pop(
+                        constants.PARENT_TYPE_ATTR_NAME
+                    ),
+                    entry.cached_attribute_data.pop(
+                        constants.CHILD_TYPE_ATTR_NAME
+                    ),
+                ],
             )
         elif data_store_ref._is_subclass(entry.entry_type(), MultiPackGroup):
             data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
-                attribute_data=attribute_data,
                 tid=entry.tid,
+                # Once an attribute is accessed from the cached_attribute_data
+                # dict, it must be removed
+                attribute_data=[
+                    entry.cached_attribute_data.pop(
+                        constants.MEMBER_TYPE_ATTR_NAME
+                    )
+                ],
             )
         elif data_store_ref._is_subclass(entry.entry_type(), MultiPackGeneric):
             data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
                 tid=entry.tid,
-                attribute_data=attribute_data,
             )
         else:
             valid_entries: str = ", ".join(
@@ -157,8 +192,8 @@ class EntryConverter:
             )
 
         # Store all the dataclass attributes to DataStore
-        for attribute in entry.__dataclass_fields__:
-            value = getattr(entry, attribute, None)
+        for attribute, value in entry.cached_attribute_data.items():
+            # value = getattr(entry, attribute, None)
             if not value:
                 continue
             if isinstance(value, Entry):
@@ -171,6 +206,8 @@ class EntryConverter:
                 tid=entry.tid, attr_name=attribute, attr_value=value
             )
 
+        # Empty the cache of the attribute data in Entry
+        entry.cached_attribute_data.clear()
         # Cache the stored entry and its tid
         self._entry_dict[entry.tid] = entry
 

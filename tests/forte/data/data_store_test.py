@@ -422,7 +422,7 @@ class DataStoreTest(unittest.TestCase):
         for i in range(add_count):
             self.data_store.add_entry_raw(
                 type_name="ft.onto.base_ontology.Sentence",
-                attribute_data={"begin": i, "end": i + 1},
+                attribute_data=[i, i + 1],
             )
         self.assertEqual(
             self.data_store.num_entries(sent_type),
@@ -640,13 +640,13 @@ class DataStoreTest(unittest.TestCase):
         # test add Document entry
         tid_doc: int = self.data_store.add_entry_raw(
             type_name="ft.onto.base_ontology.Document",
-            attribute_data={"begin": 1, "end": 5, "payload_idx": 0},
+            attribute_data=[1,5],
         )
 
         # test add Sentence entry
         tid_sent: int = self.data_store.add_entry_raw(
             type_name="ft.onto.base_ontology.Sentence",
-            attribute_data={"begin": 5, "end": 8},
+            attribute_data=[5,8],
         )
         num_doc = self.data_store.get_length("ft.onto.base_ontology.Document")
 
@@ -678,7 +678,7 @@ class DataStoreTest(unittest.TestCase):
         # test add new annotation type
         tid_em: int = self.data_store.add_entry_raw(
             type_name="ft.onto.base_ontology.EntityMention",
-            attribute_data={"begin": 10, "end": 12, "payload_idx": 1},
+            attribute_data=[10,12],
         )
         num_phrase = self.data_store.get_length(
             "ft.onto.base_ontology.EntityMention"
@@ -688,14 +688,14 @@ class DataStoreTest(unittest.TestCase):
         self.assertEqual(len(self.data_store._DataStore__tid_ref_dict), 8)
         self.assertEqual(
             self.data_store.get_entry(tid=tid_em)[0],
-            [tid_em, "ft.onto.base_ontology.EntityMention", 10, 12, 1, None],
+            [tid_em, "ft.onto.base_ontology.EntityMention", 10, 12, 0, None],
         )
 
         # test add duplicate Sentence entry
         tid_sent_duplicate: int = self.data_store.add_entry_raw(
             type_name="ft.onto.base_ontology.Sentence",
             allow_duplicate=False,
-            attribute_data={"begin": 5, "end": 8, "payload_idx": 0},
+            attribute_data=[5,8],
         )
         self.assertEqual(
             len(
@@ -709,7 +709,7 @@ class DataStoreTest(unittest.TestCase):
         self.data_store.add_entry_raw(
             type_name="ft.onto.base_ontology.Sentence",
             allow_duplicate=False,
-            attribute_data={"begin": 5, "end": 9, "payload_idx": 1},
+            attribute_data=[5,9],
         )
         self.assertEqual(
             len(
@@ -725,7 +725,7 @@ class DataStoreTest(unittest.TestCase):
         self.data_store.add_entry_raw(
             type_name="ft.onto.base_ontology.Sentence",
             tid=tid,
-            attribute_data={"begin": 0, "end": 1, "payload_idx": 1},
+            attribute_data=[0,1],
         )
         self.assertEqual(
             self.data_store.get_entry(tid=77)[0],
@@ -734,7 +734,7 @@ class DataStoreTest(unittest.TestCase):
                 "ft.onto.base_ontology.Sentence",
                 0,
                 1,
-                1,
+                0,
                 None,
                 None,
                 {},
@@ -747,16 +747,16 @@ class DataStoreTest(unittest.TestCase):
         # test add Document entry
         tid_recording: int = self.data_store.add_entry_raw(
             type_name="ft.onto.base_ontology.Recording",
-            attribute_data={"begin": 1, "end": 5, "payload_idx": 1},
+            attribute_data=[1,5],
         )
         # test add Sentence entry
         tid_audio_utterance: int = self.data_store.add_entry_raw(
             type_name="ft.onto.base_ontology.AudioUtterance",
-            attribute_data={"begin": 5, "end": 8, "payload_idx": 1},
+            attribute_data=[5,8],
         )
         tid_utterance: int = self.data_store.add_entry_raw(
             type_name="ft.onto.base_ontology.Utterance",
-            attribute_data={"begin": 5, "end": 8, "payload_idx": 0},
+            attribute_data=[5,8],
         )
         # check number of Recording
         self.assertEqual(
@@ -789,7 +789,7 @@ class DataStoreTest(unittest.TestCase):
         self.data_store.add_entry_raw(
             type_name="ft.onto.base_ontology.Recording",
             tid=tid,
-            attribute_data={"begin": 0, "end": 1, "payload_idx": 0},
+            attribute_data=[0,1],
         )
         self.assertEqual(
             self.data_store.get_entry(tid=77)[0],
@@ -813,7 +813,6 @@ class DataStoreTest(unittest.TestCase):
         tid = 77
         self.data_store.add_entry_raw(
             type_name="forte.data.ontology.top.Generics",
-            attribute_data={},
             tid=tid,
         )
         self.assertEqual(
@@ -824,12 +823,7 @@ class DataStoreTest(unittest.TestCase):
     def test_add_link_raw(self):
         self.data_store.add_entry_raw(
             type_name="forte.data.ontology.top.Link",
-            attribute_data={
-                "parent": 9999,
-                "child": 1234567,
-                "parent_type": Sentence,
-                "child_type": Sentence,
-            },
+            attribute_data=[Sentence, Document]
         )
         # check number of Link
         self.assertEqual(
@@ -845,12 +839,7 @@ class DataStoreTest(unittest.TestCase):
         tid = 77
         self.data_store.add_entry_raw(
             type_name="forte.data.ontology.top.Link",
-            attribute_data={
-                "parent": 0,
-                "child": 1,
-                "parent_type": Sentence,
-                "child_type": Document,
-            },
+            attribute_data=[Sentence, Document],
             tid=tid,
         )
         self.assertEqual(
@@ -860,15 +849,15 @@ class DataStoreTest(unittest.TestCase):
                 "forte.data.ontology.top.Link",
                 "ft.onto.base_ontology.Sentence",
                 "ft.onto.base_ontology.Document",
-                0,
-                1,
+                None,
+                None,
             ],
         )
 
     def test_add_group_raw(self):
         self.data_store.add_entry_raw(
             type_name="forte.data.ontology.top.Group",
-            attribute_data={"member_type": Document, "members": []},
+            attribute_data=[Document],
         )
         # check number of Group
         self.assertEqual(
@@ -884,7 +873,7 @@ class DataStoreTest(unittest.TestCase):
         tid = 77
         self.data_store.add_entry_raw(
             type_name="forte.data.ontology.top.Group",
-            attribute_data={"member_type": Sentence, "members": []},
+            attribute_data=[Sentence],
             tid=tid,
         )
         self.assertEqual(
@@ -900,7 +889,6 @@ class DataStoreTest(unittest.TestCase):
     def test_add_multientry_raw(self):
         self.data_store.add_entry_raw(
             type_name="forte.data.ontology.top.MultiPackGeneric",
-            attribute_data={},
         )
         # check number of MultiPackGeneric
         self.assertEqual(
@@ -914,7 +902,7 @@ class DataStoreTest(unittest.TestCase):
 
         self.data_store.add_entry_raw(
             type_name="forte.data.ontology.top.MultiPackGroup",
-            attribute_data={"member_type": Sentence},
+            attribute_data=[Sentence],
         )
         # check number of MultiPackGeneric
         self.assertEqual(
@@ -928,12 +916,7 @@ class DataStoreTest(unittest.TestCase):
 
         self.data_store.add_entry_raw(
             type_name="forte.data.ontology.top.MultiPackLink",
-            attribute_data={
-                "parent": 9999,
-                "child": 1234,
-                "parent_type": Sentence,
-                "child_type": Document,
-            },
+            attribute_data=[Sentence, Document]
         )
         # check number of MultiPackGeneric
         self.assertEqual(
@@ -949,12 +932,10 @@ class DataStoreTest(unittest.TestCase):
         tid = 77
         self.data_store.add_entry_raw(
             type_name="forte.data.ontology.top.MultiPackLink",
-            attribute_data={
-                "parent": 10,
-                "child": 20,
-                "parent_type": Sentence,
-                "child_type": Document,
-            },
+            attribute_data=[
+                Sentence,
+                Document
+            ],
             tid=tid,
         )
         self.assertEqual(
@@ -964,8 +945,8 @@ class DataStoreTest(unittest.TestCase):
                 "forte.data.ontology.top.MultiPackLink",
                 "ft.onto.base_ontology.Sentence",
                 "ft.onto.base_ontology.Document",
-                10,
-                20,
+                None,
+                None,
             ],
         )
 
