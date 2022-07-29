@@ -804,7 +804,6 @@ class DataStore(BaseStore):
                 Group,
                 Generics,
                 ImageAnnotation,
-                Grids,
                 Payload,
                 MultiPackLink,
                 MultiPackGroup,

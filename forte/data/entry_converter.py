@@ -142,14 +142,6 @@ class EntryConverter:
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,
             )
-        elif data_store_ref._is_subclass(entry.entry_type(), Grids):
-            # Will be deprecated in future
-            data_store_ref.add_entry_raw(
-                type_name=entry.entry_type(),
-                tid=entry.tid,
-                allow_duplicate=allow_duplicate,
-            )
-
         elif data_store_ref._is_subclass(entry.entry_type(), MultiPackLink):
             data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
