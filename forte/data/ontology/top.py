@@ -231,8 +231,8 @@ class Link(BaseLink):
     """
     # this type Any is needed since subclasses of this class will have new types
 
-    parent_type: Any
-    child_type: Any
+    parent_type: Any = Entry
+    child_type: Any = Entry
     parent: Optional[int] = None
     child: Optional[int] = None
 
@@ -385,8 +385,8 @@ class MultiPackLink(MultiEntry, BaseLink):
     integers, one additional index on which pack it comes from.
     """
 
-    parent_type: Any
-    child_type: Any
+    parent_type: Any = Entry
+    child_type: Any = Entry
     parent: Tuple = (None, None)
     child: Tuple = (None, None)
 

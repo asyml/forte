@@ -287,22 +287,38 @@ class DataStore(BaseStore):
         self._DataStore__deletion_count = {}
 
         reset_index = {}
-        begin_idx: int
-        end_idx: int
+
+        def get_sorting_fn(type_name: str):
+            r"""
+            This function creates a lambda method to generate the sorted
+            list of an entry of given type
+
+            Args:
+                type_name: A string representing a fully qualified type
+                    name of the entry whose sorting function we want to
+                    fetch.
+
+            Returns:
+                A lambda function representing the sorting function for
+                entries of type `type_name`.
+            """
+            return lambda s: (
+                s[
+                    self.get_datastore_attr_idx(
+                        type_name, constants.BEGIN_ATTR_NAME
+                    )
+                ],
+                s[
+                    self.get_datastore_attr_idx(
+                        type_name, constants.END_ATTR_NAME
+                    )
+                ],
+            )
+
         for k in self.__elements:
             if self._is_annotation(k):
                 # convert list back to sorted list
-                begin_idx = self.get_datastore_attr_idx(
-                    k, constants.BEGIN_ATTR_NAME
-                )
-                end_idx = self.get_datastore_attr_idx(
-                    k, constants.END_ATTR_NAME
-                )
-
-                sorting_fn = lambda s: (
-                    s[begin_idx],
-                    s[end_idx],
-                )
+                sorting_fn = get_sorting_fn(k)
                 self.__elements[k] = SortedList(
                     self.__elements[k], key=sorting_fn
                 )
