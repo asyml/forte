@@ -20,6 +20,7 @@ import unittest
 from typing import List, Tuple
 
 from forte.data.data_pack import DataPack
+from forte.data.ontology.top import Annotation
 from forte.pipeline import Pipeline
 from forte.utils import utils
 from ft.onto.base_ontology import (
@@ -31,6 +32,7 @@ from ft.onto.base_ontology import (
     PredicateLink,
     PredicateMention,
     CoreferenceGroup,
+    Phrase,
 )
 from forte.data.readers import OntonotesReader
 
@@ -167,6 +169,114 @@ class DataPackTest(unittest.TestCase):
                 ("trying", "to influence American policy on China", "ARG1"),
                 ("influence", "he", "ARG0"),
                 ("influence", "American policy on China", "ARG1"),
+            ],
+        )
+
+        # Case 3: Get Child entries when fetching parents with include_sub_type
+        all_anno: List[Tuple[int, str]] = []
+        for doc in self.data_pack.get(Document):
+            for anno in self.data_pack.get(Annotation, doc):
+                # Just to make the test case concise,
+                # We will only consider Sentence, EntityMention
+                # and PredicateArgument
+                if any(
+                    isinstance(anno, check)
+                    for check in [Sentence, EntityMention, PredicateArgument]
+                ):
+                    all_anno.append(
+                        [type(anno).__name__, anno.text, anno.begin, anno.end]
+                    )
+
+        self.assertEqual(
+            all_anno,
+            [
+                [
+                    "EntityMention",
+                    "The Indonesian billionaire James Riady",
+                    0,
+                    38,
+                ],
+                [
+                    "PredicateArgument",
+                    "The Indonesian billionaire James Riady",
+                    0,
+                    38,
+                ],
+                [
+                    "PredicateArgument",
+                    "The Indonesian billionaire James Riady",
+                    0,
+                    38,
+                ],
+                [
+                    "PredicateArgument",
+                    "The Indonesian billionaire James Riady",
+                    0,
+                    38,
+                ],
+                [
+                    "Sentence",
+                    "The Indonesian billionaire James Riady has agreed to pay $ 8.5 million "
+                    "and plead guilty to illegally donating money for Bill Clinton 's 1992 presidential "
+                    "campaign .",
+                    0,
+                    164,
+                ],
+                ["EntityMention", "Indonesian", 4, 14],
+                ["EntityMention", "James Riady", 27, 38],
+                [
+                    "PredicateArgument",
+                    "to pay $ 8.5 million and plead guilty to illegally donating money "
+                    "for Bill Clinton 's 1992 presidential campaign",
+                    50,
+                    162,
+                ],
+                ["EntityMention", "$ 8.5 million", 57, 70],
+                ["PredicateArgument", "$ 8.5 million", 57, 70],
+                ["PredicateArgument", "guilty", 81, 87],
+                [
+                    "PredicateArgument",
+                    "to illegally donating money for Bill Clinton 's 1992 "
+                    "presidential campaign",
+                    88,
+                    162,
+                ],
+                ["PredicateArgument", "illegally", 91, 100],
+                ["PredicateArgument", "money", 110, 115],
+                [
+                    "PredicateArgument",
+                    "for Bill Clinton 's 1992 presidential campaign",
+                    116,
+                    162,
+                ],
+                ["EntityMention", "Bill Clinton 's", 120, 135],
+                ["EntityMention", "1992", 136, 140],
+                ["EntityMention", "He", 165, 167],
+                ["PredicateArgument", "He", 165, 167],
+                [
+                    "Sentence",
+                    "He admits he was trying to influence American policy on China .",
+                    165,
+                    228,
+                ],
+                ["EntityMention", "he", 175, 177],
+                ["PredicateArgument", "he", 175, 177],
+                ["PredicateArgument", "he", 175, 177],
+                [
+                    "PredicateArgument",
+                    "he was trying to influence American policy on China",
+                    175,
+                    226,
+                ],
+                [
+                    "PredicateArgument",
+                    "to influence American policy on China",
+                    189,
+                    226,
+                ],
+                ["EntityMention", "American", 202, 210],
+                ["PredicateArgument", "American policy on China", 202, 226],
+                ["EntityMention", "China", 221, 226],
             ],
         )
 

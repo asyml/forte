@@ -19,7 +19,7 @@ from forte.data.modality import Modality
 import numpy as np
 
 from numpy import array_equal
-from forte.data.ontology.top import ImageAnnotation
+from forte.data.ontology.top import Box, ImageAnnotation
 
 from ft.onto.base_ontology import ImagePayload
 
@@ -29,7 +29,7 @@ import unittest
 
 class ImageAnnotationTest(unittest.TestCase):
     """
-    Test ImageAnnotation related ontologies like Edge and BoundingBox.
+    Test ImageAnnotation related ontologies like Edge and Box.
     """
 
     def setUp(self):
@@ -56,3 +56,41 @@ class ImageAnnotationTest(unittest.TestCase):
         self.assertEqual(
             new_pack.audio_annotations, self.datapack.audio_annotations
         )
+
+    def testBox(self):
+
+        b1 = Box(self.datapack, [2, 2], [7, 7], 0)
+        self.assertEqual(b1.corners, [(2, 2), (2, 7), (7, 2), (7, 7)])
+        self.assertEqual(b1.area, 25)
+        self.assertEqual(b1.center, (4, 4))
+
+        b2 = Box.init_from_center_n_shape(self.datapack, 4, 4, 5, 5)
+        self.assertEqual(b2.corners, [(2, 2), (2, 7), (7, 2), (7, 7)])
+        self.assertEqual(b2.area, 25)
+        self.assertEqual(b2.center, (4, 4))
+
+        def wrong_box():
+            # negative x coordinate
+            Box(self.datapack, [-2, 2], [7, 7], 0)
+
+        self.assertRaises(ValueError, wrong_box)
+
+        def wrong_box():
+            # negative y coordinate
+            Box(self.datapack, [2, -2], [7, 7], 0)
+
+        self.assertRaises(ValueError, wrong_box)
+
+        def wrong_box():
+            # negative width
+            Box(self.datapack, [3, 2], [2, 7], 0)
+
+        self.assertRaises(ValueError, wrong_box)
+
+        def wrong_box():
+            # negative height
+            Box(self.datapack, [2, 2], [2, 1], 0)
+
+        self.assertRaises(ValueError, wrong_box)
+
+        b3 = Box.init_from_center_n_shape(self.datapack, 4, 4, 5, 5)
