@@ -231,10 +231,10 @@ class Link(BaseLink):
     """
     # this type Any is needed since subclasses of this class will have new types
 
-    parent_type: Any = Entry
-    child_type: Any = Entry
-    parent: Optional[int] = None
-    child: Optional[int] = None
+    parent_type: Any
+    child_type: Any
+    parent: Optional[int]
+    child: Optional[int]
 
     ParentType = Entry
     ChildType = Entry
@@ -385,10 +385,10 @@ class MultiPackLink(MultiEntry, BaseLink):
     integers, one additional index on which pack it comes from.
     """
 
-    parent_type: Any = Entry
-    child_type: Any = Entry
-    parent: Tuple = (None, None)
-    child: Tuple = (None, None)
+    parent_type: Any
+    child_type: Any
+    parent: Tuple
+    child: Tuple
 
     ParentType = Entry
     ChildType = Entry
@@ -519,8 +519,8 @@ class MultiPackGroup(MultiEntry, BaseGroup[Entry]):
     r"""Group type entries, such as "coreference group". Each group has a set
     of members.
     """
-    member_type: Type[Entry] = Entry
-    members: Optional[FList[Entry]] = None
+    member_type: Type[Entry]
+    members: Optional[FList[Entry]]
 
     MemberType = Entry
 
@@ -1018,7 +1018,7 @@ class Payload(Entry):
 
     payload_idx: int
     modality_name: str
-    uri: Optional[str] = None
+    uri: Optional[str]
 
     def __init__(
         self,
