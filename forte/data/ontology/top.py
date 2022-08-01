@@ -93,13 +93,10 @@ class Annotation(Entry):
     end: int
     payload_idx: int
 
-    def __init__(
-        self, pack: PackType, begin: int, end: int, text_payload_idx: int = 0
-    ):
+    def __init__(self, pack: PackType, begin: int, end: int):
         self._span: Optional[Span] = None
         self.begin: int = begin
         self.end: int = end
-        self.payload_idx: int = text_payload_idx
         super().__init__(pack)
 
     def __getstate__(self):
@@ -609,14 +606,11 @@ class AudioAnnotation(Entry):
     end: int
     payload_idx: int
 
-    def __init__(
-        self, pack: PackType, begin: int, end: int, audio_payload_idx: int = 0
-    ):
+    def __init__(self, pack: PackType, begin: int, end: int):
 
         self._span: Optional[Span] = None
         self.begin: int = begin
         self.end: int = end
-        self.payload_idx: int = audio_payload_idx
         super().__init__(pack)
 
     @property

@@ -890,7 +890,7 @@ class DataStore(BaseStore):
 
         Args:
             type_name (str): The fully qualified type name of the entry.
-            attr (str): The name of the attribute whose index beeds to be fetched.
+            attr (str): The name of the attribute whose index needs to be fetched.
 
         Returns:
             An integer representing the attributes position in the Data
@@ -917,7 +917,7 @@ class DataStore(BaseStore):
         `member_type` is converted from an object to `str`.
 
         Args:
-            entry (list): The initial version of the dtaa store entry
+            entry (list): The initial version of the data store entry
                 whose values need to be validated.
 
         Returns:

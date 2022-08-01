@@ -21,6 +21,7 @@ from abc import abstractmethod, ABC
 from collections.abc import MutableSequence, MutableMapping
 from dataclasses import dataclass
 from typing import (
+    Any,
     Iterable,
     Optional,
     Tuple,
@@ -500,6 +501,11 @@ class FNdArray:
 
 
 class BaseLink(Entry, ABC):
+
+    # this type Any is needed since subclasses of this class will have new types
+    ParentType: Any = Entry
+    ChildType: Any = Entry
+
     def __init__(
         self,
         pack: ContainerType,
