@@ -483,6 +483,14 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                 # Check dataclass attribute value type
                 # If the attribute was an Entry object, only its tid
                 # is stored in the DataStore and hence its needs to be converted.
+
+                # Entry objects are stored in data stores by their tid (which is
+                # of type int). Thus, if we enounter an int value, we check the
+                # type information which is stored as a tuple. if any entry in this
+                # tuple is a subclass of Entry or is a ForwardRef to another entry,
+                # we can infer that this int value represents the tid of an Entry
+                # object and thus must be converted to an object using get_entry
+                # before returning.
                 if (
                     isinstance(attr_val, int)
                     and entry_type[1]
@@ -571,7 +579,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         self._save_entry_to_data_store(entry=entry)
 
         # Register property functions for all dataclass fields.
-        for name, _ in entry.__dataclass_fields__.items():
+        for name in entry.__dataclass_fields__:
             # Convert the typing annotation to the original class.
             # This will be used to determine if a field is FList/FDict.
             setattr(

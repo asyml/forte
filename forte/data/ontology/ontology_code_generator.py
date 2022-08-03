@@ -811,6 +811,10 @@ class OntologyCodeGenerator:
                 # Add entry item to the writer.
                 module_writer.add_entry(en, entry_item)
 
+            valid_properties = set(
+                val[0] for val in self.allowed_types_tree[en.class_name]
+            )
+
             # Adding entry attributes to the allowed types for validation.
             for property in properties:
                 property_name = property[0]
@@ -821,9 +825,7 @@ class OntologyCodeGenerator:
                         f"python identifier."
                     )
 
-                if property_name in set(
-                    val[0] for val in self.allowed_types_tree[en.class_name]
-                ):
+                if property_name in valid_properties:
                     warnings.warn(
                         f"Attribute type for the entry {en.class_name} "
                         f"and the attribute {property_name} already present in "
@@ -1036,6 +1038,10 @@ class OntologyCodeGenerator:
         property_items, property_names = [], []
         for prop_schema in properties:
             # TODO: add test
+
+            # the prop attributes will store the properties of each attribute
+            # of the the entry defined by the ontology. The properties are
+            # the name of the attribute and its data type.
             prop = (prop_schema["name"], prop_schema["type"])
 
             if prop_schema["name"] in RESERVED_ATTRIBUTE_NAMES:

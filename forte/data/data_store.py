@@ -162,10 +162,15 @@ class DataStore(BaseStore):
         The keys are fully qualified names of every type; The value is a
         dictionary with two keys. Key ``attribute`` provides an inner dictionary
         with all valid attributes for this type and the information of attributes
-        among these lists. This is information is represented as a dictionary. The
-        information represented in this dictionary is the index of the attribute
-        and the type of the variable it stores. Key ``parent_class`` is a string
-        representing the ancestors of this type.
+        among these lists. This information is represented as a dictionary. The
+        dictionary has two entries, the first is index which determines the position
+        where an attribute is stored in a data store entry. The second is type, which
+        is a tuple of two elements that provides the type information of a given
+        attribute. The first element is the unsubscripted version of
+        the attribute's type and the second element is the type arguments
+        for the same. The information represented in this dictionary is the index of
+        the attribute and the type of the variable it stores. Key ``parent_class`` is
+        a string representing the ancestors of this type.
 
         This structure is supposed to be built dynamically. When a user adds
         new entries, `DataStore` will check unknown types and add them to
@@ -274,26 +279,24 @@ class DataStore(BaseStore):
 
         # Make a copy of the updated type_attributes
         type_attributes = deepcopy(DataStore._type_attributes)
-        state["_type_attributes"] = DataStore._type_attributes
+        state["fields"] = DataStore._type_attributes
 
         for k in self.__elements:
             # build the full `_type_attributes`
             self._get_type_info(k)
-            for _, info in state["_type_attributes"][k][
-                constants.TYPE_ATTR_KEY
-            ].items():
-                info.pop(constants.ATTR_TYPE_KEY)
-
             state["_DataStore__elements"][k] = list(self.__elements[k])
 
         state.pop("_DataStore__tid_ref_dict")
         state.pop("_DataStore__tid_idx_dict")
         state.pop("_DataStore__deletion_count")
         state["entries"] = state.pop("_DataStore__elements")
-        state["fields"] = state.pop("_type_attributes")
         for _, v in state["fields"].items():
             if constants.PARENT_CLASS_KEY in v:
                 v.pop(constants.PARENT_CLASS_KEY)
+
+            if constants.ATTR_INFO_KEY in v:
+                for _, info in v[constants.ATTR_INFO_KEY].items():
+                    info.pop(constants.ATTR_TYPE_KEY)
         DataStore._type_attributes = type_attributes
         return state
 
@@ -314,11 +317,11 @@ class DataStore(BaseStore):
         # Update `_type_attributes` to store the types of each
         # entry attribute as well.
         for tn in self._type_attributes:
-            entry_type = self._add_entry_types(tn)
+            entry_type = self._new_entry_types(tn)
             for attr, type_val in entry_type.items():
                 try:
                     info_dict = self._type_attributes[tn][
-                        constants.TYPE_ATTR_KEY
+                        constants.ATTR_INFO_KEY
                     ][attr]
                 except KeyError:
                     continue
@@ -439,7 +442,7 @@ class DataStore(BaseStore):
                 # name and index
                 get_temp_rep = lambda entry: set(
                     (attr, val[constants.ATTR_INDEX_KEY])
-                    for attr, val in entry[constants.TYPE_ATTR_KEY].items()
+                    for attr, val in entry[constants.ATTR_INFO_KEY].items()
                 )
 
                 temp_cls_rep = get_temp_rep(v)
@@ -452,12 +455,12 @@ class DataStore(BaseStore):
                     # fields to match the order of the current class.
                     if (
                         f[0]
-                        in store._type_attributes[t][constants.TYPE_ATTR_KEY]
+                        in store._type_attributes[t][constants.ATTR_INFO_KEY]
                     ):
                         # record indices of the same field in the class and
                         # objects. Save different indices to a dictionary.
                         change_map[f[1]] = store._type_attributes[t][
-                            constants.TYPE_ATTR_KEY
+                            constants.ATTR_INFO_KEY
                         ][f[0]][constants.ATTR_INDEX_KEY]
                     # record indices of fields that only appear in the
                     # current class. We want to fill them with None.
@@ -484,7 +487,7 @@ class DataStore(BaseStore):
                                 max(
                                     info[constants.ATTR_INDEX_KEY]
                                     for info in v[
-                                        constants.TYPE_ATTR_KEY
+                                        constants.ATTR_INFO_KEY
                                     ].values()
                                 )
                                 + 1
@@ -546,7 +549,8 @@ class DataStore(BaseStore):
         ``DataStore._type_attributes``. If the ``type_name`` does not currently
         exists and dynamic import is enabled, this function will add a new
         key-value pair into ``DataStore._type_attributes``. The value consists
-        of a full attribute-to-index dictionary and an empty parent set.
+        a dictionary which stores the name and the type information of every
+        attribute of the entry and an empty parent set.
 
         This function returns a dictionary containing an attribute dict and a
         set of parent entries of the given type. For example:
@@ -577,7 +581,7 @@ class DataStore(BaseStore):
         # check if type is in dictionary
         if (
             type_name in DataStore._type_attributes
-            and constants.TYPE_ATTR_KEY in DataStore._type_attributes[type_name]
+            and constants.ATTR_INFO_KEY in DataStore._type_attributes[type_name]
         ):
             return DataStore._type_attributes[type_name]
         if not self._dynamically_add_type:
@@ -592,7 +596,7 @@ class DataStore(BaseStore):
 
         attr_dict = {}
         attr_idx = constants.ENTRY_TYPE_INDEX + 1
-        type_dict = self._add_entry_types(type_name)
+        type_dict = self._new_entry_types(type_name)
 
         for attr_name in attributes:
             attr_dict[attr_name] = {
@@ -602,7 +606,7 @@ class DataStore(BaseStore):
             attr_idx += 1
 
         new_entry_info = {
-            constants.TYPE_ATTR_KEY: attr_dict,
+            constants.ATTR_INFO_KEY: attr_dict,
             constants.PARENT_CLASS_KEY: set(),
         }
         DataStore._type_attributes[type_name] = new_entry_info
@@ -627,7 +631,7 @@ class DataStore(BaseStore):
         Returns:
             attr_dict (dict): The attribute-to-index dictionary of an entry.
         """
-        return self._get_type_info(type_name)[constants.TYPE_ATTR_KEY]
+        return self._get_type_info(type_name)[constants.ATTR_INFO_KEY]
 
     def _get_type_parent(self, type_name: str) -> str:
         """Get a set of parent names of an entry type. The set is a subset of all
@@ -667,24 +671,41 @@ class DataStore(BaseStore):
                 attr_list[attr_id - constants.ATTR_BEGIN_INDEX] = {}
         return attr_list
 
-    def _add_entry_types(
+    def _new_entry_types(
         self, type_name: str, attributes: Optional[Set[Tuple[str, str]]] = None
     ) -> Dict[str, Tuple]:
-        r"""This function takes a fully qualified ``type_name`` class name,
-        adds the type of all its dataclass attributes to the
-        `_entry_type_dict` dictionary class variable.
+        r"""This function takes a fully qualified ``type_name`` class name
+        and creates a dictionary where the key is attribute of the entry
+        and value is the type information of that attribute. For example,
+
+        .. code-block:: python
+
+            type_dict =  {
+                        "document_class": (list, (str,)),
+                        "sentiment": (dict, (str, float)),
+                        "classifications": (FDict, (str, Classification))
+                    }
+
+        For each attribute, the type information is represented by a tuple
+        of two elements. The first element is the unsubscripted version of
+        the attribute's type and the second element is the type arguments
+        for the same. The `type_dict` is used to populate the type
+        information for attributes of an entry specified by ``type_name``
+        in `_type_attributes`.
+
 
         Args:
             type_name: A fully qualified name of an entry class.
             attributes: This argument is used when parsing ontology
                 files. The entries in the set are a tuples of two
                 elements.
+
                 .. code-block:: python
 
-                attributes =  {
-                            ('passage_id', 'str'),
-                            ('author', 'str')
-                        }
+                    attributes =  {
+                                ('passage_id', 'str'),
+                                ('author', 'str')
+                            }
         """
         type_dict = {}
         attr_class: Any
@@ -692,6 +713,14 @@ class DataStore(BaseStore):
 
         if attributes:
             for attr, type_val in attributes:
+                # the type_dict only stores the type of each
+                # attribute class. When attributes and their
+                # types are defined in ontology files, these
+                # values are stored in attr_args. attr_class
+                # is empty in this case and has a value of
+                # None. But to maintain the consistency of
+                # type_dict, we only store the type of every
+                # value, even None.
                 attr_class = type(None)
                 attr_args = tuple([get_class(type_val)])
                 type_dict[attr] = tuple([attr_class, attr_args])
@@ -819,12 +848,13 @@ class DataStore(BaseStore):
         """
         try:
             return DataStore._type_attributes[type_name][
-                constants.TYPE_ATTR_KEY
+                constants.ATTR_INFO_KEY
             ][attr_name][constants.ATTR_TYPE_KEY]
         except KeyError as e:
             raise KeyError(
                 f"Attribute {attr_name} does not have type "
-                "information provided"
+                f"information provided or attribute {attr_name}"
+                f"is not a valid attribute of entry {type_name}"
             ) from e
 
     def all_entries(self, entry_type_name: str) -> Iterator[List]:
@@ -1771,6 +1801,8 @@ class DataStore(BaseStore):
 
         children = entry_tree.root.children
         while len(children) > 0:
+            # entry_node represents a node in the ontology tree
+            # generated by parsing an existing ontology file
             entry_node = children.pop(0)
             children.extend(entry_node.children)
 
@@ -1780,7 +1812,7 @@ class DataStore(BaseStore):
             attr_dict = {}
             idx = constants.ATTR_BEGIN_INDEX
 
-            type_dict = self._add_entry_types(entry_name, entry_node.attributes)
+            type_dict = self._new_entry_types(entry_name, entry_node.attributes)
 
             # sort the attribute dictionary
             for d in sorted(entry_node.attributes):
@@ -1794,7 +1826,7 @@ class DataStore(BaseStore):
             entry_dict = {}
             entry_dict[constants.PARENT_CLASS_KEY] = set()
             entry_dict[constants.PARENT_CLASS_KEY].add(entry_node.parent.name)
-            entry_dict[constants.TYPE_ATTR_KEY] = attr_dict
+            entry_dict[constants.ATTR_INFO_KEY] = attr_dict
             DataStore._type_attributes[entry_name] = entry_dict
 
     def _init_top_to_core_entries(self):
