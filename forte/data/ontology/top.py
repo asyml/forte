@@ -1273,6 +1273,11 @@ class Payload(Entry):
         else:
             state["_embedding"] = np.empty(0)
 
+        # Here we assume that if the payload is not text (in which case
+        # cache is stored a string), cache will always be stored as a
+        # numpy array (which is converted to a list during serialization).
+        # This check can be made more comprehensive when new types of
+        # payloads are introduced.
         if "_cache" in state and isinstance(state["_cache"], list):
             state["_cache"] = np.array(state["_cache"])
 

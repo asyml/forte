@@ -323,6 +323,13 @@ class DataStore(BaseStore):
                     info_dict = self._type_attributes[tn][
                         constants.ATTR_INFO_KEY
                     ][attr]
+
+                # If in case there is an attribute of entry
+                # referenced by tn which is defined in the
+                # _type_attributes dict of DataStore but not
+                # in the serialized data of _type_attributes,
+                # we dont need to add type information for
+                # that attribute.
                 except KeyError:
                     continue
                 if constants.ATTR_TYPE_KEY not in info_dict:
