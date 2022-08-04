@@ -28,13 +28,13 @@ ENTRY_DICT_ENTRY_INDEX = 1
 # The name of the attribute storing the parent entry tid in Link entries
 PARENT_TID_ATTR_NAME = "parent"
 
-# The name of the attribute storing the member parent entry type in Link entries
+# The name of the attribute storing the parent entry type in Link entries
 PARENT_TYPE_ATTR_NAME = "parent_type"
 
 # The name of the attribute storing the child entry tid in Link entries
 CHILD_TID_ATTR_NAME = "child"
 
-# The name of the attribute storing the member child entry type in Link entries
+# The name of the attribute storing the child entry type in Link entries
 CHILD_TYPE_ATTR_NAME = "child_type"
 
 # The name of the attribute storing the member entry type in Group entries

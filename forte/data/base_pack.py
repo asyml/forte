@@ -441,7 +441,32 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         """
         Call this when adding a new entry, will be called
         in :class:`~forte.data.ontology.core.Entry` when
-        its `__init__` function is called.
+        its `__init__` function is called. For every entry,
+        there are 2 scenarios that are possible during its
+        creation with regards to how default values of dataclass
+        attributes are stored at the time of initialization.
+
+        - The attributes of this entry do not have entry setter
+            and getter properties associated with them: This is the
+            case when it is the first time an entry of this type is
+            being created. Thus, any default value assigned to a
+            dataclass attribute are stored in the entry object and
+            can thus easily fetched using `getattr` when reqired to
+            be added to the datastore. We use this method to
+            populate a class level dictionary of ``Entry`` called
+            ``cached_attribute_data`` which is used to initialiaze
+            the corresponding data store entry.
+        - The attributes of this entry have have entry setter
+            and getter properties associated with them: This is the
+            case when an entry of this type has already been created
+            before (which means that its reference is stored in
+            ``_type_attributes`` for ``DataStore``). In this case,
+            whenever default values are assigned to dataclass attributes,
+            it will invoke the entry setter method. During initilization,
+            there is not pack associated with the entry an thus the default
+            values are stored in a class level dictionary of ``Entry`` called
+            ``cached_attribute_data``. This dictionary is used to initialize
+            the corresponding data store entry.
 
         Args:
             entry: The entry to be added.
@@ -502,7 +527,12 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         def entry_setter(cls: Entry, value: Any, attr_name: str, field_type):
             """A setter function for dataclass fields of entry object.
             When the value contains entry objects, we will convert them into
-            ``tid``s before storing to ``DataStore``.
+            ``tid``s before storing to ``DataStore``. Additionally, if the entry
+            setter method is called on an attribute that does not have a pack
+            associated with it (as is the case during intialization), the value
+            of the atttribute is stored in the class level cache of the ``Entry``
+            class. On the other hand, if a pack is associated with the entry,
+            the value will directly be stored in the data store.
 
             Args:
                 cls: An ``Entry`` class object.
@@ -522,7 +552,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                     raise KeyError(
                         "You are trying to overwrite the value "
                         f"of {attr_name} for a data store entry "
-                        "before for it is created."
+                        "before it is created."
                     ) from err
 
             data_store_ref = (

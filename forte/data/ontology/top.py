@@ -325,7 +325,6 @@ class Group(BaseGroup[Entry]):
         pack: PackType,
         members: Optional[Iterable[Entry]] = None,
     ):  # pylint: disable=useless-super-delegation
-        # attribute_data = {"member_type": self.MemberType, "members": members}
         self.member_type = self.MemberType
         super().__init__(pack, members)
 
@@ -341,10 +340,7 @@ class Group(BaseGroup[Entry]):
                 f"The members of {type(self)} should be "
                 f"instances of {self.MemberType}, but got {type(member)}"
             )
-        if self.members is None:
-            self.members = [member]
-        else:
-            self.members.append(member)
+        self.members.append(member)
 
     def get_members(self) -> List[Entry]:
         r"""Get the member entries in the group. The function will retrieve
@@ -517,7 +513,7 @@ class MultiPackGroup(MultiEntry, BaseGroup[Entry]):
     of members.
     """
     member_type: Type[Entry]
-    members: Optional[FList[Entry]]
+    members: FList[Entry]
 
     MemberType = Entry
 
@@ -537,10 +533,7 @@ class MultiPackGroup(MultiEntry, BaseGroup[Entry]):
                 f"The members of {type(self)} should be "
                 f"instances of {self.MemberType}, but got {type(member)}"
             )
-        if self.members is None:
-            self.members = cast(FList, [member])
-        else:
-            self.members.append(member)
+        self.members.append(member)
 
     def get_members(self) -> List[Entry]:
         members = []

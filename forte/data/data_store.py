@@ -29,13 +29,11 @@ from forte.data.ontology.top import (
     Annotation,
     AudioAnnotation,
     Group,
-    ImageAnnotation,
     Link,
-    Generics,
-    Payload,
-    MultiPackGeneric,
     MultiPackGroup,
     MultiPackLink,
+    SinglePackEntries,
+    MultiPackEntries,
 )
 from forte.data.ontology.core import Entry, FList, FDict
 from forte.common import constants
@@ -288,37 +286,10 @@ class DataStore(BaseStore):
 
         reset_index = {}
 
-        def get_sorting_fn(type_name: str):
-            r"""
-            This function creates a lambda method to generate the sorted
-            list of an entry of given type
-
-            Args:
-                type_name: A string representing a fully qualified type
-                    name of the entry whose sorting function we want to
-                    fetch.
-
-            Returns:
-                A lambda function representing the sorting function for
-                entries of type `type_name`.
-            """
-            return lambda s: (
-                s[
-                    self.get_datastore_attr_idx(
-                        type_name, constants.BEGIN_ATTR_NAME
-                    )
-                ],
-                s[
-                    self.get_datastore_attr_idx(
-                        type_name, constants.END_ATTR_NAME
-                    )
-                ],
-            )
-
         for k in self.__elements:
             if self._is_annotation(k):
                 # convert list back to sorted list
-                sorting_fn = get_sorting_fn(k)
+                sorting_fn = self.get_annotation_sorting_fn(k)
                 self.__elements[k] = SortedList(
                     self.__elements[k], key=sorting_fn
                 )
@@ -515,6 +486,30 @@ class DataStore(BaseStore):
     def _new_tid(self) -> int:
         r"""This function generates a new ``tid`` for an entry."""
         return uuid.uuid4().int
+
+    def get_annotation_sorting_fn(self, type_name: str):
+        r"""
+        This function creates a lambda method to generate the sorted
+        list of an entry of given type. The type of the entry must be
+        a successor of :class:`~forte.data.ontology.top.Annotation`.
+
+        Args:
+            type_name: A string representing a fully qualified type
+                name of the entry whose sorting function we want to
+                fetch.
+
+        Returns:
+            A lambda function representing the sorting function for
+            entries of type `type_name`.
+        """
+        return lambda s: (
+            s[
+                self.get_datastore_attr_idx(
+                    type_name, constants.BEGIN_ATTR_NAME
+                )
+            ],
+            s[self.get_datastore_attr_idx(type_name, constants.END_ATTR_NAME)],
+        )
 
     def _get_type_info(self, type_name: str) -> Dict[str, Any]:
         """
@@ -795,18 +790,7 @@ class DataStore(BaseStore):
             self._is_subclass(type_name, cls)
             for cls in (Annotation, AudioAnnotation)
         ):
-
-            begin_idx = self.get_datastore_attr_idx(
-                type_name, constants.BEGIN_ATTR_NAME
-            )
-            end_idx = self.get_datastore_attr_idx(
-                type_name, constants.END_ATTR_NAME
-            )
-
-            sorting_fn = lambda s: (
-                s[begin_idx],
-                s[end_idx],
-            )
+            sorting_fn = self.get_annotation_sorting_fn(type_name)
             try:
                 self.__elements[type_name].add(entry)
             except KeyError:
@@ -815,16 +799,7 @@ class DataStore(BaseStore):
 
         elif any(
             self._is_subclass(type_name, cls)
-            for cls in [
-                Link,
-                Group,
-                Generics,
-                ImageAnnotation,
-                Payload,
-                MultiPackLink,
-                MultiPackGroup,
-                MultiPackGeneric,
-            ]
+            for cls in (list(SinglePackEntries) + list(MultiPackEntries))
         ):
 
             try:
@@ -904,6 +879,7 @@ class DataStore(BaseStore):
             raise KeyError(
                 f"Attribute {attr} is not a part "
                 f"of type attributes for {type_name}"
+                f"or an entry of type {type_name} does not exist"
             ) from e
 
     def initialize_and_validate_entry(
@@ -914,7 +890,22 @@ class DataStore(BaseStore):
         modifies the value of certain attributes to fit data store's
         purpose of storing primitive types. For example, In the data store
         entry of type :class:`~forte.data.ontology.top.Group`, attribute
-        `member_type` is converted from an object to `str`.
+        `member_type` is converted from an object to `str`. When initializing
+        entries, this function makes certain assumptions based on the type
+        of entry.
+
+        - if the entry is of type :class:`~forte.data.ontology.top.Annotation`
+            or :class:`~forte.data.ontology.top.AudioAnnotation`, we assume that
+            `attribute_data` is a list of two elements, indicating the begin and
+            end index of the annotation respectively.
+        - if the entry is of type :class:`~forte.data.ontology.top.Group` or
+            :class:`~forte.data.ontology.top.MultiPackGroup`, we assume that
+            `attribute_data` is a list of one element representing the group's
+            member type.
+        - if the entry is of type :class:`~forte.data.ontology.top.Link` or
+            :class:`~forte.data.ontology.top.MultiPackLink`, we assume that
+            `attribute_data` is a list of two elements representing the link's
+            parent and child type respectively.
 
         Args:
             entry (list): The initial version of the data store entry
@@ -962,8 +953,7 @@ class DataStore(BaseStore):
                 entry[payload_id_idx] = 0
 
         elif any(
-            issubclass(get_class(type_name), cls)
-            for cls in (Group, MultiPackGroup)
+            self._is_subclass(type_name, cls) for cls in (Group, MultiPackGroup)
         ):
             members_idx = self.get_datastore_attr_idx(
                 type_name, constants.MEMBER_TID_ATTR_NAME
@@ -978,15 +968,15 @@ class DataStore(BaseStore):
 
             # When creating Group or MultiPackGroup, attribute_data has
             # only one entry representing the member type
-            entry[type_idx] = attribute_data[0]
+            member_type = get_full_module_name(attribute_data[0])
 
-            if not issubclass(entry[type_idx], Entry):
+            if not self._is_subclass(member_type, Entry):
                 raise ValueError(
                     "Attributes required to create Group "
                     "entry are not set correctly."
                 )
 
-            entry[type_idx] = get_full_module_name(entry[type_idx])
+            entry[type_idx] = member_type
 
         elif any(
             issubclass(get_class(type_name), cls)

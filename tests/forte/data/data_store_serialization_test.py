@@ -711,7 +711,7 @@ class DataStoreTest(unittest.TestCase):
             DataStore._type_attributes = {
                 "ft.onto.base_ontology.Document": {
                     "attributes": {
-                         "begin": 2,
+                        "begin": 2,
                         "end": 3,
                         "payload_idx": 4,
                         "document_class": 5,
