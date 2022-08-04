@@ -443,26 +443,26 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         in :class:`~forte.data.ontology.core.Entry` when
         its `__init__` function is called. For every entry,
         there are 2 scenarios that are possible during its
-        creation with regards to how default values of dataclass
+        creation with regards to how default values of `dataclass`
         attributes are stored at the time of initialization.
 
         - The attributes of this entry do not have entry setter
             and getter properties associated with them: This is the
             case when it is the first time an entry of this type is
             being created. Thus, any default value assigned to a
-            dataclass attribute are stored in the entry object and
-            can thus easily fetched using `getattr` when reqired to
-            be added to the datastore. We use this method to
+            `dataclass` attribute are stored in the entry object and
+            can thus easily fetched using `getattr` when required to
+            be added to the data store. We use this method to
             populate a class level dictionary of ``Entry`` called
-            ``cached_attribute_data`` which is used to initialiaze
+            ``cached_attribute_data`` which is used to initialize
             the corresponding data store entry.
         - The attributes of this entry have have entry setter
             and getter properties associated with them: This is the
             case when an entry of this type has already been created
             before (which means that its reference is stored in
             ``_type_attributes`` for ``DataStore``). In this case,
-            whenever default values are assigned to dataclass attributes,
-            it will invoke the entry setter method. During initilization,
+            whenever default values are assigned to `dataclass` attributes,
+            it will invoke the entry setter method. During initialization,
             there is not pack associated with the entry an thus the default
             values are stored in a class level dictionary of ``Entry`` called
             ``cached_attribute_data``. This dictionary is used to initialize
@@ -483,7 +483,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             c = self.__control_component
 
         def entry_getter(cls: Entry, attr_name: str, field_type):
-            """A getter function for dataclass fields of entry object.
+            """A getter function for `dataclass` fields of entry object.
             When the field contains ``tid``s, we will convert them to entry
             object on the fly.
 
@@ -525,7 +525,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             return attr_val
 
         def entry_setter(cls: Entry, value: Any, attr_name: str, field_type):
-            """A setter function for dataclass fields of entry object.
+            """A setter function for `dataclass` fields of entry object.
             When the value contains entry objects, we will convert them into
             ``tid``s before storing to ``DataStore``. Additionally, if the entry
             setter method is called on an attribute that does not have a pack
