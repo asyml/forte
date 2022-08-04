@@ -513,7 +513,7 @@ class MultiPackGroup(MultiEntry, BaseGroup[Entry]):
     of members.
     """
     member_type: Type[Entry]
-    members: FList[Entry]
+    members: Optional[FList[Entry]]
 
     MemberType = Entry
 
@@ -533,7 +533,10 @@ class MultiPackGroup(MultiEntry, BaseGroup[Entry]):
                 f"The members of {type(self)} should be "
                 f"instances of {self.MemberType}, but got {type(member)}"
             )
-        self.members.append(member)
+        if self.members is None:
+            self.members = cast(FList, [member])
+        else:
+            self.members.append(member)
 
     def get_members(self) -> List[Entry]:
         members = []
