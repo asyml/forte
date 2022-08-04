@@ -646,7 +646,11 @@ class DataPack(BasePack[Entry, Link, Group]):
         """
         # temporary solution for backward compatibility
         # past API use this method to add a single image in the datapack
-        if len(self.image_payloads) == 0 and image_payload_index == 0:
+        if (
+            self._data_store.num_entries("ft.onto.base_ontology.ImagePayload")
+            == 0
+            and image_payload_index == 0
+        ):
             from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
                 ImagePayload,
             )
