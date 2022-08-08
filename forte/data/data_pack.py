@@ -587,7 +587,11 @@ class DataPack(BasePack[Entry, Link, Group]):
         ) = data_utils_io.modify_text_and_track_ops(text, span_ops)
         # temporary solution for backward compatibility
         # past API use this method to add a single text in the datapack
-        if len(self.text_payloads) == 0 and text_payload_index == 0:
+        if (
+            self._data_store.num_entries("ft.onto.base_ontology.TextPayload")
+            == 0
+            and text_payload_index == 0
+        ):
             from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
                 TextPayload,
             )
@@ -619,7 +623,11 @@ class DataPack(BasePack[Entry, Link, Group]):
         """
         # temporary solution for backward compatibility
         # past API use this method to add a single audio in the datapack
-        if len(self.audio_payloads) == 0 and audio_payload_index == 0:
+        if (
+            self._data_store.num_entries("ft.onto.base_ontology.AudioPayload")
+            == 0
+            and audio_payload_index == 0
+        ):
             from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
                 AudioPayload,
             )
