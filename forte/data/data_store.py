@@ -19,7 +19,7 @@ import uuid
 import logging
 from heapq import heappush, heappop
 from sortedcontainers import SortedList
-from typing_inspect import get_origin, get_args
+from typing_inspect import get_origin, get_args, is_generic_type
 
 from forte.utils import get_class
 from forte.utils.utils import get_full_module_name
@@ -158,19 +158,22 @@ class DataStore(BaseStore):
 
         """
         The ``_type_attributes`` is a private dictionary that provides
-        ``type_name``, their parent entry, and the order of corresponding attributes.
+        ``type_name``, their parent entry, and the metadata of corresponding attributes.
+        This metadata includes the order and type information of attributes.
         The keys are fully qualified names of every type; The value is a
-        dictionary with two keys. Key ``attribute`` provides an inner dictionary
-        with all valid attributes for this type and the information of attributes
-        among these lists. This information is represented as a dictionary. The
-        dictionary has two entries, the first is index which determines the position
-        where an attribute is stored in a data store entry. The second is type, which
-        is a tuple of two elements that provides the type information of a given
-        attribute. The first element is the unsubscripted version of
-        the attribute's type and the second element is the type arguments
-        for the same. The information represented in this dictionary is the index of
-        the attribute and the type of the variable it stores. Key ``parent_class`` is
-        a string representing the ancestors of this type.
+        dictionary with two keys.
+
+        1) Key ``attribute`` provides an inner dictionary
+            with all valid attributes for this type and the information of attributes
+            among these lists. This information is represented as a dictionary. The
+            dictionary has two entries:
+            a) the first is index which determines the position
+                where an attribute is stored in a data store entry.
+            b) The second is type, which is a tuple of two elements that provides the
+                type information of a given attribute.
+                i) The first element is the unsubscripted version of the attribute's type
+                ii) the second element is the type arguments for the same.
+        2) Key ``parent_class`` is a string representing the ancestors of this type.
 
         This structure is supposed to be built dynamically. When a user adds
         new entries, `DataStore` will check unknown types and add them to
@@ -180,33 +183,33 @@ class DataStore(BaseStore):
 
         .. code-block:: python
 
-            # DataStore._type_attributes is:
-            # {
-            #    "ft.onto.base_ontology.Document": {
-            #        "attributes": {
-            #            "document_class": {"index": 4, "type": (list, (str,))},
-            #            "sentiment": {"index": 5, "type": (dict, (str, float))},
-            #            "classifications": {
-            #                "index": 6,
-            #                "type":(FDict,(str, Classification))
-            #            }
-            #       },
-            #        "parent_class": set(),
-            #    },
-            #    "ft.onto.base_ontology.Sentence": {
-            #        "attributes": {
-            #            "speaker": {"index": 4, "type": (Union, (str, type(None)))},
-            #            "part_id": {"index": 5, "type": (Union, (int, type(None)))},
-            #            "sentiment": {"index": 6, "type": (dict, (str, float))},
-            #            "classification": {"index": 7, "type": (dict, (str, float))},
-            #            "classifications": {
-            #                "index": 8,
-            #                "type": (FDict,(str, Classification))
-            #            },
-            #        },
-            #        "parent_class": set(),
-            #    },
-            # }
+            DataStore._type_attributes is:
+            {
+               "ft.onto.base_ontology.Document": {
+                   "attributes": {
+                       "document_class": {"index": 4, "type": (list, (str,))},
+                       "sentiment": {"index": 5, "type": (dict, (str, float))},
+                       "classifications": {
+                           "index": 6,
+                           "type":(FDict,(str, Classification))
+                       }
+                  },
+                   "parent_class": set(),
+               },
+               "ft.onto.base_ontology.Sentence": {
+                   "attributes": {
+                       "speaker": {"index": 4, "type": (Union, (str, type(None)))},
+                       "part_id": {"index": 5, "type": (Union, (int, type(None)))},
+                       "sentiment": {"index": 6, "type": (dict, (str, float))},
+                       "classification": {"index": 7, "type": (dict, (str, float))},
+                       "classifications": {
+                           "index": 8,
+                           "type": (FDict,(str, Classification))
+                       },
+                   },
+                   "parent_class": set(),
+               },
+            }
         """
         self._init_top_to_core_entries()
         if self._onto_file_path:
@@ -682,24 +685,23 @@ class DataStore(BaseStore):
         self, type_name: str, attributes: Optional[Set[Tuple[str, str]]] = None
     ) -> Dict[str, Tuple]:
         r"""This function takes a fully qualified ``type_name`` class name
-        and creates a dictionary where the key is attribute of the entry
-        and value is the type information of that attribute. For example,
+        and a set of tuples representing an attribute and its required type
+        (only in the case where the ``type_name`` class name represents an
+        entry being added from a user defined ontology) and creates a
+        dictionary where the key is attribute of the entry and value is
+        the type information of that attribute.
 
-        .. code-block:: python
+        There are two cases in which a fully qualified ``type_name`` class
+        name can be handled:
 
-            type_dict =  {
-                        "document_class": (list, (str,)),
-                        "sentiment": (dict, (str, float)),
-                        "classifications": (FDict, (str, Classification))
-                    }
-
-        For each attribute, the type information is represented by a tuple
-        of two elements. The first element is the unsubscripted version of
-        the attribute's type and the second element is the type arguments
-        for the same. The `type_dict` is used to populate the type
-        information for attributes of an entry specified by ``type_name``
-        in `_type_attributes`.
-
+        1) If the class being added is of an existing entry: This means
+            that there is information present about this entry through
+            its `dataclass` attributes and their respective types. Thus,
+            we use the `_get_entry_attributes_by_class` method to fetch
+            this information.
+        2) If the class being added is of a user defined entry: In this
+            case, we fetch the information about the entry's attributes
+            and their types from the ``attributes`` argument.
 
         Args:
             type_name: A fully qualified name of an entry class.
@@ -713,6 +715,21 @@ class DataStore(BaseStore):
                                 ('passage_id', 'str'),
                                 ('author', 'str')
                             }
+        Returns: A dictionary representing attributes as key and type
+            information as value. For each attribute, the type information is
+            represented by a tuple of two elements. The first element is the
+            unsubscripted version of the attribute's type and the second
+            element is the type arguments for the same. The `type_dict` is used
+            to populate the type information for attributes of an entry
+            specified by ``type_name`` in `_type_attributes`. For example,
+
+            .. code-block:: python
+
+                type_dict =  {
+                            "document_class": (list, (str,)),
+                            "sentiment": (dict, (str, float)),
+                            "classifications": (FDict, (str, Classification))
+                        }
         """
         type_dict = {}
         attr_class: Any
@@ -735,16 +752,29 @@ class DataStore(BaseStore):
         else:
             attr_fields: Dict = self._get_entry_attributes_by_class(type_name)
             for attr_name, attr_info in attr_fields.items():
-                attr_class = get_origin(attr_info.type)
-                attr_args = get_args(attr_info.type)
-
-                # Prior to Python 3.7, typing.List and typing.Dict
-                # is not converted to primitive forms of list and
+                # Prior to Python 3.7, fetching generic type
+                # aliases resulted in actual type objects whereas from
+                # Python 3.7, they were converted to their primitive
+                # form. For example, typing.List and typing.Dict
+                # is converted to primitive forms of list and
                 # dict. We handle them separately here
-                if attr_class == Dict:
-                    attr_class = dict
-                if attr_class == List:
-                    attr_class = list
+                if is_generic_type(attr_info.type):
+                    try:
+                        # if python version is < 3.7, thr primitive form
+                        # of generic types are stored in the __extra__
+                        # attribute. This attribute is not present in
+                        # generic types from 3.7.
+                        attr_class = attr_info.type.__extra__
+                    except AttributeError:
+                        # if python version is < 3.7, thr primitive form
+                        # of generic types are stored in the __origin__
+                        # attribute.
+                        attr_class = attr_info.type.__origin__
+                        pass
+                else:
+                    attr_class = get_origin(attr_info.type)
+
+                attr_args = get_args(attr_info.type)
 
                 type_dict[attr_name] = tuple([attr_class, attr_args])
 
@@ -836,11 +866,11 @@ class DataStore(BaseStore):
             for entry_class in (Annotation, AudioAnnotation)
         )
 
-    def get_entry_types(
+    def get_attr_type(
         self, type_name: str, attr_name: str
     ) -> Tuple[Any, Tuple]:
         """
-        Retrieve the entry type of a given attribute ``attr_name``
+        Retrieve the type information of a given attribute ``attr_name``
         in an entry of type ``type_name``
 
         Args:
@@ -1809,7 +1839,11 @@ class DataStore(BaseStore):
         children = entry_tree.root.children
         while len(children) > 0:
             # entry_node represents a node in the ontology tree
-            # generated by parsing an existing ontology file
+            # generated by parsing an existing ontology file.
+            # The entry_node the information of the entry
+            # represented by this node. It also stores the name
+            # and the type information of the attributes of the
+            # entry represented by this node.
             entry_node = children.pop(0)
             children.extend(entry_node.children)
 

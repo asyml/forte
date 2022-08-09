@@ -458,12 +458,30 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
         def entry_getter(cls: Entry, attr_name: str):
             """A getter function for dataclass fields of entry object.
-            When the field contains ``tid``s, we will convert them to entry
-            object on the fly.
+            Depending on the value stored in the data store and the type
+            of the attribute, the method decides how to process the value.
+
+            - Attributes repersented as ``FList`` and ``FDict`` objects are stored
+                as list and dictionary respectively in the dtaa store entry. These
+                values are converted to ``FList`` and ``FDict`` objects on the fly.
+            - When the field contains ``tid``s, we will convert them to entry
+                object on the fly. This is done by checking the type
+                information of the attribute in the entry object. If the
+                attribute is of type ``Entry`` or a ``ForwardRef``, we can
+                assume that that value stored in the data store entry represents
+                the entry's ``tid``.
+            - When values are stored as a tuple, we assume the value represents
+                a `subentry` stored in a `MultiPack`.
+            - In all other cases, the values are returned in the forms that they
+                are stored in the data store entry.
 
             Args:
                 cls: An ``Entry`` class object.
                 attr_name: The name of the attribute.
+
+            Returns:
+                The value of the required attribute in the form specified
+                by the corresponding ``Entry`` class object.
             """
 
             data_store_ref = (
@@ -472,13 +490,13 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             attr_val = data_store_ref.get_attribute(
                 tid=cls.tid, attr_name=attr_name
             )
-            entry_type = data_store_ref.get_entry_types(
+            attr_type = data_store_ref.get_attr_type(
                 cls.entry_type(), attr_name
             )
 
-            if entry_type[0] in (FList, FDict):
+            if attr_type[0] in (FList, FDict):
                 # Generate FList/FDict object on the fly
-                return entry_type[0](parent_entry=cls, data=attr_val)
+                return attr_type[0](parent_entry=cls, data=attr_val)
             try:
                 # Check dataclass attribute value type
                 # If the attribute was an Entry object, only its tid
@@ -493,12 +511,12 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                 # before returning.
                 if (
                     isinstance(attr_val, int)
-                    and entry_type[1]
+                    and attr_type[1]
                     and any(
                         issubclass(entry, Entry)
                         if isclass(entry)
                         else is_forward_ref(entry)
-                        for entry in list(entry_type[1])
+                        for entry in list(attr_type[1])
                     )
                 ):
                     return cls.pack.get_entry(tid=attr_val)
@@ -534,13 +552,13 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                 cls.pack._data_store  # pylint: disable=protected-access
             )
 
-            entry_type = data_store_ref.get_entry_types(
+            attr_type = data_store_ref.get_attr_type(
                 cls.entry_type(), attr_name
             )
             # Assumption: Users will not assign value to a FList/FDict field.
             # Only internal methods can set the FList/FDict field, and value's
             # type has to be Iterator[Entry]/Dict[Any, Entry].
-            if entry_type[0] is FList:
+            if attr_type[0] is FList:
                 try:
                     attr_value = [entry.tid for entry in value]
                 except AttributeError as e:
@@ -548,7 +566,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                         "You are trying to assign value to a `FList` field, "
                         "which can only accept an iterator of `Entry` objects."
                     ) from e
-            elif entry_type[0] is FDict:
+            elif attr_type[0] is FDict:
                 try:
                     attr_value = {
                         key: entry.tid for key, entry in value.items()

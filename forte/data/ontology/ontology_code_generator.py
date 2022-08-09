@@ -269,7 +269,7 @@ class OntologyCodeGenerator:
         # Adjacency list to store the allowed types (in-built or user-defined),
         # and their attributes (if any) in order to validate the attribute
         # types.
-        self.allowed_types_tree: Dict[str, Set[Tuple]] = {}
+        self.allowed_types_tree: Dict[str, Set] = {}
 
         for type_str in ALL_INBUILT_TYPES:
             self.allowed_types_tree[type_str] = set()
@@ -830,7 +830,7 @@ class OntologyCodeGenerator:
                         f"the ontology, will be overridden",
                         DuplicatedAttributesWarning,
                     )
-                self.allowed_types_tree[en.class_name].add(tuple(property))
+                self.allowed_types_tree[en.class_name].add(property)
             # populate the entry tree based on information
             if merged_entry_tree is not None:
                 curr_entry_name = en.class_name
@@ -971,15 +971,16 @@ class OntologyCodeGenerator:
 
     def parse_entry(
         self, entry_name: EntryName, schema: Dict
-    ) -> Tuple[EntryDefinition, List[Tuple[Any, Any]]]:
+    ) -> Tuple[EntryDefinition, List[Tuple[str, str]]]:
         """
         Args:
             entry_name: Object holds various name form of the entry.
             schema: Dictionary containing specifications for an entry.
 
         Returns: extracted entry information: entry package string, entry
-        filename, entry class entry_name, generated entry code and entry
-        attribute names.
+        filename, entry class entry_name, generated entry code and a list
+        of tuples where each element in the list represents the an attribute
+        in the entry and its corresponding type.
         """
         this_manager = self.import_managers.get(entry_name.module_name)
 

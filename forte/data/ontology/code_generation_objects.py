@@ -17,7 +17,7 @@ import os
 import warnings
 from abc import ABC
 from pathlib import Path
-from typing import Optional, Any, List, Dict, Set, Tuple
+from typing import Optional, Any, List, Dict, Set, Tuple, cast
 from numpy import ndarray
 
 from forte.data.ontology.code_generation_exceptions import (
@@ -797,7 +797,7 @@ class EntryTreeNode:
         self.children: List[EntryTreeNode] = []
         self.parent: Optional[EntryTreeNode] = None
         self.name: str = name
-        self.attributes: Set[Tuple] = set()
+        self.attributes: Set[Tuple[str, str]] = set()
 
     def __repr__(self):
         r"""for printing purpose."""
@@ -817,7 +817,7 @@ class EntryTree:
         self,
         curr_entry_name: str,
         parent_entry_name: str,
-        curr_entry_attr: Set[Tuple],
+        curr_entry_attr: Set[Tuple[str, str]],
     ):
         r"""Add a tree node with `curr_entry_name` as a child to
         `parent_entry_name` in the tree, the attributes `curr_entry_attr`
@@ -856,7 +856,9 @@ class EntryTree:
 
         Args:
             node_dict: the nodes dictionary of nodes to collect parent nodes
-                for.
+                for. The entry represented by nodes in this dictionary do not store
+                type information of its attributes. This dictionary does not store
+                the type information of the nodes.
 
         """
         input_node_dict = node_dict.copy()
@@ -907,14 +909,16 @@ class EntryTree:
         if parent_entry_name is None:
             self.root = EntryTreeNode(name=tree_dict["name"])
             self.root.attributes = set(
-                tuple(attr) for attr in tree_dict["attributes"]
+                cast(Tuple[str, str], tuple(attr))
+                for attr in tree_dict["attributes"]
             )
         else:
             self.add_node(
                 curr_entry_name=tree_dict["name"],
                 parent_entry_name=parent_entry_name,
                 curr_entry_attr=set(
-                    tuple(attr) for attr in tree_dict["attributes"]
+                    cast(Tuple[str, str], tuple(attr))
+                    for attr in tree_dict["attributes"]
                 ),
             )
         for child in tree_dict["children"]:
