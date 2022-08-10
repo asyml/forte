@@ -154,7 +154,7 @@ class RLAugmentClassifierTrainer:
         )
         # Builds data augmentation wrapper
         self.aug_wrapper = MetaAugmentationWrapper(
-            aug_model, aug_optim, input_mask_ids, device, args.num_aug
+            aug_model, aug_optim, input_mask_ids, device, args.num_aug``
         )
 
     def _init_classifier(self):

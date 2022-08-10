@@ -1256,7 +1256,8 @@ class Payload(Entry):
                 For audio data, it is the length of the audio. [length, audio_embedding_dim]
                 For image data, it is the shape of the image. [height, width,
                 channel]
-                For example, for image data, if the cache_shape length is 2, it means the image data is a 2D image [height, width].
+                For example, for image data, if the cache_shape length is 2, it
+                means the image data is a 2D image [height, width].
         """
         self._cache = data
         if isinstance(data, np.ndarray):
