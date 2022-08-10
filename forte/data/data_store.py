@@ -177,7 +177,7 @@ class DataStore(BaseStore):
                 of where the attribute is stored in the data store entry.
             b) The second key is type, which is a tuple of two elements that provides the
                 type information of a given attribute.
-                i) The first element is the unsubscripted version of the attribute's type
+                i) The first element is the `unsubscripted` version of the attribute's type
                 ii) the second element is the type arguments for the same.
         2) Key ``parent_class`` is a string representing the ancestors of this type.
 
@@ -724,7 +724,7 @@ class DataStore(BaseStore):
         Returns: A dictionary representing attributes as key and type
             information as value. For each attribute, the type information is
             represented by a tuple of two elements. The first element is the
-            unsubscripted version of the attribute's type and the second
+            `unsubscripted` version of the attribute's type and the second
             element is the type arguments for the same. The `type_dict` is used
             to populate the type information for attributes of an entry
             specified by ``type_name`` in `_type_attributes`. For example,
