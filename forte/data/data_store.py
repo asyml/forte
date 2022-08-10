@@ -15,7 +15,6 @@ from copy import deepcopy
 import json
 import sys
 from typing import Dict, List, Iterator, Set, Tuple, Optional, Any, Type
-from inspect import isclass
 
 import uuid
 import logging
@@ -40,7 +39,12 @@ from forte.data.ontology.top import (
     MultiPackGroup,
     MultiPackLink,
 )
-from forte.data.ontology.core import Entry, FList, FDict
+from forte.data.ontology.core import (
+    Entry,
+    FList,
+    FDict,
+    ENTRY_TYPE_DATA_STRUCTURES,
+)
 from forte.common import constants
 
 
@@ -764,10 +768,11 @@ class DataStore(BaseStore):
                 # form. For example, typing.List and typing.Dict
                 # is converted to primitive forms of list and
                 # dict. We handle them separately here
-                if is_generic_type(attr_info.type) and sys.version_info[:3] < (
-                    3,
-                    7,
-                    0,
+                if (
+                    is_generic_type(attr_info.type)
+                    and hasattr(attr_info.type, "__extra__")
+                    and sys.version_info[:3] < (3, 7, 0)
+                    and attr_class not in ENTRY_TYPE_DATA_STRUCTURES
                 ):
                     # if python version is < 3.7, thr primitive form
                     # of generic types are stored in the __extra__

@@ -48,6 +48,7 @@ from forte.data.ontology.core import (
     LinkType,
     FList,
     FDict,
+    ENTRY_TYPE_DATA_STRUCTURES,
 )
 from forte.version import (
     PACK_VERSION,
@@ -494,7 +495,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                 cls.entry_type(), attr_name
             )
 
-            if attr_type[0] in (FList, FDict):
+            if attr_type[0] in ENTRY_TYPE_DATA_STRUCTURES:
                 # Generate FList/FDict object on the fly
                 return attr_type[0](parent_entry=cls, data=attr_val)
             try:
