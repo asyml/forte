@@ -1187,7 +1187,7 @@ class Payload(Entry):
 
         super().__init__(pack)
         self._cache: Union[str, np.ndarray] = ""
-        self._cache_shape = None
+        self._cache_shape: Optional[Sequence[int]] = None
         self.replace_back_operations: Sequence[Tuple] = []
         self.processed_original_spans: Sequence[Tuple] = []
         self.orig_text_len: int = 0
