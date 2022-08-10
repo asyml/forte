@@ -335,10 +335,17 @@ class DataStoreTest(unittest.TestCase):
         )
         empty_data_store._get_type_info("ft.onto.base_ontology.Sentence")
         self.assertEqual(len(empty_data_store._DataStore__elements), 0)
+        
+        print(DataStore._type_attributes["ft.onto.base_ontology.Sentence"])
         self.assertEqual(
             DataStore._type_attributes["ft.onto.base_ontology.Sentence"],
             self.reference_type_attributes["ft.onto.base_ontology.Sentence"],
         )
+<<<<<<< Updated upstream
+        
+=======
+
+>>>>>>> Stashed changes
         self.assertEqual(
             DataStore._type_attributes["ft.onto.base_ontology.Document"],
             self.reference_type_attributes["ft.onto.base_ontology.Document"],

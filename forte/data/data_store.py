@@ -13,7 +13,9 @@
 
 from copy import deepcopy
 import json
+import sys
 from typing import Dict, List, Iterator, Set, Tuple, Optional, Any, Type
+from inspect import isclass
 
 import uuid
 import logging
@@ -752,29 +754,29 @@ class DataStore(BaseStore):
         else:
             attr_fields: Dict = self._get_entry_attributes_by_class(type_name)
             for attr_name, attr_info in attr_fields.items():
+
+                attr_class = get_origin(attr_info.type)
+                attr_args = get_args(attr_info.type)
+
                 # Prior to Python 3.7, fetching generic type
                 # aliases resulted in actual type objects whereas from
                 # Python 3.7, they were converted to their primitive
                 # form. For example, typing.List and typing.Dict
                 # is converted to primitive forms of list and
                 # dict. We handle them separately here
-                if is_generic_type(attr_info.type):
+                if is_generic_type(attr_info.type) and sys.version_info[:3] < (
+                    3,
+                    7,
+                    0,
+                ):
+                    # if python version is < 3.7, thr primitive form
+                    # of generic types are stored in the __extra__
+                    # attribute. This attribute is not present in
+                    # generic types from 3.7.
                     try:
-                        # if python version is < 3.7, thr primitive form
-                        # of generic types are stored in the __extra__
-                        # attribute. This attribute is not present in
-                        # generic types from 3.7.
                         attr_class = attr_info.type.__extra__
                     except AttributeError:
-                        # if python version is < 3.7, thr primitive form
-                        # of generic types are stored in the __origin__
-                        # attribute.
-                        attr_class = attr_info.type.__origin__
                         pass
-                else:
-                    attr_class = get_origin(attr_info.type)
-
-                attr_args = get_args(attr_info.type)
 
                 type_dict[attr_name] = tuple([attr_class, attr_args])
 
