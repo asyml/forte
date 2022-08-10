@@ -164,18 +164,18 @@ class DataStore(BaseStore):
 
         """
         The ``_type_attributes`` is a private dictionary that provides
-        ``type_name``, their parent entry, and the metadata of corresponding attributes.
-        This metadata includes the order and type information of attributes.
-        The keys are fully qualified names of every type; The value is a
-        dictionary with two keys.
+        ``type_name``, their parent entry, and the metadata of its corresponding
+        attributes. This metadata includes the order and type information of attributes
+        stored in the data store entry. The keys are fully qualified names of every entry
+        type; The value is a dictionary with two keys.
 
-        1) Key ``attribute`` provides an inner dictionary
-            with all valid attributes for this type and the information of attributes
-            among these lists. This information is represented as a dictionary. The
-            dictionary has two entries:
-            a) the first is index which determines the position
-                where an attribute is stored in a data store entry.
-            b) The second is type, which is a tuple of two elements that provides the
+        1) Key ``attribute`` has its value as a dictionary
+            with all valid attributes for this entry type as keys and their metadata.
+            as values. The metadata is represented as another inner dictionary
+            that has two keys:
+            a) the first key is ``index`` whose value determines the position
+                of where the attribute is stored in the data store entry.
+            b) The second key is type, which is a tuple of two elements that provides the
                 type information of a given attribute.
                 i) The first element is the unsubscripted version of the attribute's type
                 ii) the second element is the type arguments for the same.
@@ -199,7 +199,7 @@ class DataStore(BaseStore):
                            "index": 6,
                            "type":(FDict,(str, Classification))
                        }
-                  },
+                    },
                    "parent_class": set(),
                },
                "ft.onto.base_ontology.Sentence": {
@@ -212,7 +212,7 @@ class DataStore(BaseStore):
                            "index": 8,
                            "type": (FDict,(str, Classification))
                        },
-                   },
+                    },
                    "parent_class": set(),
                },
             }
@@ -326,7 +326,7 @@ class DataStore(BaseStore):
         # Update `_type_attributes` to store the types of each
         # entry attribute as well.
         for tn in self._type_attributes:
-            entry_type = self._new_entry_types(tn)
+            entry_type = self.fetch_entry_type_data(tn)
             for attr, type_val in entry_type.items():
                 try:
                     info_dict = self._type_attributes[tn][
@@ -612,7 +612,7 @@ class DataStore(BaseStore):
 
         attr_dict = {}
         attr_idx = constants.ENTRY_TYPE_INDEX + 1
-        type_dict = self._new_entry_types(type_name)
+        type_dict = self.fetch_entry_type_data(type_name)
 
         for attr_name in attributes:
             attr_dict[attr_name] = {
@@ -687,7 +687,7 @@ class DataStore(BaseStore):
                 attr_list[attr_id - constants.ATTR_BEGIN_INDEX] = {}
         return attr_list
 
-    def _new_entry_types(
+    def fetch_entry_type_data(
         self, type_name: str, attributes: Optional[Set[Tuple[str, str]]] = None
     ) -> Dict[str, Tuple]:
         r"""This function takes a fully qualified ``type_name`` class name
@@ -1860,7 +1860,9 @@ class DataStore(BaseStore):
             attr_dict = {}
             idx = constants.ATTR_BEGIN_INDEX
 
-            type_dict = self._new_entry_types(entry_name, entry_node.attributes)
+            type_dict = self.fetch_entry_type_data(
+                entry_name, entry_node.attributes
+            )
 
             # sort the attribute dictionary
             for d in sorted(entry_node.attributes):
