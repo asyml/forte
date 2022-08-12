@@ -164,10 +164,10 @@ class DataStore(BaseStore):
 
         """
         The ``_type_attributes`` is a private dictionary that provides
-        ``type_name``, their parent entry, and the metadata of its corresponding
-        attributes. This metadata includes the order and type information of attributes
-        stored in the data store entry. The keys are fully qualified names of every entry
-        type; The value is a dictionary with two keys.
+        ``type_name`` as the key, and the metadata of the entry represented by
+        ``type_name``. This metadata includes the order and type information of
+        attributes stored in the data store entry; The value is a dictionary with
+        two keys.
 
         1) Key ``attribute`` has its value as a dictionary
             with all valid attributes for this entry type as keys and their metadata.
