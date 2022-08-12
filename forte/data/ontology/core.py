@@ -864,3 +864,5 @@ class Grid:
 
 GroupType = TypeVar("GroupType", bound=BaseGroup)
 LinkType = TypeVar("LinkType", bound=BaseLink)
+
+ENTRY_TYPE_DATA_STRUCTURES = (FDict, FList)
