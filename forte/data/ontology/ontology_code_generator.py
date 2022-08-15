@@ -270,6 +270,7 @@ class OntologyCodeGenerator:
         # and their attributes (if any) in order to validate the attribute
         # types.
         self.allowed_types_tree: Dict[str, Set] = {}
+
         for type_str in ALL_INBUILT_TYPES:
             self.allowed_types_tree[type_str] = set()
 
@@ -536,7 +537,9 @@ class OntologyCodeGenerator:
                         "The directory with the name "
                         "%s is already present in "
                         "%s. New files will be merge into the "
-                        "existing directory.",
+                        "existing directory. Note that in this "
+                        "case, the namespace depth may not take "
+                        "effect.",
                         existing_top_dir,
                         destination_dir,
                     )
@@ -792,12 +795,12 @@ class OntologyCodeGenerator:
 
             # Get various parts of the entry name.
             en = EntryName(raw_entry_name)
-            entry_item, properties = self.parse_entry(en, definition)
-
-            # Add it as a defining object.
+            # First add the entry, and then parse the attribute. In this
+            #  order, we can avoid some incorrect warning.
             self.import_managers.get(en.module_name).add_defining_objects(
                 raw_entry_name
             )
+            entry_item, properties = self.parse_entry(en, definition)
 
             # Get or set module writer only if the ontology to be generated
             # is not already installed.
@@ -809,7 +812,8 @@ class OntologyCodeGenerator:
                 module_writer.add_entry(en, entry_item)
 
             # Adding entry attributes to the allowed types for validation.
-            for property_name in properties:
+            for property in properties:
+                property_name = property[0]
                 # Check if the name is allowed.
                 if not property_name.isidentifier():
                     raise InvalidIdentifierException(
@@ -817,14 +821,16 @@ class OntologyCodeGenerator:
                         f"python identifier."
                     )
 
-                if property_name in self.allowed_types_tree[en.class_name]:
+                if property_name in set(
+                    val[0] for val in self.allowed_types_tree[en.class_name]
+                ):
                     warnings.warn(
                         f"Attribute type for the entry {en.class_name} "
                         f"and the attribute {property_name} already present in "
                         f"the ontology, will be overridden",
                         DuplicatedAttributesWarning,
                     )
-                self.allowed_types_tree[en.class_name].add(property_name)
+                self.allowed_types_tree[en.class_name].add(property)
             # populate the entry tree based on information
             if merged_entry_tree is not None:
                 curr_entry_name = en.class_name
@@ -965,15 +971,16 @@ class OntologyCodeGenerator:
 
     def parse_entry(
         self, entry_name: EntryName, schema: Dict
-    ) -> Tuple[EntryDefinition, List[str]]:
+    ) -> Tuple[EntryDefinition, List[Tuple[str, str]]]:
         """
         Args:
             entry_name: Object holds various name form of the entry.
             schema: Dictionary containing specifications for an entry.
 
         Returns: extracted entry information: entry package string, entry
-        filename, entry class entry_name, generated entry code and entry
-        attribute names.
+        filename, entry class entry_name, generated entry code and a list
+        of tuples where each element in the list represents the an attribute
+        in the entry and its corresponding type.
         """
         this_manager = self.import_managers.get(entry_name.module_name)
 
@@ -1030,16 +1037,21 @@ class OntologyCodeGenerator:
         property_items, property_names = [], []
         for prop_schema in properties:
             # TODO: add test
-            prop_name = prop_schema["name"]
-            if prop_name in RESERVED_ATTRIBUTE_NAMES:
+
+            # the prop attributes will store the properties of each attribute
+            # of the the entry defined by the ontology. The properties are
+            # the name of the attribute and its data type.
+            prop = (prop_schema["name"], prop_schema["type"])
+
+            if prop_schema["name"] in RESERVED_ATTRIBUTE_NAMES:
                 raise InvalidIdentifierException(
-                    f"The attribute name {prop_name} is reserved and cannot be "
+                    f"The attribute name {prop_schema['name']} is reserved and cannot be "
                     f"used, please consider changed the name. The list of "
                     f"reserved name strings are "
                     f"{RESERVED_ATTRIBUTE_NAMES}"
                 )
 
-            property_names.append(prop_schema["name"])
+            property_names.append(prop)
             property_items.append(self.parse_property(entry_name, prop_schema))
 
         # For special classes that requires a constraint.

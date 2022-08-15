@@ -53,7 +53,6 @@ from forte.data.ontology.top import (
     Generics,
     AudioAnnotation,
     ImageAnnotation,
-    Grids,
     Payload,
 )
 
@@ -167,12 +166,10 @@ class DataPack(BasePack[Entry, Link, Group]):
 
     def __init__(self, pack_name: Optional[str] = None):
         super().__init__(pack_name)
-        self._audio: Optional[np.ndarray] = None
 
         self._data_store: DataStore = DataStore()
         self._entry_converter: EntryConverter = EntryConverter()
         self.image_annotations: List[ImageAnnotation] = []
-        self.grids: List[Grids] = []
 
         self.text_payloads: List[Payload] = []
         self.audio_payloads: List[Payload] = []
@@ -241,6 +238,11 @@ class DataPack(BasePack[Entry, Link, Group]):
             return str(self.get_payload_data_at(Modality.Text, 0))
         else:
             return ""
+
+    @property
+    def audio(self):
+        r"""Return the audio of the data pack"""
+        return self.get_payload_data_at(Modality.Audio, 0)
 
     @property
     def all_annotations(self) -> Iterator[Annotation]:
@@ -1509,7 +1511,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             for entry_data in self._data_store.get(
                 type_name=get_full_module_name(entry_type_),
                 include_sub_type=include_sub_type,
-                range_annotation=range_annotation  # type: ignore
+                range_span=range_annotation  # type: ignore
                 and (range_annotation.begin, range_annotation.end),
             ):
                 entry: Entry = self.get_entry(tid=entry_data[TID_INDEX])
