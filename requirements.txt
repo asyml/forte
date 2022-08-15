@@ -14,5 +14,3 @@ importlib-resources==5.1.4;python_version<'3.7'
 packaging~=21.2
 asyml-utilities
 enum34
-pytorch-transformers
-pyannote.audio
