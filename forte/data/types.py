@@ -24,4 +24,4 @@ ReplaceOperationsType = List[Tuple[Span, str]]
 
 DataRequest = Dict[Type[Entry], Union[Dict, List]]
 
-MatrixLike = Union[np.ndarray, List]  # type: ignore
+MatrixLike = Union[np.ndarray, List]
