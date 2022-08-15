@@ -27,6 +27,6 @@ DataRequest = Dict[Type[Entry], Union[Dict, List]]
 try:
     import torch
 
-    MatrixLike = Union[torch.TensorType, np.ndarray, List]
+    MatrixLike = Union[torch.TensorType, np.ndarray, List]  # type: ignore
 except ImportError:
     MatrixLike = Union[np.ndarray, List]  # type: ignore
