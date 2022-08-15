@@ -16,12 +16,15 @@ Unit tests for data store related operations.
 """
 
 import logging
+from typing import Union
 import unittest
 import tempfile
 import os
 from sortedcontainers import SortedList
 from forte.data.data_store import DataStore
 from forte.common import constants
+from forte.data.ontology.core import FDict
+from ft.onto.base_ontology import Classification
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -39,25 +42,29 @@ class DataStoreTest(unittest.TestCase):
         DataStore._type_attributes = {
             "ft.onto.base_ontology.Document": {
                 "attributes": {
-                    "begin": 2,
-                    "end": 3,
-                    "payload_idx": 4,
-                    "sentiment": 5,
-                    "classifications": 6,
+                    "sentiment": {"index": 4, "type": (dict, (str, float))},
+                    "classifications": {
+                        "index": 5,
+                        "type": (FDict, (str, Classification)),
+                    },
+
                 },
                 "parent_entry": "forte.data.ontology.top.Annotation",
             },
             "ft.onto.base_ontology.Sentence": {
                 "attributes": {
-                    "begin": 2,
-                    "end": 3,
-                    "payload_idx": 4,
-                    "sentiment": 5,
-                    "speaker": 6,
-                    "part_id": 7,
-                    "classification_test": 8,
-                    "classifications": 9,
-                    "temp": 10,
+                    "sentiment": {"index": 4, "type": (dict, (str, float))},
+                    "speaker": {"index": 5, "type": (Union, (str, type(None)))},
+                    "part_id": {"index": 6, "type": (Union, (int, type(None)))},
+                    "classification_test": {
+                        "index": 7,
+                        "type": (dict, (str, float)),
+                    },
+                    "classifications": {
+                        "index": 8,
+                        "type": (FDict, (str, Classification)),
+                    },
+                    "temp": {"index": 9, "type": (Union, (str, type(None)))},
                 },
                 "parent_entry": "forte.data.ontology.top.Annotation",
             },
@@ -270,25 +277,34 @@ class DataStoreTest(unittest.TestCase):
             DataStore._type_attributes = {
                 "ft.onto.base_ontology.Document": {
                     "attributes": {
-                        "begin": 2,
-                        "end": 3,
-                        "payload_idx": 4,
-                        "document_class": 5,
-                        "sentiment": 6,
-                        "classifications": 7,
+                        "document_class": {"index": 4, "type": (list, (str,))},
+                        "sentiment": {"index": 5, "type": (dict, (str, float))},
+                        "classifications": {
+                            "index": 6,
+                            "type": (FDict, (str, Classification)),
+                        },
                     },
                     "parent_entry": "forte.data.ontology.top.Annotation",
                 },
                 "ft.onto.base_ontology.Sentence": {
                     "attributes": {
-                        "begin": 2,
-                        "end": 3,
-                        "payload_idx": 4,
-                        "speaker": 5,
-                        "part_id": 6,
-                        "sentiment": 7,
-                        "classification": 8,
-                        "classifications": 9,
+                        "speaker": {
+                            "index": 4,
+                            "type": (Union, (str, type(None))),
+                        },
+                        "part_id": {
+                            "index": 5,
+                            "type": (Union, (int, type(None))),
+                        },
+                        "sentiment": {"index": 6, "type": (dict, (str, float))},
+                        "classification": {
+                            "index": 7,
+                            "type": (dict, (str, float)),
+                        },
+                        "classifications": {
+                            "index": 8,
+                            "type": (FDict, (str, Classification)),
+                        },
                     },
                     "parent_entry": "forte.data.ontology.top.Annotation",
                 },
@@ -490,14 +506,14 @@ class DataStoreTest(unittest.TestCase):
                     ][3],
                 },
             )
-            
+
             self.assertEqual(
                 temp._DataStore__tid_idx_dict,
                 {
                     10123: ["forte.data.ontology.top.Group", 0],
                     23456: ["forte.data.ontology.top.Group", 1],
                     88888: ["forte.data.ontology.top.Link", 0],
-                }
+                },
             )
 
             temp = DataStore.deserialize(
@@ -567,9 +583,6 @@ class DataStoreTest(unittest.TestCase):
                             [
                                 9999,
                                 "ft.onto.base_ontology.Sentence",
-                                6,
-                                9,
-                                0,
                                 "Positive",
                                 "teacher",
                                 1,
@@ -589,6 +602,7 @@ class DataStoreTest(unittest.TestCase):
                                 "Class C",
                                 "Class D",
                                 "abc",
+
                             ],
                             [
                                 100,
@@ -618,6 +632,7 @@ class DataStoreTest(unittest.TestCase):
                             ],
                         ],
                     key=self.sorting_fn),
+                    ),
                     "forte.data.ontology.top.Group": [
                         [
                             10123,
@@ -642,7 +657,7 @@ class DataStoreTest(unittest.TestCase):
                             1234,
                             
                         ],
-                    ],                
+                    ],
                 },
             )
             self.assertEqual(
@@ -684,7 +699,7 @@ class DataStoreTest(unittest.TestCase):
                     10123: ["forte.data.ontology.top.Group", 0],
                     23456: ["forte.data.ontology.top.Group", 1],
                     88888: ["forte.data.ontology.top.Link", 0],
-                }
+                },
             )
 
             # test check_attribute with accept_unknown_attribute = False
@@ -711,25 +726,34 @@ class DataStoreTest(unittest.TestCase):
             DataStore._type_attributes = {
                 "ft.onto.base_ontology.Document": {
                     "attributes": {
-                        "begin": 2,
-                        "end": 3,
-                        "payload_idx": 4,
-                        "document_class": 5,
-                        "sentiment": 6,
-                        "classifications": 7,
+                        "document_class": {"index": 4, "type": (list, (str,))},
+                        "sentiment": {"index": 5, "type": (dict, (str, float))},
+                        "classifications": {
+                            "index": 6,
+                            "type": (FDict, (str, Classification)),
+                        },
                     },
                     "parent_entry": "forte.data.ontology.top.Annotation",
                 },
                 "ft.onto.base_ontology.Sentence": {
                     "attributes": {
-                        "begin": 2,
-                        "end": 3,
-                        "payload_idx": 4,
-                        "speaker": 5,
-                        "part_id": 6,
-                        "sentiment": 7,
-                        "classification": 8,
-                        "classifications": 9,
+                        "speaker": {
+                            "index": 4,
+                            "type": (Union, (str, type(None))),
+                        },
+                        "part_id": {
+                            "index": 5,
+                            "type": (Union, (int, type(None))),
+                        },
+                        "sentiment": {"index": 6, "type": (dict, (str, float))},
+                        "classification": {
+                            "index": 7,
+                            "type": (dict, (str, float)),
+                        },
+                        "classifications": {
+                            "index": 8,
+                            "type": (FDict, (str, Classification)),
+                        },
                     },
                     "parent_entry": "forte.data.ontology.top.Annotation",
                 },
@@ -810,25 +834,34 @@ class DataStoreTest(unittest.TestCase):
             DataStore._type_attributes = {
                 "ft.onto.base_ontology.Document": {
                     "attributes": {
-                        "begin": 2,
-                        "end": 3,
-                        "payload_idx": 4,
-                        "document_class": 5,
-                        "sentiment": 6,
-                        "classifications": 7,
+                        "document_class": {"index": 4, "type": (list, (str,))},
+                        "sentiment": {"index": 5, "type": (dict, (str, float))},
+                        "classifications": {
+                            "index": 6,
+                            "type": (FDict, (str, Classification)),
+                        },
                     },
                     "parent_entry": "forte.data.ontology.top.Annotation",
                 },
                 "ft.onto.base_ontology.Sentence": {
                     "attributes": {
-                        "begin": 2,
-                        "end": 3,
-                        "payload_idx": 4,
-                        "speaker": 5,
-                        "part_id": 6,
-                        "sentiment": 7,
-                        "classification": 8,
-                        "classifications": 9,
+                        "speaker": {
+                            "index": 4,
+                            "type": (Union, (str, type(None))),
+                        },
+                        "part_id": {
+                            "index": 5,
+                            "type": (Union, (int, type(None))),
+                        },
+                        "sentiment": {"index": 6, "type": (dict, (str, float))},
+                        "classification": {
+                            "index": 7,
+                            "type": (dict, (str, float)),
+                        },
+                        "classifications": {
+                            "index": 8,
+                            "type": (FDict, (str, Classification)),
+                        },
                     },
                     "parent_entry": "forte.data.ontology.top.Annotation",
                 },
@@ -955,6 +988,7 @@ class DataStoreTest(unittest.TestCase):
                                 "Positive",
                                 None,
                                 "class2",
+
                             ],
                         ],
                     key=self.sorting_fn),
@@ -1008,13 +1042,13 @@ class DataStoreTest(unittest.TestCase):
                     ][3],
                 },
             )
-            
+
             self.assertEqual(
                 temp._DataStore__tid_idx_dict,
                 {
                     23456: ["forte.data.ontology.top.Group", 0],
                     88888: ["forte.data.ontology.top.Link", 0],
-                }
+                },
             )
 
 
