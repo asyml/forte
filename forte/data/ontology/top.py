@@ -230,8 +230,8 @@ class Link(BaseLink):
 
     parent_type: Any
     child_type: Any
-    parent: Optional[int]
-    child: Optional[int]
+    parent: Optional[Entry]
+    child: Optional[Entry]
 
     ParentType = Entry
     ChildType = Entry
@@ -260,7 +260,7 @@ class Link(BaseLink):
                 f"The parent of {type(self)} should be an "
                 f"instance of {self.ParentType}, but get {type(parent)}"
             )
-        self.parent = parent.tid
+        self.parent = parent
 
     def set_child(self, child: Entry):
         r"""This will set the `child` of the current instance with given Entry.
@@ -274,7 +274,7 @@ class Link(BaseLink):
                 f"The parent of {type(self)} should be an "
                 f"instance of {self.ChildType}, but get {type(child)}"
             )
-        self.child = child.tid
+        self.child = child
 
     def get_parent(self) -> Entry:
         r"""Get the parent entry of the link.
@@ -289,7 +289,7 @@ class Link(BaseLink):
             )
         if self.parent is None:
             raise ValueError("The parent of this entry is not set.")
-        return cast(Entry, self.parent)
+        return self.parent
 
     def get_child(self) -> Entry:
         r"""Get the child entry of the link.
@@ -304,7 +304,7 @@ class Link(BaseLink):
             )
         if self.child is None:
             raise ValueError("The child of this entry is not set.")
-        return cast(Entry, self.child)
+        return self.child
 
 
 # pylint: disable=duplicate-bases
@@ -397,10 +397,10 @@ class MultiPackLink(MultiEntry, BaseLink):
         self.child_type = self.ChildType
         super().__init__(pack, parent, child)
 
-        if parent is not None:
-            self.set_parent(parent)
-        if child is not None:
-            self.set_child(child)
+        # if parent is not None:
+        #     self.set_parent(parent)
+        # if child is not None:
+        #     self.set_child(child)
 
     def parent_id(self) -> int:
         """
@@ -1094,8 +1094,7 @@ class Payload(Entry):
         # TODO: this function will be removed since
         # Entry store is being integrated into DataStore
         state = self.__dict__.copy()
-
-        state["_modality"] = self._modality.name
+        state["modality"] = self.modality_name
 
         if isinstance(state["_cache"], np.ndarray):
             state["_cache"] = list(self._cache.tolist())

@@ -185,7 +185,7 @@ class EntryConverter:
 
         # Store all the dataclass attributes to DataStore
         for attribute, value in entry.cached_attribute_data.items():
-            if not value:
+            if value is None:
                 continue
             if isinstance(value, Entry):
                 value = value.tid

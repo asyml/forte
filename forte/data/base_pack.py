@@ -483,7 +483,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         if c is None:
             # Use the auto-inferred control component.
             c = self.__control_component
-            
+
         def entry_getter(cls: Entry, attr_name: str):
             """A getter function for dataclass fields of entry object.
             Depending on the value stored in the data store and the type

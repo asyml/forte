@@ -19,21 +19,16 @@ import os
 import logging
 import unittest
 import copy
+from forte.data.ontology.core import Entry, FList
 
 from ft.onto.base_ontology import Document, Sentence
 from sortedcontainers import SortedList
-from typing import List, Optional, Dict, Union
+from typing import Any, List, Optional, Dict, Tuple, Union
 from dataclasses import dataclass
 from forte.data.data_store import DataStore
 from forte.data.ontology.top import (
     Annotation,
     Generics,
-    AudioAnnotation,
-    Group,
-    Link,
-    MultiPackGeneric,
-    MultiPackGroup,
-    MultiPackLink,
 )
 from forte.data.data_pack import DataPack
 from forte.common import constants
@@ -130,10 +125,13 @@ class DataStoreTest(unittest.TestCase):
         self.reference_type_attributes = {
             "ft.onto.base_ontology.Document": {
                 "attributes": {
-                    "document_class": {"index": 4, "type": (list, (str,))},
-                    "sentiment": {"index": 5, "type": (dict, (str, float))},
+                    "begin": {"index": 2, "type": (None, (int,))},
+                    "end": {"index": 3, "type": (None, (int,))},
+                    "payload_idx": {"index": 4, "type": (None, (int,))},
+                    "document_class": {"index": 5, "type": (list, (str,))},
+                    "sentiment": {"index": 6, "type": (dict, (str, float))},
                     "classifications": {
-                        "index": 6,
+                        "index": 7,
                         "type": (FDict, (str, Classification)),
                     },
                 },
@@ -141,59 +139,123 @@ class DataStoreTest(unittest.TestCase):
             },
             "ft.onto.base_ontology.Sentence": {
                 "attributes": {
-                    "speaker": {
+                    "begin": {
+                        "index": 2,
+                        "type": (None, (int,))
+                    },
+                    "end": {
+                        "index": 3,
+                        "type": (None, (int,))
+                    },
+                    "payload_idx": {
                         "index": 4,
+                        "type": (None, (int,))
+                    },
+                    "speaker": {
+                        "index": 5,
                         "type": (Union, (str, type(None))),
                     },
                     "part_id": {
-                        "index": 5,
+                        "index": 6,
                         "type": (Union, (int, type(None))),
                     },
-                    "sentiment": {"index": 6, "type": (dict, (str, float))},
+                    "sentiment": {"index": 7, "type": (dict, (str, float))},
                     "classification": {
-                        "index": 7,
+                        "index": 8,
                         "type": (dict, (str, float)),
                     },
                     "classifications": {
-                        "index": 8,
+                        "index": 9,
                         "type": (FDict, (str, Classification)),
                     },
                 },
                 "parent_class": set(),
             },
             "forte.data.ontology.top.Annotation": {
-                "attributes": {"begin": 2, "end": 3, "payload_idx": 4},
+                "attributes": {
+                    "begin": {
+                        "index": 2,
+                        "type": (None, (int,))
+                    },
+                    "end": {
+                        "index": 3,
+                        "type": (None, (int,))
+                    },
+                    "payload_idx": {
+                        "index": 4,
+                        "type": (None, (int,))
+                    }
+                },
                 "parent_class": {"Entry"},
             },
         }
 
         self.base_type_attributes = {
             "forte.data.ontology.top.Generics": {"parent_class": {"Entry"}},
-            "forte.data.ontology.top.Link": {"parent_class": {"BaseLink"}},
+            "forte.data.ontology.top.Link": {
+                "attributes": {
+                    'parent_type': {'type': (None, (Any,)), 'index': 2},
+                    'child_type': {'type': (None, (Any,)), 'index': 3},
+                    'parent': {'type': (Union, (int, type(None))), 'index': 4},
+                    'child': {'type': (Union, (int, type(None))), 'index': 5}
+                },
+                "parent_class": {"BaseLink"}
+            },
             "forte.data.ontology.top.Group": {
+                "attributes": {
+                    'members': {'type': (FList, (Entry,)), 'index': 2},
+                    'member_type': {'type': (type, (Entry,)), 'index': 3}
+                },
                 "parent_class": {"Entry", "BaseGroup"}
             },
             "forte.data.ontology.top.MultiPackGeneric": {
                 "parent_class": {"Entry", "MultiEntry"}
             },
             "forte.data.ontology.top.MultiPackLink": {
+                "attributes": {
+                    'parent_type': {'type': (None, (Any,)), 'index': 2},
+                    'child_type': {'type': (None, (Any,)), 'index': 3},
+                    'parent': {'type': (tuple, (Tuple,)), 'index': 4},
+                    'child': {'type': (tuple, (Tuple,)), 'index': 5}
+                },
                 "parent_class": {"MultiEntry", "BaseLink"}
             },
             "forte.data.ontology.top.MultiPackGroup": {
+                "attributes": {
+                    'members': {'type': (type, (FList[Entry], type(None))), 'index': 2},
+                    'member_type': {'type': (type, (Entry,)), 'index': 3}
+                },
                 "parent_class": {"Entry", "MultiEntry", "BaseGroup"}
             },
             "forte.data.ontology.top.Query": {"parent_class": {"Generics"}},
             "forte.data.ontology.top.AudioAnnotation": {
+                "attributes": {
+                    "begin": {
+                        "index": 2,
+                        "type": (None, (int,))
+                    },
+                    "end": {
+                        "index": 3,
+                        "type": (None, (int,))
+                    },
+                    "payload_idx": {
+                        "index": 4,
+                        "type": (None, (int,))
+                    }
+                },
                 "parent_class": {"Entry"}
             },
         }
 
         DataStore._type_attributes["ft.onto.base_ontology.Document"] = {
             "attributes": {
-                "document_class": {"index": 4, "type": (list, (str,))},
-                "sentiment": {"index": 5, "type": (dict, (str, float))},
+                "begin": {"index": 2, "type": (None, (int,))},
+                "end": {"index": 3, "type": (None, (int,))},
+                "payload_idx": {"index": 4, "type": (None, (int,))},
+                "document_class": {"index": 5, "type": (list, (str,))},
+                "sentiment": {"index": 6, "type": (dict, (str, float))},
                 "classifications": {
-                    "index": 6,
+                    "index": 7,
                     "type": (FDict, (str, Classification)),
                 },
             },
@@ -202,18 +264,33 @@ class DataStoreTest(unittest.TestCase):
 
         DataStore._type_attributes["ft.onto.base_ontology.Sentence"] = {
             "attributes": {
-                "speaker": {
+                "begin": {
+                    "index": 2,
+                    "type": (None, (int,))
+                },
+                "end": {
+                    "index": 3,
+                    "type": (None, (int,))
+                },
+                "payload_idx": {
                     "index": 4,
+                    "type": (None, (int,))
+                },
+                "speaker": {
+                    "index": 5,
                     "type": (Union, (str, type(None))),
                 },
                 "part_id": {
-                    "index": 5,
+                    "index": 6,
                     "type": (Union, (int, type(None))),
                 },
-                "sentiment": {"index": 6, "type": (dict, (str, float))},
-                "classification": {"index": 7, "type": (dict, (str, float))},
-                "classifications": {
+                "sentiment": {"index": 7, "type": (dict, (str, float))},
+                "classification": {
                     "index": 8,
+                    "type": (dict, (str, float)),
+                },
+                "classifications": {
+                    "index": 9,
                     "type": (FDict, (str, Classification)),
                 },
             },
@@ -221,7 +298,20 @@ class DataStoreTest(unittest.TestCase):
         }
 
         DataStore._type_attributes["forte.data.ontology.top.Annotation"] = {
-            "attributes": {"begin": 2, "end": 3, "payload_idx": 4},
+            "attributes": {
+                "begin": {
+                    "index": 2,
+                    "type": (None, (int,))
+                },
+                "end": {
+                    "index": 3,
+                    "type": (None, (int,))
+                },
+                "payload_idx": {
+                    "index": 4,
+                    "type": (None, (int,))
+                }
+            },
             "parent_class": {"Entry"},
         }
         # The order is [Document, Sentence]. Initialize 2 entries in each list.
@@ -279,12 +369,12 @@ class DataStoreTest(unittest.TestCase):
             s[
                 self.reference_type_attributes[
                     "forte.data.ontology.top.Annotation"
-                ]["attributes"]["begin"]
+                ]["attributes"]["begin"]["index"]
             ],
             s[
                 self.reference_type_attributes[
                     "forte.data.ontology.top.Annotation"
-                ]["attributes"]["end"]
+                ]["attributes"]["end"]["index"]
             ],
         )
         self.data_store._DataStore__elements = {
@@ -563,8 +653,8 @@ class DataStoreTest(unittest.TestCase):
         sent_tn = "ft.onto.base_ontology.Sentence"
 
         begin_idx = self.data_store._type_attributes[doc_tn][
-            constants.TYPE_ATTR_KEY
-        ]["begin"]
+            constants.ATTR_INFO_KEY
+        ]["begin"][constants.ATTR_INDEX_KEY]
 
         self.data_store._DataStore__elements[doc_tn][0][begin_idx] = 0
         self.data_store._DataStore__elements[doc_tn][1][begin_idx] = 0
@@ -623,11 +713,11 @@ class DataStoreTest(unittest.TestCase):
         ordered_elements2[1] = ordered_elements1[0]
 
         begin_idx = self.data_store._type_attributes[sent_tn][
-            constants.TYPE_ATTR_KEY
-        ]["begin"]
+            constants.ATTR_INFO_KEY
+        ]["begin"][constants.ATTR_INDEX_KEY]
         end_idx = self.data_store._type_attributes[sent_tn][
-            constants.TYPE_ATTR_KEY
-        ]["end"]
+            constants.ATTR_INFO_KEY
+        ]["end"][constants.ATTR_INDEX_KEY]
 
         self.data_store._DataStore__elements[sent_tn][0][begin_idx] = 0
         self.data_store._DataStore__elements[sent_tn][0][end_idx] = 5
@@ -1346,21 +1436,31 @@ class DataStoreTest(unittest.TestCase):
         expected_type_attributes = {
             "ft.onto.test.Description": {
                 "attributes": {
-                    "author": {"index": 4, "type": (type(None), (str,))},
-                    "passage_id": {"index": 5, "type": (type(None), (str,))},
+                    "begin": {"index": 2, "type": (None, (int,))},
+                    "end": {"index": 3, "type": (None, (int,))},
+                    "payload_idx": {"index": 4, "type": (None, (int,))},
+                    "author": {"index": 5, "type": (None, (str,))},
+                    "passage_id": {"index": 6, "type": (None, (str,))},
                 },
                 "parent_class": {"forte.data.ontology.top.Annotation"},
             },
             "ft.onto.test.EntityMention": {
                 "attributes": {
-                    "ner_type": {"index": 4, "type": (type(None), (str,))},
+                    "begin": {"index": 2, "type": (None, (int,))},
+                    "end": {"index": 3, "type": (None, (int,))},
+                    "payload_idx": {"index": 4, "type": (None, (int,))},
+                    "ner_type": {"index": 5, "type": (None, (str,))},
                 },
                 "parent_class": {"forte.data.ontology.top.Annotation"},
             },
             "ft.onto.test.MedicalEntityMention": {
                 "attributes": {
-                    "umls_entities": {"index": 4, "type": (type(None), (int,))},
-                    "umls_link": {"index": 5, "type": (type(None), (str,))},
+                    "begin": {"index": 2, "type": (None, (int,))},
+                    "end": {"index": 3, "type": (None, (int,))},
+                    "payload_idx": {"index": 4, "type": (None, (int,))},
+                    "ner_type": {"index": 5, "type": (None, (str,))},
+                    "umls_entities": {"index": 6, "type": (None, (int,))},
+                    "umls_link": {"index": 7, "type": (None, (str,))},
                 },
                 "parent_class": {"ft.onto.test.EntityMention"},
             },

@@ -14,7 +14,7 @@
 from copy import deepcopy
 import json
 import sys
-from typing import Dict, List, Iterator, Set, Tuple, Optional, Any, Type
+from typing import Dict, List, Iterator, Set, Tuple, Optional, Any
 
 import uuid
 import logging
@@ -191,10 +191,13 @@ class DataStore(BaseStore):
             {
                "ft.onto.base_ontology.Document": {
                    "attributes": {
-                       "document_class": {"index": 4, "type": (list, (str,))},
-                       "sentiment": {"index": 5, "type": (dict, (str, float))},
+                        "begin": {"index": 2, "type": (None, (int,))},
+                        "end": {"index": 3, "type": (None, (int,))},
+                        "payload_idx": {"index": 4, "type": (None, (int,))},
+                       "document_class": {"index": 5, "type": (list, (str,))},
+                       "sentiment": {"index": 6, "type": (dict, (str, float))},
                        "classifications": {
-                           "index": 6,
+                           "index": 7,
                            "type":(FDict,(str, Classification))
                        }
                     },
@@ -202,12 +205,15 @@ class DataStore(BaseStore):
                },
                "ft.onto.base_ontology.Sentence": {
                    "attributes": {
-                       "speaker": {"index": 4, "type": (Union, (str, type(None)))},
-                       "part_id": {"index": 5, "type": (Union, (int, type(None)))},
-                       "sentiment": {"index": 6, "type": (dict, (str, float))},
-                       "classification": {"index": 7, "type": (dict, (str, float))},
+                        "begin": {"index": 2, "type": (None, (int,))},
+                        "end": {"index": 3, "type": (None, (int,))},
+                        "payload_idx": {"index": 4, "type": (None, (int,))},
+                       "speaker": {"index": 5, "type": (Union, (str, type(None)))},
+                       "part_id": {"index": 6, "type": (Union, (int, type(None)))},
+                       "sentiment": {"index": 7, "type": (dict, (str, float))},
+                       "classification": {"index": 8, "type": (dict, (str, float))},
                        "classifications": {
-                           "index": 8,
+                           "index": 9,
                            "type": (FDict,(str, Classification))
                        },
                     },
@@ -779,7 +785,7 @@ class DataStore(BaseStore):
                 # None. But to maintain the consistency of
                 # type_dict, we only store the type of every
                 # value, even None.
-                attr_class = type(None)
+                attr_class = None
                 attr_args = tuple([get_class(type_val)])
                 type_dict[attr] = tuple([attr_class, attr_args])
 
@@ -789,6 +795,8 @@ class DataStore(BaseStore):
 
                 attr_class = get_origin(attr_info.type)
                 attr_args = get_args(attr_info.type)
+                if len(attr_args) == 0:
+                    attr_args = tuple([attr_info.type])
 
                 # Prior to Python 3.7, fetching generic type
                 # aliases resulted in actual type objects whereas from
@@ -1083,8 +1091,8 @@ class DataStore(BaseStore):
         """
         try:
             return DataStore._type_attributes[type_name][
-                constants.TYPE_ATTR_KEY
-            ][attr]
+                constants.ATTR_INFO_KEY
+            ][attr][constants.ATTR_INDEX_KEY]
         except KeyError as e:
             raise KeyError(
                 f"Attribute {attr} is not a part "
@@ -2081,7 +2089,7 @@ class DataStore(BaseStore):
 
             # add all attributes of immediate parent
             attr_dict = DataStore._type_attributes[entry_node.parent.name][
-                constants.TYPE_ATTR_KEY
+                constants.ATTR_INFO_KEY
             ].copy()
             idx = constants.ATTR_BEGIN_INDEX + len(attr_dict)
 
