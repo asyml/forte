@@ -7,6 +7,8 @@ import os
 def test_Automatic_Speech_Recognition(tb):
     # input file
     tb.execute_cell("input_file")
+    #install
+    tb.execute_cell("install")
     # imports_1
     tb.execute_cell("imports_1")
     #processor 1
@@ -14,7 +16,6 @@ def test_Automatic_Speech_Recognition(tb):
     
     tb.execute_cell("pipeline1")
     tb.execute_cell("import_2")
-    # test Article ontology
     tb.execute_cell("AudioUtterance")
     tb.execute_cell("pipeline2")
     tb.execute_cell("inference")
