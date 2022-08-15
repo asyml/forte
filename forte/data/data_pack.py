@@ -639,6 +639,20 @@ class DataPack(BasePack[Entry, Link, Group]):
         ap.set_cache(audio)
         ap.sample_rate = sample_rate
 
+    def add_image(self, image):
+        r"""
+        Add an ImagePayload storing the image given in the parameters.
+
+        Args:
+            image: A numpy array storing the image.
+        """
+        from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
+            ImagePayload,
+        )
+
+        ip = ImagePayload(self)
+        ip.set_cache(image)
+
     def set_image(
         self,
         image,
@@ -664,9 +678,16 @@ class DataPack(BasePack[Entry, Link, Group]):
             )
 
             ip = ImagePayload(self)
+            logging.warning(
+                "image_payload_index is set to zero,"
+                "and there is not existing ImagePayload"
+                " in the DataPack."
+                "An `ImagePayload` will be added into the DataPack."
+                "However, we encourage user to"
+                " use DataPack.add_image() function instead."
+            )
         else:
             ip = self.get_payload_at(Modality.Image, image_payload_index)
-
         ip.set_cache(image)
 
     def get_original_text(self, text_payload_index: int = 0):

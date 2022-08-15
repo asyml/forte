@@ -48,13 +48,17 @@ class ImageAnnotationTest(unittest.TestCase):
         datapack.set_image(self.line, 0)
         self.assertTrue(np.array_equal(datapack.image, self.datapack.image))
         def fn():
+            # invalid image index
             datapack.set_image(self.line, 2)
         self.assertRaises(ProcessExecutionException, fn)
 
         def fn():
+            # invalid image index
             datapack.get_image(1)
         self.assertRaises(ProcessExecutionException, fn)
 
+        datapack.add_image(self.line)
+        self.assertTrue(np.array_equal(datapack.get_image(1), self.line))
 
 
 
