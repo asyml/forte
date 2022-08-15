@@ -9,6 +9,7 @@ def test_Automatic_Speech_Recognition(tb):
     tb.execute_cell("input_file")
     # install
     tb.execute_cell("install")
+    tb.execute_cell("install2")
     # imports_1
     tb.execute_cell("imports_1")
     # processor 1
