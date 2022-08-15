@@ -24,10 +24,4 @@ ReplaceOperationsType = List[Tuple[Span, str]]
 
 DataRequest = Dict[Type[Entry], Union[Dict, List]]
 
-#try:
-#    import torch
-#
-#    MatrixLike = Union[torch.TensorType, np.ndarray, List]
-#except ImportError:
-#    MatrixLike = Union[np.ndarray, List]  # type: ignore
 MatrixLike = Union[np.ndarray, List]  # type: ignore
