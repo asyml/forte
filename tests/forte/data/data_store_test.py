@@ -20,7 +20,7 @@ import logging
 import unittest
 import copy
 from sortedcontainers import SortedList
-from typing import Optional, Dict
+from typing import List, Optional, Dict, Union
 from dataclasses import dataclass
 from forte.data.data_store import DataStore
 from forte.data.ontology.top import (
@@ -35,6 +35,8 @@ from forte.data.ontology.top import (
 )
 from forte.data.data_pack import DataPack
 from forte.common import constants
+from forte.data.ontology.core import FDict
+from ft.onto.base_ontology import Classification
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -126,19 +128,34 @@ class DataStoreTest(unittest.TestCase):
         self.reference_type_attributes = {
             "ft.onto.base_ontology.Document": {
                 "attributes": {
-                    "document_class": 4,
-                    "sentiment": 5,
-                    "classifications": 6,
+                    "document_class": {"index": 4, "type": (list, (str,))},
+                    "sentiment": {"index": 5, "type": (dict, (str, float))},
+                    "classifications": {
+                        "index": 6,
+                        "type": (FDict, (str, Classification)),
+                    },
                 },
                 "parent_class": set(),
             },
             "ft.onto.base_ontology.Sentence": {
                 "attributes": {
-                    "speaker": 4,
-                    "part_id": 5,
-                    "sentiment": 6,
-                    "classification": 7,
-                    "classifications": 8,
+                    "speaker": {
+                        "index": 4,
+                        "type": (Union, (str, type(None))),
+                    },
+                    "part_id": {
+                        "index": 5,
+                        "type": (Union, (int, type(None))),
+                    },
+                    "sentiment": {"index": 6, "type": (dict, (str, float))},
+                    "classification": {
+                        "index": 7,
+                        "type": (dict, (str, float)),
+                    },
+                    "classifications": {
+                        "index": 8,
+                        "type": (FDict, (str, Classification)),
+                    },
                 },
                 "parent_class": set(),
             },
@@ -168,20 +185,32 @@ class DataStoreTest(unittest.TestCase):
 
         DataStore._type_attributes["ft.onto.base_ontology.Document"] = {
             "attributes": {
-                "document_class": 4,
-                "sentiment": 5,
-                "classifications": 6,
+                "document_class": {"index": 4, "type": (list, (str,))},
+                "sentiment": {"index": 5, "type": (dict, (str, float))},
+                "classifications": {
+                    "index": 6,
+                    "type": (FDict, (str, Classification)),
+                },
             },
             "parent_class": set(),
         }
 
         DataStore._type_attributes["ft.onto.base_ontology.Sentence"] = {
             "attributes": {
-                "speaker": 4,
-                "part_id": 5,
-                "sentiment": 6,
-                "classification": 7,
-                "classifications": 8,
+                "speaker": {
+                    "index": 4,
+                    "type": (Union, (str, type(None))),
+                },
+                "part_id": {
+                    "index": 5,
+                    "type": (Union, (int, type(None))),
+                },
+                "sentiment": {"index": 6, "type": (dict, (str, float))},
+                "classification": {"index": 7, "type": (dict, (str, float))},
+                "classifications": {
+                    "index": 8,
+                    "type": (FDict, (str, Classification)),
+                },
             },
             "parent_class": set(),
         }
@@ -306,6 +335,7 @@ class DataStoreTest(unittest.TestCase):
         )
         empty_data_store._get_type_info("ft.onto.base_ontology.Sentence")
         self.assertEqual(len(empty_data_store._DataStore__elements), 0)
+
         self.assertEqual(
             DataStore._type_attributes["ft.onto.base_ontology.Sentence"],
             self.reference_type_attributes["ft.onto.base_ontology.Sentence"],
@@ -1269,21 +1299,21 @@ class DataStoreTest(unittest.TestCase):
         expected_type_attributes = {
             "ft.onto.test.Description": {
                 "attributes": {
-                    "author": 4,
-                    "passage_id": 5,
+                    "author": {"index": 4, "type": (type(None), (str,))},
+                    "passage_id": {"index": 5, "type": (type(None), (str,))},
                 },
                 "parent_class": {"forte.data.ontology.top.Annotation"},
             },
             "ft.onto.test.EntityMention": {
                 "attributes": {
-                    "ner_type": 4,
+                    "ner_type": {"index": 4, "type": (type(None), (str,))},
                 },
                 "parent_class": {"forte.data.ontology.top.Annotation"},
             },
             "ft.onto.test.MedicalEntityMention": {
                 "attributes": {
-                    "umls_entities": 4,
-                    "umls_link": 5,
+                    "umls_entities": {"index": 4, "type": (type(None), (int,))},
+                    "umls_link": {"index": 5, "type": (type(None), (str,))},
                 },
                 "parent_class": {"ft.onto.test.EntityMention"},
             },
