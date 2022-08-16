@@ -81,10 +81,10 @@ class EntryConverter:
                 # Once an attribute is accessed from the _cached_attribute_data
                 # dict, it must be removed
                 attribute_data=[
-                    entry._cached_attribute_data[entry.entry_type()].pop(
+                    Entry._cached_attribute_data[entry.entry_type()].pop(
                         constants.BEGIN_ATTR_NAME
                     ),
-                    entry._cached_attribute_data[entry.entry_type()].pop(
+                    Entry._cached_attribute_data[entry.entry_type()].pop(
                         constants.END_ATTR_NAME
                     ),
                 ],
@@ -96,10 +96,10 @@ class EntryConverter:
                 # Once an attribute is accessed from the _cached_attribute_data
                 # dict, it must be removed
                 attribute_data=[
-                    entry._cached_attribute_data[entry.entry_type()].pop(
+                    Entry._cached_attribute_data[entry.entry_type()].pop(
                         constants.PARENT_TYPE_ATTR_NAME
                     ),
-                    entry._cached_attribute_data[entry.entry_type()].pop(
+                    Entry._cached_attribute_data[entry.entry_type()].pop(
                         constants.CHILD_TYPE_ATTR_NAME
                     ),
                 ],
@@ -111,7 +111,7 @@ class EntryConverter:
                 # Once an attribute is accessed from the _cached_attribute_data
                 # dict, it must be removed
                 attribute_data=[
-                    entry._cached_attribute_data[entry.entry_type()].pop(
+                    Entry._cached_attribute_data[entry.entry_type()].pop(
                         constants.MEMBER_TYPE_ATTR_NAME
                     )
                 ],
@@ -129,10 +129,10 @@ class EntryConverter:
                 # Once an attribute is accessed from the _cached_attribute_data
                 # dict, it must be removed
                 attribute_data=[
-                    entry._cached_attribute_data[entry.entry_type()].pop(
+                    Entry._cached_attribute_data[entry.entry_type()].pop(
                         constants.BEGIN_ATTR_NAME
                     ),
-                    entry._cached_attribute_data[entry.entry_type()].pop(
+                    Entry._cached_attribute_data[entry.entry_type()].pop(
                         constants.END_ATTR_NAME
                     ),
                 ],
@@ -157,10 +157,10 @@ class EntryConverter:
                 # Once an attribute is accessed from the _cached_attribute_data
                 # dict, it must be removed
                 attribute_data=[
-                    entry._cached_attribute_data[entry.entry_type()].pop(
+                    Entry._cached_attribute_data[entry.entry_type()].pop(
                         constants.PARENT_TYPE_ATTR_NAME
                     ),
-                    entry._cached_attribute_data[entry.entry_type()].pop(
+                    Entry._cached_attribute_data[entry.entry_type()].pop(
                         constants.CHILD_TYPE_ATTR_NAME
                     ),
                 ],
@@ -172,7 +172,7 @@ class EntryConverter:
                 # Once an attribute is accessed from the _cached_attribute_data
                 # dict, it must be removed
                 attribute_data=[
-                    entry._cached_attribute_data[entry.entry_type()].pop(
+                    Entry._cached_attribute_data[entry.entry_type()].pop(
                         constants.MEMBER_TYPE_ATTR_NAME
                     )
                 ],
@@ -192,7 +192,7 @@ class EntryConverter:
             )
 
         # Store all the dataclass attributes to DataStore
-        for attribute, value in entry._cached_attribute_data[
+        for attribute, value in Entry._cached_attribute_data[
             entry.entry_type()
         ].items():
             if value is None:
@@ -208,7 +208,7 @@ class EntryConverter:
             )
 
         # Empty the cache of the attribute data in Entry
-        entry._cached_attribute_data[entry.entry_type()].clear()
+        Entry._cached_attribute_data[entry.entry_type()].clear()
         # Cache the stored entry and its tid
         self._entry_dict[entry.tid] = entry
 

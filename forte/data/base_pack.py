@@ -470,10 +470,6 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         """
         c = component_name
 
-        # This boolean checks if this is the first time an entry of
-        # this type is created. This is useful for avoiding redundant
-        # registrations of getter and setter properties to entries.
-        new_entry: bool = False
         if c is None:
             # Use the auto-inferred control component.
             c = self.__control_component
@@ -587,11 +583,14 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                 # _cached_attribute_data of the Entry class.
 
                 # pylint: disable=protected-access
+                if cls.entry_type() not in Entry._cached_attribute_data:
+                    Entry._cached_attribute_data[cls.entry_type()] = {}
+
                 if (
                     attr_name
-                    not in cls._cached_attribute_data[cls.entry_type()]
+                    not in Entry._cached_attribute_data[cls.entry_type()]
                 ):
-                    cls._cached_attribute_data[cls.entry_type()][
+                    Entry._cached_attribute_data[cls.entry_type()][
                         attr_name
                     ] = value
                     return
@@ -659,13 +658,12 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         # method.
 
         # pylint: disable=protected-access
-        if entry.entry_type() not in entry._cached_attribute_data:
-            entry._cached_attribute_data[entry.entry_type()] = {}
-            new_entry = True
+        if entry.entry_type() not in Entry._cached_attribute_data:
+            Entry._cached_attribute_data[entry.entry_type()] = {}
             for name in entry.__dataclass_fields__:
                 attr_val = getattr(entry, name, None)
                 if attr_val is not None:
-                    entry._cached_attribute_data[entry.entry_type()][
+                    Entry._cached_attribute_data[entry.entry_type()][
                         name
                     ] = attr_val
 
@@ -673,28 +671,21 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         self._save_entry_to_data_store(entry=entry)
 
         # Register property functions for all dataclass fields.
-        # We only need to register these properties if they
-        # have not been registered before for an entry of this type.
-        # We ensure this by only registering these properties if
-        # this entry is flagged by the new_entry boolean. Note that
-        # an entry is only flagged as a new entry if it is not present
-        # in _cached_attribute_data dictionary of the Entry class.
-        if new_entry:
-            for name in entry.__dataclass_fields__:
-                # Convert the typing annotation to the original class.
-                # This will be used to determine if a field is FList/FDict.
-                setattr(
-                    type(entry),
-                    name,
-                    # property(fget, fset) will register a conversion layer
-                    # that specifies how to retrieve/assign value of this field.
-                    property(
-                        # We need to bound the attribute name and field type here
-                        # for the getter and setter of each field.
-                        fget=partial(entry_getter, attr_name=name),
-                        fset=partial(entry_setter, attr_name=name),
-                    ),
-                )
+        for name in entry.__dataclass_fields__:
+            # Convert the typing annotation to the original class.
+            # This will be used to determine if a field is FList/FDict.
+            setattr(
+                type(entry),
+                name,
+                # property(fget, fset) will register a conversion layer
+                # that specifies how to retrieve/assign value of this field.
+                property(
+                    # We need to bound the attribute name and field type here
+                    # for the getter and setter of each field.
+                    fget=partial(entry_getter, attr_name=name),
+                    fset=partial(entry_setter, attr_name=name),
+                ),
+            )
 
         # Record that this entry hasn't been added to the index yet.
         self._pending_entries[entry.tid] = c
