@@ -42,9 +42,9 @@ class DataStoreTest(unittest.TestCase):
         DataStore._type_attributes = {
             "ft.onto.base_ontology.Document": {
                 "attributes": {
-                    "begin": {"index": 2, "type": (None, (int,))},
-                    "end": {"index": 3, "type": (None, (int,))},
-                    "payload_idx": {"index": 4, "type": (None, (int,))},
+                    "begin": {"index": 2, "type": (type(None), (int,))},
+                    "end": {"index": 3, "type": (type(None), (int,))},
+                    "payload_idx": {"index": 4, "type": (type(None), (int,))},
                     "sentiment": {"index": 5, "type": (dict, (str, float))},
                     "classifications": {
                         "index": 6,
@@ -55,9 +55,9 @@ class DataStoreTest(unittest.TestCase):
             },
             "ft.onto.base_ontology.Sentence": {
                 "attributes": {
-                    "begin": {"index": 2, "type": (None, (int,))},
-                    "end": {"index": 3, "type": (None, (int,))},
-                    "payload_idx": {"index": 4, "type": (None, (int,))},
+                    "begin": {"index": 2, "type": (type(None), (int,))},
+                    "end": {"index": 3, "type": (type(None), (int,))},
+                    "payload_idx": {"index": 4, "type": (type(None), (int,))},
                     "sentiment": {"index": 5, "type": (dict, (str, float))},
                     "speaker": {"index": 6, "type": (Union, (str, type(None)))},
                     "part_id": {"index": 7, "type": (Union, (int, type(None)))},
@@ -82,8 +82,8 @@ class DataStoreTest(unittest.TestCase):
             },
             "forte.data.ontology.top.Link": {
                 "attributes": {
-                    'parent_type': {'type': (None, (Any,)), 'index': 2},
-                    'child_type': {'type': (None, (Any,)), 'index': 3},
+                    'parent_type': {'type': (type(None), (Any,)), 'index': 2},
+                    'child_type': {'type': (type(None), (Any,)), 'index': 3},
                     'parent': {'type': (Union, (int, type(None))), 'index': 4},
                     'child': {'type': (Union, (int, type(None))), 'index': 5}
                 },
@@ -282,9 +282,9 @@ class DataStoreTest(unittest.TestCase):
             DataStore._type_attributes = {
                 "ft.onto.base_ontology.Document": {
                     "attributes": {
-                        "begin": {"index": 2, "type": (None, (int,))},
-                        "end": {"index": 3, "type": (None, (int,))},
-                        "payload_idx": {"index": 4, "type": (None, (int,))},
+                        "begin": {"index": 2, "type": (type(None), (int,))},
+                        "end": {"index": 3, "type": (type(None), (int,))},
+                        "payload_idx": {"index": 4, "type": (type(None), (int,))},
                         "document_class": {"index": 5, "type": (list, (str,))},
                         "sentiment": {"index": 6, "type": (dict, (str, float))},
                         "classifications": {
@@ -298,15 +298,15 @@ class DataStoreTest(unittest.TestCase):
                     "attributes": {
                         "begin": {
                             "index": 2,
-                            "type": (None, (int,))
+                            "type": (type(None), (int,))
                         },
                         "end": {
                             "index": 3,
-                            "type": (None, (int,))
+                            "type": (type(None), (int,))
                         },
                         "payload_idx": {
                             "index": 4,
-                            "type": (None, (int,))
+                            "type": (type(None), (int,))
                         },
                         "speaker": {
                             "index": 5,
@@ -340,8 +340,8 @@ class DataStoreTest(unittest.TestCase):
                 },
                 "forte.data.ontology.top.Link": {
                     "attributes": {
-                        'parent_type': {'type': (None, (Any,)), 'index': 2},
-                        'child_type': {'type': (None, (Any,)), 'index': 3},
+                        'parent_type': {'type': (type(None), (Any,)), 'index': 2},
+                        'child_type': {'type': (type(None), (Any,)), 'index': 3},
                         'parent': {'type': (Union, (int, type(None))), 'index': 4},
                         'child': {'type': (Union, (int, type(None))), 'index': 5}
                     },
@@ -752,9 +752,9 @@ class DataStoreTest(unittest.TestCase):
             DataStore._type_attributes = {
                 "ft.onto.base_ontology.Document": {
                     "attributes": {
-                        "begin": {"index": 2, "type": (None, (int,))},
-                        "end": {"index": 3, "type": (None, (int,))},
-                        "payload_idx": {"index": 4, "type": (None, (int,))},
+                        "begin": {"index": 2, "type": (type(None), (int,))},
+                        "end": {"index": 3, "type": (type(None), (int,))},
+                        "payload_idx": {"index": 4, "type": (type(None), (int,))},
                         "document_class": {"index": 5, "type": (list, (str,))},
                         "sentiment": {"index": 6, "type": (dict, (str, float))},
                         "classifications": {
@@ -768,15 +768,15 @@ class DataStoreTest(unittest.TestCase):
                     "attributes": {
                         "begin": {
                             "index": 2,
-                            "type": (None, (int,))
+                            "type": (type(None), (int,))
                         },
                         "end": {
                             "index": 3,
-                            "type": (None, (int,))
+                            "type": (type(None), (int,))
                         },
                         "payload_idx": {
                             "index": 4,
-                            "type": (None, (int,))
+                            "type": (type(None), (int,))
                         },
                         "speaker": {
                             "index": 5,
@@ -807,8 +807,8 @@ class DataStoreTest(unittest.TestCase):
                 },
                 "forte.data.ontology.top.Link": {
                     "attributes": {
-                        'parent_type': {'type': (None, (Any,)), 'index': 2},
-                        'child_type': {'type': (None, (Any,)), 'index': 3},
+                        'parent_type': {'type': (type(None), (Any,)), 'index': 2},
+                        'child_type': {'type': (type(None), (Any,)), 'index': 3},
                         'parent': {'type': (Union, (int, type(None))), 'index': 4},
                         'child': {'type': (Union, (int, type(None))), 'index': 5}
                     },
@@ -875,9 +875,9 @@ class DataStoreTest(unittest.TestCase):
             DataStore._type_attributes = {
                 "ft.onto.base_ontology.Document": {
                     "attributes": {
-                        "begin": {"index": 2, "type": (None, (int,))},
-                        "end": {"index": 3, "type": (None, (int,))},
-                        "payload_idx": {"index": 4, "type": (None, (int,))},
+                        "begin": {"index": 2, "type": (type(None), (int,))},
+                        "end": {"index": 3, "type": (type(None), (int,))},
+                        "payload_idx": {"index": 4, "type": (type(None), (int,))},
                         "document_class": {"index": 5, "type": (list, (str,))},
                         "sentiment": {"index": 6, "type": (dict, (str, float))},
                         "classifications": {
@@ -891,15 +891,15 @@ class DataStoreTest(unittest.TestCase):
                     "attributes": {
                         "begin": {
                             "index": 2,
-                            "type": (None, (int,))
+                            "type": (type(None), (int,))
                         },
                         "end": {
                             "index": 3,
-                            "type": (None, (int,))
+                            "type": (type(None), (int,))
                         },
                         "payload_idx": {
                             "index": 4,
-                            "type": (None, (int,))
+                            "type": (type(None), (int,))
                         },
                         "speaker": {
                             "index": 5,
@@ -930,8 +930,8 @@ class DataStoreTest(unittest.TestCase):
                 },
                 "forte.data.ontology.top.Link": {
                     "attributes": {
-                        'parent_type': {'type': (None, (Any,)), 'index': 2},
-                        'child_type': {'type': (None, (Any,)), 'index': 3},
+                        'parent_type': {'type': (type(None), (Any,)), 'index': 2},
+                        'child_type': {'type': (type(None), (Any,)), 'index': 3},
                         'parent': {'type': (Union, (int, type(None))), 'index': 4},
                         'child': {'type': (Union, (int, type(None))), 'index': 5}
                     },

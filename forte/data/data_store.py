@@ -191,9 +191,9 @@ class DataStore(BaseStore):
             {
                "ft.onto.base_ontology.Document": {
                    "attributes": {
-                        "begin": {"index": 2, "type": (None, (int,))},
-                        "end": {"index": 3, "type": (None, (int,))},
-                        "payload_idx": {"index": 4, "type": (None, (int,))},
+                        "begin": {"index": 2, "type": (type(None), (int,))},
+                        "end": {"index": 3, "type": (type(None), (int,))},
+                        "payload_idx": {"index": 4, "type": (type(None), (int,))},
                        "document_class": {"index": 5, "type": (list, (str,))},
                        "sentiment": {"index": 6, "type": (dict, (str, float))},
                        "classifications": {
@@ -205,9 +205,9 @@ class DataStore(BaseStore):
                },
                "ft.onto.base_ontology.Sentence": {
                    "attributes": {
-                        "begin": {"index": 2, "type": (None, (int,))},
-                        "end": {"index": 3, "type": (None, (int,))},
-                        "payload_idx": {"index": 4, "type": (None, (int,))},
+                        "begin": {"index": 2, "type": (type(None), (int,))},
+                        "end": {"index": 3, "type": (type(None), (int,))},
+                        "payload_idx": {"index": 4, "type": (type(None), (int,))},
                        "speaker": {"index": 5, "type": (Union, (str, type(None)))},
                        "part_id": {"index": 6, "type": (Union, (int, type(None)))},
                        "sentiment": {"index": 7, "type": (dict, (str, float))},
@@ -572,6 +572,13 @@ class DataStore(BaseStore):
         This function creates a lambda method to generate the sorted
         list of an entry of given type. The type of the entry must be
         a successor of :class:`~forte.data.ontology.top.Annotation`.
+        It creates a lambda function that sorts annotation type entries
+        based on their ``begin`` and ``end`` index. The function first
+        fetches the indices of the positions where the ``begin`` and
+        ``end`` index is stored for the data store entry specified by
+        ``type_name``. These index positions are then used to create
+        the lambda function to sort the data store entries given by
+        ``type_name``.
 
         Args:
             type_name: A string representing a fully qualified type
@@ -785,7 +792,7 @@ class DataStore(BaseStore):
                 # None. But to maintain the consistency of
                 # type_dict, we only store the type of every
                 # value, even None.
-                attr_class = None
+                attr_class = type(None)
                 attr_args = tuple([get_class(type_val)])
                 type_dict[attr] = tuple([attr_class, attr_args])
 
@@ -794,6 +801,11 @@ class DataStore(BaseStore):
             for attr_name, attr_info in attr_fields.items():
 
                 attr_class = get_origin(attr_info.type)
+                # Since we store the class specified by get_origin,
+                # if the output it None, we store the class for it,
+                # ie. NoneType.
+                if attr_class is None:
+                    attr_class = type(None)
                 attr_args = get_args(attr_info.type)
                 if len(attr_args) == 0:
                     attr_args = tuple([attr_info.type])

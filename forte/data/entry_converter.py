@@ -78,24 +78,28 @@ class EntryConverter:
                 type_name=entry.entry_type(),
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,
-                # Once an attribute is accessed from the cached_attribute_data
+                # Once an attribute is accessed from the _cached_attribute_data
                 # dict, it must be removed
                 attribute_data=[
-                    entry.cached_attribute_data.pop(constants.BEGIN_ATTR_NAME),
-                    entry.cached_attribute_data.pop(constants.END_ATTR_NAME),
+                    entry._cached_attribute_data[entry.entry_type()].pop(
+                        constants.BEGIN_ATTR_NAME
+                    ),
+                    entry._cached_attribute_data[entry.entry_type()].pop(
+                        constants.END_ATTR_NAME
+                    ),
                 ],
             )
         elif data_store_ref._is_subclass(entry.entry_type(), Link):
             data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
                 tid=entry.tid,
-                # Once an attribute is accessed from the cached_attribute_data
+                # Once an attribute is accessed from the _cached_attribute_data
                 # dict, it must be removed
                 attribute_data=[
-                    entry.cached_attribute_data.pop(
+                    entry._cached_attribute_data[entry.entry_type()].pop(
                         constants.PARENT_TYPE_ATTR_NAME
                     ),
-                    entry.cached_attribute_data.pop(
+                    entry._cached_attribute_data[entry.entry_type()].pop(
                         constants.CHILD_TYPE_ATTR_NAME
                     ),
                 ],
@@ -104,10 +108,10 @@ class EntryConverter:
             data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
                 tid=entry.tid,
-                # Once an attribute is accessed from the cached_attribute_data
+                # Once an attribute is accessed from the _cached_attribute_data
                 # dict, it must be removed
                 attribute_data=[
-                    entry.cached_attribute_data.pop(
+                    entry._cached_attribute_data[entry.entry_type()].pop(
                         constants.MEMBER_TYPE_ATTR_NAME
                     )
                 ],
@@ -122,11 +126,15 @@ class EntryConverter:
                 type_name=entry.entry_type(),
                 tid=entry.tid,
                 allow_duplicate=allow_duplicate,
-                # Once an attribute is accessed from the cached_attribute_data
+                # Once an attribute is accessed from the _cached_attribute_data
                 # dict, it must be removed
                 attribute_data=[
-                    entry.cached_attribute_data.pop(constants.BEGIN_ATTR_NAME),
-                    entry.cached_attribute_data.pop(constants.END_ATTR_NAME),
+                    entry._cached_attribute_data[entry.entry_type()].pop(
+                        constants.BEGIN_ATTR_NAME
+                    ),
+                    entry._cached_attribute_data[entry.entry_type()].pop(
+                        constants.END_ATTR_NAME
+                    ),
                 ],
             )
         elif data_store_ref._is_subclass(entry.entry_type(), ImageAnnotation):
@@ -146,13 +154,13 @@ class EntryConverter:
             data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
                 tid=entry.tid,
-                # Once an attribute is accessed from the cached_attribute_data
+                # Once an attribute is accessed from the _cached_attribute_data
                 # dict, it must be removed
                 attribute_data=[
-                    entry.cached_attribute_data.pop(
+                    entry._cached_attribute_data[entry.entry_type()].pop(
                         constants.PARENT_TYPE_ATTR_NAME
                     ),
-                    entry.cached_attribute_data.pop(
+                    entry._cached_attribute_data[entry.entry_type()].pop(
                         constants.CHILD_TYPE_ATTR_NAME
                     ),
                 ],
@@ -161,10 +169,10 @@ class EntryConverter:
             data_store_ref.add_entry_raw(
                 type_name=entry.entry_type(),
                 tid=entry.tid,
-                # Once an attribute is accessed from the cached_attribute_data
+                # Once an attribute is accessed from the _cached_attribute_data
                 # dict, it must be removed
                 attribute_data=[
-                    entry.cached_attribute_data.pop(
+                    entry._cached_attribute_data[entry.entry_type()].pop(
                         constants.MEMBER_TYPE_ATTR_NAME
                     )
                 ],
@@ -184,7 +192,9 @@ class EntryConverter:
             )
 
         # Store all the dataclass attributes to DataStore
-        for attribute, value in entry.cached_attribute_data.items():
+        for attribute, value in entry._cached_attribute_data[
+            entry.entry_type()
+        ].items():
             if value is None:
                 continue
             if isinstance(value, Entry):
@@ -198,7 +208,7 @@ class EntryConverter:
             )
 
         # Empty the cache of the attribute data in Entry
-        entry.cached_attribute_data.clear()
+        entry._cached_attribute_data[entry.entry_type()].clear()
         # Cache the stored entry and its tid
         self._entry_dict[entry.tid] = entry
 

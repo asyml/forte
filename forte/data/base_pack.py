@@ -443,32 +443,22 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         """
         Call this when adding a new entry, will be called
         in :class:`~forte.data.ontology.core.Entry` when
-        its `__init__` function is called. For every entry,
-        there are 2 scenarios that are possible during its
-        creation with regards to how default values of `dataclass`
-        attributes are stored at the time of initialization.
+        its `__init__` function is called. This method does
+        the following 2 operations with regards to creating
+        a new entry.
 
-        - The attributes of this entry do not have entry setter
-            and getter properties associated with them: This is the
-            case when it is the first time an entry of this type is
-            being created. Thus, any default value assigned to a
-            `dataclass` attribute are stored in the entry object and
-            can thus easily fetched using `getattr` when required to
-            be added to the data store. We use this method to
-            populate a class level dictionary of ``Entry`` called
-            ``cached_attribute_data`` which is used to initialize
-            the corresponding data store entry.
-        - The attributes of this entry have have entry setter
-            and getter properties associated with them: This is the
-            case when an entry of this type has already been created
-            before (which means that its reference is stored in
-            ``_type_attributes`` for ``DataStore``). In this case,
-            whenever default values are assigned to `dataclass` attributes,
-            it will invoke the entry setter method. During initialization,
-            there is not pack associated with the entry an thus the default
-            values are stored in a class level dictionary of ``Entry`` called
-            ``cached_attribute_data``. This dictionary is used to initialize
-            the corresponding data store entry.
+        - All ``dataclass`` attributes of the entry to be created
+            are stored in the class level dictionary of
+            :class:`~forte.data.ontology.core.Entry` called
+            ``cached_attributes_data``. This is used to initialize
+            the corresponding entry's objects data store entry
+        - On creation of the data store entry, this methods associates
+            ``getter`` and ``setter`` properties to all `dataclass`
+            attributes of this entry to allow direct interaction
+            between the attributes of the entry and their copy being
+            stored in the data store. For example, the `setter` method
+            updates the data store value of an attribute of a given entry
+            whenever the atribute in the entry's object is updated.
 
         Args:
             entry: The entry to be added.
@@ -480,6 +470,10 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         """
         c = component_name
 
+        # This boolean checks if this is the first time an entry of
+        # this type is created. This is useful for avoiding redundant
+        # registrations of getter and setter properties to entries.
+        new_entry: bool = False
         if c is None:
             # Use the auto-inferred control component.
             c = self.__control_component
@@ -585,8 +579,21 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             try:
                 pack = cls.pack
             except AttributeError as err:
-                if attr_name not in cls.cached_attribute_data:
-                    cls.cached_attribute_data[attr_name] = value
+                # This is the case when an object of an entry that has already been
+                # created before (which means an setter and getter properties are
+                # associated with its dataclass fields) is trying to be initialized.
+                # In this case, a pack is not yet associated with this entry. Thus,
+                # we store the initial values dataclass fields of such entries in the
+                # _cached_attribute_data of the Entry class.
+
+                # pylint: disable=protected-access
+                if (
+                    attr_name
+                    not in cls._cached_attribute_data[cls.entry_type()]
+                ):
+                    cls._cached_attribute_data[cls.entry_type()][
+                        attr_name
+                    ] = value
                     return
                 else:
                     raise KeyError(
@@ -642,35 +649,52 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
         # If this is the first time an entry of this type is
         # created, its attributes do not have a getter and setter
-        # property associated with them. In this case, we manually
-        # add all dataclass attributes to the cached_attribute_data
-        # dict.
-        for name in entry.__dataclass_fields__:
-            if (
-                hasattr(type(entry), name)
-                and not isinstance(getattr(type(entry), name), property)
-            ) or (not hasattr(type(entry), name)):
-                entry.cached_attribute_data[name] = getattr(entry, name, None)
+        # property associated with them. We can thus assume that there
+        # no key in the _cached_attribute_data dictionary that has yet
+        # been created to store the dataclass fields of this entry. Thus,
+        # we create an empty dictionary to store the dataclass fields
+        # of this new entry and manually add all dataclass attributes
+        # that have been initialized to the _cached_attribute_data dict.
+        # We fetch the values of all dataclass fields by using the getattr
+        # method.
+
+        # pylint: disable=protected-access
+        if entry.entry_type() not in entry._cached_attribute_data:
+            entry._cached_attribute_data[entry.entry_type()] = {}
+            new_entry = True
+            for name in entry.__dataclass_fields__:
+                attr_val = getattr(entry, name, None)
+                if attr_val is not None:
+                    entry._cached_attribute_data[entry.entry_type()][
+                        name
+                    ] = attr_val
 
         # Save the input entry object in DataStore
         self._save_entry_to_data_store(entry=entry)
 
         # Register property functions for all dataclass fields.
-        for name in entry.__dataclass_fields__:
-            # Convert the typing annotation to the original class.
-            # This will be used to determine if a field is FList/FDict.
-            setattr(
-                type(entry),
-                name,
-                # property(fget, fset) will register a conversion layer
-                # that specifies how to retrieve/assign value of this field.
-                property(
-                    # We need to bound the attribute name and field type here
-                    # for the getter and setter of each field.
-                    fget=partial(entry_getter, attr_name=name),
-                    fset=partial(entry_setter, attr_name=name),
-                ),
-            )
+        # We only need to register these properties if they
+        # have not been registered before for an entry of this type.
+        # We ensure this by only registering these properties if
+        # this entry is flagged by the new_entry boolean. Note that
+        # an entry is only flagged as a new entry if it is not present
+        # in _cached_attribute_data dictionary of the Entry class.
+        if new_entry:
+            for name in entry.__dataclass_fields__:
+                # Convert the typing annotation to the original class.
+                # This will be used to determine if a field is FList/FDict.
+                setattr(
+                    type(entry),
+                    name,
+                    # property(fget, fset) will register a conversion layer
+                    # that specifies how to retrieve/assign value of this field.
+                    property(
+                        # We need to bound the attribute name and field type here
+                        # for the getter and setter of each field.
+                        fget=partial(entry_getter, attr_name=name),
+                        fset=partial(entry_setter, attr_name=name),
+                    ),
+                )
 
         # Record that this entry hasn't been added to the index yet.
         self._pending_entries[entry.tid] = c
