@@ -41,7 +41,7 @@ class ImageAnnotationTest(unittest.TestCase):
         self.line[4, 4] = 1
         ip = ImagePayload(self.datapack, 0)
         ip.set_cache(self.line)
-        ImageAnnotation(self.datapack)
+        self.img_ann = ImageAnnotation(self.datapack)
 
     def test_datapack_image_operation(self):
         datapack = DataPack("image2")
@@ -60,7 +60,7 @@ class ImageAnnotationTest(unittest.TestCase):
         datapack.add_image(self.line)
         self.assertTrue(np.array_equal(datapack.get_image(1), self.line))
 
-
+        self.assertEqual(self.img_ann.image_shape, (6, 12))
 
     def test_image_annotation(self):
         self.assertEqual(

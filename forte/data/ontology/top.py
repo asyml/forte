@@ -1275,6 +1275,9 @@ class Payload(Entry):
         """
         self._payload_idx = payload_index
 
+    def image_shape(self):
+        return self._cache_shape
+
     def __getstate__(self):
         r"""
         Convert ``_modality`` ``Enum`` object to str format for serialization.

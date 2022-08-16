@@ -402,4 +402,3 @@ class PatchedPythonDomain(PythonDomain):
 
 def setup(sphinx):
     sphinx.add_domain(PatchedPythonDomain, override=True)
-
