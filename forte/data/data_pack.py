@@ -241,8 +241,29 @@ class DataPack(BasePack[Entry, Link, Group]):
 
     @property
     def audio(self):
-        r"""Return the audio of the data pack"""
+        r"""
+        Return the audio data from the first audio payload in the DataPack.
+        """
         return self.get_payload_data_at(Modality.Audio, 0)
+
+    @property
+    def image(self):
+        r"""
+        Return the image data from the first image payload in the data pack.
+        """
+        return self.get_image(0)
+
+    def get_image(self, index: int):
+        """
+        Return the image data from the image payload at the specified index.
+
+        Args:
+            index: image payload index for retrieving the image data.
+
+        Returns:
+            image payload data at the specified index.
+        """
+        return self.get_payload_data_at(Modality.Image, index)
 
     @property
     def all_annotations(self) -> Iterator[Annotation]:
@@ -566,7 +587,11 @@ class DataPack(BasePack[Entry, Link, Group]):
         ) = data_utils_io.modify_text_and_track_ops(text, span_ops)
         # temporary solution for backward compatibility
         # past API use this method to add a single text in the datapack
-        if len(self.text_payloads) == 0 and text_payload_index == 0:
+        if (
+            self._data_store.num_entries("ft.onto.base_ontology.TextPayload")
+            == 0
+            and text_payload_index == 0
+        ):
             from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
                 TextPayload,
             )
@@ -598,7 +623,11 @@ class DataPack(BasePack[Entry, Link, Group]):
         """
         # temporary solution for backward compatibility
         # past API use this method to add a single audio in the datapack
-        if len(self.audio_payloads) == 0 and audio_payload_index == 0:
+        if (
+            self._data_store.num_entries("ft.onto.base_ontology.AudioPayload")
+            == 0
+            and audio_payload_index == 0
+        ):
             from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
                 AudioPayload,
             )
@@ -609,6 +638,57 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         ap.set_cache(audio)
         ap.sample_rate = sample_rate
+
+    def add_image(self, image):
+        r"""
+        Add an ImagePayload storing the image given in the parameters.
+
+        Args:
+            image: A numpy array storing the image.
+        """
+        from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
+            ImagePayload,
+        )
+
+        ip = ImagePayload(self)
+        ip.set_cache(image)
+
+    def set_image(
+        self,
+        image,
+        image_payload_index: int = 0,
+    ):
+        r"""Set the image payload of the :class:`~forte.data.data_pack.DataPack`
+        object.
+
+        Args:
+            image: A numpy array storing the image.
+            image_payload_index: the zero-based index of the ImagePayload
+                in this DataPack's ImagePayload entries. Defaults to 0.
+        """
+        # temporary solution for backward compatibility
+        # past API use this method to add a single image in the datapack
+        if (
+            self._data_store.num_entries("ft.onto.base_ontology.ImagePayload")
+            == 0
+            and image_payload_index == 0
+        ):
+            from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
+                ImagePayload,
+            )
+
+            ip = ImagePayload(self)
+            logging.warning(
+                "image_payload_index is set to zero,"
+                "and there is not existing ImagePayload"
+                " in the DataPack."
+                "An `ImagePayload` will be added into the DataPack."
+                "However, we encourage user to"
+                " use DataPack.add_image() function instead."
+            )
+        else:
+            ip = self.get_payload_at(Modality.Image, image_payload_index)
+        ip.set_cache(image)
 
     def get_original_text(self, text_payload_index: int = 0):
         r"""Get original unmodified text from the :class:`~forte.data.data_pack.DataPack` object.
