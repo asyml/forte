@@ -251,7 +251,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         r"""
         Return the image data from the first image payload in the data pack.
         """
-        return self.get_payload_data_at(Modality.Image, 0)
+        return self.get_image(0)
 
     def get_image(self, index: int):
         """
@@ -593,8 +593,10 @@ class DataPack(BasePack[Entry, Link, Group]):
         ) = data_utils_io.modify_text_and_track_ops(text, span_ops)
         # temporary solution for backward compatibility
         # past API use this method to add a single text in the datapack
-        if text_payload_index == -1 or (
-            text_payload_index == 0 and len(self.text_payloads) == 0
+        if (
+            self._data_store.num_entries("ft.onto.base_ontology.TextPayload")
+            == 0
+            and text_payload_index == 0
         ):
             from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
                 TextPayload,
@@ -637,8 +639,10 @@ class DataPack(BasePack[Entry, Link, Group]):
         """
         # temporary solution for backward compatibility
         # past API use this method to add a single audio in the datapack
-        if audio_payload_index == -1 or (
-            audio_payload_index == 0 and len(self.audio_payloads) == 0
+        if (
+            self._data_store.num_entries("ft.onto.base_ontology.AudioPayload")
+            == 0
+            and audio_payload_index == 0
         ):
             from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
                 AudioPayload,
@@ -657,40 +661,55 @@ class DataPack(BasePack[Entry, Link, Group]):
         ap.set_cache(audio)
         ap.sample_rate = sample_rate
 
+    def add_image(self, image):
+        r"""
+        Add an ImagePayload storing the image given in the parameters.
+
+        Args:
+            image: A numpy array storing the image.
+        """
+        from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
+            ImagePayload,
+        )
+
+        ip = ImagePayload(self)
+        ip.set_cache(image)
+
     def set_image(
         self,
         image,
-        image_payload_index: int = -1,
+        image_payload_index: int = 0,
     ):
-        r"""
-        Set image for ImagePayload at a specified index or add a new ImagePayload in the DataPack.
-
-        Raises:
-            ValueError: raised when the image payload index is out of range.
+        r"""Set the image payload of the :class:`~forte.data.data_pack.DataPack`
+        object.
 
         Args:
             image: A numpy array storing the image.
             image_payload_index: the zero-based index of the ImagePayload
-                in this DataPack's ImagePayload entries. Defaults to 0, and
-                it adds a new image payload if there is no image payload in the data pack.
+                in this DataPack's ImagePayload entries. Defaults to 0.
         """
-        if image_payload_index == -1 or (
-            image_payload_index == 0 and len(self.image_payloads) == 0
+        # temporary solution for backward compatibility
+        # past API use this method to add a single image in the datapack
+        if (
+            self._data_store.num_entries("ft.onto.base_ontology.ImagePayload")
+            == 0
+            and image_payload_index == 0
         ):
             from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
                 ImagePayload,
             )
 
             ip = ImagePayload(self)
-        elif 0 <= image_payload_index < len(self.image_payloads):
-            ip = self.get_payload_at(Modality.Image, image_payload_index)
-        else:
-            raise ValueError(
-                f"image payload index{image_payload_index} is out "
-                "of range. Please input a valid index between 0 "
-                f"and {len(self.image_payloads)}"
+            logging.warning(
+                "image_payload_index is set to zero,"
+                "and there is not existing ImagePayload"
+                " in the DataPack."
+                "An `ImagePayload` will be added into the DataPack."
+                "However, we encourage user to"
+                " use DataPack.add_image() function instead."
             )
-
+        else:
+            ip = self.get_payload_at(Modality.Image, image_payload_index)
         ip.set_cache(image)
 
     def get_original_text(self, text_payload_index: int = 0):
