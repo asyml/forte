@@ -38,6 +38,7 @@ from forte.data.ontology.core import (
     FList,
 )
 from forte.data.span import Span
+from forte.utils.utils import get_full_module_name
 
 
 __all__ = [
@@ -228,8 +229,8 @@ class Link(BaseLink):
     """
     # this type Any is needed since subclasses of this class will have new types
 
-    parent_type: Any
-    child_type: Any
+    parent_type: str
+    child_type: str
     parent: Optional[Entry]
     child: Optional[Entry]
 
@@ -242,9 +243,11 @@ class Link(BaseLink):
         parent: Optional[Entry] = None,
         child: Optional[Entry] = None,
     ):
-
-        self.parent_type = self.ParentType
-        self.child_type = self.ChildType
+        # These attributes are used to store values of parent
+        # and child type in data store and must thus be in a
+        # primitive form.
+        self.parent_type = get_full_module_name(self.ParentType)
+        self.child_type = get_full_module_name(self.ChildType)
         super().__init__(pack, parent, child)
 
     # TODO: Can we get better type hint here?
@@ -315,8 +318,8 @@ class Group(BaseGroup[Entry]):
     store a set of members, no duplications allowed.
     """
 
+    member_type: str
     members: FList[Entry]
-    member_type: Type[Entry]
 
     MemberType = Entry
 
@@ -325,7 +328,10 @@ class Group(BaseGroup[Entry]):
         pack: PackType,
         members: Optional[Iterable[Entry]] = None,
     ):  # pylint: disable=useless-super-delegation
-        self.member_type = self.MemberType
+
+        # These attributes are used to store values of member type
+        # in data store and must thus be in a primitive form.
+        self.member_type = get_full_module_name(self.MemberType)
         super().__init__(pack, members)
 
     def add_member(self, member: Entry):
@@ -378,8 +384,8 @@ class MultiPackLink(MultiEntry, BaseLink):
     integers, one additional index on which pack it comes from.
     """
 
-    parent_type: Any
-    child_type: Any
+    parent_type: str
+    child_type: str
     parent: Tuple
     child: Tuple
 
@@ -392,9 +398,11 @@ class MultiPackLink(MultiEntry, BaseLink):
         parent: Optional[Entry] = None,
         child: Optional[Entry] = None,
     ):
-
-        self.parent_type = self.ParentType
-        self.child_type = self.ChildType
+        # These attributes are used to store values of parent
+        # and child type in data store and must thus be in a
+        # primitive form.
+        self.parent_type = get_full_module_name(self.ParentType)
+        self.child_type = get_full_module_name(self.ChildType)
         super().__init__(pack, parent, child)
 
         # if parent is not None:
@@ -512,7 +520,7 @@ class MultiPackGroup(MultiEntry, BaseGroup[Entry]):
     r"""Group type entries, such as "coreference group". Each group has a set
     of members.
     """
-    member_type: Type[Entry]
+    member_type: str
     members: Optional[FList[Entry]]
 
     MemberType = Entry
@@ -521,7 +529,9 @@ class MultiPackGroup(MultiEntry, BaseGroup[Entry]):
         self, pack: PackType, members: Optional[Iterable[Entry]] = None
     ):  # pylint: disable=useless-super-delegation
 
-        self.member_type = self.MemberType
+        # These attributes are used to store values of member type
+        # in data store and must thus be in a primitive form.
+        self.member_type = get_full_module_name(self.MemberType)
         super().__init__(pack)
 
         if members is not None:

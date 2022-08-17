@@ -1196,21 +1196,16 @@ class DataStore(BaseStore):
                 type_name, constants.MEMBER_TYPE_ATTR_NAME
             )
 
-            # When creating Group or MultiPackGroup, attribute_data has
-            # only one entry representing the member type
-            member_type = get_full_module_name(attribute_data[0])
-
-            if not self._is_subclass(member_type, Entry):
+            if not self._is_subclass(attribute_data[0], Entry):
                 raise ValueError(
                     "Attributes required to create Group "
                     "entry are not set correctly."
                 )
 
-            entry[type_idx] = member_type
+            entry[type_idx] = attribute_data[0]
 
         elif any(
-            issubclass(get_class(type_name), cls)
-            for cls in (Link, MultiPackLink)
+            self._is_subclass(type_name, cls) for cls in (Link, MultiPackLink)
         ):
             parent_idx = self.get_datastore_attr_idx(
                 type_name, constants.PARENT_TYPE_ATTR_NAME
@@ -1218,23 +1213,17 @@ class DataStore(BaseStore):
             child_idx = self.get_datastore_attr_idx(
                 type_name, constants.CHILD_TYPE_ATTR_NAME
             )
-            # When creating Link or MultiPackLink, attribute_data has
-            # two entries representing the parent and child type
-            # respectively
+
+            if not self._is_subclass(
+                attribute_data[0], Entry
+            ) or not self._is_subclass(attribute_data[1], Entry):
+                raise ValueError(
+                    "Attributes required to create Link"
+                    "entry are not set correctly."
+                )
+
             entry[parent_idx] = attribute_data[0]
             entry[child_idx] = attribute_data[1]
-
-            if entry[parent_idx] and entry[child_idx]:
-                if not issubclass(entry[parent_idx], Entry) or not issubclass(
-                    entry[child_idx], Entry
-                ):
-                    raise ValueError(
-                        "Attributes required to create Link"
-                        "entry are not set correctly."
-                    )
-
-                entry[parent_idx] = get_full_module_name(entry[parent_idx])
-                entry[child_idx] = get_full_module_name(entry[child_idx])
 
         return entry
 
