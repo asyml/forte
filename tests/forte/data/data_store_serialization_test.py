@@ -76,14 +76,14 @@ class DataStoreTest(unittest.TestCase):
             "forte.data.ontology.top.Group": {
                 "attributes": {
                     'members': {'type': (FList, (Entry,)), 'index': 2},
-                    'member_type': {'type': (type, (Entry,)), 'index': 3}
+                    'member_type': {'type': (type(None), (str,)), 'index': 3}
                 },
                 "parent_entry": "forte.data.ontology.core.BaseGroup",
             },
             "forte.data.ontology.top.Link": {
                 "attributes": {
-                    'parent_type': {'type': (type(None), (Any,)), 'index': 2},
-                    'child_type': {'type': (type(None), (Any,)), 'index': 3},
+                    'parent_type': {'type': (type(None), (str,)), 'index': 2},
+                    'child_type': {'type': (type(None), (str,)), 'index': 3},
                     'parent': {'type': (Union, (int, type(None))), 'index': 4},
                     'child': {'type': (Union, (int, type(None))), 'index': 5}
                 },
@@ -334,14 +334,14 @@ class DataStoreTest(unittest.TestCase):
                 "forte.data.ontology.top.Group": {
                     "attributes": {
                         'members': {'type': (FList, (Entry,)), 'index': 2},
-                        'member_type': {'type': (type, (Entry,)), 'index': 3}
+                        'member_type': {'type': (type(None), (str,)), 'index': 3}
                     },
                     "parent_entry": "forte.data.ontology.core.BaseGroup",
                 },
                 "forte.data.ontology.top.Link": {
                     "attributes": {
-                        'parent_type': {'type': (type(None), (Any,)), 'index': 2},
-                        'child_type': {'type': (type(None), (Any,)), 'index': 3},
+                        'parent_type': {'type': (type(None), (str,)), 'index': 2},
+                        'child_type': {'type': (type(None), (str,)), 'index': 3},
                         'parent': {'type': (Union, (int, type(None))), 'index': 4},
                         'child': {'type': (Union, (int, type(None))), 'index': 5}
                     },
@@ -801,14 +801,14 @@ class DataStoreTest(unittest.TestCase):
                 "forte.data.ontology.top.Group": {
                     "attributes": {
                         'members': {'type': (FList, (Entry,)), 'index': 2},
-                        'member_type': {'type': (type, (Entry,)), 'index': 3}
+                        'member_type': {'type': (type(None), (str,)), 'index': 3}
                     },
                     "parent_entry": "forte.data.ontology.core.BaseGroup",
                 },
                 "forte.data.ontology.top.Link": {
                     "attributes": {
-                        'parent_type': {'type': (type(None), (Any,)), 'index': 2},
-                        'child_type': {'type': (type(None), (Any,)), 'index': 3},
+                        'parent_type': {'type': (type(None), (str,)), 'index': 2},
+                        'child_type': {'type': (type(None), (str,)), 'index': 3},
                         'parent': {'type': (Union, (int, type(None))), 'index': 4},
                         'child': {'type': (Union, (int, type(None))), 'index': 5}
                     },
@@ -924,14 +924,14 @@ class DataStoreTest(unittest.TestCase):
                 "forte.data.ontology.top.Group": {
                     "attributes": {
                         'members': {'type': (FList, (Entry,)), 'index': 2},
-                        'member_type': {'type': (type, (Entry,)), 'index': 3}
+                        'member_type': {'type': (type(None), (str,)), 'index': 3}
                     },
                     "parent_entry": "forte.data.ontology.core.BaseGroup",
                 },
                 "forte.data.ontology.top.Link": {
                     "attributes": {
-                        'parent_type': {'type': (type(None), (Any,)), 'index': 2},
-                        'child_type': {'type': (type(None), (Any,)), 'index': 3},
+                        'parent_type': {'type': (type(None), (str,)), 'index': 2},
+                        'child_type': {'type': (type(None), (str,)), 'index': 3},
                         'parent': {'type': (Union, (int, type(None))), 'index': 4},
                         'child': {'type': (Union, (int, type(None))), 'index': 5}
                     },

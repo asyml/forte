@@ -317,9 +317,8 @@ class Group(BaseGroup[Entry]):
     a "coreference group" is a group of coreferential entities. Each group will
     store a set of members, no duplications allowed.
     """
-
-    member_type: str
     members: FList[Entry]
+    member_type: str
 
     MemberType = Entry
 

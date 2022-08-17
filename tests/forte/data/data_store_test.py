@@ -194,8 +194,8 @@ class DataStoreTest(unittest.TestCase):
             "forte.data.ontology.top.Generics": {"parent_class": {"Entry"}},
             "forte.data.ontology.top.Link": {
                 "attributes": {
-                    'parent_type': {'type': (type(None), (Any,)), 'index': 2},
-                    'child_type': {'type': (type(None), (Any,)), 'index': 3},
+                    'parent_type': {'type': (type(None), (str,)), 'index': 2},
+                    'child_type': {'type': (type(None), (str,)), 'index': 3},
                     'parent': {'type': (Union, (int, type(None))), 'index': 4},
                     'child': {'type': (Union, (int, type(None))), 'index': 5}
                 },
@@ -204,7 +204,7 @@ class DataStoreTest(unittest.TestCase):
             "forte.data.ontology.top.Group": {
                 "attributes": {
                     'members': {'type': (FList, (Entry,)), 'index': 2},
-                    'member_type': {'type': (type, (Entry,)), 'index': 3}
+                    'member_type': {'type': (type(None), (str,)), 'index': 3}
                 },
                 "parent_class": {"Entry", "BaseGroup"}
             },
@@ -213,8 +213,8 @@ class DataStoreTest(unittest.TestCase):
             },
             "forte.data.ontology.top.MultiPackLink": {
                 "attributes": {
-                    'parent_type': {'type': (type(None), (Any,)), 'index': 2},
-                    'child_type': {'type': (type(None), (Any,)), 'index': 3},
+                    'parent_type': {'type': (type(None), (str,)), 'index': 2},
+                    'child_type': {'type': (type(None), (str,)), 'index': 3},
                     'parent': {'type': (tuple, (Tuple,)), 'index': 4},
                     'child': {'type': (tuple, (Tuple,)), 'index': 5}
                 },
@@ -223,7 +223,7 @@ class DataStoreTest(unittest.TestCase):
             "forte.data.ontology.top.MultiPackGroup": {
                 "attributes": {
                     'members': {'type': (type, (FList[Entry], type(None))), 'index': 2},
-                    'member_type': {'type': (type, (Entry,)), 'index': 3}
+                    'member_type': {'type': (type(None), (str,)), 'index': 3}
                 },
                 "parent_class": {"Entry", "MultiEntry", "BaseGroup"}
             },
@@ -931,7 +931,10 @@ class DataStoreTest(unittest.TestCase):
     def test_add_link_raw(self):
         self.data_store.add_entry_raw(
             type_name="forte.data.ontology.top.Link",
-            attribute_data=[Sentence, Document]
+            attribute_data=[
+                "ft.onto.base_ontology.Sentence",
+                "ft.onto.base_ontology.Document"
+                ]
         )
         # check number of Link
         self.assertEqual(
@@ -947,7 +950,10 @@ class DataStoreTest(unittest.TestCase):
         tid = 77
         self.data_store.add_entry_raw(
             type_name="forte.data.ontology.top.Link",
-            attribute_data=[Sentence, Document],
+            attribute_data=[
+                "ft.onto.base_ontology.Sentence",
+                "ft.onto.base_ontology.Document"
+            ],
             tid=tid,
         )
         self.assertEqual(
@@ -965,7 +971,7 @@ class DataStoreTest(unittest.TestCase):
     def test_add_group_raw(self):
         self.data_store.add_entry_raw(
             type_name="forte.data.ontology.top.Group",
-            attribute_data=[Document],
+            attribute_data=["ft.onto.base_ontology.Document"],
         )
         # check number of Group
         self.assertEqual(
@@ -981,7 +987,7 @@ class DataStoreTest(unittest.TestCase):
         tid = 77
         self.data_store.add_entry_raw(
             type_name="forte.data.ontology.top.Group",
-            attribute_data=[Sentence],
+            attribute_data=["ft.onto.base_ontology.Sentence"],
             tid=tid,
         )
         self.assertEqual(
@@ -1010,7 +1016,7 @@ class DataStoreTest(unittest.TestCase):
 
         self.data_store.add_entry_raw(
             type_name="forte.data.ontology.top.MultiPackGroup",
-            attribute_data=[Sentence],
+            attribute_data=["ft.onto.base_ontology.Sentence"],
         )
         # check number of MultiPackGeneric
         self.assertEqual(
@@ -1024,7 +1030,7 @@ class DataStoreTest(unittest.TestCase):
 
         self.data_store.add_entry_raw(
             type_name="forte.data.ontology.top.MultiPackLink",
-            attribute_data=[Sentence, Document]
+            attribute_data=["ft.onto.base_ontology.Sentence", "ft.onto.base_ontology.Document"]
         )
         # check number of MultiPackGeneric
         self.assertEqual(
@@ -1041,8 +1047,8 @@ class DataStoreTest(unittest.TestCase):
         self.data_store.add_entry_raw(
             type_name="forte.data.ontology.top.MultiPackLink",
             attribute_data=[
-                Sentence,
-                Document
+                "ft.onto.base_ontology.Sentence",
+                "ft.onto.base_ontology.Document"
             ],
             tid=tid,
         )
