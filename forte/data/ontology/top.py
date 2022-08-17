@@ -889,10 +889,6 @@ class ImageAnnotation(Entry):
     def max_y(self):
         return self._image_height - 1
 
-    @property
-    def image_shape(self):
-        return (self._image_height, self._image_width)
-
     def set_image_shape(self, width, height):
         """
         This function is used to set the shape of the image.
