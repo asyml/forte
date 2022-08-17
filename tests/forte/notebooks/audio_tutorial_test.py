@@ -1,10 +1,16 @@
 from testbook import testbook
+import os
 
 @testbook(
     "docs/notebook_tutorial/Automatic_Speech_Recognition.ipynb",
     execute=False
 )
+
+
+env = os.environ.get('ENVIRONMENT', 'test')
+print(env)
 def test_Automatic_Speech_Recognition(tb):
+
     # input file
     tb.execute_cell("input_file")
     # install
@@ -19,4 +25,3 @@ def test_Automatic_Speech_Recognition(tb):
     tb.execute_cell("AudioUtterance")
     tb.execute_cell("pipeline2")
     tb.execute_cell("inference")
-    
