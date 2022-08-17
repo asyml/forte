@@ -458,7 +458,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             between the attributes of the entry and their copy being
             stored in the data store. For example, the `setter` method
             updates the data store value of an attribute of a given entry
-            whenever the atribute in the entry's object is updated.
+            whenever the attribute in the entry's object is updated.
 
         Args:
             entry: The entry to be added.
