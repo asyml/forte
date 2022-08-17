@@ -578,7 +578,6 @@ class DataPack(BasePack[Entry, Link, Group]):
             replace_func: function that replace text. Defaults to None.
             text_payload_index: the zero-based index of the TextPayload
                 in this DataPack's TextPayload entries.
-                If it's -1, a new TextPayload will be added to the DataPack.
                 If it's 0, it adds a new TextPayload if there is no text payload in the data pack.
         """
         # Temporary imports
@@ -603,8 +602,6 @@ class DataPack(BasePack[Entry, Link, Group]):
             )
 
             tp = TextPayload(self, text_payload_index)
-        elif 0 <= text_payload_index < len(self.text_payloads):
-            tp = self.get_payload_at(Modality.Text, text_payload_index)
         else:
             raise ValueError(
                 f"text payload index{text_payload_index} is out "
@@ -622,7 +619,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         self,
         audio: np.ndarray,
         sample_rate: int,
-        audio_payload_index: int = -1,
+        audio_payload_index: int = 0,
     ):
         r"""
         Set audio for AudioPayload at a specified index or add a new AudioPayload in the DataPack.
@@ -634,7 +631,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             audio: A numpy array storing the audio waveform.
             sample_rate: An integer specifying the sample rate.
             audio_payload_index: the zero-based index of the AudioPayload
-                in this DataPack's AudioPayload entries. Defaults to -1, and
+                in this DataPack's AudioPayload entries. Defaults to 0, and
                 it adds a new audio payload if there is no audio payload in the data pack.
         """
         # temporary solution for backward compatibility
@@ -649,8 +646,6 @@ class DataPack(BasePack[Entry, Link, Group]):
             )
 
             ap = AudioPayload(self)
-        elif 0 <= audio_payload_index < len(self.audio_payloads):
-            ap = self.get_payload_at(Modality.Audio, audio_payload_index)
         else:
             raise ValueError(
                 f"audio payload index{audio_payload_index} is out "
