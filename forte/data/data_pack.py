@@ -560,24 +560,6 @@ class DataPack(BasePack[Entry, Link, Group]):
             ],
         )
 
-    def add_text(self, text):
-        """
-        Add a text payload to this data pack.
-
-        Args:
-            text: Text to be added.
-
-        Returns:
-            The newly created text payload.
-
-        """
-        from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
-            TextPayload,
-        )
-
-        ip = TextPayload(self)
-        ip.set_cache(text)
-
     def set_text(
         self,
         text: str,
@@ -585,18 +567,13 @@ class DataPack(BasePack[Entry, Link, Group]):
         text_payload_index: int = 0,
     ):
         """
-        Set text for TextPayload at a specified index or add a new TextPayload
-        in the DataPack.
-
-        Raises:
-            ValueError: raised when the text payload index is out of range.
+        Set text for TextPayload at a specified index.
 
         Args:
             text: a str text.
             replace_func: function that replace text. Defaults to None.
             text_payload_index: the zero-based index of the TextPayload
-                in this DataPack's TextPayload entries.
-                If it's 0, it adds a new TextPayload if there is no text payload in the data pack.
+                in this DataPack's TextPayload entries. Defaults to 0.
         """
         # Temporary imports
 
@@ -621,11 +598,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
             tp = TextPayload(self, text_payload_index)
         else:
-            raise ValueError(
-                f"text payload index{text_payload_index} is out "
-                "of range. Please input a valid index between 0 "
-                f"and {len(self.text_payloads)}"
-            )
+            tp = self.get_payload_at(Modality.Text, text_payload_index)
 
         tp.set_cache(text)
 
@@ -633,38 +606,20 @@ class DataPack(BasePack[Entry, Link, Group]):
         tp.processed_original_spans = processed_original_spans
         tp.orig_text_len = orig_text_len
 
-    def add_audio(self, audio):
-        r"""
-        Add an AudioPayload storing the audio given in the parameters.
-
-        Args:
-            audio: A numpy array storing the audio.
-        """
-        from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
-            AudioPayload,
-        )
-
-        ip = AudioPayload(self)
-        ip.set_cache(audio)
-
     def set_audio(
         self,
         audio: np.ndarray,
         sample_rate: int,
         audio_payload_index: int = 0,
     ):
-        r"""
-        Set audio for AudioPayload at a specified index or add a new AudioPayload in the DataPack.
-
-        Raises:
-            ValueError: raised when the audio payload index is out of range.
+        r"""Set the audio payload and sample rate of the :class:`~forte.data.data_pack.DataPack`
+        object.
 
         Args:
             audio: A numpy array storing the audio waveform.
             sample_rate: An integer specifying the sample rate.
             audio_payload_index: the zero-based index of the AudioPayload
-                in this DataPack's AudioPayload entries. Defaults to 0, and
-                it adds a new audio payload if there is no audio payload in the data pack.
+                in this DataPack's AudioPayload entries. Defaults to 0.
         """
         # temporary solution for backward compatibility
         # past API use this method to add a single audio in the datapack
@@ -679,11 +634,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
             ap = AudioPayload(self)
         else:
-            raise ValueError(
-                f"audio payload index{audio_payload_index} is out "
-                "of range. Please input a valid index between 0 "
-                f"and {len(self.audio_payloads)}"
-            )
+            ap = self.get_payload_at(Modality.Audio, audio_payload_index)
 
         ap.set_cache(audio)
         ap.sample_rate = sample_rate
@@ -952,7 +903,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
             if begin < 0:
                 raise ValueError(
-                    f"The begin {begin} is smaller than 0, this "
+                    f"The begin {begin} is smaller than 0, this"
                     f"is not a valid begin."
                 )
 
