@@ -62,6 +62,25 @@ class ImageAnnotationTest(unittest.TestCase):
 
         self.assertEqual(self.img_ann.image_shape, (6, 12))
 
+    def test_datapack_image_operation(self):
+        datapack = DataPack("image2")
+        datapack.set_image(self.line, 0)
+        self.assertTrue(np.array_equal(datapack.image, self.datapack.image))
+        def fn():
+            # invalid image index
+            datapack.set_image(self.line, 2)
+        self.assertRaises(ProcessExecutionException, fn)
+
+        def fn():
+            # invalid image index
+            datapack.get_image(1)
+        self.assertRaises(ProcessExecutionException, fn)
+
+        datapack.add_image(self.line)
+        self.assertTrue(np.array_equal(datapack.get_image(1), self.line))
+
+
+
     def test_image_annotation(self):
         self.assertEqual(
             self.datapack.get_single(ImageAnnotation).image_payload_idx, 0

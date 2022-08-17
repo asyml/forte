@@ -889,6 +889,7 @@ class ImageAnnotation(Entry):
     def max_y(self):
         return self.image_shape[0] - 1
 
+
     @property
     def image_shape(self):
         """
