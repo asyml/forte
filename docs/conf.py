@@ -44,6 +44,7 @@ extensions = [
     "sphinxcontrib.spelling",
     "nbsphinx",
     "sphinx_autodoc_typehints",
+    "sphinx_comments",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -402,4 +403,11 @@ class PatchedPythonDomain(PythonDomain):
 
 def setup(sphinx):
     sphinx.add_domain(PatchedPythonDomain, override=True)
+
+
+# Enable hypothesis.is in comments
+# https://sphinx-comments.readthedocs.io/en/latest/hypothesis.html#activate-hypothes-is
+comments_config = {
+   "hypothesis": True
+}
 
