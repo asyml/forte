@@ -132,10 +132,10 @@ jobs:
             ${{ runner.os }}-
       - name: ocr test
         run: |
-        sudo apt-get install automake ca-certificates g++ git libtool libleptonica-dev make pkg-config
-        sudo apt install tesseract-ocr
-        pip install --progress-bar off .ocr
-        coverage run -m pytest tests/forte/notebooks/ocr_test.py
+          sudo apt-get install -y automake ca-certificates g++ git libtool libleptonica-dev make pkg-config
+          sudo apt install tesseract-ocr
+          pip install --progress-bar off .ocr
+          coverage run -m pytest tests/forte/notebooks/ocr_test.py
 
 
   test_backbone:
