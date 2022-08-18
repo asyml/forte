@@ -134,8 +134,8 @@ jobs:
         run: |
           sudo apt-get install -y automake ca-certificates g++ git libtool libleptonica-dev make pkg-config
           sudo apt install tesseract-ocr
-          pip install --progress-bar off .ocr
-          coverage run -m pytest tests/forte/notebooks/ocr_test.py
+          pip install --progress-bar off .
+          python tests/forte/notebooks/ocr_test.py
 
 
   test_backbone:
