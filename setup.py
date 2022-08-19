@@ -69,6 +69,8 @@ setuptools.setup(
             "tqdm>=4.36.1",
             "texar-pytorch>=0.1.4",
             "tensorflow>=1.15.0",
+            "pyannote.audio",
+            "pytorch-transformers",
         ],
         "test": [
             "ddt",
