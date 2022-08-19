@@ -6,6 +6,7 @@ Pygments >= 2.1.1
 funcsigs~=1.0.2
 mypy_extensions~=0.4.1
 sphinxcontrib-spelling
+sphinx-comments
 
 # Pipeline remote features
 fastapi==0.65.2
