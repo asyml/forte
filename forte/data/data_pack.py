@@ -603,11 +603,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
             tp = TextPayload(self, text_payload_index)
         else:
-            raise ValueError(
-                f"text payload index{text_payload_index} is out "
-                "of range. Please input a valid index between 0 "
-                f"and {len(self.text_payloads)}"
-            )
+            tp = self.get_payload_at(Modality.Text, text_payload_index)
 
         tp.set_cache(text)
 
@@ -647,11 +643,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
             ap = AudioPayload(self)
         else:
-            raise ValueError(
-                f"audio payload index{audio_payload_index} is out "
-                "of range. Please input a valid index between 0 "
-                f"and {len(self.audio_payloads)}"
-            )
+            ap = self.get_payload_at(Modality.Audio, audio_payload_index)
 
         ap.set_cache(audio)
         ap.sample_rate = sample_rate
