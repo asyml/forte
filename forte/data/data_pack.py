@@ -560,6 +560,21 @@ class DataPack(BasePack[Entry, Link, Group]):
             ],
         )
 
+    def add_text(self, text):
+        """
+        Add a text payload to this data pack.
+        Args:
+            text: Text to be added.
+        Returns:
+            The newly created text payload.
+        """
+        from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
+            TextPayload,
+        )
+
+        ip = TextPayload(self)
+        ip.set_cache(text)
+
     def set_text(
         self,
         text: str,
@@ -638,6 +653,19 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         ap.set_cache(audio)
         ap.sample_rate = sample_rate
+
+    def add_audio(self, audio):
+        r"""
+        Add an AudioPayload storing the audio given in the parameters.
+        Args:
+            audio: A numpy array storing the audio.
+        """
+        from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
+            AudioPayload,
+        )
+
+        ip = AudioPayload(self)
+        ip.set_cache(audio)
 
     def add_image(self, image):
         r"""
