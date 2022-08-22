@@ -1264,6 +1264,13 @@ class Payload(Entry):
             # if it's a numpy array, we need to set the shape
             # even if user input a shape, it will be overwritten
             cache_shape = data.shape
+        elif isinstance(data, str):
+            cache_shape = len(data)
+        else:
+            raise ValueError(
+                f"Unsupported data type {type(data)} for cache. "
+                f"Currently we only support str and numpy.ndarray."
+            )
         self._cache_shape = cache_shape
 
     def set_payload_index(self, payload_index: int):
