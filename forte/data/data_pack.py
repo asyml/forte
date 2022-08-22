@@ -1399,14 +1399,12 @@ class DataPack(BasePack[Entry, Link, Group]):
                     f"{a_type}"
                 )
 
-            link_parent = cast(Entry, link.parent)
             a_dict["parent"].append(
-                np.where(data[parent_type]["tid"] == link_parent.tid)[0][0]
+                np.where(data[parent_type]["tid"] == link.parent)[0][0]
             )
 
-            link_child = cast(Entry, link.child)
             a_dict["child"].append(
-                np.where(data[child_type]["tid"] == link_child.tid)[0][0]
+                np.where(data[child_type]["tid"] == link.child)[0][0]
             )
 
             for field in fields:
