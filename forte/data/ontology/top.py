@@ -910,7 +910,7 @@ class ImageAnnotation(Entry):
             )
         image_shape = self.pack.get_payload_at(
             Modality.Image, self._image_payload_idx
-        )._cache_shape
+        ).image_shape
         if not 2 <= len(image_shape) <= 3:
             raise ValueError(
                 "Image shape is not valid."
