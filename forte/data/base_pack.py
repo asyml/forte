@@ -436,12 +436,29 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                 self._field_records[c] = {(entry_id, field_name)}
 
     def on_entry_creation(
-        self, entry: Entry, component_name: Optional[str] = None
+        self,
+        entry: Entry,
+        component_name: Optional[str] = None,
     ):
         """
         Call this when adding a new entry, will be called
         in :class:`~forte.data.ontology.core.Entry` when
-        its `__init__` function is called.
+        its `__init__` function is called. This method does
+        the following 2 operations with regards to creating
+        a new entry.
+
+        - All ``dataclass`` attributes of the entry to be created
+            are stored in the class level dictionary of
+            :class:`~forte.data.ontology.core.Entry` called
+            ``cached_attributes_data``. This is used to initialize
+            the corresponding entry's objects data store entry
+        - On creation of the data store entry, this methods associates
+            ``getter`` and ``setter`` properties to all `dataclass`
+            attributes of this entry to allow direct interaction
+            between the attributes of the entry and their copy being
+            stored in the data store. For example, the `setter` method
+            updates the data store value of an attribute of a given entry
+            whenever the attribute in the entry's object is updated.
 
         Args:
             entry: The entry to be added.
@@ -541,7 +558,12 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         def entry_setter(cls: Entry, value: Any, attr_name: str):
             """A setter function for dataclass fields of entry object.
             When the value contains entry objects, we will convert them into
-            ``tid``s before storing to ``DataStore``.
+            ``tid``s before storing to ``DataStore``. Additionally, if the entry
+            setter method is called on an attribute that does not have a pack
+            associated with it (as is the case during intialization), the value
+            of the atttribute is stored in the class level cache of the ``Entry``
+            class. On the other hand, if a pack is associated with the entry,
+            the value will directly be stored in the data store.
 
             Args:
                 cls: An ``Entry`` class object.
@@ -549,8 +571,38 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                 attr_name: The name of the attribute.
             """
             attr_value: Any
+
+            try:
+                pack = cls.pack
+            except AttributeError as err:
+                # This is the case when an object of an entry that has already been
+                # created before (which means an setter and getter properties are
+                # associated with its dataclass fields) is trying to be initialized.
+                # In this case, a pack is not yet associated with this entry. Thus,
+                # we store the initial values dataclass fields of such entries in the
+                # _cached_attribute_data of the Entry class.
+
+                # pylint: disable=protected-access
+                if cls.entry_type() not in Entry._cached_attribute_data:
+                    Entry._cached_attribute_data[cls.entry_type()] = {}
+
+                if (
+                    attr_name
+                    not in Entry._cached_attribute_data[cls.entry_type()]
+                ):
+                    Entry._cached_attribute_data[cls.entry_type()][
+                        attr_name
+                    ] = value
+                    return
+                else:
+                    raise KeyError(
+                        "You are trying to overwrite the value "
+                        f"of {attr_name} for a data store entry "
+                        "before it is created."
+                    ) from err
+
             data_store_ref = (
-                cls.pack._data_store  # pylint: disable=protected-access
+                pack._data_store  # pylint: disable=protected-access
             )
 
             attr_type = data_store_ref.get_attr_type(
@@ -593,6 +645,27 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             data_store_ref.set_attribute(
                 tid=cls.tid, attr_name=attr_name, attr_value=attr_value
             )
+
+        # If this is the first time an entry of this type is
+        # created, its attributes do not have a getter and setter
+        # property associated with them. We can thus assume that there
+        # no key in the _cached_attribute_data dictionary that has yet
+        # been created to store the dataclass fields of this entry. Thus,
+        # we create an empty dictionary to store the dataclass fields
+        # of this new entry and manually add all dataclass attributes
+        # that have been initialized to the _cached_attribute_data dict.
+        # We fetch the values of all dataclass fields by using the getattr
+        # method.
+
+        # pylint: disable=protected-access
+        if entry.entry_type() not in Entry._cached_attribute_data:
+            Entry._cached_attribute_data[entry.entry_type()] = {}
+            for name in entry.__dataclass_fields__:
+                attr_val = getattr(entry, name, None)
+                if attr_val is not None:
+                    Entry._cached_attribute_data[entry.entry_type()][
+                        name
+                    ] = attr_val
 
         # Save the input entry object in DataStore
         self._save_entry_to_data_store(entry=entry)
