@@ -1016,10 +1016,7 @@ class DataStore(BaseStore):
         Returns:
             ``tid`` of the entry.
         """
-        if any(
-            self._is_subclass(type_name, cls)
-            for cls in (Annotation, AudioAnnotation)
-        ):
+        if self._is_annotation(type_name):
             sorting_fn = self.get_annotation_sorting_fn(type_name)
             try:
                 self.__elements[type_name].add(entry)
@@ -1185,13 +1182,6 @@ class DataStore(BaseStore):
         elif any(
             self._is_subclass(type_name, cls) for cls in (Group, MultiPackGroup)
         ):
-            members_idx = self.get_datastore_attr_idx(
-                type_name, constants.MEMBER_TID_ATTR_NAME
-            )
-
-            if entry[members_idx] is None:
-                entry[members_idx] = []
-
             type_idx = self.get_datastore_attr_idx(
                 type_name, constants.MEMBER_TYPE_ATTR_NAME
             )

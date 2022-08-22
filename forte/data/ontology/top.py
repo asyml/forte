@@ -404,11 +404,6 @@ class MultiPackLink(MultiEntry, BaseLink):
         self.child_type = get_full_module_name(self.ChildType)
         super().__init__(pack, parent, child)
 
-        # if parent is not None:
-        #     self.set_parent(parent)
-        # if child is not None:
-        #     self.set_child(child)
-
     def parent_id(self) -> int:
         """
         Return the ``tid`` of the parent entry.
