@@ -2072,12 +2072,7 @@ class DataStore(BaseStore):
             if entry_name in DataStore._type_attributes:
                 continue
 
-            entry_dict = {}
-            entry_dict[constants.PARENT_CLASS_KEY] = set()
-            entry_dict[constants.PARENT_CLASS_KEY].add(entry_node.parent.name)
-
             attr_dict = {}
-
             # add all attributes of immediate parent
             attr_dict = DataStore._type_attributes[entry_node.parent.name][
                 constants.ATTR_INFO_KEY
