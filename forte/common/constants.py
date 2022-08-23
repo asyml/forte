@@ -1,15 +1,21 @@
 # DataStore constants
-# The index storing begin location in the internal entry data of DataStore.
-BEGIN_INDEX = 0
+# The name of the attribute storing the begin location in the internal
+# entry data of DataStore.
+BEGIN_ATTR_NAME = "begin"
 
-# The index storing end location in the internal entry data of DataStore.
-END_INDEX = 1
+# The name of the attribute storing the end location in the internal
+# entry data of DataStore.
+END_ATTR_NAME = "end"
 
 # The index storing tid in the internal entry data of DataStore.
-TID_INDEX = 2
+TID_INDEX = 0
 
 # The index storing entry type in the internal entry data of DataStore.
-ENTRY_TYPE_INDEX = 3
+ENTRY_TYPE_INDEX = 1
+
+# The name of the attribute storing the payload index location in the
+# internal entry data of DataStore.
+PAYLOAD_ID_ATTR_NAME = "payload_idx"
 
 # The index storing entry type (specific to Link and Group type). It is saved
 # in the `tid_idx_dict` in DataStore.
@@ -19,20 +25,26 @@ ENTRY_DICT_TYPE_INDEX = 0
 # in the `tid_idx_dict` in DataStore.
 ENTRY_DICT_ENTRY_INDEX = 1
 
-# The index storing parent entry tid in Link entries
-PARENT_TID_INDEX = 0
+# The name of the attribute storing the parent entry tid in Link entries
+PARENT_TID_ATTR_NAME = "parent"
 
-# The index storing child entry tid in Link entries
-CHILD_TID_INDEX = 1
+# The name of the attribute storing the parent entry type in Link entries
+PARENT_TYPE_ATTR_NAME = "parent_type"
 
-# The index storing member entry type in Group entries
-MEMBER_TYPE_INDEX = 0
+# The name of the attribute storing the child entry tid in Link entries
+CHILD_TID_ATTR_NAME = "child"
 
-# The index storing the list of member entries tid in Group entries
-MEMBER_TID_INDEX = 1
+# The name of the attribute storing the child entry type in Link entries
+CHILD_TYPE_ATTR_NAME = "child_type"
+
+# The name of the attribute storing the member entry type in Group entries
+MEMBER_TYPE_ATTR_NAME = "member_type"
+
+# The name of the attribute storing the list of member entries tid in Group entries
+MEMBER_TID_ATTR_NAME = "members"
 
 # The index where the first attribute appears in the internal entry data of DataStore.
-ATTR_BEGIN_INDEX = 4
+ATTR_BEGIN_INDEX = 2
 
 # Name of the key to access the attribute dict of an entry type from
 # ``_type_attributes`` of ``DataStore``.

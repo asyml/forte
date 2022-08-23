@@ -13,9 +13,8 @@
 # limitations under the License.
 
 from abc import abstractmethod
-from typing import List, Iterator, Tuple, Any, Optional, Dict, Type
+from typing import List, Iterator, Tuple, Any, Optional, Dict
 import json
-from forte.data.ontology.core import Entry
 
 __all__ = ["BaseStore"]
 
@@ -128,10 +127,9 @@ class BaseStore:
     def add_entry_raw(
         self,
         type_name: str,
-        attribute_data: List,
-        base_class: Type[Entry],
         tid: Optional[int] = None,
         allow_duplicate: bool = True,
+        attribute_data: Optional[List] = None,
     ) -> int:
 
         r"""
@@ -143,19 +141,19 @@ class BaseStore:
 
         Args:
             type_name: The fully qualified type name of the new Entry.
-            attribute_data: It is a list that stores attributes relevant to
-                the entry being added. In order to keep the number of attributes
-                same for all entries, the list is populated with trailing None's.
-            base_class: The type of entry to add to the Data Store. This is
-                a reference to the class of the entry that needs to be added
-                to the DataStore. The reference can be to any of the classes
-                supported by the function.
             tid: ``tid`` of the Entry that is being added.
                 It's optional, and it will be
                 auto-assigned if not given.
             allow_duplicate: Whether we allow duplicate in the DataStore. When
                 it's set to False, the function will return the ``tid`` of
                 existing entry if a duplicate is found. Default value is True.
+            attribute_data: It is a `list` that stores attributes relevant to
+                the entry being added. The attributes passed in
+                `attributes_data` must be present in that entries
+                `type_attributes` and must only be those entries which are
+                relevant to the initialization of the entry. For example,
+                begin and end position when creating an entry of type
+                :class:`~forte.data.ontology.top.Annotation`.
 
         Returns:
             ``tid`` of the entry.
