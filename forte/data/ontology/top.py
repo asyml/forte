@@ -100,25 +100,6 @@ class Annotation(Entry):
         self.end: int = end
         super().__init__(pack)
 
-    def __getstate__(self):
-        r"""For serializing Annotation, we should create Span annotations for
-        compatibility purposes.
-        """
-        self._span = Span(self.begin, self.end)
-        state = super().__getstate__()
-        state.pop("begin")
-        state.pop("end")
-        return state
-
-    def __setstate__(self, state):
-        """
-        For de-serializing Annotation, we load the begin, end from Span, for
-        compatibility purposes.
-        """
-        super().__setstate__(state)
-        self.begin = self._span.begin
-        self.end = self._span.end
-
     @property
     def span(self) -> Span:
         # Delay span creation at usage.
@@ -493,7 +474,8 @@ class MultiPackLink(MultiEntry, BaseLink):
         if self.parent is None:
             raise ValueError("The parent of this link is not set.")
 
-        return cast(Entry, self.parent)
+        pack_idx, parent_tid = self.parent
+        return self.pack.get_subentry(pack_idx, parent_tid)
 
     def get_child(self) -> Entry:
         r"""Get the child entry of the link.
@@ -505,7 +487,8 @@ class MultiPackLink(MultiEntry, BaseLink):
         if self.child is None:
             raise ValueError("The parent of this link is not set.")
 
-        return cast(Entry, self.child)
+        pack_idx, child_tid = self.child
+        return self.pack.get_subentry(pack_idx, child_tid)
 
 
 # pylint: disable=duplicate-bases
@@ -621,25 +604,6 @@ class AudioAnnotation(Entry):
                 "attached to any data pack."
             )
         return self.pack.get_span_audio(self.begin, self.end)
-
-    def __getstate__(self):
-        r"""For serializing AudioAnnotation, we should create Span annotations
-        for compatibility purposes.
-        """
-        self._span = Span(self.begin, self.end)
-        state = super().__getstate__()
-        state.pop("_begin")
-        state.pop("_end")
-        return state
-
-    def __setstate__(self, state):
-        """
-        For de-serializing AudioAnnotation, we load the begin, end from Span,
-        for compatibility purposes.
-        """
-        super().__setstate__(state)
-        self.begin = self._span.begin
-        self.end = self._span.end
 
     @property
     def span(self) -> Span:
@@ -1101,6 +1065,15 @@ class Payload(Entry):
         if isinstance(state["_embedding"], np.ndarray):
             state["_embedding"] = list(self._embedding.tolist())
 
+        state["replace_back_operations"] = [
+            ((span.begin, span.end), text)
+            for span, text in self.replace_back_operations
+        ]
+        state["processed_original_spans"] = [
+            ((span1.begin, span1.end), (span2.begin, span2.end))
+            for span1, span2 in self.processed_original_spans
+        ]
+
         return state
 
     def __setstate__(self, state):
@@ -1125,6 +1098,17 @@ class Payload(Entry):
         # payloads are introduced.
         if "_cache" in state and isinstance(state["_cache"], list):
             state["_cache"] = np.array(state["_cache"])
+
+        self.replace_back_operations = [
+            (Span(begin, end), text)
+            for (begin, end), text in state.pop("replace_back_operations")
+        ]
+        self.processed_original_spans = [
+            (Span(begin1, end1), Span(begin2, end2))
+            for (begin1, end1), (begin2, end2) in state.pop(
+                "processed_original_spans"
+            )
+        ]
 
 
 SinglePackEntries = (
