@@ -16,7 +16,7 @@ import copy
 import logging
 
 from pathlib import Path
-from typing import Dict, List, Union, Iterator, Optional, Type, Any, Tuple
+from typing import Dict, List, Union, Iterator, Optional, Type, Any, Tuple, cast
 
 import jsonpickle
 
@@ -802,7 +802,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         self,
         entry_type: Union[str, Type[EntryType]],
         components: Optional[Union[str, List[str]]] = None,
-        include_sub_type=True,
+        include_sub_type: bool = True,
+        get_raw: bool = False,
     ) -> Iterator[EntryType]:
         """Get entries of ``entry_type`` from this multi pack.
 
@@ -827,6 +828,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
                 any component will be returned.
             include_sub_type: whether to return the sub types of the
                 queried `entry_type`. True by default.
+            get_raw: boolean to indicate if the entry should be returned in
+                its primitive form as opposed to an object. False by default
 
         Returns:
             An iterator of the entries matching the arguments, following
@@ -855,15 +858,24 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
                 type_name=get_full_module_name(entry_type_),
                 include_sub_type=include_sub_type,
             ):
-                entry: Entry = self._entry_converter.get_entry_object(
-                    tid=entry_data[TID_INDEX],
-                    pack=self,
-                    type_name=entry_data[ENTRY_TYPE_INDEX],
-                )
                 # Filter by components
                 if components is not None:
-                    if not self.is_created_by(entry, components):
+                    if not self.is_created_by(
+                        entry_data[TID_INDEX], components
+                    ):
                         continue
+
+                entry: Union[Entry, Dict[str, Any]]
+
+                if get_raw:
+                    data_store = cast(DataStore, self._data_store)
+                    entry = data_store.transform_data_store_entry(entry_data)
+                else:
+                    entry = self._entry_converter.get_entry_object(
+                        tid=entry_data[TID_INDEX],
+                        pack=self,
+                        type_name=entry_data[ENTRY_TYPE_INDEX],
+                    )
 
                 yield entry  # type: ignore
         except ValueError:
