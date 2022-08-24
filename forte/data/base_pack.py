@@ -797,7 +797,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         Check if the entry is created by any of the provided components.
 
         Args:
-            entry_tid: Tid of the entry to check.
+            entry_tid: `tid` of the entry to check.
             components: The list of component names.
 
         Returns:

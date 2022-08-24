@@ -525,7 +525,9 @@ class MultiPackGroup(MultiEntry, BaseGroup[Entry]):
         # These attributes are used to store values of member type
         # in data store and must thus be in a primitive form.
         self.member_type = get_full_module_name(self.MemberType)
-        super().__init__(pack, members)
+        super().__init__(pack)
+        if members is not None:
+            self.add_members(members)
 
     def add_member(self, member: Entry):
         if not isinstance(member, self.MemberType):

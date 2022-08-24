@@ -302,6 +302,7 @@ class DataStore(BaseStore):
         state.pop("_DataStore__tid_ref_dict")
         state.pop("_DataStore__tid_idx_dict")
         state.pop("_DataStore__deletion_count")
+        state.pop("_type_attributes", None)
         state["entries"] = state.pop("_DataStore__elements")
         for _, v in state["fields"].items():
             if constants.PARENT_CLASS_KEY in v:
@@ -806,9 +807,22 @@ class DataStore(BaseStore):
                 # ie. NoneType.
                 if attr_class is None:
                     attr_class = type(None)
-                attr_args = get_args(attr_info.type)
-                if len(attr_args) == 0:
+                raw_attr_args = get_args(attr_info.type)
+                if len(raw_attr_args) == 0:
                     attr_args = tuple([attr_info.type])
+                else:
+                    attr_args = ()
+                    for args in raw_attr_args:
+                        # This is the case when we have a multidimensional
+                        # type attribute like List[Tuple[int, int]]. In this
+                        # case get_args will return a tuple of tuples that
+                        # looks like ((Tuple, int, int),). We thus convert
+                        # this into a single dimensional tuple -
+                        # (Tuple, int, int).
+                        if isinstance(args, tuple):
+                            attr_args += args
+                        else:
+                            attr_args += (args,)
 
                 # Prior to Python 3.7, fetching generic type
                 # aliases resulted in actual type objects whereas from
@@ -1318,7 +1332,7 @@ class DataStore(BaseStore):
     def get_attribute_positions(self, type_name: str) -> Dict[str, int]:
         r"""This function returns a dictionary where the key represents
         the attributes of the entry of type ``type_name`` and value
-        represents the index of the position where this asstribute is
+        represents the index of the position where this attribute is
         stored in the data store entry of this type.
         For example:
 
@@ -1357,7 +1371,7 @@ class DataStore(BaseStore):
         r"""
         This method converts a raw data store entry into a format more easily
         understandable to users. Data Store entries are stored as lists and
-        are not very easily interpretable. This method converts ``DataStore``
+        are not very easily understandable. This method converts ``DataStore``
         entries from a list format to a dictionary based format where the key
         is the names of the attributes of an entry and the value is the values
         corresponding attributes in the data store entry.

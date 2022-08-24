@@ -222,7 +222,7 @@ class DataStoreTest(unittest.TestCase):
             },
             "forte.data.ontology.top.MultiPackGroup": {
                 "attributes": {
-                    'members': {'type': (list, (Tuple[int, int])), 'index': 2},
+                    'members': {'type': (list, (Tuple, int, int)), 'index': 2},
                     'member_type': {'type': (type(None), (str,)), 'index': 3}
                 },
                 "parent_class": {"Entry", "MultiEntry", "BaseGroup"}
