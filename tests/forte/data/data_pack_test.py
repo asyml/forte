@@ -32,7 +32,6 @@ from ft.onto.base_ontology import (
     PredicateLink,
     PredicateMention,
     CoreferenceGroup,
-    Phrase,
 )
 from forte.data.readers import OntonotesReader
 

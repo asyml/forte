@@ -465,7 +465,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         """
         supported_modality = [enum.name for enum in Modality]
-
+        payloads_length: int = 0
         try:
             # if modality.name == "text":
             if modality == Modality.Text:
@@ -567,13 +567,18 @@ class DataPack(BasePack[Entry, Link, Group]):
         text_payload_index: int = 0,
     ):
         """
-        Set text for TextPayload at a specified index.
+        Set text for TextPayload at a specified index or add a new TextPayload
+        in the DataPack.
+
+        Raises:
+            ValueError: raised when the text payload index is out of range.
 
         Args:
             text: a str text.
             replace_func: function that replace text. Defaults to None.
             text_payload_index: the zero-based index of the TextPayload
-                in this DataPack's TextPayload entries. Defaults to 0.
+                in this DataPack's TextPayload entries.
+                If it's 0, it adds a new TextPayload if there is no text payload in the data pack.
         """
         # Temporary imports
 
@@ -612,14 +617,18 @@ class DataPack(BasePack[Entry, Link, Group]):
         sample_rate: int,
         audio_payload_index: int = 0,
     ):
-        r"""Set the audio payload and sample rate of the :class:`~forte.data.data_pack.DataPack`
-        object.
+        r"""
+        Set audio for AudioPayload at a specified index or add a new AudioPayload in the DataPack.
+
+        Raises:
+            ValueError: raised when the audio payload index is out of range.
 
         Args:
             audio: A numpy array storing the audio waveform.
             sample_rate: An integer specifying the sample rate.
             audio_payload_index: the zero-based index of the AudioPayload
-                in this DataPack's AudioPayload entries. Defaults to 0.
+                in this DataPack's AudioPayload entries. Defaults to 0, and
+                it adds a new audio payload if there is no audio payload in the data pack.
         """
         # temporary solution for backward compatibility
         # past API use this method to add a single audio in the datapack
@@ -903,7 +912,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
             if begin < 0:
                 raise ValueError(
-                    f"The begin {begin} is smaller than 0, this"
+                    f"The begin {begin} is smaller than 0, this "
                     f"is not a valid begin."
                 )
 
@@ -1402,6 +1411,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             a_dict["parent"].append(
                 np.where(data[parent_type]["tid"] == link.parent)[0][0]
             )
+
             a_dict["child"].append(
                 np.where(data[child_type]["tid"] == link.child)[0][0]
             )
@@ -1631,13 +1641,13 @@ class DataPack(BasePack[Entry, Link, Group]):
         self._entry_converter.save_entry_object(entry=entry, pack=self)
 
         if isinstance(entry, Payload):
-            if entry.modality == Modality.Text:
+            if Modality.Text.name == entry.modality_name:
                 entry.set_payload_index(len(self.text_payloads))
                 self.text_payloads.append(entry)
-            elif entry.modality == Modality.Audio:
+            elif Modality.Audio.name == entry.modality_name:
                 entry.set_payload_index(len(self.audio_payloads))
                 self.audio_payloads.append(entry)
-            elif entry.modality == Modality.Image:
+            elif Modality.Image.name == entry.modality_name:
                 entry.set_payload_index(len(self.image_payloads))
                 self.image_payloads.append(entry)
 

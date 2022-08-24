@@ -101,6 +101,15 @@ class Entry(Generic[ContainerType]):
     Args:
         pack: Each entry should be associated with one pack upon creation.
     """
+    # This dict is used only at the time of creation of an entry. Many entries
+    # like Annotation require some attributes like begin and end to be set at
+    # the time of creation. This dictionry is used to set all dataclass
+    # attributes of an entry whose datastore entry needs to be created irrespective
+    # of whether a getter and setter property for its attributes is made or not.
+    # The key of this dictionary is the name of the entry being created and the
+    # value is another dictionary whose key and values are the entry's required
+    # attribute names and their values respectively.
+    _cached_attribute_data = {}  # type: ignore
 
     def __init__(self, pack: ContainerType):
         # The Entry should have a reference to the data pack, and the data pack

@@ -69,14 +69,14 @@ class LinkExtractor(BaseExtractor):
                     "`entry_class` to this extractor " "must be a Link tpe."
                 )
 
-            self._parent_class: Type[Annotation] = self._entry_class.ParentType
+            self._parent_class: Type[Annotation] = self._entry_class.ParentType  # type: ignore
             if not issubclass(self._parent_class, Annotation):
                 raise ProcessorConfigError(
                     f"The parent class of the provided {self.config.entry_type}"
                     " must be an Annotation."
                 )
 
-            self._child_class: Type[Annotation] = self._entry_class.ChildType
+            self._child_class: Type[Annotation] = self._entry_class.ChildType  # type: ignore
             if not issubclass(self._child_class, Annotation):
                 raise ProcessorConfigError(
                     f"The child class of the provided {self.config.entry_type}"
