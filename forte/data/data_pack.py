@@ -1575,14 +1575,14 @@ class DataPack(BasePack[Entry, Link, Group]):
         def require_annotations(entry_class=Annotation) -> bool:
             if self._data_store._is_subclass(entry_type_, entry_class):
                 return True
-            if self._data_store._is_subclass(entry_type_, Link):
-                link_class = as_entry_type(entry_type_)
+
+            curr_class: Type[EntryType] = as_entry_type(entry_type_)
+            if issubclass(curr_class, Link):
                 return issubclass(
-                    link_class.ParentType, entry_class
-                ) and issubclass(link_class.ChildType, entry_class)
-            if self._data_store._is_subclass(entry_type_, Group):
-                group_class = as_entry_type(entry_type_)
-                return issubclass(group_class.MemberType, entry_class)
+                    curr_class.ParentType, entry_class
+                ) and issubclass(curr_class.ChildType, entry_class)
+            if issubclass(curr_class, Group):
+                return issubclass(curr_class.MemberType, entry_class)
             return False
 
         # If we don't have any annotations but the items to check requires them,
