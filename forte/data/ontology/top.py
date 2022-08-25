@@ -1065,15 +1065,6 @@ class Payload(Entry):
         if isinstance(state["_embedding"], np.ndarray):
             state["_embedding"] = list(self._embedding.tolist())
 
-        state["replace_back_operations"] = [
-            ((span.begin, span.end), text)
-            for span, text in self.replace_back_operations
-        ]
-        state["processed_original_spans"] = [
-            ((span1.begin, span1.end), (span2.begin, span2.end))
-            for span1, span2 in self.processed_original_spans
-        ]
-
         return state
 
     def __setstate__(self, state):
@@ -1098,17 +1089,6 @@ class Payload(Entry):
         # payloads are introduced.
         if "_cache" in state and isinstance(state["_cache"], list):
             state["_cache"] = np.array(state["_cache"])
-
-        self.replace_back_operations = [
-            (Span(begin, end), text)
-            for (begin, end), text in state.pop("replace_back_operations")
-        ]
-        self.processed_original_spans = [
-            (Span(begin1, end1), Span(begin2, end2))
-            for (begin1, end1), (begin2, end2) in state.pop(
-                "processed_original_spans"
-            )
-        ]
 
 
 SinglePackEntries = (

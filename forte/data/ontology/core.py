@@ -408,15 +408,10 @@ class FNdArray:
     """
 
     def __init__(
-        self,
-        dtype: Optional[str] = None,
-        shape: Optional[List[int]] = None,
-        data_ref: Optional[List] = None,
+        self, dtype: Optional[str] = None, shape: Optional[List[int]] = None
     ):
         super().__init__()
-        self.__data_ref: List = (
-            [dtype, shape, None] if data_ref is None else data_ref
-        )
+        self.__data_ref: List = [dtype, shape, None]
 
     @property
     def dtype(self):
@@ -466,6 +461,17 @@ class FNdArray:
         # Stored dtype and shape should match to the provided array's.
         self.__data_ref[0] = array_np.dtype.str
         self.__data_ref[1] = list(array_np.shape)
+
+    def set_data_ref(self, data_ref: List):
+        """
+        Set the internal storage to reference of a list.
+        This is only for internal usage.
+
+        Args:
+            data_ref: A reference to a list storing `[dtype, shape, data]`
+                info from `DataStore`.
+        """
+        self.__data_ref = data_ref
 
 
 class BaseLink(Entry, ABC):

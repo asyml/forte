@@ -516,9 +516,11 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             if attr_type[0] in ENTRY_TYPE_DATA_STRUCTURES:
                 # Generate FList/FDict object on the fly
                 return attr_type[0](parent_entry=cls, data=attr_val)
-            elif attr_type[1] == (FNdArray,):
+            elif attr_type == (type(None), (FNdArray,)):
                 # Generate FNdArray object on the fly
-                return FNdArray(data_ref=attr_val)
+                fndarray: FNdArray = FNdArray()
+                fndarray.set_data_ref(attr_val)
+                return fndarray
 
             # Check dataclass attribute value type
             # If the attribute was an Entry object, only its tid
@@ -634,7 +636,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                         "which can only accept a mapping whose values are "
                         "`Entry` objects."
                     ) from e
-            elif attr_type[1] == (FNdArray,):
+            elif attr_type == (type(None), (FNdArray,)):
                 attr_value = [
                     None if value.dtype is None else value.dtype.str,
                     value.shape,
