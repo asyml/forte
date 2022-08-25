@@ -40,7 +40,7 @@ from forte.data.ontology.top import (
     MultiPackGeneric,
 )
 from forte.data.types import DataRequest
-from forte.utils import get_class, get_full_module_name
+from forte.utils import get_full_module_name
 from forte.version import DEFAULT_PACK_VERSION
 
 
@@ -837,17 +837,20 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             insertion)
 
         """
-        entry_type_: Type[EntryType]
-        if isinstance(entry_type, str):
-            entry_type_ = get_class(entry_type)
-            if not issubclass(entry_type_, Entry):
-                raise AttributeError(
-                    f"The specified entry type [{entry_type}] "
-                    f"does not correspond to a "
-                    f"'forte.data.ontology.core.Entry' class"
-                )
-        else:
-            entry_type_ = entry_type
+        entry_type_ = (
+            get_full_module_name(entry_type)
+            if not isinstance(entry_type, str)
+            else entry_type
+        )
+
+        # Check if entry_type_ represents a valid entry
+        # pylint: disable=protected-access
+        if not self._data_store._is_subclass(entry_type_, Entry):
+            raise ValueError(
+                f"The specified entry type [{entry_type}] "
+                f"does not correspond to a "
+                f"`forte.data.ontology.core.Entry` class"
+            )
 
         if components is not None:
             if isinstance(components, str):
@@ -855,7 +858,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
         try:
             for entry_data in self._data_store.get(
-                type_name=get_full_module_name(entry_type_),
+                type_name=entry_type_,
                 include_sub_type=include_sub_type,
             ):
                 # Filter by components
