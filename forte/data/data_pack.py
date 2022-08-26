@@ -465,7 +465,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         """
         supported_modality = [enum.name for enum in Modality]
-        payloads_length: int = 0
+
         try:
             # if modality.name == "text":
             if modality == Modality.Text:
@@ -560,6 +560,20 @@ class DataPack(BasePack[Entry, Link, Group]):
             ],
         )
 
+    def add_text(self, text):
+        """
+        Add a text payload to this data pack.
+
+        Args:
+            text: Text to be added.
+        """
+        from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
+            TextPayload,
+        )
+
+        ip = TextPayload(self)
+        ip.set_cache(text)
+
     def set_text(
         self,
         text: str,
@@ -641,12 +655,34 @@ class DataPack(BasePack[Entry, Link, Group]):
                 AudioPayload,
             )
 
+            logging.warning(
+                "audio_payload_index is set to zero,"
+                "and there is not existing AudioPayload"
+                " in the DataPack."
+                "An `AudioPayload` will be added into the DataPack."
+                "However, we encourage user to"
+                " use DataPack.add_audio() function instead."
+            )
             ap = AudioPayload(self)
         else:
             ap = self.get_payload_at(Modality.Audio, audio_payload_index)
 
         ap.set_cache(audio)
         ap.sample_rate = sample_rate
+
+    def add_audio(self, audio):
+        r"""
+        Add an AudioPayload storing the audio given in the parameters.
+
+        Args:
+            audio: A numpy array storing the audio.
+        """
+        from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
+            AudioPayload,
+        )
+
+        ip = AudioPayload(self)
+        ip.set_cache(audio)
 
     def add_image(self, image):
         r"""
@@ -1411,7 +1447,6 @@ class DataPack(BasePack[Entry, Link, Group]):
             a_dict["parent"].append(
                 np.where(data[parent_type]["tid"] == link.parent)[0][0]
             )
-
             a_dict["child"].append(
                 np.where(data[child_type]["tid"] == link.child)[0][0]
             )
@@ -1641,13 +1676,13 @@ class DataPack(BasePack[Entry, Link, Group]):
         self._entry_converter.save_entry_object(entry=entry, pack=self)
 
         if isinstance(entry, Payload):
-            if Modality.Text.name == entry.modality_name:
+            if entry.modality == Modality.Text:
                 entry.set_payload_index(len(self.text_payloads))
                 self.text_payloads.append(entry)
-            elif Modality.Audio.name == entry.modality_name:
+            elif entry.modality == Modality.Audio:
                 entry.set_payload_index(len(self.audio_payloads))
                 self.audio_payloads.append(entry)
-            elif Modality.Image.name == entry.modality_name:
+            elif entry.modality == Modality.Image:
                 entry.set_payload_index(len(self.image_payloads))
                 self.image_payloads.append(entry)
 
