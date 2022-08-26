@@ -1114,7 +1114,7 @@ class Payload(Entry):
             # even if user input a shape, it will be overwritten
             cache_shape = data.shape
         elif isinstance(data, str):
-            cache_shape = len(data)
+            cache_shape = (len(data),)
         else:
             raise ValueError(
                 f"Unsupported data type {type(data)} for cache. "
