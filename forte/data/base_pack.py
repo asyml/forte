@@ -806,8 +806,10 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         if isinstance(components, str):
             components = [components]
 
+        entry_tid = entry.tid if isinstance(entry, Entry) else entry
+
         for c in components:
-            if entry in self._creation_records[c]:
+            if entry_tid in self._creation_records[c]:
                 break
         else:
             # The entry not created by any of these components.
