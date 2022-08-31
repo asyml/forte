@@ -61,3 +61,9 @@ ATTR_INDEX_KEY = "index"
 # Name of the key to access a set of parent names of an entry type from
 # ``_type_attributes`` of ``DataStore``.
 PARENT_CLASS_KEY = "parent_class"
+
+# Name of the class field in JSON serialization schema of BasePack
+JSON_CLASS_FIELD = "_json_class"
+
+# Name of the state field in JSON serialization schema of BasePack
+JSON_STATE_FIELD = "_json_state"

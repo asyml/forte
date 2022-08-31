@@ -1106,6 +1106,7 @@ class Payload(Entry):
         # Entry store is being integrated into DataStore
         state = self.__dict__.copy()
         state["modality"] = self.modality_name
+        state.pop("_Entry__pack")
 
         if isinstance(state["_cache"], np.ndarray):
             state["_cache"] = list(self._cache.tolist())

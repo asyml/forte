@@ -111,7 +111,7 @@ class PackWriter(PackProcessor, ABC):
         self._zip_pack = configs.zip_pack
         self._indent = configs.indent
 
-        if self.configs.serialize_method == "jsonpickle":
+        if self.configs.serialize_method in ("jsonpickle", "json"):
             self._suffix = ".json.gz" if self._zip_pack else ".json"
         else:
             self._suffix = ".pickle.gz" if self._zip_pack else ".pickle"
@@ -197,7 +197,7 @@ class MultiPackWriter(MultiPackProcessor):
         ensure_dir(multi_index)
         self.multi_idx_out = open(multi_index, "w", encoding="utf-8")
 
-        if self.configs.serialize_method == "jsonpickle":
+        if self.configs.serialize_method in ("jsonpickle", "json"):
             self._suffix = ".json.gz" if self.configs.zip_pack else ".json"
         else:
             self._suffix = ".pickle.gz" if self.configs.zip_pack else ".pickle"
