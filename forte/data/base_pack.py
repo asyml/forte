@@ -48,6 +48,7 @@ from forte.data.ontology.core import (
     LinkType,
     FList,
     FDict,
+    FNdArray,
     ENTRY_TYPE_DATA_STRUCTURES,
 )
 from forte.version import (
@@ -515,44 +516,49 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             if attr_type[0] in ENTRY_TYPE_DATA_STRUCTURES:
                 # Generate FList/FDict object on the fly
                 return attr_type[0](parent_entry=cls, data=attr_val)
-            try:
-                # Check dataclass attribute value type
-                # If the attribute was an Entry object, only its tid
-                # is stored in the DataStore and hence its needs to be converted.
+            elif attr_type == (type(None), (FNdArray,)):
+                # Generate FNdArray object on the fly
+                fndarray: FNdArray = FNdArray()
+                fndarray.set_data_ref(attr_val)
+                return fndarray
 
-                # Entry objects are stored in data stores by their tid (which is
-                # of type int). Thus, if we enounter an int value, we check the
-                # type information which is stored as a tuple. if any entry in this
-                # tuple is a subclass of Entry or is a ForwardRef to another entry,
-                # we can infer that this int value represents the tid of an Entry
-                # object and thus must be converted to an object using get_entry
-                # before returning.
-                if (
-                    isinstance(attr_val, int)
-                    and attr_type[1]
-                    and any(
-                        issubclass(entry, Entry)
-                        if isclass(entry)
-                        else is_forward_ref(entry)
-                        for entry in list(attr_type[1])
-                    )
-                ):
-                    return cls.pack.get_entry(tid=attr_val)
+            # Check dataclass attribute value type
+            # If the attribute was an Entry object, only its tid
+            # is stored in the DataStore and hence its needs to be converted.
 
-                # The condition below is to check whether the attribute's value
-                # is a pair of integers - `(pack_id, tid)`. If so we may have
-                # encountered a `tid` that can only be resolved by
-                # `MultiPack.get_subentry`.
-                elif (
-                    isinstance(attr_val, tuple)
-                    and len(attr_val) == 2
-                    and all(isinstance(element, int) for element in attr_val)
-                    and hasattr(cls.pack, "get_subentry")
-                ):
-                    # Multi pack entry
-                    return cls.pack.get_subentry(*attr_val)
-            except KeyError:
-                pass
+            # Entry objects are stored in data stores by their tid (which is
+            # of type int). Thus, if we enounter an int value, we check the
+            # type information which is stored as a tuple. if any entry in this
+            # tuple is a subclass of Entry or is a ForwardRef to another entry,
+            # we can infer that this int value represents the tid of an Entry
+            # object and thus must be converted to an object using get_entry
+            # before returning.
+            if attr_type[1] and any(
+                issubclass(entry, Entry)
+                if isclass(entry)
+                else is_forward_ref(entry)
+                for entry in list(attr_type[1])
+            ):
+                try:
+                    if isinstance(attr_val, int):
+                        return cls.pack.get_entry(tid=attr_val)
+
+                    # The condition below is to check whether the attribute's value
+                    # is a pair of integers - `(pack_id, tid)`. If so we may have
+                    # encountered a `tid` that can only be resolved by
+                    # `MultiPack.get_subentry`.
+                    elif (
+                        isinstance(attr_val, (tuple, list))
+                        and len(attr_val) == 2
+                        and all(
+                            isinstance(element, int) for element in attr_val
+                        )
+                        and hasattr(cls.pack, "get_subentry")
+                    ):
+                        # Multi pack entry
+                        return cls.pack.get_subentry(*attr_val)
+                except KeyError:
+                    pass
             return attr_val
 
         def entry_setter(cls: Entry, value: Any, attr_name: str):
@@ -630,6 +636,12 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                         "which can only accept a mapping whose values are "
                         "`Entry` objects."
                     ) from e
+            elif attr_type == (type(None), (FNdArray,)):
+                attr_value = [
+                    None if value.dtype is None else value.dtype.str,
+                    value.shape,
+                    None if value.data is None else value.data.tolist(),
+                ]
             elif isinstance(value, Entry):
                 attr_value = (
                     value.tid
