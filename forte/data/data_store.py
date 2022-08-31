@@ -1379,37 +1379,17 @@ class DataStore(BaseStore):
 
         .. code-block:: python
 
-            # Entry of type 'ft.onto.base_ontology.Sentence'
-            data_store_entry = [
-                171792711812874531962213686690228233530,
-                'ft.onto.base_ontology.Sentence',
-                0,
-                164,
-                0,
-                '-',
-                0,
-                {},
-                {},
-                {}
-            ]
-
-            transformed_entry = pack.transform_data_store_entry(
-                data_store_entry
-            )
-
-            # transformed_entry = {
-            #   'begin': 0,
-            #   'end': 164,
-            #   'payload_idx': 0,
-            #   'speaker': '-',
-            #   'part_id': 0,
-            #   'sentiment': {},
-            #   'classification': {},
-            #   'classifications': {},
-            #   'tid': 171792711812874531962213686690228233530,
-            #   'type': 'ft.onto.base_ontology.Sentence'}
-            # }
-
+            >>> data_store = DataStore()
+            >>> tid = data_store.add_entry_raw(
+            ... type_name = 'ft.onto.base_ontology.Sentence',
+            ... tid = 101, attribute_data = [0,10])
+            >>> entry = data_store.get_entry(tid)[0]
+            >>> transformed_entry = data_store.transform_data_store_entry(entry)
+            >>> transformed_entry == { 'begin': 0, 'end': 10, 'payload_idx': 0,
+            ... 'speaker': None, 'part_id': None, 'sentiment': {},
+            ... 'classification': {}, 'classifications': {}, 'tid': 101,
+            ... 'type': 'ft.onto.base_ontology.Sentence'}
+            True
 
         Args:
             entry: A list representing a valid data store entry

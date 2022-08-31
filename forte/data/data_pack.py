@@ -49,11 +49,12 @@ from forte.data.ontology.top import (
     Annotation,
     Link,
     Group,
-    SinglePackEntries,
     Generics,
     AudioAnnotation,
     ImageAnnotation,
     Payload,
+    SinglePackEntries,
+    AnnotationLikeEntries,
 )
 
 from forte.data.modality import Modality
@@ -1625,7 +1626,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         range_end: int
 
         if range_annotation is not None:
-            if isinstance(range_annotation, (Annotation, AudioAnnotation)):
+            if isinstance(range_annotation, AnnotationLikeEntries):
                 range_begin = range_annotation.begin
                 range_end = range_annotation.end
             else:
