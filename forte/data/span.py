@@ -65,3 +65,10 @@ class Span:
 
     def __hash__(self):
         return hash((self.begin, self.end))
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
