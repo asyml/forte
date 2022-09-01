@@ -286,6 +286,8 @@ class DataStore(BaseStore):
             1) will serialize the annotation sorted list as a normal list;
             2) will remove `tid_ref_dict`, `tid_idx_dict` and `deletion_count`
                 to save space.
+            3) will refine and refactor `_type_attributes` into `fields` to
+                save space and to make it better suited for serialization.
         """
         state = super().__getstate__()
         state["_DataStore__elements"] = {}
