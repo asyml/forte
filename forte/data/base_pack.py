@@ -32,7 +32,8 @@ from typing import (
     Iterable,
 )
 from functools import partial
-from typing_inspect import get_origin
+from inspect import isclass
+from typing_inspect import is_forward_ref
 from packaging.version import Version
 import jsonpickle
 
@@ -47,6 +48,8 @@ from forte.data.ontology.core import (
     LinkType,
     FList,
     FDict,
+    FNdArray,
+    ENTRY_TYPE_DATA_STRUCTURES,
 )
 from forte.version import (
     PACK_VERSION,
@@ -434,12 +437,29 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                 self._field_records[c] = {(entry_id, field_name)}
 
     def on_entry_creation(
-        self, entry: Entry, component_name: Optional[str] = None
+        self,
+        entry: Entry,
+        component_name: Optional[str] = None,
     ):
         """
         Call this when adding a new entry, will be called
         in :class:`~forte.data.ontology.core.Entry` when
-        its `__init__` function is called.
+        its `__init__` function is called. This method does
+        the following 2 operations with regards to creating
+        a new entry.
+
+        - All ``dataclass`` attributes of the entry to be created
+            are stored in the class level dictionary of
+            :class:`~forte.data.ontology.core.Entry` called
+            ``cached_attributes_data``. This is used to initialize
+            the corresponding entry's objects data store entry
+        - On creation of the data store entry, this methods associates
+            ``getter`` and ``setter`` properties to all `dataclass`
+            attributes of this entry to allow direct interaction
+            between the attributes of the entry and their copy being
+            stored in the data store. For example, the `setter` method
+            updates the data store value of an attribute of a given entry
+            whenever the attribute in the entry's object is updated.
 
         Args:
             entry: The entry to be added.
@@ -455,67 +475,149 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             # Use the auto-inferred control component.
             c = self.__control_component
 
-        def entry_getter(cls: Entry, attr_name: str, field_type):
+        def entry_getter(cls: Entry, attr_name: str):
             """A getter function for dataclass fields of entry object.
-            When the field contains ``tid``s, we will convert them to entry
-            object on the fly.
+            Depending on the value stored in the data store and the type
+            of the attribute, the method decides how to process the value.
+
+            - Attributes repersented as ``FList`` and ``FDict`` objects are stored
+                as list and dictionary respectively in the dtaa store entry. These
+                values are converted to ``FList`` and ``FDict`` objects on the fly.
+            - When the field contains ``tid``s, we will convert them to entry
+                object on the fly. This is done by checking the type
+                information of the attribute in the entry object. If the
+                attribute is of type ``Entry`` or a ``ForwardRef``, we can
+                assume that that value stored in the data store entry represents
+                the entry's ``tid``.
+            - When values are stored as a tuple, we assume the value represents
+                a `subentry` stored in a `MultiPack`.
+            - In all other cases, the values are returned in the forms that they
+                are stored in the data store entry.
 
             Args:
                 cls: An ``Entry`` class object.
                 attr_name: The name of the attribute.
-                field_type: The type of the attribute.
+
+            Returns:
+                The value of the required attribute in the form specified
+                by the corresponding ``Entry`` class object.
             """
+
             data_store_ref = (
                 cls.pack._data_store  # pylint: disable=protected-access
             )
             attr_val = data_store_ref.get_attribute(
                 tid=cls.tid, attr_name=attr_name
             )
-            if field_type in (FList, FDict):
+            attr_type = data_store_ref.get_attr_type(
+                cls.entry_type(), attr_name
+            )
+
+            if attr_type[0] in ENTRY_TYPE_DATA_STRUCTURES:
                 # Generate FList/FDict object on the fly
-                return field_type(parent_entry=cls, data=attr_val)
-            try:
-                # TODO: Find a better solution to determine if a field is Entry
-                # Will be addressed by https://github.com/asyml/forte/issues/835
-                # Convert tid to entry object on the fly
-                if isinstance(attr_val, int):
-                    # Single pack entry
-                    return cls.pack.get_entry(tid=attr_val)
-                # The condition below is to check whether the attribute's value
-                # is a pair of integers - `(pack_id, tid)`. If so we may have
-                # encountered a `tid` that can only be resolved by
-                # `MultiPack.get_subentry`.
-                elif (
-                    isinstance(attr_val, tuple)
-                    and len(attr_val) == 2
-                    and all(isinstance(element, int) for element in attr_val)
-                    and hasattr(cls.pack, "get_subentry")
-                ):
-                    # Multi pack entry
-                    return cls.pack.get_subentry(*attr_val)
-            except KeyError:
-                pass
+                return attr_type[0](parent_entry=cls, data=attr_val)
+            elif attr_type == (type(None), (FNdArray,)):
+                # Generate FNdArray object on the fly
+                fndarray: FNdArray = FNdArray()
+                fndarray.set_data_ref(attr_val)
+                return fndarray
+
+            # Check dataclass attribute value type
+            # If the attribute was an Entry object, only its tid
+            # is stored in the DataStore and hence its needs to be converted.
+
+            # Entry objects are stored in data stores by their tid (which is
+            # of type int). Thus, if we enounter an int value, we check the
+            # type information which is stored as a tuple. if any entry in this
+            # tuple is a subclass of Entry or is a ForwardRef to another entry,
+            # we can infer that this int value represents the tid of an Entry
+            # object and thus must be converted to an object using get_entry
+            # before returning.
+            if attr_type[1] and any(
+                issubclass(entry, Entry)
+                if isclass(entry)
+                else is_forward_ref(entry)
+                for entry in list(attr_type[1])
+            ):
+                try:
+                    if isinstance(attr_val, int):
+                        return cls.pack.get_entry(tid=attr_val)
+
+                    # The condition below is to check whether the attribute's value
+                    # is a pair of integers - `(pack_id, tid)`. If so we may have
+                    # encountered a `tid` that can only be resolved by
+                    # `MultiPack.get_subentry`.
+                    elif (
+                        isinstance(attr_val, (tuple, list))
+                        and len(attr_val) == 2
+                        and all(
+                            isinstance(element, int) for element in attr_val
+                        )
+                        and hasattr(cls.pack, "get_subentry")
+                    ):
+                        # Multi pack entry
+                        return cls.pack.get_subentry(*attr_val)
+                except KeyError:
+                    pass
             return attr_val
 
-        def entry_setter(cls: Entry, value: Any, attr_name: str, field_type):
+        def entry_setter(cls: Entry, value: Any, attr_name: str):
             """A setter function for dataclass fields of entry object.
             When the value contains entry objects, we will convert them into
-            ``tid``s before storing to ``DataStore``.
+            ``tid``s before storing to ``DataStore``. Additionally, if the entry
+            setter method is called on an attribute that does not have a pack
+            associated with it (as is the case during intialization), the value
+            of the atttribute is stored in the class level cache of the ``Entry``
+            class. On the other hand, if a pack is associated with the entry,
+            the value will directly be stored in the data store.
 
             Args:
                 cls: An ``Entry`` class object.
                 value: The value to be assigned to the attribute.
                 attr_name: The name of the attribute.
-                field_type: The type of the attribute.
             """
             attr_value: Any
+
+            try:
+                pack = cls.pack
+            except AttributeError as err:
+                # This is the case when an object of an entry that has already been
+                # created before (which means an setter and getter properties are
+                # associated with its dataclass fields) is trying to be initialized.
+                # In this case, a pack is not yet associated with this entry. Thus,
+                # we store the initial values dataclass fields of such entries in the
+                # _cached_attribute_data of the Entry class.
+
+                # pylint: disable=protected-access
+                if cls.entry_type() not in Entry._cached_attribute_data:
+                    Entry._cached_attribute_data[cls.entry_type()] = {}
+
+                if (
+                    attr_name
+                    not in Entry._cached_attribute_data[cls.entry_type()]
+                ):
+                    Entry._cached_attribute_data[cls.entry_type()][
+                        attr_name
+                    ] = value
+                    return
+                else:
+                    raise KeyError(
+                        "You are trying to overwrite the value "
+                        f"of {attr_name} for a data store entry "
+                        "before it is created."
+                    ) from err
+
             data_store_ref = (
-                cls.pack._data_store  # pylint: disable=protected-access
+                pack._data_store  # pylint: disable=protected-access
+            )
+
+            attr_type = data_store_ref.get_attr_type(
+                cls.entry_type(), attr_name
             )
             # Assumption: Users will not assign value to a FList/FDict field.
             # Only internal methods can set the FList/FDict field, and value's
             # type has to be Iterator[Entry]/Dict[Any, Entry].
-            if field_type is FList:
+            if attr_type[0] is FList:
                 try:
                     attr_value = [entry.tid for entry in value]
                 except AttributeError as e:
@@ -523,7 +625,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                         "You are trying to assign value to a `FList` field, "
                         "which can only accept an iterator of `Entry` objects."
                     ) from e
-            elif field_type is FDict:
+            elif attr_type[0] is FDict:
                 try:
                     attr_value = {
                         key: entry.tid for key, entry in value.items()
@@ -534,6 +636,12 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                         "which can only accept a mapping whose values are "
                         "`Entry` objects."
                     ) from e
+            elif attr_type == (type(None), (FNdArray,)):
+                attr_value = [
+                    None if value.dtype is None else value.dtype.str,
+                    value.shape,
+                    None if value.data is None else value.data.tolist(),
+                ]
             elif isinstance(value, Entry):
                 attr_value = (
                     value.tid
@@ -550,14 +658,34 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                 tid=cls.tid, attr_name=attr_name, attr_value=attr_value
             )
 
+        # If this is the first time an entry of this type is
+        # created, its attributes do not have a getter and setter
+        # property associated with them. We can thus assume that there
+        # no key in the _cached_attribute_data dictionary that has yet
+        # been created to store the dataclass fields of this entry. Thus,
+        # we create an empty dictionary to store the dataclass fields
+        # of this new entry and manually add all dataclass attributes
+        # that have been initialized to the _cached_attribute_data dict.
+        # We fetch the values of all dataclass fields by using the getattr
+        # method.
+
+        # pylint: disable=protected-access
+        if entry.entry_type() not in Entry._cached_attribute_data:
+            Entry._cached_attribute_data[entry.entry_type()] = {}
+            for name in entry.__dataclass_fields__:
+                attr_val = getattr(entry, name, None)
+                if attr_val is not None:
+                    Entry._cached_attribute_data[entry.entry_type()][
+                        name
+                    ] = attr_val
+
         # Save the input entry object in DataStore
         self._save_entry_to_data_store(entry=entry)
 
         # Register property functions for all dataclass fields.
-        for name, field in entry.__dataclass_fields__.items():
+        for name in entry.__dataclass_fields__:
             # Convert the typing annotation to the original class.
             # This will be used to determine if a field is FList/FDict.
-            field_type = get_origin(field.type)
             setattr(
                 type(entry),
                 name,
@@ -566,12 +694,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                 property(
                     # We need to bound the attribute name and field type here
                     # for the getter and setter of each field.
-                    fget=partial(
-                        entry_getter, attr_name=name, field_type=field_type
-                    ),
-                    fset=partial(
-                        entry_setter, attr_name=name, field_type=field_type
-                    ),
+                    fget=partial(entry_getter, attr_name=name),
+                    fset=partial(entry_setter, attr_name=name),
                 ),
             )
 

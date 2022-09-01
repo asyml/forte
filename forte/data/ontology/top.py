@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from dataclasses import dataclass
-from enum import IntEnum
 from functools import total_ordering
 from typing import (
     Optional,
@@ -24,6 +23,7 @@ from typing import (
     Union,
     Iterable,
     List,
+    cast,
 )
 import numpy as np
 
@@ -35,15 +35,11 @@ from forte.data.ontology.core import (
     BaseGroup,
     MultiEntry,
     EntryType,
+    FList,
 )
 from forte.data.span import Span
-from forte.common.constants import (
-    BEGIN_INDEX,
-    END_INDEX,
-    PARENT_TID_INDEX,
-    CHILD_TID_INDEX,
-    MEMBER_TID_INDEX,
-)
+from forte.utils.utils import get_full_module_name
+
 
 __all__ = [
     "Generics",
@@ -83,6 +79,7 @@ class Generics(Entry):
         super().__init__(pack=pack)
 
 
+@dataclass
 @total_ordering
 class Annotation(Entry):
     r"""Annotation type entries, such as "token", "entity mention" and
@@ -96,30 +93,15 @@ class Annotation(Entry):
         end: The offset of the last character in the annotation + 1.
     """
 
+    begin: int
+    end: int
+    payload_idx: int
+
     def __init__(self, pack: PackType, begin: int, end: int):
         self._span: Optional[Span] = None
-        self._begin: int = begin
-        self._end: int = end
+        self.begin: int = begin
+        self.end: int = end
         super().__init__(pack)
-
-    def __getstate__(self):
-        r"""For serializing Annotation, we should create Span annotations for
-        compatibility purposes.
-        """
-        self._span = Span(self.begin, self.end)
-        state = super().__getstate__()
-        state.pop("_begin")
-        state.pop("_end")
-        return state
-
-    def __setstate__(self, state):
-        """
-        For de-serializing Annotation, we load the begin, end from Span, for
-        compatibility purposes.
-        """
-        super().__setstate__(state)
-        self._begin = self._span.begin
-        self._end = self._span.end
 
     @property
     def span(self) -> Span:
@@ -127,48 +109,6 @@ class Annotation(Entry):
         if self._span is None:
             self._span = Span(self.begin, self.end)
         return self._span
-
-    @property
-    def begin(self):
-        r"""Getter function of ``begin``. The function will first try to
-        retrieve the begin index from ``DataStore`` in ``self.pack``. If
-        this attempt fails, it will directly return the value in ``_begin``.
-        """
-        try:
-            self._begin = self.pack.get_entry_raw(self.tid)[BEGIN_INDEX]
-        except KeyError:
-            # self.tid not found in DataStore
-            pass
-        return self._begin
-
-    @begin.setter
-    def begin(self, val: int):
-        r"""Setter function of ``begin``. The update will also be populated
-        into ``DataStore`` in ``self.pack``.
-        """
-        self._begin = val
-        self.pack.get_entry_raw(self.tid)[BEGIN_INDEX] = val
-
-    @property
-    def end(self):
-        r"""Getter function of ``end``. The function will first try to
-        retrieve the end index from ``DataStore`` in ``self.pack``. If
-        this attempt fails, it will directly return the value in ``_end``.
-        """
-        try:
-            self._end = self.pack.get_entry_raw(self.tid)[END_INDEX]
-        except KeyError:
-            # self.tid not found in DataStore
-            pass
-        return self._end
-
-    @end.setter
-    def end(self, val: int):
-        r"""Setter function of ``end``. The update will also be populated
-        into ``DataStore`` in ``self.pack``.
-        """
-        self._end = val
-        self.pack.get_entry_raw(self.tid)[END_INDEX] = val
 
     def __eq__(self, other):
         r"""The eq function of :class:`Annotation`.
@@ -260,6 +200,7 @@ class Annotation(Entry):
         yield from self.pack.get(entry_type, self, components, include_sub_type)
 
 
+@dataclass
 class Link(BaseLink):
     r"""Link type entries, such as "predicate link". Each link has a parent node
     and a child node.
@@ -271,8 +212,14 @@ class Link(BaseLink):
         child: the child entry of the link.
     """
     # this type Any is needed since subclasses of this class will have new types
-    ParentType: Any = Entry
-    ChildType: Any = Entry
+
+    parent_type: str
+    child_type: str
+    parent: Optional[int]
+    child: Optional[int]
+
+    ParentType = Entry
+    ChildType = Entry
 
     def __init__(
         self,
@@ -280,8 +227,11 @@ class Link(BaseLink):
         parent: Optional[Entry] = None,
         child: Optional[Entry] = None,
     ):
-        self._parent: Optional[int] = None
-        self._child: Optional[int] = None
+        # These attributes are used to store values of parent
+        # and child type in data store and must thus be in a
+        # primitive form.
+        self.parent_type = get_full_module_name(self.ParentType)
+        self.child_type = get_full_module_name(self.ChildType)
         super().__init__(pack, parent, child)
 
     # TODO: Can we get better type hint here?
@@ -309,53 +259,9 @@ class Link(BaseLink):
         if not isinstance(child, self.ChildType):
             raise TypeError(
                 f"The parent of {type(self)} should be an "
-                f"instance of {self.ParentType}, but get {type(child)}"
+                f"instance of {self.ChildType}, but get {type(child)}"
             )
         self.child = child.tid
-
-    @property
-    def parent(self):
-        r"""Get ``tid`` of the parent node. To get the object of the parent
-        node, call :meth:`get_parent`. The function will first try to
-        retrieve the parent ``tid`` from ``DataStore`` in ``self.pack``. If
-        this attempt fails, it will directly return the value in ``_parent``.
-        """
-        try:
-            self._parent = self.pack.get_entry_raw(self.tid)[PARENT_TID_INDEX]
-        except KeyError:
-            # self.tid not found in DataStore
-            pass
-        return self._parent
-
-    @parent.setter
-    def parent(self, val: int):
-        r"""Setter function of ``parent``. The update will also be populated
-        into ``DataStore`` in ``self.pack``.
-        """
-        self._parent = val
-        self.pack.get_entry_raw(self.tid)[PARENT_TID_INDEX] = val
-
-    @property
-    def child(self):
-        r"""Get ``tid`` of the child node. To get the object of the child node,
-        call :meth:`get_child`. The function will first try to
-        retrieve the child ``tid`` from ``DataStore`` in ``self.pack``. If
-        this attempt fails, it will directly return the value in ``_child``.
-        """
-        try:
-            self._child = self.pack.get_entry_raw(self.tid)[CHILD_TID_INDEX]
-        except KeyError:
-            # self.tid not found in DataStore
-            pass
-        return self._child
-
-    @child.setter
-    def child(self, val: int):
-        r"""Setter function of ``child``. The update will also be populated
-        into ``DataStore`` in ``self.pack``.
-        """
-        self._child = val
-        self.pack.get_entry_raw(self.tid)[CHILD_TID_INDEX] = val
 
     def get_parent(self) -> Entry:
         r"""Get the parent entry of the link.
@@ -389,18 +295,26 @@ class Link(BaseLink):
 
 
 # pylint: disable=duplicate-bases
+@dataclass
 class Group(BaseGroup[Entry]):
     r"""Group is an entry that represent a group of other entries. For example,
     a "coreference group" is a group of coreferential entities. Each group will
     store a set of members, no duplications allowed.
     """
-    MemberType: Type[Entry] = Entry
+    members: FList[Entry]
+    member_type: str
+
+    MemberType = Entry
 
     def __init__(
         self,
         pack: PackType,
         members: Optional[Iterable[Entry]] = None,
     ):  # pylint: disable=useless-super-delegation
+
+        # These attributes are used to store values of member type
+        # in data store and must thus be in a primitive form.
+        self.member_type = get_full_module_name(self.MemberType)
         super().__init__(pack, members)
 
     def add_member(self, member: Entry):
@@ -415,7 +329,7 @@ class Group(BaseGroup[Entry]):
                 f"The members of {type(self)} should be "
                 f"instances of {self.MemberType}, but got {type(member)}"
             )
-        self.pack.get_entry_raw(self.tid)[MEMBER_TID_INDEX].append(member.tid)
+        self.members.append(member)
 
     def get_members(self) -> List[Entry]:
         r"""Get the member entries in the group. The function will retrieve
@@ -431,9 +345,11 @@ class Group(BaseGroup[Entry]):
                 "Cannot get members because group is not "
                 "attached to any data pack."
             )
+
         member_entries = []
-        for m in self.pack.get_entry_raw(self.tid)[MEMBER_TID_INDEX]:
-            member_entries.append(self.pack.get_entry(m))
+        if self.members is not None:
+            for m in self.members:
+                member_entries.append(m)
         return member_entries
 
 
@@ -442,6 +358,7 @@ class MultiPackGeneric(MultiEntry, Entry):
         super().__init__(pack=pack)
 
 
+@dataclass
 class MultiPackLink(MultiEntry, BaseLink):
     r"""This is used to link entries in a :class:`~forte.data.multi_pack.MultiPack`, which is
     designed to support cross pack linking, this can support applications such
@@ -449,6 +366,11 @@ class MultiPackLink(MultiEntry, BaseLink):
     a parent node and a child node. Note that the nodes are indexed by two
     integers, one additional index on which pack it comes from.
     """
+
+    parent_type: str
+    child_type: str
+    parent: Tuple
+    child: Tuple
 
     ParentType = Entry
     ChildType = Entry
@@ -459,59 +381,12 @@ class MultiPackLink(MultiEntry, BaseLink):
         parent: Optional[Entry] = None,
         child: Optional[Entry] = None,
     ):
-        self._parent: Tuple = (None, None)
-        self._child: Tuple = (None, None)
-
-        super().__init__(pack)
-
-        if parent is not None:
-            self.set_parent(parent)
-        if child is not None:
-            self.set_child(child)
-
-    @property
-    def parent(self):
-        r"""Get ``pack_id`` and ``tid`` of the parent node. To get the object
-        of the parent node, call :meth:`get_parent`. The function will first
-        try to retrieve the parent from ``DataStore`` in ``self.pack``. If
-        this attempt fails, it will directly return the value in ``_parent``.
-        """
-        try:
-            self._parent = self.pack.get_entry_raw(self.tid)[PARENT_TID_INDEX]
-        except KeyError:
-            # self.tid not found in DataStore
-            pass
-        return self._parent
-
-    @parent.setter
-    def parent(self, val: Tuple):
-        r"""Setter function of ``parent``. The update will also be populated
-        into ``DataStore`` in ``self.pack``.
-        """
-        self._parent = val
-        self.pack.get_entry_raw(self.tid)[PARENT_TID_INDEX] = val
-
-    @property
-    def child(self):
-        r"""Get ``pack_id`` and ``tid`` of the child node. To get the object
-        of the child node, call :meth:`get_child`. The function will first try
-        to retrieve the child from ``DataStore`` in ``self.pack``. If
-        this attempt fails, it will directly return the value in ``_child``.
-        """
-        try:
-            self._child = self.pack.get_entry_raw(self.tid)[CHILD_TID_INDEX]
-        except KeyError:
-            # self.tid not found in DataStore
-            pass
-        return self._child
-
-    @child.setter
-    def child(self, val: Tuple):
-        r"""Setter function of ``child``. The update will also be populated
-        into ``DataStore`` in ``self.pack``.
-        """
-        self._child = val
-        self.pack.get_entry_raw(self.tid)[CHILD_TID_INDEX] = val
+        # These attributes are used to store values of parent
+        # and child type in data store and must thus be in a
+        # primitive form.
+        self.parent_type = get_full_module_name(self.ParentType)
+        self.child_type = get_full_module_name(self.ChildType)
+        super().__init__(pack, parent, child)
 
     def parent_id(self) -> int:
         """
@@ -599,7 +474,7 @@ class MultiPackLink(MultiEntry, BaseLink):
             An instance of :class:`~forte.data.ontology.core.Entry` that
             is the parent of the link.
         """
-        if self._parent is None:
+        if self.parent is None:
             raise ValueError("The parent of this link is not set.")
 
         pack_idx, parent_tid = self.parent
@@ -612,7 +487,7 @@ class MultiPackLink(MultiEntry, BaseLink):
             An instance of :class:`~forte.data.ontology.core.Entry` that is
             the child of the link.
         """
-        if self._child is None:
+        if self.child is None:
             raise ValueError("The parent of this link is not set.")
 
         pack_idx, child_tid = self.child
@@ -620,16 +495,25 @@ class MultiPackLink(MultiEntry, BaseLink):
 
 
 # pylint: disable=duplicate-bases
+@dataclass
 class MultiPackGroup(MultiEntry, BaseGroup[Entry]):
     r"""Group type entries, such as "coreference group". Each group has a set
     of members.
     """
-    MemberType: Type[Entry] = Entry
+    member_type: str
+    members: Optional[FList[Entry]]
+
+    MemberType = Entry
 
     def __init__(
         self, pack: PackType, members: Optional[Iterable[Entry]] = None
     ):  # pylint: disable=useless-super-delegation
+
+        # These attributes are used to store values of member type
+        # in data store and must thus be in a primitive form.
+        self.member_type = get_full_module_name(self.MemberType)
         super().__init__(pack)
+
         if members is not None:
             self.add_members(members)
 
@@ -639,16 +523,17 @@ class MultiPackGroup(MultiEntry, BaseGroup[Entry]):
                 f"The members of {type(self)} should be "
                 f"instances of {self.MemberType}, but got {type(member)}"
             )
-        self.pack.get_entry_raw(self.tid)[MEMBER_TID_INDEX].append(
-            (member.pack_id, member.tid)
-        )
+        if self.members is None:
+            self.members = cast(FList, [member])
+        else:
+            self.members.append(member)
 
     def get_members(self) -> List[Entry]:
         members = []
-        for pack_idx, member_tid in self.pack.get_entry_raw(self.tid)[
-            MEMBER_TID_INDEX
-        ]:
-            members.append(self.pack.get_subentry(pack_idx, member_tid))
+        if self.members is not None:
+            member_data = self.members
+            for m in member_data:
+                members.append(m)
         return members
 
 
@@ -689,6 +574,7 @@ class Query(Generics):
         self.results.update(pid_to_score)
 
 
+@dataclass
 @total_ordering
 class AudioAnnotation(Entry):
     r"""AudioAnnotation type entries, such as "recording" and "audio utterance".
@@ -702,11 +588,15 @@ class AudioAnnotation(Entry):
         begin: The offset of the first sample in the audio annotation.
         end: The offset of the last sample in the audio annotation + 1.
     """
+    begin: int
+    end: int
+    payload_idx: int
 
     def __init__(self, pack: PackType, begin: int, end: int):
+
         self._span: Optional[Span] = None
-        self._begin: int = begin
-        self._end: int = end
+        self.begin: int = begin
+        self.end: int = end
         super().__init__(pack)
 
     @property
@@ -718,73 +608,12 @@ class AudioAnnotation(Entry):
             )
         return self.pack.get_span_audio(self.begin, self.end)
 
-    def __getstate__(self):
-        r"""For serializing AudioAnnotation, we should create Span annotations
-        for compatibility purposes.
-        """
-        self._span = Span(self.begin, self.end)
-        state = super().__getstate__()
-        state.pop("_begin")
-        state.pop("_end")
-        return state
-
-    def __setstate__(self, state):
-        """
-        For de-serializing AudioAnnotation, we load the begin, end from Span,
-        for compatibility purposes.
-        """
-        super().__setstate__(state)
-        self._begin = self._span.begin
-        self._end = self._span.end
-
     @property
     def span(self) -> Span:
         # Delay span creation at usage.
         if self._span is None:
             self._span = Span(self.begin, self.end)
         return self._span
-
-    @property
-    def begin(self):
-        r"""Getter function of ``begin``. The function will first try to
-        retrieve the begin index from ``DataStore`` in ``self.pack``. If
-        this attempt fails, it will directly return the value in ``_begin``.
-        """
-        try:
-            self._begin = self.pack.get_entry_raw(self.tid)[BEGIN_INDEX]
-        except KeyError:
-            # self.tid not found in DataStore
-            pass
-        return self._begin
-
-    @begin.setter
-    def begin(self, val: int):
-        r"""Setter function of ``begin``. The update will also be populated
-        into ``DataStore`` in ``self.pack``.
-        """
-        self._begin = val
-        self.pack.get_entry_raw(self.tid)[BEGIN_INDEX] = val
-
-    @property
-    def end(self):
-        r"""Getter function of ``end``. The function will first try to
-        retrieve the end index from ``DataStore`` in ``self.pack``. If
-        this attempt fails, it will directly return the value in ``_end``.
-        """
-        try:
-            self._end = self.pack.get_entry_raw(self.tid)[END_INDEX]
-        except KeyError:
-            # self.tid not found in DataStore
-            pass
-        return self._end
-
-    @end.setter
-    def end(self, val: int):
-        r"""Setter function of ``end``. The update will also be populated
-        into ``DataStore`` in ``self.pack``.
-        """
-        self._end = val
-        self.pack.get_entry_raw(self.tid)[END_INDEX] = val
 
     def __eq__(self, other):
         r"""The eq function of :class:`AudioAnnotation`.
@@ -886,30 +715,41 @@ class ImageAnnotation(Entry):
 
     @property
     def max_x(self):
-        return self._image_width - 1
+        return self.image_shape[1] - 1
 
     @property
     def max_y(self):
-        return self._image_height - 1
+        return self.image_shape[0] - 1
 
     @property
     def image_shape(self):
-        return (self._image_height, self._image_width)
-
-    def set_image_shape(self, width, height):
         """
-        This function is used to set the shape of the image.
+        Returns the shape of the image.
 
-        Args:
-            width: the width of the image. The unit is pixel.
-            height: the height of the image. The unit is pixel.
+        Raises:
+            ValueError: if the image annotation is not attached to any data
+                pack.
+            ValueError: if the image shape is not valid. It must be either
+                2D or 3D.
+
+        Returns:
+            The shape of the image.
         """
-        self._image_width = (  # pylint: disable=attribute-defined-outside-init
-            width
-        )
-        self._image_height = (  # pylint: disable=attribute-defined-outside-init
-            height
-        )
+        if self.pack is None:
+            raise ValueError(
+                "Cannot get image because image annotation is not "
+                "attached to any data pack."
+            )
+        image_shape = self.pack.get_payload_at(
+            Modality.Image, self._image_payload_idx
+        ).image_shape
+        if not 2 <= len(image_shape) <= 3:
+            raise ValueError(
+                "Image shape is not valid."
+                "It should be 2D ([height, width])"
+                " or 3D ([height, width, channel])."
+            )
+        return image_shape
 
     def __eq__(self, other):
         if other is None:
@@ -1129,6 +969,7 @@ class Box(Region):
         return True
 
 
+@dataclass
 class Payload(Entry):
     """
     A payload class that holds data cache of one modality and its data source uri.
@@ -1147,6 +988,10 @@ class Payload(Entry):
         ValueError: raised when the modality is not supported.
     """
 
+    payload_idx: int
+    modality_name: str
+    uri: Optional[str]
+
     def __init__(
         self,
         pack: PackType,
@@ -1157,22 +1002,26 @@ class Payload(Entry):
         # we don't want to import base ontology in the header of the file
         # we import it here.
         if isinstance(self, TextPayload):
-            self._modality = Modality.Text
+            modality = Modality.Text
         elif isinstance(self, AudioPayload):
-            self._modality = Modality.Audio
+            modality = Modality.Audio
         elif isinstance(self, ImagePayload):
-            self._modality = Modality.Image
+            modality = Modality.Image
         else:
             supported_modality = [enum.name for enum in Modality]
             raise ValueError(
-                f"The given modality {self._modality.name} is not supported. "
+                f"The given modality {modality.name} is not supported. "
                 f"Currently we only support {supported_modality}"
             )
-        self._payload_idx: int = payload_idx
-        self._uri: Optional[str] = uri
+
+        self.modality = modality
+        self.modality_name: str = modality.name
+        self.payload_idx: int = payload_idx
+        self.uri: Optional[str] = uri
 
         super().__init__(pack)
         self._cache: Union[str, np.ndarray] = ""
+        self._cache_shape: Optional[Sequence[int]] = None
         self.replace_back_operations: Sequence[Tuple] = []
         self.processed_original_spans: Sequence[Tuple] = []
         self.orig_text_len: int = 0
@@ -1199,28 +1048,8 @@ class Payload(Entry):
         return self._cache
 
     @property
-    def modality(self) -> IntEnum:
-        """
-        Get the modality of the payload class.
-
-        Returns:
-            the modality of the payload class in ``IntEnum`` format.
-        """
-        return self._modality
-
-    @property
-    def modality_name(self) -> str:
-        """
-        Get the modality of the payload class in str format.
-
-        Returns:
-            the modality of the payload class in str format.
-        """
-        return self._modality.name
-
-    @property
     def payload_index(self) -> int:
-        return self._payload_idx
+        return self.payload_idx
 
     @property
     def uri(self) -> Optional[str]:
@@ -1236,16 +1065,42 @@ class Payload(Entry):
         fn = self.payloading.route(self.meta)
         self._cache = fn(self.uri)
 
-    def set_cache(self, data: Union[str, np.ndarray]):
+    def cache_shape(self) -> Optional[Sequence[int]]:
+        return self._cache_shape
+
+    def set_cache(
+        self,
+        data: Union[str, np.ndarray],
+        cache_shape: Optional[Sequence[int]] = None,
+    ):
         """
-        Set cache data in the the payload. This method can be useful when users
-        want to set a new cache.
+        Load cache data into the payload and set the data shape.
 
         Args:
             data: data to be set in the payload. It can be str for text data or
                 numpy array for audio or image data.
+            cache_shape: the shape of the data. Its representation varies based
+                on the modality and its length.
+                For text data, it is the length of the text.[length, text_embedding_dim]
+                For audio data, it is the length of the audio. [length, audio_embedding_dim]
+                For image data, it is the shape of the image. [height, width,
+                channel]
+                For example, for image data, if the cache_shape length is 2, it
+                means the image data is a 2D image [height, width].
         """
         self._cache = data
+        if isinstance(data, np.ndarray):
+            # if it's a numpy array, we need to set the shape
+            # even if user input a shape, it will be overwritten
+            cache_shape = data.shape
+        elif isinstance(data, str):
+            cache_shape = (len(data),)
+        else:
+            raise ValueError(
+                f"Unsupported data type {type(data)} for cache. "
+                f"Currently we only support str and numpy.ndarray."
+            )
+        self._cache_shape = cache_shape
 
     def set_payload_index(self, payload_index: int):
         """
@@ -1254,26 +1109,49 @@ class Payload(Entry):
         Args:
             payload_index: a new payload index to be set.
         """
-        self._payload_idx = payload_index
+        self.payload_idx = payload_index
+
+    def image_shape(self):
+        return self._cache_shape
 
     def __getstate__(self):
         r"""
-        Convert ``_modality`` ``Enum`` object to str format for serialization.
+        Convert ``modality`` ``Enum`` object to str format for serialization.
         """
         # TODO: this function will be removed since
         # Entry store is being integrated into DataStore
         state = self.__dict__.copy()
-        state["_modality"] = self._modality.name
+        state["modality"] = self.modality_name
+
+        if isinstance(state["_cache"], np.ndarray):
+            state["_cache"] = list(self._cache.tolist())
+        if isinstance(state["_embedding"], np.ndarray):
+            state["_embedding"] = list(self._embedding.tolist())
+
         return state
 
     def __setstate__(self, state):
         r"""
-        Convert ``_modality`` string to ``Enum`` object for deserialization.
+        Convert ``modality`` string to ``Enum`` object for deserialization.
         """
         # TODO: this function will be removed since
         # Entry store is being integrated into DataStore
         self.__dict__.update(state)
-        self._modality = getattr(Modality, state["_modality"])
+        self.modality = getattr(Modality, state["modality"])
+
+        # During de-serialization, convert the list back to numpy array.
+        if "_embedding" in state:
+            state["_embedding"] = np.array(state["_embedding"])
+        else:
+            state["_embedding"] = np.empty(0)
+
+        # Here we assume that if the payload is not text (in which case
+        # cache is stored a string), cache will always be stored as a
+        # numpy array (which is converted to a list during serialization).
+        # This check can be made more comprehensive when new types of
+        # payloads are introduced.
+        if "_cache" in state and isinstance(state["_cache"], list):
+            state["_cache"] = np.array(state["_cache"])
 
 
 class AudioPayload(Payload):

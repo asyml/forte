@@ -101,6 +101,15 @@ class Entry(Generic[ContainerType]):
     Args:
         pack: Each entry should be associated with one pack upon creation.
     """
+    # This dict is used only at the time of creation of an entry. Many entries
+    # like Annotation require some attributes like begin and end to be set at
+    # the time of creation. This dictionry is used to set all dataclass
+    # attributes of an entry whose datastore entry needs to be created irrespective
+    # of whether a getter and setter property for its attributes is made or not.
+    # The key of this dictionary is the name of the entry being created and the
+    # value is another dictionary whose key and values are the entry's required
+    # attribute names and their values respectively.
+    _cached_attribute_data = {}  # type: ignore
 
     def __init__(self, pack: ContainerType):
         # The Entry should have a reference to the data pack, and the data pack
@@ -295,25 +304,6 @@ class FList(Generic[ParentEntryType], MutableSequence):
     def __eq__(self, other):
         return self.__data == other._FList__data
 
-    def __getstate__(self):
-        state = self.__dict__.copy()
-        # Parent entry cannot be serialized, should be set by the parent with
-        #  _set_parent.
-        state.pop("_FList__parent_entry")
-
-        state["data"] = state.pop("_FList__data")
-
-        # We make a copy of the whole state but there are items cannot be
-        # serialized.
-        for f in unserializable_fields:
-            if f in state:
-                state.pop(f)
-        return state
-
-    def __setstate__(self, state):
-        state["_FList__data"] = state.pop("data")
-        self.__dict__.update(state)
-
     def _set_parent(self, parent_entry: ParentEntryType):
         self.__parent_entry = parent_entry
 
@@ -385,25 +375,6 @@ class FDict(Generic[KeyType, ValueType], MutableMapping):
     def __eq__(self, other):
         return self.__data == other._FDict__data
 
-    def __getstate__(self):
-        state = self.__dict__.copy()
-        # The __parent_entry need to be assigned via its parent entry,
-        # so a serialized dict may not have the following key ready sometimes.
-        state.pop("_FDict__parent_entry")
-
-        state["data"] = state.pop("_FDict__data")
-
-        # We make a copy of the whole state but there are items cannot be
-        # serialized.
-        for f in unserializable_fields:
-            if f in state:
-                state.pop(f)
-        return state
-
-    def __setstate__(self, state):
-        state["_FDict__data"] = state.pop("data")
-        self.__dict__.update(state)
-
     def __setitem__(self, k: KeyType, v: ValueType) -> None:
         try:
             self.__data[k] = v.tid
@@ -440,27 +411,25 @@ class FNdArray:
         self, dtype: Optional[str] = None, shape: Optional[List[int]] = None
     ):
         super().__init__()
-        self._dtype: Optional[np.dtype] = (
-            np.dtype(dtype) if dtype is not None else dtype
-        )
-        self._shape: Optional[tuple] = (
-            tuple(shape) if shape is not None else shape
-        )
-        self._data: Optional[np.ndarray] = None
-        if dtype and shape:
-            self._data = np.ndarray(shape, dtype=dtype)
+        self.__data_ref: List = [dtype, shape, None]
 
     @property
     def dtype(self):
-        return self._dtype
+        dtype = self.__data_ref[0]
+        return np.dtype(dtype) if dtype is not None else dtype
 
     @property
     def shape(self):
-        return self._shape
+        shape = self.__data_ref[1]
+        return tuple(shape) if shape is not None else shape
 
     @property
     def data(self):
-        return self._data
+        if self.__data_ref[2] is None:
+            if self.dtype and self.shape:
+                return np.ndarray(self.shape, dtype=self.dtype)
+            return None
+        return np.array(self.__data_ref[2], dtype=self.dtype)
 
     @data.setter
     def data(self, array: Union[np.ndarray, List]):
@@ -473,7 +442,7 @@ class FNdArray:
                 raise AttributeError(
                     f"Expecting shape {self.shape}, but got {array.shape}."
                 )
-            self._data = array
+            array_np = array
 
         elif isinstance(array, list):
             array_np = np.array(array, dtype=self.dtype)
@@ -481,16 +450,28 @@ class FNdArray:
                 raise AttributeError(
                     f"Expecting shape {self.shape}, but got {array_np.shape}."
                 )
-            self._data = array_np
 
         else:
             raise ValueError(
                 f"Can only accept numpy array or python list, but got {type(array)}"
             )
 
+        self.__data_ref[2] = array_np.tolist()
+
         # Stored dtype and shape should match to the provided array's.
-        self._dtype = self._data.dtype
-        self._shape = self._data.shape
+        self.__data_ref[0] = array_np.dtype.str
+        self.__data_ref[1] = list(array_np.shape)
+
+    def set_data_ref(self, data_ref: List):
+        """
+        Set the internal storage to reference of a list.
+        This is only for internal usage.
+
+        Args:
+            data_ref: A reference to a list storing `[dtype, shape, data]`
+                info from `DataStore`.
+        """
+        self.__data_ref = data_ref
 
 
 class BaseLink(Entry, ABC):
@@ -866,3 +847,5 @@ class Grid:
 
 GroupType = TypeVar("GroupType", bound=BaseGroup)
 LinkType = TypeVar("LinkType", bound=BaseLink)
+
+ENTRY_TYPE_DATA_STRUCTURES = (FDict, FList)
