@@ -3,7 +3,7 @@
     "definitions": [
           {
             "entry_name": "ft.onto.payload_ontology.JpegPayload",
-            "parent_entry": "forte.data.ontology.top.ImagePayload",
+            "parent_entry": "forte.data.ontology.top.DefaultImagePayload",
             "attributes":[
               {
                 "name": "extensions",
@@ -29,7 +29,7 @@
         },
         {
           "entry_name": "ft.onto.payload_ontology.SoundFilePayload",
-          "parent_entry": "forte.data.ontology.top.AudioPayload",
+          "parent_entry": "forte.data.ontology.top.DefaultAudioPayload",
           "attributes":[
             {
               "name": "source_type",

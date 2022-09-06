@@ -563,7 +563,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         Args:
             text: Text to be added.
         """
-        from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
+        from forte.data.ontology.top import (  # pylint: disable=import-outside-toplevel
             TextPayload,
         )
 
@@ -603,11 +603,11 @@ class DataPack(BasePack[Entry, Link, Group]):
         # temporary solution for backward compatibility
         # past API use this method to add a single text in the datapack
         if (
-            self._data_store.num_entries("ft.onto.base_ontology.TextPayload")
+            self._data_store.num_entries("forte.data.ontology.top.TextPayload")
             == 0
             and text_payload_index == 0
         ):
-            from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
+            from forte.data.ontology.top import (  # pylint: disable=import-outside-toplevel
                 TextPayload,
             )
 
@@ -643,11 +643,11 @@ class DataPack(BasePack[Entry, Link, Group]):
         # temporary solution for backward compatibility
         # past API use this method to add a single audio in the datapack
         if (
-            self._data_store.num_entries("ft.onto.base_ontology.AudioPayload")
+            self._data_store.num_entries("forte.data.ontology.top.AudioPayload")
             == 0
             and audio_payload_index == 0
         ):
-            from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
+            from forte.data.ontology.top import (  # pylint: disable=import-outside-toplevel
                 AudioPayload,
             )
 
@@ -673,7 +673,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         Args:
             audio: A numpy array storing the audio.
         """
-        from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
+        from forte.data.ontology.top import (  # pylint: disable=import-outside-toplevel
             AudioPayload,
         )
 
@@ -687,7 +687,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         Args:
             image: A numpy array storing the image.
         """
-        from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
+        from forte.data.ontology.top import (  # pylint: disable=import-outside-toplevel
             ImagePayload,
         )
 
@@ -710,11 +710,11 @@ class DataPack(BasePack[Entry, Link, Group]):
         # temporary solution for backward compatibility
         # past API use this method to add a single image in the datapack
         if (
-            self._data_store.num_entries("ft.onto.base_ontology.ImagePayload")
+            self._data_store.num_entries("forte.data.ontology.top.ImagePayload")
             == 0
             and image_payload_index == 0
         ):
-            from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
+            from forte.data.ontology.top import (  # pylint: disable=import-outside-toplevel
                 ImagePayload,
             )
 

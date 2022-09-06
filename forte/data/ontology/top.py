@@ -58,8 +58,11 @@ __all__ = [
     "Box",
     "Payload",
     "TextPayload",
+    "DefaultTextPayload",
     "AudioPayload",
+    "DefaultAudioPayload",
     "ImagePayload",
+    "DefaultImagePayload",
 ]
 
 QueryType = Union[Dict[str, Any], np.ndarray]
@@ -1017,7 +1020,7 @@ class Payload(Entry):
         self.modality = modality
         self.modality_name: str = modality.name
         self.payload_idx: int = payload_idx
-        self.uri: Optional[str] = uri
+        self._uri: Optional[str] = uri
 
         super().__init__(pack)
         self._cache: Union[str, np.ndarray] = ""
@@ -1168,6 +1171,17 @@ class AudioPayload(Payload):
         self.sample_rate: Optional[int] = None
 
 
+class DefaultAudioPayload(AudioPayload):
+    """
+    A payload that caches audio data
+    Attributes:
+        sample_rate (Optional[int]):
+    """
+
+    def __init__(self, pack: PackType):
+        super().__init__(pack)
+
+
 class TextPayload(Payload):
     """
     A payload that caches text data
@@ -1177,6 +1191,18 @@ class TextPayload(Payload):
         self, pack: PackType, payload_idx: int = 0, uri: Optional[str] = None
     ):
         super().__init__(pack, payload_idx, uri)
+
+
+class DefaultTextPayload(TextPayload):
+    """
+    A payload that caches audio data
+    Attributes:
+        sample_rate (Optional[int]):
+    """
+
+    def __init__(self, pack: PackType):
+        super().__init__(pack)
+        self.sample_rate: Optional[int] = None
 
 
 class ImagePayload(Payload):
@@ -1190,6 +1216,17 @@ class ImagePayload(Payload):
         super().__init__(pack, payload_idx, uri)
 
 
+class DefaultImagePayload(ImagePayload):
+    """
+    A payload that caches image data
+    """
+
+    def __init__(  # pylint: disable=useless-super-delegation
+        self, pack: PackType
+    ):
+        super().__init__(pack)
+
+
 SinglePackEntries = (
     Link,
     Group,
@@ -1199,7 +1236,10 @@ SinglePackEntries = (
     ImageAnnotation,
     Payload,
     TextPayload,
+    DefaultTextPayload,
     AudioPayload,
+    DefaultAudioPayload,
     ImagePayload,
+    DefaultImagePayload,
 )
 MultiPackEntries = (MultiPackLink, MultiPackGroup, MultiPackGeneric)
