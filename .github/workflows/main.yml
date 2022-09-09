@@ -109,8 +109,35 @@ jobs:
             for d in ${{ matrix.notebook-details.dep }}; do pip install "src/"$d; done
             cd ..
             pip install --progress-bar off .[data_aug,ir,remote,audio_ext,stave,models,test,wikipedia,nlp,extractor]
-            coverage run -m pytest tests/forte/notebooks
+            coverage run -m pytest tests/forte/notebooks  --ignore=tests/forte/notebooks/ocr_test.py
           fi
+
+  test_ocr_example:
+    runs-on: ubuntu-latest
+    env:
+      python-version: 3.7
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ env.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.python-version }}
+      - name: Cache pip
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('setup.py') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+            ${{ runner.os }}-
+      - name: ocr test
+        run: |
+          sudo apt-get install -y automake ca-certificates g++ git libtool libleptonica-dev make pkg-config
+          sudo apt install tesseract-ocr
+          pip install --progress-bar off .[ocr_tutorial,test]
+          python tests/forte/notebooks/ocr_test.py
+
+
   test_backbone:
     runs-on: ubuntu-latest
     env:
