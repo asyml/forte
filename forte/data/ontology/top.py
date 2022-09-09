@@ -23,7 +23,6 @@ from typing import (
     Union,
     Iterable,
     List,
-    cast,
 )
 import numpy as np
 
@@ -343,11 +342,7 @@ class Group(BaseGroup[Entry]):
                 "attached to any data pack."
             )
 
-        member_entries = []
-        if self.members is not None:
-            for m in self.members:
-                member_entries.append(m)
-        return member_entries
+        return list(self.members)
 
 
 class MultiPackGeneric(MultiEntry, Entry):
@@ -498,7 +493,7 @@ class MultiPackGroup(MultiEntry, BaseGroup[Entry]):
     of members.
     """
     member_type: str
-    members: Optional[FList[Entry]]
+    members: FList[Entry]
 
     MemberType = Entry
 
@@ -520,18 +515,11 @@ class MultiPackGroup(MultiEntry, BaseGroup[Entry]):
                 f"The members of {type(self)} should be "
                 f"instances of {self.MemberType}, but got {type(member)}"
             )
-        if self.members is None:
-            self.members = cast(FList, [member])
-        else:
-            self.members.append(member)
+
+        self.members.append(member)
 
     def get_members(self) -> List[Entry]:
-        members = []
-        if self.members is not None:
-            member_data = self.members
-            for m in member_data:
-                members.append(m)
-        return members
+        return list(self.members)
 
 
 @dataclass

@@ -31,6 +31,7 @@ from typing import (
     Union,
     Dict,
     Iterator,
+    cast,
     overload,
     List,
 )
@@ -295,11 +296,13 @@ class FList(Generic[ParentEntryType], MutableSequence):
     def __init__(
         self,
         parent_entry: ParentEntryType,
-        data: Optional[List[int]] = None,
+        data: Optional[List[Union[int, Tuple[int, int]]]] = None,
     ):
         super().__init__()
         self.__parent_entry = parent_entry
-        self.__data: List[int] = [] if data is None else data
+        self.__data: List[Union[int, Tuple[int, int]]] = (
+            [] if data is None else data
+        )
 
     def __eq__(self, other):
         return self.__data == other._FList__data
@@ -308,7 +311,10 @@ class FList(Generic[ParentEntryType], MutableSequence):
         self.__parent_entry = parent_entry
 
     def insert(self, index: int, entry: EntryType):
-        self.__data.insert(index, entry.tid)
+        if entry.pack.pack_id != self.__parent_entry.pack.pack_id:
+            self.__data.insert(index, (entry.pack.pack_id, entry.tid))
+        else:
+            self.__data.insert(index, entry.tid)
 
     @overload
     @abstractmethod
@@ -324,22 +330,45 @@ class FList(Generic[ParentEntryType], MutableSequence):
         self, index: Union[int, slice]
     ) -> Union[EntryType, MutableSequence]:
         if isinstance(index, slice):
-            return [
-                self.__parent_entry.pack.get_entry(tid)
-                for tid in self.__data[index]
-            ]
+            if all(isinstance(val, int) for val in self.__data):
+                return [
+                    self.__parent_entry.pack.get_entry(tid)
+                    for tid in self.__data[index]
+                ]
+            else:
+                return [
+                    self.__parent_entry.pack.get_subentry(*attr)
+                    for attr in self.__data[index]
+                ]
         else:
-            return self.__parent_entry.pack.get_entry(self.__data[index])
+            if all(isinstance(val, int) for val in self.__data):
+                return self.__parent_entry.pack.get_entry(self.__data[index])
+            else:
+                return self.__parent_entry.pack.get_subentry(
+                    *self.__data[index]
+                )
 
     def __setitem__(
         self,
         index: Union[int, slice],
         value: Union[EntryType, Iterable[EntryType]],
     ) -> None:
+
         if isinstance(index, int):
-            self.__data[index] = value.tid  # type: ignore
+            value = cast(EntryType, value)
+            if value.pack.pack_id != self.__parent_entry.pack.pack_id:
+                self.__data[index] = (value.pack.pack_id, value.tid)
+            else:
+                self.__data[index] = value.tid
         else:
-            self.__data[index] = [v.tid for v in value]  # type: ignore
+            value = cast(Iterable[EntryType], value)
+            if all(
+                val.pack.pack_id != self.__parent_entry.pack.pack_id
+                for val in value
+            ):
+                self.__data[index] = [(v.pack.pack_id, v.tid) for v in value]
+            else:
+                self.__data[index] = [v.tid for v in value]
 
     def __delitem__(self, index: Union[int, slice]) -> None:
         del self.__data[index]
