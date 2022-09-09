@@ -311,6 +311,11 @@ class FList(Generic[ParentEntryType], MutableSequence):
         self.__parent_entry = parent_entry
 
     def insert(self, index: int, entry: EntryType):
+        # If the pack id of the entry is not equal to the pack id
+        # of the parent, it indicates that the entries being stored
+        # are MultiPack entries. Thus, we store the entries as a tuple
+        # of the entry's pack id and the entry's tid in contrast to
+        # regular entries which are just stored by their tid
         if entry.pack.pack_id != self.__parent_entry.pack.pack_id:
             self.__data.insert(index, (entry.pack.pack_id, entry.tid))
         else:
@@ -331,19 +336,27 @@ class FList(Generic[ParentEntryType], MutableSequence):
     ) -> Union[EntryType, MutableSequence]:
         if isinstance(index, slice):
             if all(isinstance(val, int) for val in self.__data):
+                # If entry data is stored just be an integer, it indicates
+                # that this is a Single Pack entry (stored just by its tid)
                 return [
                     self.__parent_entry.pack.get_entry(tid)
                     for tid in self.__data[index]
                 ]
             else:
+                # else, it indicates that this is a Multi Pack
+                # entry (stored as a tuple)
                 return [
                     self.__parent_entry.pack.get_subentry(*attr)
                     for attr in self.__data[index]
                 ]
         else:
             if all(isinstance(val, int) for val in self.__data):
+                # If entry data is stored just be an integer, it indicates
+                # that this is a Single Pack entry (stored just by its tid)
                 return self.__parent_entry.pack.get_entry(self.__data[index])
             else:
+                # else, it indicates that this is a Multi Pack
+                # entry (stored as a tuple)
                 return self.__parent_entry.pack.get_subentry(
                     *self.__data[index]
                 )
@@ -357,8 +370,14 @@ class FList(Generic[ParentEntryType], MutableSequence):
         if isinstance(index, int):
             value = cast(EntryType, value)
             if value.pack.pack_id != self.__parent_entry.pack.pack_id:
+                # If the pack id of the entry is not equal to the pack id
+                # of the parent, it indicates that the entries being stored
+                # are MultiPack entries.
                 self.__data[index] = (value.pack.pack_id, value.tid)
             else:
+                # If the pack id of the entry is equal to the pack id
+                # of the parent, it indicates that the entries being stored
+                # are Single Pack entries.
                 self.__data[index] = value.tid
         else:
             value = cast(Iterable[EntryType], value)
@@ -366,8 +385,15 @@ class FList(Generic[ParentEntryType], MutableSequence):
                 val.pack.pack_id != self.__parent_entry.pack.pack_id
                 for val in value
             ):
+                # If the pack id of the entry is not equal to the pack id
+                # of the parent for all entries in the FList data,
+                # it indicates that the entries being stored
+                # are MultiPack entries.
                 self.__data[index] = [(v.pack.pack_id, v.tid) for v in value]
             else:
+                # If the pack id of the entry is equal to the pack id
+                # of the parent for any FList data item, it indicates that
+                # the entries being stored are Single Pack entries.
                 self.__data[index] = [v.tid for v in value]
 
     def __delitem__(self, index: Union[int, slice]) -> None:
