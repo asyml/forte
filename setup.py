@@ -101,16 +101,3 @@ setuptools.setup(
         "Programming Language :: Python :: 3.7",
     ],
 )
-hiddenimports = collect_submodules('pydantic')
-
-hiddenimports += [
-'colorsys',
-'decimal',
-'json',
-'ipaddress',
-'pathlib',
-'uuid'
-]
-
-a = Analysis(['main.py'],
-hiddenimports=hiddenimports)
