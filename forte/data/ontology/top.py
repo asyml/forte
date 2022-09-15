@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from dataclasses import dataclass
+import dataclasses
 from functools import total_ordering
 from typing import (
     Optional,
@@ -58,11 +59,8 @@ __all__ = [
     "Box",
     "Payload",
     "TextPayload",
-    "DefaultTextPayload",
     "AudioPayload",
-    "DefaultAudioPayload",
     "ImagePayload",
-    "DefaultImagePayload",
 ]
 
 QueryType = Union[Dict[str, Any], np.ndarray]
@@ -683,6 +681,7 @@ class AudioAnnotation(Entry):
         yield from self.pack.get(entry_type, self, components, include_sub_type)
 
 
+@dataclass
 class ImageAnnotation(Entry):
     def __init__(self, pack: PackType, image_payload_idx: int = 0):
         """
@@ -991,19 +990,15 @@ class Payload(Entry):
         ValueError: raised when the modality is not supported.
     """
 
-    payload_idx: int
-    modality_name: str
-    uri: Optional[str]
-
     def __init__(
         self,
         pack: PackType,
         payload_idx: int = 0,
         uri: Optional[str] = None,
     ):
-        # since we cannot pass different modality from generated ontology, and
-        # we don't want to import base ontology in the header of the file
-        # we import it here.
+        # # since we cannot pass different modality from generated ontology, and
+        # # we don't want to import base ontology in the header of the file
+        # # we import it here.
         if isinstance(self, TextPayload):
             modality = Modality.Text
         elif isinstance(self, AudioPayload):
@@ -1023,6 +1018,7 @@ class Payload(Entry):
         self._uri: Optional[str] = uri
 
         super().__init__(pack)
+
         self._cache: Union[str, np.ndarray] = ""
         self._cache_shape: Optional[Sequence[int]] = None
         self.replace_back_operations: Sequence[Tuple] = []
@@ -1157,6 +1153,7 @@ class Payload(Entry):
             state["_cache"] = np.array(state["_cache"])
 
 
+@dataclass
 class AudioPayload(Payload):
     """
     A payload that caches audio data
@@ -1164,67 +1161,33 @@ class AudioPayload(Payload):
         sample_rate (Optional[int]):
     """
 
-    def __init__(
-        self, pack: PackType, payload_idx: int = 0, uri: Optional[str] = None
-    ):
+    def __init__(self, pack: PackType, payload_idx=0, uri=None):
         super().__init__(pack, payload_idx, uri)
         self.sample_rate: Optional[int] = None
 
 
-class DefaultAudioPayload(AudioPayload):
-    """
-    A payload that caches audio data
-    Attributes:
-        sample_rate (Optional[int]):
-    """
-
-    def __init__(self, pack: PackType):
-        super().__init__(pack)
-
-
+@dataclass
 class TextPayload(Payload):
     """
     A payload that caches text data
     """
 
     def __init__(  # pylint: disable=useless-super-delegation
-        self, pack: PackType, payload_idx: int = 0, uri: Optional[str] = None
+        self, pack: PackType, payload_idx=0, uri=None
     ):
         super().__init__(pack, payload_idx, uri)
 
 
-class DefaultTextPayload(TextPayload):
-    """
-    A payload that caches audio data
-    Attributes:
-        sample_rate (Optional[int]):
-    """
-
-    def __init__(self, pack: PackType):
-        super().__init__(pack)
-        self.sample_rate: Optional[int] = None
-
-
+@dataclass
 class ImagePayload(Payload):
     """
     A payload that caches image data
     """
 
     def __init__(  # pylint: disable=useless-super-delegation
-        self, pack: PackType, payload_idx: int = 0, uri: Optional[str] = None
+        self, pack: PackType, payload_idx=0, uri=None
     ):
         super().__init__(pack, payload_idx, uri)
-
-
-class DefaultImagePayload(ImagePayload):
-    """
-    A payload that caches image data
-    """
-
-    def __init__(  # pylint: disable=useless-super-delegation
-        self, pack: PackType
-    ):
-        super().__init__(pack)
 
 
 SinglePackEntries = (
@@ -1236,10 +1199,7 @@ SinglePackEntries = (
     ImageAnnotation,
     Payload,
     TextPayload,
-    DefaultTextPayload,
     AudioPayload,
-    DefaultAudioPayload,
     ImagePayload,
-    DefaultImagePayload,
 )
 MultiPackEntries = (MultiPackLink, MultiPackGroup, MultiPackGeneric)
