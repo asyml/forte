@@ -9,8 +9,8 @@ Automatically generated ontology payload_ontology. Do not change manually.
 
 from dataclasses import dataclass
 from forte.data.data_pack import DataPack
-from forte.data.ontology.top import DefaultAudioPayload
-from forte.data.ontology.top import DefaultImagePayload
+from forte.data.ontology.top import AudioPayload
+from forte.data.ontology.top import ImagePayload
 from typing import Optional
 
 __all__ = [
@@ -20,7 +20,7 @@ __all__ = [
 
 
 @dataclass
-class JpegPayload(DefaultImagePayload):
+class JpegPayload(ImagePayload):
     """
     Attributes:
         extensions (Optional[str]):
@@ -36,8 +36,8 @@ class JpegPayload(DefaultImagePayload):
     version: Optional[int]
     source_type: Optional[int]
 
-    def __init__(self, pack: DataPack):
-        super().__init__(pack)
+    def __init__(self, pack: DataPack, payload_idx = 0, uri = None):
+        super().__init__(pack, payload_idx = 0, uri = None)
         self.extensions: Optional[str] = None
         self.mime: Optional[str] = None
         self.type_code: Optional[str] = None
@@ -46,7 +46,7 @@ class JpegPayload(DefaultImagePayload):
 
 
 @dataclass
-class SoundFilePayload(DefaultAudioPayload):
+class SoundFilePayload(AudioPayload):
     """
     Attributes:
         source_type (Optional[str]):
@@ -62,8 +62,8 @@ class SoundFilePayload(DefaultAudioPayload):
     dtype: Optional[str]
     encoding: Optional[int]
 
-    def __init__(self, pack: DataPack):
-        super().__init__(pack)
+    def __init__(self, pack: DataPack, payload_idx = 0, uri = None):
+        super().__init__(pack, payload_idx = 0, uri = None)
         self.source_type: Optional[str] = None
         self.sample_rate: Optional[int] = None
         self.channels: Optional[int] = None
