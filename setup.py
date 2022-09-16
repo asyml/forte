@@ -86,7 +86,7 @@ setuptools.setup(
         "extractor": ["texar-pytorch>=0.1.4"],
         "payload": ["soundfile>=0.10.3",
                     "Pillow",
-                    "requests",]
+                    "requests",],
         "ocr_tutorial": ["Pillow", "requests", "pytesseract"]
     },
     entry_points={
