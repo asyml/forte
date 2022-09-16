@@ -1024,12 +1024,12 @@ class Payload(Entry):
         self.replace_back_operations: Sequence[Tuple] = []
         self.processed_original_spans: Sequence[Tuple] = []
         self.orig_text_len: int = 0
-        self.payloading = None
-        self.meta = None
+        # self.payloading = None
+        # self.meta = None
 
-    def set_meta(self, meta):
-        # there might be a better way to set meta
-        self.meta = meta
+    # def set_meta(self, meta):
+    #     # there might be a better way to set meta
+    #     self.meta = meta
 
     def get_type(self) -> type:
         """
@@ -1060,9 +1060,9 @@ class Payload(Entry):
         """
         return self._uri
 
-    def load(self):
-        fn = self.payloading.route(self.meta)
-        self._cache = fn(self.uri)
+    # def load(self):
+    #     fn = self.payloading.route(self.meta)
+    #     self._cache = fn(self.uri)
 
     def cache_shape(self) -> Optional[Sequence[int]]:
         return self._cache_shape

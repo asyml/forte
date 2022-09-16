@@ -21,11 +21,13 @@ from ft.onto.payload_ontology import (
     SoundFilePayload
 )
 from forte.data.data_pack import DataPack
-from forte.utils.payload_factory import register
+from forte.utils.payload_factory import register, PayloadFactory
+from dataclasses import dataclass
+
 
 @register
 class OnlineJpegPayload(JpegPayload):
-    def loading_fn(self):
+    def load(self, uri):
         """
         A function that parses payload meta data and prepare and returns a loading function.
         
@@ -51,11 +53,12 @@ class OnlineJpegPayload(JpegPayload):
             pil_image = Image.open(uri_obj.raw)
             return np.asarray(pil_image)
 
-        return read_uri
+        return read_uri(uri)
+
 
 @register
 class LocalJpegPayload(JpegPayload):
-    def loading_fn(self):
+    def load(self, uri):
         """
         A function that parses payload meta data and prepare and returns a loading function.
         
@@ -65,18 +68,21 @@ class LocalJpegPayload(JpegPayload):
         Returns:
             a function that reads image data from an url.
         """
-        try:
-            import matplotlib.pyplot as plt  # pylint: disable=import-outside-toplevel
-        except ModuleNotFoundError as e:
-            raise ModuleNotFoundError(
-                "ImagePayloading reading local file requires `matplotlib`"
-                "package to be installed."
-            ) from e
-        return plt.imread
+        def load_fn(uri):
+            try:
+                import matplotlib.pyplot as plt  # pylint: disable=import-outside-toplevel
+                return plt.imread(uri)
+            except ModuleNotFoundError as e:
+                raise ModuleNotFoundError(
+                    "ImagePayloading reading local file requires `matplotlib`"
+                    "package to be installed."
+                ) from e
+        return load_fn(uri)
+
 
 @register
 class LocalSoundfilePayload(SoundFilePayload):
-    def loading_fn(self):
+    def load(self, uri):
         try:
             import soundfile  # pylint: disable=import-outside-toplevel
         except ModuleNotFoundError as e:
@@ -107,7 +113,7 @@ class LocalSoundfilePayload(SoundFilePayload):
             else:  # sound file auto detect the
                 return get_first(soundfile.read(file=uri))
 
-        return read_uri
+        return read_uri(uri)
 
 class PayloadFactoryTest(unittest.TestCase):
     """
@@ -115,13 +121,15 @@ class PayloadFactoryTest(unittest.TestCase):
     """
 
     def setUp(self):
-        pass
+        self.assertTrue("OnlineJpegPayload" in PayloadFactory)
+        self.assertTrue("LocalJpegPayload" in PayloadFactory)
+        self.assertTrue("LocalSoundfilePayload" in PayloadFactory)
 
     def test_online_image_payload(self):
         datapack = DataPack("image")
         uri = "https://assets.website-files.com/6241e60ecd4aa2049d61387c/62576e00dd225cf869b24e0f_61f880d055d4f6f2497fb3cc_symphony-EDITOR-p-1080.jpeg"
-        payload = OnlineJpegPayload(datapack, uri=uri)        
-        payload.loading_fn()(uri)
+        payload = OnlineJpegPayload(datapack, uri=uri)
+        payload.load(uri)
 
     def test_audio_payload(self):
         datapack = DataPack("audio")
@@ -139,4 +147,4 @@ class PayloadFactoryTest(unittest.TestCase):
             )
             + "/test_audio_0.flac"
         )    
-        payload.loading_fn()(uri)
+        payload.load(uri)

@@ -26,5 +26,5 @@ def register(payload):
     Returns:
         _type_: _description_
     """
-    PayloadFactory[payload.__name__] = payload.loading_fn
+    PayloadFactory[payload.__name__] = payload.load
     return payload
