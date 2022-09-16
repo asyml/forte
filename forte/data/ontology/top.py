@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from dataclasses import dataclass
-import dataclasses
 from functools import total_ordering
 from typing import (
     Optional,

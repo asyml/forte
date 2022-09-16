@@ -54,6 +54,7 @@ from forte.data.ontology.top import (
     AudioAnnotation,
     Payload,
     TextPayload,
+    ImagePayload,
 )
 
 from forte.data.modality import Modality
@@ -563,10 +564,6 @@ class DataPack(BasePack[Entry, Link, Group]):
         Args:
             text: Text to be added.
         """
-        from forte.data.ontology.top import (  # pylint: disable=import-outside-toplevel
-            TextPayload,
-        )
-
         ip = TextPayload(self)
         ip.set_cache(text)
 
@@ -607,10 +604,6 @@ class DataPack(BasePack[Entry, Link, Group]):
             == 0
             and text_payload_index == 0
         ):
-            from forte.data.ontology.top import (  # pylint: disable=import-outside-toplevel
-                TextPayload,
-            )
-
             tp = TextPayload(self, text_payload_index)
         else:
             tp = self.get_payload_at(Modality.Text, text_payload_index)
@@ -647,10 +640,6 @@ class DataPack(BasePack[Entry, Link, Group]):
             == 0
             and audio_payload_index == 0
         ):
-            from forte.data.ontology.top import (  # pylint: disable=import-outside-toplevel
-                AudioPayload,
-            )
-
             logging.warning(
                 "audio_payload_index is set to zero,"
                 "and there is not existing AudioPayload"
@@ -673,9 +662,6 @@ class DataPack(BasePack[Entry, Link, Group]):
         Args:
             audio: A numpy array storing the audio.
         """
-        from forte.data.ontology.top import (  # pylint: disable=import-outside-toplevel
-            AudioPayload,
-        )
 
         ip = AudioPayload(self)
         ip.set_cache(audio)
@@ -687,10 +673,6 @@ class DataPack(BasePack[Entry, Link, Group]):
         Args:
             image: A numpy array storing the image.
         """
-        from forte.data.ontology.top import (  # pylint: disable=import-outside-toplevel
-            ImagePayload,
-        )
-
         ip = ImagePayload(self)
         ip.set_cache(image)
 
@@ -714,10 +696,6 @@ class DataPack(BasePack[Entry, Link, Group]):
             == 0
             and image_payload_index == 0
         ):
-            from forte.data.ontology.top import (  # pylint: disable=import-outside-toplevel
-                ImagePayload,
-            )
-
             ip = ImagePayload(self)
             logging.warning(
                 "image_payload_index is set to zero,"
