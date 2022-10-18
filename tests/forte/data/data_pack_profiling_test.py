@@ -12,11 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Utils for unit tests.
+profiling test for data pack: using entry (0.2.0) and using new methods (>0.3.0).
 """
 
 import os
-import re
 import unittest
 import nltk
 
@@ -49,6 +48,7 @@ from forte.data.data_pack import DataPack
 
 from forte import Pipeline
 from nltk.tokenize.treebank import TreebankWordTokenizer
+
 
 # from fortex.spacy import SpacyProcessor
 
@@ -155,7 +155,7 @@ class ExampleNLTKPOSTagger(PackProcessor):
         record_meta["ft.onto.base_ontology.Token"].add("lemma")
 
     def process_tokens(
-        processors, sentences, input_pack: DataPack
+            processors, sentences, input_pack: DataPack
     ) -> Dict[int, Token]:
         """Basic tokenization and post tagging of the sentence.
         Args:
@@ -353,21 +353,31 @@ class NLP_Pipeline_Performance_Test(unittest.TestCase):
         self.nlp = Pipeline[DataPack]()
         # self.nlp.set_reader(StringReader())
 
-    def test_POS_tagging(self):  # input_output_pair , , input_path : str
+    def test_POS_tagging(self, input_path: str = ''):  # input_output_pair ,
         """
         Verify the intermediate representation of pipeline.
         """
         pack_output = "pack_out"
-        input_path = (
-            "/Users/jamesxiao/Downloads/Semantic-Role-Labeling-master/conll-formatted-ontonotes-5.0/"
-            "data/conll-2012-test/data/english/annotations/bc/phoenix/00/"
-        )  # msnbc_0007.gold_conll
-
-        self.nlp.set_reader(OntonotesReader())
-        # self.nlp.set_reader(StringReader())
+        # input_path = (
+        #     "...Path to ... /Semantic-Role-Labeling-master/conll-formatted-ontonotes-5.0/"
+        #     "data/conll-2012-test/data/english/annotations/bc/phoenix/00/"
+        # ) 
+        if len(input_path) == 0:
+            self.nlp.set_reader(StringReader())
+            input_param = (
+                "Forte is a data-centric ML framework. Muad Dib learned \
+                rapidly because his first training was in how to learn. "
+                "And the first lesson of all was the basic trust that he \
+                could learn. "
+                "It's shocking to find how many people do not believe they \
+                can learn, and how many more believe learning to be difficult."
+            )
+        else:
+            self.nlp.set_reader(OntonotesReader())
+            input_param = input_path
         self.nlp.add(NLTKSentenceSegmenter())  # SentenceAndTokenProcessor
         self.nlp.add(NLTKWordTokenizer())
-        self.nlp.add(NLTKPOSTagger())  #  #ExampleNLTKPOSTagger()
+        self.nlp.add(NLTKPOSTagger())  # #ExampleNLTKPOSTagger()
 
         # self.nlp.add(SentenceAndTokenProcessor())  #, {"processors": ["sentence", "tokenize"]}
         # self.nlp.add(ExampleNLTKPOSTagger())
@@ -381,16 +391,10 @@ class NLP_Pipeline_Performance_Test(unittest.TestCase):
         #     },
         # )
 
-        input_string = (
-            "Forte is a data-centric ML framework. Muad Dib learned rapidly because his first training was in how to learn. "
-            "And the first lesson of all was the basic trust that he could learn. "
-            " It's shocking to find how many people do not believe they can learn, and how many more believe learning to be difficult. "
-        )
-
         # self.nlp.initialize()
         # rs = self.nlp.run(input_path)
         for pack in self.nlp.initialize().process_dataset(
-            input_path
+                input_param
         ):  # initialize().run(input_path):   #:  rs:  #
             for sentence in pack.get("ft.onto.base_ontology.Sentence"):
                 print("The sentence is: ", sentence.text)
