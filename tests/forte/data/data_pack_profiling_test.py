@@ -155,7 +155,7 @@ class ExampleNLTKPOSTagger(PackProcessor):
         record_meta["ft.onto.base_ontology.Token"].add("lemma")
 
     def process_tokens(
-            processors, sentences, input_pack: DataPack
+        processors, sentences, input_pack: DataPack
     ) -> Dict[int, Token]:
         """Basic tokenization and post tagging of the sentence.
         Args:
@@ -353,15 +353,14 @@ class NLP_Pipeline_Performance_Test(unittest.TestCase):
         self.nlp = Pipeline[DataPack]()
         # self.nlp.set_reader(StringReader())
 
-    def test_POS_tagging(self, input_path: str = ''):  # input_output_pair ,
+    def testPOSTaggingNER(self, input_path: str = ""):  # input_output_pair ,
         """
         Verify the intermediate representation of pipeline.
         """
-        pack_output = "pack_out"
         # input_path = (
-        #     "...Path to ... /Semantic-Role-Labeling-master/conll-formatted-ontonotes-5.0/"
+        #     "..Path_to.../Semantic-Role-Labeling-master/conll-formatted-ontonotes-5.0/"
         #     "data/conll-2012-test/data/english/annotations/bc/phoenix/00/"
-        # ) 
+        # )
         if len(input_path) == 0:
             self.nlp.set_reader(StringReader())
             input_param = (
@@ -378,14 +377,17 @@ class NLP_Pipeline_Performance_Test(unittest.TestCase):
         self.nlp.add(NLTKSentenceSegmenter())  # SentenceAndTokenProcessor
         self.nlp.add(NLTKWordTokenizer())
         self.nlp.add(NLTKPOSTagger())  # #ExampleNLTKPOSTagger()
+        self.nlp.add(NLTKNER())
 
         # self.nlp.add(SentenceAndTokenProcessor())  #, {"processors": ["sentence", "tokenize"]}
         # self.nlp.add(ExampleNLTKPOSTagger())
 
+        # pack_output_dir = "./test_pack_output/"
+        #
         # self.nlp.add(
         #     PackNameJsonPackWriter(),
         #     {
-        #         "output_dir": pack_output,
+        #         "output_dir": pack_output_dir,
         #         "indent": 2,
         #         "overwrite": True,
         #     },
@@ -394,7 +396,7 @@ class NLP_Pipeline_Performance_Test(unittest.TestCase):
         # self.nlp.initialize()
         # rs = self.nlp.run(input_path)
         for pack in self.nlp.initialize().process_dataset(
-                input_param
+            input_param
         ):  # initialize().run(input_path):   #:  rs:  #
             for sentence in pack.get("ft.onto.base_ontology.Sentence"):
                 print("The sentence is: ", sentence.text)
@@ -402,6 +404,61 @@ class NLP_Pipeline_Performance_Test(unittest.TestCase):
                 for token in pack.get(Token, sentence):
                     print(f" {token.text}[{token.pos}]", end=" ")
                 print()
+
+    def testSimpleSerialization(self, input_path: str = ""):
+        """
+        Verify the intermediate representation of pipeline.
+        """
+        # input_path = (
+        #     "...Path_to.../Semantic-Role-Labeling-master/conll-formatted-ontonotes-5.0/"
+        #     "data/conll-2012-test/data/english/annotations/bc/phoenix/00/"
+        # )
+        output_path = "./test_simple_pack_output/"
+
+        if len(input_path) == 0:
+            self.nlp.set_reader(StringReader())
+            input_param = (
+                "Forte is a data-centric ML framework. Muad Dib learned \
+                rapidly because his first training was in how to learn. "
+                "And the first lesson of all was the basic trust that he \
+                could learn. "
+                "It's shocking to find how many people do not believe they \
+                can learn, and how many more believe learning to be difficult."
+            )
+        else:
+            self.nlp.set_reader(OntonotesReader())
+            input_param = input_path
+
+        self.nlp.add(
+            PackNameJsonPackWriter(),
+            {
+                "output_dir": output_path,
+                "indent": 2,
+                "overwrite": True,
+            },
+        )
+
+        # self.nlp.add(NLTKSentenceSegmenter())  # SentenceAndTokenProcessor
+        # self.nlp.add(NLTKWordTokenizer())
+        # self.nlp.add(NLTKPOSTagger())  # #ExampleNLTKPOSTagger()
+
+        self.nlp.run(input_param)
+
+        coref_pl = Pipeline()
+        coref_pl.set_reader(DirPackReader())
+        # coref_pl.add(MultiPackBoxer())
+
+        coref_pl.run(output_path)
+
+        # for pack in self.nlp.initialize().process_dataset(
+        #         output_path #input_param
+        # ):  # initialize().run(input_path):   #:  rs:  #
+        #     for sentence in pack.get("ft.onto.base_ontology.Sentence"):
+        #         print("The sentence is: ", sentence.text)
+        #         print("The POS tags of the tokens are:")
+        #         for token in pack.get(Token, sentence):
+        #             print(f" {token.text}[{token.pos}]", end=" ")
+        #         print()
 
 
 def define_skip_condition(flag: str, explanation: str):
