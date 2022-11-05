@@ -29,8 +29,8 @@ jobs:
           - python-version: 3.9
             torch-version: 1.8.1
             tensorflow-version: 2.5.0
-        notebook-details:
-          - { dep: "huggingface nltk", extra: "'tensorflow>=2.5.0,<2.8.0,termcolor>=1.1.0'"}
+    env:
+      notebook-details-dep: "huggingface nltk"
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
@@ -101,15 +101,19 @@ jobs:
         run: |
           codecov
       - name: Test notebook tutorials with installing Fortex
+        if: ${{ contains(fromJson('["1.5.0", "1.7.1"]'), matrix.torch-version) }}
         run: |
+          git clone https://github.com/asyml/forte-wrappers.git
+          cd forte-wrappers
+          for d in ${{ env.notebook-details-dep }}; do pip install "src/"$d; done
+          cd ..
           if [ ${{ matrix.torch-version }} == "1.5.0" ]
           then
-            git clone https://github.com/asyml/forte-wrappers.git
-            cd forte-wrappers
-            for d in ${{ matrix.notebook-details.dep }}; do pip install "src/"$d; done
-            cd ..
-            pip install --progress-bar off .[data_aug,ir,remote,audio_ext,stave,models,test,wikipedia,nlp,extractor]
-            coverage run -m pytest tests/forte/notebooks  --ignore=tests/forte/notebooks/ocr_test.py
+            coverage run -m pytest tests/forte/notebooks  --ignore=tests/forte/notebooks/ocr_test.py --ignore=tests/forte/notebooks/tutorial_MT_with_forte_test.py
+          fi
+          if [ ${{ matrix.torch-version }} == "1.7.1" ]
+          then
+            coverage run -m pytest tests/forte/notebooks/tutorial_MT_with_forte_test.py
           fi
 
   test_ocr_example:
