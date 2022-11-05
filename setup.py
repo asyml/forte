@@ -54,7 +54,7 @@ setuptools.setup(
     ],
     extras_require={
         "data_aug": [
-            "transformers>=4.15.0",
+            "transformers>=4.15.0, <=4.22.2",
             "nltk",
             "texar-pytorch>=0.1.4",
             "requests",
@@ -84,6 +84,7 @@ setuptools.setup(
         # transformers 4.10.0 will break the translation model we used here
         "nlp": ["texar-pytorch>=0.1.4"],
         "extractor": ["texar-pytorch>=0.1.4"],
+        "ocr_tutorial": ["Pillow", "requests", "pytesseract"]
     },
     entry_points={
         "console_scripts": [
