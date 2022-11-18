@@ -1177,10 +1177,15 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         # If we don't have any annotations but the items to check requires them,
         # then we simply yield from an empty list.
-        if len(self.annotations) == 0 and range_annotation is not None:
-            if require_annotations():
-                yield from []
-                return
+
+        # performance improvement by moving other checking before checking if
+        # generator is empty
+        # Also it seemed returning empty iterator might not be necessary after
+        # changing the underlying implementation.
+        # if require_annotations():
+        #     if len(self.annotations) == 0 and range_annotation is not None:
+        #         yield from []
+        #         return
 
         # Valid entry ids based on type.
         all_types: Set[Type]
