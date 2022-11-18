@@ -354,10 +354,10 @@ class NLP_Pipeline_Performance_Test(unittest.TestCase):
         """
         Verify the intermediate representation of pipeline.
         """
-        input_path = (
-            "/Users/jamesxiao/Downloads/Semantic-Role-Labeling-master/conll-formatted-ontonotes-5.0/"
-            "data/conll-2012-test/data/english/annotations/bc/phoenix/00/"
-        )
+        # input_path = (
+        #     "...path_to_conll ... /Semantic-Role-Labeling-master/conll-formatted-ontonotes-5.0/"
+        #     "data/conll-2012-test/data/english/annotations/bc/phoenix/00/"
+        # )
         if len(input_path) == 0:
             self.nlp.set_reader(StringReader())
             input_param = (
@@ -395,10 +395,10 @@ class NLP_Pipeline_Performance_Test(unittest.TestCase):
         """
         Verify the intermediate representation of pipeline.
         """
-        input_path = (
-            "/Users/jamesxiao/Downloads/Semantic-Role-Labeling-master/conll-formatted-ontonotes-5.0/"
-            "data/conll-2012-test/data/english/annotations/bc/phoenix/00/"
-        )
+        # input_path = (
+        #     "... path_to_conll ... /Semantic-Role-Labeling-master/conll-formatted-ontonotes-5.0/"
+        #     "data/conll-2012-test/data/english/annotations/bc/phoenix/00/"
+        # )
         output_path = "./test_simple_pack_output/"
 
         if len(input_path) == 0:
@@ -414,15 +414,14 @@ class NLP_Pipeline_Performance_Test(unittest.TestCase):
         else:
             self.nlp.set_reader(OntonotesReader())
             input_param = input_path
-
-        self.nlp.add(
-            PackNameJsonPackWriter(),
-            {
-                "output_dir": output_path,
-                "indent": 2,
-                "overwrite": True,
-            },
-        )
+            self.nlp.add(
+                PackNameJsonPackWriter(),
+                {
+                    "output_dir": output_path,
+                    "indent": 2,
+                    "overwrite": True,
+                },
+            )
 
         # self.nlp.add(NLTKSentenceSegmenter())  # SentenceAndTokenProcessor
         # self.nlp.add(NLTKWordTokenizer())
