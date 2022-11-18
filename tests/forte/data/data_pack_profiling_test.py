@@ -391,7 +391,7 @@ class NLP_Pipeline_Performance_Test(unittest.TestCase):
                     print(f" {token.text}[{token.pos}]", end=" ")
                 print()
 
-    def testSimpleSerialization(self, input_path: str = ""):
+    def testSimpleSerialization(self, input_path: str = "", output_path: str = ""):
         """
         Verify the intermediate representation of pipeline.
         """
@@ -399,7 +399,7 @@ class NLP_Pipeline_Performance_Test(unittest.TestCase):
         #     "... path_to_conll ... /Semantic-Role-Labeling-master/conll-formatted-ontonotes-5.0/"
         #     "data/conll-2012-test/data/english/annotations/bc/phoenix/00/"
         # )
-        output_path = "./test_simple_pack_output/"
+        # output_path = "./test_simple_pack_output/"
 
         if len(input_path) == 0:
             self.nlp.set_reader(StringReader())
@@ -432,7 +432,8 @@ class NLP_Pipeline_Performance_Test(unittest.TestCase):
         coref_pl = Pipeline()
         coref_pl.set_reader(DirPackReader())
         # coref_pl.add(MultiPackBoxer())
-        coref_pl.run(output_path)
+        if len(output_path) > 0:
+            coref_pl.run(output_path)
 
 
 def define_skip_condition(flag: str, explanation: str):
