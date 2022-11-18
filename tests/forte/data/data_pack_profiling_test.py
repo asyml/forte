@@ -23,9 +23,7 @@ __all__ = [
     "performance_test",
 ]
 
-from typing import Any, Callable
-
-from typing import Optional, Dict, Set, List, Any, Iterator
+from typing import Dict, Set
 
 from forte.common.configuration import Config
 from forte.common.resources import Resources
@@ -33,7 +31,7 @@ from forte.common.resources import Resources
 from forte.data.readers import OntonotesReader, DirPackReader, StringReader
 from forte.processors.writers import PackNameJsonPackWriter
 
-from ft.onto.base_ontology import EntityMention, Token, Sentence, Phrase
+from ft.onto.base_ontology import EntityMention, Token, Sentence
 from nltk import (  # type: ignore
     pos_tag,
     ne_chunk,
@@ -48,7 +46,6 @@ from forte.data.data_pack import DataPack
 
 from forte import Pipeline
 from nltk.tokenize.treebank import TreebankWordTokenizer
-
 
 # from fortex.spacy import SpacyProcessor
 
@@ -357,10 +354,10 @@ class NLP_Pipeline_Performance_Test(unittest.TestCase):
         """
         Verify the intermediate representation of pipeline.
         """
-        # input_path = (
-        #     "..Path_to.../Semantic-Role-Labeling-master/conll-formatted-ontonotes-5.0/"
-        #     "data/conll-2012-test/data/english/annotations/bc/phoenix/00/"
-        # )
+        input_path = (
+            "/Users/jamesxiao/Downloads/Semantic-Role-Labeling-master/conll-formatted-ontonotes-5.0/"
+            "data/conll-2012-test/data/english/annotations/bc/phoenix/00/"
+        )
         if len(input_path) == 0:
             self.nlp.set_reader(StringReader())
             input_param = (
@@ -382,17 +379,6 @@ class NLP_Pipeline_Performance_Test(unittest.TestCase):
         # self.nlp.add(SentenceAndTokenProcessor())  #, {"processors": ["sentence", "tokenize"]}
         # self.nlp.add(ExampleNLTKPOSTagger())
 
-        # pack_output_dir = "./test_pack_output/"
-        #
-        # self.nlp.add(
-        #     PackNameJsonPackWriter(),
-        #     {
-        #         "output_dir": pack_output_dir,
-        #         "indent": 2,
-        #         "overwrite": True,
-        #     },
-        # )
-
         # self.nlp.initialize()
         # rs = self.nlp.run(input_path)
         for pack in self.nlp.initialize().process_dataset(
@@ -409,10 +395,10 @@ class NLP_Pipeline_Performance_Test(unittest.TestCase):
         """
         Verify the intermediate representation of pipeline.
         """
-        # input_path = (
-        #     "...Path_to.../Semantic-Role-Labeling-master/conll-formatted-ontonotes-5.0/"
-        #     "data/conll-2012-test/data/english/annotations/bc/phoenix/00/"
-        # )
+        input_path = (
+            "/Users/jamesxiao/Downloads/Semantic-Role-Labeling-master/conll-formatted-ontonotes-5.0/"
+            "data/conll-2012-test/data/english/annotations/bc/phoenix/00/"
+        )
         output_path = "./test_simple_pack_output/"
 
         if len(input_path) == 0:
@@ -447,18 +433,7 @@ class NLP_Pipeline_Performance_Test(unittest.TestCase):
         coref_pl = Pipeline()
         coref_pl.set_reader(DirPackReader())
         # coref_pl.add(MultiPackBoxer())
-
         coref_pl.run(output_path)
-
-        # for pack in self.nlp.initialize().process_dataset(
-        #         output_path #input_param
-        # ):  # initialize().run(input_path):   #:  rs:  #
-        #     for sentence in pack.get("ft.onto.base_ontology.Sentence"):
-        #         print("The sentence is: ", sentence.text)
-        #         print("The POS tags of the tokens are:")
-        #         for token in pack.get(Token, sentence):
-        #             print(f" {token.text}[{token.pos}]", end=" ")
-        #         print()
 
 
 def define_skip_condition(flag: str, explanation: str):
