@@ -28,15 +28,21 @@ import os
 import logging
 import collections
 from typing import Dict, Set, Any
-
-from stave_backend.lib.stave_viewer import StaveViewer
-from stave_backend.lib.stave_project import StaveProjectWriter
-
+from forte.utils import create_import_error_msg
 from forte.common import Resources, ProcessorConfigError
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.data.ontology.code_generation_objects import search
 from forte.processors.base import PackProcessor
+
+try:
+    from stave_backend.lib.stave_viewer import StaveViewer
+    from stave_backend.lib.stave_project import StaveProjectWriter
+except ImportError as e:
+    raise ImportError(
+        create_import_error_msg("stave", "stave", "stave processor")
+    ) from e
+
 
 logger = logging.getLogger(__name__)
 

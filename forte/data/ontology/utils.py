@@ -148,7 +148,7 @@ def get_user_objects_from_module(
                 spec = import_util.spec_from_file_location(module_str, filepath)
                 module = import_util.module_from_spec(spec)  # type: ignore
                 spec.loader.exec_module(module)  # type: ignore
-                objects = module.__all__  # type: ignore
+                objects = module.__all__
             except (FileNotFoundError, AttributeError):
                 continue
     return objects

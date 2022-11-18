@@ -32,11 +32,13 @@ from forte.data.ontology.core import GroupType, LinkType, EntryType
 
 logger = logging.getLogger(__name__)
 
+__all__ = ["BaseIndex"]
+
 
 class BaseIndex(Generic[EntryType]):
-    r"""A set of indexes used in :class:`BasePack`:
+    r"""A set of indexes used in :class:`~forte.data.base_pack.BasePack`:
 
-    #. :attr:`entry_index`, the index from each tid to the corresponding entry
+    #. :attr:`entry_index`, the index from each ``tid`` to the corresponding entry
     #. :attr:`type_index`, the index from each type to the entries of
        that type
     #. :attr:`link_index`, the index from child
@@ -75,7 +77,7 @@ class BaseIndex(Generic[EntryType]):
         r"""Build or update the basic indexes, including
 
         (1) :attr:`entry_index`,
-        the index from each `tid` to the corresponding entry;
+        the index from each ``tid`` to the corresponding entry;
 
         (2) :attr:`type_index`, the index from each type to the entries of that
         type;
@@ -106,16 +108,18 @@ class BaseIndex(Generic[EntryType]):
         r"""Look up the entry indices that are instances of ``entry_type``,
         including children classes of ``entry_type``.
 
-        Note: all the known types to this data pack will be scanned to find
-          all sub-types. This method will try to cache the sub-type information
-          after the first call, but the cached information could be invalidated
-          by other operations (such as adding new items to the data pack).
+        .. note::
+
+            all the known types to this data pack will be scanned to find
+            all sub-types. This method will try to cache the sub-type information
+            after the first call, but the cached information could be invalidated
+            by other operations (such as adding new items to the data pack).
 
         Args:
             t: The type of the entry you are looking for.
 
         Returns:
-             A set of entry ids. The entries are instances of `entry_type` (
+             A set of entry ids. The entries are instances of ``entry_type`` (
              and also includes instances of the subclasses of `entry_type`).
         """
         if t in self._subtype_index:
@@ -173,7 +177,7 @@ class BaseIndex(Generic[EntryType]):
         r"""Build :attr:`group_index`, the index from group members to groups.
 
         Returns:
-
+            None
         """
         self.turn_group_index_switch(on=True)
         self._group_index = defaultdict(set)
@@ -181,15 +185,15 @@ class BaseIndex(Generic[EntryType]):
 
     def link_index(self, tid: int, as_parent: bool = True) -> Set[int]:
         r"""Look up the link_index with key ``tid``. If the link index is not
-        built, this will throw a ``PackIndexError``.
+        built, this will throw a :class:`~forte.common.exception.PackIndexError`.
 
         Args:
-            tid (int): the tid of the entry being looked up.
-            as_parent (bool): If `as_patent` is True, will look up
+            tid: the ``tid`` of the entry being looked up.
+            as_parent: If `as_patent` is True, will look up
                 :attr:`link_index["parent_index"] and return the tids of links
-                whose parent is `tid`. Otherwise,  will look up
+                whose parent is ``tid``. Otherwise,  will look up
                 :attr:`link_index["child_index"] and return the tids of links
-                whose child is `tid`.
+                whose child is ``tid``.
         """
         if not self._link_index_switch:
             raise PackIndexError("Link index for pack not build")
@@ -200,8 +204,8 @@ class BaseIndex(Generic[EntryType]):
             return self._link_index["child_index"][tid]
 
     def group_index(self, tid: int) -> Set[int]:
-        r"""Look up the group_index with key `tid`. If the index is not built,
-        this will raise a ``PackIndexError``.
+        r"""Look up the group_index with key ``tid``. If the index is not built,
+        this will raise a :class:`~forte.common.exception.PackIndexError`.
         """
         if not self.group_index_on:
             raise PackIndexError("Group index for pack not build")
@@ -212,13 +216,14 @@ class BaseIndex(Generic[EntryType]):
         child and parent to links.
 
         :attr:`link_index` consists of two sub-indexes:
+
             - "child_index" is the index from child nodes to their corresponding
               links
             - "parent_index" is the index from parent nodes to their
               corresponding links.
 
         Args:
-            links (list): a list of links to be added into the index.
+            links: a list of links to be added into the index.
         """
         if not self.link_index_on:
             raise PackIndexError("Link index has not been built.")
@@ -236,7 +241,7 @@ class BaseIndex(Generic[EntryType]):
         to groups.
 
         Args:
-            groups (list): a list of groups to be added into the index.
+            groups: a list of groups to be added into the index.
         """
         logger.debug("Updating group index")
 

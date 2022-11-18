@@ -18,7 +18,7 @@ import os
 
 import yaml
 
-from forte.elastic import ElasticSearchTextIndexProcessor
+from fortex.elastic import ElasticSearchTextIndexProcessor
 
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack

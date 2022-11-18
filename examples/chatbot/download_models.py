@@ -15,7 +15,6 @@ import argparse
 from collections import OrderedDict
 from pathlib import Path
 import os
-
 from forte.data.data_utils import maybe_download
 
 parser = argparse.ArgumentParser()

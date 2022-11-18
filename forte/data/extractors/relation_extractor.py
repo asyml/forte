@@ -69,14 +69,14 @@ class LinkExtractor(BaseExtractor):
                     "`entry_class` to this extractor " "must be a Link tpe."
                 )
 
-            self._parent_class: Type[Annotation] = self._entry_class.ParentType
+            self._parent_class: Type[Annotation] = self._entry_class.ParentType  # type: ignore
             if not issubclass(self._parent_class, Annotation):
                 raise ProcessorConfigError(
                     f"The parent class of the provided {self.config.entry_type}"
                     " must be an Annotation."
                 )
 
-            self._child_class: Type[Annotation] = self._entry_class.ChildType
+            self._child_class: Type[Annotation] = self._entry_class.ChildType  # type: ignore
             if not issubclass(self._child_class, Annotation):
                 raise ProcessorConfigError(
                     f"The child class of the provided {self.config.entry_type}"
@@ -88,11 +88,11 @@ class LinkExtractor(BaseExtractor):
         r"""Returns a dictionary of default hyper-parameters.
 
         Here:
-            - "entry_type": The target relation entry type, should be a Link
-            entry.
-            - "attribute": The attribute of the relation to extract.
-            - "index_annotation": The annotation object used to index the
-            head and child node of the relations.
+
+        - "`entry_type`": The target relation entry type, should be a Link entry.
+        - "`attribute`": The attribute of the relation to extract.
+        - "`index_annotation`": The annotation object used to index the
+          head and child node of the relations.
         """
         config = super().default_configs()
         config.update(
@@ -111,12 +111,12 @@ class LinkExtractor(BaseExtractor):
         Update values of relation attributes to the vocabulary.
 
         Args:
-            pack (DataPack): The input data pack.
-            context (Annotation): The context is an Annotation entry where
+            pack: The input data pack.
+            context: The context is an Annotation entry where
                 features will be extracted within its range. If None, then the
                 whole data pack will be used as the context. Default is None.
         Returns:
-
+            None
         """
 
         entry: Entry
@@ -130,8 +130,8 @@ class LinkExtractor(BaseExtractor):
         """Extract link data as features from the context.
 
         Args:
-            pack (DataPack): The input data pack that contains the features.
-            context (Annotation): The context is an Annotation entry where
+            pack: The input data pack that contains the features.
+            context: The context is an Annotation entry where
                 features will be extracted within its range. If None, then the
                 whole data pack will be used as the context. Default is None.
 
@@ -183,13 +183,13 @@ class LinkExtractor(BaseExtractor):
         Convert prediction back to Links inside the data pack.
 
         Args:
-            pack (DataPack): The datapack to add predictions back.
-            predictions (List): This is the output of the model, it is a
+            pack: The datapack to add predictions back.
+            predictions: This is the output of the model, it is a
                 triplet, the first element shows the parent, the second
                 element shows the child. These two are indexed by the
                 `index_annotation` of this extractor. The last element is the
                 index of the relation attribute.
-            context (Optional[Annotation]): The context is an Annotation
+            context: The context is an Annotation
                 entry where predictions will be added to. This has the same
                 meaning with `context` as in
                 :meth:`~forte.data.base_extractor.BaseExtractor.extract`.

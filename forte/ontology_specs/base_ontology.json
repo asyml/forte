@@ -2,6 +2,11 @@
   "name": "base_ontology",
   "definitions": [
     {
+      "entry_name": "ft.onto.base_ontology.Character",
+      "parent_entry": "forte.data.ontology.top.Annotation",
+      "description": "A span based annotation :class:`Character`, used to represent a character."
+    },
+    {
       "entry_name": "ft.onto.base_ontology.Token",
       "parent_entry": "forte.data.ontology.top.Annotation",
       "description": "A span based annotation :class:`Token`, used to represent a token or a word.",
@@ -381,6 +386,11 @@
       "description": "A span based annotation `Title`, normally used to represent a title."
     },
     {
+      "entry_name": "ft.onto.base_ontology.Body",
+      "parent_entry": "forte.data.ontology.top.Annotation",
+      "description": "A span based annotation `Body`, normally used to represent a document body."
+    },
+    {
       "entry_name": "ft.onto.base_ontology.MCOption",
       "parent_entry": "forte.data.ontology.top.Annotation"
     },
@@ -415,6 +425,53 @@
           "item_type": "ft.onto.base_ontology.Phrase"
         }
       ]
+    },
+    {
+      "entry_name": "ft.onto.base_ontology.Recording",
+      "parent_entry": "forte.data.ontology.top.AudioAnnotation",
+      "description": "A span based annotation `Recording`, normally used to represent a recording.",
+      "attributes": [
+        {
+          "name": "recording_class",
+          "type": "List",
+          "item_type": "str",
+          "description": "A list of class names that the recording belongs to."
+        }
+      ]
+    },
+    {
+      "entry_name": "ft.onto.base_ontology.AudioUtterance",
+      "parent_entry": "forte.data.ontology.top.AudioAnnotation",
+      "description": "A span based annotation `AudioUtterance`, normally used to represent an utterance in dialogue.",
+      "attributes": [
+        {
+          "name": "speaker",
+          "type": "str"
+        }
+      ]
+    },
+    {
+      "entry_name": "ft.onto.base_ontology.AudioPayload",
+      "parent_entry": "forte.data.ontology.top.Payload",
+      "description": "A payload that caches audio data",
+      "attributes":[
+        {
+          "name": "sample_rate",
+          "type": "int"
+        }
+      ]
+    },
+    {
+      "entry_name": "ft.onto.base_ontology.TextPayload",
+      "parent_entry": "forte.data.ontology.top.Payload",
+      "description": "A payload that caches text data",
+      "attributes": []
+    },
+    {
+      "entry_name": "ft.onto.base_ontology.ImagePayload",
+      "parent_entry": "forte.data.ontology.top.Payload",
+      "description": "A payload that caches image data",
+      "attributes":[]
     }
   ]
 }

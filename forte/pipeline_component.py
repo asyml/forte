@@ -52,7 +52,7 @@ class PipelineComponent(Generic[PackType], Configurable):
         the content expectations specified in each pipeline component. Each
         component will check whether the input pack contains the expected data
         via checking the meta-data, and throws a
-        :class:`~forte.common.exception.ExpectedEntryNotFound` if the check
+        :class:`~forte.common.exception.EntryNotFoundError` if the check
         fails. When this function is called with enforce is ``True``, all the
         pipeline components would check if the input datapack record matches
         with the expected types and attributes if function
@@ -79,9 +79,9 @@ class PipelineComponent(Generic[PackType], Configurable):
         implementation should set up the states of the component.
 
         Args:
-            resources (Resources): A global resource register. User can register
+            resources: A global resource register. User can register
                 shareable resources here, for example, the vocabulary.
-            configs (Config): The configuration passed in to set up this
+            configs: The configuration passed in to set up this
                 component.
         """
         self.resources = resources
@@ -106,11 +106,11 @@ class PipelineComponent(Generic[PackType], Configurable):
         automatically when this component finishes.
 
         Args:
-            pack (BasePack): The pack to add the entry into.
-            entry (Entry):  The entry to be added.
+            pack: The pack to add the entry into.
+            entry:  The entry to be added.
 
         Returns:
-
+            None
         """
         pack.add_entry(entry, self.name)
 
@@ -131,7 +131,7 @@ class PipelineComponent(Generic[PackType], Configurable):
         objects to the resources.
 
         Args:
-            resource (Resources): A global resource registry.
+            resource: A global resource registry.
         """
         self.__is_initialized = False
 

@@ -91,16 +91,16 @@ class MultiPackSentenceReader(MultiPackReader):
 
         Here:
 
-        `"name"`: str
-            Name of the reader
+            - `"name"`: str
+              Name of the reader
 
-        `"input_pack_name"`: str
-            Name of the input pack. This name can be used to retrieve the input
-            pack from the multipack.
+            - `"input_pack_name"`: str
+              Name of the input pack. This name can be used to retrieve the
+              input pack from the multipack.
 
-        `"output_pack_name"`: str
-            Name of the output pack. This name can be used to retrieve the
-            output pack from the multipack.
+            - `"output_pack_name"`: str
+              Name of the output pack. This name can be used to retrieve the
+              output pack from the multipack.
         """
         return {
             "name": "multipack_sentence_reader",

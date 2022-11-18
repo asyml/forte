@@ -9,8 +9,10 @@ import argparse
 from argparse import RawTextHelpFormatter
 from forte.data.ontology.ontology_code_generator import OntologyCodeGenerator
 
-logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
+log_level = os.environ.get("LOGLEVEL", "INFO")
+logging.getLogger().setLevel(level=log_level)
 log = logging.getLogger(__name__)
+log.setLevel(level=log_level)
 
 
 def normalize_path(path):
@@ -47,14 +49,14 @@ def create(args_):
         log.info("Will not enforce prefix check.")
 
     is_dry_run = not args_.no_dry_run
-    include_init = not args_.exclude_init
+
     generated_folder = generator.generate(
-        spec_path,
-        dest_path,
-        is_dry_run,
-        include_init,
-        merged_path,
-        leient_prefix,
+        spec_path=spec_path,
+        destination_dir=dest_path,
+        is_dry_run=is_dry_run,
+        merged_path=merged_path,
+        lenient_prefix=leient_prefix,
+        namespace_depth=args_.namespace_depth,
     )
     log.info("Ontology generated in the directory %s.", generated_folder)
 
@@ -164,17 +166,6 @@ def main():
     )
 
     create_parser.add_argument(
-        "-e",
-        "--exclude_init",
-        required=False,
-        default=None,
-        action="store_true",
-        help="Excludes generation of `__init__.py` files"
-        " in the already existing directories, if"
-        "`__init__.py` not already present.",
-    )
-
-    create_parser.add_argument(
         "-a",
         "--gen_all",
         required=False,
@@ -192,6 +183,21 @@ def main():
         default=False,
         action="store_true",
         help="If True, will not enforce prefix check.",
+    )
+
+    create_parser.add_argument(
+        "-n",
+        "--namespace_depth",
+        type=int,
+        required=False,
+        default=0,
+        help="set an integer argument namespace_depth "
+        "to allow customized number of levels of namespace packaging."
+        "The generation of __init__.py for all the "
+        "directory levels above namespace_depth will be disabled."
+        "Default value is set to 0 to disable namespace packaging. "
+        "When namespace_depth<=0, namespace packaging will be disabled "
+        "and __init__.py will be included in all directory levels",
     )
 
     create_parser.set_defaults(func=create)

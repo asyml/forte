@@ -21,7 +21,7 @@ import texar.torch as tx
 from torch import optim
 from transformers import BertForMaskedLM
 
-from forte.models.da_rl import MetaAugmentationWrapper
+from forte.models.da_rl.aug_wrapper import MetaAugmentationWrapper
 from forte.models.da_rl.aug_wrapper import (
     _texar_bert_adam_delta,
     _torch_adam_delta,

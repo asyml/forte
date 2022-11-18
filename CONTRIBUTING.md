@@ -27,41 +27,51 @@ you are most interested and get started!
 * [Forte](github.com/asyml/forte): Decompose and abstract complex NLP problems into
   multiple modules, and standardize the interface between the sub-problems and ML
   interface.
-* [Forte Wrappers](github.com/asyml/forte-wrappers): Decompose and abstract complex NLP
-  problems into multiple modules, and standardize the interface between the sub-problems
-  and ML interface.
+* [Forte Wrappers](github.com/asyml/forte-wrappers): Create Forte native composable
+  modules by creating adapters to the great ML tools built by the commuinity.
 * [Stave](github.com/asyml/stave): Provide visualization and annotation for NLP tasks,
   by providing generic UI elements based on the abstraction.
 
 ### Forte and Forte-Wrapper Package Convention
 
-We currently adopt a non-standard namespace packaging strategy. While this may introduce
-some constraints in development, this allows us to provide a unified user experience.
-The strategy, simply put, installs all Forte packages under "forte" module, but
-currently stored in two different repositories, as different projects.
+We adopt a namespace packaging strategy to coordinate different Forte projects
 
 #### Core Packages in Forte Main
 
-* forte: The root package contains the pipeline implementations, and defines
-  the `pipeline_component`.
+* forte: The root package contains the top-level Forte implementations, such as
+  `pipeline` and `pipeline-component`.
 * forte.data: contains main data relevant components, mainly implements the data pack
   system and the ontology system.
 * forte.dataset: contains readers to popular datasets.
 * forte.processors: Processors are core components that perform NLP tasks. This module
   currently contains some base processor implementations and simple processor examples.
-  We have
+  More processor examples can be found in the [Forte Wrappers](github.com/asyml/forte-wrappers)
+  repository.
 * forte.models: Contains our in-house development of some NLP models.
 * forte.common: configuration, exceptions and other sharable code.
 
-#### Core Packages in Forte Wrappers
+#### The `fortex` namespace for other Forte based projects
+We use the namespace packaging here to make sure different `fortex` projects can be installed
+at the same folder without conflicting with each other. In general, `fortex` is the shared namespace
+for different Forte-based projects. 
 
-* `forte.xxx`: Forte Wrapper contains adapters of third party tools. Each tool is placed
-  in its own folder to avoid dependency conflicts. Each directory contains a standalone
+* `fortex.xxx`: Mainly used to host adapters of third party tools. Each tool is installed
+  in its own namespace to avoid dependency conflicts. Each directory contains a standalone
   project and can be installed independently. *The project will be installed as
-  `forte.xxx` and under `forte/xxx` folder in the site-packages.* For
-  example, `forte.nltk` will be installed under `site_packages/forte/nltk` folder, and
-  the tool can be imported via `import forte.nltk` and uninstalled
-  via `pip uninstall forte.nltk`.
+  `fortex.xxx` and under `fortex/xxx` folder in the site-packages.* For
+  example, `fortex.nltk` will be installed under `site_packages/fortex/nltk`.
+
+### Ontology namespaces
+We have a similar package convention for the ontology code. 
+
+* The `ft.onto` namespace contains the core/basic ontology types defined by Forte, data types
+  in this namespace are mainly generic ML data concepts, such as "Sentence", "Token". Mainly
+  the Forte developers will use this namespace. Since no namespace packaging is used here, if
+  another `ft` package is used, it may cause conflicts. So we advise you not to.
+* The `ftx` namespace supports namespace packaging:
+  * We use `ftx.onto` namespace to show extra types for demo/example purposes.
+  * We also develop in other `ftx.xxx` namespace types for certain domains where `xxx`
+    represents that domain.
 
 ### Report Bugs
 
@@ -99,9 +109,16 @@ Following the feature template, fill in the information in more details:
 ### Pull Requests
 
 When you have fixed a bug or implemented a new feature, you can create a pull request
-for review. Use the following simple PR templates to structure the PR:
+for review.
 
-* [PR Template](https://github.com/asyml/forte/blob/master/.github/PULL_REQUEST_TEMPLATE.md)
+* Use a [PR Template](https://github.com/asyml/forte/blob/master/.github/PULL_REQUEST_TEMPLATE.md) to structure your PR, and here:
+
+  * The first line should always start with `This PR fixes [issue link]` or `This PR partially addresses [issue link]` where `[issue link]` can be replaced with a `#ISSUE_ID` associated to a specific [issue](https://github.com/asyml/forte/issues). This allows Github to automatically link your pull request to the corresponding issue. If this pull request will close the issue we use `fixes` otherwise we can say `partially addresses`.
+  * **Description of changes**: You should include a description of the changes that you make. If the pull request is aimed to fix an issue, you can explain the approaches to address the problem.
+  * **Possible influences of this PR**: List all the potential side-effects of your update. Examples include influences on compatibility, performance, API signature, etc.
+  * **Test Conducted**: Describe the test cases to verify the changes in pull request. You should always create unit tests for your updates in the pull request and make sure they can cover all of the conditional branches, especially the ones related to corner cases where bugs usually stem from. We will use [Covergage](https://coverage.readthedocs.io/en/6.3/) to gauge the effectiveness of tests and you can refer to [Codecov report](https://about.codecov.io/language/python/) to see which lines are not visited by your test cases.
+* Start your PR as draft and try to pass the Github Action CI check.
+* Mark the PR to be ready-for-review once you are satisfied with it.
 
 ### Using Labels
 
@@ -118,8 +135,51 @@ topic labels in the future.
 
 The programming language for Forte is Python. We follow
 the [Google Python Style guide](http://google.github.io/styleguide/pyguide.html). The
-project code is examined using `pylint`, `flake8`, `mypy` and `black`, which will be run
-automatically in CI.
+project code is examined using `pylint`, `flake8`, `mypy`, `black` and `sphinx-build` which will be run
+automatically in CI. It's recommended that you should run these tests locally before submitting your pull request to save time. Refer to the github workflow [here](https://github.com/asyml/forte/blob/master/.github/workflows/main.yml) for detailed steps to carry out the tests. Basically what you need to do is to install the requirements (check out the `Install dependencies` sections) and run the commands (refer to the steps in `Format check with Black`, `Lint with flake8`, `Lint with pylint`, `Lint main code with mypy when torch version is not 1.5.0`, `Build Docs`, etc.).
+
+We also recommend using tools `pre-commit` that automates the checking process before each commit since checking format is a repetitive process. We have the configuration file `.pre-commit-config.yaml` that lists several plugins including `black` to check format in the project root folder. Developers only need to install the package by `pip install pre-commit`. All the package versions in the `.pre-commit-config.yaml` must be consistent with package versions in [workflow configuration](https://github.com/asyml/forte/blob/master/.github/workflows/main.yml). For example, `black` package version should be set to the same.
+
+### Docstring
+
+ All public methods require docstring and type annotation. It is recommended to add docstring for all functions. The docstrings should follow the [`Comments and Docstrings` section](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings) of Google Python Style guide. We will include a pylint plugin called [docparams](https://github.com/PyCQA/pylint/blob/main/pylint/extensions/docparams.rst) to validate the parameters of docstrings:
+* parameters ~~and their types~~
+  * types are only required in function signatures and sphinx will build parameter type hyperlinks based on that.
+* return value and its type
+* exceptions raised
+
+
+
+You should take special care of the indentations in your documentation. Make sure the indents are consistent and follow the Google Style guide. All sections other than the heading should maintain a hanging indent of two or four spaces. Refer to the examples [here](https://google.github.io/styleguide/pyguide.html#383-functions-and-methods) for what is expected and what are the requirements for different sections like `args`, `lists`, `returns`, etc. Invalid indentations might trigger errors in `sphinx-build` and will cause confusing rendering of the documentation. You can run `sphinx-build` locally to see whether the generated docs look reasonable.
+
+Another aspect that should be noted is the format of links or cross-references of python objects. Make sure to follow the [sphinx cross-referencing syntax](https://www.sphinx-doc.org/en/master/usage/restructuredtext/roles.html#xref-syntax). ~~The references will be checked by [sphinx-build nit-picky mode](https://www.sphinx-doc.org/en/master/man/sphinx-build.html#cmdoption-sphinx-build-n) which raises warnings for all the missing and unresolvable links.~~
+
+### Tutorials and Jupyter Notebook
+We plan to deliver high quality tutorials via Jupyter notebooks.
+Notebooks are written under `docs/notebook_tutorial` folder, and we keep notebooks there for several reasons. First, it's friendly for new users to learn forte with a runnable notebook. Second, it can be rendered directly by the sphinx documentation pacakge by including the relative path to notebook in `docs/index_toc.rst`. It is straightforward for users to make references on how to use forte with the context of application. Third, we write notebook testing under `tests/forte/notebook` to ensure the notebook is runnable as API changes.
+
+Tutorials may use large assets like screenshots and illustrations. To keep them away from the main branch that may make a regular clone too slow, we now organize these assets in a separated "assets" [branch](https://github.com/asyml/forte/tree/assets) to host the assets.
+
+#### Notebook Rendering
+Jupyter notebook written under `docs/notebook_tutorial` will be rendered in the sphinx documentation using package `nbsphinx`. You need to make sure notebook can be rendered normally in sphinx documentation. After writing notebook under , run this [command](https://github.com/asyml/forte/blob/ae3d46884c26bac95893cbbecfaf86168a039bdc/.github/workflows/main.yml#L135) under docs folder. It might give you some sphinx warnings and you need to fix them.
+
+#### Notebook Hyperlinks
+As notebook is rendered in the sphinx documentation, we might want to include hyperlinks to other sphinx pages in the documentation. For example, if we want to mention another `rst` file, we can write the hyperlinks in the markdown way with the relative path to the `rst` file such as `[reader](../toc/reader.rst)`.
+
+#### Notebook Testing
+As notebook includes code that might break over time when API changes. Plus, we want to test code efficiently.
+Therefore, we test notebook by using package [`testbook`](https://testbook.readthedocs.io/en/latest/#).
+User can refer to [notebook_test_tutorial.py](tests/forte/notebooks/notebook_test_tutorial.py) for how to test notebook.
+
+##### Notebook Dependency
+As notebook will be running in github CI, we need to consider its package dependencies and add required packages in `matrix.notebook-details.dep`.
+As current notebooks requires fortex packages, so we limit torch version == 1.5.0 while testing notebooks.
+
+
+#### Notebook Output
+Notebooks will not be running automatically after committing files to the repository.
+Developer needs to keep notebook cell outputs that are needed for the purpose of illustration.
+
 
 ### Git Commit Style
 
@@ -127,3 +187,4 @@ automatically in CI.
 * Reference issues and pull requests in the second line
 * For documentation only changes, use [skip ci] or [ci skip] in your commit messages to
   skip travis build.
+

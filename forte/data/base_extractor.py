@@ -43,37 +43,37 @@ class BaseExtractor(ABC):
 
     Explanation:
 
-        Vocabulary:
-            Vocabulary is maintained as an attribute
-            in extractor. It will store the mapping from element
-            to index, which is an integer, and representation,
-            which could be an index integer or one-hot vector
-            depending on the configuration of the vocabulary.
-            Check :class:`~forte.data.vocabulary.Vocabulary` for
-            more details.
-        Feature:
-            A feature basically wraps the data we want from
-            one instance in a datapack. For example, the instance
-            can be one sentence in a datapack. Then the data wrapped
-            by the feature could be the token text of this sentence.
-            The data is already converted as list of indexes using
-            vocabulary. Besides the data, other information like the
-            raw data before indexing and some meta_data will also be
-            stored in the feature. Check
-            :class:`~forte.data.converter.Feature` for more
-            details.
-        Remove feature / Add prediction:
-            Removing feature means remove
-            the existing data in the datapack. If we remove the feature
-            in the pack, then extracting feature will return empty list.
-            Adding prediction means we add the prediction from model
-            back to the datapack. If a datapack has some old data (for
-            example, the golden data in the test set), we can first
-            remove those data and then add our model prediction to
-            the pack.
+        - Vocabulary:
+          Vocabulary is maintained as an attribute
+          in extractor. It will store the mapping from element
+          to index, which is an integer, and representation,
+          which could be an index integer or one-hot vector
+          depending on the configuration of the vocabulary.
+          Check :class:`~forte.data.vocabulary.Vocabulary` for
+          more details.
+        - Feature:
+          A feature basically wraps the data we want from
+          one instance in a datapack. For example, the instance
+          can be one sentence in a datapack. Then the data wrapped
+          by the feature could be the token text of this sentence.
+          The data is already converted as list of indexes using
+          vocabulary. Besides the data, other information like the
+          raw data before indexing and some meta_data will also be
+          stored in the feature. Check
+          :class:`~forte.data.converter.Feature` for more
+          details.
+        - Remove feature / Add prediction:
+          Removing feature means remove
+          the existing data in the datapack. If we remove the feature
+          in the pack, then extracting feature will return empty list.
+          Adding prediction means we add the prediction from model
+          back to the datapack. If a datapack has some old data (for
+          example, the golden data in the test set), we can first
+          remove those data and then add our model prediction to
+          the pack.
 
     Attributes:
-        config: An instance of `Dict` or :class:`~forte.common.Config` that
+        config: An instance of `Dict` or :class:`~forte.common.configuration.Config` that
             provides configurable options. See
             :meth:`~forte.data.base_extractor.BaseExtractor.default_configs`
             for available options and default values.
@@ -111,38 +111,38 @@ class BaseExtractor(ABC):
 
         Here:
 
-        vocab_method (str)
-            What type of vocabulary is used for this extractor. `custom`,
-            `indexing`, `one-hot` are supported, default is `indexing`.
-            Check the behavior of vocabulary under different setting
-            in :class:`~forte.data.vocabulary.Vocabulary`
+        - vocab_method (str)
+          What type of vocabulary is used for this extractor. `custom`,
+          `indexing`, `one-hot` are supported, default is `indexing`.
+          Check the behavior of vocabulary under different setting
+          in :class:`~forte.data.vocabulary.Vocabulary`
 
-        context_type (str): The fully qualified name of the context used to
-            group the extracted features, for example, it could be a
-            `ft.onto.base_ontology.Sentence`. If this is `None`, features from
-            in the whole data pack will be grouped together. Default is None.
-            This value could be mandatory for some processors, which will be
-            documented and specified by the specific processor implementation.
+        - context_type (str): The fully qualified name of the context used to
+          group the extracted features, for example, it could be a
+          `ft.onto.base_ontology.Sentence`. If this is `None`, features from
+          in the whole data pack will be grouped together. Default is None.
+          This value could be mandatory for some processors, which will be
+          documented and specified by the specific processor implementation.
 
-        vocab_use_unk (bool)
-            Whether the `<UNK>` element should be added to vocabulary.
-            Default is true.
+        - vocab_use_unk (bool)
+          Whether the `<UNK>` element should be added to vocabulary.
+          Default is true.
 
-        need_pad (bool)
-            Whether the `<PAD>` element should be added to vocabulary. And
-            whether the feature need to be batched and padded. Default is True.
+        - need_pad (bool)
+          Whether the `<PAD>` element should be added to vocabulary. And
+          whether the feature need to be batched and padded. Default is True.
 
-        pad_value (int)
-            A customized value/representation to be used for
-            padding. This value is only needed when `use_pad` is True.
-            Default is None, where the value of padding is determined by
-            the system.
+        - pad_value (int)
+          A customized value/representation to be used for
+          padding. This value is only needed when `use_pad` is True.
+          Default is None, where the value of padding is determined by
+          the system.
 
-        unk_value (int)
-            A customized value/representation to be used for
-            unknown value (`unk`). This value is only needed when
-            `vocab_use_unk` is True. Default is None, where the value
-            of `UNK` is determined by the system.
+        - unk_value (int)
+          A customized value/representation to be used for
+          unknown value (`unk`). This value is only needed when
+          `vocab_use_unk` is True. Default is None, where the value
+          of `UNK` is determined by the system.
 
         """
         return {
@@ -175,7 +175,7 @@ class BaseExtractor(ABC):
         externally.
 
         Args:
-            vocab (Vocabulary): The vocabulary to be assigned.
+            vocab: The vocabulary to be assigned.
 
         Returns:
 
@@ -243,12 +243,12 @@ class BaseExtractor(ABC):
 
             1. Get all entries of the type of interest, such as all the
             `Token`s in the data pack.
-            2. Use :func:`~forte.data.vocabulary.Vocabulary.add` to add those
+            2. Use :meth:`~forte.data.vocabulary.Vocabulary.add` to add those
             element into `self._vocab`.
 
         Args:
-            pack (DataPack): The input data pack.
-            context (Annotation): The context is an Annotation entry where
+            pack: The input data pack.
+            context: The context is an Annotation entry where
                 features will be extracted within its range. If None, then the
                 whole data pack will be used as the context. Default is None.
         """
@@ -262,8 +262,8 @@ class BaseExtractor(ABC):
         datapack.
 
         Args:
-            pack (DataPack): The input data pack that contains the features.
-            context (Annotation): The context is an Annotation entry where
+            pack: The input data pack that contains the features.
+            context: The context is an Annotation entry where
                 features will be extracted within its range. If None, then the
                 whole data pack will be used as the context. Default is None.
 
@@ -282,8 +282,8 @@ class BaseExtractor(ABC):
         the entry. By default, this function will not do anything.
 
         Args:
-            pack (DataPack): The datapack that contains the current instance.
-            context (Optional[Annotation]): The context is an Annotation entry
+            pack: The datapack that contains the current instance.
+            context: The context is an Annotation entry
                 where data are extracted within its range. If None, then the
                 whole data pack will be used as the context. Default is None.
         """
@@ -314,11 +314,11 @@ class BaseExtractor(ABC):
             3. Add the element to corresponding entry based on the need.
 
         Args:
-            pack (DataPack): The datapack to add predictions back.
-            predictions (Any): This is the output of the model, the format of
+            pack: The datapack to add predictions back.
+            predictions: This is the output of the model, the format of
               which will be determined by the predict function defined in the
               Predictor.
-            context (Optional[Annotation]): The context is an Annotation
+            context: The context is an Annotation
                 entry where predictions will be added to. This has the same
                 meaning with `context` as in
                 :meth:`~forte.data.base_extractor.BaseExtractor.extract`.

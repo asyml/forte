@@ -1,0 +1,35 @@
+name: TESTPYPI
+
+on:
+  push: 
+    tags:
+      - v*
+  # Trigger this workflow manually from the Actions tab
+  workflow_dispatch:
+  
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # Run deploy only on main repo.
+    if: github.repository == 'asyml/forte'
+    env:
+      python-version: 3.7
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ env.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.python-version }}    
+      - name: Install pypa/build
+        run: |
+          python -m pip install build --user
+      - name: Build a binary wheel and a source tarball
+        run: |
+          python -m build --sdist --wheel --outdir dist/ .
+      - name: Publish Python 🐍 distributions 📦 to Test PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          repository_url: https://test.pypi.org/legacy/
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}

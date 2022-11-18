@@ -22,3 +22,20 @@ Pipeline Component
 
 .. autoclass:: forte.pipeline_component.PipelineComponent
     :members:
+
+
+Process
+==================
+
+.. autoclass:: forte.process_job.ProcessJob
+    :members:
+
+:hidden:`ProcessJobStatus`
+---------------------------
+.. autoclass:: forte.process_job.ProcessJobStatus
+    :members:
+
+:hidden:`ProcessManager`
+---------------------------
+.. autoclass:: forte.process_manager.ProcessManager
+    :members:

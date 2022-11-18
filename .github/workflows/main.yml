@@ -29,6 +29,8 @@ jobs:
           - python-version: 3.9
             torch-version: 1.8.1
             tensorflow-version: 2.5.0
+    env:
+      notebook-details-dep: "huggingface nltk"
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
@@ -43,13 +45,18 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
             ${{ runner.os }}-
+
       - name: Install dependencies
         run: |
+          sudo apt-get install -y libsndfile1-dev
           python -m pip install --progress-bar off --upgrade pip
           pip install --progress-bar off Django django-guardian
-          pip install --progress-bar off pylint==2.10.2 flake8==3.9.2 mypy==0.910 pytest==5.1.3 black==20.8b1
+          pip install --progress-bar off pylint==2.10.2 flake8==3.9.2 mypy==0.931 pytest==5.1.3 black==22.3.0
           pip install --progress-bar off types-PyYAML==5.4.8 types-typed-ast==1.4.4 types-requests==2.25.6 types-dataclasses==0.1.7
           pip install --progress-bar off coverage codecov
+          python -m pip install ipykernel
+          python -m ipykernel install --user
+          pip install --progress-bar off asyml-utilities
       - name: Format check with Black
         run: |
           black --line-length 80 --check forte/
@@ -63,21 +70,14 @@ jobs:
           # Simply keep the database file but remove the repo.
           cp stave/simple-backend/db.sqlite3 .
           rm -rf stave
+
+      - name: Install Forte
+        run: |
+          pip install --progress-bar off .[data_aug,ir,remote,audio_ext,stave,models,test,wikipedia,nlp,extractor]
       - name: Install deep learning frameworks
         run: |
           pip install --progress-bar off torch==${{ matrix.torch-version }}
           pip install --progress-bar off tensorflow==${{ matrix.tensorflow-version }}
-      - name: Install Texar
-        run: |
-          git clone https://github.com/asyml/texar-pytorch.git
-          cd texar-pytorch
-          pip install --use-feature=in-tree-build --progress-bar off .
-          cd ..
-          # Remove them to avoid confusion.
-          rm -rf texar-pytorch
-      - name: Install Forte
-        run: |
-          pip install --use-feature=in-tree-build --progress-bar off .[ner,test,example,wikipedia,augment,stave]
       - name: Build ontology
         run: |
           ./scripts/build_ontology_specs.sh
@@ -90,16 +90,139 @@ jobs:
       - name: Lint with pylint
         run: |
           pylint forte/
-      - name: Lint main code with mypy when torch version is not 1.5.0
+      - name: Lint main code with mypy when torch version is not 1.5.0 and python is 3.9
         run: |
-          if [[ ${{ matrix.torch-version }} != "1.5.0" ]]; then mypy forte; fi
+          if [[ ${{ matrix.torch-version }} != "1.5.0" && ${{ matrix.python-version }} == "3.9" ]]; then mypy forte; fi
       - name: Test with pytest and run coverage
         run: |
-          coverage run -m pytest tests
+          coverage run -m pytest tests  --ignore=tests/forte/notebooks --ignore=tests/forte/forte_backbone_test.py
           coverage run --append -m pytest --doctest-modules forte
       - name: Upload coverage
         run: |
           codecov
+      - name: Test notebook tutorials with installing Fortex
+        if: ${{ contains(fromJson('["1.5.0", "1.7.1"]'), matrix.torch-version) }}
+        run: |
+          git clone https://github.com/asyml/forte-wrappers.git
+          cd forte-wrappers
+          for d in ${{ env.notebook-details-dep }}; do pip install "src/"$d; done
+          cd ..
+          if [ ${{ matrix.torch-version }} == "1.5.0" ]
+          then
+            coverage run -m pytest tests/forte/notebooks  --ignore=tests/forte/notebooks/ocr_test.py --ignore=tests/forte/notebooks/tutorial_MT_with_forte_test.py
+          fi
+          if [ ${{ matrix.torch-version }} == "1.7.1" ]
+          then
+            coverage run -m pytest tests/forte/notebooks/tutorial_MT_with_forte_test.py
+          fi
+
+  test_ocr_example:
+    runs-on: ubuntu-latest
+    env:
+      python-version: 3.7
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ env.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.python-version }}
+      - name: Cache pip
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('setup.py') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+            ${{ runner.os }}-
+      - name: ocr test
+        run: |
+          sudo apt-get install -y automake ca-certificates g++ git libtool libleptonica-dev make pkg-config
+          sudo apt install tesseract-ocr
+          pip install --progress-bar off .[ocr_tutorial,test]
+          python tests/forte/notebooks/ocr_test.py
+
+
+  test_backbone:
+    runs-on: ubuntu-latest
+    env:
+      python-version: 3.7
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ env.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.python-version }}
+      - name: Cache pip
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('setup.py') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+            ${{ runner.os }}-
+      - name: Test backbone Forte import test
+        run: |
+          # Try to install Forte backbone only and test basic imports.
+          pip install --progress-bar off .
+          python tests/forte/forte_backbone_test.py
+
+  test_modules:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ 3.6 ]
+        torch-version: [ 1.5.0 ]
+        tensorflow-version: [ 1.15.0 ]
+        modules:
+          - { module: "data_aug", test_file: "tests/forte/processors/data_augment"}
+          - { module: "ir",test_file: "tests/forte/processors/ir/"}
+          - { module: "remote", test_file: "tests/forte/remote_processor_test.py"}
+          - { module: "audio_ext",test_file: "tests/forte/data/readers/audio_reader_test.py"}
+          - { module: "stave",test_file: "tests/forte/data/readers/stave_reader_test.py tests/forte/processors/stave_processor_test.py"}
+          - { module: "models", test_file: "tests/forte/models"}
+          - { module: "wikipedia", test_file: "tests/forte/datasets/wikipedia"}
+          - { module: "nlp",test_file: "tests/forte/processors/subword_tokenizer_test.py tests/forte/processors/pretrained_encoder_processors_test.py"}
+          - { module: "extractor",test_file: "tests/forte/train_preprocessor_test.py forte/data/extractors tests/forte/data/data_pack_dataset_test.py tests/forte/data/converter/converter_test.py"}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Cache pip
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('setup.py') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+            ${{ runner.os }}-
+      - name: install forte
+        run: |
+          pip install --progress-bar off .
+      - name: install dependencies
+        run: |
+          sudo apt-get install -y libsndfile1-dev
+          python -m pip install --progress-bar off --upgrade pip
+          pip install --progress-bar off Django django-guardian
+      - name: Obtain Stave Database Examples
+        run: |
+          git clone https://github.com/asyml/stave.git
+          cd stave/simple-backend
+          python manage.py migrate
+          cat sample_sql/*.sql | sqlite3 db.sqlite3
+          cd ../..
+          # Simply keep the database file but remove the repo.
+          cp stave/simple-backend/db.sqlite3 .
+          rm -rf stave
+      - name: Test modules need extra packages
+        run: |
+          pip install --progress-bar off .[test]
+          pip install --progress-bar off .[${{ matrix.modules.module }}]
+          pip install --progress-bar off torch==${{ matrix.torch-version }}
+          pip install --progress-bar off pytest==5.1.3
+          pytest ${{ matrix.modules.test_file }}
+
   docs:
     needs: build
     runs-on: ubuntu-latest
@@ -122,6 +245,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --progress-bar off --upgrade pip
+          sudo apt-get install pandoc
           pip install --progress-bar off -r requirements.txt
           pip install --progress-bar off -r docs/requirements.txt
           git clone https://github.com/asyml/texar-pytorch.git
@@ -146,3 +270,24 @@ jobs:
           token: ${{ secrets.REPO_DISPATCH_PAT_HECTOR }}
           repository: asyml/forte-wrappers
           event-type: trigger-forte-wrappers
+
+  readme:
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      python-version: 3.9
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ env.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.python-version }}
+
+      - name: Test README.md when python version is 3.9
+        run: |
+          pip install mkcodes
+          pip install --progress-bar off .
+          pip install --progress-bar off forte.spacy nltk
+          mkcodes --github --output tests/temp_readme_test.py README.md
+          python tests/temp_readme_test.py
+          rm tests/temp_readme_test.py

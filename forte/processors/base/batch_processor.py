@@ -163,10 +163,15 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
     @abstractmethod
     def define_batcher(cls) -> ProcessingBatcher:
         r"""Define a specific batcher for this processor.
-        Single pack :class:`BatchProcessor` initialize the batcher to be a
+        Single pack
+        :class:`~forte.processors.base.batch_processor.BaseBatchProcessor`
+        initialize the batcher to be a
         :class:`~forte.data.batchers.ProcessingBatcher`.
-        And :class:`MultiPackBatchProcessor` initialize the batcher to be a
-        :class:`~forte.data.batchers.MultiPackProcessingBatcher`.
+        And
+        :class:`~forte.processors.base.batch_processor.MultiPackBatchProcessor`
+        initialize the batcher to be a
+        :class:`~forte.processors.base.batch_processor.MultiPackBatchProcessor`
+        .
         """
         raise NotImplementedError
 
@@ -178,7 +183,7 @@ class PackingBatchProcessor(BaseBatchProcessor[PackType], ABC):
 
     To implement this processor, one need to implement:
     1. The `predict` function that make predictions for each input data batch.
-    2. The `pack` function that add the prediction value back to the dat pack.
+    2. The `pack` function that add the prediction value back to the data pack.
 
     Users that implement the processor only have to concern about a single
     batch, the alignment between the data batch and the data pack will be
@@ -231,13 +236,13 @@ class PackingBatchProcessor(BaseBatchProcessor[PackType], ABC):
         pack.
 
         Args:
-            pack (PackType): The pack to add entries or fields to.
-            predict_results (Dict): The prediction results returned by
+            pack: The pack to add entries or fields to.
+            predict_results: The prediction results returned by
                 :meth:`~forte.processors.base.batch_processor
                 .BaseBatchProcessor.predict`.
                 This processor will add these results to the provided `pack`
                 as entry and attributes.
-            context (Optional[Annotation]): The context entry that the
+            context: The context entry that the
                 prediction is performed, and the pack operation should
                 be performed related to this range annotation. If None,
                 then we consider the whole data pack is used as the context.
@@ -371,7 +376,7 @@ class Predictor(PackingBatchProcessor[PackType]):
               the extractor.
 
         Returns:
-
+            None
         """
         extractor_utils.add_extractor(
             self._request, name, extractor, is_input, converter
@@ -461,7 +466,7 @@ class Predictor(PackingBatchProcessor[PackType]):
         predictions for the input ``data_batch``.
 
         Args:
-              data_batch (dict): A batch of instances in our ``dict`` format.
+              data_batch: A batch of instances in our ``dict`` format.
 
         Returns:
               The prediction results in dict datasets.
@@ -470,7 +475,7 @@ class Predictor(PackingBatchProcessor[PackType]):
 
 
 class MultiPackBatchProcessor(BaseBatchProcessor[MultiPack], ABC):
-    r"""This class defines the base batch processor for `MultiPack`s."""
+    r"""This class defines the base batch processor for `MultiPack`."""
 
     def __init__(self):
         super().__init__()

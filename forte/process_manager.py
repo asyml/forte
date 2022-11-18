@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+__all__ = ["ProcessManager"]
 from collections import deque
 from typing import List, Deque
 
@@ -41,14 +41,14 @@ class ProcessManager:
             the index of the first UNPROCESSED element in the corresponding
             queue. Length of this list equals the "pipeline_length".
 
-            If unprocessed_queue_indices = [0, 2]
+            If `unprocessed_queue_indices = [0, 2]`
 
                 - This means for the 1st queue, the first UNPROCESSED job is at
-                  index-0. All elements from indices [0, len(queue[0]) ) are
+                  index-0. All elements from indices `[0, len(queue[0]) )` are
                   UNPROCESSED.
 
                 - Similarly, for the 2nd queue, the first UNPROCESSED job is at
-                  index-2. All elements from indices [2, len(queue[1])) are
+                  index-2. All elements from indices `[2, len(queue[1]))` are
                   UNPROCESSED
 
         _processed_queue_indices (List [int]):  Each element of this list is
@@ -64,8 +64,7 @@ class ProcessManager:
                   index-2. All elements from indices [0, 2] are PROCESSED
 
         Args:
-            pipeline_length (int): The length of the current pipeline being
-                executed
+            pipeline_length: The length of the current pipeline being executed
     """
 
     def __init__(self, pipeline_length):
@@ -135,7 +134,7 @@ class ProcessManager:
             job: The job to be added.
 
         Returns:
-
+            None
         """
         if queue_index > len(self._queues):
             raise ValueError(

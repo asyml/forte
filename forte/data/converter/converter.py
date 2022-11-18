@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-from typing import List, Tuple, Any, Optional, Union, Dict
-import numpy as np
-import torch
+from typing import List, Tuple, Any, Optional, Union, Dict, Sequence
 
+import numpy as np
+
+from forte.utils import create_import_error_msg
 from forte.common.configuration import Config
 from forte.common import ValidationError
 from forte.data.converter.feature import Feature
@@ -65,12 +66,12 @@ class Converter:
 
         Here:
 
-            `"to_numpy"`: bool
-                Whether convert to `numpy.ndarray`.
-                Default is True.
+            - `"to_numpy"`: bool
+              Whether convert to `numpy.ndarray`.
+              Default is True.
 
-            `"to_torch"`: bool
-                 Whether convert to `torch.tensor`. Default is True.
+            - `"to_torch"`: bool
+              Whether convert to `torch.tensor`. Default is True.
 
             .. note::
                 If `need_pad` in :class:`forte.data.converter.Feature`
@@ -78,10 +79,10 @@ class Converter:
                 it will raise an exception if the target data cannot be
                 converted to `numpy.ndarray` or `torch.tensor`.
 
-        .. note::
-            If `need_pad` in :class:`forte.data.converter.Feature`
-            is True and `to_torch` is True, `to_torch` will overwrite the
-            effect of `to_numpy`.
+            .. note::
+                If `need_pad` in :class:`forte.data.converter.Feature`
+                is True and `to_torch` is True, `to_torch` will overwrite the
+                effect of `to_numpy`.
         """
         return {"to_numpy": True, "to_torch": True}
 
@@ -103,7 +104,7 @@ class Converter:
 
     def convert(
         self, features: List[Feature]
-    ) -> Tuple[MatrixLike, List[MatrixLike]]:
+    ) -> Tuple[MatrixLike, Sequence[MatrixLike]]:
         """
         Convert a list of Features to matrix-like form, where
 
@@ -129,7 +130,7 @@ class Converter:
         `torch.tensor`.
 
         Args:
-            features (List[Feature]):
+            features:
                 A list of :class:`forte.data.converter.Feature`
 
         Returns:
@@ -240,6 +241,13 @@ class Converter:
             #                  dtype=np.bool)
             # ]
         """
+        if self.to_torch:
+            try:
+                import torch  # pylint: disable=import-outside-toplevel
+            except ImportError as e:
+                raise ImportError(
+                    create_import_error_msg("torch", "extractor", "data module")
+                ) from e
         dtype: Optional[np.dtype] = None
         need_pad: bool = features[0].need_pad
 
@@ -301,7 +309,15 @@ class Converter:
         raise RuntimeError("Invalid converter internal state")
 
     @staticmethod
-    def _padding(features: List[Feature]) -> Optional[torch.dtype]:
+    def _padding(features: List[Feature]):
+        try:
+            import torch  # pylint: disable=import-outside-toplevel
+        except ImportError as e:
+            raise ImportError(
+                create_import_error_msg(
+                    "torch", "extractor", "the extractor system"
+                )
+            ) from e
         # BFS to pad each dimension
         queue: List[Feature] = []
         curr_max_len: int = -1
@@ -335,7 +351,6 @@ class Converter:
                         queue.append(sub_feature)
 
                 size -= 1
-
             curr_max_len = next_max_len
 
         return dtype
@@ -345,5 +360,11 @@ class Converter:
         return np.array(data, dtype=dtype)
 
     @staticmethod
-    def _to_tensor_type(data: List[Any], dtype) -> torch.Tensor:
+    def _to_tensor_type(data: List[Any], dtype):
+        try:
+            import torch  # pylint: disable=import-outside-toplevel
+        except ImportError as e:
+            raise ImportError(
+                create_import_error_msg("torch", "extractor", "data module")
+            ) from e
         return torch.tensor(data, dtype=dtype)

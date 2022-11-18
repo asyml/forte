@@ -18,6 +18,7 @@ DataPack/multiPack processors and Pipeline.
 from typing import Generic, Iterator, TypeVar, Optional, Union, Dict, Any
 
 import re
+import warnings
 
 from forte.common.configuration import Config
 from forte.common.configurable import Configurable
@@ -54,7 +55,7 @@ class Selector(Generic[InputPackType, OutputPackType], Configurable):
 
 class DummySelector(Selector[InputPackType, InputPackType]):
     r"""Do nothing, return the data pack itself, which can be either
-    :class:`DataPack` or :class:`MultiPack`.
+    :class:`~forte.data.data_pack.DataPack` or :class:`~forte.data.multi_pack.MultiPack`.
     """
 
     def select(self, pack: InputPackType) -> Iterator[InputPackType]:
@@ -90,7 +91,8 @@ class SinglePackSelector(Selector[MultiPack, DataPack]):
               selected.
             multi_pack: The original multi pack.
 
-        Returns: A boolean value to indicate whether `pack` will be returned.
+        Returns:
+            A boolean value to indicate whether `pack` will be returned.
         """
         raise NotImplementedError
 
@@ -100,25 +102,43 @@ class SinglePackSelector(Selector[MultiPack, DataPack]):
 
 
 class NameMatchSelector(SinglePackSelector):
-    r"""Select a :class:`DataPack` from a :class:`MultiPack` with specified
-    name.
+    r"""
+    Select a :class:`~forte.data.data_pack.DataPack` from a
+    :class:`~forte.data.multi_pack.MultiPack` with specified
+    name. This implementation takes special care for backward compatibility.
 
-    This implementation takes special care for backward compatability:
     Deprecated:
-        selector = NameMatchSelector(select_name="foo")
-        selector = NameMatchSelector("foo")
+
+        .. code-block:: python
+
+            selector = NameMatchSelector(select_name="foo")
+            selector = NameMatchSelector("foo")
+
     Now:
-        selector = NameMatchSelector()
-        selector.initialize(
-            configs={
-                "select_name": "foo"
-            }
-        )
+
+        .. code-block:: python
+
+            selector = NameMatchSelector()
+                selector.initialize(
+                    configs={
+                        "select_name": "foo"
+                    }
+            )
+
+    WARNING: Passing parameters through __init__ is deprecated, and does not
+    work well with pipeline serialization.
     """
 
     def __init__(self, select_name: Optional[str] = None):
         super().__init__()
         self.select_name = select_name
+        if select_name is not None:
+            warnings.warn(
+                (
+                    "Passing parameters through __init__ is deprecated,"
+                    " and does not work well with pipeline serialization."
+                )
+            )
 
     def will_select(
         self, pack_name: str, pack: DataPack, multi_pack: MultiPack
@@ -148,24 +168,45 @@ class NameMatchSelector(SinglePackSelector):
 
 
 class RegexNameMatchSelector(SinglePackSelector):
-    r"""Select a :class:`DataPack` from a :class:`MultiPack` using a regex.
+    r"""Select a :class:`~forte.data.data_pack.DataPack` from a
+    :class:`~forte.data.multi_pack.MultiPack` using a regex.
 
-    This implementation takes special care for backward compatability:
+    This implementation takes special care for backward compatibility.
+
     Deprecated:
-        selector = RegexNameMatchSelector(select_name="^.*\\d$")
-        selector = RegexNameMatchSelector("^.*\\d$")
+
+        .. code-block:: python
+
+            selector = RegexNameMatchSelector(select_name="^.*\\d$")
+            selector = RegexNameMatchSelector("^.*\\d$")
+
     Now:
-        selector = RegexNameMatchSelector()
-        selector.initialize(
-            configs={
-                "select_name": "^.*\\d$"
-            }
-        )
+
+        .. code-block:: python
+
+            selector = RegexNameMatchSelector()
+            selector.initialize(
+                configs={
+                    "select_name": "^.*\\d$"
+                }
+            )
+
+    WARNING:
+        Passing parameters through __init__ is deprecated, and does not
+        work well with pipeline serialization.
+
     """
 
     def __init__(self, select_name: Optional[str] = None):
         super().__init__()
         self.select_name = select_name
+        if select_name is not None:
+            warnings.warn(
+                (
+                    "Passing parameters through __init__ is deprecated,"
+                    " and does not work well with pipeline serialization."
+                )
+            )
 
     def will_select(
         self, pack_name: str, pack: DataPack, multi_pack: MultiPack
@@ -197,7 +238,7 @@ class RegexNameMatchSelector(SinglePackSelector):
 
 
 class FirstPackSelector(SinglePackSelector):
-    r"""Select the first entry from :class:`MultiPack` and yield it."""
+    r"""Select the first entry from :class:`~forte.data.multi_pack.MultiPack` and yield it."""
 
     def will_select(
         self, pack_name: str, pack: DataPack, multi_pack: MultiPack
@@ -206,7 +247,7 @@ class FirstPackSelector(SinglePackSelector):
 
 
 class AllPackSelector(SinglePackSelector):
-    r"""Select all the packs from :class:`MultiPack` and yield them."""
+    r"""Select all the packs from :class:`~forte.data.multi_pack.MultiPack` and yield them."""
 
     def will_select(
         self, pack_name: str, pack: DataPack, multi_pack: MultiPack

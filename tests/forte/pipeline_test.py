@@ -17,14 +17,17 @@ Unit tests for Pipeline.
 
 import os
 import unittest
-import warnings
+import tempfile
+import shutil
 from dataclasses import dataclass
 from typing import Any, Dict, Iterator, Optional, Set, List
+from unittest.mock import MagicMock
 
 import numpy as np
 from ddt import ddt, data, unpack
 
 from forte.common import ProcessExecutionException, ProcessorConfigError
+from forte.common.exception import ValidationError
 from forte.common.configuration import Config
 from forte.data.base_pack import PackType
 from forte.data.base_reader import PackReader, MultiPackReader
@@ -61,7 +64,7 @@ data_samples_root = os.path.abspath(
     os.path.join(
         os.path.dirname(os.path.realpath(__file__)),
         *([os.path.pardir] * 2),
-        "data_samples"
+        "data_samples",
     )
 )
 
@@ -72,7 +75,7 @@ onto_specs_samples_root = os.path.abspath(
         "forte",
         "data",
         "ontology",
-        "test_specs"
+        "test_specs",
     )
 )
 
@@ -89,7 +92,7 @@ class NewType(Generics):
 
 
 class NothingSelector(SinglePackSelector):
-    """Select no pack from the :class:`MultiPack`"""
+    """Select no pack from the :class:`~forte.data.multi_pack.MultiPack`"""
 
     def select(self, m_pack: MultiPack) -> Iterator[DataPack]:
         yield from []
@@ -1211,6 +1214,30 @@ class DummyEvaluatorThree(Evaluator):
         pass
 
 
+class DummyEvaluatorFour(Evaluator):
+    """This evaluator does nothing, just for test purpose."""
+
+    def pred_pack_record(self, record_meta: Dict[str, Set[str]]):
+        record_meta["Token"] = {"1", "2"}
+
+    def consume_next(self, pred_pack: PackType, ref_pack: PackType):
+        pred_pack_expectation: Dict[str, Set[str]] = {
+            "Sentence": {"1", "2", "3"}
+        }
+        ref_pack_expectation: Dict[str, Set[str]] = {
+            "Sentence": {"1", "2", "3"}
+        }
+
+        self.expected_types_and_attributes(
+            pred_pack_expectation, ref_pack_expectation
+        )
+        self.check_record(pred_pack, ref_pack)
+        self.writes_record(pred_pack, ref_pack)
+
+    def get_result(self):
+        return "Reference name of DummyEvaluatorFour is ref_dummy"
+
+
 class RecordCheckPipelineTest(unittest.TestCase):
     def test_pipeline_reader_record_writing(self):
         """Tests reader record writing"""
@@ -1416,6 +1443,114 @@ class RecordCheckPipelineTest(unittest.TestCase):
                 }
             },
         )
+
+    def test_pipeline_processor_get_eval_result_by_ref_name(self):
+        """Tests to get the processor result by it's reference name"""
+
+        nlp = Pipeline[DataPack](enforce_consistency=True)
+        reader = DummySentenceReaderOne()
+        nlp.set_reader(reader)
+        dummy = DummyEvaluatorFour()
+        nlp.add(dummy, ref_name="ref_dummy")
+        nlp.initialize()
+        data_path = data_samples_root + "/random_texts/0.txt"
+        pack = nlp.process(data_path)
+        self.assertEqual(
+            nlp.get_component("ref_dummy").get_result(),
+            "Reference name of DummyEvaluatorFour is ref_dummy",
+        )
+
+    def test_pipeline_processor_invalid_ref_name(self):
+        """Tests to get the processor result by it's reference name"""
+
+        nlp = Pipeline[DataPack](enforce_consistency=True)
+        reader = DummySentenceReaderOne()
+        nlp.set_reader(reader)
+        dummy = DummyEvaluatorFour()
+        nlp.add(dummy, ref_name="ref_dummy")
+        dummy1 = DummyEvaluatorOne()
+        with self.assertRaises(ValidationError):
+            nlp.add(dummy1, ref_name="ref_dummy")
+        nlp.initialize()
+
+
+class ExportPipelineTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.nlp = Pipeline()
+        self.nlp.set_reader(SentenceReader())
+        self.export_env_var = "FORTE_EXPORT_PATH"
+
+    def test_do_nothing(self):
+        r"""Should do nothing if FORTE_EXPORT_PATH is not set"""
+        self.nlp.save = MagicMock()
+        self.nlp.export()
+        self.nlp.save.assert_not_called()
+
+    def test_default_export(self):
+        r"""Should export pipeline if FORTE_EXPORT_PATH is set"""
+        temp_export_dir = tempfile.TemporaryDirectory()
+        os.environ[self.export_env_var] = temp_export_dir.name
+        ppl_export_path = self.nlp.export()
+        self.assertTrue(os.path.isfile(ppl_export_path))
+
+    def test_auto_create_export_dir(self):
+        r"""Test if auto-gen dir if it does not exist"""
+        temp_export_dir = tempfile.TemporaryDirectory()
+        export_dir = os.path.join(temp_export_dir.name, "randome_dir")
+        os.environ[self.export_env_var] = export_dir
+        ppl_export_path = self.nlp.export()
+        self.assertTrue(os.path.isfile(ppl_export_path))
+
+    def test_named_export(self):
+        r"""Test the export name"""
+        temp_export_dir = tempfile.TemporaryDirectory()
+        os.environ[self.export_env_var] = temp_export_dir.name
+        export_name = "test-commit"
+        self.nlp.export(export_name)
+        ppl_export_path = os.path.join(
+            temp_export_dir.name, f"{export_name}.yml"
+        )
+        self.assertTrue(os.path.isfile(ppl_export_path))
+
+    def test_two_default_export(self):
+        r"""Test two exported pipeline with default name"""
+        temp_export_dir = tempfile.TemporaryDirectory()
+        os.environ[self.export_env_var] = temp_export_dir.name
+        export_path_1 = self.nlp.export()
+        export_path_2 = self.nlp.export()
+        self.assertEqual(len(os.listdir(temp_export_dir.name)), 2)
+        self.assertTrue(os.path.isfile(export_path_1))
+        self.assertTrue(os.path.isfile(export_path_2))
+
+    def test_conflict_export(self):
+        r"""Test conflicting pipeline exporting"""
+        temp_export_dir = tempfile.TemporaryDirectory()
+        os.environ[self.export_env_var] = temp_export_dir.name
+        export_name = "test-export"
+        self.nlp.export(export_name)
+        with self.assertRaises(ValueError):
+            self.nlp.export(export_name)
+
+    def test_two_named_export(self):
+        r"""Test two named pipeline exporting"""
+        temp_export_dir = tempfile.TemporaryDirectory()
+        os.environ[self.export_env_var] = temp_export_dir.name
+        export_name_1 = "test-export-1"
+        export_name_2 = "test-export-2"
+        self.nlp.export(export_name_1)
+        self.nlp.export(export_name_2)
+        export_path_1 = os.path.join(
+            temp_export_dir.name, f"{export_name_1}.yml"
+        )
+        export_path_2 = os.path.join(
+            temp_export_dir.name, f"{export_name_2}.yml"
+        )
+        self.assertTrue(os.path.isfile(export_path_1))
+        self.assertTrue(os.path.isfile(export_path_2))
+
+    def tearDown(self) -> None:
+        if self.export_env_var in os.environ:
+            del os.environ[self.export_env_var]
 
 
 if __name__ == "__main__":

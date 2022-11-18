@@ -20,6 +20,7 @@ from typing import Tuple, List, Dict, Union, Optional, Iterable, Type
 
 from torch import Tensor
 
+
 from forte.common.configuration import Config
 from forte.data.base_extractor import BaseExtractor
 from forte.data.converter.feature import Feature
@@ -74,26 +75,26 @@ class BioSeqTaggingExtractor(BaseExtractor):
         Here, additional parameters are added from the parent class:
 
         - entry_type (str): Required. The fully qualified name of an
-            Annotation entry to extract attribute from. For example,
-            for an NER task, it could be `ft.onto.base_ontology.EntityMention`.
+          Annotation entry to extract attribute from. For example,
+          for an NER task, it could be `ft.onto.base_ontology.EntityMention`.
 
         - attribute (str): Required. The attribute name of the
-            entry from which labels are extracted.
+          entry from which labels are extracted.
 
         - tagging_unit (str): Required. The fully qualified name of the
-            units for tagging, The tagging label will align to the units,
-            e.g: `ft.onto.base_ontology.Token`.
+          units for tagging, The tagging label will align to the units,
+          e.g: `ft.onto.base_ontology.Token`.
 
         - pad_value (int):
-            A customized value/representation to be used for
-            padding. This value is only needed when `use_pad` is True.
-            Default is -100 to follow PyTorch convention.
+          A customized value/representation to be used for
+          padding. This value is only needed when `use_pad` is True.
+          Default is -100 to follow PyTorch convention.
 
         - is_bert (bool):
-            It indicates whether Bert model is used. If true, padding
-            will be added to the beginning and end of a sentence
-            corresponding to the special tokens ([CLS], [SEP])
-            used in Bert. Default is False.
+          It indicates whether Bert model is used. If true, padding
+          will be added to the beginning and end of a sentence
+          corresponding to the special tokens ([CLS], [SEP])
+          used in Bert. Default is False.
 
         For example, the config can be:
 
@@ -127,7 +128,7 @@ class BioSeqTaggingExtractor(BaseExtractor):
         return config
 
     @classmethod
-    def _bio_variance(cls, tag):
+    def _bio_variance(cls, tag: str):
         r"""Return the BIO-schemed augmented tagging scheme, for example,
         if the `tag` is "person", the output would be `B-person`, `I-person`,
         `O-person`.
@@ -135,7 +136,7 @@ class BioSeqTaggingExtractor(BaseExtractor):
         Currently only supports B, I, O label.
 
         Args:
-            tag (str): Tag name.
+            tag: Tag name.
         """
         return [(tag, "B"), (tag, "I"), (None, "O")]
 
@@ -144,7 +145,7 @@ class BioSeqTaggingExtractor(BaseExtractor):
         tag vocabulary without exploring the training data.
 
         Args:
-            predefined (Iterable[str]): A set of pre-defined tags.
+            predefined: A set of pre-defined tags.
         """
         for tag in predefined:
             for element in self._bio_variance(tag):
@@ -156,9 +157,9 @@ class BioSeqTaggingExtractor(BaseExtractor):
         r"""Add all the tag from one instance into the vocabulary.
 
         Args:
-            pack (DataPack): The datapack that contains the current
+            pack: The datapack that contains the current
                 instance.
-            context (Optional[Annotation]): The context is an Annotation entry
+            context: The context is an Annotation entry
                 where features will be extracted within its range. If None,
                 then the whole data pack will be used as the context.
                 Default is None.
@@ -179,9 +180,9 @@ class BioSeqTaggingExtractor(BaseExtractor):
         will be converted to the tag ids (int).
 
         Args:
-            pack (DataPack): The datapack that contains the current
+            pack: The datapack that contains the current
                 instance.
-            context (Annotation): The context is an Annotation entry where
+            context: The context is an Annotation entry where
                 features will be extracted within its range. If None, then the
                 whole data pack will be used as the context. Default is None.
 
@@ -229,8 +230,8 @@ class BioSeqTaggingExtractor(BaseExtractor):
         overwrite this function by yourself.
 
         Args:
-            pack (DataPack): The datapack to be processed.
-            context (Annotation): The context is an Annotation entry where
+            pack: The datapack to be processed.
+            context: The context is an Annotation entry where
                 data are extracted within its range. If None, then the
                 whole data pack will be used as the context. Default is None.
         """
@@ -259,11 +260,11 @@ class BioSeqTaggingExtractor(BaseExtractor):
                remove them.
 
         Args:
-            pack (DataPack): The datapack that contains the current instance.
-            predictions (Iterable[Union[int, Any]]):
+            pack: The datapack that contains the current instance.
+            predictions:
                 This is the output of the model, which contains the index for
                 attributes of one instance.
-            context (Annotation): The context is an Annotation entry where
+            context: The context is an Annotation entry where
                 features will be extracted within its range. If None, then the
                 whole data pack will be used as the context. Default is None.
         """

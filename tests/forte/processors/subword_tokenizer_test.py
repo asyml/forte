@@ -24,7 +24,7 @@ from forte.data.data_pack import DataPack
 from forte.data.readers import StringReader
 from forte.pipeline import Pipeline
 from forte.processors.misc import WhiteSpaceTokenizer
-from forte.processors.nlp import SubwordTokenizer
+from forte.processors.nlp.subword_tokenizer import SubwordTokenizer
 from ft.onto.base_ontology import Subword
 
 

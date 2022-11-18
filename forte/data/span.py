@@ -24,12 +24,13 @@ __all__ = [
 @total_ordering
 class Span:
     r"""A class recording the span of annotations. :class:`Span` objects can
-    be totally ordered according to their :attr:`begin` as the first sort key
-    and :attr:`end` as the second sort key.
+    be totally ordered according to their ``begin`` as
+    the first sort key and ``end`` as the second sort
+    key.
 
     Args:
-        begin (int): The offset of the first character in the span.
-        end (int): The offset of the last character in the span + 1. So the
+        begin: The offset of the first character in the span.
+        end: The offset of the last character in the span + 1. So the
             span is a left-closed and right-open interval ``[begin, end)``.
     """
 
@@ -64,3 +65,10 @@ class Span:
 
     def __hash__(self):
         return hash((self.begin, self.end))
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)

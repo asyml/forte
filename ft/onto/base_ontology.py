@@ -14,16 +14,19 @@ from forte.data.ontology.core import Entry
 from forte.data.ontology.core import FDict
 from forte.data.ontology.core import FList
 from forte.data.ontology.top import Annotation
+from forte.data.ontology.top import AudioAnnotation
 from forte.data.ontology.top import Generics
 from forte.data.ontology.top import Group
 from forte.data.ontology.top import Link
 from forte.data.ontology.top import MultiPackLink
+from forte.data.ontology.top import Payload
 from typing import Dict
 from typing import Iterable
 from typing import List
 from typing import Optional
 
 __all__ = [
+    "Character",
     "Token",
     "Subword",
     "Classification",
@@ -46,10 +49,26 @@ __all__ = [
     "CrossDocEventRelation",
     "ConstituentNode",
     "Title",
+    "Body",
     "MCOption",
     "MCQuestion",
     "MRCQuestion",
+    "Recording",
+    "AudioUtterance",
+    "AudioPayload",
+    "TextPayload",
+    "ImagePayload",
 ]
+
+
+@dataclass
+class Character(Annotation):
+    """
+    A span based annotation :class:`Character`, used to represent a character.
+    """
+
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
 
 
 @dataclass
@@ -473,6 +492,16 @@ class Title(Annotation):
 
 
 @dataclass
+class Body(Annotation):
+    """
+    A span based annotation `Body`, normally used to represent a document body.
+    """
+
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
+
+
+@dataclass
 class MCOption(Annotation):
 
     def __init__(self, pack: DataPack, begin: int, end: int):
@@ -512,3 +541,68 @@ class MRCQuestion(Annotation):
         super().__init__(pack, begin, end)
         self.qid: Optional[int] = None
         self.answers: FList[Phrase] = FList(self)
+
+
+@dataclass
+class Recording(AudioAnnotation):
+    """
+    A span based annotation `Recording`, normally used to represent a recording.
+    Attributes:
+        recording_class (List[str]):	A list of class names that the recording belongs to.
+    """
+
+    recording_class: List[str]
+
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
+        self.recording_class: List[str] = []
+
+
+@dataclass
+class AudioUtterance(AudioAnnotation):
+    """
+    A span based annotation `AudioUtterance`, normally used to represent an utterance in dialogue.
+    Attributes:
+        speaker (Optional[str]):
+    """
+
+    speaker: Optional[str]
+
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
+        self.speaker: Optional[str] = None
+
+
+@dataclass
+class AudioPayload(Payload):
+    """
+    A payload that caches audio data
+    Attributes:
+        sample_rate (Optional[int]):
+    """
+
+    sample_rate: Optional[int]
+
+    def __init__(self, pack: DataPack, payload_idx: int = 0, uri: Optional[str] = None):
+        super().__init__(pack, payload_idx, uri)
+        self.sample_rate: Optional[int] = None
+
+
+@dataclass
+class TextPayload(Payload):
+    """
+    A payload that caches text data
+    """
+
+    def __init__(self, pack: DataPack, payload_idx: int = 0, uri: Optional[str] = None):
+        super().__init__(pack, payload_idx, uri)
+
+
+@dataclass
+class ImagePayload(Payload):
+    """
+    A payload that caches image data
+    """
+
+    def __init__(self, pack: DataPack, payload_idx: int = 0, uri: Optional[str] = None):
+        super().__init__(pack, payload_idx, uri)

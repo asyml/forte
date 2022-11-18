@@ -12,18 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import yaml
-
 from termcolor import colored
 import torch
 
-from forte.nltk import NLTKSentenceSegmenter, NLTKWordTokenizer, NLTKPOSTagger
+from fortex.nltk import NLTKSentenceSegmenter, NLTKWordTokenizer, NLTKPOSTagger
 from forte.common.configuration import Config
 from forte.data.multi_pack import MultiPack
 from forte.data.readers import MultiPackTerminalReader
 from forte.common.resources import Resources
 from forte.pipeline import Pipeline
 from forte.processors.third_party import MicrosoftBingTranslator
-from forte.processors.nlp import SRLPredictor
+from forte.processors.nlp.srl_predictor import SRLPredictor
 from forte.processors.ir import SearchProcessor, BertBasedQueryCreator
 from forte.data.selector import NameMatchSelector
 from ft.onto.base_ontology import PredicateLink, Sentence
@@ -45,7 +44,7 @@ def setup(config: Config) -> Pipeline:
     )
     query_pipeline.add(component=SearchProcessor(), config=config.searcher)
 
-    top_response_pack_name = config.indexer.response_pack_name + "_0"
+    top_response_pack_name = config.indexer.response_pack_name_prefix + "_0"
 
     query_pipeline.add(
         component=NLTKSentenceSegmenter(),

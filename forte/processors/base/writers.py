@@ -63,8 +63,8 @@ def write_pack(
         overwrite: Whether to overwrite the file if already exists.
         drop_record: Whether to drop the creation records in the serialization.
         serialize_method: The method used to serialize the data. Current
-          available options are "jsonpickle" and "pickle".
-          Default is "jsonpickle".
+          available options are `jsonpickle` and `pickle`.
+          Default is `jsonpickle`.
 
     Returns:
         If successfully written, will return the path of the output file.
@@ -144,7 +144,7 @@ class PackWriter(PackProcessor, ABC):
              the default value is False.
 
           - serialize_method: The method used to serialize the data. Current
-              available options are "jsonpickle" and "pickle". Default is
+              available options are `jsonpickle` and `pickle`. Default is
               "jsonpickle".
 
         Returns: The default configuration of this writer.

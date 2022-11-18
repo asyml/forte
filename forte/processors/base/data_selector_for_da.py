@@ -44,7 +44,7 @@ class BaseDataSelector(PackReader, ABC):
 
 class BaseElasticSearchDataSelector(BaseDataSelector):
     r"""The base elastic search indexer for data selector. This class creates
-    an :class:`~forte.indexers.elastic_indexer.ElasticSearchIndexer`
+    an :class:`~fortex.elastic.elastic_indexer.ElasticSearchIndexer`
     and searches for documents according to the user-provided search keys.
     Currently supported search criteria: random-based and query-based. It
     then yields the corresponding datapacks of the selected documents.
@@ -72,7 +72,7 @@ class BaseElasticSearchDataSelector(BaseDataSelector):
         config = super().default_configs()
         config.update(
             {
-                "indexer_class": "forte.elastic.elastic_indexer.ElasticSearchIndexer",
+                "indexer_class": "fortex.elastic.elastic_indexer.ElasticSearchIndexer",
                 "index_config": {
                     "index_name": "elastic_indexer",
                     "hosts": "localhost:9200",

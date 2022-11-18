@@ -42,12 +42,19 @@ class TestTypoReplacementOp(unittest.TestCase):
         data_pack.add_entry(token_2)
         data_pack.add_entry(token_3)
 
-        self.assertIn(
-            self.tyre.replace(token_1)[1],
-            ["auxilliary", "auxilary", "auxillary"],
+        augmented_data_pack = self.tyre.perform_augmentation(data_pack)
+        augmented_tokens = list(
+            augmented_data_pack.get("ft.onto.base_ontology.Token")
         )
-        self.assertIn(self.tyre.replace(token_2)[1], ["collegue", "colleaque"])
-        self.assertIn(self.tyre.replace(token_3)[1], ["apple"])
+
+        expected_tokens = [
+            ["auxilliary", "auxilary", "auxillary"],
+            ["collegue", "colleaque"],
+            ["apple"],
+        ]
+
+        for aug, exp in zip(augmented_tokens, expected_tokens):
+            self.assertIn(aug.text, exp)
 
 
 if __name__ == "__main__":

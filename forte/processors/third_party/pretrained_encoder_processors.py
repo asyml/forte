@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import texar.torch as tx
-import torch
 
 from forte.common.configuration import Config
 from forte.common.resources import Resources
@@ -21,6 +19,8 @@ from forte.data.data_pack import DataPack
 from forte.data.ontology.top import Annotation
 from forte.processors.base import PackProcessor
 from forte.utils.utils import get_class
+from forte.utils import create_import_error_msg
+
 
 __all__ = [
     "PretrainedEncoder",
@@ -31,7 +31,7 @@ class PretrainedEncoder(PackProcessor):
     r"""A wrapper of Texar pre-trained encoders.
 
     This processor will compute the embedding vectors for entries of type
-    ``Annotation`` using pre-trained models. The user can specify the
+    :class:`~forte.data.ontology.top.Annotation` using pre-trained models. The user can specify the
     pre-trained model type and the annotation class name via configuration.
     For the full list of pre-trained models supported, see
     :meth:`default_config` for more details. The processor will add embedding
@@ -44,6 +44,12 @@ class PretrainedEncoder(PackProcessor):
         self.tokenizer = None
         self.encoder = None
         self.entry_type = None
+        try:
+            import texar.torch as tx  # pylint: disable=import-outside-toplevel
+        except ImportError as err:
+            raise ImportError(
+                create_import_error_msg("texar-pytorch", "nlp", "NLP support")
+            ) from err
         self.name2tokenizer = {
             "bert-base-uncased": tx.data.BERTTokenizer,
             "bert-large-uncased": tx.data.BERTTokenizer,
@@ -127,6 +133,12 @@ class PretrainedEncoder(PackProcessor):
             raise ValueError("entry_type must be annotation type.")
 
     def _process(self, input_pack: DataPack):
+        try:
+            import torch  # pylint: disable=import-outside-toplevel
+        except ImportError as err:
+            raise ImportError(
+                create_import_error_msg("texar-pytorch", "nlp", "NLP support")
+            ) from err
         for entry in input_pack.get(entry_type=self.entry_type):  # type: ignore
             input_ids, segment_ids, _ = self.tokenizer.encode_text(
                 text_a=entry.text

@@ -14,12 +14,15 @@
 import itertools as it
 import logging
 import os
+import warnings
 from abc import ABC
 from pathlib import Path
-from typing import Optional, Any, List, Dict, Set, Tuple
+from typing import Optional, Any, List, Dict, Set, Tuple, cast
+from numpy import ndarray
 
 from forte.data.ontology.code_generation_exceptions import (
     CodeGenerationException,
+    OntologyGenerationWarning,
 )
 from forte.data.ontology.ontology_code_const import (
     SUPPORTED_PRIMITIVES,
@@ -172,10 +175,10 @@ class ImportManager:
             if class_name not in self.__short_name_pool:
                 self.__short_name_pool.add(class_name)
             else:
-                logging.warning(
-                    "Re-declared a new class named [%s]"
+                warnings.warn(
+                    f"Re-declared a new class named [{class_name}]"
                     ", which is probably used in import.",
-                    class_name,
+                    OntologyGenerationWarning,
                 )
             self.__defining_names[full_name] = class_name
 
@@ -377,6 +380,51 @@ class NonCompositeProperty(Property):
 
     def default_value(self) -> str:
         return repr(self.default_val)
+
+    def to_field_value(self):
+        return self.name
+
+
+class NdArrayProperty(Property):
+    """
+    NdArrayProperty accepts parsed properties of NdArray and
+    instructs import manager to import and instanciate FNdArray
+    as default value in the generated code.
+    """
+
+    def __init__(
+        self,
+        import_manager: ImportManager,
+        name: str,
+        ndarray_dtype: Optional[str] = None,
+        ndarray_shape: Optional[List[int]] = None,
+        description: Optional[str] = None,
+        default_val: Optional[ndarray] = None,
+    ):
+        self.type_str = "forte.data.ontology.core.FNdArray"
+        super().__init__(
+            import_manager,
+            name,
+            self.type_str,
+            description=description,
+            default_val=default_val,
+        )
+        self.ndarray_dtype: Optional[str] = ndarray_dtype
+        self.ndarray_shape: Optional[List[int]] = ndarray_shape
+
+    def internal_type_str(self) -> str:
+        type_str = self.import_manager.get_name_to_use(self.type_str)
+        return f"{type_str}"
+
+    def default_value(self) -> str:
+        if self.ndarray_dtype is None:
+            return f"FNdArray(shape={self.ndarray_shape}, dtype={self.ndarray_dtype})"
+        else:
+            return f"FNdArray(shape={self.ndarray_shape}, dtype='{self.ndarray_dtype}')"
+
+    def _full_class(self):
+        item_type = self.import_manager.get_name_to_use(self.type_str)
+        return item_type
 
     def to_field_value(self):
         return self.name
@@ -608,7 +656,10 @@ class ModuleWriter:
         self.entries.append((entry_name, entry_item))
 
     def make_module_dirs(
-        self, tempdir: str, destination: str, include_init: bool
+        self,
+        tempdir: str,
+        destination: str,
+        namespace_depth: int,
     ):
         """
         Create entry sub-directories with .generated file to indicate the
@@ -620,13 +671,22 @@ class ModuleWriter:
               first generated here.
             destination: The destination directory where the code should be
               placed
-            include_init: True if `__init__.py` is to be generated in existing
-              packages in which `__init__.py` does not already exists
+            namespace_depth: set an integer argument namespace_depth to allow
+              customized number of levels of namespace packaging.
+              The generation of __init__.py for all the directory
+              levels above namespace_depth will be disabled.
+              For example, if we have an ontology level1.levle2.level3.
+              something and namespace_depth=2, then we remove __init__.py
+              under level1 and level1/level2 while keeping __init__.py under
+              level1/level2/level3.
+              When namespace_depth<=0, we just disable namespace packaging
+              and include __init__.py in all directory levels.
         Returns:
         """
         entry_dir_split = split_file_path(self.pkg_dir)
 
         rel_dir_paths = it.accumulate(entry_dir_split, os.path.join)
+        count = 1
         for rel_dir_path in rel_dir_paths:
             temp_path = os.path.join(tempdir, rel_dir_path)
             if not os.path.exists(temp_path):
@@ -638,26 +698,42 @@ class ModuleWriter:
                 Path(os.path.join(temp_path, AUTO_GEN_FILENAME)).touch()
 
             # Create init file
-            if not dest_path_exists or include_init:
-                init_file_path = os.path.join(temp_path, "__init__.py")
-                with open(init_file_path, "w", encoding="utf-8") as init_file:
-                    init_file.write(f"# {AUTO_GEN_SIGNATURE}\n")
+            if count > namespace_depth:
+                if not dest_path_exists:
+                    init_file_path = os.path.join(temp_path, "__init__.py")
+                    with open(
+                        init_file_path, "w", encoding="utf-8"
+                    ) as init_file:
+                        init_file.write(f"# {AUTO_GEN_SIGNATURE}\n")
+            count += 1
 
-    def write(self, tempdir: str, destination: str, include_init: bool):
+    def write(
+        self,
+        tempdir: str,
+        destination: str,
+        namespace_depth: int,
+    ):
         """
         Write the entry information to file.
 
         Args:
             tempdir: A temporary directory for writing intermediate files.
             destination: The actual folder to place the generated code.
-            include_init: Whether to include `__init__.py` in the existing
-            directories if it does not already exist.
-
+            namespace_depth: set an integer argument namespace_depth to allow
+              customized number of levels of namespace packaging.
+              The generation of __init__.py for all the directory
+              levels above namespace_depth will be disabled.
+              For example, if we have an ontology level1.levle2.level3.
+              something and namespace_depth=2, then we remove __init__.py
+              under level1 and level1/level2 while keeping __init__.py under
+              level1/level2/level3.
+              When namespace_depth<=0, we just disable namespace packaging
+              and include __init__.py in all directory levels.
         Returns:
 
         """
 
-        self.make_module_dirs(tempdir, destination, include_init)
+        self.make_module_dirs(tempdir, destination, namespace_depth)
         full_path = os.path.join(tempdir, self.pkg_dir, self.file_name) + ".py"
 
         with open(full_path, "w", encoding="utf-8") as f:
@@ -721,7 +797,7 @@ class EntryTreeNode:
         self.children: List[EntryTreeNode] = []
         self.parent: Optional[EntryTreeNode] = None
         self.name: str = name
-        self.attributes: Set[str] = set()
+        self.attributes: Set[Tuple[str, str]] = set()
 
     def __repr__(self):
         r"""for printing purpose."""
@@ -741,7 +817,7 @@ class EntryTree:
         self,
         curr_entry_name: str,
         parent_entry_name: str,
-        curr_entry_attr: Set[str],
+        curr_entry_attr: Set[Tuple[str, str]],
     ):
         r"""Add a tree node with `curr_entry_name` as a child to
         `parent_entry_name` in the tree, the attributes `curr_entry_attr`
@@ -780,7 +856,9 @@ class EntryTree:
 
         Args:
             node_dict: the nodes dictionary of nodes to collect parent nodes
-                for.
+                for. The entry represented by nodes in this dictionary do not store
+                type information of its attributes. This dictionary does not store
+                the type information of the nodes.
 
         """
         input_node_dict = node_dict.copy()
@@ -788,9 +866,9 @@ class EntryTree:
             found_node = search(self.root, search_node_name=node_name)
             if found_node is not None:
                 while found_node.parent.name != "root":
-                    node_dict[
-                        found_node.parent.name
-                    ] = found_node.parent.attributes
+                    node_dict[found_node.parent.name] = set(
+                        val[0] for val in found_node.parent.attributes
+                    )
                     found_node = found_node.parent
 
     def todict(self) -> Dict[str, Any]:
@@ -830,12 +908,18 @@ class EntryTree:
 
         if parent_entry_name is None:
             self.root = EntryTreeNode(name=tree_dict["name"])
-            self.root.attributes = set(tree_dict["attributes"])
+            self.root.attributes = set(
+                cast(Tuple[str, str], tuple(attr))
+                for attr in tree_dict["attributes"]
+            )
         else:
             self.add_node(
                 curr_entry_name=tree_dict["name"],
                 parent_entry_name=parent_entry_name,
-                curr_entry_attr=set(tree_dict["attributes"]),
+                curr_entry_attr=set(
+                    cast(Tuple[str, str], tuple(attr))
+                    for attr in tree_dict["attributes"]
+                ),
             )
         for child in tree_dict["children"]:
             self.fromdict(child, tree_dict["name"])

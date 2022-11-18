@@ -16,10 +16,8 @@
 import logging
 import os
 from typing import Dict, List, Optional, Tuple
-
 import numpy as np
-import torch
-
+from forte.utils import create_import_error_msg
 from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
@@ -28,6 +26,14 @@ from forte.models.ner import utils
 from forte.models.ner.model_factory import BiRecurrentConvCRF
 from forte.processors.base.batch_processor import RequestPackingProcessor
 from ft.onto.base_ontology import Token, EntityMention
+
+try:
+    import torch
+except ImportError as e:
+    raise ImportError(
+        create_import_error_msg("torch", "models", "ner predictor")
+    ) from e
+
 
 logger = logging.getLogger(__name__)
 
@@ -43,8 +49,8 @@ class CoNLLNERPredictor(RequestPackingProcessor):
     <https://arxiv.org/abs/1603.01354>`_.
 
     Note that to use :class:`CoNLLNERPredictor`, the :attr:`ontology` of
-    :class:`Pipeline` must be an ontology that include
-    ``ft.onto.base_ontology.Token`` and ``ft.onto.base_ontology.Sentence``.
+    :class:`~forte.pipeline.Pipeline` must be an ontology that include
+    :class:`ft.onto.base_ontology.Token` and :class:`ft.onto.base_ontology.Sentence`.
     """
 
     def __init__(self):
@@ -124,7 +130,7 @@ class CoNLLNERPredictor(RequestPackingProcessor):
     @torch.no_grad()
     def predict(
         self, data_batch: Dict[str, Dict[str, List[str]]]
-    ) -> Dict[str, Dict[str, List[np.array]]]:
+    ) -> Dict[str, Dict[str, List[np.ndarray]]]:
         tokens = data_batch["Token"]
 
         instances = []

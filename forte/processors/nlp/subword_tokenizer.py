@@ -19,7 +19,6 @@ __all__ = [
 
 from typing import List, Tuple, Iterator, Dict, Set
 
-from texar.torch.data.tokenizers.bert_tokenizer import BERTTokenizer
 
 from forte.common import Resources
 from forte.common.configuration import Config
@@ -27,8 +26,16 @@ from forte.data.data_pack import DataPack
 from forte.data.ontology import Annotation
 from forte.processors.base import PackProcessor
 from forte.utils.utils import DiffAligner
+from forte.utils import create_import_error_msg
 from ft.onto.base_ontology import Subword
 
+
+try:
+    from texar.torch.data.tokenizers.bert_tokenizer import BERTTokenizer
+except ImportError as err1:
+    raise ImportError(
+        create_import_error_msg("texar-pytorch", "nlp", "NLP support")
+    ) from err1
 
 # This should probably be named as `BertTokenizer`.
 class SubwordTokenizer(PackProcessor):
@@ -38,6 +45,7 @@ class SubwordTokenizer(PackProcessor):
 
     def __init__(self):
         super().__init__()
+
         self.tokenizer: BERTTokenizer = None
         self.aligner: DiffAligner = None
         self.__do_lower_case = True
@@ -97,8 +105,9 @@ class SubwordTokenizer(PackProcessor):
         Args:
             text: Input text to be tokenized.
 
-        Returns: A iterator of tokenization result in the form of triplets of
-        (word, (begin, end)).
+        Returns:
+            A iterator of tokenization result in the form of triplets of
+            (word, (begin, end)).
         """
         basic_tokens: List[str] = self.tokenizer.basic_tokenizer.tokenize(
             text, never_split=self.tokenizer.all_special_tokens
@@ -147,8 +156,9 @@ class SubwordTokenizer(PackProcessor):
         Args:
             record_meta: the field in the data pack storing type records needed
                 in for consistency checking.
-        Returns:
 
+        Returns:
+            None
         """
         record_meta["ft.onto.base_ontology.Subword"] = {
             "is_unk",
@@ -176,30 +186,31 @@ class SubwordTokenizer(PackProcessor):
         """Returns the configuration with default values.
 
         Here:
-          - `tokenizer_configs` contains all default
-              hyper-parameters in
-              :class:`~texar.torch.data.tokenizer.bert_tokenizer.BERTTokenizer`,
-              this processor will pass on all the configurations to the
-              tokenizer to create the tokenizer instance.
 
-          - `segment_unit` contains an Annotation entry type used to split the
-              text into smaller units. For example, setting this to
-              `ft.onto.base_ontology.Sentence` will make this tokenizer do
-              tokenization on a sentence base, which could be more efficient
-              when the alignment is used.
+        - `tokenizer_configs` contains all default hyper-parameters in
+          :class:`~texar.torch.data.tokenizer.bert_tokenizer.BERTTokenizer`,
+          this processor will pass on all the configurations to the
+          tokenizer to create the tokenizer instance.
 
-          - `token_source` contains entry name of where the tokens come from.
-               For example, setting this to `ft.onto.base_ontology.Token` will
-               make this tokenizer split the sub-word based on this token. The
-               default value will use `ft.onto.base_ontology.Token`. If this
-               value is set to None, then it will use `word_tokenization`
-               function of this class to do tokenization.
+        - `segment_unit` contains an Annotation entry type used to split the
+          text into smaller units. For example, setting this to
+          `ft.onto.base_ontology.Sentence` will make this tokenizer do
+          tokenization on a sentence base, which could be more efficient
+          when the alignment is used.
+
+        - `token_source` contains entry name of where the tokens come from.
+          For example, setting this to `ft.onto.base_ontology.Token` will
+          make this tokenizer split the sub-word based on this token. The
+          default value will use `ft.onto.base_ontology.Token`. If this
+          value is set to None, then it will use `word_tokenization`
+          function of this class to do tokenization.
 
         Note that if `segment_unit` or `token_source` is provided, the
         :meth:`~forte.processors.base.base_processor.BaseProcessor.check_record`
-         will check if certain types are written before this processor.
+        will check if certain types are written before this processor.
 
         Returns: Default configuration value for the tokenizer.
+
         """
         return {
             "tokenizer_configs": BERTTokenizer.default_hparams(),

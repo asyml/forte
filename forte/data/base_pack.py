@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 import copy
 import gzip
 import pickle
@@ -27,17 +28,36 @@ from typing import (
     Union,
     Iterator,
     Dict,
-    Tuple,
     Any,
     Iterable,
 )
-
+from functools import partial
+from inspect import isclass
+from typing_inspect import is_forward_ref
+from packaging.version import Version
 import jsonpickle
 
 from forte.common import ProcessExecutionException, EntryNotFoundError
-from forte.data.container import EntryContainer
 from forte.data.index import BaseIndex
-from forte.data.ontology.core import Entry, EntryType, GroupType, LinkType
+from forte.data.base_store import BaseStore
+from forte.data.container import EntryContainer
+from forte.data.ontology.core import (
+    Entry,
+    EntryType,
+    GroupType,
+    LinkType,
+    FList,
+    FDict,
+    FNdArray,
+    ENTRY_TYPE_DATA_STRUCTURES,
+)
+from forte.version import (
+    PACK_VERSION,
+    DEFAULT_PACK_VERSION,
+    PACK_ID_COMPATIBLE_VERSION,
+)
+
+logger = logging.getLogger(__name__)
 
 __all__ = ["BasePack", "BaseMeta", "PackType"]
 
@@ -88,25 +108,26 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
     :class:`~forte.data.multi_pack.MultiPack`.
 
     Args:
-        pack_name (str, optional): a string name of the pack.
+        pack_name: a string name of the pack.
 
     """
 
     # pylint: disable=too-many-public-methods
     def __init__(self, pack_name: Optional[str] = None):
         super().__init__()
-        self.links: List[LinkType] = []
-        self.groups: List[GroupType] = []
+        self.pack_version: str = PACK_VERSION
 
         self._meta: BaseMeta = self._init_meta(pack_name)
         self._index: BaseIndex = BaseIndex()
 
+        self._data_store: BaseStore
+
         self.__control_component: Optional[str] = None
 
-        # This Dict maintains a mapping from entry's tid to the Entry object
-        # itself and the component name associated with the entry.
+        # This Dict maintains a mapping from entry's tid to the component
+        # name associated with the entry.
         # The component name is used for tracking the "creator" of this entry.
-        self._pending_entries: Dict[int, Tuple[Entry, Optional[str]]] = {}
+        self._pending_entries: Dict[int, Optional[str]] = {}
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -116,6 +137,20 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         return state
 
     def __setstate__(self, state):
+        # Pack version checking. We will no longer provide support for
+        # serialized Pack whose "pack_version" is less than
+        # PACK_ID_COMPATIBLE_VERSION.
+        pack_version: str = (
+            state["pack_version"]
+            if "pack_version" in state
+            else DEFAULT_PACK_VERSION
+        )
+        if Version(pack_version) < Version(PACK_ID_COMPATIBLE_VERSION):
+            raise ValueError(
+                "The pack cannot be deserialized because its version "
+                f"{pack_version} is outdated. We only support pack with "
+                f"version greater or equal to {PACK_ID_COMPATIBLE_VERSION}"
+            )
         super().__setstate__(state)
         if "meta" in self.__dict__:
             self._meta = self.__dict__.pop("meta")
@@ -181,8 +216,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
               serialization.
             serialize_method: The method used to serialize the data, this
               should be the same as how serialization is done. The current
-              options are "jsonpickle" and "pickle". The default method
-              is "jsonpickle".
+              options are `jsonpickle` and `pickle`. The default method
+              is `jsonpickle`.
             zip_pack: Boolean value indicating whether the input source is
               zipped.
 
@@ -198,13 +233,19 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             with _open(data_source, mode="rb") as f:  # type: ignore
                 pack = pickle.load(f)
 
+            if not hasattr(pack, "pack_version"):
+                pack.pack_version = DEFAULT_PACK_VERSION
+
         return pack  # type: ignore
 
     @classmethod
     def from_string(cls, data_content: str) -> "BasePack":
-        return jsonpickle.decode(data_content)
+        pack = jsonpickle.decode(data_content)
+        if not hasattr(pack, "pack_version"):
+            pack.pack_version = DEFAULT_PACK_VERSION
 
-    @abstractmethod
+        return pack
+
     def delete_entry(self, entry: EntryType):
         r"""Remove the entry from the pack.
 
@@ -212,20 +253,27 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             entry: The entry to be removed.
 
         Returns:
-
+            None
         """
-        raise NotImplementedError
+        self._data_store.delete_entry(tid=entry.tid)
+
+        # update basic index
+        self._index.remove_entry(entry)
+
+        # set other index invalid
+        self._index.turn_link_index_switch(on=False)
+        self._index.turn_group_index_switch(on=False)
 
     def add_entry(
-        self, entry: Entry, component_name: Optional[str] = None
+        self, entry: Union[Entry, int], component_name: Optional[str] = None
     ) -> EntryType:
         r"""Add an :class:`~forte.data.ontology.core.Entry` object to the
-        :class:`BasePack` object. Allow duplicate entries in a pack.
+        :class:`~forte.data.base_pack.BasePack` object. Allow duplicate entries in a pack.
 
         Args:
-            entry (Entry): An :class:`~forte.data.ontology.core.Entry`
+            entry: An :class:`~forte.data.ontology.core.Entry`
                 object to be added to the pack.
-            component_name (str): A name to record that the entry is created by
+            component_name: A name to record that the entry is created by
              this component.
 
         Returns:
@@ -237,12 +285,12 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         return self._add_entry(entry)
 
     @abstractmethod
-    def _add_entry(self, entry: Entry) -> EntryType:
+    def _add_entry(self, entry: Union[Entry, int]) -> EntryType:
         r"""Add an :class:`~forte.data.ontology.core.Entry` object to the
-        :class:`BasePack` object. Allow duplicate entries in a pack.
+        :class:`~forte.data.base_pack.BasePack` object. Allow duplicate entries in a pack.
 
         Args:
-            entry (Entry): An :class:`~forte.data.ontology.core.Entry`
+            entry: An :class:`~forte.data.ontology.core.Entry`
                 object to be added to the pack.
 
         Returns:
@@ -256,12 +304,12 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         pack manually.
 
         Args:
-            component (str): Overwrite the component record with this.
+            component: Overwrite the component record with this.
 
         Returns:
-
+            None
         """
-        for entry, c in list(self._pending_entries.values()):
+        for entry, c in list(self._pending_entries.items()):
             c_ = component if component else c
             self.add_entry(entry, c_)
         self._pending_entries.clear()
@@ -309,8 +357,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             zip_pack: Whether to compress the result with `gzip`.
             drop_record: Whether to drop the creation records, default is False.
             serialize_method: The method used to serialize the data. Currently
-              supports "jsonpickle" (outputs str) and Python's built-in
-              "pickle" (outputs bytes).
+              supports `jsonpickle` (outputs str) and Python's built-in
+              `pickle` (outputs bytes).
             indent: Whether to indent the file if written as JSON.
 
         Returns: Results of serialization.
@@ -326,7 +374,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
         if serialize_method == "pickle":
             with _open(output_path, mode="wb") as pickle_out:
-                pickle.dump(self, pickle_out)  # type:ignore
+                pickle.dump(self, pickle_out)
         elif serialize_method == "jsonpickle":
             with _open(output_path, mode="wt", encoding="utf-8") as json_out:
                 json_out.write(
@@ -352,7 +400,9 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         """
         self.__control_component = component
 
-    def record_entry(self, entry: Entry, component_name: Optional[str] = None):
+    def record_entry(
+        self, entry: Union[Entry, int], component_name: Optional[str] = None
+    ):
         c = component_name
 
         if c is None:
@@ -360,10 +410,11 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             c = self.__control_component
 
         if c is not None:
+            tid: int = entry.tid if isinstance(entry, Entry) else entry
             try:
-                self._creation_records[c].add(entry.tid)
+                self._creation_records[c].add(tid)
             except KeyError:
-                self._creation_records[c] = {entry.tid}
+                self._creation_records[c] = {tid}
 
     def record_field(self, entry_id: int, field_name: str):
         """
@@ -386,16 +437,33 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                 self._field_records[c] = {(entry_id, field_name)}
 
     def on_entry_creation(
-        self, entry: Entry, component_name: Optional[str] = None
+        self,
+        entry: Entry,
+        component_name: Optional[str] = None,
     ):
         """
         Call this when adding a new entry, will be called
         in :class:`~forte.data.ontology.core.Entry` when
-        its `__init__` function is called.
+        its `__init__` function is called. This method does
+        the following 2 operations with regards to creating
+        a new entry.
+
+        - All ``dataclass`` attributes of the entry to be created
+            are stored in the class level dictionary of
+            :class:`~forte.data.ontology.core.Entry` called
+            ``cached_attributes_data``. This is used to initialize
+            the corresponding entry's objects data store entry
+        - On creation of the data store entry, this methods associates
+            ``getter`` and ``setter`` properties to all `dataclass`
+            attributes of this entry to allow direct interaction
+            between the attributes of the entry and their copy being
+            stored in the data store. For example, the `setter` method
+            updates the data store value of an attribute of a given entry
+            whenever the attribute in the entry's object is updated.
 
         Args:
-            entry (Entry): The entry to be added.
-            component_name (str): A name to record that the entry is created by
+            entry: The entry to be added.
+            component_name: A name to record that the entry is created by
              this component.
 
         Returns:
@@ -407,32 +475,274 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             # Use the auto-inferred control component.
             c = self.__control_component
 
+        def entry_getter(cls: Entry, attr_name: str):
+            """A getter function for dataclass fields of entry object.
+            Depending on the value stored in the data store and the type
+            of the attribute, the method decides how to process the value.
+
+            - Attributes repersented as ``FList`` and ``FDict`` objects are stored
+                as list and dictionary respectively in the dtaa store entry. These
+                values are converted to ``FList`` and ``FDict`` objects on the fly.
+            - When the field contains ``tid``s, we will convert them to entry
+                object on the fly. This is done by checking the type
+                information of the attribute in the entry object. If the
+                attribute is of type ``Entry`` or a ``ForwardRef``, we can
+                assume that that value stored in the data store entry represents
+                the entry's ``tid``.
+            - When values are stored as a tuple, we assume the value represents
+                a `subentry` stored in a `MultiPack`.
+            - In all other cases, the values are returned in the forms that they
+                are stored in the data store entry.
+
+            Args:
+                cls: An ``Entry`` class object.
+                attr_name: The name of the attribute.
+
+            Returns:
+                The value of the required attribute in the form specified
+                by the corresponding ``Entry`` class object.
+            """
+
+            data_store_ref = (
+                cls.pack._data_store  # pylint: disable=protected-access
+            )
+            attr_val = data_store_ref.get_attribute(
+                tid=cls.tid, attr_name=attr_name
+            )
+            attr_type = data_store_ref.get_attr_type(
+                cls.entry_type(), attr_name
+            )
+
+            if attr_type[0] in ENTRY_TYPE_DATA_STRUCTURES:
+                # Generate FList/FDict object on the fly
+                return attr_type[0](parent_entry=cls, data=attr_val)
+            elif attr_type == (type(None), (FNdArray,)):
+                # Generate FNdArray object on the fly
+                fndarray: FNdArray = FNdArray()
+                fndarray.set_data_ref(attr_val)
+                return fndarray
+
+            # Check dataclass attribute value type
+            # If the attribute was an Entry object, only its tid
+            # is stored in the DataStore and hence its needs to be converted.
+
+            # Entry objects are stored in data stores by their tid (which is
+            # of type int). Thus, if we enounter an int value, we check the
+            # type information which is stored as a tuple. if any entry in this
+            # tuple is a subclass of Entry or is a ForwardRef to another entry,
+            # we can infer that this int value represents the tid of an Entry
+            # object and thus must be converted to an object using get_entry
+            # before returning.
+            if attr_type[1] and any(
+                issubclass(entry, Entry)
+                if isclass(entry)
+                else is_forward_ref(entry)
+                for entry in list(attr_type[1])
+            ):
+                try:
+                    if isinstance(attr_val, int):
+                        return cls.pack.get_entry(tid=attr_val)
+
+                    # The condition below is to check whether the attribute's value
+                    # is a pair of integers - `(pack_id, tid)`. If so we may have
+                    # encountered a `tid` that can only be resolved by
+                    # `MultiPack.get_subentry`.
+                    elif (
+                        isinstance(attr_val, (tuple, list))
+                        and len(attr_val) == 2
+                        and all(
+                            isinstance(element, int) for element in attr_val
+                        )
+                        and hasattr(cls.pack, "get_subentry")
+                    ):
+                        # Multi pack entry
+                        return cls.pack.get_subentry(*attr_val)
+                except KeyError:
+                    pass
+            return attr_val
+
+        def entry_setter(cls: Entry, value: Any, attr_name: str):
+            """A setter function for dataclass fields of entry object.
+            When the value contains entry objects, we will convert them into
+            ``tid``s before storing to ``DataStore``. Additionally, if the entry
+            setter method is called on an attribute that does not have a pack
+            associated with it (as is the case during intialization), the value
+            of the atttribute is stored in the class level cache of the ``Entry``
+            class. On the other hand, if a pack is associated with the entry,
+            the value will directly be stored in the data store.
+
+            Args:
+                cls: An ``Entry`` class object.
+                value: The value to be assigned to the attribute.
+                attr_name: The name of the attribute.
+            """
+            attr_value: Any
+
+            try:
+                pack = cls.pack
+            except AttributeError as err:
+                # This is the case when an object of an entry that has already been
+                # created before (which means an setter and getter properties are
+                # associated with its dataclass fields) is trying to be initialized.
+                # In this case, a pack is not yet associated with this entry. Thus,
+                # we store the initial values dataclass fields of such entries in the
+                # _cached_attribute_data of the Entry class.
+
+                # pylint: disable=protected-access
+                if cls.entry_type() not in Entry._cached_attribute_data:
+                    Entry._cached_attribute_data[cls.entry_type()] = {}
+
+                if (
+                    attr_name
+                    not in Entry._cached_attribute_data[cls.entry_type()]
+                ):
+                    Entry._cached_attribute_data[cls.entry_type()][
+                        attr_name
+                    ] = value
+                    return
+                else:
+                    raise KeyError(
+                        "You are trying to overwrite the value "
+                        f"of {attr_name} for a data store entry "
+                        "before it is created."
+                    ) from err
+
+            data_store_ref = (
+                pack._data_store  # pylint: disable=protected-access
+            )
+
+            attr_type = data_store_ref.get_attr_type(
+                cls.entry_type(), attr_name
+            )
+            # Assumption: Users will not assign value to a FList/FDict field.
+            # Only internal methods can set the FList/FDict field, and value's
+            # type has to be Iterator[Entry]/Dict[Any, Entry].
+            if attr_type[0] is FList:
+                try:
+                    attr_value = [entry.tid for entry in value]
+                except AttributeError as e:
+                    raise ValueError(
+                        "You are trying to assign value to a `FList` field, "
+                        "which can only accept an iterator of `Entry` objects."
+                    ) from e
+            elif attr_type[0] is FDict:
+                try:
+                    attr_value = {
+                        key: entry.tid for key, entry in value.items()
+                    }
+                except AttributeError as e:
+                    raise ValueError(
+                        "You are trying to assign value to a `FDict` field, "
+                        "which can only accept a mapping whose values are "
+                        "`Entry` objects."
+                    ) from e
+            elif attr_type == (type(None), (FNdArray,)):
+                attr_value = [
+                    None if value.dtype is None else value.dtype.str,
+                    value.shape,
+                    None if value.data is None else value.data.tolist(),
+                ]
+            elif isinstance(value, Entry):
+                attr_value = (
+                    value.tid
+                    if value.pack.pack_id == cls.pack.pack_id
+                    # When value's pack and cls's pack are not the same, we
+                    # assume that cls.pack is a MultiPack, which will resolve
+                    # value.tid using MultiPack.get_subentry(pack_id, tid).
+                    # In this case, both pack_id and tid should be stored.
+                    else (value.pack.pack_id, value.tid)
+                )
+            else:
+                attr_value = value
+            data_store_ref.set_attribute(
+                tid=cls.tid, attr_name=attr_name, attr_value=attr_value
+            )
+
+        # If this is the first time an entry of this type is
+        # created, its attributes do not have a getter and setter
+        # property associated with them. We can thus assume that there
+        # no key in the _cached_attribute_data dictionary that has yet
+        # been created to store the dataclass fields of this entry. Thus,
+        # we create an empty dictionary to store the dataclass fields
+        # of this new entry and manually add all dataclass attributes
+        # that have been initialized to the _cached_attribute_data dict.
+        # We fetch the values of all dataclass fields by using the getattr
+        # method.
+
+        # pylint: disable=protected-access
+        if entry.entry_type() not in Entry._cached_attribute_data:
+            Entry._cached_attribute_data[entry.entry_type()] = {}
+            for name in entry.__dataclass_fields__:
+                attr_val = getattr(entry, name, None)
+                if attr_val is not None:
+                    Entry._cached_attribute_data[entry.entry_type()][
+                        name
+                    ] = attr_val
+
+        # Save the input entry object in DataStore
+        self._save_entry_to_data_store(entry=entry)
+
+        # Register property functions for all dataclass fields.
+        for name in entry.__dataclass_fields__:
+            # Convert the typing annotation to the original class.
+            # This will be used to determine if a field is FList/FDict.
+            setattr(
+                type(entry),
+                name,
+                # property(fget, fset) will register a conversion layer
+                # that specifies how to retrieve/assign value of this field.
+                property(
+                    # We need to bound the attribute name and field type here
+                    # for the getter and setter of each field.
+                    fget=partial(entry_getter, attr_name=name),
+                    fset=partial(entry_setter, attr_name=name),
+                ),
+            )
+
         # Record that this entry hasn't been added to the index yet.
-        self._pending_entries[entry.tid] = entry, c
-
-    def regret_creation(self, entry: EntryType):
-        """
-        Will remove the entry from the pending entries internal state of the
-        pack.
-
-        Args:
-            entry: The entry that we would not add the the pack anymore.
-
-        Returns:
-
-        """
-        self._pending_entries.pop(entry.tid)
+        self._pending_entries[entry.tid] = c
 
     # TODO: how to make this return the precise type here?
     def get_entry(self, tid: int) -> EntryType:
-        r"""Look up the entry_index with key ``ptr``. Specific implementation
+        r"""Look up the entry_index with ``tid``. Specific implementation
         depends on the actual class."""
-        entry: EntryType = self._index.get_entry(tid)
+        try:
+            # Try to find entry in DataIndex
+            entry: EntryType = self._index.get_entry(tid)
+        except KeyError:
+            # Find entry in DataStore
+            entry = self._get_entry_from_data_store(tid=tid)
         if entry is None:
             raise KeyError(
                 f"There is no entry with tid '{tid}'' in this datapack"
             )
         return entry
+
+    def get_entry_raw(self, tid: int) -> List:
+        r"""Retrieve the raw entry data in list format from DataStore."""
+        return self._data_store.get_entry(tid=tid)[0]
+
+    @abstractmethod
+    def _save_entry_to_data_store(self, entry: Entry):
+        r"""Save an existing entry object into DataStore"""
+        raise NotImplementedError
+
+    @abstractmethod
+    def _get_entry_from_data_store(self, tid: int) -> EntryType:
+        r"""Generate a class object from entry data in DataStore"""
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def links(self):
+        r"""A List container of all links in this data pack."""
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def groups(self):
+        r"""A List container of all groups in this pack."""
+        raise NotImplementedError
 
     @abstractmethod
     def get_data(
@@ -459,9 +769,10 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         raise NotImplementedError
 
     def get_single(self, entry_type: Union[str, Type[EntryType]]) -> EntryType:
-        r"""Take a single entry of type :attr:`entry_type` from this data
+        r"""Take a single entry of type
+        :attr:`~forte.data.data_pack.DataPack.entry_type` from this data
         pack. This is useful when the target entry type appears only one
-        time in the :class:`DataPack` for e.g., a Document entry. Or you just
+        time in the :class:`~forte.data.data_pack.DataPack` for e.g., a Document entry. Or you just
         intended to take the first one.
 
         Args:
@@ -501,7 +812,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             entry: The entry to check.
             components: The list of component names.
 
-        Returns (bool):
+        Returns:
             True if the entry is created by the component, False otherwise.
         """
         if isinstance(components, str):
@@ -522,8 +833,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
         Args:
             component: The component (creator) to get the entries. It is
-            normally the full qualified name of the creator class, but it
-            may also be customized based on the implementation.
+                normally the full qualified name of the creator class, but it
+                may also be customized based on the implementation.
 
         Returns:
             The set of entry ids that are created by the input component.
@@ -538,7 +849,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         each creator iteratively and combine the result.
 
         Args:
-            components (List[str]): The list of components to find.
+            components: The list of components to find.
 
         Returns:
             The list of entry ids that are created from these components.
@@ -558,7 +869,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
         Returns:
             A set of all the sub-types extending the provided type, including
-            the input `entry_type` itself.
+            the input ``entry_type`` itself.
         """
         all_types: Set[Type] = set()
         for data_type in self._index.indexed_types():
@@ -572,12 +883,12 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         """
         Return all entries of this particular type without orders. If you
         need to get the annotations based on the entry ordering,
-        use :meth:`forte.data.base_pack.get`.
+        use :meth:`forte.data.base_pack.BasePack.get`.
 
         Args:
             entry_type: The type of the entry you are looking for.
-            exclude_sub_types (bool): Whether to ignore the inherited sub type
-            of the provided `entry_type`. Default is True.
+            exclude_sub_types: Whether to ignore the inherited sub type
+                of the provided `entry_type`. Default is True.
 
         Returns:
             An iterator of the entries matching the type constraint.

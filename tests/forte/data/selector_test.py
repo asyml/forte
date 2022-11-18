@@ -57,7 +57,7 @@ class SelectorTest(unittest.TestCase):
         for doc_id, pack in zip(doc_ids, packs):
             self.assertEqual(doc_id, pack.pack_name)
 
-    def test_name_match_selector_backward_compatability(self) -> None:
+    def test_name_match_selector_backward_compatibility(self) -> None:
         selector = NameMatchSelector(select_name="pack1")
         selector.initialize()
         packs = selector.select(self.multi_pack)
@@ -91,7 +91,7 @@ class SelectorTest(unittest.TestCase):
         for doc_id, pack in zip(doc_ids, packs):
             self.assertEqual(doc_id, pack.pack_name)
 
-    def test_regex_name_match_selector_backward_compatability(self) -> None:
+    def test_regex_name_match_selector_backward_compatibility(self) -> None:
         selector = RegexNameMatchSelector(select_name="^.*\\d$")
         selector.initialize()
         packs = selector.select(self.multi_pack)

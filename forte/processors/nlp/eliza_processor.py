@@ -54,7 +54,7 @@ class Decomp:
 class ElizaProcessor(PackProcessor):
     """
     The ElizaProcessor adapted from https://github.com/wadetb/eliza. This
-    processor will generate reponse based on the Eliza rules. For more
+    processor will generate response based on the Eliza rules. For more
     information, please refer to https://dl.acm.org/doi/10.1145/365153.365168.
 
     This processor is not parallel ready because it will keep an internal

@@ -18,6 +18,8 @@ query_creator:
 searcher:
   model_dir: "model/chatbot"
   response_pack_name_prefix: "doc"
+  query_pack_name: "pack"
+
 
 indexer:
   batch_size: 128

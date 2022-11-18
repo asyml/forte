@@ -1,0 +1,42 @@
+{ 
+    "name": "NdArrayEntry", 
+    "definitions": [ 
+      { 
+        "entry_name": "ft.onto.test_ndarray.NdEntry1", 
+        "parent_entry": "forte.data.ontology.top.Generics", 
+        "description": "A N-dimensional entity, having dtype and shape specified.", 
+        "attributes": [ 
+          { 
+              "name": "value", 
+              "type": "NdArray",
+              "ndarray_dtype": "int",
+              "ndarray_shape": [2, 2]
+          }
+        ] 
+      },
+      { 
+        "entry_name": "ft.onto.test_ndarray.NdEntry2", 
+        "parent_entry": "forte.data.ontology.top.Generics", 
+        "description": "A N-dimensional entity. Only dtype is specified", 
+        "attributes": [ 
+          { 
+              "name": "value", 
+              "type": "NdArray",
+              "ndarray_dtype": "int"
+          }
+        ] 
+      },
+      { 
+        "entry_name": "ft.onto.test_ndarray.NdEntry3", 
+        "parent_entry": "forte.data.ontology.top.Generics", 
+        "description": "A N-dimensional entity. Only shape is specified", 
+        "attributes": [ 
+          { 
+              "name": "value", 
+              "type": "NdArray",
+              "ndarray_shape": [2, 2]
+          }
+        ] 
+      }
+    ] 
+  }

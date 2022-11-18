@@ -6,13 +6,13 @@ Training System
 
 Forte promotes the convention to separate data pre-processing (Domain Dependent)
 and actual training process. This is simply done by creating an intermediate
-layer to extract raw features from data packs. In this documentation, we will
+layer to extract raw features from ``DataPack``. In this documentation, we will
 visit several components in this system, which includes:
 
 * `Train Preprocessor` that defines the structure of this process.
 * `Extractor` that extracts from data to features back and forth.
 * `Converter` that creates matrices.
-* `Predictor` that builds data pack from model output automatically.
+* `Predictor` that builds ``DataPack`` from model output automatically.
 * `Evaluator` that conducts evaluation on the resulting pack.
 
 Train Preprocessor
@@ -28,6 +28,11 @@ Converter
 .. autoclass:: forte.data.converter.converter.Converter
     :members:
 
+:hidden:`Feature`
+--------------------
+.. autoclass:: forte.data.converter.feature.Feature
+    :members:
+
 
 Extractor
 ================================
@@ -40,6 +45,16 @@ Extractor
 :hidden:`AttributeExtractor`
 ---------------------------------------
 .. autoclass:: forte.data.extractors.attribute_extractor.AttributeExtractor
+    :members:
+
+:hidden:`LinkExtractor`
+---------------------------------------
+.. autoclass:: forte.data.extractors.relation_extractor.LinkExtractor
+    :members:
+
+:hidden:`SubwordExtractor`
+---------------------------------------
+.. autoclass:: forte.data.extractors.subword_extractor.SubwordExtractor
     :members:
 
 :hidden:`CharExtractor`

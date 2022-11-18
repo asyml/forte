@@ -26,8 +26,8 @@ This indexer is then used by the DataSelector class to search for documents.
 from typing import Dict, Any
 import logging
 
-from forte.elastic import ElasticSearchIndexer
-from forte.elastic import ElasticSearchPackIndexProcessor
+from fortex.elastic import ElasticSearchIndexer
+from fortex.elastic import ElasticSearchPackIndexProcessor
 
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack

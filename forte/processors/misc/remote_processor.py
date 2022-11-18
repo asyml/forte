@@ -21,15 +21,13 @@ being set as its reader.
 import json
 import logging
 from typing import Dict, Set, Any, Optional
-import requests
-
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
 
 from forte.common import Resources, ProcessorConfigError
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
+from forte.utils import create_import_error_msg
+
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +53,14 @@ class RemoteProcessor(PackProcessor):
 
     def __init__(self):
         super().__init__()
+        try:
+            import requests  # pylint: disable=import-outside-toplevel
+        except ImportError as e:
+            raise ImportError(
+                create_import_error_msg(
+                    "requests", "remote", "Remote Processor"
+                )
+            ) from e
         self._requests: Any = requests
         self._records: Optional[Dict[str, Set[str]]] = None
         self._expectation: Optional[Dict[str, Set[str]]] = None
@@ -153,7 +159,7 @@ class RemoteProcessor(PackProcessor):
         result = response.json()["result"]
         input_pack.update(DataPack.from_string(result))  # type: ignore
 
-    def set_test_mode(self, app: FastAPI):
+    def set_test_mode(self, app):
         """
         Configure the processor into test mode. This should only be called
         from a pytest program.
@@ -161,6 +167,13 @@ class RemoteProcessor(PackProcessor):
         Args:
             app: A fastapi app from a Forte pipeline.
         """
+        try:
+            # pylint: disable=import-outside-toplevel
+            from fastapi.testclient import TestClient
+        except ImportError as err:
+            raise ImportError(
+                create_import_error_msg("fastapi", "remote", "RemoteProcessor")
+            ) from err
         self._requests = TestClient(app)
 
     @classmethod

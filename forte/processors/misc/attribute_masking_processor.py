@@ -42,6 +42,7 @@ class AttributeMasker(PackProcessor):
         Example usage is shown below
 
         .. code-block:: python
+
             {
                 "requests": {
                     "ft.onto.base_ontology.Token": ["pos"]
@@ -50,10 +51,11 @@ class AttributeMasker(PackProcessor):
 
         Here:
 
-        `"requests"`: dict
-            The entry types and fields required. The keys of the requests dict
-            are the entry types whose fields need to be masked and the value is
-            a list of field names.
+        - `"requests"`: dict
+          The entry types and fields required. The keys of the requests dict
+          are the entry types whose fields need to be masked and the value is
+          a list of field names.
+
         """
         return {"requests": {}, "@no_typecheck": {"requests"}}
 

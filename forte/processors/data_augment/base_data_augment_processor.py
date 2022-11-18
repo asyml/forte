@@ -57,8 +57,8 @@ def modify_index(
 ) -> int:
     r"""
     A helper function to map an index before replacement
-    to the index after replacement.
 
+    to the index after replacement.
     An index is the character offset in the data pack.
     The `old_spans` are the inputs of replacement, and the new_spans
     are the outputs. Each of the span has start and end index.
@@ -91,7 +91,6 @@ def modify_index(
     we prepend an "And" to the second sentence, when modifying the start index
     of the second Sentence, it should be pushed left to include the new Token.
     In this case, the `is_begin` is True.
-
     Args:
         index (int): The index to map.
         old_spans (SortedList): The spans before replacement. It should be
@@ -103,7 +102,6 @@ def modify_index(
             index should include inserted spans.
     Returns:
         The aligned index.
-
     If the old spans are [0, 1], [2, 3], [4, 6],
     the new spans are [0, 4], [5, 7], [8, 11],
     the input index is 3, and there are no insertions,
@@ -222,7 +220,8 @@ def modify_index(
 
 
 class BaseDataAugmentProcessor(MultiPackProcessor, ABC):
-    r"""The base class of processors that augment data.
+    r"""
+    The base class of processors that augment data.
     This processor instantiates replacement ops where specific
     data augmentation algorithms are implemented. The replacement ops
     will run the algorithms and the processor will create Forte
@@ -319,10 +318,8 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         This is a wrapper function to call the replacement op. After
         getting the augmented text, it will register the input & output
         for later batch process of building the new data pack.
-
         It will ignore the input if it has an overlap with the already
         augmented spans.
-
         Args:
             replacement_op: The class for data augmentation algorithm.
             input_anno: The entry to be replaced.
@@ -372,7 +369,6 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
     def _delete(self, input_anno: Annotation) -> bool:
         r"""
         This is a wrapper function to delete an annotation.
-
         Args:
             input_anno: The annotation to remove.
         Returns:
@@ -392,19 +388,15 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         Function to replace some annotations with new strings.
         It will copy and update the text of datapack and
         auto-align the annotation spans.
-
         The links are also copied if its parent & child are
         both present in the new pack.
-
         The groups are copied if all its members are present
         in the new pack.
-
         Args:
             data_pack: The Datapack holding the replaced annotations.
             replaced_annotations: A SortedList of tuples(span, new string).
                 The text and span of the annotations will be updated
                 with the new string.
-
         Returns:
             A new data_pack holds the text after replacement. The annotations
             in the original data pack will be copied and auto-aligned as
@@ -471,7 +463,6 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         ):
             """
             An internal helper function for insertion.
-
             Args:
                 entry_class: The new annotation type to be created.
                 insert_ind: The index to be insert.
@@ -481,9 +472,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
                   a sorted ascending list.
                 new_spans: The original spans before replacement, should be
                   a sorted ascending list.
-
             Returns:
-
             """
             pos: int
             length: int
@@ -614,7 +603,6 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         If the children Link/Group does not exist, it will recursively
         create the children Link/Group. If the children Annotation
         does not exist, it will abort and return False.
-
         Args:
             entry: The Link/Group in the original data pack to copy.
             entry_map: The dictionary mapping original entry to copied entry.
@@ -676,7 +664,6 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         This function copies a MultiPackLink/MultiPackGroup in the multipack.
         It could be used in tasks such as text generation, where
         MultiPackLink is used to align the source and target.
-
         Args:
             entry: The MultiPackLink/MultiPackGroup to copy.
             multi_pack: The multi_pack contains the input entry.
@@ -736,7 +723,6 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         replacement-based methods. The subclasses should override
         this function to implement other data augmentation methods, such
         as Easy Data Augmentation.
-
         Args:
             input_pack: The input MultiPack.
             aug_pack_names: The packs names for DataPacks to be augmented.
@@ -807,63 +793,51 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
                 The key should be a full qualified class name.
                 The policy(value of the dict) specifies how to process
                 the corresponding entries after replacement.
-
                 If the policy is "auto_align", the span of the entry
                 will be automatically modified according to its original
                 location. However, some spans might become invalid after
                 the augmentation, for example, the tokens within a
                 replaced sentence may disappear.
-
                 Annotations not in the "other_entry_policy" will not
                 be copied to the new data pack. The Links and Groups
                 will be copied as well if the annotations they are
                 attached to are copied.
-
                 Example:
                     .. code-block:: python
-
                         'other_entry_policy': {
                             "kwargs": {
                                 "ft.onto.base_ontology.Document": "auto_align",
                                 "ft.onto.base_ontology.Sentence": "auto_align",
                             }
                         }
-
             - type:
                 Should not modify this field, in order to use the kwargs.
             - data_aug_op:
                 The data augmentation Op for the processor.
                 It should be a full qualified class name.
-
                 Example:
                     "forte.processors.data_augment.algorithms.
                     text_replacement_op.TextReplacementOp"
             - data_aug_op_config:
                 The configuration for data augmentation Op.
-
                 Example:
                     .. code-block:: python
-
                         'data_aug_op_config': {
                             'kwargs': {
                                 'lang': 'en',
                                 'use_gpu': False
                             }
                         }
-
             - augment_pack_names:
                 A dict specifies the DataPacks to augment and their output
                 names. It should be key-value pairs where the key is the
                 input DataPack name, and the value is the output DataPack
                 name after augmentation.
-
                 If empty, all the DataPacks will be augmented, and the output
                 names will be automatically generated by prepending
                 an `'augmented_'` prefix.
-
                 Example:
                     .. code-block:: python
-
                         'data_aug_op_config': {
                             'kwargs': {
                                 'src': 'aug_src',
