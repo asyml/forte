@@ -1598,17 +1598,19 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         # If we don't have any annotations but the items to check requires them,
         # then we simply yield from an empty list.
-        if (
-            len(self.annotations) == 0
-            and isinstance(range_annotation, Annotation)
-            and require_annotations(Annotation)
-        ) or (
-            len(self.audio_annotations) == 0
-            and isinstance(range_annotation, AudioAnnotation)
-            and require_annotations(AudioAnnotation)
-        ):
-            yield from []
-            return
+        # it seemed len() contribute to performance slowdown and this empty check
+        # might not be needed in new implementation.
+        # if (
+        #     len(self.annotations) == 0
+        #     and isinstance(range_annotation, Annotation)
+        #     and require_annotations(Annotation)
+        # ) or (
+        #     len(self.audio_annotations) == 0
+        #     and isinstance(range_annotation, AudioAnnotation)
+        #     and require_annotations(AudioAnnotation)
+        # ):
+        #     yield from []
+        #     return
 
         # If the ``entry_type`` and `range_annotation` are for different types of
         # payload, then we yield from an empty list with a warning.
