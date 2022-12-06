@@ -1598,12 +1598,14 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         # If we don't have any annotations but the items to check requires them,
         # then we simply yield from an empty list.
+        # changed form using len(annotations) to num_annotations directly for
+        # improving the performance.
         if (
-            len(self.annotations) == 0
+            self.num_annotations == 0
             and isinstance(range_annotation, Annotation)
             and require_annotations(Annotation)
         ) or (
-            len(self.audio_annotations) == 0
+            self.num_audio_annotations == 0
             and isinstance(range_annotation, AudioAnnotation)
             and require_annotations(AudioAnnotation)
         ):
