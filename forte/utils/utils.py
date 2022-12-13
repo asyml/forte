@@ -23,6 +23,8 @@ from typing import Dict, List, Optional, get_type_hints, Tuple
 from sortedcontainers import SortedList
 from typing_inspect import is_union_type, get_origin
 
+from functools import lru_cache
+
 __all__ = [
     "get_full_module_name",
     "get_class_name",
@@ -77,6 +79,7 @@ def get_class_name(o, lower: bool = False) -> str:
         return o.__name__
 
 
+@lru_cache
 def get_class(class_name: str, module_paths: Optional[List[str]] = None):
     r"""Returns the class based on class name.
 
