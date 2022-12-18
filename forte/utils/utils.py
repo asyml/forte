@@ -112,7 +112,9 @@ def get_class(full_class_name: str, module_paths: Optional[List[str]] = None):
 
     if class_ is None:
         if module_paths:
-            raise ValueError(f"Class not found in {module_paths}: {full_class_name}")
+            raise ValueError(
+                f"Class not found in {module_paths}: {full_class_name}"
+            )
         else:
             raise ValueError(f"Class not found in {full_class_name}")
 
