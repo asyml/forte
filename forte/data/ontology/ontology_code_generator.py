@@ -40,7 +40,7 @@ try:
     from importlib.abc import Traversable
 except ImportError:
     # Try backported to PY<39 `importlib_resources`.
-    from importlib_resources import resources  # type: ignore
+    import importlib_resources as resources  # type: ignore
     from importlib_resources.abc import Traversable  # type: ignore
 
 from forte.data.ontology import top, utils

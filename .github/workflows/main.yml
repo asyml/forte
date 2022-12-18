@@ -51,6 +51,7 @@ jobs:
           sudo apt-get install -y libsndfile1-dev
           python -m pip install --progress-bar off --upgrade pip
           pip install --progress-bar off Django django-guardian
+          # Remember to update pre commit hook (pre-commit-config.yaml) if the following is updated.
           pip install --progress-bar off pylint==2.15.8 flake8==5.0.4 mypy==0.991 pytest==7.2.0 black==22.12.0
           pip install --progress-bar off types-PyYAML==5.4.8 types-typed-ast==1.4.4 types-requests==2.25.6 types-dataclasses==0.1.7
           pip install --progress-bar off coverage codecov
