@@ -38,7 +38,7 @@ def post_edit(element: Tuple[Optional[str], str]) -> str:
     """
     if element[0] is None:
         return "O"
-    return "%s-%s" % (element[1], element[0])
+    return f"{element[1]}-{element[0]}"
 
 
 def bio_tagging(
@@ -221,5 +221,5 @@ def write_tokens_to_file(
             for i, (word, tgt, pred) in enumerate(
                 zip(words, refer_tag, pred_tag), 1
             ):
-                opened_file.write("%d %s %s %s\n" % (i, word, tgt, pred))
+                opened_file.write(f"{i} {word} {tgt} {pred}\n")
             opened_file.write("\n")

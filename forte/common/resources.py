@@ -82,7 +82,7 @@ class Resources:
 
     def contains(self, key: str) -> bool:
         """Return whether the specified key exists."""
-        return key in self._resources.keys()
+        return key in self._resources
 
     def get(self, key: str):
         r"""Get the corresponding resource by specifying the key."""

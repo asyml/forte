@@ -54,7 +54,7 @@ def copytree(
     """
 
     if not dry_run and not os.path.isdir(src):
-        raise DistutilsFileError("cannot copy tree '%s': not a directory" % src)
+        raise DistutilsFileError(f"cannot copy tree '{src}': not a directory")
     try:
         names = os.listdir(src)
     except OSError as e:
@@ -62,7 +62,7 @@ def copytree(
             names = []
         else:
             raise DistutilsFileError(
-                "error listing files in '%s': %s" % (src, e.strerror)
+                f"error listing files in '{src}': {e.strerror}"
             ) from e
 
     if not dry_run:
@@ -138,7 +138,7 @@ def get_user_objects_from_module(
     """
     module = locate(module_str)
     if module is not None and hasattr(module, "__all__"):
-        return module.__all__  # type: ignore
+        return module.__all__
     objects: List[str] = []
     if custom_dirs is not None:
         module_file = module_str.replace(".", "/") + ".py"

@@ -37,6 +37,7 @@ except ImportError as err1:
         create_import_error_msg("texar-pytorch", "nlp", "NLP support")
     ) from err1
 
+
 # This should probably be named as `BertTokenizer`.
 class SubwordTokenizer(PackProcessor):
     """
@@ -46,8 +47,8 @@ class SubwordTokenizer(PackProcessor):
     def __init__(self):
         super().__init__()
 
-        self.tokenizer: BERTTokenizer = None
-        self.aligner: DiffAligner = None
+        self.tokenizer: BERTTokenizer
+        self.aligner: DiffAligner
         self.__do_lower_case = True
 
     # pylint: disable=attribute-defined-outside-init,unused-argument

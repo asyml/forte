@@ -40,7 +40,7 @@ class TerminalReader(PackReader):
     def _cache_key_function(self, collection) -> str:
         return "cached_string_file"
 
-    def _collect(self) -> Iterator[str]:  # type: ignore
+    def _collect(self) -> Iterator[str]:
         # This allows the user to pass in either one single string or a list of
         # strings.
         while True:
@@ -90,7 +90,7 @@ class TerminalReader(PackReader):
 
 
 class BaseRawPackReader(BaseReader, ABC):
-    def _collect(self, pack: PackType) -> Iterator[Any]:  # type: ignore
+    def _collect(self, pack: PackType) -> Iterator[Any]:
         yield pack
 
     def _parse_pack(self, pack: PackType) -> Iterator[PackType]:

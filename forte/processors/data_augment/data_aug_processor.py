@@ -70,7 +70,7 @@ class DataAugProcessor(MultiPackProcessor):
         # :attr:`replacement_op`: BaseAugmentationOp
         # It is the augmentation Op used by this processor
         # instance.
-        self.replacement_op: BaseDataAugmentationOp = None
+        self.replacement_op: BaseDataAugmentationOp
 
         self.configs = None
 
@@ -203,9 +203,8 @@ class DataAugProcessor(MultiPackProcessor):
 
         if not success:
             raise ValueError(
-                "There was a problem encountered when performing the augmentation in {}".format(
-                    self.configs["data_aug_op"]
-                )
+                f"There was a problem encountered when performing the "
+                f"augmentation in {self.configs['data_aug_op']}."
             )
 
         new_packs: List[Tuple[str, DataPack]] = []

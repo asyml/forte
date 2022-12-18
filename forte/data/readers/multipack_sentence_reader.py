@@ -33,7 +33,7 @@ class MultiPackSentenceReader(MultiPackReader):
     multipack.
     """
 
-    def _collect(self, text_directory: str) -> Iterator[Any]:  # type: ignore
+    def _collect(self, text_directory: str) -> Iterator[Any]:
         return dataset_path_iterator_with_base(text_directory, "")
 
     def _cache_key_function(self, txt_path: str) -> str:

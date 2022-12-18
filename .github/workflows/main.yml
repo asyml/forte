@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ 3.6, 3.7 ]
+        python-version: [ 3.7 ] # temporarily remove 3.6 to get around Github bug.
         torch-version: [ 1.5.0, 1.6.0 ]
         tensorflow-version: [ 1.15.0 ]
         include:
@@ -51,12 +51,11 @@ jobs:
           sudo apt-get install -y libsndfile1-dev
           python -m pip install --progress-bar off --upgrade pip
           pip install --progress-bar off Django django-guardian
-          pip install --progress-bar off pylint==2.10.2 flake8==3.9.2 mypy==0.931 pytest==5.1.3 black==22.3.0
+          pip install --progress-bar off pylint==2.15.8 flake8==6.0.0 mypy==0.991 pytest==7.2.0 black==22.12.0
           pip install --progress-bar off types-PyYAML==5.4.8 types-typed-ast==1.4.4 types-requests==2.25.6 types-dataclasses==0.1.7
           pip install --progress-bar off coverage codecov
           python -m pip install ipykernel
           python -m ipykernel install --user
-          pip install --progress-bar off asyml-utilities
       - name: Format check with Black
         run: |
           black --line-length 80 --check forte/
@@ -85,14 +84,14 @@ jobs:
         run: |
           # stop the build if there are Python syntax errors or undefined names
           flake8 forte/ examples/ ft/ scripts/ tests/ --count --select=E9,F63,F7,F82 --show-source --statistics
-          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-          flake8 forte/ examples/ ft/ scripts/ tests/ --ignore E203,W503 --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+          # Test the rest but ignore the tests/ folder The GitHub editor is 127 chars wide
+          flake8 forte/ examples/ ft/ scripts/ --ignore E203,W503 --count --max-complexity=10 --max-line-length=127 --statistics
       - name: Lint with pylint
         run: |
           pylint forte/
       - name: Lint main code with mypy when torch version is not 1.5.0 and python is 3.9
         run: |
-          if [[ ${{ matrix.torch-version }} != "1.5.0" && ${{ matrix.python-version }} == "3.9" ]]; then mypy forte; fi
+          if [[ ${{ matrix.torch-version }} != "1.5.0" && ${{ matrix.python-version }} == "3.9" ]]; then mypy forte --check-untyped-defs; fi
       - name: Test with pytest and run coverage
         run: |
           coverage run -m pytest tests  --ignore=tests/forte/notebooks --ignore=tests/forte/forte_backbone_test.py

@@ -49,7 +49,7 @@ setuptools.setup(
         'typing>=3.7.4;python_version<"3.5"',
         "typing-inspect>=0.6.0",
         'dataclasses~=0.7;python_version<"3.7"',
-        'importlib-resources>=5.1.4;python_version<"3.7"',
+        'importlib-resources>=5.1.4;python_version<"3.9"',
         "asyml-utilities",
     ],
     extras_require={

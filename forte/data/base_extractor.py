@@ -20,6 +20,7 @@ from abc import ABC, abstractmethod
 from typing import Tuple, List, Dict, Any
 from typing import Union, Hashable, Iterable, Optional
 
+from forte.common import InvalidForteStateException
 from forte.common.configuration import Config
 from forte.data.converter.feature import Feature
 from forte.data.data_pack import DataPack
@@ -87,8 +88,8 @@ class BaseExtractor(ABC):
 
     def __init__(self):
         self._vocab: Optional[Vocabulary] = None
-        self.config: Config = None
-        self._vocab_method = None
+        self.config: Optional[Config] = None
+        self._vocab_method: Optional[str] = None
 
     def initialize(self, config: Union[Dict, Config]):
         self.config = Config(config, self.default_configs())
@@ -156,6 +157,10 @@ class BaseExtractor(ABC):
 
     @property
     def vocab_method(self) -> str:
+        if self._vocab_method is None:
+            raise InvalidForteStateException(
+                "The vocab_method for the extractor is not set."
+            )
         return self._vocab_method
 
     @property

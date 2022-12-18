@@ -209,7 +209,7 @@ class ProcessingBatcher(Generic[PackType], Configurable):
 
 
 # TODO: shouldn't implement a special extractor because we use extractors.
-class FixedSizeDataPackBatcherWithExtractor(ProcessingBatcher):
+class FixedSizeDataPackBatcherWithExtractor(ProcessingBatcher[PackType]):
     r"""This batcher uses extractor to extract features from
     dataset and group them into batch. In this class, more pools
     are added. One is `instance_pool`, which is used to record the
@@ -220,7 +220,7 @@ class FixedSizeDataPackBatcherWithExtractor(ProcessingBatcher):
 
     def __init__(self):
         super().__init__()
-        self._context_type: Type[EntryType] = None
+        self._context_type: Type[Annotation]
         self._feature_scheme: Dict = {}
         self.batch_size: int = -1
 
@@ -358,7 +358,7 @@ class FixedSizeDataPackBatcherWithExtractor(ProcessingBatcher):
             # 2. We should also yield when the batcher condition is met:
             # i.e. ``_should_yield()`` is True.
             if not self._cross_pack or self._should_yield():
-                yield from self.flush()  # type: ignore
+                yield from self.flush()
 
     def _get_data_batch(
         self,

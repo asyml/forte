@@ -61,7 +61,7 @@ class UniformTypoGenerator:
             ) from e
 
         try:
-            r = requests.get(dict_path)
+            r = requests.get(dict_path, timeout=30)
             self.data = r.json()
         except requests.exceptions.RequestException:
             with open(dict_path, encoding="utf8") as json_file:

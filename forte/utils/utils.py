@@ -77,11 +77,11 @@ def get_class_name(o, lower: bool = False) -> str:
         return o.__name__
 
 
-def get_class(class_name: str, module_paths: Optional[List[str]] = None):
+def get_class(full_class_name: str, module_paths: Optional[List[str]] = None):
     r"""Returns the class based on class name.
 
     Args:
-        class_name (str): Name or full path to the class.
+        full_class_name (str): Name or full path to the class.
         module_paths (list): Paths to candidate modules to search for the
             class. This is used if the class cannot be located solely based on
             ``class_name``. The first module in the list that contains the class
@@ -94,20 +94,26 @@ def get_class(class_name: str, module_paths: Optional[List[str]] = None):
         ValueError: If class is not found based on :attr:`class_name` and
             :attr:`module_paths`.
     """
-    class_ = locate(class_name)
+    class_ = locate(full_class_name)
     if (class_ is None) and (module_paths is not None):
         for module_path in module_paths:
-            class_ = locate(".".join([module_path, class_name]))
+            class_ = locate(".".join([module_path, full_class_name]))
             if class_ is not None:
                 break
 
     if class_ is None:
+        import sys
+        module_name, class_name = full_class_name.rsplit(".", 1)
+        try:
+            class_ = getattr(sys.modules[module_name], class_name)
+        except AttributeError:
+            pass
+
+    if class_ is None:
         if module_paths:
-            raise ValueError(
-                "Class not found in {}: {}".format(module_paths, class_name)
-            )
+            raise ValueError(f"Class not found in {module_paths}: {full_class_name}")
         else:
-            raise ValueError("Class not found in {}".format(class_name))
+            raise ValueError(f"Class not found in {full_class_name}")
 
     return class_
 
