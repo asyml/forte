@@ -169,7 +169,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ 3.6 ]
+        python-version: [ 3.7 ] # TODO: temporarily change from 3.6 to 3.7 to get around Github bug.
         torch-version: [ 1.5.0 ]
         tensorflow-version: [ 1.15.0 ]
         modules:
