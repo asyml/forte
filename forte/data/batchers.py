@@ -35,7 +35,6 @@ from forte.data.converter import Feature
 from forte.data.data_pack import DataPack
 from forte.data.data_utils_io import merge_batches, batch_instances
 from forte.data.multi_pack import MultiPack
-from forte.data.ontology.core import EntryType
 from forte.data.ontology.top import Annotation
 from forte.utils import get_class
 

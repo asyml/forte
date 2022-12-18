@@ -761,7 +761,7 @@ class ModuleWriter:
 
     def to_description(self, level):
         quotes = '"""'
-        lines = get_ignore_error_lines(self.source_file) + [
+        lines = get_ignore_error_lines(str(self.source_file)) + [
             quotes,
             self.description,
             quotes,

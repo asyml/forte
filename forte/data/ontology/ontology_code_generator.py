@@ -349,7 +349,6 @@ class OntologyCodeGenerator:
         spec_resource: Traversable = resources.files(spec_module)
 
         self.import_dirs.append(spec_resource)
-        self.exclude_from_writing: Set[Path] = set()
 
         if not generate_all:
             logging.info(
@@ -638,8 +637,7 @@ class OntologyCodeGenerator:
             if isinstance(import_dir, Path):
                 full_spec_path = import_dir / Path(rel_import)
                 if os.path.exists(full_spec_path):
-                    with open(full_spec_path, "r", encoding="utf-8") as f:
-                        yield Path(full_spec_path)
+                    yield Path(full_spec_path)
             elif isinstance(import_dir, Traversable):
                 return resources.as_file(import_dir.joinpath(rel_import))
 
@@ -695,7 +693,7 @@ class OntologyCodeGenerator:
 
         for rel_import in relative_imports:
             with self.find_import_path(rel_import) as full_pkg_path:
-                logging.info(f"Imported ontology at: {full_pkg_path}")
+                logging.info("Imported ontology at: %s", full_pkg_path)
                 self.parse_ontology_spec(
                     full_pkg_path,
                     merged_schema,
@@ -859,13 +857,6 @@ class OntologyCodeGenerator:
                 module_writer.source_file = source_json_file
                 # Add entry item to the writer.
                 module_writer.add_entry(en, entry_item)
-
-                print(en.module_name)
-                print(source_json_file)
-
-                import pdb
-                pdb.set_trace()
-
 
             # Adding entry attributes to the allowed types for validation.
             for property_ in properties:

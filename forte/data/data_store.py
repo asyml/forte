@@ -45,7 +45,6 @@ from forte.data.ontology.core import (
 )
 from forte.common import constants
 
-
 logger = logging.getLogger(__name__)
 
 __all__ = ["DataStore"]
@@ -61,7 +60,7 @@ class DataStore(BaseStore):
     do_init = False
 
     def __init__(
-        self, onto_file_path: Optional[str] = None, dynamically_add_type=True
+            self, onto_file_path: Optional[str] = None, dynamically_add_type=True
     ):
         r"""An implementation of the data store object that mainly uses
         primitive types. This class will be used as the internal data
@@ -351,7 +350,7 @@ class DataStore(BaseStore):
                 if constants.ATTR_TYPE_KEY not in info_dict:
                     info_dict[constants.ATTR_TYPE_KEY] = type_val
 
-        reset_index = {}
+        reset_index: Dict[str, int] = {}
 
         for k in self.__elements:
             if self._is_annotation(k):
@@ -389,12 +388,12 @@ class DataStore(BaseStore):
 
     @classmethod
     def deserialize(
-        cls,
-        data_source: str,
-        serialize_method: str = "json",
-        check_attribute: bool = True,
-        suppress_warning: bool = True,
-        accept_unknown_attribute: bool = True,
+            cls,
+            data_source: str,
+            serialize_method: str = "json",
+            check_attribute: bool = True,
+            suppress_warning: bool = True,
+            accept_unknown_attribute: bool = True,
     ) -> "DataStore":
         """
         Deserialize a `DataStore` from serialized data in `data_source`.
@@ -464,13 +463,18 @@ class DataStore(BaseStore):
                 # the current class, it will not be detected.
                 # Instead, it will be dropped later.
 
-                # This lambda function is used to get a temporary
+                # This `get_temp_rep` function is used to get a temporary
                 # representation of type_attributes with only the
                 # name and index
-                get_temp_rep = lambda entry: set(
-                    (attr, val[constants.ATTR_INDEX_KEY])
-                    for attr, val in entry[constants.ATTR_INFO_KEY].items()
-                )
+                # get_temp_rep = lambda entry: set(
+                #     (attr, val[constants.ATTR_INDEX_KEY])
+                #     for attr, val in entry[constants.ATTR_INFO_KEY].items()
+                # )
+                def get_temp_rep(e):
+                    return set(
+                        (attr, val[constants.ATTR_INDEX_KEY])
+                        for attr, val in e[constants.ATTR_INFO_KEY].items()
+                    )
 
                 temp_cls_rep = get_temp_rep(v)
                 temp_obj_rep = get_temp_rep(store._type_attributes[t])
@@ -481,8 +485,8 @@ class DataStore(BaseStore):
                     # serialized objects but have different orders, switch
                     # fields to match the order of the current class.
                     if (
-                        f[0]
-                        in store._type_attributes[t][constants.ATTR_INFO_KEY]
+                            f[0]
+                            in store._type_attributes[t][constants.ATTR_INFO_KEY]
                     ):
                         # record indices of the same field in the class and
                         # objects. Save different indices to a dictionary.
@@ -638,8 +642,8 @@ class DataStore(BaseStore):
         """
         # check if type is in dictionary
         if (
-            type_name in DataStore._type_attributes
-            and constants.ATTR_INFO_KEY in DataStore._type_attributes[type_name]
+                type_name in DataStore._type_attributes
+                and constants.ATTR_INFO_KEY in DataStore._type_attributes[type_name]
         ):
             return DataStore._type_attributes[type_name]
         if not self._dynamically_add_type:
@@ -732,7 +736,7 @@ class DataStore(BaseStore):
         return attr_list
 
     def fetch_entry_type_data(
-        self, type_name: str, attributes: Optional[Set[Tuple[str, str]]] = None
+            self, type_name: str, attributes: Optional[Set[Tuple[str, str]]] = None
     ) -> Dict[str, Tuple]:
         r"""This function takes a fully qualified ``type_name`` class name
         and a set of tuples representing an attribute and its required type
@@ -820,10 +824,10 @@ class DataStore(BaseStore):
                 # is converted to primitive forms of list and
                 # dict. We handle them separately here
                 if (
-                    is_generic_type(attr_info.type)
-                    and hasattr(attr_info.type, "__extra__")
-                    and sys.version_info[:3] < (3, 7, 0)
-                    and attr_class not in ENTRY_TYPE_DATA_STRUCTURES
+                        is_generic_type(attr_info.type)
+                        and hasattr(attr_info.type, "__extra__")
+                        and sys.version_info[:3] < (3, 7, 0)
+                        and attr_class not in ENTRY_TYPE_DATA_STRUCTURES
                 ):
                     # if python version is < 3.7, thr primitive form
                     # of generic types are stored in the __extra__
@@ -839,7 +843,7 @@ class DataStore(BaseStore):
         return type_dict
 
     def _is_subclass(
-        self, type_name: str, cls, no_dynamic_subclass: bool = False
+            self, type_name: str, cls, no_dynamic_subclass: bool = False
     ) -> bool:
         r"""This function takes a fully qualified ``type_name`` class name,
         ``cls`` class and returns whether ``type_name``  class is the``cls``
@@ -862,8 +866,8 @@ class DataStore(BaseStore):
         if type_name not in DataStore._type_attributes:
             self._get_type_info(type_name=type_name)
         if (
-            constants.PARENT_CLASS_KEY
-            not in DataStore._type_attributes[type_name]
+                constants.PARENT_CLASS_KEY
+                not in DataStore._type_attributes[type_name]
         ):
             DataStore._type_attributes[type_name][
                 constants.PARENT_CLASS_KEY
@@ -902,7 +906,7 @@ class DataStore(BaseStore):
         """
         for entry_type_key in sorted(self.__elements.keys()):
             if (
-                entry_type_key == entry_type_name and inclusive
+                    entry_type_key == entry_type_name and inclusive
             ) or self._is_subclass(
                 entry_type_key,
                 get_class(entry_type_name),
@@ -925,7 +929,7 @@ class DataStore(BaseStore):
         )
 
     def get_attr_type(
-        self, type_name: str, attr_name: str
+            self, type_name: str, attr_name: str
     ) -> Tuple[Any, Tuple]:
         """
         Retrieve the type information of a given attribute ``attr_name``
@@ -995,9 +999,9 @@ class DataStore(BaseStore):
         return count
 
     def _add_entry_raw(
-        self,
-        type_name: str,
-        entry: List[Any],
+            self,
+            type_name: str,
+            entry: List[Any],
     ):
         """
         This function add raw entry in DataStore object
@@ -1005,7 +1009,6 @@ class DataStore(BaseStore):
         based on entry type.
 
         Args:
-            entry_type: entry's type which decides the sorting of entry.
             type_name: The name of type in `self.__elements`.
             entry: raw entry data in the list format.
 
@@ -1028,8 +1031,8 @@ class DataStore(BaseStore):
                 self.__elements[type_name].add(entry)
 
         elif any(
-            self._is_subclass(type_name, cls)
-            for cls in (list(SinglePackEntries) + list(MultiPackEntries))
+                self._is_subclass(type_name, cls)
+                for cls in (list(SinglePackEntries) + list(MultiPackEntries))
         ):
 
             try:
@@ -1068,7 +1071,7 @@ class DataStore(BaseStore):
             raise KeyError(f"Entry with tid {tid} not found.")
 
     def _create_new_entry(
-        self, type_name: str, tid: Optional[int] = None
+            self, type_name: str, tid: Optional[int] = None
     ) -> List:
         r"""This function generates a new entry with default fields.
         The new entry is in the format used to be stored in Data Stores.
@@ -1113,7 +1116,7 @@ class DataStore(BaseStore):
             ) from e
 
     def initialize_and_validate_entry(
-        self, entry: List, attribute_data: List
+            self, entry: List, attribute_data: List
     ) -> List:
         r"""This function performs validation checks on the initial
         attributes added to a data store entry. This functions also
@@ -1183,7 +1186,7 @@ class DataStore(BaseStore):
                 entry[payload_id_idx] = 0
 
         elif any(
-            self._is_subclass(type_name, cls) for cls in (Group, MultiPackGroup)
+                self._is_subclass(type_name, cls) for cls in (Group, MultiPackGroup)
         ):
             type_idx = self.get_datastore_attr_idx(
                 type_name, constants.MEMBER_TYPE_ATTR_NAME
@@ -1198,7 +1201,7 @@ class DataStore(BaseStore):
             entry[type_idx] = attribute_data[0]
 
         elif any(
-            self._is_subclass(type_name, cls) for cls in (Link, MultiPackLink)
+                self._is_subclass(type_name, cls) for cls in (Link, MultiPackLink)
         ):
             parent_idx = self.get_datastore_attr_idx(
                 type_name, constants.PARENT_TYPE_ATTR_NAME
@@ -1208,7 +1211,7 @@ class DataStore(BaseStore):
             )
 
             if not self._is_subclass(
-                attribute_data[0], Entry
+                    attribute_data[0], Entry
             ) or not self._is_subclass(attribute_data[1], Entry):
                 raise ValueError(
                     "Attributes required to create Link"
@@ -1221,11 +1224,11 @@ class DataStore(BaseStore):
         return entry
 
     def add_entry_raw(
-        self,
-        type_name: str,
-        tid: Optional[int] = None,
-        allow_duplicate: bool = True,
-        attribute_data: Optional[List] = None,
+            self,
+            type_name: str,
+            tid: Optional[int] = None,
+            allow_duplicate: bool = True,
+            attribute_data: Optional[List] = None,
     ) -> int:
 
         r"""
@@ -1305,8 +1308,8 @@ class DataStore(BaseStore):
             index = self.__elements[type_name].bisect_left(entry)
             target_entry = self.__elements[type_name][index]
             if (
-                target_entry[begin_idx] == begin
-                and target_entry[end_idx] == end
+                    target_entry[begin_idx] == begin
+                    and target_entry[end_idx] == end
             ):
                 return target_entry[constants.TID_INDEX]
             else:
@@ -1443,8 +1446,8 @@ class DataStore(BaseStore):
             entry_index = entry_data[constants.ENTRY_DICT_ENTRY_INDEX]
 
         if entry_index >= len(target_list) or (
-            self._is_annotation(type_name)
-            and target_list[entry_index] != entry_data
+                self._is_annotation(type_name)
+                and target_list[entry_index] != entry_data
         ):
             raise RuntimeError(
                 f"When deleting entry [{tid}], entry data is not found in"
@@ -1458,7 +1461,7 @@ class DataStore(BaseStore):
         and `index_id`. Called by `delete_entry()`.
 
         Args:
-            type_id: The index of the list in ``self.__elements``.
+            type_name: The name of the list in ``self.__elements``.
             index_id: The index of the entry in the list.
 
         Raises:
@@ -1546,8 +1549,8 @@ class DataStore(BaseStore):
                     f"Entry {entry} not found in entry list."
                 ) from e
             if (not 0 <= index_id < len(entry_list)) or (
-                entry_list[index_id][constants.TID_INDEX]
-                != entry[constants.TID_INDEX]
+                    entry_list[index_id][constants.TID_INDEX]
+                    != entry[constants.TID_INDEX]
             ):
                 raise ValueError(f"Entry {entry} not found in entry list.")
         else:
@@ -1574,10 +1577,10 @@ class DataStore(BaseStore):
             return len(self.__elements[type_name]) - delete_count
 
     def _get_bisect_range(
-        self,
-        search_list: SortedList,
-        range_span: Tuple[int, int],
-        type_name: str,
+            self,
+            search_list: SortedList,
+            range_span: Tuple[int, int],
+            type_name: str,
     ) -> Optional[List]:
         """
         Perform binary search on the specified list for target entry class.
@@ -1605,8 +1608,8 @@ class DataStore(BaseStore):
 
         # Check if there are any entries within the given range
         if (
-            search_list[0][begin] > range_span[1]
-            or search_list[-1][end] < range_span[0]
+                search_list[0][begin] > range_span[1]
+                or search_list[-1][end] < range_span[0]
         ):
             return None
 
@@ -1634,9 +1637,9 @@ class DataStore(BaseStore):
         return result_list
 
     def co_iterator_annotation_like(
-        self,
-        type_names: List[str],
-        range_span: Optional[Tuple[int, int]] = None,
+            self,
+            type_names: List[str],
+            range_span: Optional[Tuple[int, int]] = None,
     ) -> Iterator[List]:
         r"""
         Given two or more type names, iterate their entry lists from beginning
@@ -1844,10 +1847,10 @@ class DataStore(BaseStore):
             yield entry
 
     def get(
-        self,
-        type_name: str,
-        include_sub_type: bool = True,
-        range_span: Optional[Tuple[int, int]] = None,
+            self,
+            type_name: str,
+            include_sub_type: bool = True,
+            range_span: Optional[Tuple[int, int]] = None,
     ) -> Iterator[List]:
         r"""This function fetches entries from the data store of
         type ``type_name``. If `include_sub_type` is set to True and
@@ -1896,7 +1899,7 @@ class DataStore(BaseStore):
                 yield from self.co_iterator_annotation_like(all_types)
             else:
                 for entry in self.co_iterator_annotation_like(
-                    all_types, range_span=range_span
+                        all_types, range_span=range_span
                 ):
                     yield entry
         elif issubclass(entry_class, Link):
@@ -1915,12 +1918,12 @@ class DataStore(BaseStore):
                         )
 
                         if (entry[parent_idx] in self.__tid_ref_dict) and (
-                            entry[child_idx] in self.__tid_ref_dict
+                                entry[child_idx] in self.__tid_ref_dict
                         ):
                             parent = self.__tid_ref_dict[entry[parent_idx]]
                             child = self.__tid_ref_dict[entry[child_idx]]
                             if within_range(
-                                parent, range_span
+                                    parent, range_span
                             ) and within_range(child, range_span):
                                 yield entry
         elif issubclass(entry_class, Group):
@@ -2095,7 +2098,7 @@ class DataStore(BaseStore):
                 }
                 idx += 1
 
-            entry_dict = {}
+            entry_dict: Dict[str, Any] = {}
             entry_dict[constants.PARENT_CLASS_KEY] = set()
             entry_dict[constants.PARENT_CLASS_KEY].add(entry_node.parent.name)
             entry_dict[constants.ATTR_INFO_KEY] = attr_dict
@@ -2109,8 +2112,8 @@ class DataStore(BaseStore):
             return
 
         for (
-            top_entry,
-            parents,
+                top_entry,
+                parents,
         ) in DataStore.onto_gen.top_to_core_entries.items():
             entry_dict = {}
             entry_dict[constants.PARENT_CLASS_KEY] = set(parents)

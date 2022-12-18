@@ -14,6 +14,7 @@
 """
 Utility functions
 """
+import sys
 import difflib
 from functools import wraps
 from inspect import getfullargspec
@@ -101,8 +102,8 @@ def get_class(full_class_name: str, module_paths: Optional[List[str]] = None):
             if class_ is not None:
                 break
 
+    # Added the following to find classes that are dynamically loaded.
     if class_ is None:
-        import sys
         module_name, class_name = full_class_name.rsplit(".", 1)
         try:
             class_ = getattr(sys.modules[module_name], class_name)
