@@ -230,6 +230,10 @@ jobs:
           # Simply keep the database file but remove the repo.
           cp stave/simple-backend/db.sqlite3 .
           rm -rf stave
+      - name: Setup tmate session
+        # Add a tmate step before the actual testing.
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.tmate_enabled }}
       - name: Test modules need extra packages
         run: |
           pip install --progress-bar off .[test]
