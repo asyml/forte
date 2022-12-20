@@ -71,6 +71,7 @@ setuptools.setup(
             "tensorflow>=1.15.0",
             "pyannote.audio",
             "pytorch-transformers",
+            'typing-extensions=4.4.0;python_version>="3.7"',
         ],
         "test": [
             "ddt",
