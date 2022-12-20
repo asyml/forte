@@ -80,6 +80,7 @@ setuptools.setup(
             "testbook",
             "termcolor",
             "nltk",
+            "transformers>=4.15.0, <=4.22.2",
         ],
         "wikipedia": ["rdflib==4.2.2"],
         # transformers 4.10.0 will break the translation model we used here

@@ -10,7 +10,7 @@ from forte.data.data_pack import DataPack
 
 # import the NdEntry classes manually
 module_name = "ft.onto.test_ndarray"
-spec = importlib.util.spec_from_file_location(module_name, "test_outputs/ft/onto/test_ndarray.py")
+spec = importlib.util.spec_from_file_location(module_name, os.path.abspath("test_outputs/ft/onto/test_ndarray.py"))
 module = importlib.util.module_from_spec(spec)
 sys.modules[module_name] = module
 spec.loader.exec_module(module)
