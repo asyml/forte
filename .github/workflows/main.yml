@@ -35,7 +35,7 @@ jobs:
           - python-version: 3.8
             torch-version: 1.8.1
             tensorflow-version: 2.2.0
-          - python-version: 3.9.15
+          - python-version: 3.9
             torch-version: 1.7.1
             tensorflow-version: 2.5.0
           - python-version: 3.9
@@ -91,6 +91,7 @@ jobs:
         run: |
           pip install --progress-bar off pylint==2.14.5 flake8==5.0.4 mypy==0.991 pytest==7.2.0 black==22.12.0
           pip install --progress-bar off types-PyYAML==5.4.8 types-typed-ast==1.4.4 types-requests==2.25.6 types-dataclasses==0.1.7
+          pip install --progress-bar off --upgrade typing-extensions
           pip install --progress-bar off coverage codecov
       - name: Build ontology
         run: |
