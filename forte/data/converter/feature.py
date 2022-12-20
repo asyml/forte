@@ -197,12 +197,16 @@ class Feature:
         )
 
     def __len__(self):
-        if self._data is None:
-            raise ValueError(
-                "Invalid internal state: leaf_feature "
-                "does not have actual data"
-            )
-        return len(self._data) if self.leaf_feature else len(self._sub_features)
+        if self.leaf_feature:
+            if self._data is None:
+                raise ValueError(
+                    "Invalid internal state: leaf_feature "
+                    "does not have actual data"
+                )
+            else:
+                return len(self._data)
+        else:
+            return len(self._sub_features)
 
     def pad(self, max_len: int):
         """
