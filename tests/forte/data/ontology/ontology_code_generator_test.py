@@ -77,6 +77,7 @@ class GenerateOntologyTest(unittest.TestCase):
                     continue
                 self.assertEqual(la, lb)
 
+
     @data(
         (
             "example_ontology",

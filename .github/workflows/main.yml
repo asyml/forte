@@ -13,7 +13,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ 3.7 ] # TODO: temporarily remove 3.6 to get around Github bug.
+        # https://github.com/actions/setup-python/issues/544#issuecomment-1333893110
+        # Python 3.6 is removed from workflow matrices now.
+        # One alternative is to support 3.6 but duplicate all the workflow steps in
+        # another ubuntu-20.04. But that would result in a full copy of all the
+        # workflow steps, causing many problems in future upgrade.
+        # Afaik, there is no good way to avoid copying right now: https://stackoverflow.com/a/71570847
+        python-version: [ 3.7 ]
         torch-version: [ 1.5.0, 1.6.0 ]
         tensorflow-version: [ 1.15.0 ]
         include:

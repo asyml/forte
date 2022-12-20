@@ -14,21 +14,18 @@
 """
 Utility functions for ontology generation.
 """
+import fnmatch
+import json
 import os
 import sys
-import re
-import json
-import fnmatch
-
-from pathlib import Path
-from pydoc import locate
-from importlib import util as import_util
-from typing import Optional, List, Tuple
-
-from distutils.file_util import copy_file
+from distutils import log
 from distutils.dir_util import mkpath
 from distutils.errors import DistutilsFileError
-from distutils import log
+from distutils.file_util import copy_file
+from importlib import util as import_util
+from pathlib import Path
+from pydoc import locate
+from typing import Optional, List, Tuple
 
 import jsonschema
 
@@ -247,32 +244,6 @@ def get_python_version() -> Tuple[int, int]:
     """
     version_info = sys.version_info
     return version_info[0], version_info[1]
-
-
-def get_schema_from_ontology(
-    imported_onto_file: Optional[str], delimiters: List[str]
-) -> str:
-    if imported_onto_file is None:
-        raise FileNotFoundError
-    with open(imported_onto_file, "r", encoding="utf-8") as imported_onto:
-        regex = "|".join(map(re.escape, delimiters))
-        reqd_line = imported_onto.readlines()[1]
-        installed_json_file = list(filter(None, re.split(regex, reqd_line)))[0]
-    return installed_json_file
-
-
-def get_parent_path(file_path: str, level: int = 1):
-    relative_path = os.path.join(file_path, *([os.pardir] * level))
-    return os.path.normpath(relative_path)
-
-
-def get_installed_forte_dir():
-    init_path = get_module_path("forte")
-    return get_parent_path(init_path, 2) if init_path is not None else None
-
-
-def get_current_forte_dir():
-    return get_parent_path(__file__, 4)
 
 
 def get_generated_files_in_dir(path):

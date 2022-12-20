@@ -464,6 +464,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         """
         supported_modality = [enum.name for enum in Modality]
 
+        payloads_length = -1
         try:
             # if modality.name == "text":
             if modality == Modality.Text:
@@ -487,7 +488,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             raise ProcessExecutionException(
                 f"payload index ({payload_index}) "
                 f"is larger or equal to {modality.name} payload list"
-                f" length ({payloads_length}). "  # pylint: disable=used-before-assignment
+                f" length ({payloads_length}). "
                 f"Please input a {modality.name} payload index less than it."
             ) from e
         return payload

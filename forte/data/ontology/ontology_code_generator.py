@@ -308,7 +308,7 @@ class OntologyCodeGenerator:
             self.import_managers.root, top_ontology_module
         )
 
-        # A few pre-requesite type to support.
+        # A few pre-requisite types to support.
         self.import_managers.add_default_import("dataclasses.dataclass")
         self.import_managers.root.add_object_to_import("typing.Optional")
 
@@ -323,7 +323,7 @@ class OntologyCodeGenerator:
         for type_str in ALL_INBUILT_TYPES:
             self.allowed_types_tree[type_str] = set()
 
-        self.installed_forte_dir = utils.get_installed_forte_dir()
+        # self.installed_forte_dir = utils.get_installed_forte_dir()
 
         # A set of paths where we won't write out ontologies.
         # A main reason for this is that they may have already been created.
@@ -347,7 +347,6 @@ class OntologyCodeGenerator:
         import forte.ontology_specs as spec_module  # pylint: disable=import-outside-toplevel
 
         spec_resource: Traversable = resources.files(spec_module)
-
         self.import_dirs.append(spec_resource)
 
         if not generate_all:
@@ -535,7 +534,7 @@ class OntologyCodeGenerator:
               customized number of levels of namespace packaging.
               The generation of __init__.py for all the directory
               levels above namespace_depth will be disabled.
-              For example, if we have an ontology level1.levle2.level3.
+              For example, if we have an ontology level1.level2.level3.
               something and namespace_depth=2, then we remove __init__.py
               under level1 and level1/level2 while keeping __init__.py under
               level1/level2/level3.
@@ -629,17 +628,18 @@ class OntologyCodeGenerator:
             rel_import: The relative path under the import directories.
 
         Returns:
-            a context manager for use in a with statement,
-            the context manager provides a pathlib.Path object
+            a context manager for use in a with statement that represents
+            the resource to be imported. The context manager provides
+            a pathlib.Path object.
         """
+
         for import_dir in self.import_dirs:
-            # When the import directory is regular path.
-            if isinstance(import_dir, Path):
-                full_spec_path = import_dir / Path(rel_import)
-                if os.path.exists(full_spec_path):
-                    yield Path(full_spec_path)
-            elif isinstance(import_dir, Traversable):
-                return resources.as_file(import_dir.joinpath(rel_import))
+            # use the contextmanager from importlib.
+            p = import_dir.joinpath(rel_import)
+            if p.is_file():
+                with resources.as_file(p) as o:
+                    yield o
+                return
 
         raise OntologySourceNotFoundException(
             f"Cannot find import [{rel_import}]."
@@ -677,7 +677,7 @@ class OntologyCodeGenerator:
             return
 
         json_file_path: Path
-        visited_path: Dict[str, bool]
+        visited_paths: Dict[str, bool]
         rec_visited_paths: Dict[str, bool]
 
         json_file_path, visited_paths, rec_visited_paths = import_info
@@ -705,19 +705,9 @@ class OntologyCodeGenerator:
 
         # Once the ontology for all the imported files is generated, generate
         # ontology of the current file.
-        # Print relative json path in the ontology if the current directory is
-        # the installation directory - example, when running the test cases
-        curr_forte_dir = utils.get_current_forte_dir()
-
-        print_json_file = json_file_path
-        if self.installed_forte_dir is not None and os.path.samefile(
-            curr_forte_dir, self.installed_forte_dir
-        ):
-            print_json_file = json_file_path / Path(curr_forte_dir)
-
         self.parse_schema(
             spec_dict,
-            print_json_file,
+            json_file_path.absolute(),
             merged_schema,
             merged_prefixes,
             lenient_prefix,
@@ -849,8 +839,6 @@ class OntologyCodeGenerator:
 
             # Get or set module writer only if the ontology to be generated
             # is not already installed.
-            # TODO: make sure exclude_from_writing store the right type
-            #   and that module writer take the right source_file
             if source_json_file not in self.exclude_from_writing:
                 module_writer = self.module_writers.get(en.module_name)
                 module_writer.set_description(file_desc)
