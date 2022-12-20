@@ -103,7 +103,10 @@ jobs:
           # Test the rest but ignore the tests/ folder The GitHub editor is 127 chars wide
           flake8 forte/ examples/ ft/ scripts/ --ignore E203,W503 --count --max-complexity=10 --max-line-length=127 --statistics
       - name: Lint with pylint
+        # Since tensorflow require certain version of `typing-extensions`, which will cause pylint to fail.
+        # Force install back our version here.
         run: |
+          pip install typing-extensions>=4.4.0
           pylint forte/
       - name: Lint main code with mypy when torch version is not 1.5.0 and python is 3.9
         run: |
