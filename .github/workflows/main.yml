@@ -29,7 +29,7 @@ jobs:
           - python-version: 3.8
             torch-version: 1.8.1
             tensorflow-version: 2.2.0
-          - python-version: 3.9
+          - python-version: 3.9.15
             torch-version: 1.7.1
             tensorflow-version: 2.5.0
           - python-version: 3.9
