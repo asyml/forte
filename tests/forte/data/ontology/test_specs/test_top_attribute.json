@@ -1,8 +1,8 @@
 {
-    "name": "test_top_attribute",
+    "name": "sample_top_attribute",
     "definitions": [
         {
-            "entry_name": "ft.onto.test_top_attribute.Item",
+            "entry_name": "ft.onto.sample_top_attribute.Item",
             "parent_entry": "forte.data.ontology.top.Annotation",
             "attributes": [
                 {

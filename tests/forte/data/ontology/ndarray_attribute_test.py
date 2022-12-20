@@ -9,8 +9,8 @@ import numpy as np
 from forte.data.data_pack import DataPack
 
 # import the NdEntry classes manually
-module_name = "ft.onto.test_ndarray"
-module_path = os.path.join(os.path.dirname(__file__), "test_outputs/ft/onto/test_ndarray.py")
+module_name = "ft.onto.sample_ndarray"
+module_path = os.path.join(os.path.dirname(__file__), "test_outputs/ft/onto/sample_ndarray.py")
 spec = importlib.util.spec_from_file_location(module_name, module_path)
 module = importlib.util.module_from_spec(spec)
 sys.modules[module_name] = module

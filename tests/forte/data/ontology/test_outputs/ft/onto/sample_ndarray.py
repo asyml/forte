@@ -1,5 +1,5 @@
 # ***automatically_generated***
-# ***source json:../testing/sample_onto/test_ndarray_attribute.json***
+# ***source json:../testing/sample_onto/sample_ndarray_attribute.json***
 # flake8: noqa
 # mypy: ignore-errors
 # pylint: skip-file
