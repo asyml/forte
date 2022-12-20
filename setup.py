@@ -70,7 +70,7 @@ setuptools.setup(
             "texar-pytorch>=0.1.4",
             "tensorflow>=1.15.0",
             "pyannote.audio",
-            "pytorch-transformers",
+            "pytorch-transformers==1.2.0",
             'typing-extensions==4.4.0;python_version>="3.7"',
         ],
         "test": [
@@ -78,7 +78,7 @@ setuptools.setup(
             "testfixtures",
             "testbook",
             "termcolor",
-            "transformers>=4.15.0",
+            "transformers>=4.15.0, <=4.23.1",
             "nltk",
         ],
         "wikipedia": ["rdflib==4.2.2"],
