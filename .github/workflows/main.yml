@@ -62,11 +62,7 @@ jobs:
           sudo apt-get install -y libsndfile1-dev
           python -m pip install --progress-bar off --upgrade pip
           pip install --progress-bar off Django django-guardian
-          # Remember to update pre commit hook (pre-commit-config.yaml) if the following is updated.
-          pip install --progress-bar off pylint==2.14.5 flake8==5.0.4 mypy==0.991 pytest==7.2.0 black==22.12.0
-          # Try to fix the pylint issue
-          pip install --progress-bar off types-PyYAML==5.4.8 types-typed-ast==1.4.4 types-requests==2.25.6 types-dataclasses==0.1.7
-          pip install --progress-bar off coverage codecov
+          pip install --progress-bar off black==22.12.0
           python -m pip install ipykernel
           python -m ipykernel install --user
       - name: Format check with Black
@@ -89,6 +85,13 @@ jobs:
         run: |
           pip install --progress-bar off torch==${{ matrix.torch-version }}
           pip install --progress-bar off tensorflow==${{ matrix.tensorflow-version }}
+      - name: Install linting tools after regular installation
+        # Remember to update pre commit hook (pre-commit-config.yaml) if the following is updated.
+        # Better run after other installations (e.g. tensorflow), since those packages may ask for different versions.
+        run: |
+          pip install --progress-bar off pylint==2.14.5 flake8==5.0.4 mypy==0.991 pytest==7.2.0 black==22.12.0
+          pip install --progress-bar off types-PyYAML==5.4.8 types-typed-ast==1.4.4 types-requests==2.25.6 types-dataclasses==0.1.7
+          pip install --progress-bar off coverage codecov
       - name: Build ontology
         run: |
           ./scripts/build_ontology_specs.sh
@@ -103,10 +106,8 @@ jobs:
           # Test the rest but ignore the tests/ folder The GitHub editor is 127 chars wide
           flake8 forte/ examples/ ft/ scripts/ --ignore E203,W503 --count --max-complexity=10 --max-line-length=127 --statistics
       - name: Lint with pylint
-        # Since tensorflow require certain version of `typing-extensions`, which will cause pylint to fail.
-        # Force install back our version here.
         run: |
-          pip install typing-extensions>=4.4.0
+          pip show typing-extensions
           pylint forte/
       - name: Lint main code with mypy when torch version is not 1.5.0 and python is 3.9
         run: |
