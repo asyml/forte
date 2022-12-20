@@ -95,7 +95,7 @@ class MetaModule(nn.ModuleList):
             # type(self) is the real class object
             # it can be MetaModule(value), or it can be its subclass,
             # e.g. TexarBertMetaModule(value)
-            self.add_module(key, type(self)(value))  # type: ignore
+            self.add_module(key, type(self)(value))
 
         for key, value in module.__dict__.items():
             if (
