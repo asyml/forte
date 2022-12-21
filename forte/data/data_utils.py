@@ -66,7 +66,7 @@ def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
 
     Raises: Exception: when path traversal is attempted, i.e., trying
         to create files outside of the designated directory.
-    """    
+    """
     for member in tar.getmembers():
         # Untar each files individually, reject ones outside of CWD.
         member_path: str = os.path.join(path, member.name)
