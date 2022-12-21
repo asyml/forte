@@ -35,7 +35,7 @@ class MultiPackTerminalReader(MultiPackReader):
     def _cache_key_function(self, collection) -> str:
         return "cached_string_file"
 
-    def _collect(self) -> Iterator[str]:  # type: ignore
+    def _collect(self) -> Iterator[str]:
         # This allows the user to pass in either one single string or a list of
         # strings.
         while True:

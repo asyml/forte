@@ -59,7 +59,7 @@ class CharacterFlipOp(SingleAnnotationAugmentOp):
         self.dict_path = self.configs["dict_path"]
 
         try:
-            r = requests.get(self.dict_path)
+            r = requests.get(self.dict_path, timeout=30)
             self.data = r.json()
         except requests.exceptions.RequestException:
             with open(self.dict_path, encoding="utf8") as json_file:

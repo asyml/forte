@@ -171,7 +171,7 @@ class Pipeline(Generic[PackType]):
         self._reader: BaseReader
         self._reader_config: Optional[Config] = None
 
-        # These variables defines the units in the pipeline, they should be
+        # These variables define the units in the pipeline, they should be
         # of the same length
         self._components: List[PipelineComponent] = []
         self._selectors: List[Selector] = []
@@ -345,6 +345,25 @@ class Pipeline(Generic[PackType]):
             except (TypeError, OverflowError) as e:
                 raise ProcessorConfigError(err_msg) from e
 
+        # Check for data completeness
+        if self._reader_config is None:
+            raise ProcessorConfigError(
+                "The configuration for the pipeline is incomplete, the reader "
+                "configuration is None."
+            )
+
+        if any(c is None for c in self.component_configs):
+            raise ProcessorConfigError(
+                "The configuration for the pipeline is incomplete, one of the component "
+                "configurations is None"
+            )
+
+        if any(c is None for c in self._selectors_configs):
+            raise ProcessorConfigError(
+                "The configuration for the pipeline is incomplete, one of the selector "
+                "configurations is None"
+            )
+
         get_err_msg: Dict = {
             "reader": lambda reader: (
                 "The reader of the pipeline cannot be JSON serialized. This is"
@@ -405,6 +424,18 @@ class Pipeline(Generic[PackType]):
             self._selectors,
             self._selectors_configs,
         ):
+            if config is None:
+                raise ProcessorConfigError(
+                    "The configuration for the pipeline is incomplete, one of the component "
+                    "configurations is None"
+                )
+
+            if selector_config is None:
+                raise ProcessorConfigError(
+                    "The configuration for the pipeline is incomplete, one of the selector "
+                    "configurations is None"
+                )
+
             configs["components"].append(
                 {
                     "type": get_full_module_name(component),
@@ -723,11 +754,11 @@ class Pipeline(Generic[PackType]):
             for component in self.components:
                 if hasattr(component, "expected_types_and_attributes"):
                     record_types_and_attributes_check(
-                        component.expected_types_and_attributes(),  # type: ignore
+                        component.expected_types_and_attributes(),
                         current_records,
                     )
                 if hasattr(component, "record"):
-                    component.record(current_records)  # type: ignore
+                    component.record(current_records)
 
         return self
 
@@ -760,7 +791,7 @@ class Pipeline(Generic[PackType]):
                     )
             except ProcessorConfigError as e:
                 logging.error(
-                    "Exception occur when initializing " "processor %s",
+                    "Exception occur when initializing processor %s",
                     component.name,
                 )
                 raise e

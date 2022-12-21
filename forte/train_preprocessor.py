@@ -24,7 +24,7 @@ from forte.data.converter import Converter
 from forte.data.data_pack import DataPack
 from forte.data.data_pack_dataset import DataPackDataset, DataPackIterator
 from forte.data.ontology import Annotation
-from forte.data.ontology.core import EntryType
+from forte.data.ontology.core import EntryType, Entry
 from forte.utils import extractor_utils, create_import_error_msg
 from forte.utils.extractor_utils import parse_feature_extractors
 
@@ -89,7 +89,7 @@ class TrainPreprocessor:
         self._pack_iterator: Iterator[DataPack] = pack_iterator
         self._cached_packs: List[DataPack] = []
 
-        self._config: Config = None
+        self._config: Config
         self._user_request: Dict = {}
         # Parsed feature extractors.
         self._request: Dict = {}
@@ -195,7 +195,7 @@ class TrainPreprocessor:
         self._request_ready = True
 
     def _build_vocab(self):
-        context_type: EntryType = self._request["context_type"]
+        context_type: Type[Entry] = self._request["context_type"]
         schemes: Dict = self._request["schemes"]
 
         # TODO: clear vocab?
@@ -213,7 +213,7 @@ class TrainPreprocessor:
                         extractor.update_vocab(data_pack)
                     else:
                         context: Annotation
-                        for context in data_pack.get(context_type):
+                        for context in data_pack.get(context_type):  # type: ignore
                             extractor.update_vocab(data_pack, context)
 
         self._vocab_ready = True

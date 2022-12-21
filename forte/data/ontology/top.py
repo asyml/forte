@@ -1103,12 +1103,12 @@ class Payload(Entry):
         Convert ``modality`` ``Enum`` object to str format for serialization.
         """
         # TODO: this function will be removed since
-        # Entry store is being integrated into DataStore
+        #   Entry store is being integrated into DataStore
         state = self.__dict__.copy()
         state["modality"] = self.modality_name
 
         if isinstance(state["_cache"], np.ndarray):
-            state["_cache"] = list(self._cache.tolist())
+            state["_cache"] = list(self._cache.tolist())  # type: ignore
         if isinstance(state["_embedding"], np.ndarray):
             state["_embedding"] = list(self._embedding.tolist())
 

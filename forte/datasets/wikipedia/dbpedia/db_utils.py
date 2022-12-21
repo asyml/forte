@@ -343,7 +343,7 @@ class ContextGroupedNIFReader:
                     if c_ is None:
                         continue
 
-                    if c_ != self.__last_c and self.__last_c != "":
+                    if self.__last_c not in (c_, ""):
                         res_c = self.__last_c
                         res_states.extend(self.__statements)
                         self.__statements.clear()

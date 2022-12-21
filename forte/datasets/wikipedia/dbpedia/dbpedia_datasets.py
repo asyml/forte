@@ -103,9 +103,7 @@ class DBpediaWikiReader(PackReader):
         else:
             raise ResourceError("Redirects not provided from resources.")
 
-    def _collect(  # type: ignore
-        self, nif_context: str
-    ) -> Iterator[Dict[str, str]]:
+    def _collect(self, nif_context: str) -> Iterator[Dict[str, str]]:
         str_data: Dict[str, str] = {}
 
         for context_statements in NIFParser(nif_context):
@@ -206,7 +204,7 @@ class WikiPackReader(PackReader):
     def add_wiki_info(self, pack: DataPack, statements: List[state_type]):
         raise NotImplementedError
 
-    def _collect(  # type: ignore
+    def _collect(
         self, nif_path: str
     ) -> Iterator[Tuple[str, Dict[str, List[state_type]]]]:
         skipped = 0
