@@ -31,6 +31,27 @@ __all__ = [
 ]
 
 
+def is_within_directory(directory: str, target: str):
+    # Check whether `target` is in `directory` by comparing the
+    # prefix.
+    abs_directory = os.path.abspath(directory)
+    abs_target = os.path.abspath(target)
+
+    prefix = os.path.commonprefix([abs_directory, abs_target])
+
+    return prefix == abs_directory
+
+
+def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
+    for member in tar.getmembers():
+        # Untar each files individually, reject ones outside of CWD.
+        member_path: str = os.path.join(path, member.name)
+        if not is_within_directory(path, member_path):
+            raise Exception("Attempted Path Traversal in Tar File")
+
+    tar.extractall(path, members, numeric_owner=numeric_owner)
+
+
 # TODO: Remove these once pylint supports function stubs.
 # pylint: disable=unused-argument,function-redefined,missing-docstring
 
@@ -124,34 +145,7 @@ def maybe_download(
                 if tarfile.is_tarfile(filepath):
                     with tarfile.open(filepath, "r") as tfile:
 
-                        def is_within_directory(directory: str, target: str):
-                            # Check whether `target` is in `directory` by comparing the
-                            # prefix.
-                            abs_directory = os.path.abspath(directory)
-                            abs_target = os.path.abspath(target)
-
-                            prefix = os.path.commonprefix(
-                                [abs_directory, abs_target]
-                            )
-
-                            return prefix == abs_directory
-
-                        def safe_extract(
-                            tar, path=".", members=None, *, numeric_owner=False
-                        ):
-                            for member in tar.getmembers():
-                                # Untar each files individually, reject ones outside of CWD.
-                                member_path: str = os.path.join(
-                                    path, member.name
-                                )
-                                if not is_within_directory(path, member_path):
-                                    raise Exception(
-                                        "Attempted Path Traversal in Tar File"
-                                    )
-
-                            tar.extractall(
-                                path, members, numeric_owner=numeric_owner
-                            )
+                        
 
                         safe_extract(tfile, path)
 
