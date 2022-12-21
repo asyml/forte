@@ -123,6 +123,7 @@ def maybe_download(
                 logging.info("Extract %s", filepath)
                 if tarfile.is_tarfile(filepath):
                     with tarfile.open(filepath, "r") as tfile:
+
                         def is_within_directory(directory: str, target: str):
                             # Check whether `target` is in `directory` by comparing the
                             # prefix.
@@ -153,6 +154,7 @@ def maybe_download(
                             )
 
                         safe_extract(tfile, path)
+
                 elif zipfile.is_zipfile(filepath):
                     with zipfile.ZipFile(filepath) as zfile:
                         zfile.extractall(path)
