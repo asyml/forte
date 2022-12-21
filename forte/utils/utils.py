@@ -102,12 +102,18 @@ def get_class(full_class_name: str, module_paths: Optional[List[str]] = None):
             if class_ is not None:
                 break
 
-    # Added the following to find classes that are dynamically loaded.
+    # Try to find classes that are dynamically loaded, class_ will still be None if failed.
     if class_ is None:
-        module_name, class_name = full_class_name.rsplit(".", 1)
         try:
-            class_ = getattr(sys.modules[module_name], class_name)
-        except AttributeError:
+            module_name, class_name = full_class_name.rsplit(".", 1)
+            try:
+                class_ = getattr(sys.modules[module_name], class_name)
+            except (AttributeError, KeyError):
+                # ignore when cannot find the module in sys.modules or cannot find the class
+                # in the module.
+                pass
+        except ValueError:
+            # ignoring when the full class name doesn't have multiple parts.
             pass
 
     if class_ is None:
