@@ -43,7 +43,7 @@ translators can be also implemented following our interface.
 
 ### Typo Replacement Op
 
-This Op generates a typo by employing a typo replacement dictionary to replace a word with a relevant typo. 
+This Op generates a typo by employing a typo replacement dictionary to replace a word with a relevant typo.
 It uses a pre-defined spelling mistake dictionary to simulate spelling mistakes.
 
 ## Easy Data Augmentation (EDA)

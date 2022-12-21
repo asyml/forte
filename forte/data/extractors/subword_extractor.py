@@ -18,7 +18,7 @@ from the subwords of an entry.
 import logging
 from typing import Union, Dict, Optional
 
-
+from forte.common import ProcessorConfigError
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.data.converter.feature import Feature
@@ -43,6 +43,11 @@ class SubwordExtractor(BaseExtractor):
     def initialize(self, config: Union[Dict, Config]):
         # pylint: disable=attribute-defined-outside-init
         super().initialize(config=config)
+
+        if self.config is None:
+            raise ProcessorConfigError(
+                "Configuration for the extractor cannot be None."
+            )
 
         try:
             from texar.torch.data.tokenizers.bert_tokenizer import (  # pylint:disable=import-outside-toplevel
@@ -103,6 +108,11 @@ class SubwordExtractor(BaseExtractor):
         Returns:
             Feature: a feature that contains the extracted data.
         """
+        if self.config is None:
+            raise ProcessorConfigError(
+                "Configuration for the extractor not found."
+            )
+
         data = []
 
         subword: Annotation

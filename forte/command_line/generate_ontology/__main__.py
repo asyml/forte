@@ -81,7 +81,7 @@ def clean(args_):
 
 class OntologyGenerationParser(argparse.ArgumentParser):
     def error(self, message):
-        sys.stderr.write("Error: %s\n" % message)
+        sys.stderr.write(f"Error: {message}\n")
         self.print_help()
         sys.exit(2)
 
@@ -229,7 +229,7 @@ def main():
     if options_func is not None:
         options.func(options)
     else:
-        sys.stderr.write("Error: %s\n" % "wrong usage of the script.")
+        sys.stderr.write("Error: wrong usage of the script.\n")
         OntologyGenerationParser().print_help()
         sys.exit(2)
 

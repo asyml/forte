@@ -53,7 +53,7 @@ class CoNLL03Reader(PackReader):
         . . O O
     """
 
-    def _collect(self, conll_directory) -> Iterator[Any]:  # type: ignore
+    def _collect(self, conll_directory) -> Iterator[Any]:
         r"""Iterator over conll files in the data_source.
 
         Args:
@@ -103,7 +103,7 @@ class CoNLL03Reader(PackReader):
                         text, replace_func=self.text_replace_operation
                     )
                     Document(pack, 0, len(text))
-                    pack.pack_name = collection + "_%d" % pack_id
+                    pack.pack_name = f"{collection}_{pack_id}"
                     pack_id += 1
                     yield pack
 
@@ -152,9 +152,9 @@ class CoNLL03Reader(PackReader):
                     # This ner tag is connected to previous one.
                     else:
                         x, y = ner_tag.split("-")
-                        assert x == "I", "Unseen tag %s in the file." % x
-                        assert y == prev_y, "Error in %s." % ner_tag
-                        assert prev_x in ("B", "I"), "Error in %s." % ner_tag
+                        assert x == "I", f"Unseen tag {x} in the file."
+                        assert y == prev_y, f"Error in {ner_tag}."
+                        assert prev_x in ("B", "I"), "Error in {ner_tag}."
                         prev_x = "I"
 
                     word_begin = offset

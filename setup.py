@@ -49,7 +49,7 @@ setuptools.setup(
         'typing>=3.7.4;python_version<"3.5"',
         "typing-inspect>=0.6.0",
         'dataclasses~=0.7;python_version<"3.7"',
-        'importlib-resources>=5.1.4;python_version<"3.7"',
+        'importlib-resources>=5.1.4;python_version<"3.9"',
         "asyml-utilities",
     ],
     extras_require={
@@ -70,15 +70,17 @@ setuptools.setup(
             "texar-pytorch>=0.1.4",
             "tensorflow>=1.15.0",
             "pyannote.audio",
-            "pytorch-transformers",
+            "pytorch-transformers==1.2.0",
+            "transformers>=4.15.0, <=4.22.2",
+            'typing-extensions==4.4.0;python_version>="3.7"',
         ],
         "test": [
             "ddt",
             "testfixtures",
             "testbook",
             "termcolor",
-            "transformers>=4.15.0",
             "nltk",
+            "transformers>=4.15.0, <=4.22.2",
         ],
         "wikipedia": ["rdflib==4.2.2"],
         # transformers 4.10.0 will break the translation model we used here

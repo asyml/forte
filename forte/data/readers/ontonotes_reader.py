@@ -196,7 +196,7 @@ class OntonotesReader(PackReader):
         config.update({"column_format": cls._DEFAULT_FORMAT})
         return config
 
-    def _collect(self, conll_directory: str) -> Iterator[Any]:  # type: ignore
+    def _collect(self, conll_directory: str) -> Iterator[Any]:
         r"""Iterator over `*.gold_conll` files in the data_source
 
         Args:

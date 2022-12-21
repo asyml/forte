@@ -7,13 +7,25 @@ on:
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+    inputs:
+      tmate_enabled:
+        type: boolean
+        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        required: false
+        default: false
 
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ 3.6, 3.7 ]
+        # https://github.com/actions/setup-python/issues/544#issuecomment-1333893110
+        # Python 3.6 is removed from workflow matrices now.
+        # One alternative is to support 3.6 but duplicate all the workflow steps in
+        # another ubuntu-20.04. But that would result in a full copy of all the
+        # workflow steps, causing many problems in future upgrade.
+        # Afaik, there is no good way to avoid copying right now: https://stackoverflow.com/a/71570847
+        python-version: [ 3.7 ]
         torch-version: [ 1.5.0, 1.6.0 ]
         tensorflow-version: [ 1.15.0 ]
         include:
@@ -45,18 +57,14 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
             ${{ runner.os }}-
-
       - name: Install dependencies
         run: |
           sudo apt-get install -y libsndfile1-dev
           python -m pip install --progress-bar off --upgrade pip
           pip install --progress-bar off Django django-guardian
-          pip install --progress-bar off pylint==2.10.2 flake8==3.9.2 mypy==0.931 pytest==5.1.3 black==22.3.0
-          pip install --progress-bar off types-PyYAML==5.4.8 types-typed-ast==1.4.4 types-requests==2.25.6 types-dataclasses==0.1.7
-          pip install --progress-bar off coverage codecov
+          pip install --progress-bar off black==22.12.0
           python -m pip install ipykernel
           python -m ipykernel install --user
-          pip install --progress-bar off asyml-utilities
       - name: Format check with Black
         run: |
           black --line-length 80 --check forte/
@@ -70,7 +78,6 @@ jobs:
           # Simply keep the database file but remove the repo.
           cp stave/simple-backend/db.sqlite3 .
           rm -rf stave
-
       - name: Install Forte
         run: |
           pip install --progress-bar off .[data_aug,ir,remote,audio_ext,stave,models,test,wikipedia,nlp,extractor]
@@ -78,21 +85,34 @@ jobs:
         run: |
           pip install --progress-bar off torch==${{ matrix.torch-version }}
           pip install --progress-bar off tensorflow==${{ matrix.tensorflow-version }}
+      - name: Install linting tools after regular installation
+        # Remember to update pre commit hook (pre-commit-config.yaml) if the following is updated.
+        # Better run after other installations (e.g. tensorflow), since those packages may ask for different versions.
+        run: |
+          pip install --progress-bar off pylint==2.14.5 flake8==5.0.4 mypy==0.991 pytest==7.2.0 black==22.12.0
+          pip install --progress-bar off types-PyYAML==5.4.8 types-typed-ast==1.4.4 types-requests==2.25.6 types-dataclasses==0.1.7
+          pip install --progress-bar off --upgrade typing-extensions
+          pip install --progress-bar off coverage codecov
       - name: Build ontology
         run: |
           ./scripts/build_ontology_specs.sh
+      - name: Setup tmate session
+        # Add a tmate step after most of the installation.
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.tmate_enabled }}
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
           flake8 forte/ examples/ ft/ scripts/ tests/ --count --select=E9,F63,F7,F82 --show-source --statistics
-          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-          flake8 forte/ examples/ ft/ scripts/ tests/ --ignore E203,W503 --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+          # Test the rest but ignore the tests/ folder The GitHub editor is 127 chars wide
+          flake8 forte/ examples/ ft/ scripts/ --ignore E203,W503 --count --max-complexity=10 --max-line-length=127 --statistics
       - name: Lint with pylint
         run: |
+          pip show typing-extensions
           pylint forte/
       - name: Lint main code with mypy when torch version is not 1.5.0 and python is 3.9
         run: |
-          if [[ ${{ matrix.torch-version }} != "1.5.0" && ${{ matrix.python-version }} == "3.9" ]]; then mypy forte; fi
+          if [[ ${{ matrix.torch-version }} != "1.5.0" && ${{ matrix.python-version }} == "3.9" ]]; then mypy forte --check-untyped-defs; fi
       - name: Test with pytest and run coverage
         run: |
           coverage run -m pytest tests  --ignore=tests/forte/notebooks --ignore=tests/forte/forte_backbone_test.py
@@ -170,7 +190,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ 3.6 ]
+        python-version: [ 3.7 ]
         torch-version: [ 1.5.0 ]
         tensorflow-version: [ 1.15.0 ]
         modules:
@@ -221,6 +241,12 @@ jobs:
           pip install --progress-bar off .[${{ matrix.modules.module }}]
           pip install --progress-bar off torch==${{ matrix.torch-version }}
           pip install --progress-bar off pytest==5.1.3
+      - name: Setup tmate session
+        # Add a tmate step before the actual testing.
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.tmate_enabled }}
+      - name: Run the test
+        run: |
           pytest ${{ matrix.modules.test_file }}
 
   docs:
