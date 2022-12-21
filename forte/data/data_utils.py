@@ -32,6 +32,15 @@ __all__ = [
 
 
 def is_within_directory(directory: str, target: str):
+    r"""Check whether `directory` is within the `target`.
+
+    Args:
+        directory (str): The directory to be checked.
+        target (str): `target` directory that should contain the `directory`
+
+    Returns:
+        Boolean value indicating whether `directory` is within `target`.
+    """    
     # Check whether `target` is in `directory` by comparing the
     # prefix.
     abs_directory = os.path.abspath(directory)
@@ -43,6 +52,21 @@ def is_within_directory(directory: str, target: str):
 
 
 def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
+    r"""Extract a tarball that disallows path traversal. See
+    https://github.com/advisories/GHSA-gw9q-c7gh-j9vm for details.
+
+    Args:
+        tar (str): The path of the tarball.
+        path (str): The directory to control the extraction process.
+        members: Optional subset of files to extract. If given, it must
+          be a subset of the list returned by `getmembers()`.
+        numeric_owners (bool): If True, the uid and gid numbers from
+          the tarfile are used to set the owner/group for the extracted
+          files. Otherwise, the named values from the tarfile are used.
+
+    Raises: Exception: when path traversal is attempted, i.e., trying
+        to create files outside of the designated directory.
+    """    
     for member in tar.getmembers():
         # Untar each files individually, reject ones outside of CWD.
         member_path: str = os.path.join(path, member.name)
