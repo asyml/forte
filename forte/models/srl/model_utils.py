@@ -324,7 +324,7 @@ class MLP(tx.ModuleBase):
         super().__init__(hparams)
 
         input_size = self._hparams.input_size
-        layers = []
+        layers: List[nn.Module] = []
         dropout = self._hparams.dropout_rate
         if self._hparams.activation is not None:
             activation = tx.core.get_layer({"type": self._hparams.activation})

@@ -464,6 +464,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         """
         supported_modality = [enum.name for enum in Modality]
 
+        payloads_length = -1
         try:
             # if modality.name == "text":
             if modality == Modality.Text:
@@ -910,7 +911,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         Returns:
             An data pack object deserialized from the string.
         """
-        return cls._deserialize(data_source, serialize_method, zip_pack)
+        return cls._deserialize(data_source, serialize_method, zip_pack)  # type: ignore
 
     def _add_entry(self, entry: Union[EntryType, int]) -> EntryType:
         r"""Force add an :class:`~forte.data.ontology.core.Entry` object to the
@@ -932,14 +933,13 @@ class DataPack(BasePack[Entry, Link, Group]):
         Args:
             entry: An :class:`~forte.data.ontology.core.Entry` object
                 to be added to the datapack.
-            allow_duplicate: Whether we allow duplicate in the datapack.
 
         Returns:
             The input entry itself
         """
         if isinstance(entry, int):
             # If entry is a TID, convert it to the class object.
-            entry = self._entry_converter.get_entry_object(tid=entry, pack=self)
+            entry = self._entry_converter.get_entry_object(tid=entry, pack=self)  # type: ignore
 
         if isinstance(entry, Annotation):
             begin, end = entry.begin, entry.end
@@ -969,14 +969,13 @@ class DataPack(BasePack[Entry, Link, Group]):
                     )
 
         # update the data pack index if needed
-        # TODO: DataIndex will be deprecated in future
-        self._index.update_basic_index([entry])
+        self._index.update_basic_index([entry])  # type: ignore
         if self._index.link_index_on and isinstance(entry, Link):
             self._index.update_link_index([entry])
         if self._index.group_index_on and isinstance(entry, Group):
             self._index.update_group_index([entry])
         self._index.deactivate_coverage_index()
-        self._pending_entries.pop(entry.tid)
+        self._pending_entries.pop(entry.tid)  # type: ignore
         return entry  # type: ignore
 
     def delete_entry(self, entry: EntryType):
@@ -1686,12 +1685,12 @@ class DataPack(BasePack[Entry, Link, Group]):
                 entry.set_payload_index(len(self.image_payloads))
                 self.image_payloads.append(entry)
 
-    def _get_entry_from_data_store(self, tid: int) -> EntryType:
+    def _get_entry_from_data_store(self, tid: int) -> Entry[Any]:
         r"""Generate a class object from entry data in DataStore"""
         return self._entry_converter.get_entry_object(tid=tid, pack=self)
 
 
-class DataIndex(BaseIndex):
+class DataIndex(BaseIndex[Entry]):
     r"""A set of indexes used in :class:`~forte.data.data_pack.DataPack`, note that this class is
     used by the `DataPack` internally.
 
@@ -1720,12 +1719,12 @@ class DataIndex(BaseIndex):
     def __init__(self):
         super().__init__()
         self._coverage_index: Dict[
-            Tuple[Type[Union[Annotation, AudioAnnotation]], Type[EntryType]],
+            Tuple[Type[Union[Annotation, AudioAnnotation]], Type[Entry]],
             Dict[int, Set[int]],
         ] = {}
         self._coverage_index_valid = True
 
-    def remove_entry(self, entry: EntryType):
+    def remove_entry(self, entry: Entry):
         super().remove_entry(entry)
         self.deactivate_coverage_index()
 
@@ -1840,12 +1839,12 @@ class DataIndex(BaseIndex):
                 checked, or the ``tid`` of the Annotation.
         """
         entry1_: Union[Annotation, AudioAnnotation] = (
-            self._entry_index[entry1]
+            self._entry_index[entry1]  # type: ignore
             if isinstance(entry1, (int, np.integer))
             else entry1
         )
         entry2_: Union[Annotation, AudioAnnotation] = (
-            self._entry_index[entry2]
+            self._entry_index[entry2]  # type: ignore
             if isinstance(entry2, (int, np.integer))
             else entry2
         )

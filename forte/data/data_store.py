@@ -45,7 +45,6 @@ from forte.data.ontology.core import (
 )
 from forte.common import constants
 
-
 logger = logging.getLogger(__name__)
 
 __all__ = ["DataStore"]
@@ -351,7 +350,7 @@ class DataStore(BaseStore):
                 if constants.ATTR_TYPE_KEY not in info_dict:
                     info_dict[constants.ATTR_TYPE_KEY] = type_val
 
-        reset_index = {}
+        reset_index: Dict[str, int] = {}
 
         for k in self.__elements:
             if self._is_annotation(k):
@@ -464,13 +463,18 @@ class DataStore(BaseStore):
                 # the current class, it will not be detected.
                 # Instead, it will be dropped later.
 
-                # This lambda function is used to get a temporary
+                # This `get_temp_rep` function is used to get a temporary
                 # representation of type_attributes with only the
                 # name and index
-                get_temp_rep = lambda entry: set(
-                    (attr, val[constants.ATTR_INDEX_KEY])
-                    for attr, val in entry[constants.ATTR_INFO_KEY].items()
-                )
+                # get_temp_rep = lambda entry: set(
+                #     (attr, val[constants.ATTR_INDEX_KEY])
+                #     for attr, val in entry[constants.ATTR_INFO_KEY].items()
+                # )
+                def get_temp_rep(e):
+                    return set(
+                        (attr, val[constants.ATTR_INDEX_KEY])
+                        for attr, val in e[constants.ATTR_INFO_KEY].items()
+                    )
 
                 temp_cls_rep = get_temp_rep(v)
                 temp_obj_rep = get_temp_rep(store._type_attributes[t])
@@ -1005,7 +1009,6 @@ class DataStore(BaseStore):
         based on entry type.
 
         Args:
-            entry_type: entry's type which decides the sorting of entry.
             type_name: The name of type in `self.__elements`.
             entry: raw entry data in the list format.
 
@@ -1458,7 +1461,7 @@ class DataStore(BaseStore):
         and `index_id`. Called by `delete_entry()`.
 
         Args:
-            type_id: The index of the list in ``self.__elements``.
+            type_name: The name of the list in ``self.__elements``.
             index_id: The index of the entry in the list.
 
         Raises:
@@ -2095,7 +2098,7 @@ class DataStore(BaseStore):
                 }
                 idx += 1
 
-            entry_dict = {}
+            entry_dict: Dict[str, Any] = {}
             entry_dict[constants.PARENT_CLASS_KEY] = set()
             entry_dict[constants.PARENT_CLASS_KEY].add(entry_node.parent.name)
             entry_dict[constants.ATTR_INFO_KEY] = attr_dict

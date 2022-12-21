@@ -208,7 +208,7 @@ def _download_from_google_drive(
         params = {"id": file_id, "confirm": token}
         response = sess.get(gurl, params=params, stream=True)
     while response.status_code != 200 and num_retries > 0:
-        response = requests.get(gurl, params=params, stream=True)
+        response = requests.get(gurl, params=params, stream=True, timeout=30)
         num_retries -= 1
     if response.status_code != 200:
         logging.error(
