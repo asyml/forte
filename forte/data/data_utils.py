@@ -123,26 +123,35 @@ def maybe_download(
                 logging.info("Extract %s", filepath)
                 if tarfile.is_tarfile(filepath):
                     with tarfile.open(filepath, "r") as tfile:
-                        # Functions to handle https://github.com/advisories/GHSA-gw9q-c7gh-j9vm
                         def is_within_directory(directory: str, target: str):
-                            # Check whether `target` is in `directory` by comparing the 
+                            # Check whether `target` is in `directory` by comparing the
                             # prefix.
                             abs_directory = os.path.abspath(directory)
                             abs_target = os.path.abspath(target)
-                        
-                            prefix = os.path.commonprefix([abs_directory, abs_target])
-                            
+
+                            prefix = os.path.commonprefix(
+                                [abs_directory, abs_target]
+                            )
+
                             return prefix == abs_directory
-                        
-                        def safe_extract(tar, path=".", members=None, *, numeric_owner=False):                            
+
+                        def safe_extract(
+                            tar, path=".", members=None, *, numeric_owner=False
+                        ):
                             for member in tar.getmembers():
-                                # Untar each files individually, reject ones outside of CWD. 
-                                member_path: str = os.path.join(path, member.name)
+                                # Untar each files individually, reject ones outside of CWD.
+                                member_path: str = os.path.join(
+                                    path, member.name
+                                )
                                 if not is_within_directory(path, member_path):
-                                    raise Exception("Attempted Path Traversal in Tar File")
-                        
-                            tar.extractall(path, members, numeric_owner=numeric_owner)                       
-                        
+                                    raise Exception(
+                                        "Attempted Path Traversal in Tar File"
+                                    )
+
+                            tar.extractall(
+                                path, members, numeric_owner=numeric_owner
+                            )
+
                         safe_extract(tfile, path)
                 elif zipfile.is_zipfile(filepath):
                     with zipfile.ZipFile(filepath) as zfile:
