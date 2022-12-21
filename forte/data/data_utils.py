@@ -40,7 +40,7 @@ def is_within_directory(directory: str, target: str):
 
     Returns:
         Boolean value indicating whether `directory` is within `target`.
-    """    
+    """
     # Check whether `target` is in `directory` by comparing the
     # prefix.
     abs_directory = os.path.abspath(directory)
