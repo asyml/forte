@@ -31,6 +31,51 @@ __all__ = [
 ]
 
 
+def is_within_directory(directory: str, target: str):
+    r"""Check whether `directory` is within the `target`.
+
+    Args:
+        directory (str): The directory to be checked.
+        target (str): `target` directory that should contain the `directory`
+
+    Returns:
+        Boolean value indicating whether `directory` is within `target`.
+    """
+    # Check whether `target` is in `directory` by comparing the
+    # prefix.
+    abs_directory = os.path.abspath(directory)
+    abs_target = os.path.abspath(target)
+
+    prefix = os.path.commonprefix([abs_directory, abs_target])
+
+    return prefix == abs_directory
+
+
+def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
+    r"""Extract a tarball that disallows path traversal. See
+    https://github.com/advisories/GHSA-gw9q-c7gh-j9vm for details.
+
+    Args:
+        tar (str): The path of the tarball.
+        path (str): The directory to control the extraction process.
+        members: Optional subset of files to extract. If given, it must
+          be a subset of the list returned by `getmembers()`.
+        numeric_owners (bool): If True, the uid and gid numbers from
+          the tarfile are used to set the owner/group for the extracted
+          files. Otherwise, the named values from the tarfile are used.
+
+    Raises: Exception: when path traversal is attempted, i.e., trying
+        to create files outside of the designated directory.
+    """
+    for member in tar.getmembers():
+        # Untar each files individually, reject ones outside of CWD.
+        member_path: str = os.path.join(path, member.name)
+        if not is_within_directory(path, member_path):
+            raise Exception("Attempted Path Traversal in Tar File")
+
+    tar.extractall(path, members, numeric_owner=numeric_owner)
+
+
 # TODO: Remove these once pylint supports function stubs.
 # pylint: disable=unused-argument,function-redefined,missing-docstring
 
@@ -123,7 +168,8 @@ def maybe_download(
                 logging.info("Extract %s", filepath)
                 if tarfile.is_tarfile(filepath):
                     with tarfile.open(filepath, "r") as tfile:
-                        tfile.extractall(path)
+                        safe_extract(tfile, path)
+
                 elif zipfile.is_zipfile(filepath):
                     with zipfile.ZipFile(filepath) as zfile:
                         zfile.extractall(path)
