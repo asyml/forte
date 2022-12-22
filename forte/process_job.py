@@ -1,8 +1,8 @@
 import itertools
 from enum import Enum
-from typing import Optional
+from typing import Optional, Any
 
-from forte.data.base_pack import PackType
+from forte.data.base_pack import PackType, BasePack
 
 __all__ = ["ProcessJobStatus", "ProcessJob"]
 
@@ -26,7 +26,7 @@ class ProcessJob:
         return self.__id
 
     @property
-    def pack(self) -> PackType:
+    def pack(self) -> BasePack[Any, Any, Any]:
         if self.__pack is None:
             raise ValueError("This job do not have a valid pack.")
         return self.__pack

@@ -14,7 +14,6 @@
 from copy import deepcopy
 from typing import List, Any, Tuple, Union, Dict, Optional
 
-
 from forte.common import ValidationError
 from forte.data.vocabulary import Vocabulary
 
@@ -81,9 +80,7 @@ class Feature:
         necessary_fields = ["dim", "dtype"]
         for field in necessary_fields:
             if field not in self._meta_data:
-                raise ValidationError(
-                    "Field not found in metadata: {}".format(field)
-                )
+                raise ValidationError(f"Field not found in metadata: {field}")
 
         if self.need_pad and "pad_value" not in self._meta_data:
             raise ValidationError("need_pad is True but no pad_value is given")
@@ -116,9 +113,9 @@ class Feature:
                 another list of features.
         """
         if self.leaf_feature:
-            self._data: List = data
+            self._data = data
         else:
-            self._sub_features: List = []
+            self._sub_features = []
             for sub_data in data:
                 sub_metadata = deepcopy(self._meta_data)
                 sub_metadata["dim"] = sub_metadata["dim"] - 1
@@ -128,7 +125,7 @@ class Feature:
                     )
                 )
 
-        self._mask: List = [1] * len(data)
+        self._mask = [1] * len(data)
 
     @property
     def leaf_feature(self) -> bool:
@@ -200,7 +197,16 @@ class Feature:
         )
 
     def __len__(self):
-        return len(self._data) if self.leaf_feature else len(self._sub_features)
+        if self.leaf_feature:
+            if self._data is None:
+                raise ValueError(
+                    "Invalid internal state: leaf_feature "
+                    "does not have actual data"
+                )
+            else:
+                return len(self._data)
+        else:
+            return len(self._sub_features)
 
     def pad(self, max_len: int):
         """

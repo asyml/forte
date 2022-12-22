@@ -14,9 +14,10 @@
 
 import logging
 from typing import Any, Dict, Optional, cast
+
+from forte.common import constants
 from forte.data.base_pack import PackType
 from forte.data.ontology.core import Entry, FList, FDict
-from forte.data.ontology.core import EntryType
 from forte.data.ontology.top import (
     Annotation,
     Link,
@@ -31,7 +32,6 @@ from forte.data.ontology.top import (
     SinglePackEntries,
     MultiPackEntries,
 )
-from forte.common import constants
 from forte.utils import get_class, get_full_module_name
 
 logger = logging.getLogger(__name__)
@@ -214,14 +214,14 @@ class EntryConverter:
 
     def get_entry_object(
         self, tid: int, pack: PackType, type_name: Optional[str] = None
-    ) -> EntryType:
+    ) -> Entry[Any]:
         """
         Convert a tid to its corresponding entry object.
         """
 
         # Check if the tid is cached
         if tid in self._entry_dict:
-            return self._entry_dict[tid]  # type: ignore
+            return self._entry_dict[tid]
 
         data_store_ref = pack._data_store  # pylint: disable=protected-access
         if type_name is None:
@@ -256,4 +256,4 @@ class EntryConverter:
         entry._tid = tid
 
         self._entry_dict[tid] = entry
-        return entry  # type: ignore
+        return entry

@@ -39,7 +39,7 @@ class SquadReader(PackReader):
     Phrase are MRC answers marked as text spans. Each MRCQuestion has a list of answers.
     """
 
-    def _collect(self, file_path: str) -> Iterator[Any]:  # type: ignore
+    def _collect(self, file_path: str) -> Iterator[Any]:
         r"""Given file_path to the dataset, return an iterator to every data point in it.
 
         Args:

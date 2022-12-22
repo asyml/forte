@@ -146,7 +146,7 @@ class ElizaProcessor(PackProcessor):
         elif parts[0].startswith("@"):
             root = parts[0][1:]
             if root not in self.synons:
-                raise ValueError("Unknown synonym root {}".format(root))
+                raise ValueError(f"Unknown synonym root {root}")
             if not words[0].lower() in self.synons[root]:
                 return False
             results.append([words[0]])
@@ -157,7 +157,7 @@ class ElizaProcessor(PackProcessor):
             return self._match_decomp_r(parts[1:], words[1:], results)
 
     def _match_decomp(self, parts, words):
-        results = []
+        results: List[str] = []
         if self._match_decomp_r(parts, words, results):
             return results
         return None
@@ -176,7 +176,7 @@ class ElizaProcessor(PackProcessor):
             if reword[0] == "(" and reword[-1] == ")":
                 index = int(reword[1:-1])
                 if index < 1 or index > len(results):
-                    raise ValueError("Invalid result index {}".format(index))
+                    raise ValueError(f"Invalid result index {index}")
                 insert = results[index - 1]
                 for punct in [",", ".", ";"]:
                     if punct in insert:
@@ -211,7 +211,7 @@ class ElizaProcessor(PackProcessor):
             if reasmb[0] == "goto":
                 goto_key = reasmb[1]
                 if goto_key not in self.keys:
-                    raise ValueError("Invalid goto key {}".format(goto_key))
+                    raise ValueError(f"Invalid goto key {goto_key}")
                 logging.debug("Goto key: %s", goto_key)
                 return self._match_key(words, self.keys[goto_key])
             output = self._reassemble(reasmb, results)

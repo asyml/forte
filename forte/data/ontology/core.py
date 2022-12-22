@@ -34,6 +34,7 @@ from typing import (
     cast,
     overload,
     List,
+    Any,
 )
 import math
 import numpy as np
@@ -52,6 +53,7 @@ __all__ = [
     "FNdArray",
     "MultiEntry",
     "Grid",
+    "ENTRY_TYPE_DATA_STRUCTURES",
 ]
 
 default_entry_fields = [
@@ -323,7 +325,7 @@ class FList(Generic[ParentEntryType], MutableSequence):
 
     @overload
     @abstractmethod
-    def __getitem__(self, i: int) -> EntryType:
+    def __getitem__(self, i: int) -> Entry[Any]:
         ...
 
     @overload

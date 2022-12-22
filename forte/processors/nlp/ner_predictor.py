@@ -17,6 +17,8 @@ import logging
 import os
 from typing import Dict, List, Optional, Tuple
 import numpy as np
+
+from forte.common import ProcessorConfigError, ResourceError
 from forte.utils import create_import_error_msg
 from forte.common.configuration import Config
 from forte.common.resources import Resources
@@ -106,6 +108,16 @@ class CoNLLNERPredictor(RequestPackingProcessor):
         if "model" not in self.resource.keys():
 
             def load_model(path):
+                if (
+                    self.word_alphabet is None
+                    or self.char_alphabet is None
+                    or self.ner_alphabet is None
+                ):
+                    raise ResourceError(
+                        "Error when configuring the predictor, alphabets "
+                        "loaded from the resources are not initialized."
+                    )
+
                 model = BiRecurrentConvCRF(
                     word_embedding_table,
                     self.char_alphabet.size(),
@@ -131,6 +143,29 @@ class CoNLLNERPredictor(RequestPackingProcessor):
     def predict(
         self, data_batch: Dict[str, Dict[str, List[str]]]
     ) -> Dict[str, Dict[str, List[np.ndarray]]]:
+        if self.config_data is None:
+            raise ProcessorConfigError(
+                "Data configuration for the predictor is not found."
+            )
+
+        if self.model is None:
+            raise ProcessorConfigError("Model for the predictor is not set.")
+
+        if self.normalize_func is None:
+            raise ProcessorConfigError(
+                "The normalizing function for the predictor is not set."
+            )
+
+        if (
+            self.word_alphabet is None
+            or self.ner_alphabet is None
+            or self.word_alphabet is None
+            or self.char_alphabet is None
+        ):
+            raise ProcessorConfigError(
+                "Error when configuring the predictor, alphabets are not initialized."
+            )
+
         tokens = data_batch["Token"]
 
         instances = []
@@ -169,6 +204,14 @@ class CoNLLNERPredictor(RequestPackingProcessor):
         return pred
 
     def load_model_checkpoint(self, model_path=None):
+        if self.config_model is None:
+            raise ProcessorConfigError(
+                "Model configuration for the predictor is not found."
+            )
+
+        if self.model is None:
+            raise ProcessorConfigError("Model is not set for the predictor.")
+
         p = (
             model_path
             if model_path is not None
@@ -254,11 +297,29 @@ class CoNLLNERPredictor(RequestPackingProcessor):
             - ``lengths``: A tensor of shape `[batch_size]` representing the
               length of each sentences in the batch
         """
+        if self.config_data is None:
+            raise ProcessorConfigError(
+                "Data configuration for the predictor is not found."
+            )
+
+        if self.config_model is None:
+            raise ProcessorConfigError(
+                "Model configuration for the predictor is not found."
+            )
+
+        if (
+            self.word_alphabet is None
+            or self.ner_alphabet is None
+            or self.word_alphabet is None
+            or self.char_alphabet is None
+        ):
+            raise ProcessorConfigError(
+                "Error when configuring the predictor, alphabets are not initialized."
+            )
+
         batch_size = len(data)
-        batch_length = max([len(d[0]) for d in data])
-        char_length = max(
-            [max([len(charseq) for charseq in d[1]]) for d in data]
-        )
+        batch_length = max(len(d[0]) for d in data)
+        char_length = max(max(len(charseq) for charseq in d[1]) for d in data)
 
         char_length = min(
             self.config_data.max_char_length,

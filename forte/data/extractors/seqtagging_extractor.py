@@ -20,7 +20,7 @@ from typing import Tuple, List, Dict, Union, Optional, Iterable, Type
 
 from torch import Tensor
 
-
+from forte.common import ProcessorConfigError
 from forte.common.configuration import Config
 from forte.data.base_extractor import BaseExtractor
 from forte.data.converter.feature import Feature
@@ -54,13 +54,19 @@ class BioSeqTaggingExtractor(BaseExtractor):
         """
         # pylint: disable=attribute-defined-outside-init
         super().initialize(config=config)
+
+        if self.config is None:
+            raise ProcessorConfigError(
+                "Configuration for the extractor not found."
+            )
+
         if self.config.attribute is None:
             raise AttributeError(
-                "attribute is required " "in BioSeqTaggingExtractor."
+                "attribute is required in BioSeqTaggingExtractor."
             )
         if not self.config.tagging_unit:
             raise AttributeError(
-                "tagging_unit is required in " "BioSeqTaggingExtractor."
+                "tagging_unit is required in BioSeqTaggingExtractor."
             )
         self._attribute: str = self.config.attribute
         self._tagging_unit: Type[Annotation] = get_class(
@@ -165,6 +171,11 @@ class BioSeqTaggingExtractor(BaseExtractor):
                 Default is None.
 
         """
+        if self.config is None:
+            raise ProcessorConfigError(
+                "Configuration for the extractor not found."
+            )
+
         anno: Annotation
         for anno in pack.get(self.config.entry_type, context):
             for tag_variance in self._bio_variance(
@@ -189,6 +200,11 @@ class BioSeqTaggingExtractor(BaseExtractor):
         Returns (Feature): a feature that contains the extracted BIO sequence
             of and other metadata.
         """
+        if self.config is None:
+            raise ProcessorConfigError(
+                "Configuration for the extractor not found."
+            )
+
         instance_tagged: List[Tuple[Optional[str], str]] = bio_tagging(
             pack,
             self.config.tagging_unit,
@@ -235,6 +251,11 @@ class BioSeqTaggingExtractor(BaseExtractor):
                 data are extracted within its range. If None, then the
                 whole data pack will be used as the context. Default is None.
         """
+        if self.config is None:
+            raise ProcessorConfigError(
+                "Configuration for the extractor not found."
+            )
+
         all_entries: List[Entry] = []
         entry: Entry
         for entry in pack.get(self.config.entry_type, context):
@@ -268,6 +289,11 @@ class BioSeqTaggingExtractor(BaseExtractor):
                 features will be extracted within its range. If None, then the
                 whole data pack will be used as the context. Default is None.
         """
+        if self.config is None:
+            raise ProcessorConfigError(
+                "Configuration for the extractor not found."
+            )
+
         instance_tagging_unit: List[Annotation] = list(
             pack.get(self._tagging_unit, context)
         )
