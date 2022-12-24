@@ -14,10 +14,10 @@
 
 _MAJOR = "0"
 _MINOR = "3"
-_REVISION = "0.dev2"
+_REVISION = "0.dev3"
 
-VERSION_SHORT = "{0}.{1}".format(_MAJOR, _MINOR)
-VERSION = "{0}.{1}.{2}".format(_MAJOR, _MINOR, _REVISION)
+VERSION_SHORT = f"{_MAJOR}.{_MINOR}"
+VERSION = f"{_MAJOR}.{_MINOR}.{_REVISION}"
 FORTE_IR_VERSION = "0.0.1"
 PACK_VERSION = "0.0.2"
 # The version before formal release, data pack without

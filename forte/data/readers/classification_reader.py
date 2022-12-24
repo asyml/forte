@@ -67,8 +67,8 @@ class ClassificationDatasetReader(PackReader):
 
     def __init__(self):
         super().__init__()
-        self._index2class = None
-        self._class2index = None
+        self._index2class: Dict[int, str]
+        self._class2index: Dict[str, int]
 
     def set_up(self):
         if self.configs.index2class is None:
@@ -125,9 +125,7 @@ class ClassificationDatasetReader(PackReader):
                     " configuration to satisfy the condition."
                 )
 
-    def _collect(  # type: ignore
-        self, csv_file: str
-    ) -> Iterator[Tuple[int, List[str]]]:
+    def _collect(self, csv_file: str) -> Iterator[Tuple[int, List[str]]]:
         with open(csv_file, encoding="utf-8") as f:
             data = csv.reader(f, delimiter=",", quoting=csv.QUOTE_ALL)
             if self.configs.skip_k_starting_lines > 0:

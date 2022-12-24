@@ -34,14 +34,14 @@ def batch_instances(instances: List[Dict]):
     for instance in instances:
         for entry, fields in instance.items():
             if isinstance(fields, dict):
-                if entry not in batch.keys():
+                if entry not in batch:
                     batch[entry] = {}
                 for k, value in fields.items():
-                    if k not in batch[entry].keys():
+                    if k not in batch[entry]:
                         batch[entry][k] = []
                     batch[entry][k].append(value)
             else:  # context level feature
-                if entry not in batch.keys():
+                if entry not in batch:
                     batch[entry] = []
                 batch[entry].append(fields)
     return batch
@@ -53,14 +53,14 @@ def merge_batches(batches: List[Dict]):
     for batch in batches:
         for entry, fields in batch.items():
             if isinstance(fields, dict):
-                if entry not in merged_batch.keys():
+                if entry not in merged_batch:
                     merged_batch[entry] = {}
                 for k, value in fields.items():
-                    if k not in merged_batch[entry].keys():
+                    if k not in merged_batch[entry]:
                         merged_batch[entry][k] = []
                     merged_batch[entry][k].extend(value)
             else:  # context level feature
-                if entry not in merged_batch.keys():
+                if entry not in merged_batch:
                     merged_batch[entry] = []
                 merged_batch[entry].extend(fields)
     return merged_batch
@@ -72,7 +72,7 @@ def slice_batch(batch, start, length):
 
     for batch_key, fields in batch.items():
         if isinstance(fields, dict):
-            if batch_key not in sliced_batch.keys():
+            if batch_key not in sliced_batch:
                 sliced_batch[batch_key] = {}
             for k, value in fields.items():
                 sliced_batch[batch_key][k] = value[start : start + length]
@@ -102,7 +102,7 @@ def dataset_path_iterator(dir_path: str, file_extension: str) -> Iterator[str]:
     the given datasets.
     """
     if not os.path.exists(dir_path):
-        raise FileNotFoundError("Cannot find the directory [%s]." % dir_path)
+        raise FileNotFoundError(f"Cannot find the directory [{dir_path}].")
 
     for root, _, files in os.walk(dir_path):
         for data_file in files:

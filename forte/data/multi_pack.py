@@ -297,10 +297,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         for link in self.get(MultiPackLink):
             parent_entry_pid = link.get_parent().pack_id
             child_entry_pid = link.get_child().pack_id
-            if (
-                parent_entry_pid == pack.pack_id
-                or child_entry_pid == pack.pack_id
-            ):
+            if pack.pack_id in (parent_entry_pid, child_entry_pid):
                 links_with_pack_for_removal.append(link)
 
         groups_with_pack_for_removal = []
@@ -367,19 +364,19 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         # Remove those None in place and shrink the _pack_ref list.
         # Caution: item index will change
         for index in range(len(self._pack_ref) - 1, 0, -1):
-            if self._pack_ref.__getitem__(index) is None:
-                self._pack_ref.__delitem__(index)
+            if self._pack_ref[index] is None:
+                del self._pack_ref[index]
 
         # Remove those None in place and shrink the _pack_names list.
         # Caution: item index will change
         for index in range(len(self._pack_names) - 1, 0, -1):
-            if not self._pack_names.__getitem__(index):
-                self._pack_names.__delitem__(index)
+            if not self._pack_names[index]:
+                del self._pack_names[index]
 
         # Remove those None in place and shrink the _packs list. Caution: item index will change
         for index in range(len(self._packs) - 1, 0, -1):
-            if self._packs.__getitem__(index) is None:
-                self._packs.__delitem__(index)
+            if self._packs[index] is None:
+                del self._packs[index]
 
         return True
 
@@ -785,7 +782,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         """
         if isinstance(entry, int):
             # If entry is a TID, convert it to the class object.
-            entry = self._entry_converter.get_entry_object(tid=entry, pack=self)
+            entry = self._entry_converter.get_entry_object(tid=entry, pack=self)  # type: ignore
 
         # update the data pack index if needed
         # TODO: MultiIndex will be deprecated in future
@@ -795,7 +792,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         if self._index.group_index_on and isinstance(entry, MultiPackGroup):
             self._index.update_group_index([entry])
 
-        self._pending_entries.pop(entry.tid)
+        self._pending_entries.pop(entry.tid)  # type: ignore
         return entry  # type: ignore
 
     def get(  # type: ignore
@@ -901,7 +898,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             An data pack object deserialized from the string.
         """
         # pylint: disable=protected-access
-        mp: MultiPack = cls._deserialize(data_path, serialize_method, zip_pack)
+        mp: MultiPack = cls._deserialize(data_path, serialize_method, zip_pack)  # type: ignore
 
         # (fix 595) change the dictionary's key after deserialization from str back to int
         mp._inverse_pack_ref = {
@@ -927,7 +924,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
         return mp
 
-    def _add_entry(self, entry: Union[Entry, int]) -> EntryType:
+    def _add_entry(self, entry: Union[Entry, int]) -> Entry[Any]:
         r"""Force add an :class:`forte.data.ontology.core.Entry` object to the
         :class:`~forte.data.multi_pack.MultiPack` object.
 
@@ -940,7 +937,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         Returns:
             The input entry itself
         """
-        return self.__add_entry_with_check(entry)  # type: ignore
+        return self.__add_entry_with_check(entry)
 
     @classmethod
     def validate_link(cls, entry: EntryType) -> bool:
@@ -957,7 +954,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         r"""Save an existing entry object into DataStore"""
         self._entry_converter.save_entry_object(entry=entry, pack=self)
 
-    def _get_entry_from_data_store(self, tid: int) -> EntryType:
+    def _get_entry_from_data_store(self, tid: int) -> Entry[Any]:
         r"""Generate a class object from entry data in DataStore"""
         return self._entry_converter.get_entry_object(tid=tid, pack=self)
 

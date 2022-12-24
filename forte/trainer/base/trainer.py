@@ -157,7 +157,7 @@ class BaseTrainer:
             return
 
         logging.info("Initializing the trainer...")
-        self._pack_iterator: Iterator[DataPack] = self.create_pack_iterator()
+        self._pack_iterator = self.create_pack_iterator()
         self._tp = TrainPreprocessor(pack_iterator=self._pack_iterator)
         self._tp.initialize(config=self.create_tp_config())
         self._initialized = True
@@ -171,7 +171,7 @@ class BaseTrainer:
         """
         if not self._initialized:
             raise ValueError(
-                "initialize should be called to " "build train preprocessor."
+                "initialize should be called to build train preprocessor."
             )
         return self._tp
 
@@ -230,18 +230,14 @@ class BaseTrainer:
         # is considered as a disk file path.
         if not isinstance(args[0], str):
             raise ValueError(
-                "Do not support input args: {} and kwargs: {}".format(
-                    args, kwargs
-                )
+                f"Do not support input args: {args} and kwargs: {kwargs}"
             )
 
         file_path = args[0]
 
         if not isinstance(self.train_preprocessor, TrainPreprocessor):
             raise ValueError(
-                "Invalid TrainPreprocessor type: {}".format(
-                    self.train_preprocessor
-                )
+                f"Invalid TrainPreprocessor type: {self.train_preprocessor}"
             )
 
         request: Dict = self.train_preprocessor.request
