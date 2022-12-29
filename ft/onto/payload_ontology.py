@@ -1,5 +1,5 @@
 # ***automatically_generated***
-# ***source json:forte/ontology_specs/payload_ontology.json***
+# ***source json:/Users/hector/Documents/projects/forte/forte/ontology_specs/payload_ontology.json***
 # flake8: noqa
 # mypy: ignore-errors
 # pylint: skip-file
@@ -36,8 +36,8 @@ class JpegPayload(ImagePayload):
     version: Optional[int]
     source_type: Optional[int]
 
-    def __init__(self, pack: DataPack, payload_idx = 0, uri = None):
-        super().__init__(pack, payload_idx = 0, uri = None)
+    def __init__(self, pack: DataPack):
+        super().__init__(pack)
         self.extensions: Optional[str] = None
         self.mime: Optional[str] = None
         self.type_code: Optional[str] = None
@@ -62,8 +62,8 @@ class SoundFilePayload(AudioPayload):
     dtype: Optional[str]
     encoding: Optional[int]
 
-    def __init__(self, pack: DataPack, payload_idx = 0, uri = None):
-        super().__init__(pack, payload_idx = 0, uri = None)
+    def __init__(self, pack: DataPack):
+        super().__init__(pack)
         self.source_type: Optional[str] = None
         self.sample_rate: Optional[int] = None
         self.channels: Optional[int] = None

@@ -1,5 +1,5 @@
 # ***automatically_generated***
-# ***source json:forte/ontology_specs/base_ontology.json***
+# ***source json:/Users/hector/Documents/projects/forte/forte/ontology_specs/base_ontology.json***
 # flake8: noqa
 # mypy: ignore-errors
 # pylint: skip-file
@@ -19,7 +19,6 @@ from forte.data.ontology.top import Generics
 from forte.data.ontology.top import Group
 from forte.data.ontology.top import Link
 from forte.data.ontology.top import MultiPackLink
-from forte.data.ontology.top import Payload
 from typing import Dict
 from typing import Iterable
 from typing import List
@@ -568,4 +567,3 @@ class AudioUtterance(AudioAnnotation):
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self.speaker: Optional[str] = None
-

@@ -11,6 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import functools
+from pathlib import Path
+
 from dataclasses import dataclass
 from functools import total_ordering
 from typing import (
@@ -24,8 +27,10 @@ from typing import (
     Iterable,
     List,
     cast,
+    Callable,
 )
 import numpy as np
+from urlpath import URL
 
 from forte.data.modality import Modality
 from forte.data.base_pack import PackType
@@ -39,7 +44,6 @@ from forte.data.ontology.core import (
 )
 from forte.data.span import Span
 from forte.utils.utils import get_full_module_name
-
 
 __all__ = [
     "Generics",
@@ -743,7 +747,7 @@ class ImageAnnotation(Entry):
             )
         image_shape = self.pack.get_payload_at(
             Modality.Image, self._image_payload_idx
-        ).image_shape
+        ).cache_shape
         if not 2 <= len(image_shape) <= 3:
             raise ValueError(
                 "Image shape is not valid."
@@ -978,7 +982,6 @@ class Payload(Entry):
     Args:
         pack: The container that this `Payload` will
             be added to.
-        modality: modality of the payload such as text, audio and image.
         payload_idx: the index of the payload in the DataPack's
             image payload list of the same modality. For example, if we
             instantiate a ``TextPayload`` inherited from ``Payload``, we assign
@@ -992,8 +995,6 @@ class Payload(Entry):
     def __init__(
         self,
         pack: PackType,
-        payload_idx: int = 0,
-        uri: Optional[str] = None,
     ):
         # # since we cannot pass different modality from generated ontology, and
         # # we don't want to import base ontology in the header of the file
@@ -1007,14 +1008,17 @@ class Payload(Entry):
         else:
             supported_modality = [enum.name for enum in Modality]
             raise ValueError(
-                f"The given modality {modality.name} is not supported. "
+                f"The requested Payload modality is not supported. "
                 f"Currently we only support {supported_modality}"
             )
 
         self.modality = modality
         self.modality_name: str = modality.name
-        self.payload_idx: int = payload_idx
-        self._uri: Optional[str] = uri
+
+        # TODO, These values need to be set later, not in init, but
+        #  this may not work for data store.
+        self.payload_idx: int = 0
+        self._uri: Optional[Union[Path, URL, str]] = None
 
         super().__init__(pack)
 
@@ -1023,12 +1027,6 @@ class Payload(Entry):
         self.replace_back_operations: Sequence[Tuple] = []
         self.processed_original_spans: Sequence[Tuple] = []
         self.orig_text_len: int = 0
-        # self.payloading = None
-        # self.meta = None
-
-    # def set_meta(self, meta):
-    #     # there might be a better way to set meta
-    #     self.meta = meta
 
     def get_type(self) -> type:
         """
@@ -1041,6 +1039,27 @@ class Payload(Entry):
         """
         return type(self)
 
+    def load(self):
+        """
+        Behavior of this function depends on the registered `_load`, in general
+        it should load the data from the provided URL to the internal cache.
+
+        Returns:
+
+        """
+        # payload_type = get_full_module_name(self)
+        # try:
+        #     loading_func = load_funcs[payload_type]
+        # except KeyError:
+        #     raise RuntimeError(
+        #         f"Loading function for {payload_type} not registered. Consider"
+        #         f"register the payload function using the `load_func` decorator."
+        #     )
+        self._cache = self._load()
+
+    def _load(self):
+        pass
+
     @property
     def cache(self) -> Union[str, np.ndarray]:
         return self._cache
@@ -1050,41 +1069,29 @@ class Payload(Entry):
         return self.payload_idx
 
     @property
-    def uri(self) -> Optional[str]:
+    def uri(self) -> Optional[Union[str, Path, URL]]:
         """
         Universal resource identifier of the data source.
 
         Returns:
-            Optional[str]: Universal resource identifier of the data source.
+            Universal resource identifier of the data source.
         """
         return self._uri
 
-    # def load(self):
-    #     fn = self.payloading.route(self.meta)
-    #     self._cache = fn(self.uri)
+    @uri.setter
+    def uri(self, url: Optional[Union[str, Path, URL]]):
+        self._uri = url
 
     def cache_shape(self) -> Optional[Sequence[int]]:
         return self._cache_shape
 
-    def set_cache(
-        self,
-        data: Union[str, np.ndarray],
-        cache_shape: Optional[Sequence[int]] = None,
-    ):
+    def set_cache(self, data: Union[str, np.ndarray]):
         """
         Load cache data into the payload and set the data shape.
 
         Args:
             data: data to be set in the payload. It can be str for text data or
                 numpy array for audio or image data.
-            cache_shape: the shape of the data. Its representation varies based
-                on the modality and its length.
-                For text data, it is the length of the text.[length, text_embedding_dim]
-                For audio data, it is the length of the audio. [length, audio_embedding_dim]
-                For image data, it is the shape of the image. [height, width,
-                channel]
-                For example, for image data, if the cache_shape length is 2, it
-                means the image data is a 2D image [height, width].
         """
         self._cache = data
         if isinstance(data, np.ndarray):
@@ -1109,9 +1116,6 @@ class Payload(Entry):
         """
         self.payload_idx = payload_index
 
-    def image_shape(self):
-        return self._cache_shape
-
     def __getstate__(self):
         r"""
         Convert ``modality`` ``Enum`` object to str format for serialization.
@@ -1133,7 +1137,7 @@ class Payload(Entry):
         Convert ``modality`` string to ``Enum`` object for deserialization.
         """
         # TODO: this function will be removed since
-        # Entry store is being integrated into DataStore
+        #   Entry store is being integrated into DataStore
         self.__dict__.update(state)
         self.modality = getattr(Modality, state["modality"])
 
@@ -1156,12 +1160,15 @@ class Payload(Entry):
 class AudioPayload(Payload):
     """
     A payload that caches audio data
+
     Attributes:
         sample_rate (Optional[int]):
     """
 
-    def __init__(self, pack: PackType, payload_idx=0, uri=None):
-        super().__init__(pack, payload_idx, uri)
+    sample_rate: Optional[int]
+
+    def __init__(self, pack: PackType):
+        super().__init__(pack)
         self.sample_rate: Optional[int] = None
 
 
@@ -1172,9 +1179,9 @@ class TextPayload(Payload):
     """
 
     def __init__(  # pylint: disable=useless-super-delegation
-        self, pack: PackType, payload_idx=0, uri=None
+        self, pack: PackType
     ):
-        super().__init__(pack, payload_idx, uri)
+        super().__init__(pack)
 
 
 @dataclass
@@ -1184,9 +1191,34 @@ class ImagePayload(Payload):
     """
 
     def __init__(  # pylint: disable=useless-super-delegation
-        self, pack: PackType, payload_idx=0, uri=None
+        self, pack: PackType
     ):
-        super().__init__(pack, payload_idx, uri)
+        super().__init__(pack)
+
+
+# # The registered functions for each payload loadng methods.
+# load_funcs: Dict[str, Callable[[str, Any], None]] = {}
+
+
+def load_func(payload_cls: Type["Payload"]):
+    """
+    A decorator to assign a loading function to a Payload type.
+
+    Args:
+        payload_cls: the Payload class to register.
+
+    Returns:
+
+    """
+
+    def decorator_load_func(func: Callable):
+        @functools.wraps(func)
+        def assign_func():
+            payload_cls._load = func
+
+        assign_func()
+
+    return decorator_load_func
 
 
 SinglePackEntries = (
