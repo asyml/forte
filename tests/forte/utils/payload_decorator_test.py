@@ -133,11 +133,13 @@ class PayloadDecoratorTest(unittest.TestCase):
 
     def test_online_image_payload(self):
         datapack = DataPack("image")
-        uri = "https://assets.website-files.com/6241e60ecd4aa2049d61387c/62576e00dd225cf869b24e0f_61f880d055d4f6f2497fb3cc_symphony-EDITOR-p-1080.jpeg"
+        uri = "https://raw.githubusercontent.com/asyml/forte/assets/ocr_tutorial/ocr.jpg"
         payload = OnlineJpegPayload(datapack)
         payload.uri = uri
         payload.load()
-        self.assertEqual(payload.cache.shape, (706, 1080, 3))
+
+        datapack.add_entry(payload)
+        self.assertEqual(payload.cache.shape, (539, 810, 3))
 
     def test_audio_payload(self):
         datapack = DataPack("audio")
@@ -155,6 +157,6 @@ class PayloadDecoratorTest(unittest.TestCase):
                 + "/test_audio_0.flac"
         )
         payload.load()
-        import pdb
-        pdb.set_trace()
-        self.assertEqual(payload.cache, None)
+
+        datapack.add_entry(payload)
+        self.assertEqual(payload.cache.shape, (74400, ))

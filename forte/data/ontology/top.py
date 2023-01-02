@@ -30,8 +30,8 @@ from typing import (
     Callable,
 )
 import numpy as np
-from urlpath import URL
 
+from forte.common.aliases import URL
 from forte.data.modality import Modality
 from forte.data.base_pack import PackType
 from forte.data.ontology.core import (
