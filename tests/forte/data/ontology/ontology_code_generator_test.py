@@ -77,6 +77,7 @@ class GenerateOntologyTest(unittest.TestCase):
                     continue
                 self.assertEqual(la, lb)
 
+
     @data(
         (
             "example_ontology",
@@ -88,8 +89,8 @@ class GenerateOntologyTest(unittest.TestCase):
             ["ft/onto/ft_module", "custom/user/custom_module"],
         ),
         ("race_qa_onto", ["ft/onto/race_qa_ontology"]),
-        ("test_top_attribute", ["ft/onto/test_top_attribute"]),
-        ("test_ndarray_attribute", ["ft/onto/test_ndarray"])
+        ("test_top_attribute", ["ft/onto/sample_top_attribute"]),
+        ("test_ndarray_attribute", ["ft/onto/sample_ndarray"])
     )
     def test_generated_code(self, value):
         input_file_name, file_paths = value

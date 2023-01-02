@@ -169,9 +169,9 @@ class WordnetDictionary(Dictionary):
                         res.append(hyponym.name())
                 else:
                     raise KeyError(
-                        "The type {} does not belong to "
+                        f"The type {type} does not belong to "
                         '["SYNONYM", "ANTONYM", '
-                        '"HYPERNYM", "HYPONYM"]]'.format(type)
+                        '"HYPERNYM", "HYPONYM"]]'
                     )
         # The phrases are concatenated with "_" in wordnet.
         return [word.replace("_", " ") for word in res]

@@ -640,7 +640,7 @@ class ModuleWriter:
 
     def __init__(self, module_name: str, import_managers: ImportManagerPool):
         self.module_name = module_name
-        self.source_file: str = ""
+        self.source_file: Path
 
         self.description: Optional[str] = None
         self.import_managers: ImportManagerPool = import_managers
@@ -662,7 +662,7 @@ class ModuleWriter:
         namespace_depth: int,
     ):
         """
-        Create entry sub-directories with .generated file to indicate the
+        Create entry subdirectories with .generated file to indicate the
          subdirectory is created by this procedure. No such file will be added
          if the directory already exists.
 
@@ -761,7 +761,7 @@ class ModuleWriter:
 
     def to_description(self, level):
         quotes = '"""'
-        lines = get_ignore_error_lines(self.source_file) + [
+        lines = get_ignore_error_lines(str(self.source_file)) + [
             quotes,
             self.description,
             quotes,
@@ -794,15 +794,29 @@ class ModuleWriterPool:
 
 class EntryTreeNode:
     def __init__(self, name: str):
-        self.children: List[EntryTreeNode] = []
-        self.parent: Optional[EntryTreeNode] = None
+        self.__children: List[EntryTreeNode] = []
+        self.__parent: Optional[EntryTreeNode] = None
         self.name: str = name
         self.attributes: Set[Tuple[str, str]] = set()
 
     def __repr__(self):
         r"""for printing purpose."""
-        attr_str = ", ".join(self.attributes)
+        attr_str = ", ".join(str(a) for a in self.attributes)
         return self.name + ": " + attr_str
+
+    @property
+    def children(self) -> "List[EntryTreeNode]":
+        return self.__children
+
+    @property
+    def parent(self) -> "EntryTreeNode":
+        if self.__parent is None:
+            raise ValueError("No parent for this node, probably root")
+        return self.__parent
+
+    @parent.setter
+    def parent(self, value):
+        self.__parent = value
 
 
 class EntryTree:
@@ -845,10 +859,6 @@ class EntryTree:
             curr_entry_node.parent = parent_in_tree
         else:
             found_node.attributes = curr_entry_attr
-
-    def print_traverse(self):
-        path = []
-        traverse(self.root, path)
 
     def collect_parents(self, node_dict: Dict[str, Set[str]]):
         r"""Collect all the parent nodes for all the nodes in the `node_dict`

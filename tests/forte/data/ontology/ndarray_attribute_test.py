@@ -1,3 +1,5 @@
+import importlib.util
+import sys
 import os
 import tempfile
 import unittest
@@ -5,7 +7,24 @@ from ddt import data, ddt
 
 import numpy as np
 from forte.data.data_pack import DataPack
-from .test_outputs.ft.onto.test_ndarray import NdEntry1, NdEntry2, NdEntry3
+
+# import the NdEntry classes manually
+module_name = "ft.onto.sample_ndarray"
+module_path = os.path.join(os.path.dirname(__file__), "test_outputs/ft/onto/sample_ndarray.py")
+spec = importlib.util.spec_from_file_location(module_name, module_path)
+module = importlib.util.module_from_spec(spec)
+sys.modules[module_name] = module
+spec.loader.exec_module(module)
+
+NdEntry1 = module.NdEntry1
+NdEntry2 = module.NdEntry2
+NdEntry3 = module.NdEntry3
+
+globals().update({
+    "NdEntry1": module.NdEntry1,
+    "NdEntry2": module.NdEntry2,
+    "NdEntry3": module.NdEntry3,
+})
 
 """
 NdEntry1, NdEntry2, and NdEntry3 are sample Entry containing NdArray attributes

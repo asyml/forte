@@ -16,6 +16,7 @@ Conditional random field.
 Adapted from AllenNLP but removed the feature of external restriction
 """
 __all__ = ["ConditionalRandomField"]
+
 from typing import Optional, List, Tuple, Dict, Union
 import logging
 from forte.utils import create_import_error_msg
@@ -530,9 +531,8 @@ def viterbi_decode(
             raise ValueError(
                 "Observations were provided, but they were not the same length "
                 "as the sequence. "
-                "Found sequence of length: {} and evidence: {}".format(
-                    sequence_length, tag_observations
-                )
+                f"Found sequence of length: {sequence_length} and "
+                f"evidence: {tag_observations}"
             )
     else:
         tag_observations = [-1 for _ in range(sequence_length)]

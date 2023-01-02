@@ -79,7 +79,7 @@ class TrainPipeline:
         self.finish()
 
     def prepare(self):
-        prepare_pl = Pipeline()
+        prepare_pl: Pipeline = Pipeline()
         prepare_pl.set_reader(self.train_reader)
         for p in self.preprocessors:
             prepare_pl.add(p)
