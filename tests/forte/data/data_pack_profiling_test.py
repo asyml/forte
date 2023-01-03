@@ -12,18 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-profiling test for data pack: using entry (0.2.0) and using new methods (>0.3.0).
+profiling test for data pack: using typical usage scenarios such as POS
+tagging, NER, serialization to check for possible bottlenecks.
 """
 
 import os
 import unittest
-import nltk
 
 __all__ = [
     "performance_test",
 ]
 
-from typing import Dict, Set
+from typing import Dict, Set, List
 
 from forte.common.configuration import Config
 from forte.common.resources import Resources
@@ -47,25 +47,17 @@ from forte.data.data_pack import DataPack
 from forte import Pipeline
 from nltk.tokenize.treebank import TreebankWordTokenizer
 
-# from fortex.spacy import SpacyProcessor
-
 
 class SentenceAndTokenProcessor(PackProcessor):
-    def __init__(self):
-        super().__init__()
-
-    def initialize(self, resources, configs):
-        super().initialize(resources, configs)
 
     def process_tokens(self, sentences, input_pack: DataPack):
         """Basic tokenization and post tagging of the sentence.
         Args:
-            processors: List of processor names.
             sentences: Generator object which yields sentences in document.
             input_pack: input pack which needs to be modified.
         Returns: A mapping from SpaCy token index to Forte Token.
         """
-        tokens: [Token] = []
+        tokens: List[Token] = []
 
         last_sentence_word_idx = 0
         for s_idx, sentence in sentences:
@@ -85,7 +77,7 @@ class SentenceAndTokenProcessor(PackProcessor):
         sentences = sent_tokenize(doc)
 
         # tokens = process_tokens(sentences, input_pack)   # sentences, input_pack
-        tokens: [Token] = []
+        tokens: List[Token] = []
 
         last_sentence_word_idx = 0
         s_idx = 0
@@ -115,73 +107,6 @@ class SentenceAndTokenProcessor(PackProcessor):
         """
         record_meta["ft.onto.base_ontology.Sentence"] = set()
         record_meta["ft.onto.base_ontology.Token"] = set()
-
-
-class ExampleNLTKPOSTagger(PackProcessor):
-    r"""A wrapper of NLTK pos tagger."""
-
-    def initialize(self, resources, configs):
-        super().initialize(resources, configs)
-        # download the NLTK average perceptron tagger
-        nltk.download("averaged_perceptron_tagger")
-
-    def _process(self, input_pack: DataPack):
-        # get a list of token data entries from `input_pack`
-        # using `DataPack.get()`` method
-
-        token_texts = [token.text for token in input_pack.get(Token)]
-
-        # use nltk pos tagging module to tag token texts
-        taggings = nltk.pos_tag(token_texts)
-
-        # assign nltk taggings to token attributes
-        for token, tag in zip(input_pack.get(Token), taggings):
-            token.pos = tag[1]
-
-            # token.pos = word.tag_
-
-            # token.lemma = word.lemma_
-
-            # Store the spacy token index to forte token mapping.
-            # indexed_tokens[word.i] = token
-
-        # return indexed_tokens
-
-    def record(record_meta: Dict[str, Set[str]]):
-        record_meta["ft.onto.base_ontology.Token"].add("pos")
-        record_meta["ft.onto.base_ontology.Token"].add("lemma")
-
-    def process_tokens(
-        processors, sentences, input_pack: DataPack
-    ) -> Dict[int, Token]:
-        """Basic tokenization and post tagging of the sentence.
-        Args:
-            processors: List of processor names.
-            sentences: Generator object which yields sentences in document.
-            input_pack: input pack which needs to be modified.
-        Returns: A mapping from SpaCy token index to Forte Token.
-        """
-        indexed_tokens: Dict[int, Token] = {}
-
-        for sentence in sentences:
-            Sentence(input_pack, sentence.start_char, sentence.end_char)
-
-            if "tokenize" in processors:
-                # Iterating through spaCy token objects
-                for word in sentence:
-                    begin_pos_word = word.idx
-                    end_pos_word = begin_pos_word + len(word.text)
-                    token = Token(input_pack, begin_pos_word, end_pos_word)
-
-                    if "pos" in processors:
-                        token.pos = word.tag_
-
-                    if "lemma" in processors:
-                        token.lemma = word.lemma_
-
-                    # Store the spacy token index to forte token mapping.
-                    indexed_tokens[word.i] = token
-        return indexed_tokens
 
 
 class NLTKNER(PackProcessor):
@@ -343,12 +268,11 @@ class NLTKPOSTagger(PackProcessor):
 
 class NLP_Pipeline_Performance_Test(unittest.TestCase):
     """
-    Test performance of POS, NER.
+    Test performance for POS, NER tasks.
     """
 
     def setUp(self) -> None:
         self.nlp = Pipeline[DataPack]()
-        # self.nlp.set_reader(StringReader())
 
     def testPOSTaggingNER(self, input_path: str = ""):  # input_output_pair ,
         """
@@ -373,16 +297,11 @@ class NLP_Pipeline_Performance_Test(unittest.TestCase):
             input_param = input_path
         self.nlp.add(NLTKSentenceSegmenter())  # SentenceAndTokenProcessor
         self.nlp.add(NLTKWordTokenizer())
-        self.nlp.add(NLTKPOSTagger())  # #ExampleNLTKPOSTagger()
+        self.nlp.add(NLTKPOSTagger())
         self.nlp.add(NLTKNER())
 
-        # self.nlp.add(SentenceAndTokenProcessor())  #, {"processors": ["sentence", "tokenize"]}
-        # self.nlp.add(ExampleNLTKPOSTagger())
-
-        # self.nlp.initialize()
-        # rs = self.nlp.run(input_path)
         for pack in self.nlp.initialize().process_dataset(
-            input_param
+                input_param
         ):  # initialize().run(input_path):   #:  rs:  #
             for sentence in pack.get("ft.onto.base_ontology.Sentence"):
                 print("The sentence is: ", sentence.text)
@@ -422,10 +341,6 @@ class NLP_Pipeline_Performance_Test(unittest.TestCase):
                     "overwrite": True,
                 },
             )
-
-        # self.nlp.add(NLTKSentenceSegmenter())  # SentenceAndTokenProcessor
-        # self.nlp.add(NLTKWordTokenizer())
-        # self.nlp.add(NLTKPOSTagger())  # #ExampleNLTKPOSTagger()
 
         self.nlp.run(input_param)
 
