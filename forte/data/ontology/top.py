@@ -34,6 +34,7 @@ from forte.data.ontology.core import (
     BaseGroup,
     MultiEntry,
     EntryType,
+    FList
 )
 from forte.data.span import Span
 from forte.utils.utils import get_full_module_name
