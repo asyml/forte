@@ -225,7 +225,7 @@ class HTMLReader(PackReader):
         self.init_with_fileloc = False
         self.init_with_html = False
 
-    def _collect(self, content) -> Iterator[str]:  # type: ignore
+    def _collect(self, content) -> Iterator[str]:
         r"""Could be called with a directory, a particular file location or a
         list of strings. If the string is an HTML string, it will be cleaned.
 

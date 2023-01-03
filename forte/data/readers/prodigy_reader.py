@@ -31,9 +31,7 @@ class ProdigyReader(PackReader):
     def _cache_key_function(self, data: dict) -> str:
         return data["meta"]["id"]
 
-    def _collect(  # type: ignore
-        self, prodigy_annotation_file: str
-    ) -> Iterator[Any]:
+    def _collect(self, prodigy_annotation_file: str) -> Iterator[Any]:
         r"""Collects from Prodigy file path and returns an iterator of Prodigy
         annotation data. The elements in the iterator correspond to each line
         in the prodigy file. One element is expected to be parsed as one

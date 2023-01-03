@@ -65,9 +65,7 @@ class MarianMachineTranslator(MachineTranslator):
         self, src_lang: str = "en", tgt_lang: str = "fr", device: str = "cpu"
     ):
         super().__init__(src_lang, tgt_lang, device)
-        self.model_name = "Helsinki-NLP/opus-mt-{src}-{tgt}".format(
-            src=src_lang, tgt=tgt_lang
-        )
+        self.model_name = f"Helsinki-NLP/opus-mt-{src_lang}-{tgt_lang}"
         try:
             from transformers import (  # pylint:disable=import-outside-toplevel
                 MarianMTModel,

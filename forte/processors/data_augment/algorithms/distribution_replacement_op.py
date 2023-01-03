@@ -80,7 +80,7 @@ class DistributionReplacementOp(SingleAnnotationAugmentOp, Configurable):
                     "data_path"
                 ]
                 try:
-                    r = requests.get(distribution_path)
+                    r = requests.get(distribution_path, timeout=30)
                     data = r.json()
                 except requests.exceptions.RequestException:
                     with open(distribution_path, encoding="utf8") as json_file:

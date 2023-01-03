@@ -114,6 +114,7 @@ class MicrosoftBingTranslator(MultiPackProcessor):
             microsoft_constructed_url,
             headers=self.microsoft_headers,
             json=[{"text": query}],
+            timeout=30,
         )
 
         if response.status_code != 200:
