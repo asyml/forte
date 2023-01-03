@@ -341,11 +341,7 @@ class Group(BaseGroup[Entry]):
                 "attached to any data pack."
             )
 
-        member_entries = []
-        if self.members is not None:
-            for m in self.members:
-                member_entries.append(self.pack.get_entry(m))
-        return member_entries
+        return list(self.members)
 
 
 class MultiPackGeneric(MultiEntry, Entry):
@@ -496,7 +492,7 @@ class MultiPackGroup(MultiEntry, BaseGroup[Entry]):
     of members.
     """
     member_type: str
-    members: List[Tuple[int, int]]
+    members: FList[Entry]
 
     MemberType = Entry
 
@@ -517,14 +513,11 @@ class MultiPackGroup(MultiEntry, BaseGroup[Entry]):
                 f"The members of {type(self)} should be "
                 f"instances of {self.MemberType}, but got {type(member)}"
             )
-        self.members.append((member.pack_id, member.tid))
+
+        self.members.append(member)
 
     def get_members(self) -> List[Entry]:
-        members = []
-        if self.members is not None:
-            for pack_idx, member_tid in self.members:
-                members.append(self.pack.get_subentry(pack_idx, member_tid))
-        return members
+        return list(self.members)
 
 
 @dataclass
@@ -1096,12 +1089,12 @@ class Payload(Entry):
         Convert ``modality`` ``Enum`` object to str format for serialization.
         """
         # TODO: this function will be removed since
-        # Entry store is being integrated into DataStore
+        #   Entry store is being integrated into DataStore
         state = self.__dict__.copy()
         state["modality"] = self.modality_name
 
         if isinstance(state["_cache"], np.ndarray):
-            state["_cache"] = list(self._cache.tolist())
+            state["_cache"] = list(self._cache.tolist())  # type: ignore
         if isinstance(state["_embedding"], np.ndarray):
             state["_embedding"] = list(self._embedding.tolist())
 

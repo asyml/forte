@@ -1,5 +1,5 @@
 # ***automatically_generated***
-# ***source json:tests/forte/data/ontology/test_specs/race_qa_onto.json***
+# ***source json:/Users/hector/Documents/projects/forte/tests/forte/data/ontology/test_specs/race_qa_onto.json***
 # flake8: noqa
 # mypy: ignore-errors
 # pylint: skip-file

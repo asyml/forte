@@ -25,7 +25,7 @@ from typing import List, Tuple, Iterator, Optional, Dict
 
 import numpy as np
 
-
+from forte.common import ProcessorConfigError
 from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.models.ner import utils
@@ -165,6 +165,33 @@ class CoNLLNERTrainer(BaseTrainer):
         Returns:
 
         """
+        if (
+            self.word_alphabet is None
+            or self.ner_alphabet is None
+            or self.word_alphabet is None
+            or self.char_alphabet is None
+        ):
+            raise ProcessorConfigError(
+                "Error when configuring the trainer, alphabets are not initialized."
+            )
+
+        if self.config_model is None:
+            raise ProcessorConfigError(
+                "Error when configuring the trainer, "
+                "model config is not found."
+            )
+
+        if self.config_data is None:
+            raise ProcessorConfigError(
+                "Error when configuring the trainer, "
+                "data config is not found."
+            )
+
+        if self.normalize_func is None:
+            raise ProcessorConfigError(
+                "Error when configuring the trainer, "
+                "the normalizer is not set."
+            )
 
         tokens = instance["Token"]
         word_ids = []
@@ -185,7 +212,7 @@ class CoNLLNERTrainer(BaseTrainer):
         for ner in ner_tags:
             ner_ids.append(self.ner_alphabet.get_index(ner))
 
-        max_len = max([len(char_seq) for char_seq in char_id_seqs])
+        max_len = max(len(char_seq) for char_seq in char_id_seqs)
         self.max_char_length = max(self.max_char_length, max_len)
 
         self.train_instances_cache.append((word_ids, char_id_seqs, ner_ids))
@@ -197,11 +224,29 @@ class CoNLLNERTrainer(BaseTrainer):
 
         :return:
         """
+        if self.config_model is None:
+            raise ProcessorConfigError(
+                "Error when configuring the trainer, "
+                "model config is not found."
+            )
+
+        if self.config_data is None:
+            raise ProcessorConfigError(
+                "Error when configuring the trainer, "
+                "data config is not found."
+            )
+
+        if self.model is None or self.optim is None:
+            raise ProcessorConfigError(
+                "Error when configuring the trainer, "
+                "the model is not initialized correctly."
+            )
+
         counter = len(self.train_instances_cache)
         logger.info(f"Total number of ner_data: {counter}")
 
         lengths = sum(
-            [len(instance[0]) for instance in self.train_instances_cache]
+            len(instance[0]) for instance in self.train_instances_cache
         )
 
         logger.info(f"Average sentence length: {(lengths / counter):0.3f}")
@@ -278,6 +323,17 @@ class CoNLLNERTrainer(BaseTrainer):
         Returns:
 
         """
+        if self.model is None:
+            raise ProcessorConfigError(
+                "Error when configuring the trainer, the model is not set."
+            )
+
+        if self.config_data is None:
+            raise ProcessorConfigError(
+                "Error when configuring the trainer, "
+                "data config is not found."
+            )
+
         losses = 0
         val_data = list(instances)
         for i in tqdm(
@@ -346,6 +402,12 @@ class CoNLLNERTrainer(BaseTrainer):
         Returns:
 
         """
+        if self.config_model is None:
+            raise ProcessorConfigError(
+                "Error when configuring the trainer, "
+                "the model configs are not found."
+            )
+
         if self.resource:
             keys_to_serializers = {}
             for key in resources.keys():
@@ -366,6 +428,18 @@ class CoNLLNERTrainer(BaseTrainer):
         self.__save_model_checkpoint()
 
     def __save_model_checkpoint(self):
+        if self.config_model is None:
+            raise ProcessorConfigError(
+                "Error when configuring the trainer, "
+                "the model configs are not found."
+            )
+
+        if self.model is None or self.optim is None:
+            raise ProcessorConfigError(
+                "Error when configuration the trainer, "
+                "the model and optimizer are not set correctly."
+            )
+
         states = {
             "model": self.model.state_dict(),
             "optimizer": self.optim.state_dict(),
@@ -385,6 +459,18 @@ class CoNLLNERTrainer(BaseTrainer):
         Returns:
 
         """
+        if self.model is None or self.optim is None:
+            raise ProcessorConfigError(
+                "Error when configuring the trainer, "
+                "the model is not initialized correctly."
+            )
+
+        if self.config_model is None:
+            raise ProcessorConfigError(
+                "Error when configuring the trainer, "
+                "the model configs are not found."
+            )
+
         ckpt = torch.load(self.config_model.model_path)
         logger.info("restoring model from %s", self.config_model.model_path)
         self.model.load_state_dict(ckpt["model"])
@@ -419,11 +505,24 @@ class CoNLLNERTrainer(BaseTrainer):
             - ``lengths``: A tensor of shape `[batch_size]` representing the
               length of each sentences in the batch
         """
+        if self.config_data is None:
+            raise ProcessorConfigError(
+                "Configuration for the trainer not found."
+            )
+
+        if (
+            self.word_alphabet is None
+            or self.ner_alphabet is None
+            or self.word_alphabet is None
+            or self.char_alphabet is None
+        ):
+            raise ProcessorConfigError(
+                "Error when configuring the trainer, alphabets are not initialized."
+            )
+
         batch_size = len(data)
-        batch_length = max([len(d[0]) for d in data])
-        char_length = max(
-            [max([len(charseq) for charseq in d[1]]) for d in data]
-        )
+        batch_length = max(len(d[0]) for d in data)
+        char_length = max(max(len(charseq) for charseq in d[1]) for d in data)
 
         char_length = min(
             self.config_data.max_char_length,

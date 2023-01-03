@@ -205,7 +205,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         data_source: Union[Path, str],
         serialize_method: str = "jsonpickle",
         zip_pack: bool = False,
-    ) -> "PackType":
+    ) -> "BasePack[Any, Any, Any]":
         """
         This function should deserialize a Pack from a string. The
         implementation should decide the specific pack type.
@@ -236,7 +236,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             if not hasattr(pack, "pack_version"):
                 pack.pack_version = DEFAULT_PACK_VERSION
 
-        return pack  # type: ignore
+        return pack
 
     @classmethod
     def from_string(cls, data_content: str) -> "BasePack":

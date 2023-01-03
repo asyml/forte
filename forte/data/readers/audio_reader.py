@@ -44,7 +44,7 @@ class AudioReader(PackReader):
             ) from e
         self.soundfile = soundfile
 
-    def _collect(self, audio_directory) -> Iterator[Any]:  # type: ignore
+    def _collect(self, audio_directory) -> Iterator[Any]:
         r"""Should be called with param ``audio_directory`` which is a path to a
         folder containing audio files.
 

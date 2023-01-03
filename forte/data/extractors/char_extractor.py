@@ -18,6 +18,7 @@ from characters of a piece of text.
 import logging
 from typing import Optional
 
+from forte.common import ProcessorConfigError
 from forte.data.data_pack import DataPack
 from forte.data.converter.feature import Feature
 from forte.data.base_extractor import BaseExtractor
@@ -68,6 +69,10 @@ class CharExtractor(BaseExtractor):
                 whole data pack will be used as the context. Default is None.
         """
         word: Annotation
+        if self.config is None:
+            raise ProcessorConfigError(
+                "Configuration for the extractor not found."
+            )
         for word in pack.get(self.config.entry_type, context):
             for char in word.text:  # type: ignore
                 self.add(char)
@@ -89,6 +94,11 @@ class CharExtractor(BaseExtractor):
         """
         data = []
 
+        if self.config is None:
+            raise ProcessorConfigError(
+                "Configuration for the extractor not found."
+            )
+
         entry: Annotation
         for entry in pack.get(self.config.entry_type, context):
             if self.config.max_char_length is not None:
@@ -104,6 +114,11 @@ class CharExtractor(BaseExtractor):
                 data.append([self.element2repr(char) for char in characters])
             else:
                 data.append(list(characters))
+
+        if self.config is None:
+            raise ProcessorConfigError(
+                "Configuration for the extractor not found."
+            )
 
         meta_data = {
             "need_pad": self.config.need_pad,

@@ -92,7 +92,7 @@ class RawDataDeserializeReader(BaseDeserializeReader):
     This reader assumes the data passed in are raw DataPack strings.
     """
 
-    def _collect(self, data_list: List[str]) -> Iterator[str]:  # type: ignore
+    def _collect(self, data_list: List[str]) -> Iterator[str]:
         yield from data_list
 
     def _parse_pack(self, data_source: str) -> Iterator[DataPack]:
@@ -107,7 +107,7 @@ class RecursiveDirectoryDeserializeReader(BaseDeserializeReader):
     Compressed data are supported through smart open.
     """
 
-    def _collect(self, data_dir: str) -> Iterator[str]:  # type: ignore
+    def _collect(self, data_dir: str) -> Iterator[str]:
         """
         This function will collect the files of the given directory. If the
          'suffix' field in the config is set, it will only take files matching
@@ -159,7 +159,7 @@ class SinglePackReader(BaseDeserializeReader):
     files are supported.
     """
 
-    def _collect(self, data_path: str) -> Iterator[str]:  # type: ignore
+    def _collect(self, data_path: str) -> Iterator[str]:
         """
         This function will collect data path as a single file.
 
@@ -291,7 +291,7 @@ class MultiPackDirectoryReader(MultiPackDeserializerBase):
         if self.configs.zip_pack:
             self._open = gzip.open
 
-    def _get_multipack_content(self) -> Iterator[str]:  # type: ignore
+    def _get_multipack_content(self) -> Iterator[str]:
         # pylint: disable=protected-access
         for mp_path in os.listdir(self.configs.multi_pack_dir):
             if mp_path.endswith(self.configs.suffix):

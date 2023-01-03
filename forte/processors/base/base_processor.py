@@ -19,7 +19,7 @@ from abc import abstractmethod, ABC
 from typing import Any, Dict, Set
 
 from forte.data.base_pack import PackType
-from forte.data.selector import DummySelector
+from forte.data.selector import DummySelector, Selector
 from forte.pipeline_component import PipelineComponent
 from forte.utils.utils_processor import (
     record_types_and_attributes_check,
@@ -38,7 +38,7 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
 
     def __init__(self):
         super().__init__()
-        self.selector = DummySelector()
+        self.selector: Selector = DummySelector()
 
     def record(self, record_meta: Dict[str, Set[str]]):
         r"""Method to add output record of the current processor to
