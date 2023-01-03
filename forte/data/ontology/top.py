@@ -325,7 +325,7 @@ class Group(BaseGroup[Entry]):
                 f"The members of {type(self)} should be "
                 f"instances of {self.MemberType}, but got {type(member)}"
             )
-        self.members.append(member.tid)
+        self.members.append(member)
 
     def get_members(self) -> List[Entry]:
         r"""Get the member entries in the group. The function will retrieve
@@ -505,6 +505,7 @@ class MultiPackGroup(MultiEntry, BaseGroup[Entry]):
         # in data store and must thus be in a primitive form.
         self.member_type = get_full_module_name(self.MemberType)
         super().__init__(pack)
+
         if members is not None:
             self.add_members(members)
 
