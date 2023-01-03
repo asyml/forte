@@ -375,7 +375,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                         JSON_CLASS_FIELD: get_full_module_name(obj),
                         JSON_STATE_FIELD: obj.__getstate__(),
                     }
-                raise TypeError("Type %s not serializable" % type(obj))
+                raise TypeError(f"Type {type(obj)} not serializable")
 
             return json.dumps(
                 self, indent=indent, default=json_serialize_handler
