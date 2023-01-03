@@ -34,7 +34,7 @@ from forte.data.ontology.core import (
     BaseGroup,
     MultiEntry,
     EntryType,
-    FList
+    FList,
 )
 from forte.data.span import Span
 from forte.utils.utils import get_full_module_name
@@ -297,7 +297,7 @@ class Group(BaseGroup[Entry]):
     a "coreference group" is a group of coreferential entities. Each group will
     store a set of members, no duplications allowed.
     """
-    members: List[int]
+    members: FList[Entry]
     member_type: str
 
     MemberType = Entry
