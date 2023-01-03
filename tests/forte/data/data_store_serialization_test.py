@@ -75,7 +75,7 @@ class DataStoreTest(unittest.TestCase):
             },
             "forte.data.ontology.top.Group": {
                 "attributes": {
-                    'members': {'type': (FList, (Entry,)), 'index': 2},
+                    'members': {'type': (list, (int,)), 'index': 2},
                     'member_type': {'type': (type(None), (str,)), 'index': 3}
                 },
                 "parent_entry": "forte.data.ontology.core.BaseGroup",
@@ -333,7 +333,7 @@ class DataStoreTest(unittest.TestCase):
                 },
                 "forte.data.ontology.top.Group": {
                     "attributes": {
-                        'members': {'type': (FList, (Entry,)), 'index': 2},
+                        'members': {'type': (list, (int,)), 'index': 2},
                         'member_type': {'type': (type(None), (str,)), 'index': 3}
                     },
                     "parent_entry": "forte.data.ontology.core.BaseGroup",
@@ -800,7 +800,7 @@ class DataStoreTest(unittest.TestCase):
                 },
                 "forte.data.ontology.top.Group": {
                     "attributes": {
-                        'members': {'type': (FList, (Entry,)), 'index': 2},
+                        'members': {'type': (list, (int,)), 'index': 2},
                         'member_type': {'type': (type(None), (str,)), 'index': 3}
                     },
                     "parent_entry": "forte.data.ontology.core.BaseGroup",
@@ -923,7 +923,7 @@ class DataStoreTest(unittest.TestCase):
                 },
                 "forte.data.ontology.top.Group": {
                     "attributes": {
-                        'members': {'type': (FList, (Entry,)), 'index': 2},
+                        'members': {'type': (list, (int,)), 'index': 2},
                         'member_type': {'type': (type(None), (str,)), 'index': 3}
                     },
                     "parent_entry": "forte.data.ontology.core.BaseGroup",

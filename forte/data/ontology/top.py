@@ -1137,3 +1137,4 @@ SinglePackEntries = (
     Payload,
 )
 MultiPackEntries = (MultiPackLink, MultiPackGroup, MultiPackGeneric)
+AnnotationLikeEntries = (Annotation, AudioAnnotation)

@@ -813,9 +813,22 @@ class DataStore(BaseStore):
                 # ie. NoneType.
                 if attr_class is None:
                     attr_class = type(None)
-                attr_args = get_args(attr_info.type)
-                if len(attr_args) == 0:
+                raw_attr_args = get_args(attr_info.type)
+                if len(raw_attr_args) == 0:
                     attr_args = tuple([attr_info.type])
+                else:
+                    attr_args = ()
+                    for args in raw_attr_args:
+                        # This is the case when we have a multidimensional
+                        # type attribute like List[Tuple[int, int]]. In this
+                        # case get_args will return a tuple of tuples that
+                        # looks like ((Tuple, int, int),). We thus convert
+                        # this into a single dimensional tuple -
+                        # (Tuple, int, int).
+                        if isinstance(args, tuple):
+                            attr_args += args
+                        else:
+                            attr_args += (args,)
 
                 # Prior to Python 3.7, fetching generic type
                 # aliases resulted in actual type objects whereas from
@@ -1320,6 +1333,91 @@ class DataStore(BaseStore):
                 " is not supported. This function only supports "
                 "getting entry id for annotation-like entry."
             )
+
+    def get_attribute_positions(self, type_name: str) -> Dict[str, int]:
+        r"""This function returns a dictionary where the key represents
+        the attributes of the entry of type ``type_name`` and value
+        represents the index of the position where this attribute is
+        stored in the data store entry of this type.
+        For example:
+
+        .. code-block:: python
+
+            positions = data_store.get_attribute_positions(
+                    "ft.onto.base_ontology.Document"
+                )
+
+            # positions = {
+            #   "begin": 2,
+            #    "end": 3,
+            #    "payload_idx": 4,
+            #    "document_class": 5,
+            #    "sentiment": 6,
+            #    "classifications": 7
+            # }
+
+        Args:
+            type_name (str): The fully qualified type name of a type.
+
+        Returns:
+            A dictionary indicating the attributes of an entry of type
+            ``type_name`` and their respective positions in a data store
+            entry.
+        """
+        type_data = self._get_type_info(type_name)
+
+        positions: Dict[str, int] = {}
+        for attr, val in type_data[constants.ATTR_INFO_KEY].items():
+            positions[attr] = val[constants.ATTR_INDEX_KEY]
+
+        return positions
+
+    def transform_data_store_entry(self, entry: List[Any]) -> Dict:
+        r"""
+        This method converts a raw data store entry into a format more easily
+        understandable to users. Data Store entries are stored as lists and
+        are not very easily understandable. This method converts ``DataStore``
+        entries from a list format to a dictionary based format where the key
+        is the names of the attributes of an entry and the value is the values
+        corresponding attributes in the data store entry.
+        For example:
+
+        .. code-block:: python
+
+            >>> data_store = DataStore()
+            >>> tid = data_store.add_entry_raw(
+            ... type_name = 'ft.onto.base_ontology.Sentence',
+            ... tid = 101, attribute_data = [0,10])
+            >>> entry = data_store.get_entry(tid)[0]
+            >>> transformed_entry = data_store.transform_data_store_entry(entry)
+            >>> transformed_entry == { 'begin': 0, 'end': 10, 'payload_idx': 0,
+            ... 'speaker': None, 'part_id': None, 'sentiment': {},
+            ... 'classification': {}, 'classifications': {}, 'tid': 101,
+            ... 'type': 'ft.onto.base_ontology.Sentence'}
+            True
+
+        Args:
+            entry: A list representing a valid data store entry
+
+        Returns:
+            a dictionary representing the the input data store entry
+        """
+
+        attribute_positions = self.get_attribute_positions(
+            entry[constants.ENTRY_TYPE_INDEX]
+        )
+
+        # We now convert the entry from data store format (list) to user
+        # representation format (dict) to make the contents of the entry more
+        # understandable.
+        user_rep: Dict[str, Any] = {}
+        for attr, pos in attribute_positions.items():
+            user_rep[attr] = entry[pos]
+
+        user_rep["tid"] = entry[constants.TID_INDEX]
+        user_rep["type"] = entry[constants.ENTRY_TYPE_INDEX]
+
+        return user_rep
 
     def set_attribute(self, tid: int, attr_name: str, attr_value: Any):
         r"""This function locates the entry data with ``tid`` and sets its
