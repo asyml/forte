@@ -2,6 +2,7 @@
 Unit tests for multi pack related operations.
 """
 import logging
+from typing import Any, Dict
 import unittest
 
 from forte.data.data_pack import DataPack
@@ -96,9 +97,27 @@ class DataPackTest(unittest.TestCase):
         g: MultiPackGroup
         for g in self.multi_pack.get(MultiPackGroup):
             e: Annotation
-            group_content.append(tuple([e.text for e in g.get_members()]))
+            temp_list = []
+            for e in g.get_members():
+                temp_list.append(e.text)
+            group_content.append(tuple(temp_list))
 
         self.assertListEqual(expected_content, group_content)
+
+        # Get raw groups
+        group_content = []
+        grp: Dict[str, Any]
+        for grp in self.multi_pack.get(MultiPackGroup, get_raw=True):
+            temp_list = []
+            # Note here that grp represents a dictionary and not an object
+            for pack, mem in grp['members']:
+                mem_obj = self.multi_pack.get_subentry(pack, mem)
+                temp_list.append(mem_obj.text)
+
+            group_content.append(tuple(temp_list))
+        self.assertListEqual(expected_content, group_content)
+        
+
 
     def test_multipack_entries(self):
         """
