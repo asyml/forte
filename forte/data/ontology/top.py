@@ -64,6 +64,7 @@ __all__ = [
     "TextPayload",
     "AudioPayload",
     "ImagePayload",
+    "load_func",
 ]
 
 QueryType = Union[Dict[str, Any], np.ndarray]
@@ -1022,7 +1023,7 @@ class Payload(Entry):
 
         super().__init__(pack)
 
-        self._cache: Union[str, np.ndarray] = ""
+        self._cache: Any = None
         self._cache_shape: Optional[Sequence[int]] = None
         self.replace_back_operations: Sequence[Tuple] = []
         self.processed_original_spans: Sequence[Tuple] = []
@@ -1047,21 +1048,15 @@ class Payload(Entry):
         Returns:
 
         """
-        # payload_type = get_full_module_name(self)
-        # try:
-        #     loading_func = load_funcs[payload_type]
-        # except KeyError:
-        #     raise RuntimeError(
-        #         f"Loading function for {payload_type} not registered. Consider"
-        #         f"register the payload function using the `load_func` decorator."
-        #     )
-        self._cache = self._load()
+        self._cache = self._load()  # type: ignore
 
     def _load(self):
         pass
 
     @property
     def cache(self) -> Union[str, np.ndarray]:
+        if self._cache is None:
+            self.load()
         return self._cache
 
     @property
@@ -1085,6 +1080,14 @@ class Payload(Entry):
     def cache_shape(self) -> Optional[Sequence[int]]:
         return self._cache_shape
 
+    @cache.setter
+    def cache(self, data: Union[str, np.ndarray]):
+        self.set_cache(data)
+
+    def clear_cache(self):
+        self._cache = None
+
+    # TODO: replace this call to the setter.
     def set_cache(self, data: Union[str, np.ndarray]):
         """
         Load cache data into the payload and set the data shape.
@@ -1182,6 +1185,10 @@ class TextPayload(Payload):
         self, pack: PackType
     ):
         super().__init__(pack)
+        self._cache = ""
+
+    def clear_cache(self):
+        self._cache = ""
 
 
 @dataclass

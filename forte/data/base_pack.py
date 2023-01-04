@@ -177,9 +177,6 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
     def __del__(self):
         if len(self._pending_entries) > 0:
-            import pdb
-
-            pdb.set_trace()
             raise ProcessExecutionException(
                 f"There are {len(self._pending_entries)} "
                 f"entries not added to the index correctly."

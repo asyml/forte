@@ -136,9 +136,9 @@ class PayloadDecoratorTest(unittest.TestCase):
         uri = "https://raw.githubusercontent.com/asyml/forte/assets/ocr_tutorial/ocr.jpg"
         payload = OnlineJpegPayload(datapack)
         payload.uri = uri
-        payload.load()
-
         datapack.add_entry(payload)
+
+        payload.load()
         self.assertEqual(payload.cache.shape, (539, 810, 3))
 
     def test_audio_payload(self):
