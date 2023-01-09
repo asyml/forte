@@ -1025,7 +1025,7 @@ class Payload(Entry):
         Returns:
 
         """
-        self._cache = self._load()  # type: ignore  # pylint: disable=assignment-from-no-return
+        self._cache = self._load()  # pylint: disable=assignment-from-no-return
 
     def _load(self) -> Any:
         pass
@@ -1035,6 +1035,22 @@ class Payload(Entry):
         if self._cache is None:
             self.load()
         return self._cache
+
+    @cache.setter
+    def cache(self, data: Union[str, np.ndarray]):
+        self._cache = data
+        if isinstance(data, np.ndarray):
+            # if it's a numpy array, we need to set the shape
+            # even if user input a shape, it will be overwritten
+            cache_shape = data.shape
+        elif isinstance(data, str):
+            cache_shape = (len(data),)
+        else:
+            raise ValueError(
+                f"Unsupported data type {type(data)} for cache. "
+                f"Currently we only support str and numpy.ndarray."
+            )
+        self._cache_shape = cache_shape
 
     @property
     def uri(self) -> Optional[Union[str, Path, URL]]:
@@ -1053,22 +1069,6 @@ class Payload(Entry):
     def cache_shape(self) -> Optional[Sequence[int]]:
         return self._cache_shape
 
-    @cache.setter
-    def cache(self, data: Union[str, np.ndarray]):
-        self._cache = data
-        if isinstance(data, np.ndarray):
-            # if it's a numpy array, we need to set the shape
-            # even if user input a shape, it will be overwritten
-            cache_shape = data.shape
-        elif isinstance(data, str):
-            cache_shape = (len(data),)
-        else:
-            raise ValueError(
-                f"Unsupported data type {type(data)} for cache. "
-                f"Currently we only support str and numpy.ndarray."
-            )
-        self._cache_shape = cache_shape
-
     def clear_cache(self):
         self._cache = None
 
@@ -1082,7 +1082,7 @@ class Payload(Entry):
         state["modality"] = self.modality.name
 
         if isinstance(state["_cache"], np.ndarray):
-            state["_cache"] = list(self._cache.tolist())  # type: ignore
+            state["_cache"] = list(self._cache.tolist())
         if isinstance(state["_embedding"], np.ndarray):
             state["_embedding"] = list(self._embedding.tolist())
 
@@ -1174,7 +1174,7 @@ def load_func(payload_cls: Type["Payload"]):
     def decorator_load_func(func: Callable):
         @functools.wraps(func)
         def assign_func():
-            payload_cls._load = func  # pylint: disable=protected-access
+            payload_cls._load = func  # type: ignore # pylint: disable=protected-access
 
         assign_func()
 
