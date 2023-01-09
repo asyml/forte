@@ -26,9 +26,9 @@ from typing import (
     List,
     Callable,
 )
+from dataclasses import dataclass
 
 import numpy as np
-from dataclasses import dataclass
 
 from forte.common.aliases import URL
 from forte.data.base_pack import PackType
@@ -1025,7 +1025,7 @@ class Payload(Entry):
         Returns:
 
         """
-        self._cache = self._load()  # type: ignore
+        self._cache = self._load()  # type: ignore  # pylint: disable=assignment-from-no-return
 
     def _load(self) -> Any:
         pass
@@ -1174,7 +1174,7 @@ def load_func(payload_cls: Type["Payload"]):
     def decorator_load_func(func: Callable):
         @functools.wraps(func)
         def assign_func():
-            payload_cls._load = func
+            payload_cls._load = func  # pylint: disable=protected-access
 
         assign_func()
 

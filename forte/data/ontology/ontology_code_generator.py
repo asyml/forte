@@ -573,25 +573,37 @@ class OntologyCodeGenerator:
                                 if module is not None and module in full_names:
                                     arg_ann.value.id = full_names[module]
                                 arg_ann = arg_ann.slice.value
-                            if isinstance(arg_ann, ast.Tuple):
-                                for name in arg_ann.elts:
-                                    add_module(
-                                        name.id,
-                                        full_ele_name,
-                                        arg_ann,
-                                        manager,
-                                        full_names,
-                                    )
-                                    # _add_module(name.id)
-                            else:
-                                # _add_module(arg_ann.id)
-                                add_module(
-                                    arg_ann.id,
-                                    full_ele_name,
-                                    arg_ann,
-                                    manager,
-                                    full_names,
-                                )
+
+                            # if isinstance(arg_ann, ast.Tuple):
+                            #     for name in arg_ann.elts:
+                            #         add_module(
+                            #             name.id,
+                            #             full_ele_name,
+                            #             arg_ann,
+                            #             manager,
+                            #             full_names,
+                            #         )
+                            #         # _add_module(name.id)
+                            #     import pdb
+                            #     pdb.set_trace()
+                            # else:
+                            #     # _add_module(arg_ann.id)
+                            #     add_module(
+                            #         arg_ann.id,
+                            #         full_ele_name,
+                            #         arg_ann,
+                            #         manager,
+                            #         full_names,
+                            #     )
+
+                            # _add_module(arg_ann.id)
+                            add_module(
+                                arg_ann.id,
+                                full_ele_name,
+                                arg_ann,
+                                manager,
+                                full_names,
+                            )
 
                     self.top_to_core_entries[full_ele_name] = elem_base_names
                     self.base_entry_lookup[full_ele_name] = full_ele_name
