@@ -12,10 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import functools
-from pathlib import Path
-
-from dataclasses import dataclass
 from functools import total_ordering
+from pathlib import Path
 from typing import (
     Optional,
     Sequence,
@@ -26,14 +24,15 @@ from typing import (
     Union,
     Iterable,
     List,
-    cast,
     Callable,
 )
+
 import numpy as np
+from dataclasses import dataclass
 
 from forte.common.aliases import URL
-from forte.data.modality import Modality
 from forte.data.base_pack import PackType
+from forte.data.modality import Modality
 from forte.data.ontology.core import (
     Entry,
     BaseLink,
@@ -1028,7 +1027,7 @@ class Payload(Entry):
         """
         self._cache = self._load()  # type: ignore
 
-    def _load(self):
+    def _load(self) -> Any:
         pass
 
     @property
