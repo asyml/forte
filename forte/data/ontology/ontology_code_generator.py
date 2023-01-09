@@ -126,25 +126,6 @@ def analyze_packages(packages: Set[str]):
     return [p for (l, p) in sorted(package_len, reverse=True)]
 
 
-def add_module(
-    module: Optional[str],
-    full_ele_name: str,
-    arg_ann,
-    manager: ImportManager,
-    full_names: Dict[str, str],
-):
-    if module is not None and module in full_names:
-        arg_ann.id = full_names[module]
-        manager.add_object_to_import(arg_ann.id)
-
-        # Convert from PackType to more concrete pack
-        # type, such as DataPack or MultiPack.
-        if arg_ann.id == PACK_TYPE_CLASS_NAME:
-            pack_class_ = hardcoded_pack_map(full_ele_name)
-            manager.add_object_to_import(pack_class_)
-            arg_ann.id = pack_class_
-
-
 def validate_entry(
     entry_name: str, sorted_packages: List[str], lenient_prefix=False
 ):
@@ -574,36 +555,27 @@ class OntologyCodeGenerator:
                                     arg_ann.value.id = full_names[module]
                                 arg_ann = arg_ann.slice.value
 
+                            if (
+                                arg_ann.id is not None
+                                and arg_ann.id in full_names
+                            ):
+                                arg_ann.id = full_names[arg_ann.id]
+                                manager.add_object_to_import(arg_ann.id)
+
+                                # Convert from PackType to more concrete pack
+                                # type, such as DataPack or MultiPack.
+                                if arg_ann.id == PACK_TYPE_CLASS_NAME:
+                                    pack_class_ = hardcoded_pack_map(
+                                        full_ele_name
+                                    )
+                                    manager.add_object_to_import(pack_class_)
+                                    arg_ann.id = pack_class_
+
                             # if isinstance(arg_ann, ast.Tuple):
                             #     for name in arg_ann.elts:
-                            #         add_module(
-                            #             name.id,
-                            #             full_ele_name,
-                            #             arg_ann,
-                            #             manager,
-                            #             full_names,
-                            #         )
-                            #         # _add_module(name.id)
-                            #     import pdb
-                            #     pdb.set_trace()
+                            #         _add_module(name.id)
                             # else:
-                            #     # _add_module(arg_ann.id)
-                            #     add_module(
-                            #         arg_ann.id,
-                            #         full_ele_name,
-                            #         arg_ann,
-                            #         manager,
-                            #         full_names,
-                            #     )
-
-                            # _add_module(arg_ann.id)
-                            add_module(
-                                arg_ann.id,
-                                full_ele_name,
-                                arg_ann,
-                                manager,
-                                full_names,
-                            )
+                            #     _add_module(arg_ann.id)
 
                     self.top_to_core_entries[full_ele_name] = elem_base_names
                     self.base_entry_lookup[full_ele_name] = full_ele_name
