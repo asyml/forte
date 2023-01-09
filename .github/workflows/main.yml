@@ -100,6 +100,10 @@ jobs:
         # Add a tmate step after most of the installation.
         uses: mxschmitt/action-tmate@v3
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.tmate_enabled }}
+      - name: Debug payload tests
+        run: |
+          # TODO: remove later.
+          pytest tests/forte/utils/payload_decorator_test.py -s
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names

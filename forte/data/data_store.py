@@ -1062,6 +1062,7 @@ class DataStore(BaseStore):
         if self._is_annotation(type_name):
             self.__tid_ref_dict[tid] = entry
         else:
+            print("adding entry ", tid, type_name)  # TODO: remove print later.
             index_id = len(self.__elements[type_name]) - 1  # last one
             self.__tid_idx_dict[tid] = [type_name, index_id]
         return tid

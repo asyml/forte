@@ -506,6 +506,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             data_store_ref = (
                 cls.pack._data_store  # pylint: disable=protected-access
             )
+            print("getting ", cls.tid, attr_name)  # TODO: remove print later.
             attr_val = data_store_ref.get_attribute(
                 tid=cls.tid, attr_name=attr_name
             )
@@ -673,6 +674,22 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         if entry.entry_type() not in Entry._cached_attribute_data:
             Entry._cached_attribute_data[entry.entry_type()] = {}
             for name in entry.__dataclass_fields__:
+                # TODO: Here the dict is empty, so the tid cannot be
+                #   found, but this will create a bug in CI, when
+                #   calling the following
+                #   stacktrace:
+                #   forte/data/base_pack.py:676: in on_entry_creation
+                #     attr_val = getattr(entry, name, None)
+                #   forte/data/base_pack.py:510: in entry_getter
+                #     tid=cls.tid, attr_name=attr_name
+                #   forte/data/data_store.py:1479: in get_attribute
+                #     entry, entry_type = self.get_entry(tid)
+                #   forte/data/data_store.py:1611: in get_entry
+                #     if self._is_annotation_tid(tid):
+                # but where locally there is no bug?
+                print(
+                    entry.pack._data_store.__dict__
+                )  # TODO: remove print later.
                 attr_val = getattr(entry, name, None)
                 if attr_val is not None:
                     Entry._cached_attribute_data[entry.entry_type()][
