@@ -981,7 +981,6 @@ class Payload(Entry):
         self,
         pack: PackType,
     ):
-        super().__init__(pack)
         # since we cannot pass different modality from generated ontology, and
         # we don't want to import base ontology in the header of the file
         # we import it here.
@@ -999,6 +998,8 @@ class Payload(Entry):
             )
 
         self.modality = modality
+
+        super().__init__(pack)
         self._uri: Optional[Union[Path, URL, str]] = None
         self._cache: Any = None
         self._cache_shape: Optional[Sequence[int]] = None

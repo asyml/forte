@@ -1708,13 +1708,10 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         if isinstance(entry, Payload):
             if entry.modality == Modality.Text:
-                entry.set_payload_index(len(self.text_payloads))
                 self.text_payloads.append(entry)
             elif entry.modality == Modality.Audio:
-                entry.set_payload_index(len(self.audio_payloads))
                 self.audio_payloads.append(entry)
             elif entry.modality == Modality.Image:
-                entry.set_payload_index(len(self.image_payloads))
                 self.image_payloads.append(entry)
 
     def _get_entry_from_data_store(self, tid: int) -> Entry[Any]:
