@@ -567,7 +567,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             text: Text to be added.
         """
         ip = TextPayload(self)
-        ip.set_cache(text)
+        ip.cache = text
 
     def set_text(
         self,
@@ -583,14 +583,15 @@ class DataPack(BasePack[Entry, Link, Group]):
             ValueError: raised when the text payload index is out of range.
 
         Args:
-            text: a str text.
+            text: the input text to be assigned to this pack.
             replace_func: function that replace text. Defaults to None.
-            text_payload_index: the zero-based index of the TextPayload
-                in this DataPack's TextPayload entries.
-                If it's 0, it adds a new TextPayload if there is no text payload in the data pack.
-        """
-        # Temporary imports
+            text_payload_index: the zero-based index of to locate a TextPayload
+                in this DataPack, default 0. This allows one to set multiple texts
+                per DataPack. A DataPack by default contains one such TextPayload,
+                if the `text_payload_index` is larger than 0, then
+                more than one TextPayload need to be added before this, otherwise
 
+        """
         span_ops = [] if replace_func is None else replace_func(text)
         # The spans should be mutually exclusive
         (
@@ -599,6 +600,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             processed_original_spans,
             orig_text_len,
         ) = data_utils_io.modify_text_and_track_ops(text, span_ops)
+
         # temporary solution for backward compatibility
         # past API use this method to add a single text in the datapack
         if (
@@ -606,11 +608,12 @@ class DataPack(BasePack[Entry, Link, Group]):
             == 0
             and text_payload_index == 0
         ):
-            tp = TextPayload(self, text_payload_index)
+            # Create a new TextPayload.
+            tp = TextPayload(self)
         else:
             tp = self.get_payload_at(Modality.Text, text_payload_index)
 
-        tp.set_cache(text)
+        tp.cache = text
 
         tp.replace_back_operations = replace_back_operations
         tp.processed_original_spans = processed_original_spans
@@ -654,7 +657,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         else:
             ap = self.get_payload_at(Modality.Audio, audio_payload_index)
 
-        ap.set_cache(audio)
+        ap.cache = audio
         ap.sample_rate = sample_rate
 
     def add_audio(self, audio):
@@ -666,7 +669,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         """
 
         ip = AudioPayload(self)
-        ip.set_cache(audio)
+        ip.cache = audio
 
     def add_image(self, image):
         r"""
@@ -676,7 +679,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             image: A numpy array storing the image.
         """
         ip = ImagePayload(self)
-        ip.set_cache(image)
+        ip.cache = image
 
     def set_image(
         self,
@@ -709,7 +712,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             )
         else:
             ip = self.get_payload_at(Modality.Image, image_payload_index)
-        ip.set_cache(image)
+        ip.cache = image
 
     def get_original_text(self, text_payload_index: int = 0):
         r"""Get original unmodified text from the :class:`~forte.data.data_pack.DataPack` object.

@@ -480,8 +480,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             Depending on the value stored in the data store and the type
             of the attribute, the method decides how to process the value.
 
-            - Attributes repersented as ``FList`` and ``FDict`` objects are stored
-                as list and dictionary respectively in the dtaa store entry. These
+            - Attributes represented as ``FList`` and ``FDict`` objects are stored
+                as list and dictionary respectively in the data store entry. These
                 values are converted to ``FList`` and ``FDict`` objects on the fly.
             - When the field contains ``tid``s, we will convert them to entry
                 object on the fly. This is done by checking the type
@@ -527,7 +527,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             # is stored in the DataStore and hence its needs to be converted.
 
             # Entry objects are stored in data stores by their tid (which is
-            # of type int). Thus, if we enounter an int value, we check the
+            # of type int). Thus, if we encounter an int value, we check the
             # type information which is stored as a tuple. if any entry in this
             # tuple is a subclass of Entry or is a ForwardRef to another entry,
             # we can infer that this int value represents the tid of an Entry
@@ -566,8 +566,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             When the value contains entry objects, we will convert them into
             ``tid``s before storing to ``DataStore``. Additionally, if the entry
             setter method is called on an attribute that does not have a pack
-            associated with it (as is the case during intialization), the value
-            of the atttribute is stored in the class level cache of the ``Entry``
+            associated with it (as is the case during initialization), the value
+            of the attribute is stored in the class level cache of the ``Entry``
             class. On the other hand, if a pack is associated with the entry,
             the value will directly be stored in the data store.
 
@@ -646,9 +646,9 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                 attr_value = (
                     value.tid
                     if value.pack.pack_id == cls.pack.pack_id
-                    # When value's pack and cls's pack are not the same, we
+                    # When value's pack and cls' pack are not the same, we
                     # assume that cls.pack is a MultiPack, which will resolve
-                    # value.tid using MultiPack.get_subentry(pack_id, tid).
+                    # `value.tid` using `MultiPack.get_subentry(pack_id, tid)`.
                     # In this case, both pack_id and tid should be stored.
                     else (value.pack.pack_id, value.tid)
                 )

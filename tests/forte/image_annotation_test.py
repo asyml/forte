@@ -38,7 +38,7 @@ class ImageAnnotationTest(unittest.TestCase):
         self.line[3, 3] = 1
         self.line[4, 4] = 1
         ip = ImagePayload(self.datapack, 0)
-        ip.set_cache(self.line)
+        ip.cache = self.line
         self.img_ann = ImageAnnotation(self.datapack)
 
     def test_datapack_image_operation(self):
