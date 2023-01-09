@@ -37,9 +37,11 @@ class ImageAnnotationTest(unittest.TestCase):
         self.line[2, 2] = 1
         self.line[3, 3] = 1
         self.line[4, 4] = 1
-        ip = ImagePayload(self.datapack, 0)
+        ip = ImagePayload(self.datapack)
         ip.cache = self.line
         self.img_ann = ImageAnnotation(self.datapack)
+
+        self.datapack.add_all_remaining_entries()
 
     def test_datapack_image_operation(self):
         datapack = DataPack("image2")
@@ -62,6 +64,7 @@ class ImageAnnotationTest(unittest.TestCase):
 
         self.datapack.set_image(self.line, 0)
         ImageAnnotation(self.datapack)
+        self.datapack.add_all_remaining_entries()
 
 
     def test_datapack_image_operation(self):
@@ -81,6 +84,7 @@ class ImageAnnotationTest(unittest.TestCase):
 
         datapack.add_image(self.line)
         self.assertTrue(np.array_equal(datapack.get_image(1), self.line))
+        self.datapack.add_all_remaining_entries()
 
 
 
@@ -99,6 +103,7 @@ class ImageAnnotationTest(unittest.TestCase):
         self.assertEqual(
             new_pack.audio_annotations, self.datapack.audio_annotations
         )
+        self.datapack.add_all_remaining_entries()
 
     def testBox(self):
 
@@ -137,3 +142,4 @@ class ImageAnnotationTest(unittest.TestCase):
         self.assertRaises(ValueError, wrong_box)
 
         b3 = Box.init_from_center_n_shape(self.datapack, 4, 4, 5, 5)
+        self.datapack.add_all_remaining_entries()
