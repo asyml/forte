@@ -17,28 +17,22 @@ Unit test for payload factory.
 import os
 import unittest
 
+from requests import RequestException
+
 from forte.data.data_pack import DataPack
-from forte.data.ontology.top import load_func
+from forte.data.ontology.top import load_func, AudioPayload
 from ft.onto.payload_ontology import (
     JpegPayload,
     SoundFilePayload
 )
 
 
-class OnlineJpegPayload(JpegPayload):
+class PillowJpegPayload(JpegPayload):
     pass
 
 
-class LocalJpegPayload(JpegPayload):
-    pass
-
-
-class LocalSoundfilePayload(SoundFilePayload):
-    pass
-
-
-@load_func(OnlineJpegPayload)
-def load(payload: OnlineJpegPayload):
+@load_func(PillowJpegPayload)
+def load(payload: PillowJpegPayload):
     """
     A function that parses payload metadata and prepare and returns a loading function.
 
@@ -59,41 +53,36 @@ def load(payload: OnlineJpegPayload):
         ) from e
 
     def read_uri(input_uri):
-        # customize this function to read data from uri
-        uri_obj = requests.get(input_uri, stream=True)
-        pil_image = Image.open(uri_obj.raw)
+        try:
+            # customize this function to read data from uri
+            open_path = requests.get(input_uri, stream=True).raw
+        except RequestException:
+            open_path = input_uri
+
+        pil_image = Image.open(open_path)
         return np.asarray(pil_image)
 
     return read_uri(payload.uri)
 
 
-@load_func(LocalJpegPayload)
-def load(payload: LocalJpegPayload):
-    """
-    A function that parses payload metadata and prepare and returns a loading function.
+@load_func(JpegPayload)
+def load(payload: JpegPayload):
+    def read_uri(input_uri):
+        return f"unimplemented parent JpegPayload with {input_uri}"
 
-    This function is not stored in data store but will be used
-    for registering in PayloadFactory.
-
-    Returns:
-        a function that reads image data from an url.
-    """
-
-    def load_fn(input_uri):
-        try:
-            import matplotlib.pyplot as plt
-            return plt.imread(input_uri)
-        except ModuleNotFoundError as e:
-            raise ModuleNotFoundError(
-                "ImagePayload reading local file requires `matplotlib`"
-                "package to be installed."
-            ) from e
-
-    return load_fn(payload.uri)
+    return read_uri(payload.uri)
 
 
-@load_func(LocalSoundfilePayload)
-def load(payload: LocalSoundfilePayload):
+@load_func(AudioPayload)
+def load(payload: AudioPayload):
+    def read_uri(input_uri):
+        return f"unimplemented parent AudioPayload with {input_uri}"
+
+    return read_uri(payload.uri)
+
+
+@load_func(SoundFilePayload)
+def load(payload: SoundFilePayload):
     try:
         import soundfile  # pylint: disable=import-outside-toplevel
     except ModuleNotFoundError as e:
@@ -123,6 +112,7 @@ def load(payload: LocalSoundfilePayload):
             )
         else:  # sound file auto-detect the
             return get_first(soundfile.read(file=input_uri))
+
     return read_uri(payload.uri)
 
 
@@ -134,16 +124,64 @@ class PayloadDecoratorTest(unittest.TestCase):
     def test_online_image_payload(self):
         datapack = DataPack("image")
         uri = "https://raw.githubusercontent.com/asyml/forte/assets/ocr_tutorial/ocr.jpg"
-        payload = OnlineJpegPayload(datapack)
+        payload = PillowJpegPayload(datapack)
         payload.uri = uri
+        payload.load()
+
         datapack.add_entry(payload)
 
-        payload.load()
         self.assertEqual(payload.cache.shape, (539, 810, 3))
+
+    def test_local_image_payload(self):
+        datapack = DataPack("image")
+        # The difference from the `test_online_image_payload` is that we download the file locally
+        uri = "https://raw.githubusercontent.com/asyml/forte/assets/ocr_tutorial/ocr.jpg"
+        local_path = "ocr.jpg"
+        import urllib.request
+        urllib.request.urlretrieve(uri, local_path)
+
+        payload = PillowJpegPayload(datapack)
+        payload.uri = local_path
+        payload.load()
+
+        datapack.add_entry(payload)
+
+        self.assertEqual(payload.cache.shape, (539, 810, 3))
+
+    def test_load_from_parent(self):
+        """
+            In this test we try to call the load function of the parent classes.
+
+            For example, we registered PillowJpegPayload, its parent is JpegPayload. The
+            behavior is that we will invoke the function registering at the right level.
+        """
+        datapack = DataPack("load_from_parent")
+
+        # Add a `JpegPayload`, which is the parent of `PillowJpegPayload`
+        jpeg_uri = "https://raw.githubusercontent.com/asyml/forte/assets/ocr_tutorial/ocr.jpg"
+        jpeg_payload = JpegPayload(datapack)
+        jpeg_payload.uri = jpeg_uri
+        jpeg_payload.load()
+        datapack.add_entry(jpeg_payload)
+        self.assertEqual(
+            jpeg_payload.cache,
+            f"unimplemented parent JpegPayload with {jpeg_uri}"
+        )
+
+        # Add a `AudioPayload`, which is the parent of `SoundFilePayload`
+        audio_uri = "random_path/doesnt/matter"
+        audio_payload = AudioPayload(datapack)
+        audio_payload.uri = audio_uri
+        audio_payload.load()
+        datapack.add_entry(audio_payload)
+        self.assertEqual(
+            audio_payload.cache,
+            f"unimplemented parent AudioPayload with {audio_uri}"
+        )
 
     def test_audio_payload(self):
         datapack = DataPack("audio")
-        payload = LocalSoundfilePayload(datapack)
+        payload = SoundFilePayload(datapack)
         payload.uri = (
                 os.path.abspath(
                     os.path.join(
@@ -159,4 +197,4 @@ class PayloadDecoratorTest(unittest.TestCase):
         payload.load()
 
         datapack.add_entry(payload)
-        self.assertEqual(payload.cache.shape, (74400, ))
+        self.assertEqual(payload.cache.shape, (74400,))

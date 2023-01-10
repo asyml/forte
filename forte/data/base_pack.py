@@ -506,7 +506,6 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             data_store_ref = (
                 cls.pack._data_store  # pylint: disable=protected-access
             )
-            print("getting ", cls.tid, attr_name)  # TODO: remove print later.
             attr_val = data_store_ref.get_attribute(
                 tid=cls.tid, attr_name=attr_name
             )
@@ -669,28 +668,40 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         # that have been initialized to the _cached_attribute_data dict.
         # We fetch the values of all dataclass fields by using the getattr
         # method.
+        #
+        # Additional note added 2022/01/10:
+        # There is a case the above-mentioned implementation won't work
+        #
+        # When registering functions for payloads of the same hierarchy, exceptions
+        # will be thrown, this can be tested using the `payload_decorator_test.py`
+        # The reason is roughly because of the following steps:
+        #
+        #   1. since a parent payload class is registered, we will pass the
+        #      `not in Entry._cached_attribute_data` condition. however, since the
+        #      child payload inherit the parent payload properties and functions,
+        #      it will make some actual `getattr` call
+        #   2. For the `getattr` to be successful, this entry needs to have the
+        #      tid stored in data store first
+        #   3. we have _save_entry_to_data_store call later, which saves the tid, but
+        #      it happens later in the code.
+        #   4. we also cannot move _save_entry_to_data_store earlier, since the entry
+        #       attribute name/value pairs need to be filled in first
+        #   Thus this causes a conflict.
+        #   Currently, I used a very simple solution that surround the `getattr` call
+        #      with a try/except block, this will make the above-mentioned child
+        #      routine to pretend it doesn't have any `property`. In reality, it actually
+        #      has some `property` registered by the parent, but since the `getattr` failed
+        #      we get `None` and pretend it doesn't.
 
         # pylint: disable=protected-access
         if entry.entry_type() not in Entry._cached_attribute_data:
             Entry._cached_attribute_data[entry.entry_type()] = {}
             for name in entry.__dataclass_fields__:
-                # TODO: Here the dict is empty, so the tid cannot be
-                #   found, but this will create a bug in CI, when
-                #   calling the following
-                #   stacktrace:
-                #   forte/data/base_pack.py:676: in on_entry_creation
-                #     attr_val = getattr(entry, name, None)
-                #   forte/data/base_pack.py:510: in entry_getter
-                #     tid=cls.tid, attr_name=attr_name
-                #   forte/data/data_store.py:1479: in get_attribute
-                #     entry, entry_type = self.get_entry(tid)
-                #   forte/data/data_store.py:1611: in get_entry
-                #     if self._is_annotation_tid(tid):
-                # but where locally there is no bug?
-                print(
-                    entry.pack._data_store.__dict__
-                )  # TODO: remove print later.
-                attr_val = getattr(entry, name, None)
+                try:
+                    attr_val = getattr(entry, name, None)
+                except KeyError:
+                    attr_val = None
+
                 if attr_val is not None:
                     Entry._cached_attribute_data[entry.entry_type()][
                         name
