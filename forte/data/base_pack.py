@@ -480,8 +480,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             Depending on the value stored in the data store and the type
             of the attribute, the method decides how to process the value.
 
-            - Attributes repersented as ``FList`` and ``FDict`` objects are stored
-                as list and dictionary respectively in the dtaa store entry. These
+            - Attributes represented as ``FList`` and ``FDict`` objects are stored
+                as list and dictionary respectively in the data store entry. These
                 values are converted to ``FList`` and ``FDict`` objects on the fly.
             - When the field contains ``tid``s, we will convert them to entry
                 object on the fly. This is done by checking the type
@@ -527,7 +527,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             # is stored in the DataStore and hence its needs to be converted.
 
             # Entry objects are stored in data stores by their tid (which is
-            # of type int). Thus, if we enounter an int value, we check the
+            # of type int). Thus, if we encounter an int value, we check the
             # type information which is stored as a tuple. if any entry in this
             # tuple is a subclass of Entry or is a ForwardRef to another entry,
             # we can infer that this int value represents the tid of an Entry
@@ -566,8 +566,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             When the value contains entry objects, we will convert them into
             ``tid``s before storing to ``DataStore``. Additionally, if the entry
             setter method is called on an attribute that does not have a pack
-            associated with it (as is the case during intialization), the value
-            of the atttribute is stored in the class level cache of the ``Entry``
+            associated with it (as is the case during initialization), the value
+            of the attribute is stored in the class level cache of the ``Entry``
             class. On the other hand, if a pack is associated with the entry,
             the value will directly be stored in the data store.
 
@@ -646,9 +646,9 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                 attr_value = (
                     value.tid
                     if value.pack.pack_id == cls.pack.pack_id
-                    # When value's pack and cls's pack are not the same, we
+                    # When value's pack and cls' pack are not the same, we
                     # assume that cls.pack is a MultiPack, which will resolve
-                    # value.tid using MultiPack.get_subentry(pack_id, tid).
+                    # `value.tid` using `MultiPack.get_subentry(pack_id, tid)`.
                     # In this case, both pack_id and tid should be stored.
                     else (value.pack.pack_id, value.tid)
                 )
@@ -668,12 +668,40 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         # that have been initialized to the _cached_attribute_data dict.
         # We fetch the values of all dataclass fields by using the getattr
         # method.
+        #
+        # Additional note added 2022/01/10:
+        # There is a case the above-mentioned implementation won't work
+        #
+        # When registering functions for payloads of the same hierarchy, exceptions
+        # will be thrown, this can be tested using the `payload_decorator_test.py`
+        # The reason is roughly because of the following steps:
+        #
+        #   1. since a parent payload class is registered, we will pass the
+        #      `not in Entry._cached_attribute_data` condition. however, since the
+        #      child payload inherit the parent payload properties and functions,
+        #      it will make some actual `getattr` call
+        #   2. For the `getattr` to be successful, this entry needs to have the
+        #      tid stored in data store first
+        #   3. we have _save_entry_to_data_store call later, which saves the tid, but
+        #      it happens later in the code.
+        #   4. we also cannot move _save_entry_to_data_store earlier, since the entry
+        #       attribute name/value pairs need to be filled in first
+        #   Thus this causes a conflict.
+        #   Currently, I used a very simple solution that surround the `getattr` call
+        #      with a try/except block, this will make the above-mentioned child
+        #      routine to pretend it doesn't have any `property`. In reality, it actually
+        #      has some `property` registered by the parent, but since the `getattr` failed
+        #      we get `None` and pretend it doesn't.
 
         # pylint: disable=protected-access
         if entry.entry_type() not in Entry._cached_attribute_data:
             Entry._cached_attribute_data[entry.entry_type()] = {}
             for name in entry.__dataclass_fields__:
-                attr_val = getattr(entry, name, None)
+                try:
+                    attr_val = getattr(entry, name, None)
+                except KeyError:
+                    attr_val = None
+
                 if attr_val is not None:
                     Entry._cached_attribute_data[entry.entry_type()][
                         name

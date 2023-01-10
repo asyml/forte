@@ -1,5 +1,5 @@
 # ***automatically_generated***
-# ***source json:forte/ontology_specs/ag_news.json***
+# ***source json:/Users/hector/Documents/projects/forte/forte/ontology_specs/ag_news.json***
 # flake8: noqa
 # mypy: ignore-errors
 # pylint: skip-file

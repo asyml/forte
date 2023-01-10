@@ -12,7 +12,7 @@ if sys.version_info < (3, 6):
 VERSION_VAR = "VERSION"
 version = {}
 with open(
-    os.path.join(os.path.dirname(os.path.abspath(__file__)), "forte/version.py")
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "forte/version.py")
 ) as fp:
     exec(fp.read(), version)
 if VERSION_VAR not in version or not version[VERSION_VAR]:
@@ -26,7 +26,7 @@ setuptools.setup(
     version=version[VERSION_VAR],
     url="https://github.com/asyml/forte",
     description="Forte is extensible framework for building composable and "
-    "modularized NLP workflows.",
+                "modularized NLP workflows.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     license="Apache License Version 2.0",
@@ -86,6 +86,12 @@ setuptools.setup(
         # transformers 4.10.0 will break the translation model we used here
         "nlp": ["texar-pytorch>=0.1.4"],
         "extractor": ["texar-pytorch>=0.1.4"],
+        "payload": [
+            "soundfile>=0.10.3",
+            "Pillow",
+            "requests",
+            "urlpath>=1.2.0"
+        ],
         "ocr_tutorial": ["Pillow", "requests", "pytesseract"]
     },
     entry_points={

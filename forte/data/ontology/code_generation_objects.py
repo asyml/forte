@@ -542,10 +542,10 @@ class EntryDefinition(Item):
         self,
         name: str,
         class_type: str,
-        init_args: Optional[str] = None,
-        properties: Optional[List[Property]] = None,
-        class_attributes: Optional[List[ClassTypeDefinition]] = None,
-        description: Optional[str] = None,
+        init_args: List[str],
+        properties: List[Property],
+        class_attributes: List[ClassTypeDefinition],
+        description: str,
     ):
         super().__init__(name, description)
         self.class_type = class_type
@@ -556,11 +556,12 @@ class EntryDefinition(Item):
             [] if class_attributes is None else class_attributes
         )
         self.description = description if description else None
-        self.init_args = init_args if init_args is not None else ""
-        self.init_args = self.init_args.replace("=", " = ")
+        self.init_args = init_args if init_args is not None else []
 
     def to_init_code(self, level: int) -> str:
-        return indent_line(f"def __init__(self, {self.init_args}):", level)
+        return indent_line(
+            f"def __init__({', '.join(self.init_args)}):", level
+        ).replace("=", " = ")
 
     def to_property_code(self, level: int) -> str:
         lines = []
@@ -578,7 +579,7 @@ class EntryDefinition(Item):
 
     def to_code(self, level: int) -> str:
         super_args = ", ".join(
-            [item.split(":")[0].strip() for item in self.init_args.split(",")]
+            [item.split(":")[0].strip() for item in self.init_args[1:]]
         )
         raw_desc = self.to_description(1)
         desc: str = "" if raw_desc is None else raw_desc

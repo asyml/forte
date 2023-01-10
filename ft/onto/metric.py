@@ -1,5 +1,5 @@
 # ***automatically_generated***
-# ***source json:../testing/metric.json***
+# ***source json:/Users/hector/Documents/projects/forte/forte/ontology_specs/metric.json***
 # flake8: noqa
 # mypy: ignore-errors
 # pylint: skip-file

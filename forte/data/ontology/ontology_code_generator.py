@@ -174,18 +174,71 @@ def validate_entry(
         )
 
 
-def as_init_str(init_args):
+def as_init_strs(init_args) -> List[str]:
     """
-    Create the __init__ string by using unparse in ast.
+    Create the __init__ argument strings by using unparse in ast.
+
+    This is done in a pretty hacky way and only supports regular
+    arguments (no **kwargs and **args).
+
+    - First, we check the length of the argument list and length
+       of the default values.
+    - Then, we start to pop out one argument at a time, getting
+       the resulting string of the init args at that time.
+          - Here, we will us ethe length of the default values
+             and the length of the argument list, once the remaining
+             length of the default value is smaller than the argument
+             list, we will pop out one default value, to sync the
+             default value positions
+    - From previous step we basically have a list of init strings,
+        each shorter than the previous one. We can then only take
+        the unique string segment of each list. This will then
+        become the string value of each argument, hopefully.
+
+    Here is one example, the initial argument is like following:
+        pack: DataPack,
+        payload_idx: int=0,
+        uri: Optional[Union[(Path, URL, str)]]=None
+
+    Now, the len(args) is 3, and len(defaults) is 2. We will generate
+    the string value now, and then pop the first argument (which is
+    pack), now the len(args) and len(defaults) are both 2.
+
+    We generate the string again, which is like the following
+        payload_idx: int=0,
+        uri: Optional[Union[(Path, URL, str)]]=None
+
+    We then pop the next argument,
+    and also the default values (to sync them up). After this, the
+    data is more like:
+        uri: Optional[Union[(Path, URL, str)]]=None
+
+    Now we should have obtained the 3 strings, by comparing them,
+    we can get the 3 argument strs individually. Note that the comma
+    is there but we will strip them. Told you this is very hacky.
+
     Args:
         init_args: The ast args object of the init arguments.
 
     Returns:
 
     """
-    # Unparsing the `__init__` args and normalising the string
-    args = ast_unparse.unparse(init_args).strip().split(",", 1)
-    return args[1].strip().replace("  ", "")
+    arg_strs = []
+
+    while len(init_args.args) > 1:
+        arg_strs.append(ast_unparse.unparse(init_args).strip())
+        init_args.args.pop(0)
+        if len(init_args.defaults) > len(init_args.args):
+            init_args.defaults.pop(0)
+    # don't forget the last one.
+    arg_strs.append(ast_unparse.unparse(init_args).strip())
+
+    for i in range(len(arg_strs) - 1):
+        arg_strs[i] = (
+            arg_strs[i].replace(arg_strs[i + 1], "").strip().strip(",")
+        )
+
+    return arg_strs
 
 
 def is_composite_type(item_type: str):
@@ -304,9 +357,14 @@ class OntologyCodeGenerator:
 
         # Populate the two dictionaries above. And make the classes in the base
         # ontology aware to the root manager.
-        self.initialize_top_entries(
-            self.import_managers.root, top_ontology_module
-        )
+        try:
+            self.initialize_top_entries(
+                self.import_managers.root, top_ontology_module
+            )
+        except AttributeError as e:
+            raise RuntimeError(
+                "Most likely parsing of the function signatures failed."
+            ) from e
 
         # A few pre-requisite types to support.
         self.import_managers.add_default_import("dataclasses.dataclass")
@@ -395,7 +453,6 @@ class OntologyCodeGenerator:
 
         Returns:
         """
-        tree = None
         with open(
             base_ontology_module.__file__, "r", encoding="utf-8"
         ) as base_ontology_file:
@@ -474,6 +531,18 @@ class OntologyCodeGenerator:
                 else:
                     full_ele_name = full_names[elem.name]
 
+                    # def _add_module(module_):
+                    #     if module_ is not None and module_ in full_names:
+                    #         arg_ann.id = full_names[module_]
+                    #         manager.add_object_to_import(arg_ann.id)
+                    #
+                    #         # Convert from PackType to more concrete pack
+                    #         # type, such as DataPack or MultiPack.
+                    #         if arg_ann.id == PACK_TYPE_CLASS_NAME:
+                    #             pack_class_ = hardcoded_pack_map(full_ele_name)
+                    #             manager.add_object_to_import(pack_class_)
+                    #             arg_ann.id = pack_class_
+
                     # Assuming no variable args and keyword only args present in
                     # the base ontology module
                     for arg in init_func.args.args:
@@ -485,20 +554,28 @@ class OntologyCodeGenerator:
                                 if module is not None and module in full_names:
                                     arg_ann.value.id = full_names[module]
                                 arg_ann = arg_ann.slice.value
-                            module = arg_ann.id
 
-                            if module is not None and module in full_names:
-                                arg_ann.id = full_names[module]
+                            if (
+                                arg_ann.id is not None
+                                and arg_ann.id in full_names
+                            ):
+                                arg_ann.id = full_names[arg_ann.id]
                                 manager.add_object_to_import(arg_ann.id)
 
                                 # Convert from PackType to more concrete pack
                                 # type, such as DataPack or MultiPack.
                                 if arg_ann.id == PACK_TYPE_CLASS_NAME:
-                                    pack_class = hardcoded_pack_map(
+                                    pack_class_ = hardcoded_pack_map(
                                         full_ele_name
                                     )
-                                    manager.add_object_to_import(pack_class)
-                                    arg_ann.id = pack_class
+                                    manager.add_object_to_import(pack_class_)
+                                    arg_ann.id = pack_class_
+
+                            # if isinstance(arg_ann, ast.Tuple):
+                            #     for name in arg_ann.elts:
+                            #         _add_module(name.id)
+                            # else:
+                            #     _add_module(arg_ann.id)
 
                     self.top_to_core_entries[full_ele_name] = elem_base_names
                     self.base_entry_lookup[full_ele_name] = full_ele_name
@@ -996,13 +1073,29 @@ class OntologyCodeGenerator:
                 # Handling the type name for arguments.
                 arg_ann.id = this_manager.get_name_to_use(arg_ann.id)
 
-    def construct_init(self, entry_name: EntryName, base_entry: str):
-        base_init_args = self.top_init_args[base_entry]
-        custom_init_args = copy.deepcopy(base_init_args)
+    def construct_init_arg_strs(
+        self, entry_name: EntryName, base_entry: str
+    ) -> List[str]:
+        """
+        Create the argument strings in for the init function. Each argument
+        will be returned individually (with the separating comma attached).
+        If join these strings back with ",", you should get the full string
+        of the init function.
 
+        Args:
+            entry_name: The entry name used to replace some type annotations.
+            base_entry: the base entry to find the init arguments from (which
+              is stored earlier)
+
+        Returns:
+            List of strings, each corresponding to each argument value.
+        """
+        base_init_args = self.top_init_args[base_entry]
+
+        custom_init_args = copy.deepcopy(base_init_args)
         self.replace_annotation(entry_name, custom_init_args)
-        custom_init_args_str = as_init_str(custom_init_args)
-        return custom_init_args_str
+        custom_init_args_strs = as_init_strs(custom_init_args)
+        return custom_init_args_strs
 
     def parse_entry(
         self, entry_name: EntryName, schema: Dict
@@ -1121,12 +1214,14 @@ class OntologyCodeGenerator:
                 )
 
         # TODO: Can assign better object type to Link and Group objects
-        custom_init_arg_str: str = self.construct_init(entry_name, base_entry)
+        custom_init_arg_strs: List[str] = self.construct_init_arg_strs(
+            entry_name, base_entry
+        )
 
         entry_item = EntryDefinition(
             name=entry_name.name,
             class_type=parent_entry_use_name,
-            init_args=custom_init_arg_str,
+            init_args=custom_init_arg_strs,
             properties=property_items,
             class_attributes=class_att_items,
             description=schema.get(SchemaKeywords.description, None),
