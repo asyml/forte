@@ -106,7 +106,7 @@ class Entry(Generic[ContainerType]):
     """
     # This dict is used only at the time of creation of an entry. Many entries
     # like Annotation require some attributes like begin and end to be set at
-    # the time of creation. This dictionry is used to set all dataclass
+    # the time of creation. This dictionary is used to set all dataclass
     # attributes of an entry whose datastore entry needs to be created irrespective
     # of whether a getter and setter property for its attributes is made or not.
     # The key of this dictionary is the name of the entry being created and the
@@ -779,6 +779,7 @@ class Grid:
             w_idx: the zero-based width(column) index of the grid cell in the
                 grid, the unit is one grid cell.
 
+
         Raises:
             ValueError: ``h_idx`` is out of the range specified by ``height``.
             ValueError: ``w_idx`` is out of the range specified by ``width``.
@@ -838,6 +839,7 @@ class Grid:
         The computation of the center position of the grid cell is
         dividing the grid cell height range (unit: pixel) and
         width range (unit: pixel) by 2 (round down)
+
         Suppose an edge case that a grid cell has a height range
         (unit: pixel) of (0, 3)
         and a width range (unit: pixel) of (0, 3) the grid cell center

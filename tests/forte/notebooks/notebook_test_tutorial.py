@@ -1,7 +1,7 @@
 from testbook import testbook
 
 
-@testbook("docs/notebook_tutorial/handling_structued_data.ipynb")
+@testbook("docs/notebook_tutorial/handling_structured_data.ipynb")
 def test_handling_structued_data_cells(tb):
     # test specific cells output
     # note that Developer needs to assign tags to cells
@@ -16,7 +16,7 @@ def test_handling_structued_data_cells(tb):
     assert tb.cell_output_text("get_document") == get_document_text
 
 
-@testbook("docs/notebook_tutorial/handling_structued_data.ipynb", execute=True)
+@testbook("docs/notebook_tutorial/handling_structured_data.ipynb", execute=True)
 def test_handling_structued_data(tb):
     # if we simply want to run through the notebook
     pass

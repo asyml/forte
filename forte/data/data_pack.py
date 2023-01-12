@@ -32,7 +32,6 @@ from typing import (
 
 import numpy as np
 from sortedcontainers import SortedList
-
 from forte.common.exception import (
     ProcessExecutionException,
     UnknownOntologyClassException,
@@ -52,6 +51,9 @@ from forte.data.ontology.top import (
     Generics,
     AudioAnnotation,
     Payload,
+    AudioPayload,
+    TextPayload,
+    ImagePayload,
     SinglePackEntries,
     AnnotationLikeEntries,
 )
@@ -467,15 +469,12 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         payloads_length = -1
         try:
-            # if modality.name == "text":
             if modality == Modality.Text:
                 payloads_length = len(self.text_payloads)
                 payload = self.text_payloads[payload_index]
-            # elif modality.name == "audio":
             elif modality == Modality.Audio:
                 payloads_length = len(self.audio_payloads)
                 payload = self.audio_payloads[payload_index]
-            # elif modality.name == "image":
             elif modality == Modality.Image:
                 payloads_length = len(self.image_payloads)
                 payload = self.image_payloads[payload_index]
@@ -567,12 +566,8 @@ class DataPack(BasePack[Entry, Link, Group]):
         Args:
             text: Text to be added.
         """
-        from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
-            TextPayload,
-        )
-
         ip = TextPayload(self)
-        ip.set_cache(text)
+        ip.cache = text
 
     def set_text(
         self,
@@ -588,14 +583,15 @@ class DataPack(BasePack[Entry, Link, Group]):
             ValueError: raised when the text payload index is out of range.
 
         Args:
-            text: a str text.
+            text: the input text to be assigned to this pack.
             replace_func: function that replace text. Defaults to None.
-            text_payload_index: the zero-based index of the TextPayload
-                in this DataPack's TextPayload entries.
-                If it's 0, it adds a new TextPayload if there is no text payload in the data pack.
-        """
-        # Temporary imports
+            text_payload_index: the zero-based index of to locate a TextPayload
+                in this DataPack, default 0. This allows one to set multiple texts
+                per DataPack. A DataPack by default contains one such TextPayload,
+                if the `text_payload_index` is larger than 0, then
+                more than one TextPayload need to be added before this, otherwise
 
+        """
         span_ops = [] if replace_func is None else replace_func(text)
         # The spans should be mutually exclusive
         (
@@ -604,22 +600,20 @@ class DataPack(BasePack[Entry, Link, Group]):
             processed_original_spans,
             orig_text_len,
         ) = data_utils_io.modify_text_and_track_ops(text, span_ops)
+
         # temporary solution for backward compatibility
         # past API use this method to add a single text in the datapack
         if (
-            self._data_store.num_entries("ft.onto.base_ontology.TextPayload")
+            self._data_store.num_entries("forte.data.ontology.top.TextPayload")
             == 0
             and text_payload_index == 0
         ):
-            from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
-                TextPayload,
-            )
-
-            tp = TextPayload(self, text_payload_index)
+            # Create a new TextPayload.
+            tp = TextPayload(self)
         else:
             tp = self.get_payload_at(Modality.Text, text_payload_index)
 
-        tp.set_cache(text)
+        tp.cache = text
 
         tp.replace_back_operations = replace_back_operations
         tp.processed_original_spans = processed_original_spans
@@ -647,14 +641,10 @@ class DataPack(BasePack[Entry, Link, Group]):
         # temporary solution for backward compatibility
         # past API use this method to add a single audio in the datapack
         if (
-            self._data_store.num_entries("ft.onto.base_ontology.AudioPayload")
+            self._data_store.num_entries("forte.data.ontology.top.AudioPayload")
             == 0
             and audio_payload_index == 0
         ):
-            from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
-                AudioPayload,
-            )
-
             logging.warning(
                 "audio_payload_index is set to zero,"
                 "and there is not existing AudioPayload"
@@ -667,7 +657,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         else:
             ap = self.get_payload_at(Modality.Audio, audio_payload_index)
 
-        ap.set_cache(audio)
+        ap.cache = audio
         ap.sample_rate = sample_rate
 
     def add_audio(self, audio):
@@ -677,12 +667,9 @@ class DataPack(BasePack[Entry, Link, Group]):
         Args:
             audio: A numpy array storing the audio.
         """
-        from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
-            AudioPayload,
-        )
 
         ip = AudioPayload(self)
-        ip.set_cache(audio)
+        ip.cache = audio
 
     def add_image(self, image):
         r"""
@@ -691,12 +678,8 @@ class DataPack(BasePack[Entry, Link, Group]):
         Args:
             image: A numpy array storing the image.
         """
-        from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
-            ImagePayload,
-        )
-
         ip = ImagePayload(self)
-        ip.set_cache(image)
+        ip.cache = image
 
     def set_image(
         self,
@@ -714,14 +697,10 @@ class DataPack(BasePack[Entry, Link, Group]):
         # temporary solution for backward compatibility
         # past API use this method to add a single image in the datapack
         if (
-            self._data_store.num_entries("ft.onto.base_ontology.ImagePayload")
+            self._data_store.num_entries("forte.data.ontology.top.ImagePayload")
             == 0
             and image_payload_index == 0
         ):
-            from ft.onto.base_ontology import (  # pylint: disable=import-outside-toplevel
-                ImagePayload,
-            )
-
             ip = ImagePayload(self)
             logging.warning(
                 "image_payload_index is set to zero,"
@@ -733,7 +712,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             )
         else:
             ip = self.get_payload_at(Modality.Image, image_payload_index)
-        ip.set_cache(image)
+        ip.cache = image
 
     def get_original_text(self, text_payload_index: int = 0):
         r"""Get original unmodified text from the :class:`~forte.data.data_pack.DataPack` object.
@@ -1729,13 +1708,10 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         if isinstance(entry, Payload):
             if entry.modality == Modality.Text:
-                entry.set_payload_index(len(self.text_payloads))
                 self.text_payloads.append(entry)
             elif entry.modality == Modality.Audio:
-                entry.set_payload_index(len(self.audio_payloads))
                 self.audio_payloads.append(entry)
             elif entry.modality == Modality.Image:
-                entry.set_payload_index(len(self.image_payloads))
                 self.image_payloads.append(entry)
 
     def _get_entry_from_data_store(self, tid: int) -> Entry[Any]:
