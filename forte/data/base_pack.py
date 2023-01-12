@@ -15,6 +15,7 @@
 import logging
 import copy
 import gzip
+import json
 import pickle
 import uuid
 from abc import abstractmethod
@@ -38,6 +39,7 @@ from packaging.version import Version
 import jsonpickle
 
 from forte.common import ProcessExecutionException, EntryNotFoundError
+from forte.common.constants import JSON_CLASS_FIELD, JSON_STATE_FIELD
 from forte.data.index import BaseIndex
 from forte.data.base_store import BaseStore
 from forte.data.container import EntryContainer
@@ -56,6 +58,7 @@ from forte.version import (
     DEFAULT_PACK_VERSION,
     PACK_ID_COMPATIBLE_VERSION,
 )
+from forte.utils import get_full_module_name, get_class
 
 logger = logging.getLogger(__name__)
 
@@ -130,7 +133,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         self._pending_entries: Dict[int, Optional[str]] = {}
 
     def __getstate__(self):
-        state = self.__dict__.copy()
+        state = super().__getstate__()
         state.pop("_index")
         state.pop("_pending_entries")
         state.pop("_BasePack__control_component")
@@ -203,7 +206,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
     def _deserialize(
         cls,
         data_source: Union[Path, str],
-        serialize_method: str = "jsonpickle",
+        serialize_method: str = "json",
         zip_pack: bool = False,
     ) -> "BasePack[Any, Any, Any]":
         """
@@ -216,8 +219,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
               serialization.
             serialize_method: The method used to serialize the data, this
               should be the same as how serialization is done. The current
-              options are `jsonpickle` and `pickle`. The default method
-              is `jsonpickle`.
+              options are `json`, `jsonpickle` and `pickle`. The default method
+              is `json`.
             zip_pack: Boolean value indicating whether the input source is
               zipped.
 
@@ -226,9 +229,9 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         """
         _open = gzip.open if zip_pack else open
 
-        if serialize_method == "jsonpickle":
+        if serialize_method in ("jsonpickle", "json"):
             with _open(data_source, mode="rt") as f:  # type: ignore
-                pack = cls.from_string(f.read())
+                pack = cls.from_string(f.read(), json_method=serialize_method)
         else:
             with _open(data_source, mode="rb") as f:  # type: ignore
                 pack = pickle.load(f)
@@ -239,8 +242,30 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         return pack
 
     @classmethod
-    def from_string(cls, data_content: str) -> "BasePack":
-        pack = jsonpickle.decode(data_content)
+    def from_string(
+        cls, data_content: str, json_method: str = "json"
+    ) -> "BasePack":
+        if json_method == "jsonpickle":
+            pack = jsonpickle.decode(data_content)
+        elif json_method == "json":
+
+            def object_hook(json_dict):
+                """
+                Custom object hook for JSON deserialization. It will call
+                `__setstate__` to deserialize the json content into a class
+                object.
+                """
+                if json_dict.keys() == {JSON_STATE_FIELD, JSON_CLASS_FIELD}:
+                    state = json_dict[JSON_STATE_FIELD]
+                    obj_type = get_class(json_dict[JSON_CLASS_FIELD])
+                    obj = obj_type.__new__(obj_type)
+                    obj.__setstate__(state)
+                    return obj
+                return json_dict
+
+            pack = json.loads(data_content, object_hook=object_hook)
+        else:
+            raise ValueError(f"Unsupported JSON method {json_method}.")
         if not hasattr(pack, "pack_version"):
             pack.pack_version = DEFAULT_PACK_VERSION
 
@@ -317,7 +342,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
     def to_string(
         self,
         drop_record: Optional[bool] = False,
-        json_method: str = "jsonpickle",
+        json_method: str = "json",
         indent: Optional[int] = None,
     ) -> str:
         """
@@ -326,8 +351,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         Args:
             drop_record: Whether to drop the creation records, default is False.
             json_method: What method is used to convert data pack to json.
-              Only supports `json_pickle` for now. Default value is
-              `json_pickle`.
+              Only supports `json` and `jsonpickle` for now. Default value is
+              `json`.
             indent: The indent used for json string.
 
         Returns: String representation of the data pack.
@@ -337,6 +362,24 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             self._field_records.clear()
         if json_method == "jsonpickle":
             return jsonpickle.encode(self, unpicklable=True, indent=indent)
+        elif json_method == "json":
+
+            def json_serialize_handler(obj):
+                """
+                Custom object handler for JSON serialization. It will call
+                `__getstate__` to serialize a class object into the its json
+                format.
+                """
+                if hasattr(obj, "__getstate__"):
+                    return {
+                        JSON_CLASS_FIELD: get_full_module_name(obj),
+                        JSON_STATE_FIELD: obj.__getstate__(),
+                    }
+                raise TypeError(f"Type {type(obj)} not serializable")
+
+            return json.dumps(
+                self, indent=indent, default=json_serialize_handler
+            )
         else:
             raise ValueError(f"Unsupported JSON method {json_method}.")
 
@@ -345,7 +388,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         output_path: Union[str, Path],
         zip_pack: bool = False,
         drop_record: bool = False,
-        serialize_method: str = "jsonpickle",
+        serialize_method: str = "json",
         indent: Optional[int] = None,
     ):
         r"""
@@ -357,8 +400,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             zip_pack: Whether to compress the result with `gzip`.
             drop_record: Whether to drop the creation records, default is False.
             serialize_method: The method used to serialize the data. Currently
-              supports `jsonpickle` (outputs str) and Python's built-in
-              `pickle` (outputs bytes).
+              supports `json` (outputs str), `jsonpickle` (outputs str) and
+              Python's built-in `pickle` (outputs bytes).
             indent: Whether to indent the file if written as JSON.
 
         Returns: Results of serialization.
@@ -375,10 +418,12 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         if serialize_method == "pickle":
             with _open(output_path, mode="wb") as pickle_out:
                 pickle.dump(self, pickle_out)
-        elif serialize_method == "jsonpickle":
+        elif serialize_method in ("jsonpickle", "json"):
             with _open(output_path, mode="wt", encoding="utf-8") as json_out:
                 json_out.write(
-                    self.to_string(drop_record, "jsonpickle", indent=indent)
+                    self.to_string(
+                        drop_record, json_method=serialize_method, indent=indent
+                    )
                 )
         else:
             raise NotImplementedError(

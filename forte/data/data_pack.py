@@ -871,7 +871,7 @@ class DataPack(BasePack[Entry, Link, Group]):
     def deserialize(
         cls,
         data_source: Union[Path, str],
-        serialize_method: str = "jsonpickle",
+        serialize_method: str = "json",
         zip_pack: bool = False,
     ) -> "DataPack":
         """
@@ -883,8 +883,8 @@ class DataPack(BasePack[Entry, Link, Group]):
             data_source: The path storing data source.
             serialize_method: The method used to serialize the data, this
               should be the same as how serialization is done. The current
-              options are `jsonpickle` and `pickle`. The default method
-              is `jsonpickle`.
+              options are `json`, `jsonpickle` and `pickle`. The default method
+              is `json`.
             zip_pack: Boolean value indicating whether the input source is
               zipped.
 

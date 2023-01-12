@@ -39,8 +39,25 @@ class DataPackTest(unittest.TestCase):
         self.data_pack2.set_text("This pack contains some other sample data.")
 
     def test_serialization(self):
-        ser_str: str = self.multi_pack.to_string()
-        print(ser_str)
+        mp: MultiPack = self.multi_pack
+
+        # Serialize and deserialize MultiPack object
+        serialized_mp = mp.to_string(drop_record=True)
+        recovered_mp = MultiPack.from_string(serialized_mp)
+
+        # Serialize and deserialize DataPack objects
+        s_packs = [p.to_string() for p in mp.packs]
+        recovered_packs = [DataPack.from_string(s) for s in s_packs]
+
+        # Add the recovered DataPack objects to MultiPack
+        recovered_mp.relink(recovered_packs)
+
+        # Validate the deserialized MultiPack object
+        for pack_name in mp.pack_names:
+            self.assertEqual(
+                recovered_mp.get_pack(pack_name).pack_id,
+                mp.get_pack(pack_name).pack_id
+            )
 
     def test_add_pack(self):
         data_pack3 = self.multi_pack.add_pack(ref_name="new pack")

@@ -18,8 +18,6 @@ import logging
 from pathlib import Path
 from typing import Dict, List, Union, Iterator, Optional, Type, Any, Tuple, cast
 
-import jsonpickle
-
 from packaging.version import Version
 from sortedcontainers import SortedList
 
@@ -41,7 +39,6 @@ from forte.data.ontology.top import (
 )
 from forte.data.types import DataRequest
 from forte.utils import get_full_module_name
-from forte.version import DEFAULT_PACK_VERSION
 
 
 logger = logging.getLogger(__name__)
@@ -886,7 +883,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     def deserialize(
         cls,
         data_path: Union[Path, str],
-        serialize_method: str = "jsonpickle",
+        serialize_method: str = "json",
         zip_pack: bool = False,
     ) -> "MultiPack":
         """
@@ -923,18 +920,15 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         return mp
 
     @classmethod
-    def from_string(cls, data_content: str):
+    def from_string(cls, data_content: str, json_method: str = "json"):
         # pylint: disable=protected-access
         # can not use explict type hint for mp as pylint does not allow type change
         # from base_pack to multi_pack which is problematic so use jsonpickle instead
-
-        mp = jsonpickle.decode(data_content)
-        if not hasattr(mp, "pack_version"):
-            mp.pack_version = DEFAULT_PACK_VERSION
+        mp = super().from_string(data_content, json_method)
         # (fix 595) change the dictionary's key after deserialization from str back to int
-        mp._inverse_pack_ref = {  # pylint: disable=no-member
+        mp._inverse_pack_ref = {  # type: ignore  # pylint: disable=no-member
             int(k): v
-            for k, v in mp._inverse_pack_ref.items()  # pylint: disable=no-member
+            for k, v in mp._inverse_pack_ref.items()  # type: ignore  # pylint: disable=no-member
         }
 
         return mp

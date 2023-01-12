@@ -123,7 +123,7 @@ class TestDBpediaReaders(TestCase):
         self.num_indexed(output, 1)
 
         pack = DataPack.deserialize(
-            glob.glob(output + "/**/*.json.gz")[0], zip_pack=True
+            glob.glob(output + "/**/*.json.gz")[0], serialize_method="jsonpickle", zip_pack=True
         )
         self.assertEqual(len(list(pack.get("ft.onto.wikipedia.WikiAnchor"))), 4)
 
