@@ -1079,7 +1079,7 @@ class Payload(Entry):
         # TODO: this function will be removed since
         #   Entry store is being integrated into DataStore
         state = self.__dict__.copy()
-        state["modality"] = self.modality_name
+        state["modality"] = self.modality.name
         state.pop("_Entry__pack")
 
         if isinstance(state["_cache"], np.ndarray):
