@@ -258,7 +258,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                 if json_dict.keys() == {JSON_STATE_FIELD, JSON_CLASS_FIELD}:
                     state = json_dict[JSON_STATE_FIELD]
                     obj_type = get_class(json_dict[JSON_CLASS_FIELD])
-                    obj = obj_type.__new__(obj_type)
+                    obj = obj_type(obj_type)
                     obj.__setstate__(state)
                     return obj
                 return json_dict

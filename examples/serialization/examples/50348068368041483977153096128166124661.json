@@ -1,0 +1,371 @@
+{
+  "_json_class": "forte.data.data_pack.DataPack",
+  "_json_state": {
+    "pack_version": "0.0.2",
+    "_meta": {
+      "_json_class": "forte.data.data_pack.Meta",
+      "_json_state": {
+        "pack_name": "bn/abc/00/abc_0059_copy",
+        "_pack_id": 50348068368041483977153096128166124661,
+        "record": {},
+        "language": "eng",
+        "span_unit": "character",
+        "sample_rate": null,
+        "info": {}
+      }
+    },
+    "_data_store": {
+      "_json_class": "forte.data.data_store.DataStore",
+      "_json_state": {
+        "_onto_file_path": null,
+        "_dynamically_add_type": true,
+        "fields": {
+          "forte.data.ontology.top.Generics": {},
+          "forte.data.ontology.top.Annotation": {},
+          "forte.data.ontology.top.Link": {},
+          "forte.data.ontology.top.Group": {},
+          "forte.data.ontology.top.MultiPackGeneric": {},
+          "forte.data.ontology.top.MultiPackLink": {},
+          "forte.data.ontology.top.MultiPackGroup": {},
+          "forte.data.ontology.top.Query": {},
+          "forte.data.ontology.top.AudioAnnotation": {},
+          "forte.data.ontology.top.ImageAnnotation": {},
+          "forte.data.ontology.top.Region": {},
+          "forte.data.ontology.top.Box": {},
+          "forte.data.ontology.top.Payload": {},
+          "ft.onto.base_ontology.Token": {
+            "attributes": {
+              "begin": {
+                "index": 2
+              },
+              "end": {
+                "index": 3
+              },
+              "payload_idx": {
+                "index": 4
+              },
+              "pos": {
+                "index": 5
+              },
+              "ud_xpos": {
+                "index": 6
+              },
+              "lemma": {
+                "index": 7
+              },
+              "chunk": {
+                "index": 8
+              },
+              "ner": {
+                "index": 9
+              },
+              "sense": {
+                "index": 10
+              },
+              "is_root": {
+                "index": 11
+              },
+              "ud_features": {
+                "index": 12
+              },
+              "ud_misc": {
+                "index": 13
+              }
+            }
+          },
+          "ft.onto.base_ontology.PredicateMention": {
+            "attributes": {
+              "begin": {
+                "index": 2
+              },
+              "end": {
+                "index": 3
+              },
+              "payload_idx": {
+                "index": 4
+              },
+              "phrase_type": {
+                "index": 5
+              },
+              "headword": {
+                "index": 6
+              },
+              "predicate_lemma": {
+                "index": 7
+              },
+              "framenet_id": {
+                "index": 8
+              },
+              "is_verb": {
+                "index": 9
+              }
+            }
+          },
+          "ft.onto.base_ontology.Sentence": {
+            "attributes": {
+              "begin": {
+                "index": 2
+              },
+              "end": {
+                "index": 3
+              },
+              "payload_idx": {
+                "index": 4
+              },
+              "speaker": {
+                "index": 5
+              },
+              "part_id": {
+                "index": 6
+              },
+              "sentiment": {
+                "index": 7
+              },
+              "classification": {
+                "index": 8
+              },
+              "classifications": {
+                "index": 9
+              }
+            }
+          },
+          "ft.onto.base_ontology.EntityMention": {
+            "attributes": {
+              "begin": {
+                "index": 2
+              },
+              "end": {
+                "index": 3
+              },
+              "payload_idx": {
+                "index": 4
+              },
+              "ner_type": {
+                "index": 5
+              }
+            }
+          },
+          "ft.onto.base_ontology.PredicateArgument": {
+            "attributes": {
+              "begin": {
+                "index": 2
+              },
+              "end": {
+                "index": 3
+              },
+              "payload_idx": {
+                "index": 4
+              },
+              "ner_type": {
+                "index": 5
+              },
+              "predicate_lemma": {
+                "index": 6
+              },
+              "is_verb": {
+                "index": 7
+              }
+            }
+          },
+          "ft.onto.base_ontology.PredicateLink": {
+            "attributes": {
+              "parent_type": {
+                "index": 2
+              },
+              "child_type": {
+                "index": 3
+              },
+              "parent": {
+                "index": 4
+              },
+              "child": {
+                "index": 5
+              },
+              "arg_type": {
+                "index": 6
+              }
+            }
+          },
+          "ft.onto.base_ontology.CoreferenceGroup": {
+            "attributes": {
+              "members": {
+                "index": 2
+              },
+              "member_type": {
+                "index": 3
+              }
+            }
+          },
+          "ft.onto.base_ontology.TextPayload": {
+            "attributes": {
+              "payload_idx": {
+                "index": 2
+              },
+              "modality_name": {
+                "index": 3
+              },
+              "uri": {
+                "index": 4
+              }
+            }
+          },
+          "ft.onto.base_ontology.Document": {
+            "attributes": {
+              "begin": {
+                "index": 2
+              },
+              "end": {
+                "index": 3
+              },
+              "payload_idx": {
+                "index": 4
+              },
+              "document_class": {
+                "index": 5
+              },
+              "sentiment": {
+                "index": 6
+              },
+              "classifications": {
+                "index": 7
+              }
+            }
+          },
+          "ft.onto.base_ontology.CrossDocEntityRelation": {
+            "attributes": {
+              "parent_type": {
+                "index": 2
+              },
+              "child_type": {
+                "index": 3
+              },
+              "parent": {
+                "index": 4
+              },
+              "child": {
+                "index": 5
+              },
+              "rel_type": {
+                "index": 6
+              }
+            }
+          }
+        },
+        "entries": {
+          "ft.onto.base_ontology.TextPayload": [
+            [
+              265710147387312369705310328925283168787,
+              "ft.onto.base_ontology.TextPayload",
+              0,
+              "Text",
+              null
+            ]
+          ],
+          "ft.onto.base_ontology.EntityMention": [
+            [
+              255973275687056323052526528451607712622,
+              "ft.onto.base_ontology.EntityMention",
+              0,
+              38,
+              0,
+              null
+            ],
+            [
+              262302831265279403666198145077593478129,
+              "ft.onto.base_ontology.EntityMention",
+              4,
+              14,
+              0,
+              null
+            ],
+            [
+              124665037885365814552682301432538188798,
+              "ft.onto.base_ontology.EntityMention",
+              27,
+              38,
+              0,
+              null
+            ],
+            [
+              290034132192939270793985894944762486885,
+              "ft.onto.base_ontology.EntityMention",
+              57,
+              70,
+              0,
+              null
+            ],
+            [
+              328325362948767099394016600505665831376,
+              "ft.onto.base_ontology.EntityMention",
+              120,
+              135,
+              0,
+              null
+            ],
+            [
+              130075699850016302070611591228076181769,
+              "ft.onto.base_ontology.EntityMention",
+              136,
+              140,
+              0,
+              null
+            ],
+            [
+              204138036143994261242683505018840232975,
+              "ft.onto.base_ontology.EntityMention",
+              165,
+              167,
+              0,
+              null
+            ],
+            [
+              305208827159625657239604316732915773581,
+              "ft.onto.base_ontology.EntityMention",
+              175,
+              177,
+              0,
+              null
+            ],
+            [
+              41943513099117858256320890340497692789,
+              "ft.onto.base_ontology.EntityMention",
+              202,
+              210,
+              0,
+              null
+            ],
+            [
+              8257202731330214134414326796128986562,
+              "ft.onto.base_ontology.EntityMention",
+              221,
+              226,
+              0,
+              null
+            ]
+          ]
+        }
+      }
+    },
+    "text_payloads": [
+      {
+        "_json_class": "ft.onto.base_ontology.TextPayload",
+        "_json_state": {
+          "modality": "Text",
+          "_tid": 265710147387312369705310328925283168787,
+          "_embedding": [],
+          "_cache": "The Indonesian billionaire James Riady has agreed to pay $ 8.5 million and plead guilty to illegally donating money for Bill Clinton 's 1992 presidential campaign . He admits he was trying to influence American policy on China .",
+          "_cache_shape": [
+            228
+          ],
+          "replace_back_operations": [],
+          "processed_original_spans": [],
+          "orig_text_len": 228
+        }
+      }
+    ],
+    "audio_payloads": [],
+    "image_payloads": [],
+    "_creation_records": {},
+    "_field_records": {}
+  }
+}
