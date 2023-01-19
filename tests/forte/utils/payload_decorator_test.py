@@ -21,10 +21,7 @@ from requests import RequestException
 
 from forte.data.data_pack import DataPack
 from forte.data.ontology.top import load_func, AudioPayload
-from ft.onto.payload_ontology import (
-    JpegPayload,
-    SoundFilePayload
-)
+from ft.onto.payload_ontology import JpegPayload, SoundFilePayload
 
 
 class PillowJpegPayload(JpegPayload):
@@ -96,7 +93,7 @@ def load(payload: SoundFilePayload):
         ) from e
 
     def get_first(
-            seq,
+        seq,
     ):  # takes the first item as soundfile returns a tuple of (data, samplerate)
         return seq[0]
 
@@ -138,6 +135,7 @@ class PayloadDecoratorTest(unittest.TestCase):
         uri = "https://raw.githubusercontent.com/asyml/forte/assets/ocr_tutorial/ocr.jpg"
         local_path = "ocr.jpg"
         import urllib.request
+
         urllib.request.urlretrieve(uri, local_path)
 
         payload = PillowJpegPayload(datapack)
@@ -150,10 +148,10 @@ class PayloadDecoratorTest(unittest.TestCase):
 
     def test_load_from_parent(self):
         """
-            In this test we try to call the load function of the parent classes.
+        In this test we try to call the load function of the parent classes.
 
-            For example, we registered PillowJpegPayload, its parent is JpegPayload. The
-            behavior is that we will invoke the function registering at the right level.
+        For example, we registered PillowJpegPayload, its parent is JpegPayload. The
+        behavior is that we will invoke the function registering at the right level.
         """
         datapack = DataPack("load_from_parent")
 
@@ -165,7 +163,7 @@ class PayloadDecoratorTest(unittest.TestCase):
         datapack.add_entry(jpeg_payload)
         self.assertEqual(
             jpeg_payload.cache,
-            f"unimplemented parent JpegPayload with {jpeg_uri}"
+            f"unimplemented parent JpegPayload with {jpeg_uri}",
         )
 
         # Add a `AudioPayload`, which is the parent of `SoundFilePayload`
@@ -176,23 +174,23 @@ class PayloadDecoratorTest(unittest.TestCase):
         datapack.add_entry(audio_payload)
         self.assertEqual(
             audio_payload.cache,
-            f"unimplemented parent AudioPayload with {audio_uri}"
+            f"unimplemented parent AudioPayload with {audio_uri}",
         )
 
     def test_audio_payload(self):
         datapack = DataPack("audio")
         payload = SoundFilePayload(datapack)
         payload.uri = (
-                os.path.abspath(
-                    os.path.join(
-                        os.path.dirname(os.path.abspath(__file__)),
-                        os.pardir,
-                        os.pardir,
-                        os.pardir,
-                        "data_samples/audio_reader_test",
-                    )
+            os.path.abspath(
+                os.path.join(
+                    os.path.dirname(os.path.abspath(__file__)),
+                    os.pardir,
+                    os.pardir,
+                    os.pardir,
+                    "data_samples/audio_reader_test",
                 )
-                + "/test_audio_0.flac"
+            )
+            + "/test_audio_0.flac"
         )
         payload.load()
 

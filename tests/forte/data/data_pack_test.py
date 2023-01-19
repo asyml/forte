@@ -318,25 +318,25 @@ class DataPackTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             for doc in self.data_pack.get("forte.data.data_pack.DataPack"):
                 print(doc)
-        
+
         # Test get raw entries
 
         # fetching documents
-        primitive_documents = list(self.data_pack.get(Document, get_raw = True))
+        primitive_documents = list(self.data_pack.get(Document, get_raw=True))
         object_documents = list(self.data_pack.get(Document))
 
         self.assertEqual(
             primitive_documents[0],
             {
-                'begin': 0,
-                'end': 228,
-                'payload_idx': 0,
-                'document_class': [],
-                'sentiment': {},
-                'classifications': {},
-                'tid': object_documents[0].tid,
-                'type': 'ft.onto.base_ontology.Document'
-            }
+                "begin": 0,
+                "end": 228,
+                "payload_idx": 0,
+                "document_class": [],
+                "sentiment": {},
+                "classifications": {},
+                "tid": object_documents[0].tid,
+                "type": "ft.onto.base_ontology.Document",
+            },
         )
 
         # fetching groups
@@ -353,12 +353,11 @@ class DataPackTest(unittest.TestCase):
                     em_object = self.data_pack.get_entry(em)
                     members.append(em_object.text)
             group_members.append(sorted(members))
-        
+
         self.assertEqual(
             group_members,
-             [["He", "The Indonesian billionaire James Riady", "he"]]
+            [["He", "The Indonesian billionaire James Riady", "he"]],
         )
-        
 
     def test_delete_entry(self):
         # test delete entry

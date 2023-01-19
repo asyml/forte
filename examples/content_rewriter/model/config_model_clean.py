@@ -10,7 +10,7 @@ def get_embedder_hparams(dimension, name):
             "type": "random_normal_initializer",
             "kwargs": {
                 "mean": 0.0,
-                "stddev": dimension ** -0.5,
+                "stddev": dimension**-0.5,
             },
         },
     }

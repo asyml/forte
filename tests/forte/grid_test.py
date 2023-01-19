@@ -25,7 +25,6 @@ from forte.data.data_pack import DataPack
 from forte.data.ontology.top import ImagePayload
 
 
-
 class GridTest(unittest.TestCase):
     """
     Test Grid related ontologies and operations.
@@ -72,18 +71,15 @@ class GridTest(unittest.TestCase):
         def fn1():
             self.grid._get_image_within_grid_cell(self.line, 2, 0)
 
-
         self.assertRaises(ValueError, fn1)
 
         def fn2():
             self.grid._get_image_within_grid_cell(self.line, 0, 3)
 
-
         self.assertRaises(ValueError, fn2)
 
         def fn3():
             self.grid._get_image_within_grid_cell(self.line, -1, 0)
-
 
         self.assertRaises(ValueError, fn3)
 
@@ -92,15 +88,18 @@ class GridTest(unittest.TestCase):
 
         self.assertRaises(ValueError, fn4)
 
-
-
     def test_get_overlapped_grid_cell_indices(self):
-        self.assertEqual(self.grid.get_overlapped_grid_cell_indices(self.line), [(0,0), (1,1)])
-        
-        line = np.zeros((4, 6))
-        line[0,0]= 1
-        line[2,0]=1
-        line[0,2]=1
-        line[0,4]=1
-        self.assertEqual(self.grid.get_overlapped_grid_cell_indices(line), [(0, 0), (0, 1), (0, 2), (1, 0)])
+        self.assertEqual(
+            self.grid.get_overlapped_grid_cell_indices(self.line),
+            [(0, 0), (1, 1)],
+        )
 
+        line = np.zeros((4, 6))
+        line[0, 0] = 1
+        line[2, 0] = 1
+        line[0, 2] = 1
+        line[0, 4] = 1
+        self.assertEqual(
+            self.grid.get_overlapped_grid_cell_indices(line),
+            [(0, 0), (0, 1), (0, 2), (1, 0)],
+        )

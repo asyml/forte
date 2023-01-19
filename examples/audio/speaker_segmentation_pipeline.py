@@ -50,7 +50,7 @@ class SpeakerSegmentationProcessor(PackProcessor):
             audio_utter: AudioUtterance = AudioUtterance(
                 pack=input_pack,
                 begin=int(turn.start * input_pack.sample_rate),
-                end=int(turn.end * input_pack.sample_rate)
+                end=int(turn.end * input_pack.sample_rate),
             )
             audio_utter.speaker = speaker
 
@@ -97,7 +97,7 @@ class AudioUtteranceASRProcessor(PackProcessor):
             text_utter: Utterance = Utterance(
                 pack=input_pack,
                 begin=len(input_pack.text) - len(transcription[0]),
-                end=len(input_pack.text)
+                end=len(input_pack.text),
             )
             text_utter.speaker = audio_utter.speaker
             Link(pack=input_pack, parent=audio_utter, child=text_utter)

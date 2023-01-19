@@ -113,9 +113,7 @@ this_reader_config = {
         "label",
     ],
     "index2class": index2class,
-    "text_fields": [
-        "ft.onto.base_ontology.Body"
-    ],
+    "text_fields": ["ft.onto.base_ontology.Body"],
     "digit_label": False,
     "one_based_index_label": False,
 }

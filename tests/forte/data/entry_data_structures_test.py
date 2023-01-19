@@ -48,6 +48,7 @@ class EntryWithList(Generics):
         super().__init__(pack)
         self.entries = FList[ExampleEntry](self)
 
+
 @dataclass
 class EntryWithDict(Generics):
     """
@@ -182,7 +183,10 @@ class MultiEntryStructure(unittest.TestCase):
 
         recovered_mp = MultiPack.from_string(serialized_mp)
 
-        s_packs: List[str] = ["""{"_json_class": "forte.data.data_pack.DataPack", "_json_state": {"pack_version": "0.0.2", "_meta": {"_json_class": "forte.data.data_pack.Meta", "_json_state": {"pack_name": null, "_pack_id": 143667891708823045988051900980860741991, "record": {}, "language": "eng", "span_unit": "character", "sample_rate": null, "info": {}}}, "_data_store": {"_json_class": "forte.data.data_store.DataStore", "_json_state": {"_onto_file_path": null, "_dynamically_add_type": true, "fields": {"forte.data.ontology.top.Generics": {}, "forte.data.ontology.top.Annotation": {}, "forte.data.ontology.top.Link": {}, "forte.data.ontology.top.Group": {}, "forte.data.ontology.top.MultiPackGeneric": {}, "forte.data.ontology.top.MultiPackLink": {}, "forte.data.ontology.top.MultiPackGroup": {}, "forte.data.ontology.top.Query": {}, "forte.data.ontology.top.AudioAnnotation": {}, "forte.data.ontology.top.ImageAnnotation": {}, "forte.data.ontology.top.Region": {}, "forte.data.ontology.top.Box": {}, "forte.data.ontology.top.Payload": {}, "entry_data_structures_test.EntryWithList": {"attributes": {"entries": {"index": 2}}}, "entry_data_structures_test.ExampleEntry": {"attributes": {"secret_number": {"index": 2}}}, "entry_data_structures_test.EntryWithDict": {"attributes": {"entries": {"index": 2}}}, "entry_data_structures_test.EntryAsAttribute": {"attributes": {}}, "entry_data_structures_test.ExampleMPEntry": {"attributes": {"refer_entry": {"index": 2}}}}, "entries": {"entry_data_structures_test.ExampleEntry": [[264470699675371126293844966884005648796, "entry_data_structures_test.ExampleEntry", 1]]}}}, "text_payloads": [], "audio_payloads": [], "image_payloads": [], "_creation_records": {}, "_field_records": {}}}""", """{"_json_class": "forte.data.data_pack.DataPack", "_json_state": {"pack_version": "0.0.2", "_meta": {"_json_class": "forte.data.data_pack.Meta", "_json_state": {"pack_name": null, "_pack_id": 55501035046014418523039697578490139411, "record": {}, "language": "eng", "span_unit": "character", "sample_rate": null, "info": {}}}, "_data_store": {"_json_class": "forte.data.data_store.DataStore", "_json_state": {"_onto_file_path": null, "_dynamically_add_type": true, "fields": {"forte.data.ontology.top.Generics": {}, "forte.data.ontology.top.Annotation": {}, "forte.data.ontology.top.Link": {}, "forte.data.ontology.top.Group": {}, "forte.data.ontology.top.MultiPackGeneric": {}, "forte.data.ontology.top.MultiPackLink": {}, "forte.data.ontology.top.MultiPackGroup": {}, "forte.data.ontology.top.Query": {}, "forte.data.ontology.top.AudioAnnotation": {}, "forte.data.ontology.top.ImageAnnotation": {}, "forte.data.ontology.top.Region": {}, "forte.data.ontology.top.Box": {}, "forte.data.ontology.top.Payload": {}, "entry_data_structures_test.EntryWithList": {"attributes": {"entries": {"index": 2}}}, "entry_data_structures_test.ExampleEntry": {"attributes": {"secret_number": {"index": 2}}}, "entry_data_structures_test.EntryWithDict": {"attributes": {"entries": {"index": 2}}}, "entry_data_structures_test.EntryAsAttribute": {"attributes": {}}, "entry_data_structures_test.ExampleMPEntry": {"attributes": {"refer_entry": {"index": 2}}}}, "entries": {"entry_data_structures_test.ExampleEntry": [[211693204381909586800582877426087499308, "entry_data_structures_test.ExampleEntry", null]]}}}, "text_payloads": [], "audio_payloads": [], "image_payloads": [], "_creation_records": {}, "_field_records": {}}}"""]
+        s_packs: List[str] = [
+            """{"_json_class": "forte.data.data_pack.DataPack", "_json_state": {"pack_version": "0.0.2", "_meta": {"_json_class": "forte.data.data_pack.Meta", "_json_state": {"pack_name": null, "_pack_id": 143667891708823045988051900980860741991, "record": {}, "language": "eng", "span_unit": "character", "sample_rate": null, "info": {}}}, "_data_store": {"_json_class": "forte.data.data_store.DataStore", "_json_state": {"_onto_file_path": null, "_dynamically_add_type": true, "fields": {"forte.data.ontology.top.Generics": {}, "forte.data.ontology.top.Annotation": {}, "forte.data.ontology.top.Link": {}, "forte.data.ontology.top.Group": {}, "forte.data.ontology.top.MultiPackGeneric": {}, "forte.data.ontology.top.MultiPackLink": {}, "forte.data.ontology.top.MultiPackGroup": {}, "forte.data.ontology.top.Query": {}, "forte.data.ontology.top.AudioAnnotation": {}, "forte.data.ontology.top.ImageAnnotation": {}, "forte.data.ontology.top.Region": {}, "forte.data.ontology.top.Box": {}, "forte.data.ontology.top.Payload": {}, "entry_data_structures_test.EntryWithList": {"attributes": {"entries": {"index": 2}}}, "entry_data_structures_test.ExampleEntry": {"attributes": {"secret_number": {"index": 2}}}, "entry_data_structures_test.EntryWithDict": {"attributes": {"entries": {"index": 2}}}, "entry_data_structures_test.EntryAsAttribute": {"attributes": {}}, "entry_data_structures_test.ExampleMPEntry": {"attributes": {"refer_entry": {"index": 2}}}}, "entries": {"entry_data_structures_test.ExampleEntry": [[264470699675371126293844966884005648796, "entry_data_structures_test.ExampleEntry", 1]]}}}, "text_payloads": [], "audio_payloads": [], "image_payloads": [], "_creation_records": {}, "_field_records": {}}}""",
+            """{"_json_class": "forte.data.data_pack.DataPack", "_json_state": {"pack_version": "0.0.2", "_meta": {"_json_class": "forte.data.data_pack.Meta", "_json_state": {"pack_name": null, "_pack_id": 55501035046014418523039697578490139411, "record": {}, "language": "eng", "span_unit": "character", "sample_rate": null, "info": {}}}, "_data_store": {"_json_class": "forte.data.data_store.DataStore", "_json_state": {"_onto_file_path": null, "_dynamically_add_type": true, "fields": {"forte.data.ontology.top.Generics": {}, "forte.data.ontology.top.Annotation": {}, "forte.data.ontology.top.Link": {}, "forte.data.ontology.top.Group": {}, "forte.data.ontology.top.MultiPackGeneric": {}, "forte.data.ontology.top.MultiPackLink": {}, "forte.data.ontology.top.MultiPackGroup": {}, "forte.data.ontology.top.Query": {}, "forte.data.ontology.top.AudioAnnotation": {}, "forte.data.ontology.top.ImageAnnotation": {}, "forte.data.ontology.top.Region": {}, "forte.data.ontology.top.Box": {}, "forte.data.ontology.top.Payload": {}, "entry_data_structures_test.EntryWithList": {"attributes": {"entries": {"index": 2}}}, "entry_data_structures_test.ExampleEntry": {"attributes": {"secret_number": {"index": 2}}}, "entry_data_structures_test.EntryWithDict": {"attributes": {"entries": {"index": 2}}}, "entry_data_structures_test.EntryAsAttribute": {"attributes": {}}, "entry_data_structures_test.ExampleMPEntry": {"attributes": {"refer_entry": {"index": 2}}}}, "entries": {"entry_data_structures_test.ExampleEntry": [[211693204381909586800582877426087499308, "entry_data_structures_test.ExampleEntry", null]]}}}, "text_payloads": [], "audio_payloads": [], "image_payloads": [], "_creation_records": {}, "_field_records": {}}}""",
+        ]
 
         recovered_packs = [DataPack.from_string(s) for s in s_packs]
 
@@ -285,10 +289,10 @@ class EntryDataStructure(unittest.TestCase):
     def test_entry_key_memories(self):
         pack = (
             Pipeline[MultiPack]()
-                .set_reader(EmptyReader())
-                .add(ChildEntryAnnotator())
-                .initialize()
-                .process(["pack1", "pack2"])
+            .set_reader(EmptyReader())
+            .add(ChildEntryAnnotator())
+            .initialize()
+            .process(["pack1", "pack2"])
         )
 
         DataPack.from_string(pack.to_string(True))
@@ -336,6 +340,7 @@ class NotHashingTest(unittest.TestCase):
         anno1: EntityMention = EntityMention(self.pack, 0, 2)
         with self.assertRaises(TypeError):
             hash(anno1)
+
 
 if __name__ == "__main__":
     unittest.main()
