@@ -24,6 +24,7 @@ from forte.common import Resources, ProcessorConfigError
 from forte.data.readers import ClassificationDatasetReader
 from forte.data.data_pack import DataPack
 
+
 class ClassificationDatasetReaderTest(unittest.TestCase):
     def setUp(self):
         self.sample_file1: str = os.path.abspath(
@@ -51,45 +52,53 @@ class ClassificationDatasetReaderTest(unittest.TestCase):
 
     def test_classification_dataset_reader(self):
         # test incompatible forte data field `ft.onto.base_ontology.Document`
-        
+
         with self.assertRaises(ProcessorConfigError):
             self.pipeline = Pipeline()
-            self.pipeline.set_reader(ClassificationDatasetReader(),
-                                 config={"index2class": self.index2class1,
-                                         "skip_k_starting_lines": 0,
-                                         "forte_data_fields":
-                                            [
-                                                "label",
-                                                "ft.onto.base_ontology.Title",
-                                                "ft.onto.base_ontology.Document",
-                                            ]})
+            self.pipeline.set_reader(
+                ClassificationDatasetReader(),
+                config={
+                    "index2class": self.index2class1,
+                    "skip_k_starting_lines": 0,
+                    "forte_data_fields": [
+                        "label",
+                        "ft.onto.base_ontology.Title",
+                        "ft.onto.base_ontology.Document",
+                    ],
+                },
+            )
             self.pipeline.initialize()
         # test wrong length of forte_data_fields
         with self.assertRaises(ProcessorConfigError):
             self.pipeline = Pipeline()
-            self.pipeline.set_reader(ClassificationDatasetReader(),
-                                 config={"index2class": self.index2class1,
-                                         "skip_k_starting_lines": 0,
-                                         "forte_data_fields":
-                                            [
-                                                "label",
-                                                "ft.onto.base_ontology.Body",
-                                            ]})
+            self.pipeline.set_reader(
+                ClassificationDatasetReader(),
+                config={
+                    "index2class": self.index2class1,
+                    "skip_k_starting_lines": 0,
+                    "forte_data_fields": [
+                        "label",
+                        "ft.onto.base_ontology.Body",
+                    ],
+                },
+            )
             self.pipeline.initialize()
             # length check happens while processing data
             for data_pack in self.pipeline.process_dataset(self.sample_file1):
                 continue
         self.pipeline = Pipeline()
-        self.pipeline.set_reader(ClassificationDatasetReader(),
-                                 config={
-                                    "forte_data_fields":
-                                        [
-                                        "label",
-                                        "ft.onto.base_ontology.Title",
-                                        "ft.onto.base_ontology.Body",
-                                        ],
-                                     "index2class": self.index2class1,
-                                         "skip_k_starting_lines": 0})
+        self.pipeline.set_reader(
+            ClassificationDatasetReader(),
+            config={
+                "forte_data_fields": [
+                    "label",
+                    "ft.onto.base_ontology.Title",
+                    "ft.onto.base_ontology.Body",
+                ],
+                "index2class": self.index2class1,
+                "skip_k_starting_lines": 0,
+            },
+        )
         self.pipeline.initialize()
         for data_pack in self.pipeline.process_dataset(self.sample_file1):
             (
@@ -114,7 +123,7 @@ class ClassificationDatasetReaderTest(unittest.TestCase):
             self.assertTrue(len(doc_class) == 1)
             # print(class_idx_to_name, expected_class_id)
             self.assertEqual(
-                 doc_class[0], self.class_idx_to_name[expected_class_id]
+                doc_class[0], self.class_idx_to_name[expected_class_id]
             )
             # Test Title
             title_entries = list(data_pack.get(Title))

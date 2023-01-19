@@ -22,7 +22,7 @@ from forte.processors.base.writers import PackWriter, MultiPackWriter
 class PackIdJsonPackWriter(PackWriter):
     """
     A writer implementation that writes data pack to disk. The default
-    serialization uses jsonpickle (readable). The file name of each data pack
+    serialization uses json. The file name of each data pack
     is the auto generated pack id of each pack.
     """
 
@@ -51,7 +51,7 @@ class PackIdPicklePackWriter(PackIdJsonPackWriter):
 class PackNameJsonPackWriter(PackWriter):
     """
     A writer implementation that writes data pack to disk. The default
-    serialization uses jsonpickle (readable). The file name of
+    serialization uses json. The file name of
     each data pack is the assigned name of each pack.
     """
 

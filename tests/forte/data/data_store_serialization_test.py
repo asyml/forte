@@ -30,8 +30,6 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 class DataStoreTest(unittest.TestCase):
-
-
     def setUp(self) -> None:
         self.data_store = DataStore()
         # This test setup changes the order of fields and delete one field of
@@ -75,17 +73,17 @@ class DataStoreTest(unittest.TestCase):
             },
             "forte.data.ontology.top.Group": {
                 "attributes": {
-                    'members': {'type': (list, (int,)), 'index': 2},
-                    'member_type': {'type': (type(None), (str,)), 'index': 3}
+                    "members": {"type": (list, (int,)), "index": 2},
+                    "member_type": {"type": (type(None), (str,)), "index": 3},
                 },
                 "parent_entry": "forte.data.ontology.core.BaseGroup",
             },
             "forte.data.ontology.top.Link": {
                 "attributes": {
-                    'parent_type': {'type': (type(None), (str,)), 'index': 2},
-                    'child_type': {'type': (type(None), (str,)), 'index': 3},
-                    'parent': {'type': (Union, (int, type(None))), 'index': 4},
-                    'child': {'type': (Union, (int, type(None))), 'index': 5}
+                    "parent_type": {"type": (type(None), (str,)), "index": 2},
+                    "child_type": {"type": (type(None), (str,)), "index": 3},
+                    "parent": {"type": (Union, (int, type(None))), "index": 4},
+                    "child": {"type": (Union, (int, type(None))), "index": 5},
                 },
                 "parent_entry": "forte.data.ontology.core.BaseLink",
             },
@@ -147,7 +145,8 @@ class DataStoreTest(unittest.TestCase):
                         "Class E",
                     ],
                 ],
-            key=self.sorting_fn),
+                key=self.sorting_fn,
+            ),
             "ft.onto.base_ontology.Sentence": SortedList(
                 [
                     [
@@ -203,19 +202,20 @@ class DataStoreTest(unittest.TestCase):
                         "good",
                     ],
                 ],
-            key=self.sorting_fn),
+                key=self.sorting_fn,
+            ),
             "forte.data.ontology.top.Group": [
                 [
                     10123,
                     "forte.data.ontology.top.Group",
                     [9999, 1234567],
-                    "ft.onto.base_ontology.Sentence"
+                    "ft.onto.base_ontology.Sentence",
                 ],
                 [
                     23456,
                     "forte.data.ontology.top.Group",
                     [1234, 3456],
-                    "ft.onto.base_ontology.Document"
+                    "ft.onto.base_ontology.Document",
                 ],
             ],
             "forte.data.ontology.top.Link": [
@@ -226,7 +226,6 @@ class DataStoreTest(unittest.TestCase):
                     "ft.onto.base_ontology.Document",
                     9999,
                     1234,
-                    
                 ],
             ],
         }
@@ -284,7 +283,10 @@ class DataStoreTest(unittest.TestCase):
                     "attributes": {
                         "begin": {"index": 2, "type": (type(None), (int,))},
                         "end": {"index": 3, "type": (type(None), (int,))},
-                        "payload_idx": {"index": 4, "type": (type(None), (int,))},
+                        "payload_idx": {
+                            "index": 4,
+                            "type": (type(None), (int,)),
+                        },
                         "document_class": {"index": 5, "type": (list, (str,))},
                         "sentiment": {"index": 6, "type": (dict, (str, float))},
                         "classifications": {
@@ -296,17 +298,11 @@ class DataStoreTest(unittest.TestCase):
                 },
                 "ft.onto.base_ontology.Sentence": {
                     "attributes": {
-                        "begin": {
-                            "index": 2,
-                            "type": (type(None), (int,))
-                        },
-                        "end": {
-                            "index": 3,
-                            "type": (type(None), (int,))
-                        },
+                        "begin": {"index": 2, "type": (type(None), (int,))},
+                        "end": {"index": 3, "type": (type(None), (int,))},
                         "payload_idx": {
                             "index": 4,
-                            "type": (type(None), (int,))
+                            "type": (type(None), (int,)),
                         },
                         "speaker": {
                             "index": 5,
@@ -316,10 +312,7 @@ class DataStoreTest(unittest.TestCase):
                             "index": 6,
                             "type": (Union, (int, type(None))),
                         },
-                        "sentiment": {
-                            "index": 7, 
-                            "type": (dict, (str, float))
-                        },
+                        "sentiment": {"index": 7, "type": (dict, (str, float))},
                         "classification": {
                             "index": 8,
                             "type": (dict, (str, float)),
@@ -333,17 +326,32 @@ class DataStoreTest(unittest.TestCase):
                 },
                 "forte.data.ontology.top.Group": {
                     "attributes": {
-                        'members': {'type': (list, (int,)), 'index': 2},
-                        'member_type': {'type': (type(None), (str,)), 'index': 3}
+                        "members": {"type": (list, (int,)), "index": 2},
+                        "member_type": {
+                            "type": (type(None), (str,)),
+                            "index": 3,
+                        },
                     },
                     "parent_entry": "forte.data.ontology.core.BaseGroup",
                 },
                 "forte.data.ontology.top.Link": {
                     "attributes": {
-                        'parent_type': {'type': (type(None), (str,)), 'index': 2},
-                        'child_type': {'type': (type(None), (str,)), 'index': 3},
-                        'parent': {'type': (Union, (int, type(None))), 'index': 4},
-                        'child': {'type': (Union, (int, type(None))), 'index': 5}
+                        "parent_type": {
+                            "type": (type(None), (str,)),
+                            "index": 2,
+                        },
+                        "child_type": {
+                            "type": (type(None), (str,)),
+                            "index": 3,
+                        },
+                        "parent": {
+                            "type": (Union, (int, type(None))),
+                            "index": 4,
+                        },
+                        "child": {
+                            "type": (Union, (int, type(None))),
+                            "index": 5,
+                        },
                     },
                     "parent_entry": "forte.data.ontology.core.BaseLink",
                 },
@@ -416,7 +424,8 @@ class DataStoreTest(unittest.TestCase):
                                 "Class E",
                             ],
                         ],
-                    key=self.sorting_fn),
+                        key=self.sorting_fn,
+                    ),
                     "ft.onto.base_ontology.Sentence": SortedList(
                         [
                             [
@@ -468,19 +477,20 @@ class DataStoreTest(unittest.TestCase):
                                 "class2",
                             ],
                         ],
-                    key=self.sorting_fn),
+                        key=self.sorting_fn,
+                    ),
                     "forte.data.ontology.top.Group": [
                         [
                             10123,
                             "forte.data.ontology.top.Group",
                             [9999, 1234567],
-                            "ft.onto.base_ontology.Sentence"
+                            "ft.onto.base_ontology.Sentence",
                         ],
                         [
                             23456,
                             "forte.data.ontology.top.Group",
                             [1234, 3456],
-                            "ft.onto.base_ontology.Document"
+                            "ft.onto.base_ontology.Document",
                         ],
                     ],
                     "forte.data.ontology.top.Link": [
@@ -491,10 +501,8 @@ class DataStoreTest(unittest.TestCase):
                             "ft.onto.base_ontology.Document",
                             9999,
                             1234,
-                            
                         ],
                     ],
-        
                 },
             )
             self.assertEqual(
@@ -598,9 +606,10 @@ class DataStoreTest(unittest.TestCase):
                                 0,
                                 "Very Positive",
                                 "Class E",
-                            ]
+                            ],
                         ],
-                        key=self.sorting_fn),
+                        key=self.sorting_fn,
+                    ),
                     "ft.onto.base_ontology.Sentence": SortedList(
                         [
                             [
@@ -628,7 +637,6 @@ class DataStoreTest(unittest.TestCase):
                                 "Class C",
                                 "Class D",
                                 "abc",
-
                             ],
                             [
                                 100,
@@ -657,20 +665,20 @@ class DataStoreTest(unittest.TestCase):
                                 "good",
                             ],
                         ],
-                        key=self.sorting_fn
+                        key=self.sorting_fn,
                     ),
                     "forte.data.ontology.top.Group": [
                         [
                             10123,
                             "forte.data.ontology.top.Group",
                             [9999, 1234567],
-                            "ft.onto.base_ontology.Sentence"
+                            "ft.onto.base_ontology.Sentence",
                         ],
                         [
                             23456,
                             "forte.data.ontology.top.Group",
                             [1234, 3456],
-                            "ft.onto.base_ontology.Document"
+                            "ft.onto.base_ontology.Document",
                         ],
                     ],
                     "forte.data.ontology.top.Link": [
@@ -681,7 +689,6 @@ class DataStoreTest(unittest.TestCase):
                             "ft.onto.base_ontology.Document",
                             9999,
                             1234,
-                            
                         ],
                     ],
                 },
@@ -754,7 +761,10 @@ class DataStoreTest(unittest.TestCase):
                     "attributes": {
                         "begin": {"index": 2, "type": (type(None), (int,))},
                         "end": {"index": 3, "type": (type(None), (int,))},
-                        "payload_idx": {"index": 4, "type": (type(None), (int,))},
+                        "payload_idx": {
+                            "index": 4,
+                            "type": (type(None), (int,)),
+                        },
                         "document_class": {"index": 5, "type": (list, (str,))},
                         "sentiment": {"index": 6, "type": (dict, (str, float))},
                         "classifications": {
@@ -766,17 +776,11 @@ class DataStoreTest(unittest.TestCase):
                 },
                 "ft.onto.base_ontology.Sentence": {
                     "attributes": {
-                        "begin": {
-                            "index": 2,
-                            "type": (type(None), (int,))
-                        },
-                        "end": {
-                            "index": 3,
-                            "type": (type(None), (int,))
-                        },
+                        "begin": {"index": 2, "type": (type(None), (int,))},
+                        "end": {"index": 3, "type": (type(None), (int,))},
                         "payload_idx": {
                             "index": 4,
-                            "type": (type(None), (int,))
+                            "type": (type(None), (int,)),
                         },
                         "speaker": {
                             "index": 5,
@@ -800,17 +804,32 @@ class DataStoreTest(unittest.TestCase):
                 },
                 "forte.data.ontology.top.Group": {
                     "attributes": {
-                        'members': {'type': (list, (int,)), 'index': 2},
-                        'member_type': {'type': (type(None), (str,)), 'index': 3}
+                        "members": {"type": (list, (int,)), "index": 2},
+                        "member_type": {
+                            "type": (type(None), (str,)),
+                            "index": 3,
+                        },
                     },
                     "parent_entry": "forte.data.ontology.core.BaseGroup",
                 },
                 "forte.data.ontology.top.Link": {
                     "attributes": {
-                        'parent_type': {'type': (type(None), (str,)), 'index': 2},
-                        'child_type': {'type': (type(None), (str,)), 'index': 3},
-                        'parent': {'type': (Union, (int, type(None))), 'index': 4},
-                        'child': {'type': (Union, (int, type(None))), 'index': 5}
+                        "parent_type": {
+                            "type": (type(None), (str,)),
+                            "index": 2,
+                        },
+                        "child_type": {
+                            "type": (type(None), (str,)),
+                            "index": 3,
+                        },
+                        "parent": {
+                            "type": (Union, (int, type(None))),
+                            "index": 4,
+                        },
+                        "child": {
+                            "type": (Union, (int, type(None))),
+                            "index": 5,
+                        },
                     },
                     "parent_entry": "forte.data.ontology.core.BaseLink",
                 },
@@ -877,7 +896,10 @@ class DataStoreTest(unittest.TestCase):
                     "attributes": {
                         "begin": {"index": 2, "type": (type(None), (int,))},
                         "end": {"index": 3, "type": (type(None), (int,))},
-                        "payload_idx": {"index": 4, "type": (type(None), (int,))},
+                        "payload_idx": {
+                            "index": 4,
+                            "type": (type(None), (int,)),
+                        },
                         "document_class": {"index": 5, "type": (list, (str,))},
                         "sentiment": {"index": 6, "type": (dict, (str, float))},
                         "classifications": {
@@ -889,17 +911,11 @@ class DataStoreTest(unittest.TestCase):
                 },
                 "ft.onto.base_ontology.Sentence": {
                     "attributes": {
-                        "begin": {
-                            "index": 2,
-                            "type": (type(None), (int,))
-                        },
-                        "end": {
-                            "index": 3,
-                            "type": (type(None), (int,))
-                        },
+                        "begin": {"index": 2, "type": (type(None), (int,))},
+                        "end": {"index": 3, "type": (type(None), (int,))},
                         "payload_idx": {
                             "index": 4,
-                            "type": (type(None), (int,))
+                            "type": (type(None), (int,)),
                         },
                         "speaker": {
                             "index": 5,
@@ -923,17 +939,32 @@ class DataStoreTest(unittest.TestCase):
                 },
                 "forte.data.ontology.top.Group": {
                     "attributes": {
-                        'members': {'type': (list, (int,)), 'index': 2},
-                        'member_type': {'type': (type(None), (str,)), 'index': 3}
+                        "members": {"type": (list, (int,)), "index": 2},
+                        "member_type": {
+                            "type": (type(None), (str,)),
+                            "index": 3,
+                        },
                     },
                     "parent_entry": "forte.data.ontology.core.BaseGroup",
                 },
                 "forte.data.ontology.top.Link": {
                     "attributes": {
-                        'parent_type': {'type': (type(None), (str,)), 'index': 2},
-                        'child_type': {'type': (type(None), (str,)), 'index': 3},
-                        'parent': {'type': (Union, (int, type(None))), 'index': 4},
-                        'child': {'type': (Union, (int, type(None))), 'index': 5}
+                        "parent_type": {
+                            "type": (type(None), (str,)),
+                            "index": 2,
+                        },
+                        "child_type": {
+                            "type": (type(None), (str,)),
+                            "index": 3,
+                        },
+                        "parent": {
+                            "type": (Union, (int, type(None))),
+                            "index": 4,
+                        },
+                        "child": {
+                            "type": (Union, (int, type(None))),
+                            "index": 5,
+                        },
                     },
                     "parent_entry": "forte.data.ontology.core.BaseLink",
                 },
@@ -994,7 +1025,8 @@ class DataStoreTest(unittest.TestCase):
                                 "Class E",
                             ],
                         ],
-                    key=self.sorting_fn),
+                        key=self.sorting_fn,
+                    ),
                     "ft.onto.base_ontology.Sentence": SortedList(
                         [
                             [
@@ -1044,16 +1076,16 @@ class DataStoreTest(unittest.TestCase):
                                 "Positive",
                                 None,
                                 "class2",
-
                             ],
                         ],
-                    key=self.sorting_fn),
+                        key=self.sorting_fn,
+                    ),
                     "forte.data.ontology.top.Group": [
                         [
                             23456,
                             "forte.data.ontology.top.Group",
                             [1234, 3456],
-                            "ft.onto.base_ontology.Document"
+                            "ft.onto.base_ontology.Document",
                         ],
                     ],
                     "forte.data.ontology.top.Link": [
@@ -1064,7 +1096,6 @@ class DataStoreTest(unittest.TestCase):
                             "ft.onto.base_ontology.Document",
                             9999,
                             1234,
-                            
                         ],
                     ],
                 },

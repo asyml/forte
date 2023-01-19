@@ -12,7 +12,7 @@ if sys.version_info < (3, 6):
 VERSION_VAR = "VERSION"
 version = {}
 with open(
-        os.path.join(os.path.dirname(os.path.abspath(__file__)), "forte/version.py")
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "forte/version.py")
 ) as fp:
     exec(fp.read(), version)
 if VERSION_VAR not in version or not version[VERSION_VAR]:
@@ -26,7 +26,7 @@ setuptools.setup(
     version=version[VERSION_VAR],
     url="https://github.com/asyml/forte",
     description="Forte is extensible framework for building composable and "
-                "modularized NLP workflows.",
+    "modularized NLP workflows.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     license="Apache License Version 2.0",
@@ -60,7 +60,12 @@ setuptools.setup(
             "requests",
         ],
         "ir": ["texar-pytorch>=0.1.4", "tensorflow>=1.15.0"],
-        "remote": ["fastapi>=0.65.2, <=0.75.2", "pydantic<=1.9.2", "uvicorn>=0.14.0", "requests"],
+        "remote": [
+            "fastapi>=0.65.2, <=0.75.2",
+            "pydantic<=1.9.2",
+            "uvicorn>=0.14.0",
+            "requests",
+        ],
         "audio_ext": ["soundfile>=0.10.3"],
         "stave": ["stave>=0.0.1.dev12"],
         "models": [
@@ -90,9 +95,9 @@ setuptools.setup(
             "soundfile>=0.10.3",
             "Pillow",
             "requests",
-            "urlpath>=1.2.0"
+            "urlpath>=1.2.0",
         ],
-        "ocr_tutorial": ["Pillow", "requests", "pytesseract"]
+        "ocr_tutorial": ["Pillow", "requests", "pytesseract"],
     },
     entry_points={
         "console_scripts": [

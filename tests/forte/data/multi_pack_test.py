@@ -56,7 +56,7 @@ class DataPackTest(unittest.TestCase):
         for pack_name in mp.pack_names:
             self.assertEqual(
                 recovered_mp.get_pack(pack_name).pack_id,
-                mp.get_pack(pack_name).pack_id
+                mp.get_pack(pack_name).pack_id,
             )
 
     def test_add_pack(self):
@@ -127,14 +127,12 @@ class DataPackTest(unittest.TestCase):
         for grp in self.multi_pack.get(MultiPackGroup, get_raw=True):
             temp_list = []
             # Note here that grp represents a dictionary and not an object
-            for pack, mem in grp['members']:
+            for pack, mem in grp["members"]:
                 mem_obj = self.multi_pack.get_subentry(pack, mem)
                 temp_list.append(mem_obj.text)
 
             group_content.append(tuple(temp_list))
         self.assertListEqual(expected_content, group_content)
-        
-
 
     def test_multipack_entries(self):
         """
@@ -223,7 +221,8 @@ class DataPackTest(unittest.TestCase):
         right_tokens_recovered = [t.text for t in recovered_packs[1].get(Token)]
 
         self.assertListEqual(
-            left_tokens_recovered, ["This", "pack", "contains", "some", "sample", "data."]
+            left_tokens_recovered,
+            ["This", "pack", "contains", "some", "sample", "data."],
         )
         self.assertListEqual(
             right_tokens_recovered,
@@ -319,7 +318,7 @@ class DataPackTest(unittest.TestCase):
         # Add MultiPackLink to data_pack11 and data_pack12 & Add MultiPackGroup to data_pack11, data_pack12
         # and data_pack13
         # Add tokens to each pack.
-        for pack in self.multi_pack.packs[ref_id11: ref_id12 + 1]:
+        for pack in self.multi_pack.packs[ref_id11 : ref_id12 + 1]:
             _space_token(pack)
 
         # Create some group.
@@ -369,13 +368,9 @@ class DataPackTest(unittest.TestCase):
         # print('check_list_name_all:', self.check_list_name)
 
         ## Preparation for remaining pack ID list check ##
-        expected_id_list_1 = list(
-            set(check_list_id) - set([ref_id10])
-        )
+        expected_id_list_1 = list(set(check_list_id) - set([ref_id10]))
         expected_id_list_2 = list(
-            set(check_list_id)
-            - set([ref_id10])
-            - set([ref_id11])
+            set(check_list_id) - set([ref_id10]) - set([ref_id11])
         )
         expected_id_list_3 = list(
             set(check_list_id)
@@ -427,9 +422,7 @@ class DataPackTest(unittest.TestCase):
         self.assertListEqual(expected_id_list_1, remaining_id_1)
         ## remaining pack name alignment check
         self.assertNotIn(["remove pack 10"], self.multi_pack.pack_names)
-        self.assertListEqual(
-            self.multi_pack.pack_names, expected_name_list_1
-        )
+        self.assertListEqual(self.multi_pack.pack_names, expected_name_list_1)
 
         # Test to remove the added pack from multi_pack with MultiPackGroup
         self.multi_pack.remove_pack(ref_id11, True)
@@ -443,9 +436,7 @@ class DataPackTest(unittest.TestCase):
         self.assertListEqual(expected_id_list_2, remaining_id_2)
         ## remaining pack name alignment check
         self.assertNotIn(["remove pack 11"], self.multi_pack.pack_names)
-        self.assertListEqual(
-            self.multi_pack.pack_names, expected_name_list_2
-        )
+        self.assertListEqual(self.multi_pack.pack_names, expected_name_list_2)
 
         # Test to remove the added pack from multi_pack with MultiPackGroup and MultiPackLink
         self.multi_pack.remove_pack(ref_id12, True)
@@ -454,9 +445,7 @@ class DataPackTest(unittest.TestCase):
         self.assertListEqual(expected_id_list_3, remaining_id_3)
         ## remaining pack name alignment check
         self.assertNotIn(["remove pack 12"], self.multi_pack.pack_names)
-        self.assertListEqual(
-            self.multi_pack.pack_names, expected_name_list_3
-        )
+        self.assertListEqual(self.multi_pack.pack_names, expected_name_list_3)
 
         self.multi_pack.purge_deleted_packs()
         self.assertListEqual(
@@ -509,7 +498,7 @@ class DataPackTest(unittest.TestCase):
         # Add MultiPackLink to data_pack11 and data_pack12 & Add MultiPackGroup to data_pack11, data_pack12
         # and data_pack13
         # Add tokens to each pack.
-        for pack in self.multi_pack.packs[ref_id11: ref_id12 + 1]:
+        for pack in self.multi_pack.packs[ref_id11 : ref_id12 + 1]:
             _space_token(pack)
 
         # Create some group.
@@ -559,13 +548,9 @@ class DataPackTest(unittest.TestCase):
         # print('check_list_name_all:', self.check_list_name)
 
         ## Preparation for remaining pack ID list check ##
-        expected_id_list_1 = list(
-            set(check_list_id) - set([ref_id10])
-        )
+        expected_id_list_1 = list(set(check_list_id) - set([ref_id10]))
         expected_id_list_2 = list(
-            set(check_list_id)
-            - set([ref_id10])
-            - set([ref_id11])
+            set(check_list_id) - set([ref_id10]) - set([ref_id11])
         )
         expected_id_list_3 = list(
             set(check_list_id)
@@ -602,9 +587,7 @@ class DataPackTest(unittest.TestCase):
         self.assertListEqual(expected_id_list_1, remaining_id_1)
         ## remaining pack name alignment check
         self.assertNotIn(["remove pack 10"], self.multi_pack.pack_names)
-        self.assertListEqual(
-            self.multi_pack.pack_names, expected_name_list_1
-        )
+        self.assertListEqual(self.multi_pack.pack_names, expected_name_list_1)
 
         # Test to remove the added pack from multi_pack with MultiPackGroup
         self.multi_pack.remove_pack(ref_id11, True)

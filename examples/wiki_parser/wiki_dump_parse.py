@@ -94,12 +94,12 @@ def add_wiki_info(
 
     if resume_from_last:
         if not os.path.exists(out_index_path):
-            raise ValueError(f"Configured to do resume but path "
-                             f"{out_index_path} does not exists.")
+            raise ValueError(
+                f"Configured to do resume but path "
+                f"{out_index_path} does not exists."
+            )
 
-        print_progress(
-            f"\nWill resume from last from {out_index_path}", "\n"
-        )
+        print_progress(f"\nWill resume from last from {out_index_path}", "\n")
         pl.set_reader(
             reader,
             config={

@@ -139,18 +139,9 @@ class DataStoreTest(unittest.TestCase):
             },
             "ft.onto.base_ontology.Sentence": {
                 "attributes": {
-                    "begin": {
-                        "index": 2,
-                        "type": (type(None), (int,))
-                    },
-                    "end": {
-                        "index": 3,
-                        "type": (type(None), (int,))
-                    },
-                    "payload_idx": {
-                        "index": 4,
-                        "type": (type(None), (int,))
-                    },
+                    "begin": {"index": 2, "type": (type(None), (int,))},
+                    "end": {"index": 3, "type": (type(None), (int,))},
+                    "payload_idx": {"index": 4, "type": (type(None), (int,))},
                     "speaker": {
                         "index": 5,
                         "type": (Union, (str, type(None))),
@@ -173,18 +164,9 @@ class DataStoreTest(unittest.TestCase):
             },
             "forte.data.ontology.top.Annotation": {
                 "attributes": {
-                    "begin": {
-                        "index": 2,
-                        "type": (type(None), (int,))
-                    },
-                    "end": {
-                        "index": 3,
-                        "type": (type(None), (int,))
-                    },
-                    "payload_idx": {
-                        "index": 4,
-                        "type": (type(None), (int,))
-                    }
+                    "begin": {"index": 2, "type": (type(None), (int,))},
+                    "end": {"index": 3, "type": (type(None), (int,))},
+                    "payload_idx": {"index": 4, "type": (type(None), (int,))},
                 },
                 "parent_class": {"Entry"},
             },
@@ -194,56 +176,47 @@ class DataStoreTest(unittest.TestCase):
             "forte.data.ontology.top.Generics": {"parent_class": {"Entry"}},
             "forte.data.ontology.top.Link": {
                 "attributes": {
-                    'parent_type': {'type': (type(None), (str,)), 'index': 2},
-                    'child_type': {'type': (type(None), (str,)), 'index': 3},
-                    'parent': {'type': (Union, (int, type(None))), 'index': 4},
-                    'child': {'type': (Union, (int, type(None))), 'index': 5}
+                    "parent_type": {"type": (type(None), (str,)), "index": 2},
+                    "child_type": {"type": (type(None), (str,)), "index": 3},
+                    "parent": {"type": (Union, (int, type(None))), "index": 4},
+                    "child": {"type": (Union, (int, type(None))), "index": 5},
                 },
-                "parent_class": {"BaseLink"}
+                "parent_class": {"BaseLink"},
             },
             "forte.data.ontology.top.Group": {
                 "attributes": {
-                    'members': {'type': (list, (int,)), 'index': 2},
-                    'member_type': {'type': (type(None), (str,)), 'index': 3}
+                    "members": {"type": (list, (int,)), "index": 2},
+                    "member_type": {"type": (type(None), (str,)), "index": 3},
                 },
-                "parent_class": {"Entry", "BaseGroup"}
+                "parent_class": {"Entry", "BaseGroup"},
             },
             "forte.data.ontology.top.MultiPackGeneric": {
                 "parent_class": {"Entry", "MultiEntry"}
             },
             "forte.data.ontology.top.MultiPackLink": {
                 "attributes": {
-                    'parent_type': {'type': (type(None), (str,)), 'index': 2},
-                    'child_type': {'type': (type(None), (str,)), 'index': 3},
-                    'parent': {'type': (tuple, (Tuple,)), 'index': 4},
-                    'child': {'type': (tuple, (Tuple,)), 'index': 5}
+                    "parent_type": {"type": (type(None), (str,)), "index": 2},
+                    "child_type": {"type": (type(None), (str,)), "index": 3},
+                    "parent": {"type": (tuple, (Tuple,)), "index": 4},
+                    "child": {"type": (tuple, (Tuple,)), "index": 5},
                 },
-                "parent_class": {"MultiEntry", "BaseLink"}
+                "parent_class": {"MultiEntry", "BaseLink"},
             },
             "forte.data.ontology.top.MultiPackGroup": {
                 "attributes": {
-                    'members': {'type': (list, (Tuple, int, int)), 'index': 2},
-                    'member_type': {'type': (type(None), (str,)), 'index': 3}
+                    "members": {"type": (list, (Tuple, int, int)), "index": 2},
+                    "member_type": {"type": (type(None), (str,)), "index": 3},
                 },
-                "parent_class": {"Entry", "MultiEntry", "BaseGroup"}
+                "parent_class": {"Entry", "MultiEntry", "BaseGroup"},
             },
             "forte.data.ontology.top.Query": {"parent_class": {"Generics"}},
             "forte.data.ontology.top.AudioAnnotation": {
                 "attributes": {
-                    "begin": {
-                        "index": 2,
-                        "type": (type(None), (int,))
-                    },
-                    "end": {
-                        "index": 3,
-                        "type": (type(None), (int,))
-                    },
-                    "payload_idx": {
-                        "index": 4,
-                        "type": (type(None), (int,))
-                    }
+                    "begin": {"index": 2, "type": (type(None), (int,))},
+                    "end": {"index": 3, "type": (type(None), (int,))},
+                    "payload_idx": {"index": 4, "type": (type(None), (int,))},
                 },
-                "parent_class": {"Entry"}
+                "parent_class": {"Entry"},
             },
         }
 
@@ -264,18 +237,9 @@ class DataStoreTest(unittest.TestCase):
 
         DataStore._type_attributes["ft.onto.base_ontology.Sentence"] = {
             "attributes": {
-                "begin": {
-                    "index": 2,
-                    "type": (type(None), (int,))
-                },
-                "end": {
-                    "index": 3,
-                    "type": (type(None), (int,))
-                },
-                "payload_idx": {
-                    "index": 4,
-                    "type": (type(None), (int,))
-                },
+                "begin": {"index": 2, "type": (type(None), (int,))},
+                "end": {"index": 3, "type": (type(None), (int,))},
+                "payload_idx": {"index": 4, "type": (type(None), (int,))},
                 "speaker": {
                     "index": 5,
                     "type": (Union, (str, type(None))),
@@ -299,18 +263,9 @@ class DataStoreTest(unittest.TestCase):
 
         DataStore._type_attributes["forte.data.ontology.top.Annotation"] = {
             "attributes": {
-                "begin": {
-                    "index": 2,
-                    "type": (type(None), (int,))
-                },
-                "end": {
-                    "index": 3,
-                    "type": (type(None), (int,))
-                },
-                "payload_idx": {
-                    "index": 4,
-                    "type": (type(None), (int,))
-                }
+                "begin": {"index": 2, "type": (type(None), (int,))},
+                "end": {"index": 3, "type": (type(None), (int,))},
+                "payload_idx": {"index": 4, "type": (type(None), (int,))},
             },
             "parent_class": {"Entry"},
         }
@@ -748,13 +703,13 @@ class DataStoreTest(unittest.TestCase):
         # test add Document entry
         tid_doc: int = self.data_store.add_entry_raw(
             type_name="ft.onto.base_ontology.Document",
-            attribute_data=[1,5],
+            attribute_data=[1, 5],
         )
 
         # test add Sentence entry
         tid_sent: int = self.data_store.add_entry_raw(
             type_name="ft.onto.base_ontology.Sentence",
-            attribute_data=[5,8],
+            attribute_data=[5, 8],
         )
         num_doc = self.data_store.get_length("ft.onto.base_ontology.Document")
 
@@ -786,7 +741,7 @@ class DataStoreTest(unittest.TestCase):
         # test add new annotation type
         tid_em: int = self.data_store.add_entry_raw(
             type_name="ft.onto.base_ontology.EntityMention",
-            attribute_data=[10,12],
+            attribute_data=[10, 12],
         )
         num_phrase = self.data_store.get_length(
             "ft.onto.base_ontology.EntityMention"
@@ -803,7 +758,7 @@ class DataStoreTest(unittest.TestCase):
         tid_sent_duplicate: int = self.data_store.add_entry_raw(
             type_name="ft.onto.base_ontology.Sentence",
             allow_duplicate=False,
-            attribute_data=[5,8],
+            attribute_data=[5, 8],
         )
         self.assertEqual(
             len(
@@ -817,7 +772,7 @@ class DataStoreTest(unittest.TestCase):
         self.data_store.add_entry_raw(
             type_name="ft.onto.base_ontology.Sentence",
             allow_duplicate=False,
-            attribute_data=[5,9],
+            attribute_data=[5, 9],
         )
         self.assertEqual(
             len(
@@ -833,7 +788,7 @@ class DataStoreTest(unittest.TestCase):
         self.data_store.add_entry_raw(
             type_name="ft.onto.base_ontology.Sentence",
             tid=tid,
-            attribute_data=[0,1],
+            attribute_data=[0, 1],
         )
         self.assertEqual(
             self.data_store.get_entry(tid=77)[0],
@@ -855,16 +810,16 @@ class DataStoreTest(unittest.TestCase):
         # test add Document entry
         tid_recording: int = self.data_store.add_entry_raw(
             type_name="ft.onto.base_ontology.Recording",
-            attribute_data=[1,5],
+            attribute_data=[1, 5],
         )
         # test add Sentence entry
         tid_audio_utterance: int = self.data_store.add_entry_raw(
             type_name="ft.onto.base_ontology.AudioUtterance",
-            attribute_data=[5,8],
+            attribute_data=[5, 8],
         )
         tid_utterance: int = self.data_store.add_entry_raw(
             type_name="ft.onto.base_ontology.Utterance",
-            attribute_data=[5,8],
+            attribute_data=[5, 8],
         )
         # check number of Recording
         self.assertEqual(
@@ -897,7 +852,7 @@ class DataStoreTest(unittest.TestCase):
         self.data_store.add_entry_raw(
             type_name="ft.onto.base_ontology.Recording",
             tid=tid,
-            attribute_data=[0,1],
+            attribute_data=[0, 1],
         )
         self.assertEqual(
             self.data_store.get_entry(tid=77)[0],
@@ -933,8 +888,8 @@ class DataStoreTest(unittest.TestCase):
             type_name="forte.data.ontology.top.Link",
             attribute_data=[
                 "ft.onto.base_ontology.Sentence",
-                "ft.onto.base_ontology.Document"
-                ]
+                "ft.onto.base_ontology.Document",
+            ],
         )
         # check number of Link
         self.assertEqual(
@@ -952,7 +907,7 @@ class DataStoreTest(unittest.TestCase):
             type_name="forte.data.ontology.top.Link",
             attribute_data=[
                 "ft.onto.base_ontology.Sentence",
-                "ft.onto.base_ontology.Document"
+                "ft.onto.base_ontology.Document",
             ],
             tid=tid,
         )
@@ -1030,7 +985,10 @@ class DataStoreTest(unittest.TestCase):
 
         self.data_store.add_entry_raw(
             type_name="forte.data.ontology.top.MultiPackLink",
-            attribute_data=["ft.onto.base_ontology.Sentence", "ft.onto.base_ontology.Document"]
+            attribute_data=[
+                "ft.onto.base_ontology.Sentence",
+                "ft.onto.base_ontology.Document",
+            ],
         )
         # check number of MultiPackGeneric
         self.assertEqual(
@@ -1048,7 +1006,7 @@ class DataStoreTest(unittest.TestCase):
             type_name="forte.data.ontology.top.MultiPackLink",
             attribute_data=[
                 "ft.onto.base_ontology.Sentence",
-                "ft.onto.base_ontology.Document"
+                "ft.onto.base_ontology.Document",
             ],
             tid=tid,
         )
