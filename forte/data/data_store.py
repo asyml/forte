@@ -22,7 +22,7 @@ from heapq import heappush, heappop
 from sortedcontainers import SortedList
 from typing_inspect import get_origin, get_args, is_generic_type
 
-from forte.utils import get_class
+from forte.utils import get_class, get_class_nc
 from forte.utils.utils import get_full_module_name
 from forte.data.ontology.code_generation_objects import EntryTree
 from forte.data.ontology.ontology_code_generator import OntologyCodeGenerator
@@ -879,7 +879,7 @@ class DataStore(BaseStore):
             if cls_qualified_name in type_name_parent_class:
                 return True
             else:
-                entry_class = get_class(type_name)
+                entry_class = get_class_nc(type_name)
                 if issubclass(entry_class, cls):
                     type_name_parent_class.add(cls_qualified_name)
                     return True

@@ -29,6 +29,7 @@ __all__ = [
     "get_full_module_name",
     "get_class_name",
     "get_class",
+    "get_class_nc",
     "get_qual_name",
     "create_class_with_kwargs",
     "check_type",
@@ -81,6 +82,12 @@ def get_class_name(o, lower: bool = False) -> str:
 
 @lru_cache
 def get_class(class_name: str, module_paths: Optional[List[str]] = None):
+    r"""This is the cached version of get_class_nc.
+    """
+    return get_class_nc(str, module_paths)
+
+
+def get_class_nc(class_name: str, module_paths: Optional[List[str]] = None):
     r"""Returns the class based on class name.
 
     Args:
