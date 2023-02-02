@@ -80,13 +80,6 @@ def get_class_name(o, lower: bool = False) -> str:
         return o.__name__
 
 
-@lru_cache
-def get_class(class_name: str, module_paths: Optional[List[str]] = None):
-    r"""This is the cached version of get_class_nc.
-    """
-    return get_class_nc(str, module_paths)
-
-
 def get_class_nc(class_name: str, module_paths: Optional[List[str]] = None):
     r"""Returns the class based on class name.
 
@@ -120,6 +113,24 @@ def get_class_nc(class_name: str, module_paths: Optional[List[str]] = None):
             raise ValueError("Class not found in {}".format(class_name))
 
     return class_
+
+
+@lru_cache
+def get_class(class_name: str, module_paths: Optional[List[str]] = None):
+    r"""This is the cached version of get_class_nc.
+
+    Args:
+        class_name (str): Name or full path to the class.
+        module_paths (list): Paths to candidate modules to search for the
+            class. This is used if the class cannot be located solely based on
+            ``class_name``. The first module in the list that contains the class
+            is used.
+
+    Returns:
+        The target class.
+
+    """
+    return get_class_nc(class_name, module_paths)
 
 
 def get_qual_name(o: object, lower: bool = False) -> str:
