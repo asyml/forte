@@ -542,10 +542,10 @@ class EntryDefinition(Item):
         self,
         name: str,
         class_type: str,
-        init_args: Optional[str] = None,
-        properties: Optional[List[Property]] = None,
-        class_attributes: Optional[List[ClassTypeDefinition]] = None,
-        description: Optional[str] = None,
+        init_args: List[str],
+        properties: List[Property],
+        class_attributes: List[ClassTypeDefinition],
+        description: str,
     ):
         super().__init__(name, description)
         self.class_type = class_type
@@ -556,11 +556,12 @@ class EntryDefinition(Item):
             [] if class_attributes is None else class_attributes
         )
         self.description = description if description else None
-        self.init_args = init_args if init_args is not None else ""
-        self.init_args = self.init_args.replace("=", " = ")
+        self.init_args = init_args if init_args is not None else []
 
     def to_init_code(self, level: int) -> str:
-        return indent_line(f"def __init__(self, {self.init_args}):", level)
+        return indent_line(
+            f"def __init__({', '.join(self.init_args)}):", level
+        ).replace("=", " = ")
 
     def to_property_code(self, level: int) -> str:
         lines = []
@@ -578,7 +579,7 @@ class EntryDefinition(Item):
 
     def to_code(self, level: int) -> str:
         super_args = ", ".join(
-            [item.split(":")[0].strip() for item in self.init_args.split(",")]
+            [item.split(":")[0].strip() for item in self.init_args[1:]]
         )
         raw_desc = self.to_description(1)
         desc: str = "" if raw_desc is None else raw_desc
@@ -640,7 +641,7 @@ class ModuleWriter:
 
     def __init__(self, module_name: str, import_managers: ImportManagerPool):
         self.module_name = module_name
-        self.source_file: str = ""
+        self.source_file: Path
 
         self.description: Optional[str] = None
         self.import_managers: ImportManagerPool = import_managers
@@ -662,7 +663,7 @@ class ModuleWriter:
         namespace_depth: int,
     ):
         """
-        Create entry sub-directories with .generated file to indicate the
+        Create entry subdirectories with .generated file to indicate the
          subdirectory is created by this procedure. No such file will be added
          if the directory already exists.
 
@@ -761,7 +762,7 @@ class ModuleWriter:
 
     def to_description(self, level):
         quotes = '"""'
-        lines = get_ignore_error_lines(self.source_file) + [
+        lines = get_ignore_error_lines(str(self.source_file)) + [
             quotes,
             self.description,
             quotes,
@@ -794,15 +795,29 @@ class ModuleWriterPool:
 
 class EntryTreeNode:
     def __init__(self, name: str):
-        self.children: List[EntryTreeNode] = []
-        self.parent: Optional[EntryTreeNode] = None
+        self.__children: List[EntryTreeNode] = []
+        self.__parent: Optional[EntryTreeNode] = None
         self.name: str = name
         self.attributes: Set[Tuple[str, str]] = set()
 
     def __repr__(self):
         r"""for printing purpose."""
-        attr_str = ", ".join(self.attributes)
+        attr_str = ", ".join(str(a) for a in self.attributes)
         return self.name + ": " + attr_str
+
+    @property
+    def children(self) -> "List[EntryTreeNode]":
+        return self.__children
+
+    @property
+    def parent(self) -> "EntryTreeNode":
+        if self.__parent is None:
+            raise ValueError("No parent for this node, probably root")
+        return self.__parent
+
+    @parent.setter
+    def parent(self, value):
+        self.__parent = value
 
 
 class EntryTree:
@@ -845,10 +860,6 @@ class EntryTree:
             curr_entry_node.parent = parent_in_tree
         else:
             found_node.attributes = curr_entry_attr
-
-    def print_traverse(self):
-        path = []
-        traverse(self.root, path)
 
     def collect_parents(self, node_dict: Dict[str, Set[str]]):
         r"""Collect all the parent nodes for all the nodes in the `node_dict`

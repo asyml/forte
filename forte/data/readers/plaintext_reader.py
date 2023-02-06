@@ -30,7 +30,7 @@ __all__ = [
 class PlainTextReader(PackReader):
     r""":class:`PlainTextReader` is designed to read in plain text dataset."""
 
-    def _collect(self, text_directory) -> Iterator[Any]:  # type: ignore
+    def _collect(self, text_directory) -> Iterator[Any]:
         r"""Should be called with param ``text_directory`` which is a path to a
         folder containing txt files.
 

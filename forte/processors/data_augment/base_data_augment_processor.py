@@ -431,8 +431,8 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         # indices before & after replacement.
         bias: int = 0
         for i, span in enumerate(spans):
-            old_begin: int = spans[i].begin
-            old_end: int = spans[i].end
+            old_begin: int = span.begin
+            old_end: int = span.end
             new_begin: int = old_begin + bias
             new_end = new_begin + len(replacement_strs[i])
             new_spans.append(Span(new_begin, new_end))

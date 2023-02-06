@@ -78,7 +78,7 @@ class TestEmbeddingSimilarityReplacementOp(unittest.TestCase):
         )[0]
         self.assertIn(
             augmented_token.text,
-            ["yahoo", "aol", "microsoft", "web", "internet"]
+            ["yahoo", "aol", "microsoft", "web", "internet"],
         )
 
     @data(
@@ -113,9 +113,7 @@ class TestEmbeddingSimilarityReplacementOp(unittest.TestCase):
             },
             "augment_pack_names": {"input": "augmented_input"},
         }
-        nlp.add(
-            component=(DataAugProcessor()), config=processor_config
-        )
+        nlp.add(component=(DataAugProcessor()), config=processor_config)
         nlp.initialize()
 
         for idx, m_pack in enumerate(nlp.process_dataset(texts)):

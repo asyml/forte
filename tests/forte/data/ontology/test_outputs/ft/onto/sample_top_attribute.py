@@ -1,10 +1,10 @@
 # ***automatically_generated***
-# ***source json:tests/forte/data/ontology/test_specs/test_top_attribute.json***
+# ***source json:/Users/hector/Documents/projects/forte/tests/forte/data/ontology/test_specs/test_top_attribute.json***
 # flake8: noqa
 # mypy: ignore-errors
 # pylint: skip-file
 """
-Automatically generated ontology test_top_attribute. Do not change manually.
+Automatically generated ontology sample_top_attribute. Do not change manually.
 """
 
 from dataclasses import dataclass

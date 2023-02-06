@@ -77,7 +77,7 @@ Some components or modules in forte may require some [extra requirements](https:
 * `pip install forte[wikipedia]`: Install packages required for reading [wikipedia datasets](https://github.com/asyml/forte/tree/master/forte/datasets/wikipedia).
 * `pip install forte[nlp]`: Install packages required for additional NLP supports, such as [subword_tokenizer](https://github.com/asyml/forte/tree/master/forte/processors/nlp/subword_tokenizer.py) and [texar encoder](https://github.com/asyml/forte/tree/master/forte/processors/third_party/pretrained_encoder_processors.py)
 * `pip install forte[extractor]`: Install packages required for extractor-based training system, [extractor](https://github.com/asyml/forte/blob/master/forte/data/extractors), [train_preprocessor](https://github.com/asyml/forte/tree/master/forte/train_preprocessor.py), [tagging trainer](https://github.com/asyml/forte/tree/master/examples/tagging/tagging_trainer.py), [DataPack dataset](https://github.com/asyml/forte/blob/master/forte/data/data_pack_dataset.py), [types](https://github.com/asyml/forte/blob/master/forte/data/types.py), and [converter](https://github.com/asyml/forte/blob/master/forte/data/converter).
-
+* `pip install forte[payload]` install packages required for payload.
 ## Quick Start Guide
 Writing NLP pipelines with Forte is easy. The following example creates a simple pipeline that analyzes the sentences, tokens, and named entities from a piece of text.
 

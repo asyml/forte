@@ -102,7 +102,7 @@ class StaveMultiDocSqlReader(MultiPackDeserializerBase):
             self.conn, configs.datapack_table, configs.pack_content_col
         )
 
-    def _get_multipack_content(self) -> Iterator[str]:  # type: ignore
+    def _get_multipack_content(self) -> Iterator[str]:
         c = self.conn.cursor()
         for value in c.execute(
             f"SELECT textPack FROM {self.configs.multipack_table}"
@@ -215,7 +215,7 @@ class StaveDataPackSqlReader(PackReader):
                 "No project specified, will attempt to read all proejcts."
             )
 
-    def _collect(self) -> Iterator[str]:  # type: ignore
+    def _collect(self) -> Iterator[str]:
         # pylint: disable=attribute-defined-outside-init
         self.conn = sqlite3.connect(self.configs.stave_db_path)
         c = self.conn.cursor()

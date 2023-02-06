@@ -3,15 +3,11 @@ import sys
 
 
 @testbook(
-    "docs/notebook_tutorial/Automatic_Speech_Recognition.ipynb",
-    execute=False
+    "docs/notebook_tutorial/Automatic_Speech_Recognition.ipynb", execute=False
 )
-
-
-
 def test_Automatic_Speech_Recognition(tb):
     if sys.version_info[0] > 3.7:
-    # input file
+        # input file
         tb.execute_cell("input_file")
         # install
         tb.execute_cell("install")

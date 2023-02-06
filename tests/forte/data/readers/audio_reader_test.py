@@ -28,7 +28,6 @@ from forte.data.data_pack import DataPack
 from forte.data.readers import AudioReader
 from forte.pipeline import Pipeline
 from forte.processors.base.pack_processor import PackProcessor
-from ft.onto.base_ontology import TextPayload
 
 
 class TestASRProcessor(PackProcessor):
