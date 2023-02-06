@@ -115,7 +115,7 @@ def get_class_nc(class_name: str, module_paths: Optional[List[str]] = None):
     return class_
 
 
-@lru_cache
+@lru_cache()
 def get_class(class_name: str, module_paths: Optional[List[str]] = None):
     r"""This is the cached version of get_class_nc.
 
