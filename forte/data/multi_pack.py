@@ -16,9 +16,7 @@ import copy
 import logging
 
 from pathlib import Path
-from typing import Dict, List, Union, Iterator, Optional, Type, Any, Tuple
-
-import jsonpickle
+from typing import Dict, List, Union, Iterator, Optional, Type, Any, Tuple, cast
 
 from packaging.version import Version
 from sortedcontainers import SortedList
@@ -40,8 +38,7 @@ from forte.data.ontology.top import (
     MultiPackGeneric,
 )
 from forte.data.types import DataRequest
-from forte.utils import get_class, get_full_module_name
-from forte.version import DEFAULT_PACK_VERSION
+from forte.utils import get_full_module_name
 
 
 logger = logging.getLogger(__name__)
@@ -297,10 +294,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         for link in self.get(MultiPackLink):
             parent_entry_pid = link.get_parent().pack_id
             child_entry_pid = link.get_child().pack_id
-            if (
-                parent_entry_pid == pack.pack_id
-                or child_entry_pid == pack.pack_id
-            ):
+            if pack.pack_id in (parent_entry_pid, child_entry_pid):
                 links_with_pack_for_removal.append(link)
 
         groups_with_pack_for_removal = []
@@ -367,19 +361,19 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         # Remove those None in place and shrink the _pack_ref list.
         # Caution: item index will change
         for index in range(len(self._pack_ref) - 1, 0, -1):
-            if self._pack_ref.__getitem__(index) is None:
-                self._pack_ref.__delitem__(index)
+            if self._pack_ref[index] is None:
+                del self._pack_ref[index]
 
         # Remove those None in place and shrink the _pack_names list.
         # Caution: item index will change
         for index in range(len(self._pack_names) - 1, 0, -1):
-            if not self._pack_names.__getitem__(index):
-                self._pack_names.__delitem__(index)
+            if not self._pack_names[index]:
+                del self._pack_names[index]
 
         # Remove those None in place and shrink the _packs list. Caution: item index will change
         for index in range(len(self._packs) - 1, 0, -1):
-            if self._packs.__getitem__(index) is None:
-                self._packs.__delitem__(index)
+            if self._packs[index] is None:
+                del self._packs[index]
 
         return True
 
@@ -785,7 +779,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         """
         if isinstance(entry, int):
             # If entry is a TID, convert it to the class object.
-            entry = self._entry_converter.get_entry_object(tid=entry, pack=self)
+            entry = self._entry_converter.get_entry_object(tid=entry, pack=self)  # type: ignore
 
         # update the data pack index if needed
         # TODO: MultiIndex will be deprecated in future
@@ -795,14 +789,15 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         if self._index.group_index_on and isinstance(entry, MultiPackGroup):
             self._index.update_group_index([entry])
 
-        self._pending_entries.pop(entry.tid)
+        self._pending_entries.pop(entry.tid)  # type: ignore
         return entry  # type: ignore
 
     def get(  # type: ignore
         self,
         entry_type: Union[str, Type[EntryType]],
         components: Optional[Union[str, List[str]]] = None,
-        include_sub_type=True,
+        include_sub_type: bool = True,
+        get_raw: bool = False,
     ) -> Iterator[EntryType]:
         """Get entries of ``entry_type`` from this multi pack.
 
@@ -827,6 +822,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
                 any component will be returned.
             include_sub_type: whether to return the sub types of the
                 queried `entry_type`. True by default.
+            get_raw: boolean to indicate if the entry should be returned in
+                its primitive form as opposed to an object. False by default
 
         Returns:
             An iterator of the entries matching the arguments, following
@@ -834,17 +831,20 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             insertion)
 
         """
-        entry_type_: Type[EntryType]
-        if isinstance(entry_type, str):
-            entry_type_ = get_class(entry_type)
-            if not issubclass(entry_type_, Entry):
-                raise AttributeError(
-                    f"The specified entry type [{entry_type}] "
-                    f"does not correspond to a "
-                    f"'forte.data.ontology.core.Entry' class"
-                )
-        else:
-            entry_type_ = entry_type
+        entry_type_ = (
+            get_full_module_name(entry_type)
+            if not isinstance(entry_type, str)
+            else entry_type
+        )
+
+        # Check if entry_type_ represents a valid entry
+        # pylint: disable=protected-access
+        if not self._data_store._is_subclass(entry_type_, Entry):
+            raise ValueError(
+                f"The specified entry type [{entry_type}] "
+                f"does not correspond to a "
+                f"`forte.data.ontology.core.Entry` class"
+            )
 
         if components is not None:
             if isinstance(components, str):
@@ -852,18 +852,27 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
         try:
             for entry_data in self._data_store.get(
-                type_name=get_full_module_name(entry_type_),
+                type_name=entry_type_,
                 include_sub_type=include_sub_type,
             ):
-                entry: Entry = self._entry_converter.get_entry_object(
-                    tid=entry_data[TID_INDEX],
-                    pack=self,
-                    type_name=entry_data[ENTRY_TYPE_INDEX],
-                )
                 # Filter by components
                 if components is not None:
-                    if not self.is_created_by(entry, components):
+                    if not self.is_created_by(
+                        entry_data[TID_INDEX], components
+                    ):
                         continue
+
+                entry: Union[Entry, Dict[str, Any]]
+
+                if get_raw:
+                    data_store = cast(DataStore, self._data_store)
+                    entry = data_store.transform_data_store_entry(entry_data)
+                else:
+                    entry = self._entry_converter.get_entry_object(
+                        tid=entry_data[TID_INDEX],
+                        pack=self,
+                        type_name=entry_data[ENTRY_TYPE_INDEX],
+                    )
 
                 yield entry  # type: ignore
         except ValueError:
@@ -874,7 +883,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     def deserialize(
         cls,
         data_path: Union[Path, str],
-        serialize_method: str = "jsonpickle",
+        serialize_method: str = "json",
         zip_pack: bool = False,
     ) -> "MultiPack":
         """
@@ -901,7 +910,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             An data pack object deserialized from the string.
         """
         # pylint: disable=protected-access
-        mp: MultiPack = cls._deserialize(data_path, serialize_method, zip_pack)
+        mp: MultiPack = cls._deserialize(data_path, serialize_method, zip_pack)  # type: ignore
 
         # (fix 595) change the dictionary's key after deserialization from str back to int
         mp._inverse_pack_ref = {
@@ -911,23 +920,20 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         return mp
 
     @classmethod
-    def from_string(cls, data_content: str):
+    def from_string(cls, data_content: str, json_method: str = "json"):
         # pylint: disable=protected-access
         # can not use explict type hint for mp as pylint does not allow type change
         # from base_pack to multi_pack which is problematic so use jsonpickle instead
-
-        mp = jsonpickle.decode(data_content)
-        if not hasattr(mp, "pack_version"):
-            mp.pack_version = DEFAULT_PACK_VERSION
+        mp = super().from_string(data_content, json_method)
         # (fix 595) change the dictionary's key after deserialization from str back to int
-        mp._inverse_pack_ref = {  # pylint: disable=no-member
+        mp._inverse_pack_ref = {  # type: ignore  # pylint: disable=no-member
             int(k): v
-            for k, v in mp._inverse_pack_ref.items()  # pylint: disable=no-member
+            for k, v in mp._inverse_pack_ref.items()  # type: ignore  # pylint: disable=no-member
         }
 
         return mp
 
-    def _add_entry(self, entry: Union[Entry, int]) -> EntryType:
+    def _add_entry(self, entry: Union[Entry, int]) -> Entry[Any]:
         r"""Force add an :class:`forte.data.ontology.core.Entry` object to the
         :class:`~forte.data.multi_pack.MultiPack` object.
 
@@ -940,7 +946,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         Returns:
             The input entry itself
         """
-        return self.__add_entry_with_check(entry)  # type: ignore
+        return self.__add_entry_with_check(entry)
 
     @classmethod
     def validate_link(cls, entry: EntryType) -> bool:
@@ -957,7 +963,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         r"""Save an existing entry object into DataStore"""
         self._entry_converter.save_entry_object(entry=entry, pack=self)
 
-    def _get_entry_from_data_store(self, tid: int) -> EntryType:
+    def _get_entry_from_data_store(self, tid: int) -> Entry[Any]:
         r"""Generate a class object from entry data in DataStore"""
         return self._entry_converter.get_entry_object(tid=tid, pack=self)
 

@@ -2,7 +2,7 @@
     "name": "NdArrayEntry", 
     "definitions": [ 
       { 
-        "entry_name": "ft.onto.test_ndarray.TestNdEntry", 
+        "entry_name": "ft.onto.sample_ndarray.TestNdEntry",
         "parent_entry": "forte.data.ontology.top.Generics", 
         "description": "A N-dimensional entity", 
         "attributes": [ 

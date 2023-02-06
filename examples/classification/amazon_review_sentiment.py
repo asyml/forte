@@ -37,7 +37,9 @@ pl.initialize()
 for pack in pl.process_dataset(csv_path):
     for sent in pack.get(Sentence):
         if (
-            input("Type n for the next documentation and its prediction: ").lower()
+            input(
+                "Type n for the next documentation and its prediction: "
+            ).lower()
             == "n"
         ):
             sent_text = sent.text

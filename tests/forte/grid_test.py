@@ -17,13 +17,12 @@ Unit tests for Grid.
 
 import unittest
 from forte.data.ontology.core import Grid
-from ft.onto.base_ontology import ImagePayload
 import numpy as np
 
 from numpy import array_equal
 
 from forte.data.data_pack import DataPack
-from forte.data.ontology.top import ImageAnnotation
+from forte.data.ontology.top import ImagePayload
 
 
 class GridTest(unittest.TestCase):
@@ -89,14 +88,18 @@ class GridTest(unittest.TestCase):
 
         self.assertRaises(ValueError, fn4)
 
-
-
     def test_get_overlapped_grid_cell_indices(self):
-        self.assertEqual(self.grid.get_overlapped_grid_cell_indices(self.line), [(0,0), (1,1)])
-        
+        self.assertEqual(
+            self.grid.get_overlapped_grid_cell_indices(self.line),
+            [(0, 0), (1, 1)],
+        )
+
         line = np.zeros((4, 6))
-        line[0,0]= 1
-        line[2,0]=1
-        line[0,2]=1
-        line[0,4]=1
-        self.assertEqual(self.grid.get_overlapped_grid_cell_indices(line), [(0, 0), (0, 1), (0, 2), (1, 0)])
+        line[0, 0] = 1
+        line[2, 0] = 1
+        line[0, 2] = 1
+        line[0, 4] = 1
+        self.assertEqual(
+            self.grid.get_overlapped_grid_cell_indices(line),
+            [(0, 0), (0, 1), (0, 2), (1, 0)],
+        )

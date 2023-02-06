@@ -1,5 +1,5 @@
 # ***automatically_generated***
-# ***source json:forte/ontology_specs/wikipedia.json***
+# ***source json:/Users/hector/Documents/projects/forte/forte/ontology_specs/wikipedia.json***
 # flake8: noqa
 # mypy: ignore-errors
 # pylint: skip-file

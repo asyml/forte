@@ -454,8 +454,8 @@ class BaseDataAugmentationOp(Configurable):
         # indices before & after replacement.
         bias: int = 0
         for i, span in enumerate(spans):
-            old_begin: int = spans[i].begin
-            old_end: int = spans[i].end
+            old_begin: int = span.begin
+            old_end: int = span.end
             new_begin: int = old_begin + bias
             new_end = new_begin + len(replacement_strs[i])
             new_spans.append(Span(new_begin, new_end))
@@ -789,7 +789,7 @@ class BaseDataAugmentationOp(Configurable):
         augmentation.
 
         Args:
-            input_anno: the input annotation to be replaced.
+            data_pack: the input data pack to augment
 
         Returns:
             A boolean value indicating if the augmentation

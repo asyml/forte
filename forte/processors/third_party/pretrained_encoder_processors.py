@@ -11,11 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from typing import Type
 
+from texar.torch.data import TokenizerBase
+from texar.torch.modules import EncoderBase
 
 from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
+from forte.data.ontology.core import Entry
 from forte.data.ontology.top import Annotation
 from forte.processors.base import PackProcessor
 from forte.utils.utils import get_class
@@ -41,9 +45,9 @@ class PretrainedEncoder(PackProcessor):
 
     def __init__(self):
         super().__init__()
-        self.tokenizer = None
-        self.encoder = None
-        self.entry_type = None
+        self.tokenizer: TokenizerBase
+        self.encoder: EncoderBase
+        self.entry_type: Type[Entry]
         try:
             import texar.torch as tx  # pylint: disable=import-outside-toplevel
         except ImportError as err:
@@ -139,6 +143,8 @@ class PretrainedEncoder(PackProcessor):
             raise ImportError(
                 create_import_error_msg("texar-pytorch", "nlp", "NLP support")
             ) from err
+
+        entry: Annotation
         for entry in input_pack.get(entry_type=self.entry_type):  # type: ignore
             input_ids, segment_ids, _ = self.tokenizer.encode_text(
                 text_a=entry.text

@@ -1,3 +1,5 @@
+import importlib.util
+import sys
 import os
 import tempfile
 import unittest
@@ -5,7 +7,28 @@ from ddt import data, ddt
 
 import numpy as np
 from forte.data.data_pack import DataPack
-from .test_outputs.ft.onto.test_ndarray import NdEntry1, NdEntry2, NdEntry3
+
+# import the NdEntry classes manually
+module_name = "ft.onto.sample_ndarray"
+module_path = os.path.join(
+    os.path.dirname(__file__), "test_outputs/ft/onto/sample_ndarray.py"
+)
+spec = importlib.util.spec_from_file_location(module_name, module_path)
+module = importlib.util.module_from_spec(spec)
+sys.modules[module_name] = module
+spec.loader.exec_module(module)
+
+NdEntry1 = module.NdEntry1
+NdEntry2 = module.NdEntry2
+NdEntry3 = module.NdEntry3
+
+globals().update(
+    {
+        "NdEntry1": module.NdEntry1,
+        "NdEntry2": module.NdEntry2,
+        "NdEntry3": module.NdEntry3,
+    }
+)
 
 """
 NdEntry1, NdEntry2, and NdEntry3 are sample Entry containing NdArray attributes
@@ -17,11 +40,7 @@ NdEntry1 has both dtype and shape specified,
 
 @ddt
 class SerializationTest(unittest.TestCase):
-    @data(
-        NdEntry1,
-        NdEntry2,
-        NdEntry3
-    )
+    @data(NdEntry1, NdEntry2, NdEntry3)
     def test_serialization(self, TestEntry):
         data_pack = DataPack()
         nd_entry = TestEntry(data_pack)
@@ -35,11 +54,17 @@ class SerializationTest(unittest.TestCase):
             nd_entry_deseri = datapack_deseri.get_single(TestEntry)
 
             if nd_entry.value.dtype:
-                self.assertEqual(nd_entry.value.dtype, nd_entry_deseri.value.dtype)
+                self.assertEqual(
+                    nd_entry.value.dtype, nd_entry_deseri.value.dtype
+                )
             if nd_entry.value.shape:
-                self.assertEqual(nd_entry.value.shape, nd_entry_deseri.value.shape)
+                self.assertEqual(
+                    nd_entry.value.shape, nd_entry_deseri.value.shape
+                )
             if nd_entry.value.data is not None:
-                self.assertEqual(np.sum(nd_entry.value.data - nd_entry_deseri.value.data), 0)
+                self.assertEqual(
+                    np.sum(nd_entry.value.data - nd_entry_deseri.value.data), 0
+                )
 
 
 @ddt
@@ -100,13 +125,13 @@ class PropertyTest(unittest.TestCase):
 
     @data(
         (NdEntry1, [[1, 1], [1, 1]]),
-        (NdEntry1, [[1., 1.], [1., 1.]]),
+        (NdEntry1, [[1.0, 1.0], [1.0, 1.0]]),
         (NdEntry2, [[1, 1], [1, 1]]),
         (NdEntry2, [1]),
-        (NdEntry2, [1.]),
-        (NdEntry2, [[1., 1.], [1., 1.]]),
+        (NdEntry2, [1.0]),
+        (NdEntry2, [[1.0, 1.0], [1.0, 1.0]]),
         (NdEntry3, [[1, 1], [1, 1]]),
-        (NdEntry3, [[1., 1.], [1., 1.]]),
+        (NdEntry3, [[1.0, 1.0], [1.0, 1.0]]),
     )
     def test_valid_py_list(self, input_data):
         TestEntry, input_list = input_data

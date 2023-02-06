@@ -45,6 +45,11 @@ class AttributeExtractor(BaseExtractor):
 
     def initialize(self, config: Union[Dict, Config]):
         super().initialize(config)
+        if self.config is None:
+            raise ProcessorConfigError(
+                "Configuration for the extractor not found."
+            )
+
         if self.config.entry_type is None:
             raise ProcessorConfigError(
                 "The ``entry_type`` configuration must be "
@@ -126,6 +131,11 @@ class AttributeExtractor(BaseExtractor):
                 features will be extracted within its range. If None, then the
                 whole data pack will be used as the context. Default is None.
         """
+        if self.config is None:
+            raise ProcessorConfigError(
+                "Configuration for the extractor not found."
+            )
+
         entry: Entry
         for entry in pack.get(self.config.entry_type, context):
             # The following pylint skip due to a bug:
@@ -160,6 +170,11 @@ class AttributeExtractor(BaseExtractor):
             context, they will be converted to the representation based on
             the vocabulary configuration.
         """
+        if self.config is None:
+            raise ProcessorConfigError(
+                "Configuration for the extractor not found."
+            )
+
         data = []
 
         instance: Annotation
@@ -191,6 +206,11 @@ class AttributeExtractor(BaseExtractor):
                 data are extracted within its range. If None, then the
                 whole data pack will be used as the context. Default is None.
         """
+        if self.config is None:
+            raise ProcessorConfigError(
+                "Configuration for the extractor not found."
+            )
+
         entry: Entry
         for entry in pack.get(self.config.entry_type, context):
             self._set_attribute(entry, self.config.attribute, None)
@@ -217,6 +237,11 @@ class AttributeExtractor(BaseExtractor):
                 If None, then the whole data pack will be used as the
                 context. Default is None.
         """
+        if self.config is None:
+            raise ProcessorConfigError(
+                "Configuration for the extractor not found."
+            )
+
         instance_entries: List[Entry] = list(
             pack.get(self.config.entry_type, context)
         )

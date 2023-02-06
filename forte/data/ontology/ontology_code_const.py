@@ -44,7 +44,6 @@ RESERVED_ATTRIBUTE_NAMES: Set[str] = {
     "tid",
     "pack",
     "pack_id",
-    "index_key",
 }
 
 REQUIRED_IMPORTS: List[str] = ["typing"]

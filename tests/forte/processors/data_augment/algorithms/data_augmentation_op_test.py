@@ -74,7 +74,7 @@ class DummyAugmenter(BaseDataAugmentationOp):
             _ = self.replace_annotations(annotation_list[-1], replaced_text)
             _ = self.replace_annotations(annotation_list[-1], replaced_text)
             return True
-        except:
+        except IndexError:
             return False
 
 
@@ -99,7 +99,7 @@ class ReplacementAugmentTest(BaseDataAugmentationOp):
 
             return True
 
-        except:
+        except IndexError:
             return False
 
 
@@ -223,11 +223,11 @@ class TestBaseOp(unittest.TestCase):
         (
             [
                 "Mary and Samantha arrived at the bus station early but waited \
-                    until noon for the bus ."
+                        until noon for the bus ."
             ],
             [
                 "MaTherery Avoidand  arrived at the bus station early but waited \
-                    until noon for the bus Last"
+                        until noon for the bus Last"
             ],
             [
                 [
@@ -291,15 +291,15 @@ class TestBaseOp(unittest.TestCase):
         (
             [
                 "Mary and Samantha arrived at the bus station early but waited \
-                    until noon for the bus ."
+                        until noon for the bus ."
             ],
             [
                 " NLP Ma NLP ry  Samantha  NLP arrived at the bus station early but waited \
-                    until noon for the bus  NLP . NLP"
+                        until noon for the bus  NLP . NLP"
             ],
             [
                 "Ma NLP ry  Samantha  NLP arrived at the bus station early but waited \
-                    until noon for the bus  NLP ."
+                        until noon for the bus  NLP ."
             ],
             [
                 [

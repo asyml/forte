@@ -20,9 +20,7 @@ from forte.data.modality import Modality
 import numpy as np
 
 from numpy import array_equal
-from forte.data.ontology.top import Box, ImageAnnotation
-
-from ft.onto.base_ontology import ImagePayload
+from forte.data.ontology.top import Box, ImageAnnotation, ImagePayload
 
 from forte.data.data_pack import DataPack
 import unittest
@@ -39,22 +37,27 @@ class ImageAnnotationTest(unittest.TestCase):
         self.line[2, 2] = 1
         self.line[3, 3] = 1
         self.line[4, 4] = 1
-        ip = ImagePayload(self.datapack, 0)
-        ip.set_cache(self.line)
+        ip = ImagePayload(self.datapack)
+        ip.cache = self.line
         self.img_ann = ImageAnnotation(self.datapack)
+
+        self.datapack.add_all_remaining_entries()
 
     def test_datapack_image_operation(self):
         datapack = DataPack("image2")
         datapack.set_image(self.line, 0)
         self.assertTrue(np.array_equal(datapack.image, self.datapack.image))
+
         def fn():
             # invalid image index
             datapack.set_image(self.line, 2)
+
         self.assertRaises(ProcessExecutionException, fn)
 
         def fn():
             # invalid image index
             datapack.get_image(1)
+
         self.assertRaises(ProcessExecutionException, fn)
 
         datapack.add_image(self.line)
@@ -64,28 +67,29 @@ class ImageAnnotationTest(unittest.TestCase):
 
         self.datapack.set_image(self.line, 0)
         ImageAnnotation(self.datapack)
-
+        self.datapack.add_all_remaining_entries()
 
     def test_datapack_image_operation(self):
         datapack = DataPack("image2")
 
         datapack.set_image(self.line, 0)
         self.assertTrue(np.array_equal(datapack.image, self.datapack.image))
+
         def fn():
             # invalid image index
             datapack.set_image(self.line, 2)
+
         self.assertRaises(ProcessExecutionException, fn)
 
         def fn():
             # invalid image index
             datapack.get_image(1)
+
         self.assertRaises(ProcessExecutionException, fn)
 
         datapack.add_image(self.line)
         self.assertTrue(np.array_equal(datapack.get_image(1), self.line))
-
-
-
+        self.datapack.add_all_remaining_entries()
 
     def test_image_annotation(self):
         self.assertEqual(
@@ -101,6 +105,7 @@ class ImageAnnotationTest(unittest.TestCase):
         self.assertEqual(
             new_pack.audio_annotations, self.datapack.audio_annotations
         )
+        self.datapack.add_all_remaining_entries()
 
     def testBox(self):
 
@@ -139,3 +144,4 @@ class ImageAnnotationTest(unittest.TestCase):
         self.assertRaises(ValueError, wrong_box)
 
         b3 = Box.init_from_center_n_shape(self.datapack, 4, 4, 5, 5)
+        self.datapack.add_all_remaining_entries()

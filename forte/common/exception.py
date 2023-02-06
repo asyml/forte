@@ -28,6 +28,7 @@ __all__ = [
     "ExpectedRecordNotFound",
     "InvalidOperationException",
     "UnknownOntologyClassException",
+    "InvalidForteStateException",
 ]
 
 
@@ -95,5 +96,11 @@ class InvalidOperationException(Exception):
 
 class UnknownOntologyClassException(Exception):
     """Throw when there are unrecognized ontology class in the input"""
+
+    pass
+
+
+class InvalidForteStateException(Exception):
+    """Certain Forte internal state is at an invalid state, such as not initialized."""
 
     pass

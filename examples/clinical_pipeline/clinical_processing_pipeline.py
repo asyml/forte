@@ -14,6 +14,7 @@ from fortex.huggingface.bio_ner_predictor import BioBERTNERPredictor
 from fortex.huggingface.transformers_processor import BERTTokenizer
 from fortex.nltk import NLTKSentenceSegmenter
 
+
 def main(input_path: str, output_path: str, max_packs: int = -1):
     pl = Pipeline[DataPack]()
     pl.set_reader(
