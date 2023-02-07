@@ -81,7 +81,9 @@ def get_class_name(o, lower: bool = False) -> str:
         return o.__name__
 
 
-def get_class_nc(full_class_name: str, module_paths: Optional[List[str]] = None):
+def get_class_nc(
+    full_class_name: str, module_paths: Optional[List[str]] = None
+):
     r"""Returns the class based on class name.
 
     Args:
