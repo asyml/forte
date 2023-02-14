@@ -1484,7 +1484,7 @@ class DataStore(BaseStore):
 
         return entry[attr_id]
 
-    def get_attributes_of_tid(self, tid: int, attr_names: [str]) -> dict:
+    def get_attributes_of_tid(self, tid: int, attr_names: list[str]) -> dict:
         r"""This function returns the value of attributes listed in
         ``attr_names`` for the entry with ``tid``. It locates the entry data
         with ``tid`` and finds attributes listed in ``attr_names`` and return
@@ -1516,7 +1516,7 @@ class DataStore(BaseStore):
 
         return attrs
 
-    def get_attributes_of_tids(self, tids: [int], attr_names: [str]):
+    def get_attributes_of_tids(self, tids: list[int], attr_names: list[str]):
         r"""This function returns the value of attributes listed in
         ``attr_names`` for entries in listed in the ``tids``. It locates
         the entries data with ``tid`` and put attributes listed in
@@ -1555,10 +1555,10 @@ class DataStore(BaseStore):
     def get_attributes_of_type(
         self,
         type_name: str,
-        attributes_names: [str],
+        attributes_names: list[str],
         include_sub_type: bool = True,
         range_span: Optional[Tuple[int, int]] = None,
-    ) -> Iterator[List]:
+    ):
         r"""This function fetches required attributes of entries from the
         data store of type ``type_name``. If `include_sub_type` is set to
         True and ``type_name`` is in [Annotation], this function also
@@ -1608,8 +1608,7 @@ class DataStore(BaseStore):
             if range_span is None:
                 # yield from self.co_iterator_annotation_like(all_types)
                 for entry in self.co_iterator_annotation_like(all_types):
-                    attrs: dict = {}
-                    attrs["tid"] = entry[0]
+                    attrs: dict = {"tid": entry[0]}
                     for attr_name in attributes_names:
                         try:
                             attr_id = self._get_type_attribute_dict(type_name)[
@@ -1626,8 +1625,7 @@ class DataStore(BaseStore):
                 for entry in self.co_iterator_annotation_like(
                     all_types, range_span=range_span
                 ):
-                    attrs: dict = {}
-                    attrs["tid"] = entry[0]
+                    attrs = {"tid": entry[0]}
                     for attr_name in attributes_names:
                         try:
                             attr_id = self._get_type_attribute_dict(type_name)[
@@ -1703,8 +1701,7 @@ class DataStore(BaseStore):
                 raise ValueError(f"type {type_name} does not exist")
             # yield from self.iter(type_name)
             for entry in self.iter(type_name):
-                attrs: dict = {}
-                attrs["tid"] = entry[0]
+                attrs: dict = {"tid": entry[0]}
                 for attr_name in attributes_names:
                     try:
                         attr_id = self._get_type_attribute_dict(type_name)[
