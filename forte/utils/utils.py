@@ -21,10 +21,9 @@ from inspect import getfullargspec
 from pydoc import locate
 from typing import Dict, List, Optional, get_type_hints, Tuple
 
+from functools import lru_cache
 from sortedcontainers import SortedList
 from typing_inspect import is_union_type, get_origin
-
-from functools import lru_cache
 
 __all__ = [
     "get_full_module_name",
