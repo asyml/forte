@@ -699,7 +699,6 @@ class DataStoreTest(unittest.TestCase):
         self.assertRaises(ValueError, value_err_fn)
 
     def test_add_annotation_raw(self):
-
         # test add Document entry
         tid_doc: int = self.data_store.add_entry_raw(
             type_name="ft.onto.base_ontology.Document",
@@ -1040,8 +1039,12 @@ class DataStoreTest(unittest.TestCase):
             self.data_store.get_attribute(9999, "class")
 
     def test_get_attributes_of_tid(self):
-        result_dict = self.data_store.get_attributes_of_tid(9999, ["begin", "end", "speaker"])
-        result_dict2 = self.data_store.get_attributes_of_tid(3456, ["payload_idx", "classifications"])
+        result_dict = self.data_store.get_attributes_of_tid(
+            9999, ["begin", "end", "speaker"]
+        )
+        result_dict2 = self.data_store.get_attributes_of_tid(
+            3456, ["payload_idx", "classifications"]
+        )
 
         self.assertEqual(result_dict["begin"], 6)
         self.assertEqual(result_dict["end"], 9)
@@ -1061,9 +1064,13 @@ class DataStoreTest(unittest.TestCase):
 
     def test_get_attributes_of_tids(self):
         tids_attrs: list[dict]
-        #tids_attrs2: list[dict]
-        tids_attrs = self.data_store.get_attributes_of_tids([9999, 3456], ["begin", "end", "payload_idx"])
-        tids_attrs2 = self.data_store.get_attributes_of_tids([9999], ["begin", "speaker"])
+        # tids_attrs2: list[dict]
+        tids_attrs = self.data_store.get_attributes_of_tids(
+            [9999, 3456], ["begin", "end", "payload_idx"]
+        )
+        tids_attrs2 = self.data_store.get_attributes_of_tids(
+            [9999], ["begin", "speaker"]
+        )
 
         self.assertEqual(tids_attrs2[0]["begin"], 6)
         self.assertEqual(tids_attrs[0]["end"], 9)
@@ -1082,8 +1089,12 @@ class DataStoreTest(unittest.TestCase):
 
     def test_get_attributes_of_type(self):
         # get document entries
-        instances = list(self.data_store.get_attributes_of_type(
-            "ft.onto.base_ontology.Document", ["begin", "end", "payload_idx"]))
+        instances = list(
+            self.data_store.get_attributes_of_type(
+                "ft.onto.base_ontology.Document",
+                ["begin", "end", "payload_idx"],
+            )
+        )
         # print(instances)
         self.assertEqual(len(instances), 2)
         # check tid
@@ -1093,8 +1104,11 @@ class DataStoreTest(unittest.TestCase):
         self.assertEqual(instances[1]["begin"], 10)
 
         # For types other than annotation, group or link, not support include_subtype
-        instances = list(self.data_store.get_attributes_of_type(
-            "forte.data.ontology.core.Entry", ["begin", "end"]))
+        instances = list(
+            self.data_store.get_attributes_of_type(
+                "forte.data.ontology.core.Entry", ["begin", "end"]
+            )
+        )
         self.assertEqual(len(instances), 0)
 
         self.assertEqual(
@@ -1104,8 +1118,9 @@ class DataStoreTest(unittest.TestCase):
         # get annotations with subclasses and range annotation
         instances = list(
             self.data_store.get_attributes_of_type(
-                "forte.data.ontology.top.Annotation", ["begin", "end"],
-                range_span=(1, 20)
+                "forte.data.ontology.top.Annotation",
+                ["begin", "end"],
+                range_span=(1, 20),
             )
         )
         self.assertEqual(len(instances), 2)
@@ -1432,7 +1447,6 @@ class DataStoreTest(unittest.TestCase):
             )
 
     def test_is_subclass(self):
-
         import forte
 
         self.assertEqual(
@@ -1500,7 +1514,6 @@ class DataStoreTest(unittest.TestCase):
         )
 
     def test_check_onto_file(self):
-
         expected_type_attributes = {
             "ft.onto.test.Description": {
                 "attributes": {

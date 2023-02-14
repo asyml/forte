@@ -806,7 +806,6 @@ class DataStore(BaseStore):
         else:
             attr_fields: Dict = self._get_entry_attributes_by_class(type_name)
             for attr_name, attr_info in attr_fields.items():
-
                 attr_class = get_origin(attr_info.type)
                 # Since we store the class specified by get_origin,
                 # if the output it None, we store the class for it,
@@ -1047,7 +1046,6 @@ class DataStore(BaseStore):
             self._is_subclass(type_name, cls)
             for cls in (list(SinglePackEntries) + list(MultiPackEntries))
         ):
-
             try:
                 self.__elements[type_name].append(entry)
             except KeyError:
@@ -1246,7 +1244,6 @@ class DataStore(BaseStore):
         allow_duplicate: bool = True,
         attribute_data: Optional[List] = None,
     ) -> int:
-
         r"""
         This function provides a general implementation to add all
         types of entries to the data store. It can add namely
@@ -1512,7 +1509,9 @@ class DataStore(BaseStore):
                     constants.ATTR_INDEX_KEY
                 ]
             except KeyError as e:
-                raise KeyError(f"{entry_type} has no {attr_name} attribute.") from e
+                raise KeyError(
+                    f"{entry_type} has no {attr_name} attribute."
+                ) from e
             attrs[attr_name] = entry[attr_id]
 
         return attrs
@@ -1540,12 +1539,14 @@ class DataStore(BaseStore):
             attrs: dict = {}
             for attr_name in attr_names:
                 try:
-                    attr_id = self._get_type_attribute_dict(entry_type)[attr_name][
-                        constants.ATTR_INDEX_KEY
-                    ]
+                    attr_id = self._get_type_attribute_dict(entry_type)[
+                        attr_name
+                    ][constants.ATTR_INDEX_KEY]
                 except KeyError as e:
-                    raise KeyError(f"{entry_type} has no {attr_name} attribute.") from e
-                attrs[attr_name] = (entry[attr_id])
+                    raise KeyError(
+                        f"{entry_type} has no {attr_name} attribute."
+                    ) from e
+                attrs[attr_name] = entry[attr_id]
 
             tids_attrs.append(attrs)
 
@@ -1605,17 +1606,19 @@ class DataStore(BaseStore):
 
         if self._is_annotation(type_name):
             if range_span is None:
-                #yield from self.co_iterator_annotation_like(all_types)
+                # yield from self.co_iterator_annotation_like(all_types)
                 for entry in self.co_iterator_annotation_like(all_types):
                     attrs: dict = {}
                     attrs["tid"] = entry[0]
                     for attr_name in attributes_names:
                         try:
-                            attr_id = self._get_type_attribute_dict(type_name)[attr_name][
-                                constants.ATTR_INDEX_KEY
-                            ]
+                            attr_id = self._get_type_attribute_dict(type_name)[
+                                attr_name
+                            ][constants.ATTR_INDEX_KEY]
                         except KeyError as e:
-                            raise KeyError(f"{type_name} has no {attr_name} attribute.") from e
+                            raise KeyError(
+                                f"{type_name} has no {attr_name} attribute."
+                            ) from e
                         attrs[attr_name] = entry[attr_id]
 
                     yield attrs
@@ -1627,16 +1630,20 @@ class DataStore(BaseStore):
                     attrs["tid"] = entry[0]
                     for attr_name in attributes_names:
                         try:
-                            attr_id = self._get_type_attribute_dict(type_name)[attr_name][
-                                constants.ATTR_INDEX_KEY
-                            ]
+                            attr_id = self._get_type_attribute_dict(type_name)[
+                                attr_name
+                            ][constants.ATTR_INDEX_KEY]
                         except KeyError as e:
-                            raise KeyError(f"{type_name} has no {attr_name} attribute.") from e
+                            raise KeyError(
+                                f"{type_name} has no {attr_name} attribute."
+                            ) from e
                         attrs[attr_name] = entry[attr_id]
 
-                    yield attrs  #attrs instead of entry
+                    yield attrs  # attrs instead of entry
         elif issubclass(entry_class, Link):
-            raise NotImplementedError(f"{type_name} of Link is not currently supported.")
+            raise NotImplementedError(
+                f"{type_name} of Link is not currently supported."
+            )
             # for type in all_types:
             #     if range_span is None:
             #         yield from self.iter(type)
@@ -1661,7 +1668,9 @@ class DataStore(BaseStore):
             #                 ) and within_range(child, range_span):
             #                     yield entry
         elif issubclass(entry_class, Group):
-            raise NotImplementedError(f"{type_name} of Group is not currently supported.")
+            raise NotImplementedError(
+                f"{type_name} of Group is not currently supported."
+            )
             # for type in all_types:
             #     if range_span is None:
             #         yield from self.iter(type)
@@ -1692,17 +1701,19 @@ class DataStore(BaseStore):
             # [Annotation, Group, List].
             if type_name not in self.__elements:
                 raise ValueError(f"type {type_name} does not exist")
-            #yield from self.iter(type_name)
+            # yield from self.iter(type_name)
             for entry in self.iter(type_name):
                 attrs: dict = {}
                 attrs["tid"] = entry[0]
                 for attr_name in attributes_names:
                     try:
-                        attr_id = self._get_type_attribute_dict(type_name)[attr_name][
-                            constants.ATTR_INDEX_KEY
-                        ]
+                        attr_id = self._get_type_attribute_dict(type_name)[
+                            attr_name
+                        ][constants.ATTR_INDEX_KEY]
                     except KeyError as e:
-                        raise KeyError(f"{type_name} has no {attr_name} attribute.") from e
+                        raise KeyError(
+                            f"{type_name} has no {attr_name} attribute."
+                        ) from e
                     attrs[attr_name] = entry[attr_id]
 
                 yield attrs
@@ -2090,7 +2101,9 @@ class DataStore(BaseStore):
                     self.get_datastore_attr_idx(tn, constants.BEGIN_ATTR_NAME),
                     self.get_datastore_attr_idx(tn, constants.END_ATTR_NAME),
                 )
-            except IndexError as e:  # all_entries_range[tn][0] will be caught here.
+            except (
+                IndexError
+            ) as e:  # all_entries_range[tn][0] will be caught here.
                 raise ValueError(
                     f"Entry list of type name, {tn} which is"
                     " one list item of input argument `type_names`,"
