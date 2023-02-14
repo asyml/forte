@@ -1484,7 +1484,7 @@ class DataStore(BaseStore):
 
         return entry[attr_id]
 
-    def get_attributes_of_tid(self, tid: int, attr_names: list[str]) -> dict:
+    def get_attributes_of_tid(self, tid: int, attr_names: List[str]) -> dict:
         r"""This function returns the value of attributes listed in
         ``attr_names`` for the entry with ``tid``. It locates the entry data
         with ``tid`` and finds attributes listed in ``attr_names`` and return
@@ -1516,7 +1516,7 @@ class DataStore(BaseStore):
 
         return attrs
 
-    def get_attributes_of_tids(self, tids: list[int], attr_names: list[str]):
+    def get_attributes_of_tids(self, tids: List[int], attr_names: List[str]):
         r"""This function returns the value of attributes listed in
         ``attr_names`` for entries in listed in the ``tids``. It locates
         the entries data with ``tid`` and put attributes listed in
@@ -1555,7 +1555,7 @@ class DataStore(BaseStore):
     def get_attributes_of_type(
         self,
         type_name: str,
-        attributes_names: list[str],
+        attributes_names: List[str],
         include_sub_type: bool = True,
         range_span: Optional[Tuple[int, int]] = None,
     ):
