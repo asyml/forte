@@ -1516,7 +1516,9 @@ class DataStore(BaseStore):
 
         return attrs
 
-    def get_attributes_of_tids(self, tids: List[int], attr_names: List[str]):
+    def get_attributes_of_tids(
+        self, tids: List[int], attr_names: List[str]
+    ) -> List[Any]:
         r"""This function returns the value of attributes listed in
         ``attr_names`` for entries in listed in the ``tids``. It locates
         the entries data with ``tid`` and put attributes listed in
@@ -1558,7 +1560,7 @@ class DataStore(BaseStore):
         attributes_names: List[str],
         include_sub_type: bool = True,
         range_span: Optional[Tuple[int, int]] = None,
-    ):
+    ) -> List[Any]:
         r"""This function fetches required attributes of entries from the
         data store of type ``type_name``. If `include_sub_type` is set to
         True and ``type_name`` is in [Annotation], this function also
