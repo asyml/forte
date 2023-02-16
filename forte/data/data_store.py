@@ -1560,7 +1560,7 @@ class DataStore(BaseStore):
         attributes_names: List[str],
         include_sub_type: bool = True,
         range_span: Optional[Tuple[int, int]] = None,
-    ) -> List[Any]:
+    ) -> Iterator[dict]:
         r"""This function fetches required attributes of entries from the
         data store of type ``type_name``. If `include_sub_type` is set to
         True and ``type_name`` is in [Annotation], this function also
@@ -1703,7 +1703,7 @@ class DataStore(BaseStore):
                 raise ValueError(f"type {type_name} does not exist")
             # yield from self.iter(type_name)
             for entry in self.iter(type_name):
-                attrs: dict = {"tid": entry[0]}
+                attrs = {"tid": entry[0]}
                 for attr_name in attributes_names:
                     try:
                         attr_id = self._get_type_attribute_dict(type_name)[
