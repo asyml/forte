@@ -1579,22 +1579,6 @@ class DataStore(BaseStore):
             provided arguments.
         """
 
-        # def within_range(entry: List[Any], range_span: Tuple[int, int]) -> bool:
-        #     """
-        #     A helper function for deciding whether an annotation entry is
-        #     inside the `range_span`.
-        #     """
-        #     begin = self.get_datastore_attr_idx(
-        #         entry[constants.ENTRY_TYPE_INDEX], constants.BEGIN_ATTR_NAME
-        #     )
-        #     end = self.get_datastore_attr_idx(
-        #         entry[constants.ENTRY_TYPE_INDEX], constants.END_ATTR_NAME
-        #     )
-        #
-        #     if not self._is_annotation(entry[constants.ENTRY_TYPE_INDEX]):
-        #         return False
-        #     return entry[begin] >= range_span[0] and entry[end] <= range_span[1]
-
         entry_class = get_class(type_name)
         all_types = set()
         if include_sub_type:
@@ -1644,61 +1628,11 @@ class DataStore(BaseStore):
             raise NotImplementedError(
                 f"{type_name} of Link is not currently supported."
             )
-            # for type in all_types:
-            #     if range_span is None:
-            #         yield from self.iter(type)
-            #     else:
-            #         for entry in self.__elements[type]:
-            #             parent_idx = self.get_datastore_attr_idx(
-            #                 entry[constants.ENTRY_TYPE_INDEX],
-            #                 constants.PARENT_TID_ATTR_NAME,
-            #             )
-            #             child_idx = self.get_datastore_attr_idx(
-            #                 entry[constants.ENTRY_TYPE_INDEX],
-            #                 constants.CHILD_TID_ATTR_NAME,
-            #             )
-            #
-            #             if (entry[parent_idx] in self.__tid_ref_dict) and (
-            #                 entry[child_idx] in self.__tid_ref_dict
-            #             ):
-            #                 parent = self.__tid_ref_dict[entry[parent_idx]]
-            #                 child = self.__tid_ref_dict[entry[child_idx]]
-            #                 if within_range(
-            #                     parent, range_span
-            #                 ) and within_range(child, range_span):
-            #                     yield entry
         elif issubclass(entry_class, Group):
             raise NotImplementedError(
                 f"{type_name} of Group is not currently supported."
             )
-            # for type in all_types:
-            #     if range_span is None:
-            #         yield from self.iter(type)
-            #     else:
-            #         for entry in self.__elements[type]:
-            #             member_type_idx = self.get_datastore_attr_idx(
-            #                 entry[constants.ENTRY_TYPE_INDEX],
-            #                 constants.MEMBER_TYPE_ATTR_NAME,
-            #             )
-            #             members_idx = self.get_datastore_attr_idx(
-            #                 entry[constants.ENTRY_TYPE_INDEX],
-            #                 constants.MEMBER_TID_ATTR_NAME,
-            #             )
-            #
-            #             member_type = entry[member_type_idx]
-            #             if self._is_annotation(member_type):
-            #                 members = entry[members_idx]
-            #                 within = True
-            #                 for m in members:
-            #                     e = self.__tid_ref_dict[m]
-            #                     if not within_range(e, range_span):
-            #                         within = False
-            #                         break
-            #                 if within:
-            #                     yield entry
         else:
-            # Only fetches entries of type ``type_name`` when it's not in
-            # [Annotation, Group, List].
             if type_name not in self.__elements:
                 raise ValueError(f"type {type_name} does not exist")
             # yield from self.iter(type_name)
