@@ -41,7 +41,7 @@ try:
 except ImportError:
     # Try backported to PY<39 `importlib_resources`.
     import importlib_resources as resources  # type: ignore
-    from importlib_resources.abc import Traversable  # type: ignore
+    from importlib_resources.abc import Traversable
 
 from forte.data.ontology import top, utils
 from forte.data.ontology.code_generation_exceptions import (
