@@ -369,6 +369,39 @@ class DataPackTest(unittest.TestCase):
             len(list(self.data_pack.get_data(Sentence))), num_sent - 1
         )
 
+    def test_get_attributes_of_tids(self):
+        tids_attrs: list[dict]
+        test_tids = [9999, 3456]
+        add_count = 2
+        for i in range(add_count):
+            self.data_pack._data_store.add_entry_raw(
+                type_name="ft.onto.base_ontology.Sentence",
+                tid=test_tids[i],
+                attribute_data=[i, i + 1],
+            )
+
+        tids_attrs = self.data_pack.get_attributes_of_tids(
+            test_tids, ["begin", "end", "payload_idx"]
+        )
+        tids_attrs2 = self.data_pack.get_attributes_of_tids(
+            [9999], ["begin", "speaker"]
+        )
+
+        self.assertEqual(tids_attrs2[0]["begin"], 0)
+        self.assertEqual(tids_attrs[0]["end"], 1)
+        self.assertEqual(tids_attrs[1]["payload_idx"], 0)
+        self.assertEqual(tids_attrs2[0]["speaker"], None)
+
+        # Entry with such tid does not exist
+        with self.assertRaisesRegex(KeyError, "Entry with tid 1111 not found."):
+            self.data_pack.get_attributes_of_tids([1111], ["speaker"])
+
+        # Get attribute field that does not exist
+        with self.assertRaisesRegex(
+            KeyError, "ft.onto.base_ontology.Sentence has no class attribute."
+        ):
+            self.data_pack.get_attributes_of_tids([9999], ["class"])
+
 
 if __name__ == "__main__":
     unittest.main()
