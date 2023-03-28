@@ -1700,7 +1700,9 @@ class DataPack(BasePack[Entry, Link, Group]):
         get_raw: bool = False,
     ) -> Iterable:  # [EntryType]
         def require_annotations(entry_class=Annotation) -> bool:
-            if self._data_store._is_subclass(s_entry_type, entry_class):
+            if self._data_store._is_subclass(
+                s_entry_type, entry_class
+            ):  # pylint: disable=W0212
                 return True
 
             curr_class: Type[EntryType] = as_entry_type(s_entry_type)
@@ -1794,11 +1796,12 @@ class DataPack(BasePack[Entry, Link, Group]):
                     entry = self.get_entry(
                         tid=attrs_from_ds["tid"]
                     )  # entry_data[TID_INDEX]
-                    # entry_data["text"] = self.get_span_text(entry_data['begin'], entry_data['end'])
+                    # entry_data["text"] = self.get_span_text(entry_data['begin'],
+                    # entry_data['end'])
 
                     # Filter out incompatible audio span comparison for Links and Groups
                     if (
-                        self._data_store._is_subclass(
+                        self._data_store._is_subclass(  # pylint: disable=W0212
                             s_entry_type, (Link, Group)
                         )
                         and isinstance(range_annotation, AudioAnnotation)
