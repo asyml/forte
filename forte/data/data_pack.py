@@ -1688,7 +1688,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             # type_name does not exist in DataStore
             yield from []
 
-    def get_attributes_of_type(  # type: ignore
+    def get_attributes_of_type(
         self,
         s_entry_type: str,
         attributes_names: List[str],
@@ -1699,13 +1699,12 @@ class DataPack(BasePack[Entry, Link, Group]):
         include_sub_type: bool = True,
         get_raw: bool = False,
     ) -> Iterable:  # [EntryType]
+        # pylint: disable=protected-access
         def require_annotations(entry_class=Annotation) -> bool:
-            if self._data_store._is_subclass(  # pylint: disable=W0212
-                s_entry_type, entry_class
-            ):
+            if self._data_store._is_subclass(s_entry_type, entry_class):
                 return True
 
-            curr_class: Type[EntryType] = as_entry_type(s_entry_type)
+            curr_class: Type[EntryType] = as_entry_type(s_entry_type)  # type: ignore
             if issubclass(curr_class, Link):
                 return issubclass(
                     curr_class.ParentType, entry_class
@@ -1713,8 +1712,6 @@ class DataPack(BasePack[Entry, Link, Group]):
             if issubclass(curr_class, Group):
                 return issubclass(curr_class.MemberType, entry_class)
             return False
-
-        attrs_from_ds: dict = {}
 
         # If we don't have any annotations but the items to check requires them,
         # then we simply yield from an empty list.
