@@ -1700,7 +1700,9 @@ class DataPack(BasePack[Entry, Link, Group]):
         get_raw: bool = False,
     ) -> Iterable:  # [EntryType]
         def require_annotations(entry_class=Annotation) -> bool:
-            if self._data_store._is_subclass(s_entry_type, entry_class): # pylint: disable=W0212
+            if self._data_store._is_subclass(  # pylint: disable=W0212
+                s_entry_type, entry_class
+            ):
                 return True
 
             curr_class: Type[EntryType] = as_entry_type(s_entry_type)
