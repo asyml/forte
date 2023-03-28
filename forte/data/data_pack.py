@@ -1707,8 +1707,8 @@ class DataPack(BasePack[Entry, Link, Group]):
             curr_class: Type[EntryType] = as_entry_type(s_entry_type)  # type: ignore
             if issubclass(curr_class, Link):
                 return issubclass(
-                    curr_class.ParentType, entry_class
-                ) and issubclass(curr_class.ChildType, entry_class)
+                    curr_class.ParentType, entry_class  # type: ignore
+                ) and issubclass(curr_class.ChildType, entry_class)  # type: ignore
             if issubclass(curr_class, Group):
                 return issubclass(curr_class.MemberType, entry_class)
             return False
@@ -1786,9 +1786,10 @@ class DataPack(BasePack[Entry, Link, Group]):
 
                 entry: Union[Entry, Dict[str, Any]]
                 if get_raw:
-                    entry = self._data_store.transform_data_store_entry(
-                        attrs_from_ds
-                    )
+                    entry = None  # not implemented
+                    # entry = self._data_store.transform_data_store_entry(
+                    #     attrs_from_ds
+                    # )
                 else:
                     entry = self.get_entry(
                         tid=attrs_from_ds["tid"]
@@ -1808,12 +1809,12 @@ class DataPack(BasePack[Entry, Link, Group]):
                     ):
                         continue
 
-                yield entry, attrs_from_ds  # type: ignore
+                yield entry, attrs_from_ds
         except ValueError:
             # type_name does not exist in DataStore
             yield from []
 
-    def get_attributes_of_tids(self, tids: [int], attr_names: [str]) -> List:
+    def get_attributes_of_tids(self, tids: List[int], attr_names: List[str]) -> List:
         r"""This function returns the value of attributes listed in
         ``attr_names`` for entries in listed in the ``tids``. It locates
         the entries data with ``tid`` and put attributes listed in
