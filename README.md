@@ -47,6 +47,7 @@ cd forte
 pip install .
 ```
 
+
 To install some forte adapter for some existing [libraries](https://github.com/asyml/forte-wrappers#libraries-and-tools-supported):
 
 Install from PyPI:
