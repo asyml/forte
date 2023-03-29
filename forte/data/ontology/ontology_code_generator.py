@@ -40,6 +40,7 @@ try:
     from importlib.abc import Traversable
 except ImportError:
     # Try backported to PY<39 `importlib_resources`.
+    # mypy: allow-untyped-defs
     import importlib_resources as resources  # type: ignore
     from importlib_resources.abc import Traversable  # type: ignore
 
