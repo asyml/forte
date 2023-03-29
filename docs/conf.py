@@ -407,7 +407,4 @@ def setup(sphinx):
 
 # Enable hypothesis.is in comments
 # https://sphinx-comments.readthedocs.io/en/latest/hypothesis.html#activate-hypothes-is
-comments_config = {
-   "hypothesis": True
-}
-
+comments_config = {"hypothesis": True}

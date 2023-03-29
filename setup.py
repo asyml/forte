@@ -60,7 +60,12 @@ setuptools.setup(
             "requests",
         ],
         "ir": ["texar-pytorch>=0.1.4", "tensorflow>=1.15.0"],
-        "remote": ["fastapi>=0.65.2, <=0.75.2", "pydantic<=1.9.2", "uvicorn>=0.14.0", "requests"],
+        "remote": [
+            "fastapi>=0.65.2, <=0.75.2",
+            "pydantic<=1.9.2",
+            "uvicorn>=0.14.0",
+            "requests",
+        ],
         "audio_ext": ["soundfile>=0.10.3"],
         "stave": ["stave>=0.0.1.dev12"],
         "models": [
@@ -86,7 +91,13 @@ setuptools.setup(
         # transformers 4.10.0 will break the translation model we used here
         "nlp": ["texar-pytorch>=0.1.4"],
         "extractor": ["texar-pytorch>=0.1.4"],
-        "ocr_tutorial": ["Pillow", "requests", "pytesseract"]
+        "payload": [
+            "soundfile>=0.10.3",
+            "Pillow",
+            "requests",
+            "urlpath>=1.2.0",
+        ],
+        "ocr_tutorial": ["Pillow", "requests", "pytesseract"],
     },
     entry_points={
         "console_scripts": [

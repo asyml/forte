@@ -16,9 +16,7 @@ import copy
 import logging
 
 from pathlib import Path
-from typing import Dict, List, Union, Iterator, Optional, Type, Any, Tuple
-
-import jsonpickle
+from typing import Dict, List, Union, Iterator, Optional, Type, Any, Tuple, cast
 
 from packaging.version import Version
 from sortedcontainers import SortedList
@@ -40,8 +38,7 @@ from forte.data.ontology.top import (
     MultiPackGeneric,
 )
 from forte.data.types import DataRequest
-from forte.utils import get_class, get_full_module_name
-from forte.version import DEFAULT_PACK_VERSION
+from forte.utils import get_full_module_name
 
 
 logger = logging.getLogger(__name__)
@@ -799,7 +796,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         self,
         entry_type: Union[str, Type[EntryType]],
         components: Optional[Union[str, List[str]]] = None,
-        include_sub_type=True,
+        include_sub_type: bool = True,
+        get_raw: bool = False,
     ) -> Iterator[EntryType]:
         """Get entries of ``entry_type`` from this multi pack.
 
@@ -824,6 +822,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
                 any component will be returned.
             include_sub_type: whether to return the sub types of the
                 queried `entry_type`. True by default.
+            get_raw: boolean to indicate if the entry should be returned in
+                its primitive form as opposed to an object. False by default
 
         Returns:
             An iterator of the entries matching the arguments, following
@@ -831,17 +831,20 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             insertion)
 
         """
-        entry_type_: Type[EntryType]
-        if isinstance(entry_type, str):
-            entry_type_ = get_class(entry_type)
-            if not issubclass(entry_type_, Entry):
-                raise AttributeError(
-                    f"The specified entry type [{entry_type}] "
-                    f"does not correspond to a "
-                    f"'forte.data.ontology.core.Entry' class"
-                )
-        else:
-            entry_type_ = entry_type
+        entry_type_ = (
+            get_full_module_name(entry_type)
+            if not isinstance(entry_type, str)
+            else entry_type
+        )
+
+        # Check if entry_type_ represents a valid entry
+        # pylint: disable=protected-access
+        if not self._data_store._is_subclass(entry_type_, Entry):
+            raise ValueError(
+                f"The specified entry type [{entry_type}] "
+                f"does not correspond to a "
+                f"`forte.data.ontology.core.Entry` class"
+            )
 
         if components is not None:
             if isinstance(components, str):
@@ -849,18 +852,27 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
         try:
             for entry_data in self._data_store.get(
-                type_name=get_full_module_name(entry_type_),
+                type_name=entry_type_,
                 include_sub_type=include_sub_type,
             ):
-                entry: Entry = self._entry_converter.get_entry_object(
-                    tid=entry_data[TID_INDEX],
-                    pack=self,
-                    type_name=entry_data[ENTRY_TYPE_INDEX],
-                )
                 # Filter by components
                 if components is not None:
-                    if not self.is_created_by(entry, components):
+                    if not self.is_created_by(
+                        entry_data[TID_INDEX], components
+                    ):
                         continue
+
+                entry: Union[Entry, Dict[str, Any]]
+
+                if get_raw:
+                    data_store = cast(DataStore, self._data_store)
+                    entry = data_store.transform_data_store_entry(entry_data)
+                else:
+                    entry = self._entry_converter.get_entry_object(
+                        tid=entry_data[TID_INDEX],
+                        pack=self,
+                        type_name=entry_data[ENTRY_TYPE_INDEX],
+                    )
 
                 yield entry  # type: ignore
         except ValueError:
@@ -871,7 +883,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     def deserialize(
         cls,
         data_path: Union[Path, str],
-        serialize_method: str = "jsonpickle",
+        serialize_method: str = "json",
         zip_pack: bool = False,
     ) -> "MultiPack":
         """
@@ -908,18 +920,15 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         return mp
 
     @classmethod
-    def from_string(cls, data_content: str):
+    def from_string(cls, data_content: str, json_method: str = "json"):
         # pylint: disable=protected-access
         # can not use explict type hint for mp as pylint does not allow type change
         # from base_pack to multi_pack which is problematic so use jsonpickle instead
-
-        mp = jsonpickle.decode(data_content)
-        if not hasattr(mp, "pack_version"):
-            mp.pack_version = DEFAULT_PACK_VERSION
+        mp = super().from_string(data_content, json_method)
         # (fix 595) change the dictionary's key after deserialization from str back to int
-        mp._inverse_pack_ref = {  # pylint: disable=no-member
+        mp._inverse_pack_ref = {  # type: ignore  # pylint: disable=no-member
             int(k): v
-            for k, v in mp._inverse_pack_ref.items()  # pylint: disable=no-member
+            for k, v in mp._inverse_pack_ref.items()  # type: ignore  # pylint: disable=no-member
         }
 
         return mp

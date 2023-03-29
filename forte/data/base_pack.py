@@ -15,6 +15,7 @@
 import logging
 import copy
 import gzip
+import json
 import pickle
 import uuid
 from abc import abstractmethod
@@ -38,6 +39,7 @@ from packaging.version import Version
 import jsonpickle
 
 from forte.common import ProcessExecutionException, EntryNotFoundError
+from forte.common.constants import JSON_CLASS_FIELD, JSON_STATE_FIELD
 from forte.data.index import BaseIndex
 from forte.data.base_store import BaseStore
 from forte.data.container import EntryContainer
@@ -56,6 +58,7 @@ from forte.version import (
     DEFAULT_PACK_VERSION,
     PACK_ID_COMPATIBLE_VERSION,
 )
+from forte.utils import get_full_module_name, get_class
 
 logger = logging.getLogger(__name__)
 
@@ -130,7 +133,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         self._pending_entries: Dict[int, Optional[str]] = {}
 
     def __getstate__(self):
-        state = self.__dict__.copy()
+        state = super().__getstate__()
         state.pop("_index")
         state.pop("_pending_entries")
         state.pop("_BasePack__control_component")
@@ -203,7 +206,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
     def _deserialize(
         cls,
         data_source: Union[Path, str],
-        serialize_method: str = "jsonpickle",
+        serialize_method: str = "json",
         zip_pack: bool = False,
     ) -> "BasePack[Any, Any, Any]":
         """
@@ -216,8 +219,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
               serialization.
             serialize_method: The method used to serialize the data, this
               should be the same as how serialization is done. The current
-              options are `jsonpickle` and `pickle`. The default method
-              is `jsonpickle`.
+              options are `json`, `jsonpickle` and `pickle`. The default method
+              is `json`.
             zip_pack: Boolean value indicating whether the input source is
               zipped.
 
@@ -226,9 +229,9 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         """
         _open = gzip.open if zip_pack else open
 
-        if serialize_method == "jsonpickle":
+        if serialize_method in ("jsonpickle", "json"):
             with _open(data_source, mode="rt") as f:  # type: ignore
-                pack = cls.from_string(f.read())
+                pack = cls.from_string(f.read(), json_method=serialize_method)
         else:
             with _open(data_source, mode="rb") as f:  # type: ignore
                 pack = pickle.load(f)
@@ -239,8 +242,30 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         return pack
 
     @classmethod
-    def from_string(cls, data_content: str) -> "BasePack":
-        pack = jsonpickle.decode(data_content)
+    def from_string(
+        cls, data_content: str, json_method: str = "json"
+    ) -> "BasePack":
+        if json_method == "jsonpickle":
+            pack = jsonpickle.decode(data_content)
+        elif json_method == "json":
+
+            def object_hook(json_dict):
+                """
+                Custom object hook for JSON deserialization. It will call
+                `__setstate__` to deserialize the json content into a class
+                object.
+                """
+                if json_dict.keys() == {JSON_STATE_FIELD, JSON_CLASS_FIELD}:
+                    state = json_dict[JSON_STATE_FIELD]
+                    obj_type = get_class(json_dict[JSON_CLASS_FIELD])
+                    obj = obj_type.__new__(obj_type)
+                    obj.__setstate__(state)
+                    return obj
+                return json_dict
+
+            pack = json.loads(data_content, object_hook=object_hook)
+        else:
+            raise ValueError(f"Unsupported JSON method {json_method}.")
         if not hasattr(pack, "pack_version"):
             pack.pack_version = DEFAULT_PACK_VERSION
 
@@ -317,7 +342,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
     def to_string(
         self,
         drop_record: Optional[bool] = False,
-        json_method: str = "jsonpickle",
+        json_method: str = "json",
         indent: Optional[int] = None,
     ) -> str:
         """
@@ -326,8 +351,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         Args:
             drop_record: Whether to drop the creation records, default is False.
             json_method: What method is used to convert data pack to json.
-              Only supports `json_pickle` for now. Default value is
-              `json_pickle`.
+              Only supports `json` and `jsonpickle` for now. Default value is
+              `json`.
             indent: The indent used for json string.
 
         Returns: String representation of the data pack.
@@ -337,6 +362,24 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             self._field_records.clear()
         if json_method == "jsonpickle":
             return jsonpickle.encode(self, unpicklable=True, indent=indent)
+        elif json_method == "json":
+
+            def json_serialize_handler(obj):
+                """
+                Custom object handler for JSON serialization. It will call
+                `__getstate__` to serialize a class object into the its json
+                format.
+                """
+                if hasattr(obj, "__getstate__"):
+                    return {
+                        JSON_CLASS_FIELD: get_full_module_name(obj),
+                        JSON_STATE_FIELD: obj.__getstate__(),
+                    }
+                raise TypeError(f"Type {type(obj)} not serializable")
+
+            return json.dumps(
+                self, indent=indent, default=json_serialize_handler
+            )
         else:
             raise ValueError(f"Unsupported JSON method {json_method}.")
 
@@ -345,7 +388,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         output_path: Union[str, Path],
         zip_pack: bool = False,
         drop_record: bool = False,
-        serialize_method: str = "jsonpickle",
+        serialize_method: str = "json",
         indent: Optional[int] = None,
     ):
         r"""
@@ -357,8 +400,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             zip_pack: Whether to compress the result with `gzip`.
             drop_record: Whether to drop the creation records, default is False.
             serialize_method: The method used to serialize the data. Currently
-              supports `jsonpickle` (outputs str) and Python's built-in
-              `pickle` (outputs bytes).
+              supports `json` (outputs str), `jsonpickle` (outputs str) and
+              Python's built-in `pickle` (outputs bytes).
             indent: Whether to indent the file if written as JSON.
 
         Returns: Results of serialization.
@@ -375,10 +418,12 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         if serialize_method == "pickle":
             with _open(output_path, mode="wb") as pickle_out:
                 pickle.dump(self, pickle_out)
-        elif serialize_method == "jsonpickle":
+        elif serialize_method in ("jsonpickle", "json"):
             with _open(output_path, mode="wt", encoding="utf-8") as json_out:
                 json_out.write(
-                    self.to_string(drop_record, "jsonpickle", indent=indent)
+                    self.to_string(
+                        drop_record, json_method=serialize_method, indent=indent
+                    )
                 )
         else:
             raise NotImplementedError(
@@ -480,8 +525,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             Depending on the value stored in the data store and the type
             of the attribute, the method decides how to process the value.
 
-            - Attributes repersented as ``FList`` and ``FDict`` objects are stored
-                as list and dictionary respectively in the dtaa store entry. These
+            - Attributes represented as ``FList`` and ``FDict`` objects are stored
+                as list and dictionary respectively in the data store entry. These
                 values are converted to ``FList`` and ``FDict`` objects on the fly.
             - When the field contains ``tid``s, we will convert them to entry
                 object on the fly. This is done by checking the type
@@ -527,7 +572,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             # is stored in the DataStore and hence its needs to be converted.
 
             # Entry objects are stored in data stores by their tid (which is
-            # of type int). Thus, if we enounter an int value, we check the
+            # of type int). Thus, if we encounter an int value, we check the
             # type information which is stored as a tuple. if any entry in this
             # tuple is a subclass of Entry or is a ForwardRef to another entry,
             # we can infer that this int value represents the tid of an Entry
@@ -566,8 +611,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             When the value contains entry objects, we will convert them into
             ``tid``s before storing to ``DataStore``. Additionally, if the entry
             setter method is called on an attribute that does not have a pack
-            associated with it (as is the case during intialization), the value
-            of the atttribute is stored in the class level cache of the ``Entry``
+            associated with it (as is the case during initialization), the value
+            of the attribute is stored in the class level cache of the ``Entry``
             class. On the other hand, if a pack is associated with the entry,
             the value will directly be stored in the data store.
 
@@ -646,9 +691,9 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                 attr_value = (
                     value.tid
                     if value.pack.pack_id == cls.pack.pack_id
-                    # When value's pack and cls's pack are not the same, we
+                    # When value's pack and cls' pack are not the same, we
                     # assume that cls.pack is a MultiPack, which will resolve
-                    # value.tid using MultiPack.get_subentry(pack_id, tid).
+                    # `value.tid` using `MultiPack.get_subentry(pack_id, tid)`.
                     # In this case, both pack_id and tid should be stored.
                     else (value.pack.pack_id, value.tid)
                 )
@@ -668,12 +713,40 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         # that have been initialized to the _cached_attribute_data dict.
         # We fetch the values of all dataclass fields by using the getattr
         # method.
+        #
+        # Additional note added 2022/01/10:
+        # There is a case the above-mentioned implementation won't work
+        #
+        # When registering functions for payloads of the same hierarchy, exceptions
+        # will be thrown, this can be tested using the `payload_decorator_test.py`
+        # The reason is roughly because of the following steps:
+        #
+        #   1. since a parent payload class is registered, we will pass the
+        #      `not in Entry._cached_attribute_data` condition. however, since the
+        #      child payload inherit the parent payload properties and functions,
+        #      it will make some actual `getattr` call
+        #   2. For the `getattr` to be successful, this entry needs to have the
+        #      tid stored in data store first
+        #   3. we have _save_entry_to_data_store call later, which saves the tid, but
+        #      it happens later in the code.
+        #   4. we also cannot move _save_entry_to_data_store earlier, since the entry
+        #       attribute name/value pairs need to be filled in first
+        #   Thus this causes a conflict.
+        #   Currently, I used a very simple solution that surround the `getattr` call
+        #      with a try/except block, this will make the above-mentioned child
+        #      routine to pretend it doesn't have any `property`. In reality, it actually
+        #      has some `property` registered by the parent, but since the `getattr` failed
+        #      we get `None` and pretend it doesn't.
 
         # pylint: disable=protected-access
         if entry.entry_type() not in Entry._cached_attribute_data:
             Entry._cached_attribute_data[entry.entry_type()] = {}
             for name in entry.__dataclass_fields__:
-                attr_val = getattr(entry, name, None)
+                try:
+                    attr_val = getattr(entry, name, None)
+                except KeyError:
+                    attr_val = None
+
                 if attr_val is not None:
                     Entry._cached_attribute_data[entry.entry_type()][
                         name
@@ -803,13 +876,13 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         return entry_set
 
     def is_created_by(
-        self, entry: Entry, components: Union[str, Iterable[str]]
+        self, entry: Union[Entry, int], components: Union[str, Iterable[str]]
     ) -> bool:
         """
         Check if the entry is created by any of the provided components.
 
         Args:
-            entry: The entry to check.
+            entry: `tid` of the entry or the entry object to check
             components: The list of component names.
 
         Returns:
@@ -818,8 +891,10 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         if isinstance(components, str):
             components = [components]
 
+        entry_tid = entry.tid if isinstance(entry, Entry) else entry
+
         for c in components:
-            if entry.tid in self._creation_records[c]:
+            if entry_tid in self._creation_records[c]:
                 break
         else:
             # The entry not created by any of these components.

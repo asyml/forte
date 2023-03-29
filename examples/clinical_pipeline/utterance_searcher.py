@@ -94,8 +94,8 @@ class LastUtteranceSearcher(PackProcessor):
             else:
                 links: List[str] = create_links(self.configs.url_stub, answers)
                 response_text: str = (
-                        "I found the following results: <br> -- "
-                        + "<br> -- ".join(links)
+                    "I found the following results: <br> -- "
+                    + "<br> -- ".join(links)
                 )
                 print(response_text)
 

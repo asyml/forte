@@ -172,26 +172,26 @@ class TestBaseOp(unittest.TestCase):
         (1, [[0, 1], [1, 1], [1, 3]], [[0, 2], [2, 5], [5, 8]], False, True, 5),
         (1, [[0, 1], [1, 1], [2, 3]], [[0, 2], [2, 5], [6, 8]], False, True, 5),
         (
-                1,
-                [[0, 1], [1, 1], [1, 3]],
-                [[0, 2], [2, 5], [5, 8]],
-                False,
-                False,
-                2,
+            1,
+            [[0, 1], [1, 1], [1, 3]],
+            [[0, 2], [2, 5], [5, 8]],
+            False,
+            False,
+            2,
         ),
         (
-                1,
-                [[0, 1], [1, 1], [2, 3]],
-                [[0, 2], [2, 5], [6, 8]],
-                False,
-                False,
-                2,
+            1,
+            [[0, 1], [1, 1], [2, 3]],
+            [[0, 2], [2, 5], [6, 8]],
+            False,
+            False,
+            2,
         ),
         (0, [[1, 2], [2, 3]], [[1, 4], [4, 5]], True, True, 0),
     )
     @unpack
     def test_modify_index(
-            self, index, old_spans, new_spans, is_begin, is_inclusive, aligned_index
+        self, index, old_spans, new_spans, is_begin, is_inclusive, aligned_index
     ):
         old_spans = [Span(span[0], span[1]) for span in old_spans]
         new_spans = [Span(span[0], span[1]) for span in new_spans]
@@ -221,35 +221,35 @@ class TestBaseOp(unittest.TestCase):
 
     @data(
         (
-                [
-                    "Mary and Samantha arrived at the bus station early but waited \
+            [
+                "Mary and Samantha arrived at the bus station early but waited \
                         until noon for the bus ."
-                ],
-                [
-                    "MaTherery Avoidand  arrived at the bus station early but waited \
+            ],
+            [
+                "MaTherery Avoidand  arrived at the bus station early but waited \
                         until noon for the bus Last"
-                ],
+            ],
+            [
                 [
-                    [
-                        "MaTherery",
-                        "There",
-                        "and",
-                        "arrived",
-                        "at",
-                        "the",
-                        "bus",
-                        "station",
-                        "early",
-                        "but",
-                        "waited",
-                        "until",
-                        "noon",
-                        "for",
-                        "the",
-                        "bus",
-                        "Last",
-                    ]
-                ],
+                    "MaTherery",
+                    "There",
+                    "and",
+                    "arrived",
+                    "at",
+                    "the",
+                    "bus",
+                    "station",
+                    "early",
+                    "but",
+                    "waited",
+                    "until",
+                    "noon",
+                    "for",
+                    "the",
+                    "bus",
+                    "Last",
+                ]
+            ],
         )
     )
     @unpack
@@ -259,7 +259,7 @@ class TestBaseOp(unittest.TestCase):
         boxer_config = {"pack_name": "input"}
 
         replacer_op = (
-                DummyAugmenter.__module__ + "." + DummyAugmenter.__qualname__
+            DummyAugmenter.__module__ + "." + DummyAugmenter.__qualname__
         )
 
         processor_config = {
@@ -289,49 +289,49 @@ class TestBaseOp(unittest.TestCase):
 
     @data(
         (
-                [
-                    "Mary and Samantha arrived at the bus station early but waited \
+            [
+                "Mary and Samantha arrived at the bus station early but waited \
                         until noon for the bus ."
-                ],
-                [
-                    " NLP Ma NLP ry  Samantha  NLP arrived at the bus station early but waited \
+            ],
+            [
+                " NLP Ma NLP ry  Samantha  NLP arrived at the bus station early but waited \
                         until noon for the bus  NLP . NLP"
-                ],
-                [
-                    "Ma NLP ry  Samantha  NLP arrived at the bus station early but waited \
+            ],
+            [
+                "Ma NLP ry  Samantha  NLP arrived at the bus station early but waited \
                         until noon for the bus  NLP ."
-                ],
+            ],
+            [
                 [
-                    [
-                        "Ma NLP ry",
-                        "Samantha",
-                        "arrived",
-                        "at",
-                        "the",
-                        "bus",
-                        "station",
-                        "early",
-                        "but",
-                        "waited",
-                        "until",
-                        "noon",
-                        "for",
-                        "the",
-                        "bus",
-                        ".",
-                    ],
+                    "Ma NLP ry",
+                    "Samantha",
+                    "arrived",
+                    "at",
+                    "the",
+                    "bus",
+                    "station",
+                    "early",
+                    "but",
+                    "waited",
+                    "until",
+                    "noon",
+                    "for",
+                    "the",
+                    "bus",
+                    ".",
                 ],
-                [["til", "noon", "for", "the", "bus", "."]],
+            ],
+            [["til", "noon", "for", "the", "bus", "."]],
         )
     )
     @unpack
     def test_replace_token(
-            self,
-            texts,
-            expected_outputs,
-            expected_sentences,
-            expected_tokens,
-            expected_links,
+        self,
+        texts,
+        expected_outputs,
+        expected_sentences,
+        expected_tokens,
+        expected_links,
     ):
         for idx, text in enumerate(texts):
             file_path = os.path.join(self.test_dir, f"{idx + 1}.txt")
@@ -348,9 +348,9 @@ class TestBaseOp(unittest.TestCase):
         nlp.add(component=WhiteSpaceTokenizer(), selector=AllPackSelector())
 
         replacer_op = (
-                ReplacementAugmentTest.__module__
-                + "."
-                + ReplacementAugmentTest.__qualname__
+            ReplacementAugmentTest.__module__
+            + "."
+            + ReplacementAugmentTest.__qualname__
         )
 
         processor_config = {

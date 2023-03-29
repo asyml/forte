@@ -49,7 +49,7 @@ def write_pack(
     zip_pack: bool = False,
     overwrite: bool = False,
     drop_record: bool = False,
-    serialize_method: str = "jsonpickle",
+    serialize_method: str = "json",
 ) -> str:
     """
     Write a pack to a path.
@@ -63,8 +63,8 @@ def write_pack(
         overwrite: Whether to overwrite the file if already exists.
         drop_record: Whether to drop the creation records in the serialization.
         serialize_method: The method used to serialize the data. Current
-          available options are `jsonpickle` and `pickle`.
-          Default is `jsonpickle`.
+          available options are `json`, `jsonpickle` and `pickle`.
+          Default is `json`.
 
     Returns:
         If successfully written, will return the path of the output file.
@@ -111,7 +111,7 @@ class PackWriter(PackProcessor, ABC):
         self._zip_pack = configs.zip_pack
         self._indent = configs.indent
 
-        if self.configs.serialize_method == "jsonpickle":
+        if self.configs.serialize_method in ("jsonpickle", "json"):
             self._suffix = ".json.gz" if self._zip_pack else ".json"
         else:
             self._suffix = ".pickle.gz" if self._zip_pack else ".pickle"
@@ -144,8 +144,8 @@ class PackWriter(PackProcessor, ABC):
              the default value is False.
 
           - serialize_method: The method used to serialize the data. Current
-              available options are `jsonpickle` and `pickle`. Default is
-              "jsonpickle".
+              available options are `json`, `jsonpickle` and `pickle`. Default is
+              "json".
 
         Returns: The default configuration of this writer.
         """
@@ -154,7 +154,7 @@ class PackWriter(PackProcessor, ABC):
             "zip_pack": False,
             "indent": None,
             "drop_record": False,
-            "serialize_method": "jsonpickle",
+            "serialize_method": "json",
         }
 
     def _process(self, input_pack: DataPack):
@@ -197,7 +197,7 @@ class MultiPackWriter(MultiPackProcessor):
         ensure_dir(multi_index)
         self.multi_idx_out = open(multi_index, "w", encoding="utf-8")
 
-        if self.configs.serialize_method == "jsonpickle":
+        if self.configs.serialize_method in ("jsonpickle", "json"):
             self._suffix = ".json.gz" if self.configs.zip_pack else ".json"
         else:
             self._suffix = ".pickle.gz" if self.configs.zip_pack else ".pickle"
@@ -260,5 +260,5 @@ class MultiPackWriter(MultiPackProcessor):
             "zip_pack": False,
             "indent": None,
             "drop_record": False,
-            "serialize_method": "jsonpickle",
+            "serialize_method": "json",
         }

@@ -1,0 +1,57 @@
+{
+    "name": "payload_ontology",
+    "definitions": [
+          {
+            "entry_name": "ft.onto.payload_ontology.JpegPayload",
+            "parent_entry": "forte.data.ontology.top.ImagePayload",
+            "attributes":[
+              {
+                "name": "extensions",
+                "type": "str"
+              },
+              {
+                "name": "mime",
+                "type": "str"
+              },
+              {
+                "name": "type_code",
+                "type": "str"
+              },
+              {
+                "name": "version",
+                "type": "int"
+              },
+              {
+                "name": "source_type",
+                "type": "int"
+              }
+            ]
+        },
+        {
+          "entry_name": "ft.onto.payload_ontology.SoundFilePayload",
+          "parent_entry": "forte.data.ontology.top.AudioPayload",
+          "attributes":[
+            {
+              "name": "source_type",
+              "type": "str"
+            },
+            {
+              "name": "sample_rate",
+              "type": "int"
+            },
+            {
+              "name": "channels",
+              "type": "int"
+            },
+            {
+              "name": "dtype",
+              "type": "str"
+            },
+            {
+              "name": "encoding",
+              "type": "int"
+            }
+          ]
+      }
+    ]
+}

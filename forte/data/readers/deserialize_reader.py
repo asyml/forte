@@ -74,8 +74,8 @@ class BaseDeserializeReader(PackReader, ABC):
             default value is None.
 
           - serialize_method: The method used to serialize the data. Current
-            available options are `jsonpickle` and `pickle`. Default is
-            `jsonpickle`.
+            available options are `json`, `jsonpickle` and `pickle`. Default is
+            `json`.
 
         Returns:
             The default configuration of this writer.
@@ -83,7 +83,7 @@ class BaseDeserializeReader(PackReader, ABC):
         return {
             "zip_pack": False,
             "indent": None,
-            "serialize_method": "jsonpickle",
+            "serialize_method": "json",
         }
 
 
@@ -262,13 +262,13 @@ class MultiPackDeserializerBase(MultiPackReader):
 
         Here:
           - serialize_method: The method used to serialize the data. Current
-              available options are `jsonpickle` and `pickle`. Default is
-              `jsonpickle`.
+              available options are `json`, `jsonpickle` and `pickle`. Default is
+              `json`.
 
         Returns: The default configuration of this writer.
         """
         return {
-            "serialize_method": "jsonpickle",
+            "serialize_method": "json",
         }
 
 
@@ -326,8 +326,8 @@ class MultiPackDirectoryReader(MultiPackDeserializerBase):
 
           - serialize_method (str): The method used to serialize the data, this
               should be the same as how serialization is done. The current
-              options are `jsonpickle` and `pickle`. The default method
-              is `jsonpickle`.
+              options are `json`, `jsonpickle` and `pickle`. The default method
+              is `json`.
 
           - zip_pack (bool): whether to zip the data pack. The default value is
               False.
@@ -338,7 +338,7 @@ class MultiPackDirectoryReader(MultiPackDeserializerBase):
             "multi_pack_dir": None,
             "data_pack_dir": None,
             "suffix": ".json",
-            "serialize_method": "jsonpickle",
+            "serialize_method": "json",
             "zip_pack": False,
         }
 

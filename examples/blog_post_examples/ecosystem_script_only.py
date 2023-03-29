@@ -20,16 +20,12 @@ from forte.pipeline import Pipeline
 from forte.processors.stave import StaveProcessor
 from fortex.spacy import SpacyProcessor
 
-Pipeline[DataPack](
-).set_reader(
-    HTMLReader()
-).add(
-    SpacyProcessor(), config={
+Pipeline[DataPack]().set_reader(HTMLReader()).add(
+    SpacyProcessor(),
+    config={
         "processors": ["sentence", "tokenize", "pos", "ner", "dep", "umls_link"]
-    }
-).add(
-    StaveProcessor()
-).run(
+    },
+).add(StaveProcessor()).run(
     "<body><p>"
     "she does not have SVS syndrome from an axillary vein thrombosis."
     "</p></body>"

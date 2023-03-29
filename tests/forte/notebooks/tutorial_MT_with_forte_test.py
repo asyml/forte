@@ -1,9 +1,8 @@
 from testbook import testbook
 import os
 
-@testbook(
-    "docs/notebook_tutorial/tutorial_MT_with_forte.ipynb", execute=False
-)
+
+@testbook("docs/notebook_tutorial/tutorial_MT_with_forte.ipynb", execute=False)
 def test_wrap_MT_inference_pipeline(tb):
     # if we just want to run through the notebook
     tb.execute_cell("pip_install")
