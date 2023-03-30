@@ -1,12 +1,13 @@
 # myst requires sphinx <4
-sphinx<4
-myst-parser>=0.14.0
-sphinx-rtd-theme >= 0.5.0
+sphinx==3.5.4
+myst-parser==0.17.2
+sphinx-rtd-theme == 1.1.1
 Pygments >= 2.1.1
 funcsigs~=1.0.2
 mypy_extensions~=0.4.1
-sphinxcontrib-spelling
+sphinxcontrib-spelling==7.7.0
 sphinx-comments
+docutils==0.16
 
 # Pipeline remote features
 fastapi==0.65.2
@@ -44,7 +45,7 @@ transformers>=3.1
 nltk==3.6.6
 
 nbsphinx==0.8.8
-jinja2<=3.0.3
+jinja2==3.0.3
 asyml_utilities
 sphinx_autodoc_typehints
 
