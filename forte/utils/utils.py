@@ -82,7 +82,7 @@ def get_class_name(o, lower: bool = False) -> str:
 def get_class_nc(
     full_class_name: str, module_paths: Optional[List[str]] = None
 ):
-    r"""Returns the class based on class name.
+    r"""Returns the class based on class name, not cached.
 
     Args:
         full_class_name (str): Name or full path to the class.
@@ -131,8 +131,12 @@ def get_class_nc(
 
 
 @lru_cache()
-def get_class(class_name: str, module_paths: Optional[List[str]] = None):
-    r"""This is the cached version of get_class_nc.
+def cached_locate(name_to_locate_class):
+    return locate(name_to_locate_class)
+
+
+def get_class(full_class_name: str, module_paths: Optional[List[str]] = None):
+    r"""Returns the class based on class name, with cache to improve speed.
 
     Args:
         class_name (str): Name or full path to the class.
@@ -145,7 +149,36 @@ def get_class(class_name: str, module_paths: Optional[List[str]] = None):
         The target class.
 
     """
-    return get_class_nc(class_name, module_paths)
+    class_ = cached_locate(full_class_name)
+    if (class_ is None) and (module_paths is not None):
+        for module_path in module_paths:
+            class_ = cached_locate(".".join([module_path, full_class_name]))
+            if class_ is not None:
+                break
+
+    # Try to find classes that are dynamically loaded, class_ will still be None if failed.
+    if class_ is None:
+        try:
+            module_name, class_name = full_class_name.rsplit(".", 1)
+            try:
+                class_ = getattr(sys.modules[module_name], class_name)
+            except (AttributeError, KeyError):
+                # ignore when cannot find the module in sys.modules or cannot find the class
+                # in the module.
+                pass
+        except ValueError:
+            # ignoring when the full class name doesn't have multiple parts.
+            pass
+
+    if class_ is None:
+        if module_paths:
+            raise ValueError(
+                f"Class not found in {module_paths}: {full_class_name}"
+            )
+        else:
+            raise ValueError(f"Class not found in {full_class_name}")
+
+    return class_
 
 
 def get_qual_name(o: object, lower: bool = False) -> str:
