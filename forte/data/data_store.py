@@ -1522,7 +1522,7 @@ class DataStore(BaseStore):
         r"""This function returns the value of attributes listed in
         ``attr_names`` for entries in listed in the ``list_of_tid``.
         It locates the entries data with ``tid`` and put attributes
-        listed in ``attr_name`` in a dict for each entry (tid).
+        listed in ``attr_name`` in a dict for each entry.
 
         Args:
             list_of_tid: List of unique ids of the entry.
@@ -1530,7 +1530,7 @@ class DataStore(BaseStore):
 
         Returns:
             A list of dict with ``attr_name`` as key for attributes
-             of the entries listed in``list_of_tid``.
+             of the entries requested.
 
         Raises:
             KeyError: when ``tid`` or ``attr_name`` is not found.
