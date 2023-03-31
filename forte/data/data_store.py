@@ -1517,26 +1517,26 @@ class DataStore(BaseStore):
         return attrs
 
     def get_attributes_of_tids(
-        self, tids: List[int], attr_names: List[str]
+        self, list_of_tid: List[int], attr_names: List[str]
     ) -> List[Any]:
         r"""This function returns the value of attributes listed in
-        ``attr_names`` for entries in listed in the ``tids``. It locates
-        the entries data with ``tid`` and put attributes listed in
-        ``attr_name`` in a dict for each entry (tid).
+        ``attr_names`` for entries in listed in the ``list_of_tid``.
+        It locates the entries data with ``tid`` and put attributes
+        listed in ``attr_name`` in a dict for each entry (tid).
 
         Args:
-            tids: List of unique ids (tids) of the entry.
+            list_of_tid: List of unique ids of the entry.
             attr_names: List of name of the attribute.
 
         Returns:
-            A list of dict with ``attr_name`` as key for atrributes
-             of the entries listed in``tids``.
+            A list of dict with ``attr_name`` as key for attributes
+             of the entries listed in``list_of_tid``.
 
         Raises:
             KeyError: when ``tid`` or ``attr_name`` is not found.
         """
         tids_attrs = []
-        for tid in tids:
+        for tid in list_of_tid:
             entry, entry_type = self.get_entry(tid)
             attrs: dict = {}
             for attr_name in attr_names:
