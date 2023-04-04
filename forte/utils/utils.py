@@ -28,7 +28,6 @@ __all__ = [
     "get_full_module_name",
     "get_class_name",
     "get_class",
-    "get_class_nc",
     "get_qual_name",
     "create_class_with_kwargs",
     "check_type",
