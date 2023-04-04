@@ -1079,10 +1079,7 @@ class DataStore(BaseStore):
         elif tid in self.__tid_idx_dict:
             return False
         else:
-            raise KeyError(
-                f"Entry with tid {tid} not found."
-                f" Data store content is only {str(self.__dict__)}"
-            )
+            raise KeyError(f"Entry with tid {tid} not found.")
 
     def _create_new_entry(
         self, type_name: str, tid: Optional[int] = None
