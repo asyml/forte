@@ -806,7 +806,6 @@ class DataStore(BaseStore):
         else:
             attr_fields: Dict = self._get_entry_attributes_by_class(type_name)
             for attr_name, attr_info in attr_fields.items():
-
                 attr_class = get_origin(attr_info.type)
                 # Since we store the class specified by get_origin,
                 # if the output it None, we store the class for it,
@@ -896,7 +895,7 @@ class DataStore(BaseStore):
             if cls_qualified_name in type_name_parent_class:
                 return True
             else:
-                entry_class = get_class(type_name)
+                entry_class = get_class(type_name, cached_lookup=False)
                 if issubclass(entry_class, cls):
                     type_name_parent_class.add(cls_qualified_name)
                     return True
@@ -1047,7 +1046,6 @@ class DataStore(BaseStore):
             self._is_subclass(type_name, cls)
             for cls in (list(SinglePackEntries) + list(MultiPackEntries))
         ):
-
             try:
                 self.__elements[type_name].append(entry)
             except KeyError:
@@ -1081,10 +1079,7 @@ class DataStore(BaseStore):
         elif tid in self.__tid_idx_dict:
             return False
         else:
-            raise KeyError(
-                f"Entry with tid {tid} not found."
-                f" Data store content is only {str(self.__dict__)}"
-            )
+            raise KeyError(f"Entry with tid {tid} not found.")
 
     def _create_new_entry(
         self, type_name: str, tid: Optional[int] = None
@@ -1246,7 +1241,6 @@ class DataStore(BaseStore):
         allow_duplicate: bool = True,
         attribute_data: Optional[List] = None,
     ) -> int:
-
         r"""
         This function provides a general implementation to add all
         types of entries to the data store. It can add namely
@@ -1870,7 +1864,9 @@ class DataStore(BaseStore):
                     self.get_datastore_attr_idx(tn, constants.BEGIN_ATTR_NAME),
                     self.get_datastore_attr_idx(tn, constants.END_ATTR_NAME),
                 )
-            except IndexError as e:  # all_entries_range[tn][0] will be caught here.
+            except (
+                IndexError
+            ) as e:  # all_entries_range[tn][0] will be caught here.
                 raise ValueError(
                     f"Entry list of type name, {tn} which is"
                     " one list item of input argument `type_names`,"
