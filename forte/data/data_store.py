@@ -895,7 +895,7 @@ class DataStore(BaseStore):
             if cls_qualified_name in type_name_parent_class:
                 return True
             else:
-                entry_class = get_class(type_name)
+                entry_class = get_class(type_name, cached_lookup=False)
                 if issubclass(entry_class, cls):
                     type_name_parent_class.add(cls_qualified_name)
                     return True
@@ -1079,10 +1079,7 @@ class DataStore(BaseStore):
         elif tid in self.__tid_idx_dict:
             return False
         else:
-            raise KeyError(
-                f"Entry with tid {tid} not found."
-                f" Data store content is only {str(self.__dict__)}"
-            )
+            raise KeyError(f"Entry with tid {tid} not found.")
 
     def _create_new_entry(
         self, type_name: str, tid: Optional[int] = None

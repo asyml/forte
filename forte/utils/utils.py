@@ -16,7 +16,7 @@ Utility functions
 """
 import sys
 import difflib
-from functools import wraps
+from functools import wraps, lru_cache
 from inspect import getfullargspec
 from pydoc import locate
 from typing import Dict, List, Optional, get_type_hints, Tuple
@@ -78,8 +78,26 @@ def get_class_name(o, lower: bool = False) -> str:
         return o.__name__
 
 
-def get_class(full_class_name: str, module_paths: Optional[List[str]] = None):
-    r"""Returns the class based on class name.
+@lru_cache()
+def cached_locate(name_to_locate_class):
+    r"""Wrapped version of locate for loading class based on
+        ``name_to_locate_class``, cached by lru_cache.
+    Args:
+        name_to_locate_class (str): Name or full path to the class.
+
+    Returns:
+        The target class.
+
+    """
+    return locate(name_to_locate_class)
+
+
+def get_class(
+    full_class_name: str,
+    module_paths: Optional[List[str]] = None,
+    cached_lookup: Optional[bool] = True,
+):
+    r"""Returns the class based on class name, with cached lookup option.
 
     Args:
         full_class_name (str): Name or full path to the class.
@@ -87,18 +105,22 @@ def get_class(full_class_name: str, module_paths: Optional[List[str]] = None):
             class. This is used if the class cannot be located solely based on
             ``class_name``. The first module in the list that contains the class
             is used.
+        cached_lookup (bool): Flag to use "cached_locate" for class loading
 
     Returns:
         The target class.
 
-    Raises:
-        ValueError: If class is not found based on :attr:`class_name` and
-            :attr:`module_paths`.
     """
-    class_ = locate(full_class_name)
+    if cached_lookup:
+        class_ = cached_locate(full_class_name)
+    else:
+        class_ = locate(full_class_name)
     if (class_ is None) and (module_paths is not None):
         for module_path in module_paths:
-            class_ = locate(".".join([module_path, full_class_name]))
+            if cached_lookup:
+                class_ = cached_locate(".".join([module_path, full_class_name]))
+            else:
+                class_ = locate(".".join([module_path, full_class_name]))
             if class_ is not None:
                 break
 
