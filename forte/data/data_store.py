@@ -895,7 +895,7 @@ class DataStore(BaseStore):
             if cls_qualified_name in type_name_parent_class:
                 return True
             else:
-                entry_class = get_class(type_name)
+                entry_class = get_class(type_name, cached_lookup=False)
                 if issubclass(entry_class, cls):
                     type_name_parent_class.add(cls_qualified_name)
                     return True
