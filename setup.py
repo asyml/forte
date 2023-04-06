@@ -51,7 +51,7 @@ setuptools.setup(
         'dataclasses~=0.7;python_version<"3.7"',
         'importlib-resources>=5.1.4;python_version<"3.9"',
         "asyml-utilities",
-        "protobuf==3.20.0"
+        "protobuf==3.20.2"
     ],
     extras_require={
         "data_aug": [
