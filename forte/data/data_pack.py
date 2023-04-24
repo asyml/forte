@@ -1308,7 +1308,6 @@ class DataPack(BasePack[Entry, Link, Group]):
         data: Dict,
         cont: Optional[Annotation],
     ) -> Dict:
-
         components, unit, fields = self._parse_request_args(a_type, a_args)
 
         a_dict: Dict[str, Any] = {}
@@ -1391,7 +1390,6 @@ class DataPack(BasePack[Entry, Link, Group]):
         data: Dict,
         cont: Optional[Annotation],
     ) -> Dict:
-
         components, unit, fields = self._parse_request_args(a_type, a_args)
 
         if unit is not None:
@@ -1658,7 +1656,6 @@ class DataPack(BasePack[Entry, Link, Group]):
                 range_span=range_annotation  # type: ignore
                 and (range_begin, range_end),
             ):
-
                 # Filter by components
                 if components is not None:
                     if not self.is_created_by(
@@ -1690,6 +1687,154 @@ class DataPack(BasePack[Entry, Link, Group]):
         except ValueError:
             # type_name does not exist in DataStore
             yield from []
+
+    def get_attributes_of_type(
+        self,
+        s_entry_type: str,
+        attributes_names: List[str],
+        range_annotation: Optional[
+            Union[Annotation, AudioAnnotation, int]
+        ] = None,
+        components: Optional[Union[str, Iterable[str]]] = None,
+        include_sub_type: bool = True,
+        get_raw: bool = False,
+    ) -> Iterable:  # [EntryType]
+        # pylint: disable=protected-access
+        def require_annotations(entry_class=Annotation) -> bool:
+            if self._data_store._is_subclass(s_entry_type, entry_class):
+                return True
+
+            curr_class: Type[EntryType] = as_entry_type(s_entry_type)  # type: ignore
+            if issubclass(curr_class, Link):
+                return issubclass(
+                    curr_class.ParentType, entry_class  # type: ignore
+                ) and issubclass(curr_class.ChildType, entry_class)  # type: ignore
+            if issubclass(curr_class, Group):
+                return issubclass(curr_class.MemberType, entry_class)
+            return False
+
+        # If we don't have any annotations but the items to check requires them,
+        # then we simply yield from an empty list.
+        # changed form using len(annotations) to num_annotations directly for
+        # improving the performance.
+        if (
+            self.num_annotations == 0
+            and isinstance(range_annotation, Annotation)
+            and require_annotations(Annotation)
+        ) or (
+            self.num_audio_annotations == 0
+            and isinstance(range_annotation, AudioAnnotation)
+            and require_annotations(AudioAnnotation)
+        ):
+            yield from []
+            return
+
+        # If the ``entry_type`` and `range_annotation` are for different types of
+        # payload, then we yield from an empty list with a warning.
+        if (
+            require_annotations(Annotation)
+            and isinstance(range_annotation, AudioAnnotation)
+        ) or (
+            require_annotations(AudioAnnotation)
+            and isinstance(range_annotation, Annotation)
+        ):
+            logger.warning(
+                "Incompatible combination of ``entry_type`` and "
+                "`range_annotation` found in the input of `DataPack.get()`"
+                " method. An empty iterator will be returned when inputs "
+                "contain multi-media entries. Please double check the input "
+                "arguments and make sure they are associated with the same type"
+                " of payload (i.e., either text or audio)."
+            )
+            yield from []
+            return
+
+        # If range_annotation is specified, we record its begin and
+        # end index
+        range_begin: int
+        range_end: int
+
+        if range_annotation is not None:
+            if isinstance(range_annotation, AnnotationLikeEntries):
+                range_begin = range_annotation.begin
+                range_end = range_annotation.end
+            else:
+                # range_annotation is given by the tid of the entry it
+                # represents
+                range_raw = self._data_store.transform_data_store_entry(
+                    self.get_entry_raw(range_annotation)
+                )
+                range_begin = range_raw[BEGIN_ATTR_NAME]
+                range_end = range_raw[END_ATTR_NAME]
+
+        try:
+            for attrs_from_ds in self._data_store.get_attributes_of_type(
+                type_name=s_entry_type,
+                attributes_names=attributes_names,
+                include_sub_type=include_sub_type,
+                range_span=range_annotation  # type: ignore
+                and (range_begin, range_end),
+            ):
+                # Filter by components
+                if components is not None:
+                    if not self.is_created_by(
+                        attrs_from_ds["tid"],
+                        # entry_data[TID_INDEX],
+                        components,
+                    ):
+                        continue
+
+                entry: Union[Entry, Dict[str, Any]]
+                if get_raw:
+                    entry = None  # not implemented
+                    # entry = self._data_store.transform_data_store_entry(
+                    #     attrs_from_ds
+                    # )
+                else:
+                    entry = self.get_entry(
+                        tid=attrs_from_ds["tid"]
+                    )  # entry_data[TID_INDEX]
+                    # entry_data["text"] = self.get_span_text(entry_data['begin'],
+                    # entry_data['end'])
+
+                    # Filter out incompatible audio span comparison for Links and Groups
+                    if (
+                        self._data_store._is_subclass(  # pylint: disable=W0212
+                            s_entry_type, (Link, Group)
+                        )
+                        and isinstance(range_annotation, AudioAnnotation)
+                        and not self._index.in_audio_span(
+                            entry, range_annotation.span
+                        )
+                    ):
+                        continue
+
+                yield entry, attrs_from_ds
+        except ValueError:
+            # type_name does not exist in DataStore
+            yield from []
+
+    def get_attributes_of_tids(self, tids: List[int], attr_names: List[str]) -> List:
+        r"""This function returns the value of attributes listed in
+        ``attr_names`` for entries in listed in the ``tids``. It locates
+        the entries data with ``tid`` and put attributes listed in
+        ``attr_name`` in a dict for each entry (tid).
+
+        Args:
+            tids: List of unique ids (tids) of the entry.
+            attr_names: List of name of the attribute.
+
+        Returns:
+            A list of dict with ``attr_name`` as key for atrributes
+             of the entries listed in``tids``.
+
+        Raises:
+            KeyError: when ``tid`` or ``attr_name`` is not found.
+        """
+
+        tids_attrs = self._data_store.get_attributes_of_tids(tids, attr_names)
+
+        return tids_attrs
 
     def update(self, datapack: "DataPack"):
         r"""Update the attributes and properties of the current DataPack with
