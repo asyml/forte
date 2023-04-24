@@ -1481,6 +1481,173 @@ class DataStore(BaseStore):
 
         return entry[attr_id]
 
+    def get_attributes_of_tid(self, tid: int, attr_names: List[str]) -> dict:
+        r"""This function returns the value of attributes listed in
+        ``attr_names`` for the entry with ``tid``. It locates the entry data
+        with ``tid`` and finds attributes listed in ``attr_names`` and return
+        as a dict.
+
+        Args:
+            tid: Unique id of the entry.
+            attr_names: List of names of the attribute.
+
+        Returns:
+            A dict with keys listed in ``attr_names`` for attributes of the
+            entry with ``tid``.
+
+        Raises:
+            KeyError: when ``tid`` or ``attr_name`` is not found.
+        """
+        entry, entry_type = self.get_entry(tid)
+        attrs: dict = {}
+        for attr_name in attr_names:
+            try:
+                attr_id = self._get_type_attribute_dict(entry_type)[attr_name][
+                    constants.ATTR_INDEX_KEY
+                ]
+            except KeyError as e:
+                raise KeyError(
+                    f"{entry_type} has no {attr_name} attribute."
+                ) from e
+            attrs[attr_name] = entry[attr_id]
+
+        return attrs
+
+    def get_attributes_of_tids(
+        self, list_of_tid: List[int], attr_names: List[str]
+    ) -> List[Any]:
+        r"""This function returns the value of attributes listed in
+        ``attr_names`` for entries in listed in the ``list_of_tid``.
+        It locates the entries data with ``tid`` and put attributes
+        listed in ``attr_name`` in a dict for each entry.
+
+        Args:
+            list_of_tid: List of unique ids of the entry.
+            attr_names: List of name of the attribute.
+
+        Returns:
+            A list of dict with ``attr_name`` as key for attributes
+             of the entries requested.
+
+        Raises:
+            KeyError: when ``tid`` or ``attr_name`` is not found.
+        """
+        tids_attrs = []
+        for tid in list_of_tid:
+            entry, entry_type = self.get_entry(tid)
+            attrs: dict = {}
+            for attr_name in attr_names:
+                try:
+                    attr_id = self._get_type_attribute_dict(entry_type)[
+                        attr_name
+                    ][constants.ATTR_INDEX_KEY]
+                except KeyError as e:
+                    raise KeyError(
+                        f"{entry_type} has no {attr_name} attribute."
+                    ) from e
+                attrs[attr_name] = entry[attr_id]
+
+            tids_attrs.append(attrs)
+
+        return tids_attrs
+
+    def get_attributes_of_type(
+        self,
+        type_name: str,
+        attributes_names: List[str],
+        include_sub_type: bool = True,
+        range_span: Optional[Tuple[int, int]] = None,
+    ) -> Iterator[dict]:
+        r"""This function fetches required attributes of entries from the
+        data store of type ``type_name``. If `include_sub_type` is set to
+        True and ``type_name`` is in [Annotation], this function also
+        fetches entries of subtype of ``type_name``. Otherwise, it only
+        fetches entries of type ``type_name``.
+
+        Args:
+            type_name: The fully qualified name of the entry.
+            attributes_names: list of attributes to be fetched for each entry
+            include_sub_type: A boolean to indicate whether get its subclass.
+            range_span: A tuple that contains the begin and end indices
+                of the searching range of entries.
+
+        Returns:
+            An iterator of the attributes of the entry in dict matching the
+            provided arguments.
+        """
+
+        entry_class = get_class(type_name)
+        all_types = set()
+        if include_sub_type:
+            for type in self.__elements:
+                if issubclass(get_class(type), entry_class):
+                    all_types.add(type)
+        else:
+            all_types.add(type_name)
+        all_types = list(all_types)
+        all_types.sort()
+
+        if self._is_annotation(type_name):
+            if range_span is None:
+                # yield from self.co_iterator_annotation_like(all_types)
+                for entry in self.co_iterator_annotation_like(all_types):
+                    attrs: dict = {"tid": entry[0]}
+                    for attr_name in attributes_names:
+                        try:
+                            attr_id = self._get_type_attribute_dict(type_name)[
+                                attr_name
+                            ][constants.ATTR_INDEX_KEY]
+                        except KeyError as e:
+                            raise KeyError(
+                                f"{type_name} has no {attr_name} attribute."
+                            ) from e
+                        attrs[attr_name] = entry[attr_id]
+
+                    yield attrs
+            else:
+                for entry in self.co_iterator_annotation_like(
+                    all_types, range_span=range_span
+                ):
+                    attrs = {"tid": entry[0]}
+                    for attr_name in attributes_names:
+                        try:
+                            attr_id = self._get_type_attribute_dict(type_name)[
+                                attr_name
+                            ][constants.ATTR_INDEX_KEY]
+                        except KeyError as e:
+                            raise KeyError(
+                                f"{type_name} has no {attr_name} attribute."
+                            ) from e
+                        attrs[attr_name] = entry[attr_id]
+
+                    yield attrs  # attrs instead of entry
+        elif issubclass(entry_class, Link):
+            raise NotImplementedError(
+                f"{type_name} of Link is not currently supported."
+            )
+        elif issubclass(entry_class, Group):
+            raise NotImplementedError(
+                f"{type_name} of Group is not currently supported."
+            )
+        else:
+            if type_name not in self.__elements:
+                raise ValueError(f"type {type_name} does not exist")
+            # yield from self.iter(type_name)
+            for entry in self.iter(type_name):
+                attrs = {"tid": entry[0]}
+                for attr_name in attributes_names:
+                    try:
+                        attr_id = self._get_type_attribute_dict(type_name)[
+                            attr_name
+                        ][constants.ATTR_INDEX_KEY]
+                    except KeyError as e:
+                        raise KeyError(
+                            f"{type_name} has no {attr_name} attribute."
+                        ) from e
+                    attrs[attr_name] = entry[attr_id]
+
+                yield attrs
+
     def _get_attr(self, tid: int, attr_id: int) -> Any:
         r"""This function locates the entry data with ``tid`` and gets the value
         of ``attr_id``  of this entry. Called by `get_attribute()`.
