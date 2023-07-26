@@ -159,6 +159,11 @@ Data Augmentation Ops
 .. autoclass:: forte.processors.data_augment.algorithms.eda_ops.RandomDeletionDataAugmentOp
     :members:
 
+:hidden:`AbbreviationReplacementOp`
+------------------------------------------
+.. autoclass:: forte.processors.data_augment.algorithms.abbreviation_replacement_op.AbbreviationReplacementOp
+    :members:
+
 Data Augmentation Models
 ========================================
 
